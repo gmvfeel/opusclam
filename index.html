@@ -61,11 +61,16 @@
   .util .left a{margin-right:18px;color:rgba(255,255,255,.34);font-family:var(--serif);letter-spacing:.05em;font-size:8px;font-weight:600;transition:color .2s ease}
   .util .right a{color:rgba(255,255,255,.34);letter-spacing:.04em;font-size:8px;font-weight:600;transition:color .2s ease}
   .util a:hover{color:#fff}
+  .m-community{display:none}
   @media(max-width:880px){
-    .util .wrap{overflow:hidden}
-    .util .left{white-space:nowrap;min-width:0;overflow:hidden}
-    .util .left a{margin-right:9px}
-    .util .right{white-space:nowrap;flex:0 0 auto}
+    .m-community{display:block;margin:10px 24px 4px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);font-family:var(--serif);letter-spacing:.12em;font-size:11px;font-weight:600;transition:color .2s ease}
+    .m-community:active{color:#fff}
+  }
+  @media(max-width:880px){
+    .util .left{white-space:nowrap;min-width:0}
+    .util .left a{margin-right:14px}
+    .util .left a:last-child{display:none}
+    .util .right{white-space:nowrap;flex:0 0 auto;padding-left:14px}
   }
 
   /* ---------- header ---------- */
@@ -688,6 +693,7 @@
         <a href="#">로그인</a>
         <a href="#">회원가입</a>
       </div>
+      <a href="#" class="m-community" target="_blank" rel="noopener">OPUSCLAM COMMUNITY ↗</a>
     </nav>
     <div class="mast-tools">
       <a href="#" class="school">학교등록</a>
@@ -1337,11 +1343,14 @@
   if(!sh||!hero)return;
   var hovering=false;
   function update(){
-    if(window.innerWidth<=880){ sh.classList.add('solid'); return; }
-    var trigger=hero.offsetHeight-sh.offsetHeight-8;
-    var past=window.scrollY>Math.max(trigger,60);
-    if(hovering||past){sh.classList.add('solid');}
-    else{sh.classList.remove('solid');}
+    var solid;
+    if(window.innerWidth<=880){
+      solid = window.scrollY>8;               // 모바일: 맨 위는 투명, 스크롤하면 불투명
+    } else {
+      var trigger=hero.offsetHeight-sh.offsetHeight-8;
+      solid = hovering || window.scrollY>Math.max(trigger,60);
+    }
+    sh.classList.toggle('solid', solid);
   }
   sh.addEventListener('mouseenter',function(){hovering=true;update();});
   sh.addEventListener('mouseleave',function(){hovering=false;update();});
