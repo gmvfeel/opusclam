@@ -1,0 +1,17 @@
+{
+  "name": "OPUSCLAM · 클래식 스페셜리스트",
+  "short_name": "OPUSCLAM",
+  "description": "클래식 음악 포털 — OPUSCLAM.COM",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0d24",
+  "theme_color": "#0a0d24",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
