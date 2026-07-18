@@ -911,7 +911,7 @@
 
 <!-- ===== ticker ===== -->
 <div class="ticker">
-  <div class="wrap">
+  <div class="wrap" id="ticker-list">
     <div class="tk">
       <span class="lbl">NEWS</span>
       <span class="txt">한국페스티발앙상블 — 르네상스와 현대의 조화</span>
@@ -1058,7 +1058,7 @@
       </ul>
 
       <div class="sec-head" style="margin-top:24px"><div class="t"><span class="en-s">Self Picture</span></div></div>
-      <div class="selfpic">
+      <div class="selfpic" id="card-self-picture">
         <div class="thumb ph"></div>
         <div>
           <h4>한국 최고의 실내악 콘서트</h4>
@@ -1694,8 +1694,30 @@ document.querySelectorAll('.tabs').forEach(function(t){
     }catch(e){ console.error('hero_slides 로드 실패:', e); }
   }
 
+  // 상단 뉴스 티커
+  async function loadTicker(){
+    const box = document.getElementById('ticker-list');
+    if(!box) return;
+    try{
+      const rows = await sbGet('ticker?select=label,headline,posted_on,link&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      box.innerHTML = '';
+      rows.forEach(function(r){
+        const tk = document.createElement('div'); tk.className = 'tk';
+        const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = r.label || '';
+        const txt = document.createElement('span'); txt.className = 'txt'; txt.textContent = r.headline || '';
+        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.posted_on || '';
+        const a = document.createElement('a'); a.className = 'more en'; a.href = (r.link && r.link !== '#') ? r.link : '#'; a.innerHTML = 'VIEW DETAIL &rarr;';
+        tk.appendChild(lbl); tk.appendChild(txt); tk.appendChild(dt); tk.appendChild(a);
+        box.appendChild(tk);
+      });
+    }catch(e){ console.error('ticker 로드 실패:', e); }
+  }
+
   function init(){
     loadHeroSlides();
+    loadTicker();
+    loadFeature('card-self-picture', 'self_picture');
     loadDateList('notice-list', 'notices');
     loadDateList('concours-list', 'concours');
     loadFunding();
