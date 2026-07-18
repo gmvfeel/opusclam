@@ -962,7 +962,7 @@
     <div class="col-2">
       <div class="col-block">
         <div class="sec-head"><div class="t"><span class="en-s">Hot Topic</span><span class="ko">핫토픽</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <article class="lead">
+        <article class="lead" id="card-hot-topic">
           <div class="thumb ph"></div>
           <h4>MIKHAIL PLETNEV — 피아니스트의 재해석</h4>
           <p>‘복구의 쇼팽’이라 불리며 섬세한 시정 넘치는 많은 피아노 작품들을 남겼던 ‘에드바르트 그리그’ 그의 작품세계를 한눈에 풀어볼 수 있는 음반으로, 그리그의 유일한 피아노 소나타를 비롯, 작곡자가…</p>
@@ -972,7 +972,7 @@
 
       <div class="col-block">
         <div class="sec-head"><div class="t"><span class="en-s">Music School</span><span class="ko">이달의 음악학교</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <div class="split">
+        <div class="split" id="card-music-school">
           <div class="thumb ph"></div>
           <div class="body">
             <h4>&lt;제3탄&gt; 미국 뉴욕 줄리어드음대</h4>
@@ -984,7 +984,7 @@
 
       <div class="col-block">
         <div class="sec-head"><div class="t"><span class="en-s">Gallery</span><span class="ko">공연사진 / 영상</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <div class="split">
+        <div class="split" id="card-gallery">
           <div class="thumb ph"></div>
           <div class="body">
             <h4>[15명 한정 도슨트전시+공연초청] 2015 HPF</h4>
@@ -996,7 +996,7 @@
 
       <div class="col-block">
         <div class="sec-head"><div class="t"><span class="en-s">Contemporary</span><span class="ko">현대음악</span></div><a class="more en" href="#">MORE +</a></div>
-        <div class="split">
+        <div class="split" id="card-contemporary">
           <div class="thumb ph"></div>
           <div class="body">
             <h4>MIKHAIL PLETNEV</h4>
@@ -1554,11 +1554,40 @@ document.querySelectorAll('.tabs').forEach(function(t){
     }catch(e){ console.error('scores 로드 실패:', e); }
   }
 
+  // 카드형 콘텐츠 — 핫토픽 / 이달의 음악학교 / 갤러리 / 현대음악 (각 1건)
+  function fmtDot(d){
+    if(!d) return '';
+    const p = String(d).split('-');
+    if(p.length < 3) return d;
+    return p[0] + '.' + p[1] + '.' + p[2];   // 2021.11.22
+  }
+  async function loadFeature(cardId, slot){
+    const card = document.getElementById(cardId);
+    if(!card) return;
+    try{
+      const rows = await sbGet('features?slot=eq.' + slot + '&select=title,summary,image_url,link,posted_on&order=sort_order.asc,created_at.desc&limit=1');
+      if(!Array.isArray(rows) || !rows.length) return;
+      const r = rows[0];
+      const h = card.querySelector('h4'); if(h) h.textContent = r.title || '';
+      const p = card.querySelector('p'); if(p && r.summary != null) p.textContent = r.summary;
+      const dt = card.querySelector('.dt'); if(dt) dt.textContent = fmtDot(r.posted_on);
+      const vm = card.querySelector('a.vm'); if(vm && r.link) vm.href = r.link;
+      if(r.image_url){
+        const th = card.querySelector('.thumb');
+        if(th){ th.classList.remove('ph'); th.style.backgroundImage = 'url("' + r.image_url + '")'; th.style.backgroundSize = 'cover'; th.style.backgroundPosition = 'center'; }
+      }
+    }catch(e){ console.error(slot + ' 로드 실패:', e); }
+  }
+
   function init(){
     loadDateList('notice-list', 'notices');
     loadDateList('concours-list', 'concours');
     loadFunding();
     loadScores();
+    loadFeature('card-hot-topic', 'hot_topic');
+    loadFeature('card-music-school', 'music_school');
+    loadFeature('card-gallery', 'gallery');
+    loadFeature('card-contemporary', 'contemporary');
   }
 
   if(document.readyState === 'loading'){
