@@ -99,7 +99,7 @@
   nav.main>.nav-item>a.active::after,nav.main>.nav-item:hover>a::after{content:"";position:absolute;left:0;right:0;bottom:24px;height:2px;background:var(--orange)}
   /* horizontal submenu bar */
   .dropdown{position:absolute;top:100%;left:0;right:0;width:100%;
-    background:#eaeaee;border-top:1px solid var(--line);border-bottom:1px solid #d6d6dc;box-shadow:0 16px 32px -18px rgba(30,20,60,.28);
+    background:rgba(234,234,238,.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--line);border-bottom:1px solid #d6d6dc;box-shadow:0 16px 32px -18px rgba(30,20,60,.28);
     opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,visibility .22s ease;z-index:65}
   .nav-item:hover .dropdown{opacity:1;visibility:visible;pointer-events:auto}
   .dropdown-inner{max-width:var(--wrap);margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center}
@@ -510,7 +510,7 @@
   @media(max-width:880px){.to-top{right:16px;bottom:16px;width:42px;height:42px}}
 
   /* ---------- PWA install banner ---------- */
-  .pwa-install{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(14px);z-index:200;display:none;align-items:center;gap:14px;max-width:calc(100vw - 32px);padding:11px 12px 11px 13px;background:#161826;border:1px solid rgba(255,255,255,.1);border-radius:14px;box-shadow:0 18px 44px -14px rgba(0,0,0,.6);opacity:0;transition:opacity .3s ease,transform .3s ease}
+  .pwa-install{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(14px);z-index:200;display:none;align-items:center;gap:14px;max-width:calc(100vw - 32px);padding:11px 12px 11px 13px;background:rgba(22,24,38,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:14px;box-shadow:0 18px 44px -14px rgba(0,0,0,.6);opacity:0;transition:opacity .3s ease,transform .3s ease}
   .pwa-install.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
   .pwa-ico{flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--violet-2),var(--violet-3));display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:14px;color:#fff}
   .pwa-txt{font-size:13.5px;line-height:1.4;color:#d7d5e4;white-space:nowrap}
@@ -582,7 +582,7 @@
   html[data-theme="dark"] .fm-col .fm-num{color:#9a9a9a}
   html[data-theme="dark"] nav.main>.nav-item>a.active::after,
   html[data-theme="dark"] nav.main>.nav-item:hover>a::after{background:#c4c4c4}
-  html[data-theme="dark"] .dropdown{background:#171717;border-top-color:#2b2b2b;border-bottom-color:#2b2b2b}
+  html[data-theme="dark"] .dropdown{background:rgba(23,23,23,.88);border-top-color:#2b2b2b;border-bottom-color:#2b2b2b}
   html[data-theme="dark"] nav.main>.nav-item>a{color:#8f8f8f}
   html[data-theme="dark"] nav.main>.nav-item>a.active,
   html[data-theme="dark"] nav.main>.nav-item:hover>a{color:#ffffff}
