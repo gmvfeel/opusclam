@@ -1300,23 +1300,28 @@
   }
 })();
 
-/* hero concert slides — dots control these */
+/* hero concert slides — dots control these (재초기화 가능) */
 (function(){
-  var slides=document.querySelectorAll('.hslide');
-  var dots=document.querySelectorAll('.hero-dots i');
-  if(slides.length<2)return;
-  var i=0, timer;
-  function go(n){
-    slides[i].classList.remove('on'); if(dots[i])dots[i].classList.remove('on');
-    i=(n+slides.length)%slides.length;
-    slides[i].classList.add('on'); if(dots[i])dots[i].classList.add('on');
-  }
-  function auto(){timer=setInterval(function(){go(i+1);},6500);}
-  dots.forEach(function(d,k){
-    d.setAttribute('role','button');
-    d.addEventListener('click',function(){clearInterval(timer);go(k);auto();});
-  });
-  auto();
+  var heroTimer=null;
+  window.initHeroRotation=function(){
+    var slides=document.querySelectorAll('.hslide');
+    var dots=document.querySelectorAll('.hero-dots i');
+    if(heroTimer){clearInterval(heroTimer);heroTimer=null;}
+    if(slides.length<2)return;
+    var i=0;
+    function go(n){
+      slides[i].classList.remove('on'); if(dots[i])dots[i].classList.remove('on');
+      i=(n+slides.length)%slides.length;
+      slides[i].classList.add('on'); if(dots[i])dots[i].classList.add('on');
+    }
+    function auto(){heroTimer=setInterval(function(){go(i+1);},6500);}
+    dots.forEach(function(d,k){
+      d.setAttribute('role','button');
+      d.addEventListener('click',function(){clearInterval(heroTimer);go(k);auto();});
+    });
+    auto();
+  };
+  window.initHeroRotation();
 })();
 /* header: transparent over hero, solid on hover or after scrolling past hero */
 (function(){
@@ -1656,7 +1661,41 @@ document.querySelectorAll('.tabs').forEach(function(t){
     }catch(e){ console.error('concert_pr 로드 실패:', e); }
   }
 
+  // 빅배너(히어로) 슬라이드
+  async function loadHeroSlides(){
+    const wrap = document.querySelector('.hero .wrap');
+    const dotsBox = document.querySelector('.hero-dots');
+    if(!wrap || !dotsBox) return;
+    try{
+      const rows = await sbGet('hero_slides?select=eyebrow,title,subtitle,schedule,venue,time_text,image_url,link&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      wrap.innerHTML = '';
+      dotsBox.innerHTML = '';
+      rows.forEach(function(r, idx){
+        const sl = document.createElement('div');
+        sl.className = 'hslide' + (idx === 0 ? ' on' : '');
+        if(r.eyebrow){ const eb = document.createElement('div'); eb.className = 'eyebrow'; eb.textContent = r.eyebrow; sl.appendChild(eb); }
+        const h1 = document.createElement('h1');
+        String(r.title || '').split('\n').forEach(function(line, li){
+          if(li > 0) h1.appendChild(document.createElement('br'));
+          h1.appendChild(document.createTextNode(line));
+        });
+        sl.appendChild(h1);
+        if(r.subtitle){ const sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = r.subtitle; sl.appendChild(sub); }
+        const meta = document.createElement('div'); meta.className = 'meta';
+        if(r.schedule){ const s = document.createElement('span'); s.appendChild(document.createTextNode('일정 ')); const bx = document.createElement('b'); bx.textContent = r.schedule; s.appendChild(bx); meta.appendChild(s); }
+        if(r.venue){ const s = document.createElement('span'); s.appendChild(document.createTextNode('장소 ')); const bx = document.createElement('b'); bx.textContent = r.venue; s.appendChild(bx); meta.appendChild(s); }
+        if(r.time_text){ const s = document.createElement('span'); s.textContent = r.time_text; meta.appendChild(s); }
+        sl.appendChild(meta);
+        wrap.appendChild(sl);
+        const dot = document.createElement('i'); if(idx === 0) dot.className = 'on'; dotsBox.appendChild(dot);
+      });
+      if(window.initHeroRotation) window.initHeroRotation();
+    }catch(e){ console.error('hero_slides 로드 실패:', e); }
+  }
+
   function init(){
+    loadHeroSlides();
     loadDateList('notice-list', 'notices');
     loadDateList('concours-list', 'concours');
     loadFunding();
