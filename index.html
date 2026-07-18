@@ -932,7 +932,7 @@
           <p>안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다. 지금 2015년 11월 18일(수) 오후 4시 공연 전 부대행사인 도슨트 투어부터 공연까지 관람하실 수 있도록…</p>
           <div class="foot"><a class="vm" href="#">VIEW MORE</a><span class="dt">2021.11.22</span></div>
         </article>
-        <ul class="list">
+        <ul class="list" id="notice-list">
           <li><a href="#">부산시립교향악단 2016 신년음악회 안내</a><span class="dt">21.11.22</span></li>
           <li><a href="#">일반 베르크 《보체크》와 바그너 《탈하일러》는 예정대로</a><span class="dt">21.11.22</span></li>
           <li><a href="#">3월 30일과 4월 2일은 파비오 루이지</a><span class="dt">21.11.22</span></li>
@@ -1478,6 +1478,52 @@ document.querySelectorAll('.tabs').forEach(function(t){
   });
 })();
 
+</script>
+<script>
+/* ===== Supabase 연동: 공지사항(Notice) 목록 ===== */
+(function(){
+  const SUPABASE_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  function fmtDate(d){
+    if(!d) return '';
+    const p = String(d).split('-');       // YYYY-MM-DD
+    if(p.length < 3) return d;
+    return p[0].slice(2) + '.' + p[1] + '.' + p[2];   // 21.11.22
+  }
+
+  async function loadNotices(){
+    const list = document.getElementById('notice-list');
+    if(!list) return;
+    try{
+      const res = await fetch(
+        SUPABASE_URL + '/rest/v1/notices?select=title,link,posted_on&order=sort_order.asc',
+        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
+      );
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const rows = await res.json();
+      if(!Array.isArray(rows) || rows.length === 0) return;  // 데이터 없으면 기존 내용 유지
+      list.innerHTML = '';
+      rows.forEach(function(row){
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = row.link || '#';
+        a.textContent = row.title || '';
+        const dt = document.createElement('span');
+        dt.className = 'dt';
+        dt.textContent = fmtDate(row.posted_on);
+        li.appendChild(a); li.appendChild(dt);
+        list.appendChild(li);
+      });
+    }catch(err){
+      console.error('공지사항 불러오기 실패:', err);   // 실패 시 기존 정적 목록 유지(안전)
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', loadNotices);
+  } else { loadNotices(); }
+})();
 </script>
 </body>
 </html>
