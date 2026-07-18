@@ -43,6 +43,7 @@
   .disp{font-family:var(--display)}
 
   /* ---------- placeholders ---------- */
+  .card-link{position:absolute;inset:0;z-index:6;border-radius:inherit;text-indent:-9999px;overflow:hidden}
   .ph{background:
       linear-gradient(135deg,rgba(90,74,122,.14),rgba(124,99,176,.06)),
       repeating-linear-gradient(45deg,#e9e6f1 0 12px,#e2def0 12px 24px);
@@ -1517,6 +1518,20 @@ document.querySelectorAll('.tabs').forEach(function(t){
     return res.json();
   }
 
+  // 카드에 클릭 링크(투명 덮개) 적용 — 실제 주소가 있을 때만
+  function setCardLink(card, link){
+    let a = card.querySelector(':scope > a.card-link');
+    if(!link || link === '#'){ if(a) a.remove(); return; }
+    if(!a){
+      a = document.createElement('a');
+      a.className = 'card-link';
+      a.textContent = '자세히 보기';
+      if(getComputedStyle(card).position === 'static') card.style.position = 'relative';
+      card.appendChild(a);
+    }
+    a.href = link;
+  }
+
   // 공지사항 / 콩쿨 — 제목 + 날짜
   async function loadDateList(elId, table){
     const list = document.getElementById(elId);
@@ -1590,6 +1605,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
       const p = card.querySelector('p'); if(p && r.summary != null) p.textContent = r.summary;
       const dt = card.querySelector('.dt'); if(dt) dt.textContent = fmtDot(r.posted_on);
       const vm = card.querySelector('a.vm'); if(vm && r.link) vm.href = r.link;
+      setCardLink(card, r.link);
       if(r.image_url){
         const th = card.querySelector('.thumb');
         if(th){ th.classList.remove('ph'); th.style.backgroundImage = 'url("' + r.image_url + '")'; th.style.backgroundSize = 'cover'; th.style.backgroundPosition = 'center'; }
@@ -1602,7 +1618,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
     const box = document.getElementById('artists-list');
     if(!box) return;
     try{
-      const rows = await sbGet('artists?select=name,role,bio,image_url&order=sort_order.asc');
+      const rows = await sbGet('artists?select=name,role,bio,image_url,link&order=sort_order.asc');
       if(!Array.isArray(rows) || !rows.length) return;
       box.innerHTML = '';
       rows.forEach(function(r, i){
@@ -1618,6 +1634,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
         const bio = document.createElement('p'); bio.textContent = r.bio || '';
         info.appendChild(role); info.appendChild(h); info.appendChild(bio);
         wrap.appendChild(ava); wrap.appendChild(info);
+        setCardLink(wrap, r.link);
         box.appendChild(wrap);
       });
     }catch(e){ console.error('artists 로드 실패:', e); }
@@ -1628,12 +1645,13 @@ document.querySelectorAll('.tabs').forEach(function(t){
     const card = document.getElementById('concert-pr');
     if(!card) return;
     try{
-      const rows = await sbGet('features?slot=eq.concert_pr&select=label,title,summary,image_url&order=sort_order.asc,created_at.desc&limit=1');
+      const rows = await sbGet('features?slot=eq.concert_pr&select=label,title,summary,image_url,link&order=sort_order.asc,created_at.desc&limit=1');
       if(!Array.isArray(rows) || !rows.length) return;
       const r = rows[0];
       const lbl = card.querySelector('.en-s'); if(lbl && r.label != null) lbl.textContent = r.label;
       const h = card.querySelector('h4'); if(h) h.textContent = r.title || '';
       const p = card.querySelector('p'); if(p && r.summary != null) p.textContent = r.summary;
+      setCardLink(card, r.link);
       if(r.image_url){ const img = card.querySelector('.img'); if(img){ img.classList.remove('ph'); img.style.backgroundImage = 'url("' + r.image_url + '")'; img.style.backgroundSize = 'cover'; img.style.backgroundPosition = 'center'; } }
     }catch(e){ console.error('concert_pr 로드 실패:', e); }
   }
