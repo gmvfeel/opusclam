@@ -949,7 +949,7 @@
             <div class="dt">2021.11.22</div>
           </div>
         </div>
-        <ul class="list" style="margin-top:12px">
+        <ul class="list" id="concours-list" style="margin-top:12px">
           <li><a href="#">International piano competition 전체대상 400만원</a><span class="dt">21.11.22</span></li>
           <li><a href="#">제7회 민 클래식컵 뮤직 컴페티션 — 전국 음악 콩쿠르</a><span class="dt">21.11.22</span></li>
           <li><a href="#">예중·예고, 음대 입시생들을 위한 2017 음악입시</a><span class="dt">21.11.22</span></li>
@@ -1038,7 +1038,7 @@
       </div>
 
       <div class="sec-head"><div class="t"><span class="en-s">Funding</span><span class="ko">지원금 / 정책자금정보</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-      <ul class="fund">
+      <ul class="fund" id="funding-list">
         <li><a href="#">문화예술교육형 사회적기업 육성 지원사업</a><span class="dt">~22.03.31</span></li>
         <li><a href="#">2012년 강원문화예술진흥사업</a><span class="dt">~22.03.31</span></li>
         <li><a href="#">2011 문학창작활성화_작가활동지원신청</a><span class="dt">~22.03.31</span></li>
@@ -1099,7 +1099,7 @@
     <!-- utility/score -->
     <div>
       <div class="sec-head"><div class="t"><span class="en-s">Utility / Score</span><span class="ko">악보·자료</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-      <ul class="dl">
+      <ul class="dl" id="scores-list">
         <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">Waves Complete 2016.12.97</a></li>
         <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">MAGIX Vegas DVD Architect 7.0.0 Build 38</a></li>
         <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">MusicLab RealGuitar v3.0.1</a></li>
@@ -1480,10 +1480,11 @@ document.querySelectorAll('.tabs').forEach(function(t){
 
 </script>
 <script>
-/* ===== Supabase 연동: 공지사항(Notice) 목록 ===== */
+/* ===== Supabase 연동: 목록 데이터 로드 ===== */
 (function(){
   const SUPABASE_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  const H = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
 
   function fmtDate(d){
     if(!d) return '';
@@ -1492,37 +1493,77 @@ document.querySelectorAll('.tabs').forEach(function(t){
     return p[0].slice(2) + '.' + p[1] + '.' + p[2];   // 21.11.22
   }
 
-  async function loadNotices(){
-    const list = document.getElementById('notice-list');
+  async function sbGet(query){
+    const res = await fetch(SUPABASE_URL + '/rest/v1/' + query, { headers: H });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+
+  // 공지사항 / 콩쿨 — 제목 + 날짜
+  async function loadDateList(elId, table){
+    const list = document.getElementById(elId);
     if(!list) return;
     try{
-      const res = await fetch(
-        SUPABASE_URL + '/rest/v1/notices?select=title,link,posted_on&order=sort_order.asc',
-        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }
-      );
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      const rows = await res.json();
-      if(!Array.isArray(rows) || rows.length === 0) return;  // 데이터 없으면 기존 내용 유지
+      const rows = await sbGet(table + '?select=title,link,posted_on&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
       list.innerHTML = '';
-      rows.forEach(function(row){
+      rows.forEach(function(r){
         const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = row.link || '#';
-        a.textContent = row.title || '';
-        const dt = document.createElement('span');
-        dt.className = 'dt';
-        dt.textContent = fmtDate(row.posted_on);
+        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
+        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = fmtDate(r.posted_on);
         li.appendChild(a); li.appendChild(dt);
         list.appendChild(li);
       });
-    }catch(err){
-      console.error('공지사항 불러오기 실패:', err);   // 실패 시 기존 정적 목록 유지(안전)
-    }
+    }catch(e){ console.error(table + ' 로드 실패:', e); }
+  }
+
+  // 지원금 — 제목 + 마감일(텍스트)
+  async function loadFunding(){
+    const list = document.getElementById('funding-list');
+    if(!list) return;
+    try{
+      const rows = await sbGet('funding?select=title,link,deadline&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      list.innerHTML = '';
+      rows.forEach(function(r){
+        const li = document.createElement('li');
+        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
+        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.deadline || '';
+        li.appendChild(a); li.appendChild(dt);
+        list.appendChild(li);
+      });
+    }catch(e){ console.error('funding 로드 실패:', e); }
+  }
+
+  // 악보·자료 — 아이콘 + 제목
+  const DL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>';
+  async function loadScores(){
+    const list = document.getElementById('scores-list');
+    if(!list) return;
+    try{
+      const rows = await sbGet('scores?select=title,link&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      list.innerHTML = '';
+      rows.forEach(function(r){
+        const li = document.createElement('li');
+        const icon = document.createElement('span'); icon.className = 'icon'; icon.innerHTML = DL_ICON;
+        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
+        li.appendChild(icon); li.appendChild(a);
+        list.appendChild(li);
+      });
+    }catch(e){ console.error('scores 로드 실패:', e); }
+  }
+
+  function init(){
+    loadDateList('notice-list', 'notices');
+    loadDateList('concours-list', 'concours');
+    loadFunding();
+    loadScores();
   }
 
   if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', loadNotices);
-  } else { loadNotices(); }
+    document.addEventListener('DOMContentLoaded', init);
+  } else { init(); }
 })();
 </script>
 </body>
