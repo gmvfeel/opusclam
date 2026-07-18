@@ -61,6 +61,12 @@
   .util .left a{margin-right:18px;color:rgba(255,255,255,.34);font-family:var(--serif);letter-spacing:.05em;font-size:8px;font-weight:600;transition:color .2s ease}
   .util .right a{color:rgba(255,255,255,.34);letter-spacing:.04em;font-size:8px;font-weight:600;transition:color .2s ease}
   .util a:hover{color:#fff}
+  @media(max-width:880px){
+    .util .wrap{overflow:hidden}
+    .util .left{white-space:nowrap;min-width:0;overflow:hidden}
+    .util .left a{margin-right:9px}
+    .util .right{white-space:nowrap;flex:0 0 auto}
+  }
 
   /* ---------- header ---------- */
   .site-header{position:fixed;top:0;left:0;right:0;z-index:60;transition:background .35s ease}
@@ -280,11 +286,11 @@
   /* ---------- main grid ---------- */
   .board{padding:44px 0 10px}
   .board .wrap{display:grid;grid-template-columns:1fr 350px;gap:34px}
-  .board-main{display:grid;grid-template-columns:1fr 1fr;column-gap:34px;grid-template-areas:'c1 c2' 'ad ad'}
-  .col-1{grid-area:c1}
-  .col-2{grid-area:c2}
+  .board-main{display:grid;min-width:0;grid-template-columns:1fr 1fr;column-gap:34px;grid-template-areas:'c1 c2' 'ad ad'}
+  .col-1{grid-area:c1;min-width:0}
+  .col-2{grid-area:c2;min-width:0}
   .board-ad{grid-area:ad;align-self:stretch}
-  @media(max-width:1080px){.board .wrap{grid-template-columns:1fr}.side{grid-column:1/-1}}
+  @media(max-width:1080px){.board .wrap{grid-template-columns:1fr}.side{grid-column:1/-1;min-width:0}}
 
   .sec-head{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:9px;margin-bottom:16px}
   .sec-head .t{display:flex;align-items:baseline;gap:9px}
@@ -305,7 +311,7 @@
   ul.list{margin-top:4px}
   ul.list li{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
   ul.list li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--violet-2);flex:0 0 4px}
-  ul.list li a{flex:1;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
+  ul.list li a{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
   ul.list li a:hover{color:var(--link-hover)}
   ul.list li .dt{font-size:11.5px;color:var(--text-3);white-space:nowrap}
 
@@ -354,7 +360,7 @@
 
   .side .sec-head{border-bottom-width:2px}
   .fund li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
-  .fund li a{flex:1;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
+  .fund li a{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
   .fund li a:hover{color:var(--link-hover)}
   .fund li .dt{font-size:10.5px;color:var(--text-3);white-space:nowrap}
 
@@ -373,6 +379,7 @@
   /* ---------- lower triple ---------- */
   .lower{padding:20px 0 44px}
   .lower .wrap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:34px}
+  .lower .wrap>*{min-width:0}
   @media(max-width:1080px){.lower .wrap{grid-template-columns:1fr 1fr}}
 
   .tabs{display:flex;gap:0;border-bottom:2px solid var(--ink);margin-bottom:14px}
@@ -390,7 +397,7 @@
   .grid-region a:hover{background:var(--violet-2);color:#fff;border-color:var(--violet-2)}
 
   .dl li{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);font-size:13px}
-  .dl li a{flex:1;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
+  .dl li a{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
   .dl li .icon{width:28px;height:28px;border-radius:6px;background:var(--paper-3);display:grid;place-items:center;color:var(--violet-2)}
   .dl li .icon svg{width:15px;height:15px}
   .dl li a:hover{color:var(--link-hover)}
@@ -1330,6 +1337,7 @@
   if(!sh||!hero)return;
   var hovering=false;
   function update(){
+    if(window.innerWidth<=880){ sh.classList.add('solid'); return; }
     var trigger=hero.offsetHeight-sh.offsetHeight-8;
     var past=window.scrollY>Math.max(trigger,60);
     if(hovering||past){sh.classList.add('solid');}
