@@ -176,7 +176,7 @@
   .hero .meta{margin-top:26px;display:flex;gap:22px;font-size:13px;color:#b9b2d4}
   .hero .meta b{color:#fff;font-weight:600}
   /* waveform signature */
-  .wave{position:absolute;right:0;bottom:0;top:0;width:74%;z-index:1;opacity:.9;
+  .wave{position:absolute;right:0;bottom:0;top:0;width:74%;z-index:1;opacity:.9;transform:translateY(50px);
         -webkit-mask-image:linear-gradient(90deg,transparent,#000 36%,#000 64%,transparent);mask-image:linear-gradient(90deg,transparent,#000 36%,#000 64%,transparent)}
   .wave svg{width:100%;height:100%;display:block}
   .scene{position:absolute;inset:0;opacity:0;transition:opacity 1.4s ease}
@@ -185,10 +185,10 @@
   @keyframes eq{0%,100%{transform:scaleY(.93)}50%{transform:scaleY(1.03)}}
   .scene-eq rect{transform-box:fill-box;transform-origin:center;animation:eq 4.2s ease-in-out infinite;will-change:transform}
   /* scene 2 · flowing waves */
-  @keyframes flow{from{transform:translateX(0)}to{transform:translateX(-300px)}}
+  @keyframes flow{from{transform:translateX(0)}to{transform:translateX(var(--flow-shift,-300px))}}
   .scene-flow path{will-change:transform;animation:flow linear infinite}
   /* scene 3 · dot grid wave */
-  @keyframes gridwave{0%,100%{transform:translateY(-5px);opacity:.28}50%{transform:translateY(5px);opacity:.7}}
+  @keyframes gridwave{0%,100%{transform:translateY(5px) scale(.5);opacity:.14}50%{transform:translateY(-7px) scale(1.3);opacity:.85}}
   .scene-rings circle{transform-box:fill-box;transform-origin:center;will-change:transform,opacity;animation:gridwave ease-in-out infinite}
   /* scene 4 · floating particles */
   /* scene 4 · network constellation */
@@ -196,13 +196,22 @@
   @keyframes netline{0%,100%{opacity:.07}50%{opacity:.3}}
   .scene-net line{stroke:#c06fa2;stroke-width:.7;fill:none;will-change:opacity;animation:netline ease-in-out infinite}
   .scene-net circle{transform-box:fill-box;transform-origin:center;will-change:transform,opacity;animation:netnode ease-in-out infinite}
-  .hero-dots{position:absolute;right:26px;bottom:22px;z-index:3;display:flex;gap:9px}
+  .hero-dots{position:absolute;right:26px;bottom:52px;z-index:3;display:flex;gap:9px}
   .hero-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
   .hero-dots i.on{background:#FFD400;width:22px;border-radius:4px}
 
   /* ---------- triple banner ---------- */
   .triple{position:relative;z-index:1;background:var(--band-grad);overflow:hidden;box-shadow:0 16px 30px -10px rgba(0,0,0,.5)}
-  .wxn-eyebrow{position:relative;z-index:3;text-align:center;padding:16px 20px 5px;font-family:var(--serif);font-size:8px;font-weight:600;letter-spacing:.16em;color:rgba(255,255,255,.5)}
+  .wxn-eyebrow{position:relative;z-index:3;height:30px;margin-top:6px;overflow:hidden}
+  .wxn-run{position:absolute;top:50%;left:0;white-space:nowrap;font-family:var(--serif);font-size:8px;font-weight:600;letter-spacing:.16em;color:rgba(255,255,255,.5);animation:wxnMove 120s linear infinite}
+  @keyframes wxnMove{
+    0%{left:0;transform:translate(0,-50%)}
+    50%{left:100%;transform:translate(-100%,-50%)}
+    100%{left:0;transform:translate(0,-50%)}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .wxn-run{animation:none;left:50%;transform:translate(-50%,-50%)}
+  }
   .tb-viewport{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 28%,#000 72%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 28%,#000 72%,transparent 100%)}
   .tb-track{display:flex;will-change:transform}
   .tb{flex:0 0 auto;width:clamp(260px,25vw,360px);padding:30px 26px;color:#fff;position:relative;display:flex;align-items:center;gap:18px;min-height:132px;transition:.25s;overflow:hidden;border-right:1px solid rgba(255,255,255,.14)}
@@ -336,7 +345,7 @@
   .pr-slide .dots i.on{background:var(--violet-2);width:18px;border-radius:4px}
 
   .ticket{background:linear-gradient(120deg,#3a2f5e,#5a4a7a);color:#fff;border-radius:10px;padding:22px 20px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between}
-  .ticket .en-s{font-family:var(--display);font-weight:800;font-size:26px;line-height:1;letter-spacing:.02em}
+  .ticket .en-s{font-family:var(--display);font-weight:700;font-size:17px;line-height:1;letter-spacing:.02em}
   .ticket h4{font-size:14px;margin:8px 0 4px}
   .ticket p{font-size:11.5px;color:#d3ccea}
   .ticket .tk-ic{width:64px;height:64px;border-radius:10px;background:rgba(255,255,255,.14);display:grid;place-items:center}
@@ -846,7 +855,7 @@
       </div>
     </div>
   </div>
-  <div class="wxn-eyebrow">ALLIANCE WXN</div>
+  <div class="wxn-eyebrow"><span class="wxn-run">ALLIANCE WXN</span></div>
   <div class="hero-dots"><i class="on"></i><i></i><i></i></div>
 </section>
 
@@ -926,7 +935,7 @@
     <div class="col-1">
       <div class="col-block">
         <div class="sec-head"><div class="t"><span class="en-s">Notice</span><span class="ko">공지사항</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <article class="lead">
+        <article class="lead" id="card-notice-lead">
           <div class="thumb ph"></div>
           <h4>[15명 한정 도슨트전시+공연초청] 2015 HPF 스페이스프로젝트</h4>
           <p>안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다. 지금 2015년 11월 18일(수) 오후 4시 공연 전 부대행사인 도슨트 투어부터 공연까지 관람하실 수 있도록…</p>
@@ -941,7 +950,7 @@
 
       <div class="col-block">
         <div class="sec-head"><div class="t"><span class="en-s">Concours</span><span class="ko">콩쿨정보</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <div class="split">
+        <div class="split" id="card-concours-lead">
           <div class="thumb ph"></div>
           <div class="body">
             <h4>2016 대한민국 신인음악콩쿠르</h4>
@@ -1018,7 +1027,7 @@
     <!-- sidebar -->
     <aside class="side">
       <div class="sec-head"><div class="t"><span class="en-s">Concert PR</span></div></div>
-      <div class="card pr-slide">
+      <div class="card pr-slide" id="concert-pr">
         <div class="img ph dark"></div>
         <div class="cap">
           <div class="en-s">Outdoor Concert · 2013</div>
@@ -1058,6 +1067,7 @@
       </div>
 
       <div class="sec-head"><div class="t"><span class="en-s">Self PR</span></div></div>
+      <div id="artists-list">
       <div class="artist">
         <div class="ava ph"></div>
         <div>
@@ -1073,6 +1083,7 @@
           <h4>정남일</h4>
           <p>매너스음대졸업 · 광원디/에워학교졸업 · KBS교향악단 정기연주회 협연</p>
         </div>
+      </div>
       </div>
     </aside>
   </div>
@@ -1205,14 +1216,19 @@
   /* scene 2 · flowing sine lines */
   var fl=document.querySelector('.scene-flow g');
   if(fl){
-    function sine(base,amp,wl,ph){
+    var TWO_PI=Math.PI*2;
+    function sine(base,amp,wl,ph,xmax){
       var d='M0 '+base;
-      for(var x=0;x<=W*2;x+=18){d+=' L'+x+' '+(base+Math.sin(x/wl+ph)*amp).toFixed(1);}
+      for(var x=0;x<=xmax;x+=16){d+=' L'+x+' '+(base+Math.sin(x/wl+ph)*amp).toFixed(1);}
       return d;
     }
     [[86,18,82],[112,24,92],[140,30,110],[166,20,102],[192,26,120],[218,22,114],[244,28,132],[270,20,100]].forEach(function(c,k){
+      var wl=c[2];
+      var period=TWO_PI*wl;            // 한 파장 = 이동 거리 (이음매 완벽)
+      var xmax=W+period+40;            // 화면폭 + 한 파장 + 여유 (빈칸 방지)
       var p=el('path');
-      p.setAttribute('d',sine(c[0],c[1],c[2],k*1.4));
+      p.setAttribute('d',sine(c[0],c[1],wl,k*1.4,xmax));
+      p.style.setProperty('--flow-shift',(-period).toFixed(1)+'px');
       p.style.animationDuration=(16+k*5)+'s';
       p.style.opacity=(0.6-k*0.09).toFixed(2);
       fl.appendChild(p);
@@ -1223,14 +1239,16 @@
   var gd=document.querySelector('.scene-rings g');
   if(gd){
     var cols=24, rows=10, sx=W/cols, sy=H/rows;
+    var cx0=(cols-1)/2, cy0=(rows-1)/2;
     for(var cc=0;cc<cols;cc++){
       for(var rr=0;rr<rows;rr++){
         var dot=el('circle');
         dot.setAttribute('cx',(cc*sx+sx/2).toFixed(1));
         dot.setAttribute('cy',(rr*sy+sy/2).toFixed(1));
         dot.setAttribute('r','2.4');
-        dot.style.animationDuration='3.4s';
-        dot.style.animationDelay=(-(cc*0.16+rr*0.12)).toFixed(2)+'s';
+        dot.style.animationDuration='2.8s';
+        var dist=Math.sqrt((cc-cx0)*(cc-cx0)+(rr-cy0)*(rr-cy0));
+        dot.style.animationDelay=(-dist*0.3).toFixed(2)+'s';
         gd.appendChild(dot);
       }
     }
@@ -1579,6 +1597,47 @@ document.querySelectorAll('.tabs').forEach(function(t){
     }catch(e){ console.error(slot + ' 로드 실패:', e); }
   }
 
+  // Self PR 연주자 목록
+  async function loadArtists(){
+    const box = document.getElementById('artists-list');
+    if(!box) return;
+    try{
+      const rows = await sbGet('artists?select=name,role,bio,image_url&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      box.innerHTML = '';
+      rows.forEach(function(r, i){
+        const wrap = document.createElement('div');
+        wrap.className = 'artist';
+        if(i === rows.length - 1) wrap.style.borderBottom = '0';
+        const ava = document.createElement('div');
+        ava.className = 'ava' + (r.image_url ? '' : ' ph');
+        if(r.image_url){ ava.style.backgroundImage = 'url("' + r.image_url + '")'; ava.style.backgroundSize = 'cover'; ava.style.backgroundPosition = 'center'; }
+        const info = document.createElement('div');
+        const role = document.createElement('div'); role.className = 'role'; role.textContent = r.role || '';
+        const h = document.createElement('h4'); h.textContent = r.name || '';
+        const bio = document.createElement('p'); bio.textContent = r.bio || '';
+        info.appendChild(role); info.appendChild(h); info.appendChild(bio);
+        wrap.appendChild(ava); wrap.appendChild(info);
+        box.appendChild(wrap);
+      });
+    }catch(e){ console.error('artists 로드 실패:', e); }
+  }
+
+  // 한여름밤 배너(Concert PR)
+  async function loadConcertPR(){
+    const card = document.getElementById('concert-pr');
+    if(!card) return;
+    try{
+      const rows = await sbGet('features?slot=eq.concert_pr&select=label,title,summary,image_url&order=sort_order.asc,created_at.desc&limit=1');
+      if(!Array.isArray(rows) || !rows.length) return;
+      const r = rows[0];
+      const lbl = card.querySelector('.en-s'); if(lbl && r.label != null) lbl.textContent = r.label;
+      const h = card.querySelector('h4'); if(h) h.textContent = r.title || '';
+      const p = card.querySelector('p'); if(p && r.summary != null) p.textContent = r.summary;
+      if(r.image_url){ const img = card.querySelector('.img'); if(img){ img.classList.remove('ph'); img.style.backgroundImage = 'url("' + r.image_url + '")'; img.style.backgroundSize = 'cover'; img.style.backgroundPosition = 'center'; } }
+    }catch(e){ console.error('concert_pr 로드 실패:', e); }
+  }
+
   function init(){
     loadDateList('notice-list', 'notices');
     loadDateList('concours-list', 'concours');
@@ -1588,6 +1647,10 @@ document.querySelectorAll('.tabs').forEach(function(t){
     loadFeature('card-music-school', 'music_school');
     loadFeature('card-gallery', 'gallery');
     loadFeature('card-contemporary', 'contemporary');
+    loadFeature('card-notice-lead', 'notice_lead');
+    loadFeature('card-concours-lead', 'concours_lead');
+    loadArtists();
+    loadConcertPR();
   }
 
   if(document.readyState === 'loading'){
