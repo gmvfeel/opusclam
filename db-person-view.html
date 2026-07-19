@@ -2167,5 +2167,54 @@ if('serviceWorker' in navigator){
   upd();
 })();
 </script>
+<script>
+/* 인물 뷰: ?id 로 Supabase에서 해당 인물 로드 (id 없으면 기존 샘플 유지) */
+(function(){
+  var URL='https://ptdxzxkgddvkusamkiol.supabase.co';
+  var KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var H={apikey:KEY,Authorization:'Bearer '+KEY};
+  var id=new URLSearchParams(location.search).get('id');
+  if(!id) return;
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function fact(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
+  fetch(URL+'/rest/v1/persons?select=*&id=eq.'+encodeURIComponent(id),{headers:H})
+   .then(function(r){return r.json();})
+   .then(function(a){
+     if(!a||!a.length) return;
+     var p=a[0];
+     var nm=(p.name_ko||'').trim();
+     var por=document.querySelector('.pv-portrait span'); if(por) por.textContent=nm?nm[0]:'?';
+     var h=document.querySelector('.pv-name'); if(h) h.textContent=nm;
+     var tg=document.querySelector('.pv-tags'); if(tg){
+       var html=(p.field||'').split(',').map(function(t){t=t.trim();return t?'<span class="tag">'+esc(t)+'</span>':'';}).join('');
+       if(p.is_oc) html+='<span class="oc-badge">OC</span>';
+       tg.innerHTML=html;
+     }
+     var natv=esc(p.nationality||'')+(p.nat_code?' <span class="nat-code">('+esc(p.nat_code)+')</span>':'');
+     var erav=esc(p.era_name||'')+(p.era_yr?' · '+esc(p.era_yr):'');
+     var fc=document.querySelector('.pv-facts'); if(fc){
+       fc.innerHTML=fact('국적',natv)+fact('생몰',esc(p.life||''))+fact('사조',erav)+fact('소속',esc(p.affiliation||''));
+     }
+     var desc=(p.description&&p.description.trim())?p.description.trim():((p.era_name?p.era_name+' 시대의 ':'')+(p.field?p.field.split(',')[0].trim()+' ':'')+'음악가.');
+     var lead=document.querySelector('.pv-lead'); if(lead) lead.textContent=desc;
+     var bio=document.querySelector('.pv-prose'); if(bio){
+       bio.innerHTML='<p>'+esc(desc)+'</p>'+((p.description&&p.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
+     }
+     var wl=document.querySelector('ul.pv-worklist'); if(wl && p.works){
+       wl.innerHTML=p.works.split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
+     }
+     var dl=document.querySelector('dl.pv-deflist'); if(dl){
+       dl.innerHTML=fact('국적',esc(p.nationality||'')+(p.nat_code?' ('+esc(p.nat_code)+')':''))
+         +fact('생몰',esc(p.life||''))+fact('사조',erav)
+         +fact('소속',esc(p.affiliation||''))+fact('출신학교',esc(p.school||''));
+     }
+     // 아직 데이터 없는 섹션 숨김: 관련 인물
+     var ppl=document.querySelector('.pv-people'); if(ppl){var sec=ppl.closest('.pv-sec'); if(sec) sec.style.display='none';}
+     document.title=nm+' · 인물DB · OPUSCLAM.COM';
+     var cr=document.querySelector('.pdb-crumb .on'); if(cr) cr.textContent=nm;
+   })
+   .catch(function(e){console.error('person view 로드 실패:',e);});
+})();
+</script>
 </body>
 </html>
