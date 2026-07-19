@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OPUSCLAM.COM — Classic Speciality</title>
+<title>진은숙 · 현대음악DB · OPUSCLAM.COM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0a0d24">
 <link rel="apple-touch-icon" href="/icon-192.png">
@@ -108,6 +108,8 @@
   .dropdown a{position:relative;font-size:13px;color:#9a9baa;padding:5px 18px;white-space:nowrap;letter-spacing:-.01em;transition:color .15s}
   .dropdown a:not(:last-child)::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--line-2)}
   .dropdown a:hover{color:#363845}
+  .dropdown a.active,.dropdown a.active:hover{color:var(--orange);font-weight:700}
+  .fm-col a.active{color:var(--orange);font-weight:700}
   .mast-tools{display:flex;align-items:center;gap:12px;flex:0 0 auto}
   .mast-tools a{white-space:nowrap}
   .mast-tools .search{width:34px;height:34px;border:1px solid var(--line-2);border-radius:50%;display:grid;place-items:center;color:var(--text-2);transition:.2s}
@@ -596,6 +598,390 @@
     html[data-theme="dark"] .nav-overlay{background:rgba(0,0,0,.6)}
   }
 
+
+  /* ================= 인물DB (data-centric, premium) ================= */
+  .pdb{padding:158px 0 70px}
+  .pdb-inner{max-width:1360px;margin:0 auto;padding:0 24px}
+
+  .pdb-crumb{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text-3);margin-bottom:16px}
+  .pdb-crumb a{color:var(--text-3);text-decoration:none;transition:color .15s ease}
+  .pdb-crumb a:hover{color:var(--text)}
+  .pdb-crumb .on{color:var(--text-2)}
+  /* 상시 노출 서브메뉴 바 (현재 페이지 하이라이트) */
+  .pdb-subnav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:34px}
+  .pdb-subnav a{font-size:13px;color:var(--text-2);padding:8px 17px;border:1px solid var(--line);border-radius:999px;text-decoration:none;white-space:nowrap;transition:border-color .15s ease,color .15s ease,background .15s ease}
+  .pdb-subnav a:hover{border-color:var(--text-3);color:var(--text)}
+  .pdb-subnav a.active{background:var(--violet);border-color:var(--violet);color:#fff;font-weight:700}
+
+  .pdb-titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+  .pdb-eyebrow{font-family:var(--serif);letter-spacing:.32em;font-size:11px;color:var(--text-3);text-transform:uppercase}
+  .pdb-title{font-family:var(--display);font-size:46px;font-weight:800;letter-spacing:-.015em;line-height:1;color:var(--text);margin-top:10px}
+  .pdb-lead{color:var(--text-2);font-size:14px;line-height:1.65;margin-top:18px;max-width:640px}
+  .pdb-reg{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:0;background:var(--orange);color:#fff;text-decoration:none;font-size:13px;font-weight:700;padding:11px 20px;border-radius:9px;box-shadow:0 8px 20px -8px rgba(236,122,28,.55);transition:background .2s ease,box-shadow .2s ease,transform .15s ease}
+  .pdb-reg:hover{background:#d86c12;box-shadow:0 10px 24px -8px rgba(236,122,28,.62);transform:translateY(-1px)}
+  .pdb-reg .plus{color:#fff;font-weight:800;font-size:15px;line-height:1}
+
+  .pdb-toolbar{display:flex;align-items:center;gap:12px;margin-top:44px;flex-wrap:wrap}
+  .pdb-toolbar .pdb-reg{height:49px;padding:0 20px;margin-left:auto}
+  .pdb-search{flex:1;min-width:250px;display:flex;align-items:center;gap:11px;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:0 15px;transition:border-color .2s ease}
+  .pdb-search:focus-within{border-color:var(--text-3)}
+  .pdb-search svg{width:17px;height:17px;color:var(--text-3);flex:0 0 auto}
+  .pdb-search input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--text);font-family:inherit;font-size:14px;padding:14px 0}
+  .pdb-search input::placeholder{color:var(--text-3)}
+  .pdb-selects{display:flex;gap:8px;flex-wrap:wrap}
+  .pdb-selects select{background:var(--paper);border:1px solid var(--line);border-radius:11px;color:var(--text);font-family:inherit;font-size:13px;padding:0 16px;height:49px;cursor:pointer;transition:border-color .2s ease}
+  .pdb-selects select:hover{border-color:var(--text-3)}
+  .pdb-selects select:focus,.pdb-selects select:focus-visible{outline:none;border-color:var(--text-3)}
+
+  .pdb-meta{display:flex;align-items:center;justify-content:space-between;margin-top:30px;padding:0 4px 14px;border-bottom:1px solid var(--line)}
+  .pdb-count{font-size:24px;color:var(--text);font-weight:400}
+  .pdb-count b{color:var(--text);font-weight:400;font-size:28px}
+  .pdb-legend{font-size:12px;color:var(--text-3)}
+  .pdb-meta-right{display:flex;align-items:center;gap:18px}
+  .pdb-fontsize{display:flex;align-items:center;gap:4px}
+  .pdb-fontsize .fs-label{font-size:12px;color:var(--text-3);margin-right:3px}
+  .pdb-fontsize .fs-btn{width:30px;height:30px;padding:0;border:1px solid var(--line-2);background:var(--paper);border-radius:8px;color:var(--text-2);cursor:pointer;font-family:inherit;line-height:1;display:grid;place-items:center;transition:border-color .15s ease,color .15s ease,background .15s ease}
+  .pdb-fontsize .fs-btn:hover{border-color:var(--text-3);color:var(--text)}
+  .pdb-fontsize .fs-btn[data-fs=down]{font-size:11px}
+  .pdb-fontsize .fs-btn[data-fs=reset]{font-size:13px}
+  .pdb-fontsize .fs-btn[data-fs=up]{font-size:15px}
+  @media(max-width:520px){.pdb-fontsize .fs-label{display:none}.pdb-meta-right{gap:10px}}
+  .star{color:#C9A94E;font-style:normal;font-size:.92em}
+
+  .pdb-tablewrap{overflow-x:hidden}
+  .pdb-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:var(--tbl-fs,13px)}
+  /* 컬럼 폭(기본) */
+  .pdb-table th.c-no{width:3.5%}
+  .pdb-table th.c-ava{width:4.5%}
+  .pdb-table th.c-name{width:11%}
+  .pdb-table th.c-field{width:13%}
+  .pdb-table th.c-nation{width:9%}
+  .pdb-table th.c-life{width:7.5%}
+  .pdb-table th.c-era{width:7%}
+  .pdb-table th.c-work{width:15%}
+  .pdb-table th.c-org{width:12%}
+  .pdb-table th.c-school{width:8.5%}
+  .pdb-table th.c-link{width:9%}
+  /* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
+  @media(max-width:840px){
+    .pdb-table .c-no,.pdb-table .c-ava,.pdb-table .c-era,.pdb-table .c-school{display:none}
+    .pdb-table th.c-no,.pdb-table th.c-ava,.pdb-table th.c-era,.pdb-table th.c-school{width:0}
+    .pdb-table th.c-name{width:14%}
+    .pdb-table th.c-field{width:16%}
+    .pdb-table th.c-nation{width:11%}
+    .pdb-table th.c-life{width:9%}
+    .pdb-table th.c-work{width:24%}
+    .pdb-table th.c-org{width:15%}
+    .pdb-table th.c-link{width:11%}
+  }
+  /* ===== 휴대폰: 핵심(이름·분야·국적·대표작·링크)만 ===== */
+  @media(max-width:520px){
+    .pdb-table .c-life,.pdb-table .c-org{display:none}
+    .pdb-table th.c-life,.pdb-table th.c-org{width:0}
+    .pdb-table th.c-name{width:19%}
+    .pdb-table th.c-field{width:20%}
+    .pdb-table th.c-nation{width:17%}
+    .pdb-table th.c-work{width:22%}
+    .pdb-table th.c-link{width:22%}
+    .pdb-table th,.pdb-table td{padding-left:6px;padding-right:6px}
+    .pdb-table .c-field{white-space:normal}
+    .pdb-table .nat-code{display:none}
+    .pdb-table .c-link .lk{width:22px;height:22px;margin-right:2px}
+    .pdb-table .c-link .lk svg{width:12px;height:12px}
+  }
+  .pdb-table th{text-align:left;font-size:1.15em;letter-spacing:0;text-transform:none;color:var(--text-2);font-weight:700;padding:20px 9px;border-top:3px solid var(--text);border-bottom:2px solid var(--text)}
+  .pdb-table td{padding:14px 9px;border-top:1px solid var(--line);color:var(--text-2);font-size:1em;white-space:nowrap;vertical-align:middle;overflow:hidden}
+  .pdb-table tbody tr{transition:background .15s ease}
+
+  .pdb-table .c-no{width:64px;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .pdb-table .c-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+  .pdb-table .c-name a{color:var(--text);font-weight:600;font-size:1em;text-decoration:none;letter-spacing:-.01em;transition:color .15s ease}
+
+  .pdb-table .c-field{width:112px}
+  .pdb-table .tag{display:inline-block;font-size:.92em;color:var(--text-2);border:1px solid var(--line-2);border-radius:20px;padding:3px 11px;white-space:nowrap}
+  .pdb-table .c-birth{width:130px;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .pdb-table .c-school{color:var(--text-3)}
+
+  /* 표 하단 구분선 */
+  .pdb-divider{border-top:1px solid var(--line-2);margin-top:48px}
+  .pdb-pager{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:60px}
+  .pdb-pager .pg-nums{display:flex;gap:4px}
+  .pdb-pager .pg-nums a{min-width:38px;height:38px;display:grid;place-items:center;border-radius:9px;font-size:13px;color:var(--text-2);text-decoration:none;transition:background .15s ease,color .15s ease}
+  .pdb-pager .pg-nums a:hover{background:var(--paper-2);color:var(--text)}
+  .pdb-pager .pg-nums a.on{background:var(--text);color:var(--paper);font-weight:700}
+  .pdb-pager .pg-nav{font-size:13px;color:var(--text-2);text-decoration:none;padding:8px 10px;transition:color .15s ease}
+  .pdb-pager .pg-nav:hover{color:var(--text)}
+
+  /* ================= 인물 상세(뷰) ================= */
+  .pv{max-width:940px;margin:0 auto;font-size:var(--pv-fs,14px)}
+  .pv-utility{margin:32px 0 24px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+  .pv-topline{border-top:3px solid var(--text);margin-top:30px}
+  .pv-tools{display:flex;gap:8px;flex-wrap:wrap}
+  .pv-tool{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);border:1px solid var(--line-2);background:var(--paper);border-radius:8px;padding:7px 12px;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,background .15s}
+  .pv-tool:hover{border-color:var(--text-3);color:var(--text)}
+  .pv-tool svg{width:15px;height:15px}
+  .pv-tool[aria-pressed="true"]{color:var(--violet-2);border-color:var(--violet-2);background:rgba(124,99,176,.09)}
+  .pv-tool[aria-pressed="true"] svg{fill:var(--violet-2);stroke:var(--violet-2)}
+  .pv-track .pv-card{flex:0 0 auto;width:280px}
+  .pv-hero{display:flex;gap:34px;align-items:flex-start;padding-bottom:34px;border-bottom:1px solid var(--line)}
+  .pv-portrait{flex:0 0 auto;width:132px;height:132px;border-radius:18px;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:52px;color:var(--text-3);overflow:hidden}
+  .pv-headinfo{flex:1;min-width:0}
+  .pv-eyebrow{font-family:var(--serif);letter-spacing:.32em;font-size:11px;color:var(--text-3);text-transform:uppercase}
+  .pv-name{font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:-.015em;line-height:1.05;color:var(--text);margin-top:8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .pv-name-sub{font-family:var(--serif);font-size:16px;font-weight:400;color:var(--text-3);letter-spacing:0}
+  .pv-tags{display:flex;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+  .pv-tags .tag{display:inline-block;font-size:12px;color:var(--text-2);border:1px solid var(--line-2);border-radius:20px;padding:3px 12px}
+  .pv-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 28px;margin-top:20px}
+  .pv-facts>div{display:flex;gap:12px;font-size:13.5px}
+  .pv-facts dt{flex:0 0 auto;white-space:nowrap;color:var(--text-3)}
+  .pv-facts dd{color:var(--text);margin:0}
+  .pv-facts .nat-code{font-size:11px;opacity:.6}
+  .pv-actions{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap}
+  .pv-link{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--text-2);border:1px solid var(--line-2);border-radius:9px;padding:9px 15px;text-decoration:none;transition:border-color .15s,color .15s}
+  .pv-link:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  .pv-link svg{width:15px;height:15px}
+  .pv-lead{margin-top:30px;font-size:1.05em;line-height:1.75;color:var(--text-2)}
+  /* 국/영문 병기 */
+  .pv-en{color:var(--text-3);font-weight:400}
+  .pv-tags .tag-en{color:var(--text-3);font-size:.82em;font-weight:400;margin-left:3px}
+  .pv-h-en{font-family:var(--serif);font-size:13px;font-weight:400;color:var(--text-3);letter-spacing:.01em;margin-left:9px}
+  .pv-lead-en{display:block;margin-top:11px;font-size:.9em;line-height:1.7;color:var(--text-3)}
+  .pv-prose .pv-prose-en{color:var(--text-3);font-size:.95em}
+  .pv-worklist em{font-style:normal;color:var(--text-3);font-weight:400;font-size:.82em;margin-left:5px}
+  .pv-deflist dd .pv-en{display:block;font-size:.85em;margin-top:2px}
+  .pv-schoollink{color:var(--text);text-decoration:none;transition:color .15s}
+  .pv-schoolgo{display:inline-flex;align-items:center;gap:3px;margin:0 0 0 8px;font-size:11px;color:var(--violet-2);background:rgba(124,99,176,.1);border:1px solid rgba(124,99,176,.32);border-radius:20px;padding:2px 9px;white-space:nowrap;vertical-align:middle;font-weight:600;transition:background .15s,color .15s,border-color .15s}
+  .pv-schoolgo svg{width:11px;height:11px}
+  .pv-schoollink:hover{color:var(--violet-2)}
+  .pv-schoollink:hover .pv-schoolgo{background:var(--violet-2);color:#fff;border-color:var(--violet-2)}
+  .pv-schoollink:hover{color:var(--violet-2);border-color:var(--violet-2)}
+  .pv-sec{margin-top:46px}
+  .pv-sechead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+  .pv-h{font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--text);padding-left:12px;border-left:3px solid var(--violet-2);line-height:1.15;margin:0 0 18px}
+  .pv-sechead .pv-h{margin:0}
+  .pv-auto{font-size:11px;letter-spacing:.05em;color:var(--text-3);border:1px dashed var(--line-2);border-radius:20px;padding:4px 11px;white-space:nowrap}
+  .pv-prose p{font-size:1em;line-height:1.85;color:var(--text-2);margin:0 0 14px}
+  .pv-prose p:last-child{margin-bottom:0}
+  .pv-worklist{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
+  .pv-worklist li{font-size:1em;color:var(--text);padding:11px 0 11px 20px;border-bottom:1px solid var(--line);position:relative}
+  .pv-worklist li::before{content:"";position:absolute;left:2px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:var(--violet-2)}
+  .pv-worklist li span{color:var(--text-3);font-size:.82em;margin-left:6px}
+  .pv-metagrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px}
+  .pv-metagrid>div{display:flex;flex-direction:column;gap:5px;padding:16px 18px;background:var(--paper-2);border:1px solid var(--line);border-radius:12px}
+  .pv-metagrid dt{font-size:12px;color:var(--text-3)}
+  .pv-metagrid dd{margin:0;font-size:1em;color:var(--text)}
+  .pv-gallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .pv-tile{aspect-ratio:1/1;border:1px solid var(--line);border-radius:12px;display:grid;place-items:center;color:var(--text-3);background:repeating-linear-gradient(45deg,#f5f3fa 0 14px,#efedf7 14px 28px)}
+  .pv-tile svg{width:26px;height:26px}
+  .pv-media{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .pv-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--paper);text-decoration:none;transition:border-color .15s,transform .15s,box-shadow .2s;display:flex;flex-direction:column}
+  .pv-card:hover{border-color:var(--violet-2);transform:translateY(-2px);box-shadow:0 14px 30px -16px rgba(30,20,60,.28)}
+  .pv-thumb{aspect-ratio:16/10;display:grid;place-items:center;color:var(--violet-2);background:repeating-linear-gradient(45deg,#f5f3fa 0 14px,#efedf7 14px 28px);border-bottom:1px solid var(--line)}
+  .pv-thumb svg{width:34px;height:34px}
+  .pv-cardbody{padding:13px 15px}
+  .pv-ct{display:block;font-size:13.5px;color:var(--text);font-weight:600;line-height:1.4}
+  .pv-cs{display:block;font-size:12px;color:var(--text-3);margin-top:3px}
+  .pv-linkcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .pv-lc{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--text);transition:border-color .15s}
+  .pv-lc:hover{border-color:var(--violet-2)}
+  .pv-lcicon{width:34px;height:34px;border-radius:9px;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;color:var(--violet-2);flex:0 0 auto}
+  .pv-lcicon svg{width:16px;height:16px}
+  .pv-lc b{font-size:13.5px;font-weight:600}
+  .pv-lc span span{display:block;font-size:12px;color:var(--text-3);margin-top:2px;font-weight:400}
+  .pv-people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .pv-person{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;text-decoration:none;transition:border-color .15s,transform .15s}
+  .pv-person:hover{border-color:var(--violet-2);transform:translateY(-2px)}
+  .pv-person .ava{width:44px;height:44px;border-radius:50%;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--display);font-weight:700;color:var(--text-3);flex:0 0 auto}
+  .pv-person .pn{display:block;font-size:13.5px;color:var(--text);font-weight:600}
+  .pv-person .pf{display:block;font-size:12px;color:var(--text-3);margin-top:2px}
+  .pv-nav{display:flex;align-items:stretch;gap:12px;margin-top:54px;padding-top:34px;border-top:1px solid var(--line)}
+  .pv-prevnext{flex:1;display:flex;flex-direction:column;gap:3px;padding:14px 18px;border:1px solid var(--line);border-radius:12px;text-decoration:none;transition:border-color .15s}
+  .pv-prevnext:hover{border-color:var(--violet-2)}
+  .pv-prevnext.next{text-align:right}
+  .pv-prevnext .dir{font-size:12px;color:var(--text-3)}
+  .pv-prevnext .nm{font-size:14px;color:var(--text);font-weight:600}
+  .pv-tolist{flex:0 0 auto;display:grid;place-items:center;padding:0 26px;border-radius:12px;background:var(--violet-2);color:#fff;font-weight:700;font-size:13px;text-decoration:none;transition:background .15s}
+  .pv-tolist:hover{background:var(--violet)}
+  /* 왼쪽 고정 리스트 탭 */
+  /* 뷰 하단: DB보강 + 출처 안내 */
+  .pv-contrib{margin-top:48px;padding-top:32px;border-top:1px solid var(--line)}
+  .pv-enhance{display:flex;width:fit-content;max-width:100%;margin:0 auto;align-items:center;gap:13px;background:var(--orange);color:#fff;text-decoration:none;padding:16px 32px;border-radius:14px;box-shadow:0 10px 26px -8px rgba(236,122,28,.55);transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+  .pv-enhance:hover{background:#d86d12;transform:translateY(-2px);box-shadow:0 16px 34px -8px rgba(236,122,28,.65)}
+  .pv-enhance svg{width:22px;height:22px;flex:0 0 auto}
+  .pv-enhance b{font-size:16px;font-weight:700;display:block;line-height:1.2}
+  .pv-enhance small{font-size:12px;opacity:.92;display:block;margin-top:2px;font-weight:400}
+  .pv-source{margin-top:20px;background:rgba(124,99,176,.05);border:1px solid var(--line);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  .pv-source-t{margin:0;font-size:12.5px;line-height:1.7;color:var(--text-3);flex:1;min-width:260px}
+  .pv-source-t b{color:var(--text-2);font-weight:600}
+  .pv-mailbtn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);border-radius:9px;padding:10px 17px;font-size:13px;font-weight:600;text-decoration:none;transition:border-color .15s,color .15s}
+  .pv-mailbtn:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  .pv-mailbtn svg{width:15px;height:15px}
+  .pv-listtab{position:fixed;left:max(8px, calc(50% - 676px));top:560px;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;align-items:center;gap:10px;background:#372a5c;color:#fff;text-decoration:none;padding:24px 13px 24px 10px;border-radius:0 13px 13px 0;box-shadow:0 14px 32px -8px rgba(45,33,73,.6);transition:background .15s ease,padding-left .15s ease,opacity .25s ease,visibility .25s ease}
+  .pv-listtab:hover{background:#281d45;padding-left:16px}
+  .pv-listtab-arrow{font-size:20px;line-height:1;font-weight:400}
+  .pv-listtab-text{writing-mode:vertical-rl;text-orientation:mixed;font-size:13px;font-weight:700;letter-spacing:.18em}
+  @media(max-width:600px){.pv-listtab{padding:13px 7px 13px 5px}.pv-listtab-text{font-size:11px}}
+  /* 좁은 화면: 본문과 겹치면 탭 숨김 (상단 위치표시·서브메뉴로 이동) */
+  @media(max-width:1040px){.pv-listtab{display:none}}
+  /* 갤러리 라이트박스 */
+  .pv-tile{cursor:zoom-in}
+  .pv-lightbox{position:fixed;inset:0;z-index:200;background:rgba(14,18,48,.84);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:44px}
+  .pv-lightbox.open{display:flex}
+  .pv-lb-close{position:absolute;top:20px;right:24px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:background .15s}
+  .pv-lb-close:hover{background:rgba(255,255,255,.2)}
+  .pv-lb-content{max-width:min(92vw,1100px);max-height:86vh;display:flex;align-items:center;justify-content:center}
+  .pv-lb-content img{max-width:100%;max-height:86vh;border-radius:8px;display:block}
+  .pv-lb-ph{width:min(84vw,560px);aspect-ratio:4/3;border-radius:14px;display:grid;place-items:center;gap:14px;color:#cfc9e6;background:repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 16px,rgba(255,255,255,.03) 16px 32px);border:1px solid rgba(255,255,255,.15)}
+  .pv-lb-ph svg{width:56px;height:56px}
+  .pv-lb-ph span{font-size:13px;letter-spacing:.02em}
+  /* 2단 정보 배치 */
+  .pv-split{display:grid;grid-template-columns:1.45fr 1fr;gap:40px;margin-top:46px;align-items:start}
+  .pv-worklist--single{grid-template-columns:1fr;gap:0}
+  .pv-deflist{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+  .pv-deflist>div{display:flex;gap:20px;align-items:baseline;padding:13px 2px;border-bottom:1px solid var(--line);font-size:.95em}
+  .pv-deflist dt{color:var(--text-3);flex:0 0 96px}
+  .pv-deflist dd{margin:0;color:var(--text);text-align:left;flex:1}
+  /* 갤러리 캐러셀 */
+  .pv-carousel{position:relative}
+  .pv-track{display:flex;gap:12px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;padding:2px 1px}
+  .pv-track::-webkit-scrollbar{display:none}
+  .pv-track .pv-tile{flex:0 0 auto;width:190px;height:190px;aspect-ratio:auto}
+  .pv-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:40px;height:40px;border-radius:50%;border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);display:grid;place-items:center;cursor:pointer;font-size:20px;line-height:1;box-shadow:0 6px 18px -8px rgba(30,20,60,.32);transition:background .15s,color .15s,border-color .15s,opacity .15s}
+  .pv-arrow:hover{background:var(--violet-2);color:#fff;border-color:var(--violet-2)}
+  .pv-arrow:disabled{opacity:.32;cursor:default;box-shadow:none}
+  .pv-arrow--prev{left:-8px}
+  .pv-arrow--next{right:-8px}
+  /* 리스트(악보·음원) */
+  .pv-list{border-top:1px solid var(--line)}
+  .pv-lirow{display:flex;align-items:center;gap:14px;padding:14px 6px;border-bottom:1px solid var(--line);text-decoration:none;transition:background .15s}
+  .pv-lirow:hover{background:var(--paper-2)}
+  .pv-li-ic{width:38px;height:38px;border-radius:9px;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;color:var(--violet-2);flex:0 0 auto}
+  .pv-li-ic svg{width:18px;height:18px}
+  .pv-li-main{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pv-li-main b{font-size:1em;color:var(--text);font-weight:600}
+  .pv-li-main b .pv-en{font-weight:400;font-size:.85em;margin-left:5px}
+  .pv-li-main span{font-size:.85em;color:var(--text-3);margin-left:10px}
+  .pv-li-main span::before{content:'·';margin-right:9px;color:var(--line-2)}
+  .pv-li-act{flex:0 0 auto;font-size:12.5px;color:var(--text-3);white-space:nowrap;transition:color .15s}
+  .pv-lirow:hover .pv-li-act{color:var(--violet-2)}
+  /* 하단 목록 버튼 */
+  .pv-back{margin-top:54px;padding-top:34px;border-top:1px solid var(--line);display:flex;justify-content:center}
+  .pv-back .pv-tolist{padding:13px 44px}
+  @media(max-width:760px){
+    .pv-split{grid-template-columns:1fr;gap:6px}
+    .pv-track .pv-tile{width:150px;height:150px}
+  }
+  @media(max-width:760px){
+    .pv-hero{flex-direction:column;gap:22px}
+    .pv-name{font-size:30px}
+    .pv-facts,.pv-worklist,.pv-metagrid,.pv-linkcards{grid-template-columns:1fr}
+    .pv-gallery{grid-template-columns:repeat(2,1fr)}
+    .pv-media,.pv-people{grid-template-columns:1fr}
+    .pv-nav{flex-wrap:wrap}
+    .pv-tolist{order:-1;flex:1 0 100%;padding:14px}
+  }
+
+  @media(max-width:720px){
+    .pdb{padding:140px 0 46px}
+    .pdb-title{font-size:34px}
+    .pdb-titlebar{flex-direction:column;align-items:flex-start;gap:16px}
+    .pdb-toolbar{margin-top:34px}
+  }
+
+
+  /* 서브페이지 헤더: 기본 어두운(메인 GNB 느낌) → 호버 시 흰색 */
+  .site-header:not(.solid){background:linear-gradient(115deg,#0E1230 0%,#241a44 55%,#3a2456 100%)}
+  html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115deg,#0a0a0a 0%,#161616 55%,#222 100%)}
+
+
+  /* 풍성한 컬럼 */
+  .pdb-table .c-ava{width:56px;padding-right:0}
+  .pdb-table .ava{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--paper-2);border:1px solid var(--line);font-family:var(--display);font-weight:700;font-size:13px;color:var(--text-3);background-size:cover;background-position:center}
+  .pdb-table .c-nation{color:var(--text-2);overflow:hidden;text-overflow:ellipsis}
+  .pdb-table .nat-code{font-size:.85em;opacity:.6;margin-left:1px}
+  .pdb-table .c-life{width:118px;color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pdb-table .c-era{width:96px;color:var(--text-2)}
+
+
+  /* 대표작·소속 컬럼 */
+  .pdb-table .c-work{min-width:180px;max-width:270px;color:var(--text-2);white-space:normal;line-height:1.5}
+  .pdb-table .c-org{min-width:120px;max-width:170px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pdb-table .c-school{max-width:170px;overflow:hidden;text-overflow:ellipsis}
+  .pdb-table .c-name{min-width:120px}
+
+
+  /* 행 호버: 짙은 퍼플 배경 + 흰색 텍스트 */
+  .pdb-table tbody tr:hover td{background:#322152;color:#fff}
+  .pdb-table tbody tr:hover td a{color:#fff}
+  .pdb-table tbody tr:hover .tag{color:#fff;border-color:rgba(255,255,255,.45)}
+  .pdb-table tbody tr:hover .ava{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+
+
+  /* 복수 태그 */
+  .pdb-table .c-field{white-space:nowrap;overflow:hidden}
+  .pdb-table .c-field .tag{margin:0 4px 3px 0}
+  /* 사조 2줄 */
+  .pdb-table .c-era{white-space:nowrap}
+  .pdb-table .c-era .era-name{display:block;color:var(--text-2)}
+  .pdb-table .c-era .era-yr{display:block;font-size:.85em;color:var(--text-3);margin-top:2px}
+  /* 관련 링크 아이콘 */
+  .pdb-table .c-link{width:112px}
+  .pdb-table .c-link .lk{display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;color:var(--text-3);border:1px solid var(--line);border-radius:7px;margin-right:5px;transition:color .15s ease,border-color .15s ease}
+  .pdb-table .c-link .lk svg{width:14px;height:14px}
+  .pdb-table .c-link .lk:hover{color:var(--text);border-color:var(--text-3)}
+
+  /* 데이터 컬럼(분야·국적·생몰·사조·링크) 가운데 정렬 — 대표작·소속·출신학교는 왼쪽 */
+  .pdb-table th.c-field, .pdb-table td.c-field,
+  .pdb-table th.c-nation, .pdb-table td.c-nation,
+  .pdb-table th.c-life, .pdb-table td.c-life,
+  .pdb-table th.c-era, .pdb-table td.c-era,
+  .pdb-table th.c-link, .pdb-table td.c-link{text-align:center}
+  .pdb-table .c-field .tag{margin:0 1px}
+  /* 호버(퍼플) 시 추가 요소도 흰색 */
+  .pdb-table tbody tr:hover .era-name,
+  .pdb-table tbody tr:hover .era-yr{color:#fff}
+  .pdb-table tbody tr:hover .lk{color:#fff;border-color:rgba(255,255,255,.4)}
+
+
+  .pdb-table thead th[class]{color:var(--text-2)}
+
+
+  /* 행 호버 색 전환을 부드럽게 */
+  .pdb-table td,
+  .pdb-table td a,
+  .pdb-table .tag,
+  .pdb-table .ava,
+  .pdb-table .era-name,
+  .pdb-table .era-yr,
+  .pdb-table .lk{transition:background-color .25s ease, color .25s ease, border-color .25s ease}
+
+
+  /* OC 회원 배지 (별표 대체) */
+  .oc-badge{display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-size:9px;font-weight:800;letter-spacing:.03em;color:#fff;background:#EC7A1C;border-radius:4px;padding:2px 5px;margin-left:6px;vertical-align:middle;line-height:1}
+  .pdb-legend .oc-badge{margin-left:0;margin-right:5px}
+
+
+
+
+  /* ALLIANCE WXN: 빅배너 바로 위, 어두운 텍스트 */
+  .wxn-sub{margin:0 0 14px}
+  .wxn-sub .wxn-run{color:var(--text-2)}
+
+
+  /* 헤더 배경: 메인 4번째 패턴(scene-net 별자리) */
+  .pdb{position:relative}
+  .pdb-bg{position:absolute;top:0;left:0;right:0;height:470px;z-index:0;overflow:hidden;pointer-events:none;opacity:.55;-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%)}
+  .pdb-bg .wave{position:absolute;inset:0;width:100%;height:100%;transform:none;-webkit-mask-image:none;mask-image:none}
+  .pdb-bg .scene{position:absolute;inset:0;opacity:1}
+  .pdb-bg .scene svg{width:100%;height:100%;display:block}
+  .pdb-inner{position:relative;z-index:1}
+
+
+  /* 다크모드 행 호버: 순수 블랙 */
+  html[data-theme="dark"] .pdb-table tbody tr:hover td{background:#000}
+
+
+
 </style>
 </head>
 <body>
@@ -623,13 +1009,13 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
       <div class="nav-item nav-item--db">
-        <a href="#">DATABASE</a>
+        <a href="#" class="active">DATABASE</a>
         <div class="dropdown"><div class="dropdown-inner">
           <a href="db-person.html">인물 DB</a>
           <a href="db-org.html">음악단체 DB</a>
           <a href="db-venue.html">공연장 DB</a>
           <a href="db-school.html">음악학교 DB</a>
-          <a href="db-modern.html">현대음악 DB</a>
+          <a href="db-modern.html" class="active">현대음악 DB</a>
           <a href="db-foundation.html">관련기관·재단 DB</a>
           <a href="db-academic.html">학술 DB</a>
         </div></div>
@@ -738,7 +1124,7 @@
             <a href="db-org.html">음악단체 DB</a>
             <a href="db-venue.html">공연장 DB</a>
             <a href="db-school.html">음악학교 DB</a>
-            <a href="db-modern.html">현대음악 DB</a>
+            <a href="db-modern.html" class="active">현대음악 DB</a>
             <a href="db-foundation.html">관련기관·재단 DB</a>
             <a href="db-academic.html">학술 DB</a>
           </div>
@@ -802,354 +1188,191 @@
   </div>
 </div>
 
-<!-- ===== hero ===== -->
-<section class="hero">
-  <div class="wave" aria-hidden="true">
-    <!-- scene 1: equalizer -->
-    <div class="scene scene-eq on">
-      <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice">
-        <defs><linearGradient id="wg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#9C7FD6"/><stop offset=".5" stop-color="#C9A94E"/><stop offset="1" stop-color="#7C63B0"/>
-        </linearGradient></defs>
-        <g fill="url(#wg)" opacity=".5"></g>
-      </svg>
-    </div>
-    <!-- scene 2: flowing waves -->
-    <div class="scene scene-flow">
-      <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice">
-        <defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#9C7FD6"/><stop offset=".5" stop-color="#C9A94E"/><stop offset="1" stop-color="#7C63B0"/>
-        </linearGradient></defs>
-        <g fill="none" stroke="url(#fg)" stroke-width="1.6" opacity=".55" stroke-linecap="round"></g>
-      </svg>
-    </div>
-    <!-- scene 3: dot grid wave -->
-    <div class="scene scene-rings">
-      <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice">
-        <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
-        <g fill="url(#rg)"></g>
-      </svg>
-    </div>
-    <!-- scene 4: floating particles -->
-    <div class="scene scene-net">
-      <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice">
-        <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/>
-        </linearGradient></defs>
-        <g fill="url(#dg)"></g>
-      </svg>
-    </div>
-  </div>
-  <div class="wrap">
-    <div class="hslide on">
-      <div class="eyebrow">Wixon Orchestra Series · Seoul</div>
-      <h1>Wiener Philharmoniker<br>&amp; Franz Welser-Möst</h1>
-      <div class="sub">빈 필하모닉 &amp; 프란츠 벨저-뫼스트 내한공연</div>
-      <div class="meta">
-        <span>일정 <b>2022.11.03 — 11.04</b></span>
-        <span>장소 <b>예술의전당 콘서트홀</b></span>
-        <span>19:30</span>
-      </div>
-    </div>
-    <div class="hslide">
-      <div class="eyebrow">Special Concert · Seoul</div>
-      <h1>The Little Singers<br>of Paris</h1>
-      <div class="sub">파리나무십자가 소년합창단 내한공연</div>
-      <div class="meta">
-        <span>일정 <b>2022.12.10 — 12.11</b></span>
-        <span>장소 <b>롯데콘서트홀</b></span>
-        <span>20:00</span>
-      </div>
-    </div>
-    <div class="hslide">
-      <div class="eyebrow">Outdoor Concert · Seoul</div>
-      <h1>한여름밤<br>우리가곡 야외음악회</h1>
-      <div class="sub">서울사이버대학교 &times; 하나은행 야외음악회</div>
-      <div class="meta">
-        <span>일정 <b>2013.08.03 — 08.24</b></span>
-        <span>장소 <b>예술의전당 신세계스퀘어</b></span>
-        <span>무료입장</span>
+<!-- ===== people database (data-centric) ===== -->
+<section class="pdb">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-net on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
       </div>
     </div>
   </div>
-  <div class="wxn-eyebrow"><span class="wxn-run">ALLIANCE WXN</span></div>
-  <div class="hero-dots"><i class="on"></i><i></i><i></i></div>
-</section>
+  <div class="pdb-inner">
 
-<!-- ===== triple banner ===== -->
-<section class="triple">
-  <button class="tb-arrow tb-prev" id="tbPrev" aria-label="이전">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-  </button>
-  <div class="tb-viewport">
-    <div class="tb-track" id="tbTrack"></div>
-  </div>
-  <button class="tb-arrow tb-next" id="tbNext" aria-label="다음">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-  </button>
-</section>
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/">홈</a><span>/</span><a href="#">Database</a><span>/</span><a href="db-modern.html">현대음악DB</a><span>/</span><span class="on">진은숙</span>
+    </nav>
 
-<!-- ===== quick icons ===== -->
-<section class="quick">
-  <div class="wrap">
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m1"></i></span>
-      <span class="qi-en">Recruit</span>
-      <span class="qi-ko">리크루트</span>
-      <span class="qi-desc">국내외 채용·인재 정보를<br>한곳에서 제공</span>
-    </a>
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m2"></i></span>
-      <span class="qi-en">Concours Info</span>
-      <span class="qi-ko">콩쿨정보</span>
-      <span class="qi-desc">국내 콩쿨 및 해외 유명<br>콩쿨 정보를 상세히 제공</span>
-    </a>
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m3"></i></span>
-      <span class="qi-en">Concert Info</span>
-      <span class="qi-ko">공연정보</span>
-      <span class="qi-desc">국내외 클래식 공연<br>일정과 정보를 제공</span>
-    </a>
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m4"></i></span>
-      <span class="qi-en">Entrance Examination</span>
-      <span class="qi-ko">입시커뮤니티</span>
-      <span class="qi-desc">예중·예고·음대 입시<br>정보와 소통 공간</span>
-    </a>
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m5"></i></span>
-      <span class="qi-en">Production Agency</span>
-      <span class="qi-ko">공연단체/기획사</span>
-      <span class="qi-desc">공연단체·기획사<br>소개 및 정보를 제공</span>
-    </a>
-  </div>
-</section>
+    <nav class="pdb-subnav" aria-label="DATABASE 하위 메뉴">
+      <a href="db-person.html">인물 DB</a>
+      <a href="db-org.html">음악단체 DB</a>
+      <a href="db-venue.html">공연장 DB</a>
+      <a href="db-school.html">음악학교 DB</a>
+      <a href="db-modern.html" class="active">현대음악 DB</a>
+      <a href="db-foundation.html">관련기관·재단 DB</a>
+      <a href="db-academic.html">학술 DB</a>
+    </nav>
 
-<!-- ===== ticker ===== -->
-<div class="ticker">
-  <div class="wrap" id="ticker-list">
-    <div class="tk">
-      <span class="lbl">NEWS</span>
-      <span class="txt">한국페스티발앙상블 — 르네상스와 현대의 조화</span>
-      <span class="dt">2021-11-22</span>
-      <a class="more en" href="#">VIEW DETAIL &rarr;</a>
-    </div>
-    <div class="tk">
-      <span class="lbl">지식나눔</span>
-      <span class="txt">한국페스티발앙상블 — 르네상스와 현대의 조화</span>
-      <span class="dt">2021-11-22</span>
-      <a class="more en" href="#">VIEW DETAIL &rarr;</a>
-    </div>
-  </div>
-</div>
-
-<!-- ===== main board ===== -->
-<section class="board">
-  <div class="wrap">
-    <div class="board-main">
-
-    <!-- column 1 -->
-    <div class="col-1">
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Notice</span><span class="ko">공지사항</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <article class="lead" id="card-notice-lead">
-          <div class="thumb ph"></div>
-          <h4>[15명 한정 도슨트전시+공연초청] 2015 HPF 스페이스프로젝트</h4>
-          <p>안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다. 지금 2015년 11월 18일(수) 오후 4시 공연 전 부대행사인 도슨트 투어부터 공연까지 관람하실 수 있도록…</p>
-          <div class="foot"><a class="vm" href="#">VIEW MORE</a><span class="dt">2021.11.22</span></div>
-        </article>
-        <ul class="list" id="notice-list">
-          <li><a href="#">부산시립교향악단 2016 신년음악회 안내</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">일반 베르크 《보체크》와 바그너 《탈하일러》는 예정대로</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">3월 30일과 4월 2일은 파비오 루이지</a><span class="dt">21.11.22</span></li>
-        </ul>
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">CONTEMPORARY · DATABASE</div>
+          <h1 class="pdb-title">현대음악DB</h1>
+        </div>
       </div>
+      <p class="pdb-lead">20–21세기 현대음악 작곡가 아카이브 — 유파 · 기법 · 대표작을 한곳에서 확인하세요.</p>
+    </header>
 
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Concours</span><span class="ko">콩쿨정보</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <div class="split" id="card-concours-lead">
-          <div class="thumb ph"></div>
-          <div class="body">
-            <h4>2016 대한민국 신인음악콩쿠르</h4>
-            <p>국내 주요 콩쿠르 일정과 접수 안내를 한곳에서 확인하세요. 참가 부문·심사 기준·시상 내역을 정리했습니다.</p>
-            <div class="dt">2021.11.22</div>
+    <!-- ===== 인물 상세(뷰) 본문 ===== -->
+    <div class="pv-topline"></div>
+
+    <div class="pv-utility">
+      <div class="pv-tools">
+        <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.5 9.7l5.9-.9z"/></svg>즐겨찾기</button>
+        <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v18l-6-4-6 4z"/></svg>킵</button>
+        <button type="button" class="pv-tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>저장</button>
+        <button type="button" class="pv-tool" data-share><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.1 10.9l7.8-4.7M8.1 13.1l7.8 4.7"/></svg>공유</button>
+      </div>
+      <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+        <span class="fs-label">글자크기</span>
+        <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+        <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+        <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+      </div>
+    </div>
+
+    <article class="pv">
+      <header class="pv-hero">
+        <div class="pv-portrait" aria-hidden="true"><span>진</span></div>
+        <div class="pv-headinfo">
+          <div class="pv-eyebrow">CONTEMPORARY · DATABASE</div>
+          <h2 class="pv-name">진은숙 <span class="pv-name-sub">Unsuk Chin</span></h2>
+          <div class="pv-tags">
+            <span class="tag">다원주의 <span class="tag-en">Pluralism</span></span>
+            <span class="oc-badge">OC</span>
+          </div>
+          <dl class="pv-facts">
+            <div><dt>국적</dt><dd>대한민국 · 독일 <span class="nat-code">(KOR/GER)</span></dd></div>
+            <div><dt>생몰</dt><dd>1961 –</dd></div>
+            <div><dt>사조·유파</dt><dd>다원주의 <span class="pv-en">Pluralism</span></dd></div>
+            <div><dt>대표 기법</dt><dd>음색 · 리듬 · 관현악법</dd></div>
+          </dl>
+          <div class="pv-actions">
+            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>위키 <span class="pv-en">Wiki</span></a>
+            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>음원 <span class="pv-en">Audio</span></a>
+            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>영상 <span class="pv-en">Video</span></a>
+            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>악보 <span class="pv-en">Score</span></a>
           </div>
         </div>
-        <ul class="list" id="concours-list" style="margin-top:12px">
-          <li><a href="#">International piano competition 전체대상 400만원</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">제7회 민 클래식컵 뮤직 컴페티션 — 전국 음악 콩쿠르</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">예중·예고, 음대 입시생들을 위한 2017 음악입시</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">2016 대한민국 신인음악콩쿠르 안내</a><span class="dt">21.11.22</span></li>
-        </ul>
-      </div>
-    </div>
+      </header>
 
-    <!-- column 2 -->
-    <div class="col-2">
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Hot Topic</span><span class="ko">핫토픽</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <article class="lead" id="card-hot-topic">
-          <div class="thumb ph"></div>
-          <h4>MIKHAIL PLETNEV — 피아니스트의 재해석</h4>
-          <p>‘복구의 쇼팽’이라 불리며 섬세한 시정 넘치는 많은 피아노 작품들을 남겼던 ‘에드바르트 그리그’ 그의 작품세계를 한눈에 풀어볼 수 있는 음반으로, 그리그의 유일한 피아노 소나타를 비롯, 작곡자가…</p>
-          <div class="foot"><a class="vm" href="#">VIEW MORE</a><span class="dt">2021.11.22</span></div>
-        </article>
-      </div>
+      <p class="pv-lead">대한민국 출신의 세계적인 현대음악 작곡가.<span class="pv-lead-en">Unsuk Chin is a Korean-born composer recognised as one of the leading voices in contemporary music.</span></p>
 
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Music School</span><span class="ko">이달의 음악학교</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <div class="split" id="card-music-school">
-          <div class="thumb ph"></div>
-          <div class="body">
-            <h4>&lt;제3탄&gt; 미국 뉴욕 줄리어드음대</h4>
-            <p>60 Lincoln Center Plaza New York, New York 10023 U.S.A. 미국 뉴욕음악에 위치한 줄리어드 음대는 한국 유학생이 많은 걸로 유명하다. 국내에서 왕성한 활동을 하고 있는 음악인들 중에도 유독…</p>
-            <div class="dt">2021.11.22</div>
-          </div>
+      <section class="pv-sec">
+        <h2 class="pv-h">생애 · 활동 <span class="pv-h-en">Biography</span></h2>
+        <div class="pv-prose">
+          <p>1961년 서울에서 태어나 서울대학교에서 강석희를 사사하고, 이후 함부르크에서 죄르지 리게티에게 배웠다. 정교한 음색과 리듬, 화려한 관현악법으로 세계적 명성을 얻었다.</p>
+          <p class="pv-prose-en">Born in Seoul in 1961, she studied with Sukhi Kang at Seoul National University and later with György Ligeti in Hamburg, gaining international renown for her refined timbres, rhythms and brilliant orchestration.</p>
+          <p>그로마이어상·시벨리우스상 등 세계 유수의 작곡상을 수상했으며, 베를린 필하모닉·LA 필하모닉 등 세계 정상급 악단이 그의 작품을 정기적으로 연주한다.</p>
+          <p class="pv-prose-en">A recipient of the Grawemeyer and Sibelius awards, her works are regularly performed by leading orchestras including the Berlin and Los Angeles Philharmonics.</p>
         </div>
+      </section>
+
+      <div class="pv-split">
+        <section class="pv-block">
+          <h2 class="pv-h">대표작 <span class="pv-h-en">Works</span></h2>
+          <ul class="pv-worklist pv-worklist--single">
+            <li>바이올린 협주곡 <em>Violin Concerto</em> <span>2001</span></li>
+            <li>이상한 나라의 앨리스 <em>Alice in Wonderland</em> <span>2007</span></li>
+            <li>첼로 협주곡 <em>Cello Concerto</em> <span>2009</span></li>
+            <li>Šu (笙) 협주곡 <em>Šu for Sheng</em> <span>2009</span></li>
+            <li>클라리넷 협주곡 <em>Clarinet Concerto</em> <span>2014</span></li>
+            <li>피아노 에튀드 <em>Piano Études</em> <span>1995–</span></li>
+          </ul>
+        </section>
+        <section class="pv-block">
+          <h2 class="pv-h">작곡가 정보 <span class="pv-h-en">Profile</span></h2>
+          <dl class="pv-deflist">
+            <div><dt>국적</dt><dd>대한민국 · 독일 <span class="pv-en">Korea / Germany</span></dd></div>
+            <div><dt>생몰</dt><dd>1961년 –</dd></div>
+            <div><dt>사조·유파</dt><dd>다원주의 · 현대</dd></div>
+            <div><dt>대표 기법</dt><dd>음색 · 리듬 · 관현악법</dd></div>
+            <div><dt>사사(계보)</dt><dd><a class="pv-schoollink" href="db-person.html" title="스승 정보 보기">강석희 · 죄르지 리게티 <span class="pv-schoolgo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h13M13 6l6 6-6 6"/></svg>인물 보기</span></a></dd></div>
+            <div><dt>활동 거점</dt><dd>베를린 <span class="pv-en">Berlin</span></dd></div>
+          </dl>
+        </section>
       </div>
 
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Gallery</span><span class="ko">공연사진 / 영상</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <div class="split" id="card-gallery">
-          <div class="thumb ph"></div>
-          <div class="body">
-            <h4>[15명 한정 도슨트전시+공연초청] 2015 HPF</h4>
-            <p>안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다. 공연 전 부대행사인 도슨트 투어부터 관람하실 수 있도록…</p>
-            <div class="dt">2021.11.22</div>
-          </div>
+      <section class="pv-sec">
+        <div class="pv-sechead"><h2 class="pv-h">사진 · 갤러리</h2><span class="pv-auto">자동 수집 영역</span></div>
+        <div class="pv-carousel">
+          <button type="button" class="pv-arrow pv-arrow--prev" aria-label="이전 사진">&#8249;</button>
+          <div class="pv-track"><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div></div>
+          <button type="button" class="pv-arrow pv-arrow--next" aria-label="다음 사진">&#8250;</button>
         </div>
-      </div>
+      </section>
 
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Contemporary</span><span class="ko">현대음악</span></div><a class="more en" href="#">MORE +</a></div>
-        <div class="split" id="card-contemporary">
-          <div class="thumb ph"></div>
-          <div class="body">
-            <h4>MIKHAIL PLETNEV</h4>
-            <p>‘복구의 쇼팽’이라 불리며 섬세한 시정 넘치는 많은 피아노 작품들을 남겼던 ‘에드바르트 그리그’ 그의 작품세계를 한눈에 풀어볼 수 있는 음반으로, 그리그의 유일한 피아노 소나타를 비롯…</p>
-            <div class="dt">2021.11.22</div>
-          </div>
+      <section class="pv-sec">
+        <div class="pv-sechead"><h2 class="pv-h">영상</h2><span class="pv-auto">YouTube 등 연동</span></div>
+        <div class="pv-carousel">
+          <button type="button" class="pv-arrow pv-arrow--prev" aria-label="이전 영상">&#8249;</button>
+          <div class="pv-track"><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">바이올린 협주곡 실황</span><span class="pv-cs">오케스트라</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">이상한 나라의 앨리스</span><span class="pv-cs">오페라</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">첼로 협주곡</span><span class="pv-cs">협연</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">작곡가 인터뷰</span><span class="pv-cs">다큐</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">피아노 에튀드</span><span class="pv-cs">독주</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">베를린필 연주</span><span class="pv-cs">실황</span></span></a></div>
+          <button type="button" class="pv-arrow pv-arrow--next" aria-label="다음 영상">&#8250;</button>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- ad: horizontal banner across both columns -->
-    <a class="ad-slot board-ad" href="#">
-      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
-      <span class="ad-badge">Advertisement</span>
-      <span class="ad-desc">광고 영역 · 가로형 반응형 디스플레이</span>
-    </a>
-    </div><!-- /board-main -->
-
-    <!-- sidebar -->
-    <aside class="side">
-      <div class="sec-head"><div class="t"><span class="en-s">Concert PR</span></div></div>
-      <div class="card pr-slide" id="concert-pr">
-        <div class="img ph dark"></div>
-        <div class="cap">
-          <div class="en-s">Outdoor Concert · 2013</div>
-          <h4>한여름밤 우리가곡 야외음악회</h4>
-          <p>2013.8.3 ~ 8.24 · 예술의전당 신세계스퀘어 야외무대 · 무료입장. 서울사이버대학교와 하나은행이 함께하는 우리가곡 야외음악회.</p>
+      <section class="pv-sec">
+        <div class="pv-sechead"><h2 class="pv-h">대표 음원 · 음반</h2><span class="pv-auto">음반 정보 연동</span></div>
+        <div class="pv-list">
+          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/></svg></span><span class="pv-li-main"><b>바이올린 협주곡 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Violin Concerto</span></b><span>DG · 정규 음반</span></span><span class="pv-li-act">보기 →</span></a>
+          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/></svg></span><span class="pv-li-main"><b>3 협주곡집 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Three Concertos</span></b><span>DG</span></span><span class="pv-li-act">보기 →</span></a>
+          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span><span class="pv-li-main"><b>이상한 나라의 앨리스 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Alice in Wonderland</span></b><span>오페라 실황</span></span><span class="pv-li-act">재생 →</span></a>
         </div>
-        <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
-      </div>
+      </section>
 
-      <div class="ticket">
-        <div>
-          <div class="en-s">FREE TICKETS</div>
-          <h4>연주회·콘서트 티켓 무료신청</h4>
-          <p>오퍼스클램 회원만 신청 가능합니다.</p>
+      <section class="pv-sec">
+        <div class="pv-sechead"><h2 class="pv-h">주요 수상 · 이력</h2><span class="pv-auto">자동 연동</span></div>
+        <div class="pv-list">
+          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="5"/><path d="M9 13l-2 8 5-3 5 3-2-8"/></svg></span><span class="pv-li-main"><b>그로마이어상 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Grawemeyer Award</span></b><span>작곡 부문</span></span><span class="pv-li-act">2004</span></a>
+          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="5"/><path d="M9 13l-2 8 5-3 5 3-2-8"/></svg></span><span class="pv-li-main"><b>시벨리우스상 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Sibelius Prize</span></b><span>작곡가 공로</span></span><span class="pv-li-act">2017</span></a>
+          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="5"/><path d="M9 13l-2 8 5-3 5 3-2-8"/></svg></span><span class="pv-li-main"><b>레오니 소닝상 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Léonie Sonning</span></b><span>음악상</span></span><span class="pv-li-act">2021</span></a>
         </div>
-        <div class="tk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M9 6v12" stroke-dasharray="2 2"/></svg></div>
-      </div>
+      </section>
 
-      <div class="sec-head"><div class="t"><span class="en-s">Funding</span><span class="ko">지원금 / 정책자금정보</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-      <ul class="fund" id="funding-list">
-        <li><a href="#">문화예술교육형 사회적기업 육성 지원사업</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">2012년 강원문화예술진흥사업</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">2011 문학창작활성화_작가활동지원신청</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">2011 공연영상주예술단체육성지원사업 심사결과</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">2011『문화공간 활성화지원사업』지원신청공고</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">문화예술교육형 사회적기업 육성 지원사업</a><span class="dt">~22.03.31</span></li>
-      </ul>
+      <section class="pv-sec">
+        <h2 class="pv-h">관련 작곡가 <span class="pv-h-en">Related Composers</span></h2>
+        <div class="pv-people">
+          <a class="pv-person" href="db-person.html"><span class="ava">L</span><span><span class="pn">죄르지 리게티 <span style="color:var(--text-3);font-weight:400;font-size:.85em">Ligeti</span></span><span class="pf">스승 · 음향주의</span></span></a>
+          <a class="pv-person" href="db-person.html"><span class="ava">강</span><span><span class="pn">강석희 <span style="color:var(--text-3);font-weight:400;font-size:.85em">Sukhi Kang</span></span><span class="pf">스승 · 한국 현대음악</span></span></a>
+          <a class="pv-person" href="db-person.html"><span class="ava">S</span><span><span class="pn">카이야 사리아호 <span style="color:var(--text-3);font-weight:400;font-size:.85em">Saariaho</span></span><span class="pf">동시대 · 스펙트럴</span></span></a>
+        </div>
+      </section>
 
-      <div class="sec-head" style="margin-top:24px"><div class="t"><span class="en-s">Self Picture</span></div></div>
-      <div class="selfpic" id="card-self-picture">
-        <div class="thumb ph"></div>
-        <div>
-          <h4>한국 최고의 실내악 콘서트</h4>
-          <p>1997년 세계무대에서 활약하는 국내 실내악 최정상 기인의 음악인을 한 무대에 모아 클래식계의…</p>
-          <a class="vm" href="#">VIEW DETAIL →</a>
+      <section class="pv-contrib">
+        <a class="pv-enhance" href="db-write.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          <span><b>DB보강하기</b><small>이 항목의 정보를 수정하거나 내용을 추가할 수 있습니다 · 자격 회원</small></span>
+        </a>
+        <div class="pv-source">
+          <p class="pv-source-t">본 오퍼스클램 데이터는 웹상에 공개된 내용을 취합·수집하여 등록되므로, 잘못된 정보를 포함할 수 있습니다. 잘못된 정보의 수정을 원하시거나 보강할 내용이 있는 경우, 아래 <b>메일문의하기</b> 또는 <b>DB보강</b>을 통해 알려주시면 신속히 반영하겠습니다.</p>
+          <a class="pv-mailbtn" href="mailto:contact@opusclam.com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg> 메일문의하기</a>
         </div>
-      </div>
+      </section>
 
-      <div class="sec-head"><div class="t"><span class="en-s">Self PR</span></div></div>
-      <div id="artists-list">
-      <div class="artist">
-        <div class="ava ph"></div>
-        <div>
-          <div class="role">Viola</div>
-          <h4>신윤경</h4>
-          <p>예원학교, 서울예고, 서울대학교 음악대학 우등 졸업 · New England Conservatory NEC Scholarship 장학생 우등 졸업</p>
-        </div>
-      </div>
-      <div class="artist" style="border-bottom:0">
-        <div class="ava ph"></div>
-        <div>
-          <div class="role">Violin</div>
-          <h4>정남일</h4>
-          <p>매너스음대졸업 · 광원디/에워학교졸업 · KBS교향악단 정기연주회 협연</p>
-        </div>
-      </div>
-      </div>
-    </aside>
+      <a class="pv-listtab" href="db-modern.html" aria-label="리스트로 가기">
+        <span class="pv-listtab-arrow">&#8249;</span>
+        <span class="pv-listtab-text">리스트</span>
+      </a>
+    </article>
+
   </div>
 </section>
 
-<!-- ===== lower triple ===== -->
-<section class="lower">
-  <div class="wrap">
-    <!-- recruit -->
-    <div>
-      <div class="tabs"><button class="on">구인</button><button>구직</button></div>
-      <div class="recruit-lead">
-        <h4 class="disp">바로크합주단</h4><span class="badge">NEW</span>
-        <p>안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다…</p>
-      </div>
-      <ul class="list">
-        <li><a href="#">바로크주단 — 다카오는 2020년, 민간 오케스트라로…</a><span class="dt">~21.12.09</span></li>
-        <li><a href="#">작곡전공자 — 입시생은 매주실 전공자분 구합니다. 5개월정도…</a><span class="dt">~21.12.09</span></li>
-        <li><a href="#">서울현드영상불 — 바슨/클라리넷 주자 구합니다.</a><span class="dt">~21.12.09</span></li>
-        <li><a href="#">서울현드영상불 — 바슨/클라리넷 주자 구합니다.</a><span class="dt">~21.12.09</span></li>
-      </ul>
-    </div>
 
-    <!-- utility/score -->
-    <div>
-      <div class="sec-head"><div class="t"><span class="en-s">Utility / Score</span><span class="ko">악보·자료</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-      <ul class="dl" id="scores-list">
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">Waves Complete 2016.12.97</a></li>
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">MAGIX Vegas DVD Architect 7.0.0 Build 38</a></li>
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">MusicLab RealGuitar v3.0.1</a></li>
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">Beethoven Symphony No.6 Full Score</a></li>
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">[VSTi] Spectrasonics Atmosphere</a></li>
-      </ul>
-    </div>
-
-    <!-- entrance exam region -->
-    <div>
-      <div class="sec-head"><div class="t"><span class="en-s">Entrance Exam</span><span class="ko">전국 예중·고·대학 입시요강</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-      <div class="grid-region">
-        <a href="#">서울</a><a href="#">경기</a><a href="#">인천</a><a href="#">강원</a>
-        <a href="#">충남</a><a href="#">대전</a><a href="#">충북</a><a href="#">부산</a>
-        <a href="#">울산</a><a href="#">대구</a><a href="#">경북</a><a href="#">경남</a>
-        <a href="#">전남</a><a href="#">광주</a><a href="#">전북</a><a href="#">제주</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== bottom ad banners ===== -->
+<!-- ===== list bottom ad banners ===== -->
 <section class="bigban">
   <div class="wrap">
     <a class="ad-slot bigban-ad" href="#">
@@ -1163,6 +1386,21 @@
       <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
     </a>
   </div>
+</section>
+
+
+<!-- ===== triple banner ===== -->
+<div class="wxn-eyebrow wxn-sub"><span class="wxn-run">ALLIANCE WXN</span></div>
+<section class="triple">
+  <button class="tb-arrow tb-prev" id="tbPrev" aria-label="이전">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+  </button>
+  <div class="tb-viewport">
+    <div class="tb-track" id="tbTrack"></div>
+  </div>
+  <button class="tb-arrow tb-next" id="tbNext" aria-label="다음">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
 </section>
 
 <!-- ===== footer ===== -->
@@ -1343,7 +1581,20 @@
 (function(){
   var sh=document.getElementById('siteHeader');
   var hero=document.querySelector('.hero');
-  if(!sh||!hero)return;
+  if(!sh)return;
+  if(!hero){
+    if(window.innerWidth<=880){ sh.classList.add('solid'); return; }
+    var subHover=false;
+    function subUpd(){
+      if(subHover || window.scrollY>40){ sh.classList.add('solid'); }
+      else { sh.classList.remove('solid'); }
+    }
+    sh.addEventListener('mouseenter',function(){subHover=true;subUpd();});
+    sh.addEventListener('mouseleave',function(){subHover=false;subUpd();});
+    window.addEventListener('scroll',subUpd,{passive:true});
+    subUpd();
+    return;
+  }
   var hovering=false;
   function update(){
     var solid;
@@ -1764,6 +2015,138 @@ if('serviceWorker' in navigator){
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', init);
   } else { init(); }
+})();
+</script>
+
+<script>
+/* 인물DB 헤더 배경: 촘촘·작은 별자리 (공용 빌더 결과 재생성) */
+(function(){
+  var g=document.querySelector('.pdb-bg .scene-net g');
+  if(!g)return;
+  g.innerHTML='';
+  var W=1280,H=460,NN=70,maxD=132,NS='http://www.w3.org/2000/svg';
+  function el(t){return document.createElementNS(NS,t);}
+  var nodes=[];
+  for(var i=0;i<NN;i++) nodes.push({x:Math.random()*W, y:Math.random()*H});
+  for(var a=0;a<nodes.length;a++){
+    for(var b=a+1;b<nodes.length;b++){
+      var dx=nodes[a].x-nodes[b].x, dy=nodes[a].y-nodes[b].y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<maxD){
+        var ln=el('line');
+        ln.setAttribute('x1',nodes[a].x.toFixed(1));ln.setAttribute('y1',nodes[a].y.toFixed(1));
+        ln.setAttribute('x2',nodes[b].x.toFixed(1));ln.setAttribute('y2',nodes[b].y.toFixed(1));
+        ln.style.animationDuration=(3.2+Math.random()*3.2).toFixed(2)+'s';
+        ln.style.animationDelay=(-Math.random()*4.5).toFixed(2)+'s';
+        g.appendChild(ln);
+      }
+    }
+  }
+  nodes.forEach(function(n){
+    var c=el('circle');
+    c.setAttribute('cx',n.x.toFixed(1));c.setAttribute('cy',n.y.toFixed(1));
+    c.setAttribute('r',(1.1+Math.random()*1.7).toFixed(1));
+    c.style.animationDuration=(3+Math.random()*3).toFixed(2)+'s';
+    c.style.animationDelay=(-Math.random()*4).toFixed(2)+'s';
+    g.appendChild(c);
+  });
+})();
+</script>
+<script>
+/* 게시판/자료실 글자 크기 조절 */
+(function(){
+  var root=document.querySelector('.pv');
+  var btns=document.querySelectorAll('.pdb-fontsize .fs-btn');
+  if(!root||!btns.length)return;
+  var sizes=[12,14,16,18,20], idx=1;
+  function apply(){ root.style.setProperty('--pv-fs', sizes[idx]+'px'); }
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.getAttribute('data-fs');
+      if(k==='up') idx=Math.min(sizes.length-1, idx+1);
+      else if(k==='down') idx=Math.max(0, idx-1);
+      else idx=1;
+      apply();
+    });
+  });
+})();
+</script>
+<div class="pv-lightbox" id="pvLightbox" aria-hidden="true">
+  <button type="button" class="pv-lb-close" aria-label="닫기">&#10005;</button>
+  <div class="pv-lb-content" id="pvLbContent"></div>
+</div>
+
+<script>
+/* 갤러리 캐러셀 화살표 */
+(function(){
+  document.querySelectorAll('.pv-carousel').forEach(function(c){
+    var track=c.querySelector('.pv-track');
+    var prev=c.querySelector('.pv-arrow--prev');
+    var next=c.querySelector('.pv-arrow--next');
+    if(!track)return;
+    function upd(){
+      var overflow=track.scrollWidth>track.clientWidth+2;
+      [prev,next].forEach(function(b){ if(b) b.style.display=overflow?'grid':'none'; });
+      var max=track.scrollWidth-track.clientWidth-1;
+      if(prev) prev.disabled=track.scrollLeft<=0;
+      if(next) next.disabled=track.scrollLeft>=max;
+    }
+    function step(d){ track.scrollBy({left:d*Math.max(240,track.clientWidth*0.8),behavior:'smooth'}); }
+    if(prev) prev.addEventListener('click',function(){step(-1);});
+    if(next) next.addEventListener('click',function(){step(1);});
+    track.addEventListener('scroll',upd,{passive:true});
+    window.addEventListener('resize',upd);
+    upd();
+  });
+})();
+/* 상단 기능 버튼 */
+(function(){
+  document.querySelectorAll('.pv-tool[data-toggle]').forEach(function(b){
+    b.addEventListener('click',function(){ b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')==='true'?'false':'true'); });
+  });
+  document.querySelectorAll('.pv-tool[data-share]').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(navigator.share){ navigator.share({title:document.title, url:location.href}).catch(function(){}); }
+      else if(navigator.clipboard){ navigator.clipboard.writeText(location.href); }
+    });
+  });
+})();
+</script>
+<script>
+/* 갤러리 라이트박스 */
+(function(){
+  var lb=document.getElementById('pvLightbox');
+  var content=document.getElementById('pvLbContent');
+  if(!lb||!content)return;
+  var ph='<div class="pv-lb-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg><span>원본 이미지 · 자동 수집 시 표시됩니다</span></div>';
+  function open(html){ content.innerHTML=html; lb.classList.add('open'); document.body.style.overflow='hidden'; }
+  function close(){ lb.classList.remove('open'); content.innerHTML=''; document.body.style.overflow=''; }
+  document.querySelectorAll('.pv-tile').forEach(function(t){
+    t.addEventListener('click',function(){
+      var full=t.getAttribute('data-full');
+      open(full ? '<img src="'+full+'" alt="">' : ph);
+    });
+  });
+  lb.addEventListener('click',function(e){ if(e.target===lb) close(); });
+  var cb=lb.querySelector('.pv-lb-close'); if(cb) cb.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+})();
+</script>
+<script>
+/* 리스트 탭: 하단 배너/푸터 겹침 방지 */
+(function(){
+  var tab=document.querySelector('.pv-listtab');
+  var stop=document.querySelector('.bigban')||document.querySelector('.triple')||document.querySelector('footer');
+  if(!tab||!stop)return;
+  function upd(){
+    var s=stop.getBoundingClientRect().top;
+    var t=tab.getBoundingClientRect().bottom;
+    var hide=s < t + 20;
+    tab.style.opacity=hide?'0':'1';
+    tab.style.visibility=hide?'hidden':'visible';
+  }
+  window.addEventListener('scroll',upd,{passive:true});
+  window.addEventListener('resize',upd);
+  upd();
 })();
 </script>
 </body>

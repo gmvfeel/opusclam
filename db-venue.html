@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OPUSCLAM.COM — Classic Speciality</title>
+<title>공연장DB · OPUSCLAM.COM Database</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0a0d24">
 <link rel="apple-touch-icon" href="/icon-192.png">
@@ -108,6 +108,8 @@
   .dropdown a{position:relative;font-size:13px;color:#9a9baa;padding:5px 18px;white-space:nowrap;letter-spacing:-.01em;transition:color .15s}
   .dropdown a:not(:last-child)::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--line-2)}
   .dropdown a:hover{color:#363845}
+  .dropdown a.active,.dropdown a.active:hover{color:var(--orange);font-weight:700}
+  .fm-col a.active{color:var(--orange);font-weight:700}
   .mast-tools{display:flex;align-items:center;gap:12px;flex:0 0 auto}
   .mast-tools a{white-space:nowrap}
   .mast-tools .search{width:34px;height:34px;border:1px solid var(--line-2);border-radius:50%;display:grid;place-items:center;color:var(--text-2);transition:.2s}
@@ -596,6 +598,218 @@
     html[data-theme="dark"] .nav-overlay{background:rgba(0,0,0,.6)}
   }
 
+
+  /* ================= 인물DB (data-centric, premium) ================= */
+  .pdb{padding:158px 0 70px}
+  .pdb-inner{max-width:1360px;margin:0 auto;padding:0 24px}
+
+  .pdb-crumb{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text-3);margin-bottom:16px}
+  .pdb-crumb a{color:var(--text-3);text-decoration:none;transition:color .15s ease}
+  .pdb-crumb a:hover{color:var(--text)}
+  .pdb-crumb .on{color:var(--text-2)}
+  /* 상시 노출 서브메뉴 바 (현재 페이지 하이라이트) */
+  .pdb-subnav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:34px}
+  .pdb-subnav a{font-size:13px;color:var(--text-2);padding:8px 17px;border:1px solid var(--line);border-radius:999px;text-decoration:none;white-space:nowrap;transition:border-color .15s ease,color .15s ease,background .15s ease}
+  .pdb-subnav a:hover{border-color:var(--text-3);color:var(--text)}
+  .pdb-subnav a.active{background:var(--violet);border-color:var(--violet);color:#fff;font-weight:700}
+
+  .pdb-titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+  .pdb-eyebrow{font-family:var(--serif);letter-spacing:.32em;font-size:11px;color:var(--text-3);text-transform:uppercase}
+  .pdb-title{font-family:var(--display);font-size:46px;font-weight:800;letter-spacing:-.015em;line-height:1;color:var(--text);margin-top:10px}
+  .pdb-lead{color:var(--text-2);font-size:14px;line-height:1.65;margin-top:18px;max-width:640px}
+  .pdb-reg{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:0;background:var(--orange);color:#fff;text-decoration:none;font-size:13px;font-weight:700;padding:11px 20px;border-radius:9px;box-shadow:0 8px 20px -8px rgba(236,122,28,.55);transition:background .2s ease,box-shadow .2s ease,transform .15s ease}
+  .pdb-reg:hover{background:#d86c12;box-shadow:0 10px 24px -8px rgba(236,122,28,.62);transform:translateY(-1px)}
+  .pdb-reg .plus{color:#fff;font-weight:800;font-size:15px;line-height:1}
+
+  .pdb-toolbar{display:flex;align-items:center;gap:12px;margin-top:44px;flex-wrap:wrap}
+  .pdb-toolbar .pdb-reg{height:49px;padding:0 20px;margin-left:auto}
+  .pdb-search{flex:1;min-width:250px;display:flex;align-items:center;gap:11px;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:0 15px;transition:border-color .2s ease}
+  .pdb-search:focus-within{border-color:var(--text-3)}
+  .pdb-search svg{width:17px;height:17px;color:var(--text-3);flex:0 0 auto}
+  .pdb-search input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--text);font-family:inherit;font-size:14px;padding:14px 0}
+  .pdb-search input::placeholder{color:var(--text-3)}
+  .pdb-selects{display:flex;gap:8px;flex-wrap:wrap}
+  .pdb-selects select{background:var(--paper);border:1px solid var(--line);border-radius:11px;color:var(--text);font-family:inherit;font-size:13px;padding:0 16px;height:49px;cursor:pointer;transition:border-color .2s ease}
+  .pdb-selects select:hover{border-color:var(--text-3)}
+  .pdb-selects select:focus,.pdb-selects select:focus-visible{outline:none;border-color:var(--text-3)}
+
+  .pdb-meta{display:flex;align-items:center;justify-content:space-between;margin-top:30px;padding:0 4px 14px;border-bottom:1px solid var(--line)}
+  .pdb-count{font-size:24px;color:var(--text);font-weight:400}
+  .pdb-count b{color:var(--text);font-weight:400;font-size:28px}
+  .pdb-legend{font-size:12px;color:var(--text-3)}
+  .pdb-meta-right{display:flex;align-items:center;gap:18px}
+  .pdb-fontsize{display:flex;align-items:center;gap:4px}
+  .pdb-fontsize .fs-label{font-size:12px;color:var(--text-3);margin-right:3px}
+  .pdb-fontsize .fs-btn{width:30px;height:30px;padding:0;border:1px solid var(--line-2);background:var(--paper);border-radius:8px;color:var(--text-2);cursor:pointer;font-family:inherit;line-height:1;display:grid;place-items:center;transition:border-color .15s ease,color .15s ease,background .15s ease}
+  .pdb-fontsize .fs-btn:hover{border-color:var(--text-3);color:var(--text)}
+  .pdb-fontsize .fs-btn[data-fs=down]{font-size:11px}
+  .pdb-fontsize .fs-btn[data-fs=reset]{font-size:13px}
+  .pdb-fontsize .fs-btn[data-fs=up]{font-size:15px}
+  @media(max-width:520px){.pdb-fontsize .fs-label{display:none}.pdb-meta-right{gap:10px}}
+  .star{color:#C9A94E;font-style:normal;font-size:.92em}
+
+  .pdb-tablewrap{overflow-x:hidden}
+  .pdb-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:var(--tbl-fs,13px)}
+  /* 컬럼 폭(기본) */
+  .pdb-table th.c-no{width:3.5%}
+  .pdb-table th.c-ava{width:4.5%}
+  .pdb-table th.c-name{width:16%}
+  .pdb-table th.c-field{width:8%}
+  .pdb-table th.c-nation{width:11%}
+  .pdb-table th.c-life{width:6.5%}
+  .pdb-table th.c-org{width:7%}
+  .pdb-table th.c-era{width:11%}
+  .pdb-table th.c-work{width:12%}
+  .pdb-table th.c-school{width:12.5%}
+  .pdb-table th.c-link{width:8%}
+  /* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
+  @media(max-width:840px){
+    .pdb-table .c-no,.pdb-table .c-ava,.pdb-table .c-school{display:none}
+    .pdb-table th.c-no,.pdb-table th.c-ava,.pdb-table th.c-school{width:0}
+    .pdb-table th.c-name{width:20%}
+    .pdb-table th.c-field{width:9%}
+    .pdb-table th.c-nation{width:13%}
+    .pdb-table th.c-life{width:8%}
+    .pdb-table th.c-org{width:8%}
+    .pdb-table th.c-era{width:14%}
+    .pdb-table th.c-work{width:16%}
+    .pdb-table th.c-link{width:12%}
+  }
+  /* ===== 휴대폰: 핵심(이름·분야·국적·대표작·링크)만 ===== */
+  @media(max-width:520px){
+    .pdb-table .c-life,.pdb-table .c-org,.pdb-table .c-work,.pdb-table .c-era{display:none}
+    .pdb-table th.c-life,.pdb-table th.c-org,.pdb-table th.c-work,.pdb-table th.c-era{width:0}
+    .pdb-table th.c-name{width:34%}
+    .pdb-table th.c-field{width:20%}
+    .pdb-table th.c-nation{width:28%}
+    .pdb-table th.c-link{width:18%}
+    .pdb-table th,.pdb-table td{padding-left:6px;padding-right:6px}
+    .pdb-table .c-field{white-space:normal}
+  }
+  .pdb-table th{text-align:left;font-size:1.15em;letter-spacing:0;text-transform:none;color:var(--text-2);font-weight:700;padding:20px 9px;border-top:3px solid var(--text);border-bottom:2px solid var(--text)}
+  .pdb-table td{padding:14px 9px;border-top:1px solid var(--line);color:var(--text-2);font-size:1em;white-space:nowrap;vertical-align:middle;overflow:hidden}
+  .pdb-table tbody tr{transition:background .15s ease}
+
+  .pdb-table .c-no{width:64px;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .pdb-table .c-name{white-space:normal;line-height:1.35}
+  .pdb-table .c-name a{color:var(--text);font-weight:600;font-size:1em;text-decoration:none;letter-spacing:-.01em;transition:color .15s ease}
+  .pdb-table .c-name-en{font-size:.82em;color:var(--text-3);font-weight:400;margin-left:6px}
+
+  .pdb-table .c-field{width:112px}
+  .pdb-table .tag{display:inline-block;font-size:.92em;color:var(--text-2);border:1px solid var(--line-2);border-radius:20px;padding:3px 11px;white-space:nowrap}
+  .pdb-table .c-birth{width:130px;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .pdb-table .c-school{color:var(--text-3)}
+
+  /* 표 하단 구분선 */
+  .pdb-divider{border-top:1px solid var(--line-2);margin-top:48px}
+  .pdb-pager{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:60px}
+  .pdb-pager .pg-nums{display:flex;gap:4px}
+  .pdb-pager .pg-nums a{min-width:38px;height:38px;display:grid;place-items:center;border-radius:9px;font-size:13px;color:var(--text-2);text-decoration:none;transition:background .15s ease,color .15s ease}
+  .pdb-pager .pg-nums a:hover{background:var(--paper-2);color:var(--text)}
+  .pdb-pager .pg-nums a.on{background:var(--text);color:var(--paper);font-weight:700}
+  .pdb-pager .pg-nav{font-size:13px;color:var(--text-2);text-decoration:none;padding:8px 10px;transition:color .15s ease}
+  .pdb-pager .pg-nav:hover{color:var(--text)}
+
+  @media(max-width:720px){
+    .pdb{padding:140px 0 46px}
+    .pdb-title{font-size:34px}
+    .pdb-titlebar{flex-direction:column;align-items:flex-start;gap:16px}
+    .pdb-toolbar{margin-top:34px}
+  }
+
+
+  /* 서브페이지 헤더: 기본 어두운(메인 GNB 느낌) → 호버 시 흰색 */
+  .site-header:not(.solid){background:linear-gradient(115deg,#0E1230 0%,#241a44 55%,#3a2456 100%)}
+  html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115deg,#0a0a0a 0%,#161616 55%,#222 100%)}
+
+
+  /* 풍성한 컬럼 */
+  .pdb-table .c-ava{width:56px;padding-right:0}
+  .pdb-table .ava{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--paper-2);border:1px solid var(--line);font-family:var(--display);font-weight:700;font-size:13px;color:var(--text-3);background-size:cover;background-position:center}
+  .pdb-table .c-nation{color:var(--text-2);overflow:hidden;text-overflow:ellipsis}
+  .pdb-table .nat-code{font-size:.85em;opacity:.6;margin-left:1px}
+  .pdb-table .c-life{width:118px;color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pdb-table .c-era{width:96px;color:var(--text-2)}
+
+
+  /* 대표작·소속 컬럼 */
+  .pdb-table .c-work{min-width:180px;max-width:270px;color:var(--text-2);white-space:normal;line-height:1.5}
+  .pdb-table .c-org{min-width:120px;max-width:170px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pdb-table .c-school{max-width:170px;overflow:hidden;text-overflow:ellipsis}
+  .pdb-table .c-name{min-width:120px}
+
+
+  /* 행 호버: 짙은 퍼플 배경 + 흰색 텍스트 */
+  .pdb-table tbody tr:hover td{background:#322152;color:#fff}
+  .pdb-table tbody tr:hover td a{color:#fff}
+  .pdb-table tbody tr:hover .tag{color:#fff;border-color:rgba(255,255,255,.45)}
+  .pdb-table tbody tr:hover .ava{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+
+
+  /* 복수 태그 */
+  .pdb-table .c-field{white-space:nowrap;overflow:hidden}
+  .pdb-table .c-field .tag{margin:0 4px 3px 0}
+  /* 사조 2줄 */
+  .pdb-table .c-era{white-space:nowrap}
+  .pdb-table .c-era .era-name{display:block;color:var(--text-2)}
+  .pdb-table .c-era .era-yr{display:block;font-size:.85em;color:var(--text-3);margin-top:2px}
+  /* 관련 링크 아이콘 */
+  .pdb-table .c-link{width:112px}
+  .pdb-table .c-link .lk{display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;color:var(--text-3);border:1px solid var(--line);border-radius:7px;margin-right:5px;transition:color .15s ease,border-color .15s ease}
+  .pdb-table .c-link .lk svg{width:14px;height:14px}
+  .pdb-table .c-link .lk:hover{color:var(--text);border-color:var(--text-3)}
+
+  /* 데이터 컬럼(유형·창단·홈페이지) 가운데 정렬 — 단체명·소재지·대표지휘자는 왼쪽 */
+  .pdb-table th.c-field, .pdb-table td.c-field,
+  .pdb-table th.c-life, .pdb-table td.c-life,
+  .pdb-table th.c-org, .pdb-table td.c-org,
+  .pdb-table th.c-link, .pdb-table td.c-link{text-align:center}
+  .pdb-table .c-field .tag{margin:0 1px}
+  /* 호버(퍼플) 시 추가 요소도 흰색 */
+  .pdb-table tbody tr:hover .era-name,
+  .pdb-table tbody tr:hover .era-yr{color:#fff}
+  .pdb-table tbody tr:hover .lk{color:#fff;border-color:rgba(255,255,255,.4)}
+
+
+  .pdb-table thead th[class]{color:var(--text-2)}
+
+
+  /* 행 호버 색 전환을 부드럽게 */
+  .pdb-table td,
+  .pdb-table td a,
+  .pdb-table .tag,
+  .pdb-table .ava,
+  .pdb-table .era-name,
+  .pdb-table .era-yr,
+  .pdb-table .lk{transition:background-color .25s ease, color .25s ease, border-color .25s ease}
+
+
+  /* OC 회원 배지 (별표 대체) */
+  .oc-badge{display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-size:9px;font-weight:800;letter-spacing:.03em;color:#fff;background:#EC7A1C;border-radius:4px;padding:2px 5px;margin-left:6px;vertical-align:middle;line-height:1}
+  .pdb-legend .oc-badge{margin-left:0;margin-right:5px}
+
+
+
+
+  /* ALLIANCE WXN: 빅배너 바로 위, 어두운 텍스트 */
+  .wxn-sub{margin:0 0 14px}
+  .wxn-sub .wxn-run{color:var(--text-2)}
+
+
+  /* 헤더 배경: 메인 4번째 패턴(scene-net 별자리) */
+  .pdb{position:relative}
+  .pdb-bg{position:absolute;top:0;left:0;right:0;height:470px;z-index:0;overflow:hidden;pointer-events:none;opacity:.55;-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%)}
+  .pdb-bg .wave{position:absolute;inset:0;width:100%;height:100%;transform:none;-webkit-mask-image:none;mask-image:none}
+  .pdb-bg .scene{position:absolute;inset:0;opacity:1}
+  .pdb-bg .scene svg{width:100%;height:100%;display:block}
+  .pdb-inner{position:relative;z-index:1}
+
+
+  /* 다크모드 행 호버: 순수 블랙 */
+  html[data-theme="dark"] .pdb-table tbody tr:hover td{background:#000}
+
+
+
 </style>
 </head>
 <body>
@@ -623,11 +837,11 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
       <div class="nav-item nav-item--db">
-        <a href="#">DATABASE</a>
+        <a href="#" class="active">DATABASE</a>
         <div class="dropdown"><div class="dropdown-inner">
           <a href="db-person.html">인물 DB</a>
           <a href="db-org.html">음악단체 DB</a>
-          <a href="db-venue.html">공연장 DB</a>
+          <a href="db-venue.html" class="active">공연장 DB</a>
           <a href="db-school.html">음악학교 DB</a>
           <a href="db-modern.html">현대음악 DB</a>
           <a href="db-foundation.html">관련기관·재단 DB</a>
@@ -736,7 +950,7 @@
             <h4>DATABASE</h4>
             <a href="db-person.html">인물 DB</a>
             <a href="db-org.html">음악단체 DB</a>
-            <a href="db-venue.html">공연장 DB</a>
+            <a href="db-venue.html" class="active">공연장 DB</a>
             <a href="db-school.html">음악학교 DB</a>
             <a href="db-modern.html">현대음악 DB</a>
             <a href="db-foundation.html">관련기관·재단 DB</a>
@@ -802,354 +1016,161 @@
   </div>
 </div>
 
-<!-- ===== hero ===== -->
-<section class="hero">
-  <div class="wave" aria-hidden="true">
-    <!-- scene 1: equalizer -->
-    <div class="scene scene-eq on">
-      <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice">
-        <defs><linearGradient id="wg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#9C7FD6"/><stop offset=".5" stop-color="#C9A94E"/><stop offset="1" stop-color="#7C63B0"/>
-        </linearGradient></defs>
-        <g fill="url(#wg)" opacity=".5"></g>
-      </svg>
-    </div>
-    <!-- scene 2: flowing waves -->
-    <div class="scene scene-flow">
-      <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice">
-        <defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#9C7FD6"/><stop offset=".5" stop-color="#C9A94E"/><stop offset="1" stop-color="#7C63B0"/>
-        </linearGradient></defs>
-        <g fill="none" stroke="url(#fg)" stroke-width="1.6" opacity=".55" stroke-linecap="round"></g>
-      </svg>
-    </div>
-    <!-- scene 3: dot grid wave -->
-    <div class="scene scene-rings">
-      <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice">
-        <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
-        <g fill="url(#rg)"></g>
-      </svg>
-    </div>
-    <!-- scene 4: floating particles -->
-    <div class="scene scene-net">
-      <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice">
-        <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/>
-        </linearGradient></defs>
-        <g fill="url(#dg)"></g>
-      </svg>
-    </div>
-  </div>
-  <div class="wrap">
-    <div class="hslide on">
-      <div class="eyebrow">Wixon Orchestra Series · Seoul</div>
-      <h1>Wiener Philharmoniker<br>&amp; Franz Welser-Möst</h1>
-      <div class="sub">빈 필하모닉 &amp; 프란츠 벨저-뫼스트 내한공연</div>
-      <div class="meta">
-        <span>일정 <b>2022.11.03 — 11.04</b></span>
-        <span>장소 <b>예술의전당 콘서트홀</b></span>
-        <span>19:30</span>
-      </div>
-    </div>
-    <div class="hslide">
-      <div class="eyebrow">Special Concert · Seoul</div>
-      <h1>The Little Singers<br>of Paris</h1>
-      <div class="sub">파리나무십자가 소년합창단 내한공연</div>
-      <div class="meta">
-        <span>일정 <b>2022.12.10 — 12.11</b></span>
-        <span>장소 <b>롯데콘서트홀</b></span>
-        <span>20:00</span>
-      </div>
-    </div>
-    <div class="hslide">
-      <div class="eyebrow">Outdoor Concert · Seoul</div>
-      <h1>한여름밤<br>우리가곡 야외음악회</h1>
-      <div class="sub">서울사이버대학교 &times; 하나은행 야외음악회</div>
-      <div class="meta">
-        <span>일정 <b>2013.08.03 — 08.24</b></span>
-        <span>장소 <b>예술의전당 신세계스퀘어</b></span>
-        <span>무료입장</span>
+<!-- ===== people database (data-centric) ===== -->
+<section class="pdb">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-net on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
       </div>
     </div>
   </div>
-  <div class="wxn-eyebrow"><span class="wxn-run">ALLIANCE WXN</span></div>
-  <div class="hero-dots"><i class="on"></i><i></i><i></i></div>
-</section>
+  <div class="pdb-inner">
 
-<!-- ===== triple banner ===== -->
-<section class="triple">
-  <button class="tb-arrow tb-prev" id="tbPrev" aria-label="이전">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-  </button>
-  <div class="tb-viewport">
-    <div class="tb-track" id="tbTrack"></div>
-  </div>
-  <button class="tb-arrow tb-next" id="tbNext" aria-label="다음">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-  </button>
-</section>
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/">홈</a><span>/</span><a href="#">Database</a><span>/</span><span class="on">공연장DB</span>
+    </nav>
 
-<!-- ===== quick icons ===== -->
-<section class="quick">
-  <div class="wrap">
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m1"></i></span>
-      <span class="qi-en">Recruit</span>
-      <span class="qi-ko">리크루트</span>
-      <span class="qi-desc">국내외 채용·인재 정보를<br>한곳에서 제공</span>
-    </a>
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m2"></i></span>
-      <span class="qi-en">Concours Info</span>
-      <span class="qi-ko">콩쿨정보</span>
-      <span class="qi-desc">국내 콩쿨 및 해외 유명<br>콩쿨 정보를 상세히 제공</span>
-    </a>
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m3"></i></span>
-      <span class="qi-en">Concert Info</span>
-      <span class="qi-ko">공연정보</span>
-      <span class="qi-desc">국내외 클래식 공연<br>일정과 정보를 제공</span>
-    </a>
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m4"></i></span>
-      <span class="qi-en">Entrance Examination</span>
-      <span class="qi-ko">입시커뮤니티</span>
-      <span class="qi-desc">예중·예고·음대 입시<br>정보와 소통 공간</span>
-    </a>
-    <a class="qa" href="#">
-      <span class="qi"><i class="qi-ic m5"></i></span>
-      <span class="qi-en">Production Agency</span>
-      <span class="qi-ko">공연단체/기획사</span>
-      <span class="qi-desc">공연단체·기획사<br>소개 및 정보를 제공</span>
-    </a>
-  </div>
-</section>
+    <nav class="pdb-subnav" aria-label="DATABASE 하위 메뉴">
+      <a href="db-person.html">인물 DB</a>
+      <a href="db-org.html">음악단체 DB</a>
+      <a href="db-venue.html" class="active">공연장 DB</a>
+      <a href="db-school.html">음악학교 DB</a>
+      <a href="db-modern.html">현대음악 DB</a>
+      <a href="db-foundation.html">관련기관·재단 DB</a>
+      <a href="db-academic.html">학술 DB</a>
+    </nav>
 
-<!-- ===== ticker ===== -->
-<div class="ticker">
-  <div class="wrap" id="ticker-list">
-    <div class="tk">
-      <span class="lbl">NEWS</span>
-      <span class="txt">한국페스티발앙상블 — 르네상스와 현대의 조화</span>
-      <span class="dt">2021-11-22</span>
-      <a class="more en" href="#">VIEW DETAIL &rarr;</a>
-    </div>
-    <div class="tk">
-      <span class="lbl">지식나눔</span>
-      <span class="txt">한국페스티발앙상블 — 르네상스와 현대의 조화</span>
-      <span class="dt">2021-11-22</span>
-      <a class="more en" href="#">VIEW DETAIL &rarr;</a>
-    </div>
-  </div>
-</div>
-
-<!-- ===== main board ===== -->
-<section class="board">
-  <div class="wrap">
-    <div class="board-main">
-
-    <!-- column 1 -->
-    <div class="col-1">
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Notice</span><span class="ko">공지사항</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <article class="lead" id="card-notice-lead">
-          <div class="thumb ph"></div>
-          <h4>[15명 한정 도슨트전시+공연초청] 2015 HPF 스페이스프로젝트</h4>
-          <p>안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다. 지금 2015년 11월 18일(수) 오후 4시 공연 전 부대행사인 도슨트 투어부터 공연까지 관람하실 수 있도록…</p>
-          <div class="foot"><a class="vm" href="#">VIEW MORE</a><span class="dt">2021.11.22</span></div>
-        </article>
-        <ul class="list" id="notice-list">
-          <li><a href="#">부산시립교향악단 2016 신년음악회 안내</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">일반 베르크 《보체크》와 바그너 《탈하일러》는 예정대로</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">3월 30일과 4월 2일은 파비오 루이지</a><span class="dt">21.11.22</span></li>
-        </ul>
-      </div>
-
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Concours</span><span class="ko">콩쿨정보</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <div class="split" id="card-concours-lead">
-          <div class="thumb ph"></div>
-          <div class="body">
-            <h4>2016 대한민국 신인음악콩쿠르</h4>
-            <p>국내 주요 콩쿠르 일정과 접수 안내를 한곳에서 확인하세요. 참가 부문·심사 기준·시상 내역을 정리했습니다.</p>
-            <div class="dt">2021.11.22</div>
-          </div>
-        </div>
-        <ul class="list" id="concours-list" style="margin-top:12px">
-          <li><a href="#">International piano competition 전체대상 400만원</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">제7회 민 클래식컵 뮤직 컴페티션 — 전국 음악 콩쿠르</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">예중·예고, 음대 입시생들을 위한 2017 음악입시</a><span class="dt">21.11.22</span></li>
-          <li><a href="#">2016 대한민국 신인음악콩쿠르 안내</a><span class="dt">21.11.22</span></li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- column 2 -->
-    <div class="col-2">
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Hot Topic</span><span class="ko">핫토픽</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <article class="lead" id="card-hot-topic">
-          <div class="thumb ph"></div>
-          <h4>MIKHAIL PLETNEV — 피아니스트의 재해석</h4>
-          <p>‘복구의 쇼팽’이라 불리며 섬세한 시정 넘치는 많은 피아노 작품들을 남겼던 ‘에드바르트 그리그’ 그의 작품세계를 한눈에 풀어볼 수 있는 음반으로, 그리그의 유일한 피아노 소나타를 비롯, 작곡자가…</p>
-          <div class="foot"><a class="vm" href="#">VIEW MORE</a><span class="dt">2021.11.22</span></div>
-        </article>
-      </div>
-
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Music School</span><span class="ko">이달의 음악학교</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <div class="split" id="card-music-school">
-          <div class="thumb ph"></div>
-          <div class="body">
-            <h4>&lt;제3탄&gt; 미국 뉴욕 줄리어드음대</h4>
-            <p>60 Lincoln Center Plaza New York, New York 10023 U.S.A. 미국 뉴욕음악에 위치한 줄리어드 음대는 한국 유학생이 많은 걸로 유명하다. 국내에서 왕성한 활동을 하고 있는 음악인들 중에도 유독…</p>
-            <div class="dt">2021.11.22</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Gallery</span><span class="ko">공연사진 / 영상</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-        <div class="split" id="card-gallery">
-          <div class="thumb ph"></div>
-          <div class="body">
-            <h4>[15명 한정 도슨트전시+공연초청] 2015 HPF</h4>
-            <p>안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다. 공연 전 부대행사인 도슨트 투어부터 관람하실 수 있도록…</p>
-            <div class="dt">2021.11.22</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Contemporary</span><span class="ko">현대음악</span></div><a class="more en" href="#">MORE +</a></div>
-        <div class="split" id="card-contemporary">
-          <div class="thumb ph"></div>
-          <div class="body">
-            <h4>MIKHAIL PLETNEV</h4>
-            <p>‘복구의 쇼팽’이라 불리며 섬세한 시정 넘치는 많은 피아노 작품들을 남겼던 ‘에드바르트 그리그’ 그의 작품세계를 한눈에 풀어볼 수 있는 음반으로, 그리그의 유일한 피아노 소나타를 비롯…</p>
-            <div class="dt">2021.11.22</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ad: horizontal banner across both columns -->
-    <a class="ad-slot board-ad" href="#">
-      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
-      <span class="ad-badge">Advertisement</span>
-      <span class="ad-desc">광고 영역 · 가로형 반응형 디스플레이</span>
-    </a>
-    </div><!-- /board-main -->
-
-    <!-- sidebar -->
-    <aside class="side">
-      <div class="sec-head"><div class="t"><span class="en-s">Concert PR</span></div></div>
-      <div class="card pr-slide" id="concert-pr">
-        <div class="img ph dark"></div>
-        <div class="cap">
-          <div class="en-s">Outdoor Concert · 2013</div>
-          <h4>한여름밤 우리가곡 야외음악회</h4>
-          <p>2013.8.3 ~ 8.24 · 예술의전당 신세계스퀘어 야외무대 · 무료입장. 서울사이버대학교와 하나은행이 함께하는 우리가곡 야외음악회.</p>
-        </div>
-        <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
-      </div>
-
-      <div class="ticket">
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
         <div>
-          <div class="en-s">FREE TICKETS</div>
-          <h4>연주회·콘서트 티켓 무료신청</h4>
-          <p>오퍼스클램 회원만 신청 가능합니다.</p>
+          <div class="pdb-eyebrow">VENUE · DATABASE</div>
+          <h1 class="pdb-title">공연장DB</h1>
         </div>
-        <div class="tk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M9 6v12" stroke-dasharray="2 2"/></svg></div>
       </div>
+      <p class="pdb-lead">국내외 콘서트홀 · 오페라하우스 · 복합공연장 등 공연장 아카이브 — 시설 정보와 공연을 한곳에서 확인하세요.</p>
+    </header>
 
-      <div class="sec-head"><div class="t"><span class="en-s">Funding</span><span class="ko">지원금 / 정책자금정보</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-      <ul class="fund" id="funding-list">
-        <li><a href="#">문화예술교육형 사회적기업 육성 지원사업</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">2012년 강원문화예술진흥사업</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">2011 문학창작활성화_작가활동지원신청</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">2011 공연영상주예술단체육성지원사업 심사결과</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">2011『문화공간 활성화지원사업』지원신청공고</a><span class="dt">~22.03.31</span></li>
-        <li><a href="#">문화예술교육형 사회적기업 육성 지원사업</a><span class="dt">~22.03.31</span></li>
-      </ul>
+    <div class="pdb-toolbar">
+      <div class="pdb-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" placeholder="이름 · 출신학교 · 키워드로 검색">
+      </div>
+      <div class="pdb-selects">
+        <select aria-label="국내/외">
+          <option>국내 · 국외</option>
+          <option>국내</option>
+          <option>국외</option>
+          <optgroup label="주요 국가">
+            <option>대한민국</option>
+            <option>독일</option>
+            <option>오스트리아</option>
+            <option>이탈리아</option>
+            <option>프랑스</option>
+            <option>러시아</option>
+            <option>영국</option>
+            <option>미국</option>
+            <option>체코</option>
+            <option>폴란드</option>
+            <option>헝가리</option>
+            <option>일본</option>
+            <option>중국</option>
+          </optgroup>
+          <option>기타</option>
+        </select>
+        <select aria-label="유형">
+          <option>전체 유형</option>
+          <option>콘서트홀</option>
+          <option>오페라하우스</option>
+          <option>다목적홀</option>
+          <option>실내악홀</option>
+          <option>야외공연장</option>
+          <option>복합공연장</option>
+          <option>기타</option>
+        </select>
+        <select aria-label="정렬">
+          <optgroup label="등록순">
+            <option>최신순</option>
+            <option>오래된순</option>
+          </optgroup>
+          <optgroup label="이름순">
+            <option>가나다순 (ㄱ→ㅎ)</option>
+            <option>가나다 역순 (ㅎ→ㄱ)</option>
+            <option>이름 A–Z</option>
+          </optgroup>
+          <optgroup label="공연장 속성">
+            <option>개관연도순</option>
+            <option>좌석수순</option>
+            <option>소재지순</option>
+          </optgroup>
+          <optgroup label="기타">
+            <option>OC등록 우선</option>
+            <option>조회수순</option>
+          </optgroup>
+        </select>
+      </div>
+      <a class="pdb-reg" href="db-write.html"><span class="plus">+</span> DB 등록</a>
+    </div>
 
-      <div class="sec-head" style="margin-top:24px"><div class="t"><span class="en-s">Self Picture</span></div></div>
-      <div class="selfpic" id="card-self-picture">
-        <div class="thumb ph"></div>
-        <div>
-          <h4>한국 최고의 실내악 콘서트</h4>
-          <p>1997년 세계무대에서 활약하는 국내 실내악 최정상 기인의 음악인을 한 무대에 모아 클래식계의…</p>
-          <a class="vm" href="#">VIEW DETAIL →</a>
+    <div class="pdb-meta">
+      <div class="pdb-count">전체 <b>280</b>개</div>
+      <div class="pdb-meta-right">
+        <div class="pdb-legend"><span class="oc-badge">OC</span> 오퍼스클램 등록 공연장</div>
+        <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+          <span class="fs-label">글자크기</span>
+          <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+          <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+          <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
         </div>
       </div>
+    </div>
 
-      <div class="sec-head"><div class="t"><span class="en-s">Self PR</span></div></div>
-      <div id="artists-list">
-      <div class="artist">
-        <div class="ava ph"></div>
-        <div>
-          <div class="role">Viola</div>
-          <h4>신윤경</h4>
-          <p>예원학교, 서울예고, 서울대학교 음악대학 우등 졸업 · New England Conservatory NEC Scholarship 장학생 우등 졸업</p>
-        </div>
-      </div>
-      <div class="artist" style="border-bottom:0">
-        <div class="ava ph"></div>
-        <div>
-          <div class="role">Violin</div>
-          <h4>정남일</h4>
-          <p>매너스음대졸업 · 광원디/에워학교졸업 · KBS교향악단 정기연주회 협연</p>
-        </div>
-      </div>
-      </div>
-    </aside>
+    <div class="pdb-tablewrap">
+      <table class="pdb-table">
+        <thead>
+          <tr><th class="c-no">No</th><th class="c-ava"></th><th class="c-name">공연장명</th><th class="c-field">유형</th><th class="c-nation">소재지</th><th class="c-life">개관</th><th class="c-org">좌석수</th><th class="c-era">운영주체</th><th class="c-work">상주단체</th><th class="c-school">대표 프로그램</th><th class="c-link">링크</th></tr>
+        </thead>
+        <tbody id="venues-list">
+          <tr><td class="c-no">20</td><td class="c-ava"><span class="ava">예</span></td><td class="c-name"><a href="db-venue-view.html">예술의전당 <span class="oc-badge">OC</span><span class="c-name-en">Seoul Arts Center</span></a></td><td class="c-field"><span class="tag">복합공연장</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1988</td><td class="c-org">2,505석</td><td class="c-era">예술의전당재단</td><td class="c-work">서울시향</td><td class="c-school">교향악축제</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">19</td><td class="c-ava"><span class="ava">롯</span></td><td class="c-name"><a href="db-venue-view.html">롯데콘서트홀<span class="c-name-en">Lotte Concert Hall</span></a></td><td class="c-field"><span class="tag">콘서트홀</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">2016</td><td class="c-org">2,036석</td><td class="c-era">롯데문화재단</td><td class="c-work">—</td><td class="c-school">오르간 콘서트</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">18</td><td class="c-ava"><span class="ava">세</span></td><td class="c-name"><a href="db-venue-view.html">세종문화회관 <span class="oc-badge">OC</span><span class="c-name-en">Sejong Center</span></a></td><td class="c-field"><span class="tag">복합공연장</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1978</td><td class="c-org">3,022석</td><td class="c-era">세종문화회관 (서울시)</td><td class="c-work">서울시립교향악단</td><td class="c-school">정기공연</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">17</td><td class="c-ava"><span class="ava">통</span></td><td class="c-name"><a href="db-venue-view.html">통영국제음악당<span class="c-name-en">Tongyeong Concert Hall</span></a></td><td class="c-field"><span class="tag">콘서트홀</span></td><td class="c-nation">대한민국 · 통영</td><td class="c-life">2014</td><td class="c-org">1,309석</td><td class="c-era">통영국제음악재단</td><td class="c-work">—</td><td class="c-school">통영국제음악제</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">16</td><td class="c-ava"><span class="ava">아</span></td><td class="c-name"><a href="db-venue-view.html">아트센터인천<span class="c-name-en">Art Center Incheon</span></a></td><td class="c-field"><span class="tag">콘서트홀</span></td><td class="c-nation">대한민국 · 인천</td><td class="c-life">2018</td><td class="c-org">1,727석</td><td class="c-era">인천문화재단</td><td class="c-work">—</td><td class="c-school">정기연주회</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">15</td><td class="c-ava"><span class="ava">무</span></td><td class="c-name"><a href="db-venue-view.html">빈 무지크페라인<span class="c-name-en">Musikverein</span></a></td><td class="c-field"><span class="tag">콘서트홀</span></td><td class="c-nation">오스트리아 · 빈</td><td class="c-life">1870</td><td class="c-org">1,744석</td><td class="c-era">빈 악우협회</td><td class="c-work">빈 필하모닉</td><td class="c-school">신년음악회</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">14</td><td class="c-ava"><span class="ava">베</span></td><td class="c-name"><a href="db-venue-view.html">베를린 필하모니<span class="c-name-en">Berlin Philharmonie</span></a></td><td class="c-field"><span class="tag">콘서트홀</span></td><td class="c-nation">독일 · 베를린</td><td class="c-life">1963</td><td class="c-org">2,440석</td><td class="c-era">베를린필 재단</td><td class="c-work">베를린 필하모닉</td><td class="c-school">발트뷔네</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">13</td><td class="c-ava"><span class="ava">콘</span></td><td class="c-name"><a href="db-venue-view.html">콘세르트헤바우<span class="c-name-en">Concertgebouw</span></a></td><td class="c-field"><span class="tag">콘서트홀</span></td><td class="c-nation">네덜란드 · 암스테르담</td><td class="c-life">1888</td><td class="c-org">1,974석</td><td class="c-era">콘세르트헤바우 N.V.</td><td class="c-work">로열 콘세르트헤바우</td><td class="c-school">정기연주회</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">12</td><td class="c-ava"><span class="ava">카</span></td><td class="c-name"><a href="db-venue-view.html">카네기홀<span class="c-name-en">Carnegie Hall</span></a></td><td class="c-field"><span class="tag">콘서트홀</span></td><td class="c-nation">미국 · 뉴욕</td><td class="c-life">1891</td><td class="c-org">2,804석</td><td class="c-era">카네기홀 코퍼레이션</td><td class="c-work">—</td><td class="c-school">시즌 공연</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">11</td><td class="c-ava"><span class="ava">로</span></td><td class="c-name"><a href="db-venue-view.html">로열 앨버트 홀<span class="c-name-en">Royal Albert Hall</span></a></td><td class="c-field"><span class="tag">다목적홀</span></td><td class="c-nation">영국 · 런던</td><td class="c-life">1871</td><td class="c-org">5,272석</td><td class="c-era">로열 앨버트 홀 재단</td><td class="c-work">—</td><td class="c-school">BBC 프롬스</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">10</td><td class="c-ava"><span class="ava">메</span></td><td class="c-name"><a href="db-venue-view.html">메트로폴리탄 오페라하우스<span class="c-name-en">Metropolitan Opera House</span></a></td><td class="c-field"><span class="tag">오페라하우스</span></td><td class="c-nation">미국 · 뉴욕</td><td class="c-life">1966</td><td class="c-org">3,800석</td><td class="c-era">링컨센터</td><td class="c-work">메트로폴리탄 오페라</td><td class="c-school">시즌 프로덕션</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">09</td><td class="c-ava"><span class="ava">라</span></td><td class="c-name"><a href="db-venue-view.html">라 스칼라<span class="c-name-en">Teatro alla Scala</span></a></td><td class="c-field"><span class="tag">오페라하우스</span></td><td class="c-nation">이탈리아 · 밀라노</td><td class="c-life">1778</td><td class="c-org">2,030석</td><td class="c-era">스칼라 재단</td><td class="c-work">라 스칼라</td><td class="c-school">시즌 개막</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">08</td><td class="c-ava"><span class="ava">빈</span></td><td class="c-name"><a href="db-venue-view.html">빈 국립오페라극장<span class="c-name-en">Vienna State Opera</span></a></td><td class="c-field"><span class="tag">오페라하우스</span></td><td class="c-nation">오스트리아 · 빈</td><td class="c-life">1869</td><td class="c-org">2,284석</td><td class="c-era">오스트리아 연방극장</td><td class="c-work">빈 국립오페라</td><td class="c-school">레퍼토리 공연</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">07</td><td class="c-ava"><span class="ava">시</span></td><td class="c-name"><a href="db-venue-view.html">시드니 오페라하우스<span class="c-name-en">Sydney Opera House</span></a></td><td class="c-field"><span class="tag">복합공연장</span></td><td class="c-nation">호주 · 시드니</td><td class="c-life">1973</td><td class="c-org">5,738석</td><td class="c-era">SOH 트러스트</td><td class="c-work">시드니 심포니</td><td class="c-school">다양한 공연</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">06</td><td class="c-ava"><span class="ava">금</span></td><td class="c-name"><a href="db-venue-view.html">금호아트홀 연세<span class="c-name-en">Kumho Art Hall</span></a></td><td class="c-field"><span class="tag">실내악홀</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">2015</td><td class="c-org">396석</td><td class="c-era">금호문화재단</td><td class="c-work">—</td><td class="c-school">아름다운 목요일</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">05</td><td class="c-ava"><span class="ava">리</span></td><td class="c-name"><a href="db-venue-view.html">예술의전당 리사이틀홀<span class="c-name-en">SAC Recital Hall</span></a></td><td class="c-field"><span class="tag">실내악홀</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1993</td><td class="c-org">354석</td><td class="c-era">예술의전당재단</td><td class="c-work">—</td><td class="c-school">실내악 시리즈</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">04</td><td class="c-ava"><span class="ava">대</span></td><td class="c-name"><a href="db-venue-view.html">대구콘서트하우스<span class="c-name-en">Daegu Concert House</span></a></td><td class="c-field"><span class="tag">콘서트홀</span></td><td class="c-nation">대한민국 · 대구</td><td class="c-life">1990</td><td class="c-org">1,344석</td><td class="c-era">대구시</td><td class="c-work">대구시립교향악단</td><td class="c-school">정기연주회</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">03</td><td class="c-ava"><span class="ava">부</span></td><td class="c-name"><a href="db-venue-view.html">부산문화회관<span class="c-name-en">Busan Cultural Center</span></a></td><td class="c-field"><span class="tag">복합공연장</span></td><td class="c-nation">대한민국 · 부산</td><td class="c-life">1988</td><td class="c-org">1,631석</td><td class="c-era">부산시</td><td class="c-work">부산시립교향악단</td><td class="c-school">정기공연</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">02</td><td class="c-ava"><span class="ava">올</span></td><td class="c-name"><a href="db-venue-view.html">올림픽공원 야외무대<span class="c-name-en">Olympic Park</span></a></td><td class="c-field"><span class="tag">야외공연장</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1986</td><td class="c-org">대형</td><td class="c-era">국민체육진흥공단</td><td class="c-work">—</td><td class="c-school">야외 페스티벌</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+          <tr><td class="c-no">01</td><td class="c-ava"><span class="ava">잘</span></td><td class="c-name"><a href="db-venue-view.html">잘츠부르크 축제극장<span class="c-name-en">Salzburg Festspielhaus</span></a></td><td class="c-field"><span class="tag">복합공연장</span></td><td class="c-nation">오스트리아 · 잘츠부르크</td><td class="c-life">1925</td><td class="c-org">2,179석</td><td class="c-era">잘츠부르크 페스티벌</td><td class="c-work">빈 필하모닉</td><td class="c-school">잘츠부르크 페스티벌</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pdb-divider"></div>
+
+    <div class="pdb-pager">
+      <a class="pg-nav" href="#">‹ 이전</a>
+      <div class="pg-nums"><a class="on" href="#">1</a><a href="#">2</a><a href="#">3</a><a href="#">4</a><a href="#">5</a></div>
+      <a class="pg-nav" href="#">다음 ›</a>
+    </div>
+
   </div>
 </section>
 
-<!-- ===== lower triple ===== -->
-<section class="lower">
-  <div class="wrap">
-    <!-- recruit -->
-    <div>
-      <div class="tabs"><button class="on">구인</button><button>구직</button></div>
-      <div class="recruit-lead">
-        <h4 class="disp">바로크합주단</h4><span class="badge">NEW</span>
-        <p>안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다…</p>
-      </div>
-      <ul class="list">
-        <li><a href="#">바로크주단 — 다카오는 2020년, 민간 오케스트라로…</a><span class="dt">~21.12.09</span></li>
-        <li><a href="#">작곡전공자 — 입시생은 매주실 전공자분 구합니다. 5개월정도…</a><span class="dt">~21.12.09</span></li>
-        <li><a href="#">서울현드영상불 — 바슨/클라리넷 주자 구합니다.</a><span class="dt">~21.12.09</span></li>
-        <li><a href="#">서울현드영상불 — 바슨/클라리넷 주자 구합니다.</a><span class="dt">~21.12.09</span></li>
-      </ul>
-    </div>
 
-    <!-- utility/score -->
-    <div>
-      <div class="sec-head"><div class="t"><span class="en-s">Utility / Score</span><span class="ko">악보·자료</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-      <ul class="dl" id="scores-list">
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">Waves Complete 2016.12.97</a></li>
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">MAGIX Vegas DVD Architect 7.0.0 Build 38</a></li>
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">MusicLab RealGuitar v3.0.1</a></li>
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">Beethoven Symphony No.6 Full Score</a></li>
-        <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">[VSTi] Spectrasonics Atmosphere</a></li>
-      </ul>
-    </div>
-
-    <!-- entrance exam region -->
-    <div>
-      <div class="sec-head"><div class="t"><span class="en-s">Entrance Exam</span><span class="ko">전국 예중·고·대학 입시요강</span></div><a class="more en" href="#">VIEW MORE +</a></div>
-      <div class="grid-region">
-        <a href="#">서울</a><a href="#">경기</a><a href="#">인천</a><a href="#">강원</a>
-        <a href="#">충남</a><a href="#">대전</a><a href="#">충북</a><a href="#">부산</a>
-        <a href="#">울산</a><a href="#">대구</a><a href="#">경북</a><a href="#">경남</a>
-        <a href="#">전남</a><a href="#">광주</a><a href="#">전북</a><a href="#">제주</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== bottom ad banners ===== -->
+<!-- ===== list bottom ad banners ===== -->
 <section class="bigban">
   <div class="wrap">
     <a class="ad-slot bigban-ad" href="#">
@@ -1163,6 +1184,21 @@
       <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
     </a>
   </div>
+</section>
+
+
+<!-- ===== triple banner ===== -->
+<div class="wxn-eyebrow wxn-sub"><span class="wxn-run">ALLIANCE WXN</span></div>
+<section class="triple">
+  <button class="tb-arrow tb-prev" id="tbPrev" aria-label="이전">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+  </button>
+  <div class="tb-viewport">
+    <div class="tb-track" id="tbTrack"></div>
+  </div>
+  <button class="tb-arrow tb-next" id="tbNext" aria-label="다음">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
 </section>
 
 <!-- ===== footer ===== -->
@@ -1343,7 +1379,20 @@
 (function(){
   var sh=document.getElementById('siteHeader');
   var hero=document.querySelector('.hero');
-  if(!sh||!hero)return;
+  if(!sh)return;
+  if(!hero){
+    if(window.innerWidth<=880){ sh.classList.add('solid'); return; }
+    var subHover=false;
+    function subUpd(){
+      if(subHover || window.scrollY>40){ sh.classList.add('solid'); }
+      else { sh.classList.remove('solid'); }
+    }
+    sh.addEventListener('mouseenter',function(){subHover=true;subUpd();});
+    sh.addEventListener('mouseleave',function(){subHover=false;subUpd();});
+    window.addEventListener('scroll',subUpd,{passive:true});
+    subUpd();
+    return;
+  }
   var hovering=false;
   function update(){
     var solid;
@@ -1764,6 +1813,59 @@ if('serviceWorker' in navigator){
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', init);
   } else { init(); }
+})();
+</script>
+
+<script>
+/* 인물DB 헤더 배경: 촘촘·작은 별자리 (공용 빌더 결과 재생성) */
+(function(){
+  var g=document.querySelector('.pdb-bg .scene-net g');
+  if(!g)return;
+  g.innerHTML='';
+  var W=1280,H=460,NN=70,maxD=132,NS='http://www.w3.org/2000/svg';
+  function el(t){return document.createElementNS(NS,t);}
+  var nodes=[];
+  for(var i=0;i<NN;i++) nodes.push({x:Math.random()*W, y:Math.random()*H});
+  for(var a=0;a<nodes.length;a++){
+    for(var b=a+1;b<nodes.length;b++){
+      var dx=nodes[a].x-nodes[b].x, dy=nodes[a].y-nodes[b].y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<maxD){
+        var ln=el('line');
+        ln.setAttribute('x1',nodes[a].x.toFixed(1));ln.setAttribute('y1',nodes[a].y.toFixed(1));
+        ln.setAttribute('x2',nodes[b].x.toFixed(1));ln.setAttribute('y2',nodes[b].y.toFixed(1));
+        ln.style.animationDuration=(3.2+Math.random()*3.2).toFixed(2)+'s';
+        ln.style.animationDelay=(-Math.random()*4.5).toFixed(2)+'s';
+        g.appendChild(ln);
+      }
+    }
+  }
+  nodes.forEach(function(n){
+    var c=el('circle');
+    c.setAttribute('cx',n.x.toFixed(1));c.setAttribute('cy',n.y.toFixed(1));
+    c.setAttribute('r',(1.1+Math.random()*1.7).toFixed(1));
+    c.style.animationDuration=(3+Math.random()*3).toFixed(2)+'s';
+    c.style.animationDelay=(-Math.random()*4).toFixed(2)+'s';
+    g.appendChild(c);
+  });
+})();
+</script>
+<script>
+/* 게시판/자료실 글자 크기 조절 */
+(function(){
+  var table=document.querySelector('.pdb-table');
+  var btns=document.querySelectorAll('.pdb-fontsize .fs-btn');
+  if(!table||!btns.length)return;
+  var sizes=[12,13,15,17,19], idx=1;
+  function apply(){ table.style.setProperty('--tbl-fs', sizes[idx]+'px'); }
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.getAttribute('data-fs');
+      if(k==='up') idx=Math.min(sizes.length-1, idx+1);
+      else if(k==='down') idx=Math.max(0, idx-1);
+      else idx=1;
+      apply();
+    });
+  });
 })();
 </script>
 </body>
