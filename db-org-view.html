@@ -2165,5 +2165,29 @@ if('serviceWorker' in navigator){
   upd();
 })();
 </script>
+<script>
+/* 음악단체 뷰: ?id 로드 */
+(function(){
+  var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var H={apikey:KEY,Authorization:'Bearer '+KEY};
+  var id=new URLSearchParams(location.search).get('id'); if(!id) return;
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function fact(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
+  fetch(URL+'/rest/v1/orgs?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})
+   .then(function(a){if(!a||!a.length)return;var o=a[0];var nm=(o.name_ko||'').trim();
+     var por=document.querySelector('.pv-portrait span');if(por)por.textContent=nm?nm[0]:'?';
+     var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(o.name_en){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=o.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
+     var tg=document.querySelector('.pv-tags');if(tg){var html=o.type?'<span class="tag">'+esc(o.type)+'</span>':'';if(o.is_oc)html+='<span class="oc-badge">OC</span>';tg.innerHTML=html;}
+     var fc=document.querySelector('.pv-facts');if(fc)fc.innerHTML=fact('소재지',esc(o.location||''))+fact('창단',esc(o.founded||''))+fact('상임지휘자',esc(o.leader||''))+fact('연고',esc(o.home_venue||''));
+     var desc=(o.description&&o.description.trim())?o.description.trim():((o.location?o.location+'의 ':'')+(o.type||'음악단체')+'.');
+     var lead=document.querySelector('.pv-lead');if(lead)lead.textContent=desc;
+     var bio=document.querySelector('.pv-prose');if(bio)bio.innerHTML='<p>'+esc(desc)+'</p>'+((o.description&&o.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
+     var wl=document.querySelector('ul.pv-worklist');if(wl&&o.activities)wl.innerHTML=o.activities.split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
+     var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('유형',esc(o.type||''))+fact('소재지',esc(o.location||''))+fact('창단',esc(o.founded||''))+fact('상임지휘자',esc(o.leader||''))+fact('연고 공연장',esc(o.home_venue||''));
+     var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
+     document.title=nm+' · 음악단체DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+   }).catch(function(e){console.error('org view 로드 실패:',e);});
+})();
+</script>
 </body>
 </html>

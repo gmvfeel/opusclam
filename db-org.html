@@ -1874,5 +1874,31 @@ if('serviceWorker' in navigator){
   });
 })();
 </script>
+<script>
+/* 음악단체DB: Supabase 목록 로드 */
+(function(){
+  var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var H={apikey:KEY,Authorization:'Bearer '+KEY};
+  var tb=document.getElementById('orgs-list'); if(!tb) return;
+  var IC={home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>',wiki:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>',video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>'};
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function ini(n){n=(n||'').trim();return n?esc(n[0]):'?';}
+  function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
+  function row(o){
+    var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
+    var en=o.name_en?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
+    var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
+    return '<tr><td class="c-no">'+esc(o.sort_no)+'</td><td class="c-ava"><span class="ava">'+ini(o.name_ko)+'</span></td>'+
+      '<td class="c-name"><a href="db-org-view.html?id='+encodeURIComponent(o.id)+'">'+esc(o.name_ko)+oc+en+'</a></td>'+
+      '<td class="c-field"><span class="tag">'+esc(o.type||'')+'</span></td>'+
+      '<td class="c-nation">'+esc(o.location||'')+'</td><td class="c-life">'+esc(o.founded||'')+'</td>'+
+      '<td class="c-org">'+esc(o.leader||'')+'</td><td class="c-work">'+esc(o.activities||'')+'</td>'+
+      '<td class="c-school">'+esc(o.home_venue||'')+'</td><td class="c-link">'+links+'</td></tr>';
+  }
+  fetch(URL+'/rest/v1/orgs?select=*&order=sort_no.desc',{headers:H}).then(function(r){if(!r.ok)throw 0;return r.json();})
+   .then(function(rows){if(!Array.isArray(rows)||!rows.length)return;tb.innerHTML=rows.map(row).join('');var c=document.querySelector('.pdb-count b');if(c)c.textContent=rows.length;})
+   .catch(function(e){console.error('orgs 로드 실패:',e);});
+})();
+</script>
 </body>
 </html>
