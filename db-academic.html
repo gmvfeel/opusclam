@@ -1859,5 +1859,29 @@ if('serviceWorker' in navigator){
   });
 })();
 </script>
+<script>
+/* 학술DB 리스트: Supabase 로드 */
+(function(){
+  var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',H={apikey:KEY,Authorization:'Bearer '+KEY};
+  var tb=document.getElementById('academic-list'); if(!tb) return;
+  var IC={quote:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 12h8M12 8v8\"/></svg>',link:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1\"/><path d=\"M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1\"/></svg>'};
+
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function ini(n){n=(n||'').trim();return n?esc(n[0]):'?';}
+  function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
+  function row(x){
+    var oc=x.is_oc?' <span class="oc-badge">OC</span>':'';
+    var en=x.name_en?'<span class="c-name-en">'+esc(x.name_en)+'</span>':'';
+    var links='<span class="c-link">'+lk(x.link_full,'원문',IC.link)+lk(x.link_cite,'인용',IC.quote)+'</span>';
+    return '<tr><td class="c-no">'+esc(x.sort_no)+'</td><td class="c-ava"><span class="ava">'+esc(x.ava||'?')+'</span></td>'+
+      '<td class="c-name"><a href="db-academic-view.html?id='+encodeURIComponent(x.id)+'">'+esc(x.name_ko)+oc+en+'</a></td>'+
+      '<td class="c-field"><span class="tag">'+esc(x.type||'')+'</span></td>'+'<td class="c-nation">'+esc(x.author||'')+'</td>'+'<td class="c-life">'+esc(x.pub_year||'')+'</td>'+'<td class="c-org">'+esc(x.publisher||'')+'</td>'+'<td class="c-work">'+esc(x.field||'')+'</td>'+'<td class="c-era">'+esc(x.keywords||'')+'</td>'+'<td class="c-school">'+esc(x.language||'')+'</td>'+
+      '<td class="c-link">'+links+'</td></tr>';
+  }
+  fetch(URL+'/rest/v1/academic?select=*&order=sort_no.desc',{headers:H}).then(function(r){if(!r.ok)throw 0;return r.json();})
+   .then(function(rows){if(!Array.isArray(rows)||!rows.length)return;tb.innerHTML=rows.map(row).join('');var c=document.querySelector('.pdb-count b');if(c)c.textContent=rows.length;})
+   .catch(function(e){console.error('academic 로드 실패:',e);});
+})();
+</script>
 </body>
 </html>

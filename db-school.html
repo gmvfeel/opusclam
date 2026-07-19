@@ -1879,5 +1879,29 @@ if('serviceWorker' in navigator){
   });
 })();
 </script>
+<script>
+/* 음악학교DB 리스트: Supabase 로드 */
+(function(){
+  var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',H={apikey:KEY,Authorization:'Bearer '+KEY};
+  var tb=document.getElementById('schools-list'); if(!tb) return;
+  var IC={wiki:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z\"/><path d=\"M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z\"/></svg>',video:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M10 9l5 3-5 3z\" fill=\"currentColor\" stroke=\"none\"/></svg>',home:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18\"/></svg>'};
+
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function ini(n){n=(n||'').trim();return n?esc(n[0]):'?';}
+  function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
+  function row(x){
+    var oc=x.is_oc?' <span class="oc-badge">OC</span>':'';
+    var en=x.name_en?'<span class="c-name-en">'+esc(x.name_en)+'</span>':'';
+    var links='<span class="c-link">'+lk(x.link_home,'홈페이지',IC.home)+lk(x.link_wiki,'위키',IC.wiki)+lk(x.link_video,'영상',IC.video)+'</span>';
+    return '<tr><td class="c-no">'+esc(x.sort_no)+'</td><td class="c-ava"><span class="ava">'+ini(x.name_ko)+'</span></td>'+
+      '<td class="c-name"><a href="db-school-view.html?id='+encodeURIComponent(x.id)+'">'+esc(x.name_ko)+oc+en+'</a></td>'+
+      '<td class="c-field"><span class="tag">'+esc(x.category||'')+'</span></td>'+'<td class="c-nation">'+esc(x.location||'')+'</td>'+'<td class="c-life">'+esc(x.founded||'')+'</td>'+'<td class="c-org">'+esc(x.departments||'')+'</td>'+'<td class="c-work">'+esc(x.estab_type||'')+'</td>'+'<td class="c-era">'+esc(x.alumni||'')+'</td>'+'<td class="c-school">'+esc(x.features||'')+'</td>'+
+      '<td class="c-link">'+links+'</td></tr>';
+  }
+  fetch(URL+'/rest/v1/schools?select=*&order=sort_no.desc',{headers:H}).then(function(r){if(!r.ok)throw 0;return r.json();})
+   .then(function(rows){if(!Array.isArray(rows)||!rows.length)return;tb.innerHTML=rows.map(row).join('');var c=document.querySelector('.pdb-count b');if(c)c.textContent=rows.length;})
+   .catch(function(e){console.error('schools 로드 실패:',e);});
+})();
+</script>
 </body>
 </html>

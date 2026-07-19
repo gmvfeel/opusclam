@@ -2166,5 +2166,29 @@ if('serviceWorker' in navigator){
   upd();
 })();
 </script>
+<script>
+/* 현대음악DB 뷰: ?id 로드 */
+(function(){
+  var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',H={apikey:KEY,Authorization:'Bearer '+KEY};
+  var id=new URLSearchParams(location.search).get('id'); if(!id) return;
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function fact(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
+  fetch(URL+'/rest/v1/modern_composers?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})
+   .then(function(a){if(!a||!a.length)return;var x=a[0];var nm=(x.name_ko||'').trim();
+     var por=document.querySelector('.pv-portrait span');if(por)por.textContent=(function(n){n=(x.name_ko||'').trim();return n?n[0]:'?';})();
+     var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(x.name_en){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=x.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
+     var tg=document.querySelector('.pv-tags');if(tg){var html=x.school_style?'<span class="tag">'+esc(x.school_style)+'</span>':'';if(x.is_oc)html+='<span class="oc-badge">OC</span>';tg.innerHTML=html;}
+     var fc=document.querySelector('.pv-facts');if(fc)fc.innerHTML=fact('사조·유파',esc(x.school_style||''))+fact('국적',esc(x.nationality||'')+(x.nat_code?' <span class="nat-code">('+esc(x.nat_code)+')</span>':''))+fact('생몰',esc(x.life||''))+fact('대표 기법',esc(x.technique||''));
+     var lead0=(esc(x.nationality||'')+' · '+esc(x.school_style||'')).replace(/(^| · )+/g,function(m,p,o){return o===0?'':' · ';}).replace(/^ · | · $/g,'');
+     var desc=(x.description&&x.description.trim())?x.description.trim():(lead0||'현대음악DB');
+     var lead=document.querySelector('.pv-lead');if(lead)lead.textContent=desc;
+     var bio=document.querySelector('.pv-prose');if(bio)bio.innerHTML='<p>'+esc(desc)+'</p>'+((x.description&&x.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
+     var wl=document.querySelector('ul.pv-worklist');if(wl&&x.works)wl.innerHTML=String(x.works).split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
+     var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('사조·유파',esc(x.school_style||''))+fact('국적',esc(x.nationality||'')+(x.nat_code?' <span class="nat-code">('+esc(x.nat_code)+')</span>':''))+fact('생몰',esc(x.life||''))+fact('대표 기법',esc(x.technique||''))+fact('대표작',esc(x.works||''))+fact('사사(계보)',esc(x.lineage||''))+fact('활동시기',esc(x.active_period||''));
+     var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
+     document.title=nm+' · 현대음악DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+   }).catch(function(e){console.error('현대음악DB view 로드 실패:',e);});
+})();
+</script>
 </body>
 </html>
