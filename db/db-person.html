@@ -1314,7 +1314,7 @@ if('serviceWorker' in navigator){
   function nd(v){return (v!=null&&String(v).trim())?esc(v):'<span class="nd">\u2014</span>';}
   function ava(n){n=(n||'').trim();return n?esc(n.charAt(0)):'?';}
   function tags(f){if(!f)return '';return f.split(',').map(function(t){t=t.trim();return t?'<span class="tag">'+esc(t)+'</span>':'';}).join('');}
-  function row(p){
+  function row(p,no){
     var oc=p.is_oc?' <span class="oc-badge">OC</span>':'';
     var _nc=natCode(p.nationality); var nat=p.nationality?(esc(p.nationality)+(_nc?' <span class="nat-code">('+_nc+')</span>':'')):'<span class="nd">\u2014</span>';
     var era=(p.era_name||p.era_yr)?((p.era_name?'<span class="era-name">'+esc(p.era_name)+'</span>':'')+(p.era_yr?'<span class="era-yr">'+esc(p.era_yr)+'</span>':'')):'<span class="nd">\u2014</span>';
@@ -1323,7 +1323,7 @@ if('serviceWorker' in navigator){
       +'<a href="'+esc(p.link_audio||'#')+'" class="lk" title="음원">'+I_AUDIO+'</a>'
       +'<a href="'+esc(p.link_video||'#')+'" class="lk" title="영상">'+I_VIDEO+'</a></span>';
     return '<tr data-id="'+esc(p.id)+'">'
-      +'<td class="c-no">'+esc(p.sort_no)+'</td>'
+      +'<td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ava(p.name_ko))+'</span></td>'
       +'<td class="c-name"><a href="db-person-view.html?id='+encodeURIComponent(p.id)+'&p='+cur+'">'+esc(p.name_ko)+oc+((p.name_en&&p.name_en!==p.name_ko)?'<span class="c-name-en">'+esc(p.name_en)+'</span>':'')+'</a></td>'
       +'<td class="c-field">'+tags(p.field)+'</td>'
@@ -1395,7 +1395,7 @@ if('serviceWorker' in navigator){
             tbody.innerHTML='<tr><td colspan="11" class="pdb-empty">요청하신 검색 결과가 없습니다.</td></tr>';
             if(pager) pager.innerHTML='';
           } else {
-            tbody.innerHTML=rows.map(row).join('');
+            tbody.innerHTML=rows.map(function(rw,ix){return row(rw, off+ix+1);}).join('');
             renderPager();
             if(focusId){ var _fr=tbody.querySelector('tr[data-id="'+focusId+'"]'); if(_fr){ _fr.classList.add('row-focus'); try{_fr.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){} } focusId=null; }
           }
