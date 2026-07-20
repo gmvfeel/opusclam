@@ -119,7 +119,7 @@
         <h3>인물DB · 분야별 수집</h3>
         <p>위키데이터에서 클래식 인물을 <b>분야별</b>로 가져옵니다. 이름(한/영)·생몰·국적·사조·출신학교·대표작·주요 악기·사진을 채우며, 같은 인물은 중복 저장되지 않습니다. 원하는 분야 버튼을 눌러 하나씩 수집하세요.</p>
         <div class="collect-row">
-          <label>분야별 가져올 인원</label><input type="number" id="collectLimit" value="200" min="10" max="500">
+          <label>분야별 가져올 인원</label><input type="number" id="collectLimit" value="500" min="10" max="5000">
         </div>
         <label class="collect-kr"><input type="checkbox" id="krOnly"> 🇰🇷 국내(한국) 인물만 수집</label>
         <div class="collect-btns">
@@ -227,7 +227,7 @@
     }
     async function collect(mode, occ, field, label){
       var limit=parseInt(document.getElementById('collectLimit').value,10)||200;
-      if(limit>500)limit=500; if(limit<10)limit=10;
+      if(limit>5000)limit=5000; if(limit<10)limit=10;
       var kr=document.getElementById('krOnly')&&document.getElementById('krOnly').checked;
       var krC=kr?' ?item wdt:P27 wd:Q884 . ':'';
       var pop='FILTER NOT EXISTS { ?item wdt:P136 ?g. ?g wdt:P279* wd:Q373342 } FILTER NOT EXISTS { ?item wdt:P136 wd:Q37073 } FILTER NOT EXISTS { ?item wdt:P106 wd:Q33999 }';
@@ -243,19 +243,19 @@
         sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?1:8)+') '+krC+pop;
       }
       setBtns(true); logbox.textContent='위키데이터에 요청 중… ('+label+(kr?' · 국내':'')+' 상위 '+limit+'명)'; progShow(label+' 목록 가져오는 중…',true);
-      var q1='SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel ?mbid WHERE {'
-        +'{ SELECT DISTINCT ?item ?sl WHERE { '+sub+' } ORDER BY DESC(?sl) LIMIT '+limit+' } '
-        +'OPTIONAL{?item wdt:P569 ?birth.} OPTIONAL{?item wdt:P570 ?death.} '
-        +'OPTIONAL{?item wdt:P27 ?c. ?c rdfs:label ?countryLabel FILTER(LANG(?countryLabel)="ko")} '
-        +'OPTIONAL{?item rdfs:label ?en FILTER(LANG(?en)="en")} '
-        +'OPTIONAL{?item rdfs:label ?ko FILTER(LANG(?ko)="ko")} '
-        +'OPTIONAL{?item wdt:P434 ?mbid.} '
-        +'} ORDER BY DESC(?sl)';
-      var rows=await sparql(q1);
-      if(rows===null){ progHide(); setBtns(false); return; }
-      log('받은 목록: '+rows.length+'행 → 정리 중…');
+      var CHUNK=(mode==='instrument')?250:400;
       var seen={}, persons=[];
-      rows.forEach(function(b){
+      function bq(off,ch){
+        return 'SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel ?mbid WHERE {'
+          +'{ SELECT DISTINCT ?item ?sl WHERE { '+sub+' } ORDER BY DESC(?sl) LIMIT '+ch+' OFFSET '+off+' } '
+          +'OPTIONAL{?item wdt:P569 ?birth.} OPTIONAL{?item wdt:P570 ?death.} '
+          +'OPTIONAL{?item wdt:P27 ?c. ?c rdfs:label ?countryLabel FILTER(LANG(?countryLabel)="ko")} '
+          +'OPTIONAL{?item rdfs:label ?en FILTER(LANG(?en)="en")} '
+          +'OPTIONAL{?item rdfs:label ?ko FILTER(LANG(?ko)="ko")} '
+          +'OPTIONAL{?item wdt:P434 ?mbid.} '
+          +'} ORDER BY DESC(?sl)';
+      }
+      function parseRow(b){
         var qid=b.item.value.split('/').pop(); if(seen[qid])return; seen[qid]=1;
         var en=b.en?b.en.value:''; if(!en)return;
         var ko=b.ko?b.ko.value:en;
@@ -267,7 +267,18 @@
           nationality:(b.countryLabel?b.countryLabel.value:''),
           life:(by?(by+' – '+(dy||'')):''),era_name:eraFromYear(by),era_yr:eraYr(by),
           works:'',school:'',instrument:'',image_url:'',mbid:(b.mbid?b.mbid.value:''),sort_no:sl});
-      });
+      }
+      for(var off=0; off<limit; off+=CHUNK){
+        var ch=Math.min(CHUNK, limit-off);
+        progLabel.textContent=label+' 목록 '+(off+1)+'~'+(off+ch);
+        log('목록 가져오는 중… ('+(off+1)+'~'+(off+ch)+')');
+        var rows=await sparql(bq(off,ch));
+        if(rows===null){ if(!persons.length){ progHide(); setBtns(false); return; } break; }
+        var chunkItems={}; rows.forEach(function(r){chunkItems[r.item.value]=1;});
+        rows.forEach(parseRow);
+        if(Object.keys(chunkItems).length < ch) break;
+      }
+      log('받은 인물: '+persons.length+'명');
       if(!persons.length){ log('⚠ 조건에 맞는 인물이 없습니다.'); progHide(); setBtns(false); return; }
       var byId={}; persons.forEach(function(p){byId[p.wikidata_id]=p;});
       progShow('상세정보(학교·대표활동·악기·사진) 가져오는 중…',false); progSet(0);
