@@ -227,14 +227,15 @@
       var krC=kr?' ?item wdt:P27 wd:Q884 . ':'';
       var pop='FILTER NOT EXISTS { ?item wdt:P136 ?g. ?g wdt:P279* wd:Q373342 } FILTER NOT EXISTS { ?item wdt:P136 wd:Q37073 } FILTER NOT EXISTS { ?item wdt:P106 wd:Q33999 }';
       var popInst=pop+' FILTER NOT EXISTS { ?item wdt:P106 wd:Q177220 }';
+      var classReq=' VALUES ?fam { wd:Q9730 wd:Q1344 } ?item wdt:P136/wdt:P279* ?fam . ';
       var sub;
       if(mode==='classical'){
-        if(kr) sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > 2) '+krC+pop;
-        else sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . '+krC+' VALUES ?fam { wd:Q9730 wd:Q1344 } ?item wdt:P136/wdt:P279* ?fam .';
+        sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . '+krC+classReq+(kr?pop:'');
       } else if(mode==='instrument'){
-        sub='?item wdt:P1303 ?anyi ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?3:12)+') '+krC+popInst;
+        if(kr) sub='?item wdt:P1303 ?anyi ; wikibase:sitelinks ?sl . '+krC+classReq+popInst;
+        else sub='?item wdt:P1303 ?anyi ; wikibase:sitelinks ?sl . FILTER(?sl > 12) '+popInst;
       } else {
-        sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?3:8)+') '+krC+pop;
+        sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?1:8)+') '+krC+pop;
       }
       setBtns(true); logbox.textContent='위키데이터에 요청 중… ('+label+(kr?' · 국내':'')+' 상위 '+limit+'명)'; progShow(label+' 목록 가져오는 중…',true);
       var q1='SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel WHERE {'
