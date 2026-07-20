@@ -1350,7 +1350,7 @@ if('serviceWorker' in navigator){
       .then(function(rows){
         if(Array.isArray(rows)){
           cur=pg; tbody.innerHTML=rows.map(row).join('');
-          var cnt=document.querySelector('.pdb-count b'); if(cnt&&total) cnt.textContent=total.toLocaleString();
+          var cnt=document.querySelector('.pdb-count b'); if(cnt) cnt.textContent=(total||0).toLocaleString();
           renderPager();
         }
       })
