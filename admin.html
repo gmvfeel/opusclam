@@ -61,7 +61,9 @@
   .collect-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .collect-row label{font-size:13px;color:#b0aac8}
   .collect-row input{width:90px;padding:9px 11px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.22);color:#fff;font-family:inherit}
-  .collect-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .collect-kr{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-size:13px;color:#cfc9e2;cursor:pointer}
+  .collect-kr input{width:16px;height:16px}
+  .collect-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
   .collect-btn{padding:11px 22px;border:0;border-radius:9px;background:var(--orange);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
   .collect-btn:hover{background:#d86d12}.collect-btn:disabled{opacity:.6;cursor:default}
     .progress-wrap{margin-top:16px;display:none}
@@ -119,13 +121,12 @@
         <div class="collect-row">
           <label>분야별 가져올 인원</label><input type="number" id="collectLimit" value="200" min="10" max="500">
         </div>
+        <label class="collect-kr"><input type="checkbox" id="krOnly"> 🇰🇷 국내(한국) 인물만 수집</label>
         <div class="collect-btns">
-          <button class="collect-btn" data-occ="Q36834" data-field="작곡" data-mode="classical">작곡가</button>
-          <button class="collect-btn" data-occ="Q158852" data-field="지휘" data-mode="pop">지휘자</button>
-          <button class="collect-btn" data-occ="Q486748" data-field="피아노" data-mode="pop">피아니스트</button>
-          <button class="collect-btn" data-occ="Q1259917" data-field="바이올린" data-mode="pop">바이올리니스트</button>
-          <button class="collect-btn" data-occ="Q13219637" data-field="첼로" data-mode="pop">첼리스트</button>
-          <button class="collect-btn" data-occ="Q2865819" data-field="성악" data-mode="pop">성악가</button>
+          <button class="collect-btn" data-mode="classical" data-occ="Q36834" data-field="작곡">작곡가</button>
+          <button class="collect-btn" data-mode="occupation" data-occ="Q158852" data-field="지휘">지휘자</button>
+          <button class="collect-btn" data-mode="occupation" data-occ="Q2865819" data-field="성악">성악가</button>
+          <button class="collect-btn" data-mode="instrument" data-occ="" data-field="">연주자 (악기별)</button>
         </div>
         <div class="progress-wrap" id="progWrap">
           <div class="progress-top"><span id="progLabel">진행 중…</span><span id="progPct"></span></div>
@@ -219,15 +220,24 @@
       try{ var res=await fetch(url,{headers:{Accept:'application/sparql-results+json'}}); if(!res.ok){ log('❌ 위키데이터 오류: HTTP '+res.status); return null; } var j=await res.json(); return (j.results&&j.results.bindings)||[]; }
       catch(e){ log('❌ 위키데이터 연결 실패: '+e.message); return null; }
     }
-    async function collect(occ, field, mode, label){
+    async function collect(mode, occ, field, label){
       var limit=parseInt(document.getElementById('collectLimit').value,10)||200;
       if(limit>500)limit=500; if(limit<10)limit=10;
-      setBtns(true); logbox.textContent='위키데이터에 요청 중… ('+label+' 상위 '+limit+'명)'; progShow(label+' 목록 가져오는 중…',true);
-      var filt = (mode==='classical')
-        ? 'VALUES ?fam { wd:Q9730 wd:Q1344 } ?item wdt:P136/wdt:P279* ?fam .'
-        : 'FILTER(?sl > 8) FILTER NOT EXISTS { ?item wdt:P136 ?g. ?g wdt:P279* wd:Q373342 } FILTER NOT EXISTS { ?item wdt:P136 wd:Q37073 }';
+      var kr=document.getElementById('krOnly')&&document.getElementById('krOnly').checked;
+      var krC=kr?' ?item wdt:P27 wd:Q884 . ':'';
+      var pop='FILTER NOT EXISTS { ?item wdt:P136 ?g. ?g wdt:P279* wd:Q373342 } FILTER NOT EXISTS { ?item wdt:P136 wd:Q37073 }';
+      var sub;
+      if(mode==='classical'){
+        if(kr) sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > 0) '+krC+pop;
+        else sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . '+krC+' VALUES ?fam { wd:Q9730 wd:Q1344 } ?item wdt:P136/wdt:P279* ?fam .';
+      } else if(mode==='instrument'){
+        sub='?item wdt:P1303 ?anyi ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?0:12)+') '+krC+pop;
+      } else {
+        sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?0:8)+') '+krC+pop;
+      }
+      setBtns(true); logbox.textContent='위키데이터에 요청 중… ('+label+(kr?' · 국내':'')+' 상위 '+limit+'명)'; progShow(label+' 목록 가져오는 중…',true);
       var q1='SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel WHERE {'
-        +'{ SELECT DISTINCT ?item ?sl WHERE { ?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . '+filt+' } ORDER BY DESC(?sl) LIMIT '+limit+' } '
+        +'{ SELECT DISTINCT ?item ?sl WHERE { '+sub+' } ORDER BY DESC(?sl) LIMIT '+limit+' } '
         +'OPTIONAL{?item wdt:P569 ?birth.} OPTIONAL{?item wdt:P570 ?death.} '
         +'OPTIONAL{?item wdt:P27 ?c. ?c rdfs:label ?countryLabel FILTER(LANG(?countryLabel)="ko")} '
         +'OPTIONAL{?item rdfs:label ?en FILTER(LANG(?en)="en")} '
@@ -245,29 +255,40 @@
         if(b.birth && b.birth.value.charAt(0)!=='-') by=parseInt(b.birth.value.slice(0,4),10)||null;
         if(b.death && b.death.value.charAt(0)!=='-') dy=parseInt(b.death.value.slice(0,4),10)||null;
         var sl=b.sl?(parseInt(b.sl.value,10)||0):0;
-        persons.push({wikidata_id:qid,name_ko:ko,name_en:en,field:field,
+        persons.push({wikidata_id:qid,name_ko:ko,name_en:en,field:(mode==='instrument'?'':field),
           nationality:(b.countryLabel?b.countryLabel.value:''),
           life:(by?(by+' – '+(dy||'')):''),era_name:eraFromYear(by),era_yr:eraYr(by),
           works:'',school:'',instrument:'',image_url:'',sort_no:sl});
       });
+      if(!persons.length){ log('⚠ 조건에 맞는 인물이 없습니다.'); progHide(); setBtns(false); return; }
       var byId={}; persons.forEach(function(p){byId[p.wikidata_id]=p;});
-      progShow('상세정보(학교·대표작·악기·사진) 가져오는 중…',false); progSet(0);
+      progShow('상세정보(학교·대표활동·악기·사진) 가져오는 중…',false); progSet(0);
       var qids=persons.map(function(p){return 'wd:'+p.wikidata_id;});
-      var CH2=60, got=0;
+      var CH2=40, got=0;
       for(var i=0;i<qids.length;i+=CH2){
         var chunk=qids.slice(i,i+CH2).join(' ');
-        var q2='SELECT ?item (SAMPLE(?schoolL) AS ?school) (GROUP_CONCAT(DISTINCT ?workL;separator=" · ") AS ?works) (SAMPLE(?instL) AS ?instrument) (SAMPLE(?img) AS ?image) WHERE { VALUES ?item { '+chunk+' } '
+        var q2='SELECT ?item (SAMPLE(?schoolL) AS ?school) (SAMPLE(?instL) AS ?instrument) (SAMPLE(?img) AS ?image) (GROUP_CONCAT(DISTINCT ?workL;separator=" · ") AS ?works) (GROUP_CONCAT(DISTINCT ?memL;separator=" · ") AS ?members) (GROUP_CONCAT(DISTINCT ?awdL;separator=" · ") AS ?awards) WHERE { VALUES ?item { '+chunk+' } '
           +'OPTIONAL{?item wdt:P69 ?sch. OPTIONAL{?sch rdfs:label ?scKo FILTER(LANG(?scKo)="ko")} OPTIONAL{?sch rdfs:label ?scEn FILTER(LANG(?scEn)="en")} BIND(COALESCE(?scKo,?scEn) AS ?schoolL)} '
-          +'OPTIONAL{?item wdt:P800 ?wk. OPTIONAL{?wk rdfs:label ?wkKo FILTER(LANG(?wkKo)="ko")} OPTIONAL{?wk rdfs:label ?wkEn FILTER(LANG(?wkEn)="en")} BIND(COALESCE(?wkKo,?wkEn) AS ?workL)} '
           +'OPTIONAL{?item wdt:P1303 ?inst. OPTIONAL{?inst rdfs:label ?iKo FILTER(LANG(?iKo)="ko")} OPTIONAL{?inst rdfs:label ?iEn FILTER(LANG(?iEn)="en")} BIND(COALESCE(?iKo,?iEn) AS ?instL)} '
-          +'OPTIONAL{?item wdt:P18 ?img.} } GROUP BY ?item';
+          +'OPTIONAL{?item wdt:P18 ?img.} '
+          +'OPTIONAL{?item wdt:P800 ?wk. OPTIONAL{?wk rdfs:label ?wkKo FILTER(LANG(?wkKo)="ko")} OPTIONAL{?wk rdfs:label ?wkEn FILTER(LANG(?wkEn)="en")} BIND(COALESCE(?wkKo,?wkEn) AS ?workL)} '
+          +'OPTIONAL{?item wdt:P463 ?mem. OPTIONAL{?mem rdfs:label ?mKo FILTER(LANG(?mKo)="ko")} OPTIONAL{?mem rdfs:label ?mEn FILTER(LANG(?mEn)="en")} BIND(COALESCE(?mKo,?mEn) AS ?memL)} '
+          +'OPTIONAL{?item wdt:P166 ?awd. OPTIONAL{?awd rdfs:label ?aKo FILTER(LANG(?aKo)="ko")} OPTIONAL{?awd rdfs:label ?aEn FILTER(LANG(?aEn)="en")} BIND(COALESCE(?aKo,?aEn) AS ?awdL)} '
+          +'} GROUP BY ?item';
         var r2=await sparql(q2);
         if(r2){ r2.forEach(function(b){
           var qid=b.item.value.split('/').pop(); var p=byId[qid]; if(!p)return;
           if(b.school&&b.school.value) p.school=b.school.value;
-          if(b.works&&b.works.value) p.works=b.works.value.split(' · ').slice(0,3).join(' · ');
           if(b.instrument&&b.instrument.value) p.instrument=b.instrument.value;
           if(b.image&&b.image.value) p.image_url=b.image.value.replace('http://','https://')+(b.image.value.indexOf('?')>=0?'&':'?')+'width=200';
+          if(mode==='classical'){
+            if(b.works&&b.works.value) p.works=b.works.value.split(' · ').slice(0,3).join(' · ');
+          } else {
+            var mem=(b.members&&b.members.value)?b.members.value.split(' · ').slice(0,2):[];
+            var awd=(b.awards&&b.awards.value)?b.awards.value.split(' · ').slice(0,2):[];
+            p.works=mem.concat(awd).join(' · ');
+          }
+          if(mode==='instrument') p.field=p.instrument||'연주';
         }); }
         got+=Math.min(CH2,qids.length-i); progSet(Math.round(got/(qids.length||1)*100)); log('상세정보 '+got+'/'+qids.length);
       }
@@ -279,11 +300,11 @@
         if(r.error){ log('❌ 저장 실패: '+r.error.message); progHide(); setBtns(false); return; }
         done+=batch.length; progSet(Math.round(done/persons.length*100)); log('저장 중… '+done+'/'+persons.length);
       }
-      progSet(100); progLabel.textContent='완료'; log('✅ 완료! '+label+' '+persons.length+'명 반영 (분야: '+field+').');
+      progSet(100); progLabel.textContent='완료'; log('✅ 완료! '+label+(kr?'(국내)':'')+' '+persons.length+'명 반영.');
       setBtns(false);
     }
     document.querySelectorAll('.collect-btn').forEach(function(b){
-      b.addEventListener('click',function(){ collect(b.getAttribute('data-occ'), b.getAttribute('data-field'), b.getAttribute('data-mode'), b.textContent.trim()); });
+      b.addEventListener('click',function(){ collect(b.getAttribute('data-mode'), b.getAttribute('data-occ'), b.getAttribute('data-field'), b.textContent.trim()); });
     });
   </script>
 </body>
