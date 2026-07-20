@@ -132,6 +132,7 @@
           <p style="font-size:12px;color:#9a9cc0;margin:0 0 9px">실험 · 다른 소스 (MusicBrainz)</p>
           <button class="collect-btn" id="mbTestBtn" style="background:#4a4a7a">MusicBrainz 연결 시험</button>
           <button class="collect-btn" id="mbEnrichBtn" style="background:#2f6b4f">MusicBrainz 보강 (전체 빈 대표활동)</button>
+          <button class="collect-btn" id="wikiEnrichBtn" style="background:#2f5a6b">한국어 위키 소개 보강</button>
         </div>
         <div class="progress-wrap" id="progWrap">
           <div class="progress-top"><span id="progLabel">진행 중…</span><span id="progPct"></span></div>
@@ -407,9 +408,54 @@
       progSet(100); progLabel.textContent='완료'; log('✅ 전체 MusicBrainz 보강 완료! '+filled+'명 대표활동 채움.');
       setBtns(false);
     }
+    async function wikiEnrich(){
+      setBtns(true); logbox.textContent='소개 보강 대상 조회 중…'; progShow('한국어 위키 소개 보강',true);
+      var r=await sb.from('persons').select('id,wikidata_id,description').order('sort_no',{ascending:false}).limit(3000);
+      if(r.error){ log('❌ 조회 실패: '+r.error.message); progHide(); setBtns(false); return; }
+      var persons=(r.data||[]).filter(function(p){return p.wikidata_id && (!p.description||!String(p.description).trim());});
+      if(!persons.length){ log('보강 대상(빈 소개)이 없습니다.'); progHide(); setBtns(false); return; }
+      log('빈 소개: '+persons.length+'명 → 한국어 위키 문서명 조회');
+      var titleMap={};
+      for(var k=0;k<persons.length;k+=150){
+        var qs=persons.slice(k,k+150).map(function(p){return 'wd:'+p.wikidata_id;}).join(' ');
+        var rows=await sparql('SELECT ?item ?title WHERE { VALUES ?item { '+qs+' } ?a schema:about ?item ; schema:isPartOf <https://ko.wikipedia.org/> ; schema:name ?title . }');
+        if(rows){ rows.forEach(function(b){ titleMap[b.item.value.split('/').pop()]=b.title.value; }); }
+      }
+      var targets=persons.filter(function(p){return titleMap[p.wikidata_id];});
+      log('한국어 위키 문서 있는 대상: '+targets.length+'명 → 소개 가져오기');
+      progShow('한국어 소개 가져오는 중…',false); progSet(0);
+      var done=0, filled=0;
+      for(var i=0;i<targets.length;i+=20){
+        var batch=targets.slice(i,i+20);
+        var titles=batch.map(function(p){return titleMap[p.wikidata_id];}).join('|');
+        try{
+          var url='https://ko.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro=1&explaintext=1&exlimit=20&redirects=1&titles='+encodeURIComponent(titles);
+          var res=await fetch(url);
+          if(res.ok){
+            var j=await res.json(), q=j.query||{};
+            var norm={}; (q.normalized||[]).forEach(function(n){norm[n.from]=n.to;});
+            var redir={}; (q.redirects||[]).forEach(function(rd){redir[rd.from]=rd.to;});
+            var byTitle={}, pages=q.pages||{};
+            Object.keys(pages).forEach(function(kk){ var pg=pages[kk]; if(pg.extract) byTitle[pg.title]=pg.extract; });
+            for(var b2=0;b2<batch.length;b2++){
+              var p=batch[b2], t=titleMap[p.wikidata_id];
+              if(norm[t])t=norm[t]; if(redir[t])t=redir[t];
+              var ex=byTitle[t];
+              if(ex){ ex=ex.replace(/\s+/g,' ').trim(); if(ex.length>500)ex=ex.slice(0,500)+'…';
+                var up=await sb.from('persons').update({description:ex}).eq('id',p.id); if(!up.error) filled++; }
+            }
+          }
+        }catch(e){}
+        done+=batch.length; progSet(Math.round(done/(targets.length||1)*100)); log('소개 '+done+'/'+targets.length+' (채움 '+filled+')');
+        await new Promise(function(rz){setTimeout(rz,300);});
+      }
+      progSet(100); progLabel.textContent='완료'; log('✅ 한국어 소개 보강 완료! '+filled+'명 채움.');
+      setBtns(false);
+    }
     document.querySelectorAll('.collect-btn').forEach(function(b){
       if(b.id==='mbTestBtn'){ b.addEventListener('click',mbTest); return; }
       if(b.id==='mbEnrichBtn'){ b.addEventListener('click',mbEnrich); return; }
+      if(b.id==='wikiEnrichBtn'){ b.addEventListener('click',wikiEnrich); return; }
       b.addEventListener('click',function(){ collect(b.getAttribute('data-mode'), b.getAttribute('data-occ'), b.getAttribute('data-field'), b.textContent.trim()); });
     });
   </script>
