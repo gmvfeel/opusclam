@@ -1531,7 +1531,7 @@ if('serviceWorker' in navigator){
   var H={apikey:KEY,Authorization:'Bearer '+KEY};
   var id=new URLSearchParams(location.search).get('id');
   var _pp=new URLSearchParams(location.search).get('p');
-  if(_pp){ document.querySelectorAll('.pv-tolist-m,.pv-listtab').forEach(function(a){ a.setAttribute('href','db-person.html?p='+encodeURIComponent(_pp)); }); }
+  if(_pp){ document.querySelectorAll('a[href="db-person.html"]').forEach(function(a){ a.setAttribute('href','db-person.html?p='+encodeURIComponent(_pp)); }); }
   if(!id) return;
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   var NATCODE={'대한민국':'KOR','한국':'KOR','독일':'GER','오스트리아':'AUT','이탈리아':'ITA','프랑스':'FRA','러시아':'RUS','영국':'GBR','미국':'USA','체코':'CZE','폴란드':'POL','헝가리':'HUN','일본':'JPN','중국':'CHN','스페인':'ESP','핀란드':'FIN','노르웨이':'NOR','스웨덴':'SWE','덴마크':'DEN','네덜란드':'NED','벨기에':'BEL','스위스':'SUI','포르투갈':'POR','그리스':'GRE','루마니아':'ROU','우크라이나':'UKR','아일랜드':'IRL','캐나다':'CAN','브라질':'BRA','아르헨티나':'ARG','멕시코':'MEX','호주':'AUS','오스트레일리아':'AUS','튀르키예':'TUR','터키':'TUR','에스토니아':'EST','라트비아':'LAT','리투아니아':'LTU','불가리아':'BUL','슬로바키아':'SVK','슬로베니아':'SLO','크로아티아':'CRO','세르비아':'SRB','아이슬란드':'ISL','이스라엘':'ISR','인도':'IND'};

@@ -103,6 +103,9 @@
   /* 대표작·소속 컬럼 */
   .pdb-table .c-work{min-width:180px;max-width:270px;color:var(--text-2);white-space:normal;line-height:1.5}
   .pdb-table .c-org{min-width:120px;max-width:170px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pdb-table .c-org,.pdb-table th.c-org{text-align:center}
+  .pdb-empty{text-align:center;padding:64px 0;color:var(--text-3);font-size:14px}
+  .nd{color:var(--text-3);opacity:.45}
   .pdb-table .c-school{max-width:170px;overflow:hidden;text-overflow:ellipsis}
   .pdb-table .c-name{min-width:160px}
 
@@ -1306,12 +1309,13 @@ if('serviceWorker' in navigator){
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   var NATCODE={'대한민국':'KOR','한국':'KOR','독일':'GER','오스트리아':'AUT','이탈리아':'ITA','프랑스':'FRA','러시아':'RUS','영국':'GBR','미국':'USA','체코':'CZE','폴란드':'POL','헝가리':'HUN','일본':'JPN','중국':'CHN','스페인':'ESP','핀란드':'FIN','노르웨이':'NOR','스웨덴':'SWE','덴마크':'DEN','네덜란드':'NED','벨기에':'BEL','스위스':'SUI','포르투갈':'POR','그리스':'GRE','루마니아':'ROU','우크라이나':'UKR','아일랜드':'IRL','캐나다':'CAN','브라질':'BRA','아르헨티나':'ARG','멕시코':'MEX','호주':'AUS','오스트레일리아':'AUS','튀르키예':'TUR','터키':'TUR','에스토니아':'EST','라트비아':'LAT','리투아니아':'LTU','불가리아':'BUL','슬로바키아':'SVK','슬로베니아':'SLO','크로아티아':'CRO','세르비아':'SRB','아이슬란드':'ISL','이스라엘':'ISR','인도':'IND'};
   function natCode(n){if(!n)return '';n=String(n).trim();if(NATCODE[n])return NATCODE[n];for(var k in NATCODE){if(n.indexOf(k)>=0)return NATCODE[k];}return '';}
+  function nd(v){return (v!=null&&String(v).trim())?esc(v):'<span class="nd">\u2014</span>';}
   function ava(n){n=(n||'').trim();return n?esc(n.charAt(0)):'?';}
   function tags(f){if(!f)return '';return f.split(',').map(function(t){t=t.trim();return t?'<span class="tag">'+esc(t)+'</span>':'';}).join('');}
   function row(p){
     var oc=p.is_oc?' <span class="oc-badge">OC</span>':'';
-    var _nc=natCode(p.nationality); var nat=esc(p.nationality||'')+(_nc?' <span class="nat-code">('+_nc+')</span>':'');
-    var era=(p.era_name?'<span class="era-name">'+esc(p.era_name)+'</span>':'')+(p.era_yr?'<span class="era-yr">'+esc(p.era_yr)+'</span>':'');
+    var _nc=natCode(p.nationality); var nat=p.nationality?(esc(p.nationality)+(_nc?' <span class="nat-code">('+_nc+')</span>':'')):'<span class="nd">\u2014</span>';
+    var era=(p.era_name||p.era_yr)?((p.era_name?'<span class="era-name">'+esc(p.era_name)+'</span>':'')+(p.era_yr?'<span class="era-yr">'+esc(p.era_yr)+'</span>':'')):'<span class="nd">\u2014</span>';
     var lk='<span class="c-link">'
       +'<a href="'+esc(p.link_wiki||'#')+'" class="lk" title="위키">'+I_WIKI+'</a>'
       +'<a href="'+esc(p.link_audio||'#')+'" class="lk" title="음원">'+I_AUDIO+'</a>'
@@ -1322,11 +1326,11 @@ if('serviceWorker' in navigator){
       +'<td class="c-name"><a href="db-person-view.html?id='+encodeURIComponent(p.id)+'&p='+cur+'">'+esc(p.name_ko)+oc+((p.name_en&&p.name_en!==p.name_ko)?'<span class="c-name-en">'+esc(p.name_en)+'</span>':'')+'</a></td>'
       +'<td class="c-field">'+tags(p.field)+'</td>'
       +'<td class="c-nation">'+nat+'</td>'
-      +'<td class="c-life">'+esc(p.life)+'</td>'
+      +'<td class="c-life">'+nd(p.life)+'</td>'
       +'<td class="c-era">'+era+'</td>'
-      +'<td class="c-work">'+esc(p.works)+'</td>'
-      +'<td class="c-org">'+esc(p.instrument||'')+'</td>'
-      +'<td class="c-school">'+esc(p.school)+'</td>'
+      +'<td class="c-work">'+nd(p.works)+'</td>'
+      +'<td class="c-org">'+nd(p.instrument)+'</td>'
+      +'<td class="c-school">'+nd(p.school)+'</td>'
       +'<td class="c-link">'+lk+'</td>'
       +'</tr>';
   }
@@ -1365,9 +1369,12 @@ if('serviceWorker' in navigator){
     var start=Math.max(1,cur-2), end=Math.min(pages,start+4); start=Math.max(1,end-4);
     var nums='';
     for(var i=start;i<=end;i++){ nums+='<a href="#" data-pg="'+i+'"'+(i===cur?' class="on"':'')+'>'+i+'</a>'; }
-    pager.innerHTML='<a class="pg-nav" data-pg="'+(cur-1)+'" href="#"'+(cur<=1?' style="visibility:hidden"':'')+'>\u2039 \uc774\uc804</a>'
+    var hidF=(cur<=1?' style="visibility:hidden"':''), hidL=(cur>=pages?' style="visibility:hidden"':'');
+    pager.innerHTML='<a class="pg-nav" data-pg="1" href="#"'+hidF+'>\u00ab \uba3c\uc55e</a>'
+      +'<a class="pg-nav" data-pg="'+(cur-1)+'" href="#"'+hidF+'>\u2039 \uc774\uc804</a>'
       +'<div class="pg-nums">'+nums+'</div>'
-      +'<a class="pg-nav" data-pg="'+(cur+1)+'" href="#"'+(cur>=pages?' style="visibility:hidden"':'')+'>\ub2e4\uc74c \u203a</a>';
+      +'<a class="pg-nav" data-pg="'+(cur+1)+'" href="#"'+hidL+'>\ub2e4\uc74c \u203a</a>'
+      +'<a class="pg-nav" data-pg="'+pages+'" href="#"'+hidL+'>\uba3c\ub4a4 \u00bb</a>';
   }
   function loadPage(pg){
     var off=(pg-1)*PAGE;
@@ -1379,9 +1386,15 @@ if('serviceWorker' in navigator){
       })
       .then(function(rows){
         if(Array.isArray(rows)){
-          cur=pg; tbody.innerHTML=rows.map(row).join('');
+          cur=pg;
           var cnt=document.querySelector('.pdb-count b'); if(cnt) cnt.textContent=(total||0).toLocaleString();
-          renderPager();
+          if(rows.length===0){
+            tbody.innerHTML='<tr><td colspan="11" class="pdb-empty">요청하신 검색 결과가 없습니다.</td></tr>';
+            if(pager) pager.innerHTML='';
+          } else {
+            tbody.innerHTML=rows.map(row).join('');
+            renderPager();
+          }
         }
       })
       .catch(function(e){ console.error('persons 로드 실패:', e); });
