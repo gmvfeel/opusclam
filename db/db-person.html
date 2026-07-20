@@ -1417,6 +1417,8 @@ if('serviceWorker' in navigator){
     var sbtn=document.querySelector('.pdb-searchbtn'); if(sbtn) sbtn.addEventListener('click',doSearch);
     document.querySelectorAll('.pdb-selects select').forEach(function(sel){ sel.addEventListener('change',doSearch); });
   })();
+  function setStickyTop(){ var h=document.querySelector('.site-header'); var t=h?Math.round(h.getBoundingClientRect().height):64; document.querySelectorAll('.pdb-table thead th').forEach(function(th){th.style.top=t+'px';}); }
+  setStickyTop(); window.addEventListener('resize',setStickyTop);
   var _sp=parseInt(new URLSearchParams(location.search).get('p'),10)||1;
   loadPage(_sp>=1?_sp:1);
 })();
