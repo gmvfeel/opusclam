@@ -657,3 +657,10 @@
   body .pg-nums a{min-width:30px;height:32px;font-size:12px;border-radius:7px}
   body .pg-nav{padding:6px 6px;font-size:12px}
 }
+
+/* ===== 모바일: 링크 아이콘 축소(칸 안에 들어오게, 안되면 줄바꿈) — 인라인보다 우선 ===== */
+@media(max-width:560px){
+  body .pdb-table td.c-link{white-space:normal;text-align:center}
+  body .pdb-table .c-link .lk{width:19px;height:19px;margin-right:1px}
+  body .pdb-table .c-link .lk svg{width:11px;height:11px}
+}
