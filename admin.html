@@ -367,10 +367,16 @@
         try{
           var res=await fetch('https://musicbrainz.org/ws/2/artist/'+mbid+'?inc=artist-rels&fmt=json',{headers:{Accept:'application/json'}});
           if(res.ok){
-            var j=await res.json(), ens=[];
-            (j.relations||[]).forEach(function(rel){ if(rel.type && rel.type.indexOf('member')>=0 && rel.artist && rel.artist.name && ens.indexOf(rel.artist.name)<0) ens.push(rel.artist.name); });
+            var j=await res.json(), ens=[], teachers=[];
+            (j.relations||[]).forEach(function(rel){
+              if(!rel.artist||!rel.artist.name) return;
+              if(rel.type && rel.type.indexOf('member')>=0){ if(ens.indexOf(rel.artist.name)<0) ens.push(rel.artist.name); }
+              else if(rel.type==='teacher' && rel.direction==='backward'){ if(teachers.indexOf(rel.artist.name)<0) teachers.push(rel.artist.name); }
+            });
             var area=(j.area&&j.area.name)?j.area.name:'';
-            var parts=ens.slice(0,3); if(area)parts.push(area);
+            var parts=ens.slice(0,4);
+            teachers.slice(0,2).forEach(function(t){ parts.push('사사 '+t); });
+            if(area)parts.push(area);
             var w=parts.join(' · ');
             if(w){ var up=await sb.from('persons').update({works:w}).eq('id',p.id); if(!up.error) filled++; }
           }
