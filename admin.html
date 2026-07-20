@@ -208,12 +208,14 @@
       var limit=parseInt(document.getElementById('collectLimit').value,10)||200;
       if(limit>500)limit=500; if(limit<10)limit=10;
       colBtn.disabled=true; logbox.textContent='위키데이터에 요청 중… (작곡가 상위 '+limit+'명)'; progShow('위키데이터에서 가져오는 중…',true);
-      var q='SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel (SAMPLE(?schoolEn) AS ?school) (GROUP_CONCAT(DISTINCT ?workEn;separator=" \u00b7 ") AS ?works) WHERE {'
+      var q='SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel (SAMPLE(?schoolEn) AS ?school) (GROUP_CONCAT(DISTINCT ?workEn;separator=" \u00b7 ") AS ?works) (SAMPLE(?img) AS ?image) (SAMPLE(?instL) AS ?instrument) WHERE {'
         +'{ SELECT DISTINCT ?item ?sl WHERE { ?item wdt:P106 wd:Q36834 ; wikibase:sitelinks ?sl . VALUES ?fam { wd:Q9730 wd:Q1344 } ?item wdt:P136/wdt:P279* ?fam . } ORDER BY DESC(?sl) LIMIT '+limit+' } '
         +'OPTIONAL{?item wdt:P569 ?birth.} OPTIONAL{?item wdt:P570 ?death.} '
         +'OPTIONAL{?item wdt:P27 ?c. ?c rdfs:label ?countryLabel FILTER(LANG(?countryLabel)="ko")} '
         +'OPTIONAL{?item wdt:P69 ?sch. ?sch rdfs:label ?schoolEn FILTER(LANG(?schoolEn)="en")} '
         +'OPTIONAL{?item wdt:P800 ?wk. ?wk rdfs:label ?workEn FILTER(LANG(?workEn)="en")} '
+        +'OPTIONAL{?item wdt:P18 ?img.} '
+        +'OPTIONAL{?item wdt:P1303 ?inst. OPTIONAL{?inst rdfs:label ?iKo FILTER(LANG(?iKo)="ko")} OPTIONAL{?inst rdfs:label ?iEn FILTER(LANG(?iEn)="en")} BIND(COALESCE(?iKo,?iEn) AS ?instL)} '
         +'OPTIONAL{?item rdfs:label ?en FILTER(LANG(?en)="en")} '
         +'OPTIONAL{?item rdfs:label ?ko FILTER(LANG(?ko)="ko")} '
         +'} GROUP BY ?item ?sl ?en ?ko ?birth ?death ?countryLabel ORDER BY DESC(?sl)';
@@ -237,7 +239,7 @@
           life:(by?(by+' – '+(dy||'')):''),era_name:eraFromYear(by),era_yr:'',
           works:(b.works&&b.works.value?b.works.value.split(' \u00b7 ').slice(0,3).join(' \u00b7 '):''),
           school:(b.school&&b.school.value?b.school.value:''),
-          sort_no:0});
+          image_url:(b.image&&b.image.value?(b.image.value.replace('http://','https://')+(b.image.value.indexOf('?')>=0?'&':'?')+'width=200'):''),instrument:(b.instrument&&b.instrument.value?b.instrument.value:''),sort_no:0});
       });
       persons.forEach(function(pp,ii){pp.sort_no=persons.length-ii;});
       log('정리 완료: '+persons.length+'명 → 저장(업서트) 중…'); progShow('DB에 저장 중…',false); progSet(0);

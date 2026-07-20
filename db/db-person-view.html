@@ -1530,6 +1530,8 @@ if('serviceWorker' in navigator){
   var KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var H={apikey:KEY,Authorization:'Bearer '+KEY};
   var id=new URLSearchParams(location.search).get('id');
+  var _pp=new URLSearchParams(location.search).get('p');
+  if(_pp){ document.querySelectorAll('.pv-tolist-m,.pv-listtab').forEach(function(a){ a.setAttribute('href','db-person.html?p='+encodeURIComponent(_pp)); }); }
   if(!id) return;
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fact(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
@@ -1549,7 +1551,7 @@ if('serviceWorker' in navigator){
      var natv=esc(p.nationality||'')+(p.nat_code?' <span class="nat-code">('+esc(p.nat_code)+')</span>':'');
      var erav=esc(p.era_name||'')+(p.era_yr?' · '+esc(p.era_yr):'');
      var fc=document.querySelector('.pv-facts'); if(fc){
-       fc.innerHTML=fact('국적',natv)+fact('생몰',esc(p.life||''))+fact('사조',erav)+fact('소속',esc(p.affiliation||''));
+       fc.innerHTML=fact('국적',natv)+fact('생몰',esc(p.life||''))+fact('사조',erav)+fact('주요 악기',esc(p.instrument||''));
      }
      var desc=(p.description&&p.description.trim())?p.description.trim():((p.era_name?p.era_name+' 시대의 ':'')+(p.field?p.field.split(',')[0].trim()+' ':'')+'음악가.');
      var lead=document.querySelector('.pv-lead'); if(lead) lead.textContent=desc;
@@ -1562,7 +1564,7 @@ if('serviceWorker' in navigator){
      var dl=document.querySelector('dl.pv-deflist'); if(dl){
        dl.innerHTML=fact('국적',esc(p.nationality||'')+(p.nat_code?' ('+esc(p.nat_code)+')':''))
          +fact('생몰',esc(p.life||''))+fact('사조',erav)
-         +fact('소속',esc(p.affiliation||''))+fact('출신학교',esc(p.school||''));
+         +fact('주요 악기',esc(p.instrument||''))+fact('출신학교',esc(p.school||''));
      }
      // 아직 데이터 없는 섹션 숨김: 관련 인물
      var ppl=document.querySelector('.pv-people'); if(ppl){var sec=ppl.closest('.pv-sec'); if(sec) sec.style.display='none';}
