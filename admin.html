@@ -217,7 +217,7 @@
       var extra=(rows.length>800)?' (상위 800만 표시 — 검색으로 좁히세요)':'';
       document.getElementById('mgCount').textContent='전체 '+mgData.length+' · 의심 '+susCount+' · 표시 '+rows.length+extra;
       var html=rows.slice(0,800).map(function(p){
-        var desc=mgEsc((p.description||'').slice(0,70));
+        var desc=mgEsc((p.description||'').slice(0,200));
         var flag=p._sus?'<span class="mg-flag">\u26a0\ufe0f '+mgEsc(p._reason)+'</span>':'';
         var en=(p.name_en&&p.name_en!==p.name_ko)?' <span class="en">'+mgEsc(p.name_en)+'</span>':'';
         return '<tr'+(p._sus?' class="sus"':'')+'><td class="mg-chk"><input type="checkbox" class="mg-cb" value="'+p.id+'"></td>'
