@@ -90,6 +90,10 @@
   #manage .mg-flag{color:#f0a080;font-weight:700;font-size:12px;display:block;margin-bottom:3px}
   #manage .mg-desc{color:#9a9cb0;font-size:12px}
   #manage .mg-table .en{color:#9a9cb0;font-size:11px}
+  #manage .mg-pager{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:16px}
+  #manage .mg-pager button{padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e8e8f2;cursor:pointer;font-size:13px}
+  #manage .mg-pager button:disabled{opacity:.35;cursor:default}
+  #manage .mg-pginfo{font-size:13px;color:#cfc9e2}
 </style>
 </head>
 <body>
@@ -177,6 +181,7 @@
           <tbody id="mgBody"><tr><td colspan="4" class="loading">불러오는 중…</td></tr></tbody>
         </table>
       </div>
+      <div class="mg-pager" id="mgPager"></div>
     </div>
   </div>
 
@@ -186,7 +191,7 @@
     var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     var views={login:document.getElementById('loginWrap'),dash:document.getElementById('dash'),hero:document.getElementById('hero'),collect:document.getElementById('collect'),manage:document.getElementById('manage')};
     function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');}
-    var mgData=[];
+    var mgData=[]; var mgPage=0;
     var MG_NONMUSIC=['정치인','정치가','대통령','국회의원','장관','시장','주지사','영화배우','탤런트','영화감독','드라마','예능','개그맨','코미디언','희극','소설가','시인','만화가','웹툰','축구','야구','농구','배구','골프','테니스','운동선수','물리학자','과학자','수학자','철학자','경제학자','기업인','사업가','최고경영자','아이돌','래퍼','힙합','유튜버','인플루언서','방송인','성우','아나운서','기자','모델'];
     var MG_FAMOUS=['아인슈타인','einstein','클린턴','clinton','톰 크루즈','tom cruise','트럼프','trump','오바마','obama','푸틴','putin','만델라','mandela','간디','gandhi','링컨','lincoln','케네디','kennedy','처칠','churchill','나폴레옹','napoleon','괴테','goethe','펠레','pel\u00e9','조던','jordan','히틀러','hitler'];
     function mgEsc(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -199,11 +204,16 @@
       return {flag:reasons.length>0, reason:reasons.join(' · ')};
     }
     async function loadManage(){
-      document.getElementById('mgBody').innerHTML='<tr><td colspan="4" class="loading">불러오는 중…</td></tr>';
-      var r=await sb.from('persons').select('id,wikidata_id,name_ko,name_en,field,description,works,sort_no').order('sort_no',{ascending:false}).limit(3000);
-      if(r.error){ document.getElementById('mgBody').innerHTML='<tr><td colspan="4">오류: '+mgEsc(r.error.message)+'</td></tr>'; return; }
-      mgData=(r.data||[]).map(function(p){ var x=mgSuspect(p); p._sus=x.flag; p._reason=x.reason; return p; });
-      renderManage();
+      document.getElementById('mgBody').innerHTML='<tr><td colspan="4" class="loading">전체 불러오는 중…</td></tr>';
+      mgData=[]; var from=0, PAGE=1000;
+      while(true){
+        var r=await sb.from('persons').select('id,wikidata_id,name_ko,name_en,field,description,works,sort_no').order('sort_no',{ascending:false}).range(from,from+PAGE-1);
+        if(r.error){ document.getElementById('mgBody').innerHTML='<tr><td colspan="4">오류: '+mgEsc(r.error.message)+'</td></tr>'; return; }
+        var d=r.data||[]; d.forEach(function(p){ var x=mgSuspect(p); p._sus=x.flag; p._reason=x.reason; mgData.push(p); });
+        document.getElementById('mgBody').innerHTML='<tr><td colspan="4" class="loading">전체 불러오는 중… ('+mgData.length+'명)</td></tr>';
+        if(d.length<PAGE) break; from+=PAGE; if(from>60000) break;
+      }
+      mgPage=0; renderManage();
     }
     function renderManage(){
       var q=(document.getElementById('mgSearch').value||'').trim().toLowerCase();
@@ -214,9 +224,11 @@
         return true;
       });
       var susCount=0; mgData.forEach(function(p){if(p._sus)susCount++;});
-      var extra=(rows.length>800)?' (상위 800만 표시 — 검색으로 좁히세요)':'';
-      document.getElementById('mgCount').textContent='전체 '+mgData.length+' · 의심 '+susCount+' · 표시 '+rows.length+extra;
-      var html=rows.slice(0,800).map(function(p){
+      var PER=100, totalPages=Math.max(1,Math.ceil(rows.length/PER));
+      if(mgPage>=totalPages) mgPage=0;
+      var pageRows=rows.slice(mgPage*PER, mgPage*PER+PER);
+      document.getElementById('mgCount').textContent='전체 '+mgData.length+' · 의심 '+susCount+' · 검색결과 '+rows.length;
+      var html=pageRows.map(function(p){
         var desc=mgEsc((p.description||'').slice(0,200));
         var flag=p._sus?'<span class="mg-flag">\u26a0\ufe0f '+mgEsc(p._reason)+'</span>':'';
         var en=(p.name_en&&p.name_en!==p.name_ko)?' <span class="en">'+mgEsc(p.name_en)+'</span>':'';
@@ -225,6 +237,8 @@
       }).join('');
       document.getElementById('mgBody').innerHTML=html||'<tr><td colspan="4" class="loading">결과 없음</td></tr>';
       var all=document.getElementById('mgAll'); if(all) all.checked=false;
+      var pg=document.getElementById('mgPager');
+      if(pg) pg.innerHTML = totalPages>1 ? ('<button data-mgpg="'+(mgPage-1)+'"'+(mgPage<=0?' disabled':'')+'>\u2039 이전</button><span class="mg-pginfo">'+(mgPage+1)+' / '+totalPages+' 페이지</span><button data-mgpg="'+(mgPage+1)+'"'+(mgPage>=totalPages-1?' disabled':'')+'>다음 \u203a</button>') : '';
     }
     async function mgDelete(){
       var ids=Array.prototype.slice.call(document.querySelectorAll('.mg-cb:checked')).map(function(c){return parseInt(c.value,10);});
@@ -260,8 +274,9 @@
     document.getElementById('cardCollect').addEventListener('click',function(){show('collect');});
     document.getElementById('cardManage').addEventListener('click',function(){show('manage');loadManage();});
     document.getElementById('mgBack').addEventListener('click',function(){show('dash');});
-    document.getElementById('mgSearch').addEventListener('input',renderManage);
-    document.getElementById('mgSusOnly').addEventListener('change',renderManage);
+    document.getElementById('mgSearch').addEventListener('input',function(){mgPage=0;renderManage();});
+    document.getElementById('mgSusOnly').addEventListener('change',function(){mgPage=0;renderManage();});
+    document.getElementById('mgPager').addEventListener('click',function(e){var b=e.target.closest('[data-mgpg]'); if(!b||b.disabled)return; var v=parseInt(b.getAttribute('data-mgpg'),10); if(v>=0){mgPage=v; renderManage(); var tw=document.querySelector('#manage .mg-tablewrap'); if(tw)tw.scrollTop=0;}});
     document.getElementById('mgDelBtn').addEventListener('click',mgDelete);
     document.getElementById('mgAll').addEventListener('change',function(){var on=this.checked;document.querySelectorAll('.mg-cb').forEach(function(c){c.checked=on;});});
 
