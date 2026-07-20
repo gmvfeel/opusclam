@@ -1319,7 +1319,7 @@ if('serviceWorker' in navigator){
     return '<tr>'
       +'<td class="c-no">'+esc(p.sort_no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ava(p.name_ko))+'</span></td>'
-      +'<td class="c-name"><a href="db-person-view.html?id='+encodeURIComponent(p.id)+'&p='+cur+'">'+esc(p.name_ko)+oc+(p.name_en?'<span class="c-name-en">'+esc(p.name_en)+'</span>':'')+'</a></td>'
+      +'<td class="c-name"><a href="db-person-view.html?id='+encodeURIComponent(p.id)+'&p='+cur+'">'+esc(p.name_ko)+oc+((p.name_en&&p.name_en!==p.name_ko)?'<span class="c-name-en">'+esc(p.name_en)+'</span>':'')+'</a></td>'
       +'<td class="c-field">'+tags(p.field)+'</td>'
       +'<td class="c-nation">'+nat+'</td>'
       +'<td class="c-life">'+esc(p.life)+'</td>'

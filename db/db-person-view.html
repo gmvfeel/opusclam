@@ -1544,7 +1544,7 @@ if('serviceWorker' in navigator){
      var p=a[0];
      var nm=(p.name_ko||'').trim();
      var por=document.querySelector('.pv-portrait span'); if(por) por.textContent=nm?nm[0]:'?';
-     var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(p.name_en){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=p.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
+     var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(p.name_en&&p.name_en!==nm){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=p.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
      var tg=document.querySelector('.pv-tags'); if(tg){
        var html=(p.field||'').split(',').map(function(t){t=t.trim();return t?'<span class="tag">'+esc(t)+'</span>':'';}).join('');
        if(p.is_oc) html+='<span class="oc-badge">OC</span>';
