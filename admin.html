@@ -220,10 +220,18 @@
     function log(t){logbox.textContent += "\n" + t; logbox.scrollTop=logbox.scrollHeight;}
     function eraFromYear(y){if(!y)return '';if(y<1400)return '중세';if(y<1600)return '르네상스';if(y<1750)return '바로크';if(y<1820)return '고전주의';if(y<1900)return '낭만주의';if(y<1945)return '근·현대';return '현대';}
     function eraYr(y){if(!y)return '';if(y<1400)return '~1400';if(y<1600)return '1400–1600';if(y<1750)return '1600–1750';if(y<1820)return '1750–1820';if(y<1900)return '1820–1900';if(y<1945)return '1900–1945';return '1945~';}
-    async function sparql(q){
+    async function sparql(q, tries){
+      tries=tries||3;
       var url='https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q);
-      try{ var res=await fetch(url,{headers:{Accept:'application/sparql-results+json'}}); if(!res.ok){ log('❌ 위키데이터 오류: HTTP '+res.status); return null; } var j=await res.json(); return (j.results&&j.results.bindings)||[]; }
-      catch(e){ log('❌ 위키데이터 연결 실패: '+e.message); return null; }
+      for(var t=0;t<tries;t++){
+        try{
+          var res=await fetch(url,{headers:{Accept:'application/sparql-results+json'}});
+          if(res.ok){ var j=await res.json(); return (j.results&&j.results.bindings)||[]; }
+          if(res.status===429||res.status>=500){ log('… 위키데이터 혼잡('+res.status+') 재시도 '+(t+1)+'/'+tries); await new Promise(function(r){setTimeout(r,2500*(t+1));}); continue; }
+          log('❌ 위키데이터 오류: HTTP '+res.status); return null;
+        }catch(e){ log('… 연결 재시도 '+(t+1)+'/'+tries); await new Promise(function(r){setTimeout(r,2500*(t+1));}); }
+      }
+      log('❌ 위키데이터 반복 실패(혼잡/시간초과). 잠시 후 다시 시도하거나 인원을 줄여보세요.'); return null;
     }
     async function collect(mode, occ, field, label){
       var limit=parseInt(document.getElementById('collectLimit').value,10)||200;
@@ -243,7 +251,7 @@
         sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?1:8)+') '+krC+pop;
       }
       setBtns(true); logbox.textContent='위키데이터에 요청 중… ('+label+(kr?' · 국내':'')+' 상위 '+limit+'명)'; progShow(label+' 목록 가져오는 중…',true);
-      var CHUNK=(mode==='instrument')?250:400;
+      var CHUNK=(mode==='instrument')?200:300;
       var seen={}, persons=[];
       function bq(off,ch){
         return 'SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel ?mbid WHERE {'
@@ -277,6 +285,7 @@
         var chunkItems={}; rows.forEach(function(r){chunkItems[r.item.value]=1;});
         rows.forEach(parseRow);
         if(Object.keys(chunkItems).length < ch) break;
+        await new Promise(function(r){setTimeout(r,500);});
       }
       log('받은 인물: '+persons.length+'명');
       if(!persons.length){ log('⚠ 조건에 맞는 인물이 없습니다.'); progHide(); setBtns(false); return; }
