@@ -74,6 +74,12 @@
   .pdb-pager .pg-nums a.on{background:var(--text);color:var(--paper);font-weight:700}
   .pdb-pager .pg-nav{font-size:13px;color:var(--text-2);text-decoration:none;padding:8px 10px;transition:color .15s ease}
   .pdb-pager .pg-nav:hover{color:var(--text)}
+  @media(max-width:520px){
+    .pdb-pager{gap:6px;margin-top:34px;flex-wrap:wrap;justify-content:center}
+    .pdb-pager .pg-nums{gap:3px}
+    .pdb-pager .pg-nums a{min-width:30px;height:30px;font-size:12px;border-radius:7px}
+    .pdb-pager .pg-nav{padding:6px 6px;font-size:12px}
+  }
 
   @media(max-width:720px){
     .pdb{padding:140px 0 46px}
