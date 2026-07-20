@@ -625,6 +625,8 @@
   .pdb-search:focus-within{border-color:var(--text-3)}
   .pdb-search svg{width:17px;height:17px;color:var(--text-3);flex:0 0 auto}
   .pdb-search input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--text);font-family:inherit;font-size:14px;padding:14px 0}
+  .pdb-searchbtn{flex:0 0 auto;margin-left:6px;padding:9px 20px;border:0;border-radius:8px;background:var(--violet);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:filter .15s}
+  .pdb-searchbtn:hover{filter:brightness(.92)}
   .pdb-search input::placeholder{color:var(--text-3)}
   .pdb-selects{display:flex;gap:8px;flex-wrap:wrap}
   .pdb-selects select{background:var(--paper);border:1px solid var(--line);border-radius:11px;color:var(--text);font-family:inherit;font-size:13px;padding:0 16px;height:49px;cursor:pointer;transition:border-color .2s ease}
