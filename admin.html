@@ -209,7 +209,7 @@
       if(limit>500)limit=500; if(limit<10)limit=10;
       colBtn.disabled=true; logbox.textContent='위키데이터에 요청 중… (작곡가 상위 '+limit+'명)'; progShow('위키데이터에서 가져오는 중…',true);
       var q='SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel (SAMPLE(?schoolEn) AS ?school) (GROUP_CONCAT(DISTINCT ?workEn;separator=" \u00b7 ") AS ?works) WHERE {'
-        +'{ SELECT ?item ?sl WHERE { ?item wdt:P106 wd:Q36834 ; wikibase:sitelinks ?sl . FILTER(?sl > 25) } ORDER BY DESC(?sl) LIMIT '+limit+' } '
+        +'{ SELECT ?item ?sl WHERE { ?item wdt:P106 wd:Q36834 ; wikibase:sitelinks ?sl . FILTER(?sl > 25) FILTER NOT EXISTS { ?item wdt:P136 ?g. ?g wdt:P279* wd:Q373342 } FILTER NOT EXISTS { ?item wdt:P136 wd:Q37073 } } ORDER BY DESC(?sl) LIMIT '+limit+' } '
         +'OPTIONAL{?item wdt:P569 ?birth.} OPTIONAL{?item wdt:P570 ?death.} '
         +'OPTIONAL{?item wdt:P27 ?c. ?c rdfs:label ?countryLabel FILTER(LANG(?countryLabel)="ko")} '
         +'OPTIONAL{?item wdt:P69 ?sch. ?sch rdfs:label ?schoolEn FILTER(LANG(?schoolEn)="en")} '
@@ -237,8 +237,9 @@
           life:(by?(by+' – '+(dy||'')):''),era_name:eraFromYear(by),era_yr:'',
           works:(b.works&&b.works.value?b.works.value.split(' \u00b7 ').slice(0,3).join(' \u00b7 '):''),
           school:(b.school&&b.school.value?b.school.value:''),
-          sort_no:-(rank++)});
+          sort_no:0});
       });
+      persons.forEach(function(pp,ii){pp.sort_no=persons.length-ii;});
       log('정리 완료: '+persons.length+'명 → 저장(업서트) 중…'); progShow('DB에 저장 중…',false); progSet(0);
       var CH=100, done=0;
       for(var i=0;i<persons.length;i+=CH){
