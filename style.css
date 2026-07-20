@@ -651,6 +651,7 @@
   .pdb-tablewrap{overflow:visible}
   .pdb-table thead th{position:sticky;top:0;z-index:3;background:var(--paper)}
   @media(max-width:640px){.pdb-tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}}
+  @media(max-width:640px){.pdb-table thead th{position:static}}
   .pdb-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:var(--tbl-fs,13px)}
 
 
