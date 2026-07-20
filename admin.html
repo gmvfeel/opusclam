@@ -200,7 +200,7 @@
     }
     async function loadManage(){
       document.getElementById('mgBody').innerHTML='<tr><td colspan="4" class="loading">불러오는 중…</td></tr>';
-      var r=await sb.from('persons').select('id,name_ko,name_en,field,description,works,sort_no').order('sort_no',{ascending:false}).limit(3000);
+      var r=await sb.from('persons').select('id,wikidata_id,name_ko,name_en,field,description,works,sort_no').order('sort_no',{ascending:false}).limit(3000);
       if(r.error){ document.getElementById('mgBody').innerHTML='<tr><td colspan="4">오류: '+mgEsc(r.error.message)+'</td></tr>'; return; }
       mgData=(r.data||[]).map(function(p){ var x=mgSuspect(p); p._sus=x.flag; p._reason=x.reason; return p; });
       renderManage();
@@ -229,12 +229,14 @@
     async function mgDelete(){
       var ids=Array.prototype.slice.call(document.querySelectorAll('.mg-cb:checked')).map(function(c){return parseInt(c.value,10);});
       if(!ids.length){ alert('삭제할 인물을 먼저 체크하세요.'); return; }
-      if(!confirm(ids.length+'명을 삭제합니다. 되돌릴 수 없어요. 진행할까요?')) return;
+      if(!confirm(ids.length+'명을 삭제하고 차단 목록에 등록합니다.\n(재수집해도 다시 들어오지 않습니다)\n되돌릴 수 없어요. 진행할까요?')) return;
+      var wids=mgData.filter(function(p){return ids.indexOf(p.id)>=0 && p.wikidata_id;}).map(function(p){return {wikidata_id:p.wikidata_id};});
       var r=await sb.from('persons').delete().in('id',ids);
       if(r.error){ alert('삭제 실패: '+r.error.message); return; }
+      if(wids.length){ var br=await sb.from('blocklist').upsert(wids,{onConflict:'wikidata_id'}); if(br.error) alert('삭제는 됐으나 차단 등록 실패: '+br.error.message+'\n(15_blocklist.sql 을 실행했는지 확인하세요)'); }
       mgData=mgData.filter(function(p){return ids.indexOf(p.id)<0;});
       renderManage();
-      alert(ids.length+'명 삭제 완료.');
+      alert(ids.length+'명 삭제 + 차단 목록 등록 완료.');
     }
     function setWho(e){e=e||'';['who','who2','who3'].forEach(function(id){document.getElementById(id).textContent=e;});}
     var msg=document.getElementById('msg'), btn=document.getElementById('loginBtn');
@@ -382,6 +384,10 @@
         await new Promise(function(r){setTimeout(r,500);});
       }
       log('받은 인물: '+persons.length+'명');
+      try{ var bl=await sb.from('blocklist').select('wikidata_id').limit(5000);
+        if(bl && !bl.error && bl.data && bl.data.length){ var blset={}; bl.data.forEach(function(x){blset[x.wikidata_id]=1;});
+          var before=persons.length; persons=persons.filter(function(p){return !blset[p.wikidata_id];});
+          if(before!==persons.length) log('차단 목록 제외: '+(before-persons.length)+'명'); } }catch(e){}
       if(!persons.length){ log('⚠ 조건에 맞는 인물이 없습니다.'); progHide(); setBtns(false); return; }
       var byId={}; persons.forEach(function(p){byId[p.wikidata_id]=p;});
       progShow('상세정보(학교·대표활동·악기·사진) 가져오는 중…',false); progSet(0);
