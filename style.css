@@ -652,6 +652,16 @@
   .pdb-table thead th{position:sticky;top:0;z-index:3;background:var(--paper)}
   @media(max-width:640px){.pdb-tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}}
   @media(max-width:640px){.pdb-table thead th{position:static}}
+  @media(max-width:520px){
+    .pdb-meta{flex-direction:column;align-items:flex-start;gap:10px}
+    .pdb-count{font-size:18px}
+    .pdb-meta-right{flex-wrap:wrap;gap:8px 12px;width:100%}
+    .pdb-legend{font-size:11px}
+    .pdb-fontsize .fs-label{display:none}
+    .pdb-pager{margin-top:28px;gap:5px;justify-content:center}
+    .pdb-pager .pg-nav{padding:6px 7px;font-size:12px}
+    .pg-nums{gap:2px}
+  }
   .pdb-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:var(--tbl-fs,13px)}
 
 
