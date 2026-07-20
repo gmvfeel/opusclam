@@ -269,13 +269,13 @@
       var CH2=40, got=0;
       for(var i=0;i<qids.length;i+=CH2){
         var chunk=qids.slice(i,i+CH2).join(' ');
-        var q2='SELECT ?item (SAMPLE(?schoolL) AS ?school) (SAMPLE(?instL) AS ?instrument) (SAMPLE(?img) AS ?image) (GROUP_CONCAT(DISTINCT ?workL;separator=" · ") AS ?works) (GROUP_CONCAT(DISTINCT ?memL;separator=" · ") AS ?members) (GROUP_CONCAT(DISTINCT ?awdL;separator=" · ") AS ?awards) WHERE { VALUES ?item { '+chunk+' } '
+        var q2='SELECT ?item (SAMPLE(?schoolL) AS ?school) (SAMPLE(?instL) AS ?instrument) (SAMPLE(?img) AS ?image) (GROUP_CONCAT(DISTINCT ?memL;separator=" · ") AS ?members) (GROUP_CONCAT(DISTINCT ?awdL;separator=" · ") AS ?awards) (GROUP_CONCAT(DISTINCT ?labL;separator=" · ") AS ?labels) WHERE { VALUES ?item { '+chunk+' } '
           +'OPTIONAL{?item wdt:P69 ?sch. OPTIONAL{?sch rdfs:label ?scKo FILTER(LANG(?scKo)="ko")} OPTIONAL{?sch rdfs:label ?scEn FILTER(LANG(?scEn)="en")} BIND(COALESCE(?scKo,?scEn) AS ?schoolL)} '
           +'OPTIONAL{?item wdt:P1303 ?inst. OPTIONAL{?inst rdfs:label ?iKo FILTER(LANG(?iKo)="ko")} OPTIONAL{?inst rdfs:label ?iEn FILTER(LANG(?iEn)="en")} BIND(COALESCE(?iKo,?iEn) AS ?instL)} '
           +'OPTIONAL{?item wdt:P18 ?img.} '
-          +'OPTIONAL{?item wdt:P800 ?wk. OPTIONAL{?wk rdfs:label ?wkKo FILTER(LANG(?wkKo)="ko")} OPTIONAL{?wk rdfs:label ?wkEn FILTER(LANG(?wkEn)="en")} BIND(COALESCE(?wkKo,?wkEn) AS ?workL)} '
           +'OPTIONAL{?item wdt:P463 ?mem. OPTIONAL{?mem rdfs:label ?mKo FILTER(LANG(?mKo)="ko")} OPTIONAL{?mem rdfs:label ?mEn FILTER(LANG(?mEn)="en")} BIND(COALESCE(?mKo,?mEn) AS ?memL)} '
           +'OPTIONAL{?item wdt:P166 ?awd. OPTIONAL{?awd rdfs:label ?aKo FILTER(LANG(?aKo)="ko")} OPTIONAL{?awd rdfs:label ?aEn FILTER(LANG(?aEn)="en")} BIND(COALESCE(?aKo,?aEn) AS ?awdL)} '
+          +'OPTIONAL{?item wdt:P264 ?lab. OPTIONAL{?lab rdfs:label ?lKo FILTER(LANG(?lKo)="ko")} OPTIONAL{?lab rdfs:label ?lEn FILTER(LANG(?lEn)="en")} BIND(COALESCE(?lKo,?lEn) AS ?labL)} '
           +'} GROUP BY ?item';
         var r2=await sparql(q2);
         if(r2){ r2.forEach(function(b){
@@ -283,15 +283,22 @@
           if(b.school&&b.school.value) p.school=b.school.value;
           if(b.instrument&&b.instrument.value) p.instrument=b.instrument.value;
           if(b.image&&b.image.value) p.image_url=b.image.value.replace('http://','https://')+(b.image.value.indexOf('?')>=0?'&':'?')+'width=200';
-          if(mode==='classical'){
-            if(b.works&&b.works.value) p.works=b.works.value.split(' · ').slice(0,3).join(' · ');
-          } else {
+          if(mode!=='classical'){
             var mem=(b.members&&b.members.value)?b.members.value.split(' · ').slice(0,2):[];
             var awd=(b.awards&&b.awards.value)?b.awards.value.split(' · ').slice(0,2):[];
-            p.works=mem.concat(awd).join(' · ');
+            var lab=(b.labels&&b.labels.value)?b.labels.value.split(' · ').slice(0,1):[];
+            p.works=mem.concat(awd).concat(lab).join(' · ');
           }
           if(mode==='instrument') p.field=p.instrument||'연주';
         }); }
+        if(mode==='classical'){
+          var q3='SELECT ?item (GROUP_CONCAT(DISTINCT ?wL;separator=" · ") AS ?revworks) WHERE { VALUES ?item { '+chunk+' } ?work wdt:P86 ?item. ?work wikibase:sitelinks ?wsl. FILTER(?wsl > 15) ?work rdfs:label ?wL FILTER(LANG(?wL)="en") } GROUP BY ?item';
+          var r3=await sparql(q3);
+          if(r3){ r3.forEach(function(b){
+            var qid=b.item.value.split('/').pop(); var p=byId[qid]; if(!p)return;
+            if(b.revworks&&b.revworks.value) p.works=b.revworks.value.split(' · ').slice(0,3).join(' · ');
+          }); }
+        }
         got+=Math.min(CH2,qids.length-i); progSet(Math.round(got/(qids.length||1)*100)); log('상세정보 '+got+'/'+qids.length);
       }
       log('정리 완료: '+persons.length+'명 → 저장(업서트) 중…'); progShow('DB에 저장 중…',false); progSet(0);

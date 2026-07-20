@@ -648,7 +648,8 @@
   @media(max-width:520px){.pdb-fontsize .fs-label{display:none}.pdb-meta-right{gap:10px}}
   .star{color:#C9A94E;font-style:normal;font-size:.92em}
 
-  .pdb-tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .pdb-tablewrap{overflow:auto;max-height:72vh;-webkit-overflow-scrolling:touch}
+  .pdb-table thead th{position:sticky;top:0;z-index:3;background:var(--paper)}
   .pdb-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:var(--tbl-fs,13px)}
 
 
