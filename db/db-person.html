@@ -18,8 +18,8 @@
   <style>  /* 컬럼 폭(기본) */
   .pdb-table th.c-no{width:3.5%}
   .pdb-table th.c-ava{width:4.5%}
-  .pdb-table th.c-name{width:11%}
-  .pdb-table th.c-field{width:13%}
+  .pdb-table th.c-name{width:17%}
+  .pdb-table th.c-field{width:7%}
   .pdb-table th.c-nation{width:9%}
   .pdb-table th.c-life{width:7.5%}
   .pdb-table th.c-era{width:7%}
@@ -31,8 +31,8 @@
   @media(max-width:840px){
     .pdb-table .c-no,.pdb-table .c-ava,.pdb-table .c-era,.pdb-table .c-school{display:none}
     .pdb-table th.c-no,.pdb-table th.c-ava,.pdb-table th.c-era,.pdb-table th.c-school{width:0}
-    .pdb-table th.c-name{width:14%}
-    .pdb-table th.c-field{width:16%}
+    .pdb-table th.c-name{width:20%}
+    .pdb-table th.c-field{width:9%}
     .pdb-table th.c-nation{width:11%}
     .pdb-table th.c-life{width:9%}
     .pdb-table th.c-work{width:24%}
@@ -59,7 +59,7 @@
   .pdb-table tbody tr{transition:background .15s ease}
 
   .pdb-table .c-no{width:64px;color:var(--text-3);font-variant-numeric:tabular-nums}
-  .pdb-table .c-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+  .pdb-table .c-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
   .pdb-table .c-name a{color:var(--text);font-weight:600;font-size:1em;text-decoration:none;letter-spacing:-.01em;transition:color .15s ease}
 
   .pdb-table .c-field{width:112px}
@@ -104,7 +104,7 @@
   .pdb-table .c-work{min-width:180px;max-width:270px;color:var(--text-2);white-space:normal;line-height:1.5}
   .pdb-table .c-org{min-width:120px;max-width:170px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pdb-table .c-school{max-width:170px;overflow:hidden;text-overflow:ellipsis}
-  .pdb-table .c-name{min-width:120px}
+  .pdb-table .c-name{min-width:160px}
 
 
   /* 행 호버: 짙은 퍼플 배경 + 흰색 텍스트 */
@@ -1304,11 +1304,13 @@ if('serviceWorker' in navigator){
   var I_AUDIO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>';
   var I_VIDEO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>';
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  var NATCODE={'대한민국':'KOR','한국':'KOR','독일':'GER','오스트리아':'AUT','이탈리아':'ITA','프랑스':'FRA','러시아':'RUS','영국':'GBR','미국':'USA','체코':'CZE','폴란드':'POL','헝가리':'HUN','일본':'JPN','중국':'CHN','스페인':'ESP','핀란드':'FIN','노르웨이':'NOR','스웨덴':'SWE','덴마크':'DEN','네덜란드':'NED','벨기에':'BEL','스위스':'SUI','포르투갈':'POR','그리스':'GRE','루마니아':'ROU','우크라이나':'UKR','아일랜드':'IRL','캐나다':'CAN','브라질':'BRA','아르헨티나':'ARG','멕시코':'MEX','호주':'AUS','오스트레일리아':'AUS','튀르키예':'TUR','터키':'TUR','에스토니아':'EST','라트비아':'LAT','리투아니아':'LTU','불가리아':'BUL','슬로바키아':'SVK','슬로베니아':'SLO','크로아티아':'CRO','세르비아':'SRB','아이슬란드':'ISL','이스라엘':'ISR','인도':'IND'};
+  function natCode(n){if(!n)return '';n=String(n).trim();if(NATCODE[n])return NATCODE[n];for(var k in NATCODE){if(n.indexOf(k)>=0)return NATCODE[k];}return '';}
   function ava(n){n=(n||'').trim();return n?esc(n.charAt(0)):'?';}
   function tags(f){if(!f)return '';return f.split(',').map(function(t){t=t.trim();return t?'<span class="tag">'+esc(t)+'</span>':'';}).join('');}
   function row(p){
     var oc=p.is_oc?' <span class="oc-badge">OC</span>':'';
-    var nat=esc(p.nationality||'')+(p.nat_code?' <span class="nat-code">('+esc(p.nat_code)+')</span>':'');
+    var _nc=natCode(p.nationality); var nat=esc(p.nationality||'')+(_nc?' <span class="nat-code">('+_nc+')</span>':'');
     var era=(p.era_name?'<span class="era-name">'+esc(p.era_name)+'</span>':'')+(p.era_yr?'<span class="era-yr">'+esc(p.era_yr)+'</span>':'');
     var lk='<span class="c-link">'
       +'<a href="'+esc(p.link_wiki||'#')+'" class="lk" title="위키">'+I_WIKI+'</a>'
