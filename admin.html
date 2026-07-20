@@ -131,7 +131,7 @@
         <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)">
           <p style="font-size:12px;color:#9a9cc0;margin:0 0 9px">실험 · 다른 소스 (MusicBrainz)</p>
           <button class="collect-btn" id="mbTestBtn" style="background:#4a4a7a">MusicBrainz 연결 시험</button>
-          <button class="collect-btn" id="mbEnrichBtn" style="background:#2f6b4f">MusicBrainz 보강 (빈 대표활동 30명)</button>
+          <button class="collect-btn" id="mbEnrichBtn" style="background:#2f6b4f">MusicBrainz 보강 (전체 빈 대표활동)</button>
         </div>
         <div class="progress-wrap" id="progWrap">
           <div class="progress-top"><span id="progLabel">진행 중…</span><span id="progPct"></span></div>
@@ -243,12 +243,13 @@
         sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?1:8)+') '+krC+pop;
       }
       setBtns(true); logbox.textContent='위키데이터에 요청 중… ('+label+(kr?' · 국내':'')+' 상위 '+limit+'명)'; progShow(label+' 목록 가져오는 중…',true);
-      var q1='SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel WHERE {'
+      var q1='SELECT ?item ?sl ?en ?ko ?birth ?death ?countryLabel ?mbid WHERE {'
         +'{ SELECT DISTINCT ?item ?sl WHERE { '+sub+' } ORDER BY DESC(?sl) LIMIT '+limit+' } '
         +'OPTIONAL{?item wdt:P569 ?birth.} OPTIONAL{?item wdt:P570 ?death.} '
         +'OPTIONAL{?item wdt:P27 ?c. ?c rdfs:label ?countryLabel FILTER(LANG(?countryLabel)="ko")} '
         +'OPTIONAL{?item rdfs:label ?en FILTER(LANG(?en)="en")} '
         +'OPTIONAL{?item rdfs:label ?ko FILTER(LANG(?ko)="ko")} '
+        +'OPTIONAL{?item wdt:P434 ?mbid.} '
         +'} ORDER BY DESC(?sl)';
       var rows=await sparql(q1);
       if(rows===null){ progHide(); setBtns(false); return; }
@@ -265,7 +266,7 @@
         persons.push({wikidata_id:qid,name_ko:ko,name_en:en,field:(mode==='instrument'?'':field),
           nationality:(b.countryLabel?b.countryLabel.value:''),
           life:(by?(by+' – '+(dy||'')):''),era_name:eraFromYear(by),era_yr:eraYr(by),
-          works:'',school:'',instrument:'',image_url:'',sort_no:sl});
+          works:'',school:'',instrument:'',image_url:'',mbid:(b.mbid?b.mbid.value:''),sort_no:sl});
       });
       if(!persons.length){ log('⚠ 조건에 맞는 인물이 없습니다.'); progHide(); setBtns(false); return; }
       var byId={}; persons.forEach(function(p){byId[p.wikidata_id]=p;});
@@ -340,17 +341,24 @@
     }
     async function mbEnrich(){
       setBtns(true); logbox.textContent='보강 대상 조회 중…'; progShow('MusicBrainz 보강',true);
-      var r=await sb.from('persons').select('id,wikidata_id,name_ko,works').order('sort_no',{ascending:false}).limit(300);
+      var r=await sb.from('persons').select('id,wikidata_id,mbid,works').order('sort_no',{ascending:false}).limit(2000);
       if(r.error){ log('❌ 조회 실패: '+r.error.message); progHide(); setBtns(false); return; }
-      var persons=(r.data||[]).filter(function(p){return p.wikidata_id && (!p.works || !String(p.works).trim());}).slice(0,30);
+      var persons=(r.data||[]).filter(function(p){return (!p.works||!String(p.works).trim());});
       if(!persons.length){ log('보강 대상(빈 대표활동)이 없습니다.'); progHide(); setBtns(false); return; }
-      log('대상: '+persons.length+'명 → MusicBrainz ID(P434) 조회 중…');
-      var qids=persons.map(function(p){return 'wd:'+p.wikidata_id;}).join(' ');
-      var rows=await sparql('SELECT ?item ?mbid WHERE { VALUES ?item { '+qids+' } ?item wdt:P434 ?mbid }');
-      if(rows===null){ progHide(); setBtns(false); return; }
-      var mbmap={}; rows.forEach(function(b){ mbmap[b.item.value.split('/').pop()]=b.mbid.value; });
+      log('빈 대표활동: '+persons.length+'명');
+      var mbmap={};
+      persons.forEach(function(p){ if(p.mbid) mbmap[p.wikidata_id]=p.mbid; });
+      var need=persons.filter(function(p){return !p.mbid && p.wikidata_id;});
+      if(need.length){
+        log('MusicBrainz ID 조회 중: '+need.length+'명 (위키데이터)');
+        for(var k=0;k<need.length;k+=120){
+          var qs=need.slice(k,k+120).map(function(p){return 'wd:'+p.wikidata_id;}).join(' ');
+          var rows=await sparql('SELECT ?item ?mbid WHERE { VALUES ?item { '+qs+' } ?item wdt:P434 ?mbid }');
+          if(rows){ rows.forEach(function(b){ mbmap[b.item.value.split('/').pop()]=b.mbid.value; }); }
+        }
+      }
       var targets=persons.filter(function(p){return mbmap[p.wikidata_id];});
-      log('MusicBrainz ID 있는 대상: '+targets.length+'명 → 보강 시작 (초당 1건, 조금 걸려요)');
+      log('보강 대상(MBID 보유): '+targets.length+'명 → 시작 (초당 1건, 시간이 꽤 걸려요. 창을 열어두세요)');
       progShow('MusicBrainz 보강 중…',false); progSet(0);
       var done=0, filled=0;
       for(var i=0;i<targets.length;i++){
@@ -366,10 +374,10 @@
             if(w){ var up=await sb.from('persons').update({works:w}).eq('id',p.id); if(!up.error) filled++; }
           }
         }catch(e){}
-        done++; progSet(Math.round(done/targets.length*100)); log('보강 '+done+'/'+targets.length+' (채움 '+filled+')');
+        done++; if(done%5===0||done===targets.length){ progSet(Math.round(done/targets.length*100)); log('보강 '+done+'/'+targets.length+' (채움 '+filled+')'); }
         await new Promise(function(rz){setTimeout(rz,1100);});
       }
-      progSet(100); progLabel.textContent='완료'; log('✅ MusicBrainz 보강 완료! '+filled+'명 대표활동 채움.');
+      progSet(100); progLabel.textContent='완료'; log('✅ 전체 MusicBrainz 보강 완료! '+filled+'명 대표활동 채움.');
       setBtns(false);
     }
     document.querySelectorAll('.collect-btn').forEach(function(b){
