@@ -1373,15 +1373,19 @@ if('serviceWorker' in navigator){
   function renderPager(){
     if(!pager) return;
     var pages=Math.max(1,Math.ceil(total/PAGE));
-    var start=Math.max(1,cur-2), end=Math.min(pages,start+4); start=Math.max(1,end-4);
+    var mob=window.innerWidth<=520;
+    var w=mob?2:4;
+    var start=Math.max(1,cur-(mob?1:2)), end=Math.min(pages,start+w); start=Math.max(1,end-w);
     var nums='';
     for(var i=start;i<=end;i++){ nums+='<a href="#" data-pg="'+i+'"'+(i===cur?' class="on"':'')+'>'+i+'</a>'; }
     var hidF=(cur<=1?' style="visibility:hidden"':''), hidL=(cur>=pages?' style="visibility:hidden"':'');
-    pager.innerHTML='<a class="pg-nav" data-pg="1" href="#"'+hidF+'>\u00ab \uba3c\uc55e</a>'
-      +'<a class="pg-nav" data-pg="'+(cur-1)+'" href="#"'+hidF+'>\u2039 \uc774\uc804</a>'
+    var html='';
+    if(!mob) html+='<a class="pg-nav" data-pg="1" href="#"'+hidF+'>\u00ab \uba3c\uc55e</a>';
+    html+='<a class="pg-nav" data-pg="'+(cur-1)+'" href="#"'+hidF+'>\u2039 \uc774\uc804</a>'
       +'<div class="pg-nums">'+nums+'</div>'
-      +'<a class="pg-nav" data-pg="'+(cur+1)+'" href="#"'+hidL+'>\ub2e4\uc74c \u203a</a>'
-      +'<a class="pg-nav" data-pg="'+pages+'" href="#"'+hidL+'>\uba3c\ub4a4 \u00bb</a>';
+      +'<a class="pg-nav" data-pg="'+(cur+1)+'" href="#"'+hidL+'>\ub2e4\uc74c \u203a</a>';
+    if(!mob) html+='<a class="pg-nav" data-pg="'+pages+'" href="#"'+hidL+'>\uba3c\ub4a4 \u00bb</a>';
+    pager.innerHTML=html;
   }
   function loadPage(pg){
     var off=(pg-1)*PAGE;
@@ -1423,6 +1427,7 @@ if('serviceWorker' in navigator){
   })();
   function setStickyTop(){ var h=document.querySelector('.site-header'); var t=h?Math.round(h.getBoundingClientRect().height):64; document.querySelectorAll('.pdb-table thead th').forEach(function(th){th.style.top=t+'px';}); }
   setStickyTop(); window.addEventListener('resize',setStickyTop);
+  window.addEventListener('resize',function(){ if(total) renderPager(); });
   var _sp=parseInt(new URLSearchParams(location.search).get('p'),10)||1;
   loadPage(_sp>=1?_sp:1);
 })();
