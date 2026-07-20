@@ -131,6 +131,7 @@
         <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)">
           <p style="font-size:12px;color:#9a9cc0;margin:0 0 9px">실험 · 다른 소스 (MusicBrainz)</p>
           <button class="collect-btn" id="mbTestBtn" style="background:#4a4a7a">MusicBrainz 연결 시험</button>
+          <button class="collect-btn" id="mbEnrichBtn" style="background:#2f6b4f">MusicBrainz 보강 (빈 대표활동 30명)</button>
         </div>
         <div class="progress-wrap" id="progWrap">
           <div class="progress-top"><span id="progLabel">진행 중…</span><span id="progPct"></span></div>
@@ -337,8 +338,43 @@
       }
       progHide(); setBtns(false);
     }
+    async function mbEnrich(){
+      setBtns(true); logbox.textContent='보강 대상 조회 중…'; progShow('MusicBrainz 보강',true);
+      var r=await sb.from('persons').select('id,wikidata_id,name_ko,works').order('sort_no',{ascending:false}).limit(300);
+      if(r.error){ log('❌ 조회 실패: '+r.error.message); progHide(); setBtns(false); return; }
+      var persons=(r.data||[]).filter(function(p){return p.wikidata_id && (!p.works || !String(p.works).trim());}).slice(0,30);
+      if(!persons.length){ log('보강 대상(빈 대표활동)이 없습니다.'); progHide(); setBtns(false); return; }
+      log('대상: '+persons.length+'명 → MusicBrainz ID(P434) 조회 중…');
+      var qids=persons.map(function(p){return 'wd:'+p.wikidata_id;}).join(' ');
+      var rows=await sparql('SELECT ?item ?mbid WHERE { VALUES ?item { '+qids+' } ?item wdt:P434 ?mbid }');
+      if(rows===null){ progHide(); setBtns(false); return; }
+      var mbmap={}; rows.forEach(function(b){ mbmap[b.item.value.split('/').pop()]=b.mbid.value; });
+      var targets=persons.filter(function(p){return mbmap[p.wikidata_id];});
+      log('MusicBrainz ID 있는 대상: '+targets.length+'명 → 보강 시작 (초당 1건, 조금 걸려요)');
+      progShow('MusicBrainz 보강 중…',false); progSet(0);
+      var done=0, filled=0;
+      for(var i=0;i<targets.length;i++){
+        var p=targets[i], mbid=mbmap[p.wikidata_id];
+        try{
+          var res=await fetch('https://musicbrainz.org/ws/2/artist/'+mbid+'?inc=artist-rels&fmt=json',{headers:{Accept:'application/json'}});
+          if(res.ok){
+            var j=await res.json(), ens=[];
+            (j.relations||[]).forEach(function(rel){ if(rel.type && rel.type.indexOf('member')>=0 && rel.artist && rel.artist.name && ens.indexOf(rel.artist.name)<0) ens.push(rel.artist.name); });
+            var area=(j.area&&j.area.name)?j.area.name:'';
+            var parts=ens.slice(0,3); if(area)parts.push(area);
+            var w=parts.join(' · ');
+            if(w){ var up=await sb.from('persons').update({works:w}).eq('id',p.id); if(!up.error) filled++; }
+          }
+        }catch(e){}
+        done++; progSet(Math.round(done/targets.length*100)); log('보강 '+done+'/'+targets.length+' (채움 '+filled+')');
+        await new Promise(function(rz){setTimeout(rz,1100);});
+      }
+      progSet(100); progLabel.textContent='완료'; log('✅ MusicBrainz 보강 완료! '+filled+'명 대표활동 채움.');
+      setBtns(false);
+    }
     document.querySelectorAll('.collect-btn').forEach(function(b){
       if(b.id==='mbTestBtn'){ b.addEventListener('click',mbTest); return; }
+      if(b.id==='mbEnrichBtn'){ b.addEventListener('click',mbEnrich); return; }
       b.addEventListener('click',function(){ collect(b.getAttribute('data-mode'), b.getAttribute('data-occ'), b.getAttribute('data-field'), b.textContent.trim()); });
     });
   </script>
