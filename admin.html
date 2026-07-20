@@ -128,6 +128,10 @@
           <button class="collect-btn" data-mode="occupation" data-occ="Q2865819" data-field="성악">성악가</button>
           <button class="collect-btn" data-mode="instrument" data-occ="" data-field="">연주자 (악기별)</button>
         </div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)">
+          <p style="font-size:12px;color:#9a9cc0;margin:0 0 9px">실험 · 다른 소스 (MusicBrainz)</p>
+          <button class="collect-btn" id="mbTestBtn" style="background:#4a4a7a">MusicBrainz 연결 시험</button>
+        </div>
         <div class="progress-wrap" id="progWrap">
           <div class="progress-top"><span id="progLabel">진행 중…</span><span id="progPct"></span></div>
           <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
@@ -317,7 +321,24 @@
       progSet(100); progLabel.textContent='완료'; log('✅ 완료! '+label+(kr?'(국내)':'')+' '+persons.length+'명 반영.');
       setBtns(false);
     }
+    async function mbTest(){
+      setBtns(true); logbox.textContent='MusicBrainz 연결 시험 중…'; progShow('MusicBrainz 연결 확인',true);
+      try{
+        var url='https://musicbrainz.org/ws/2/artist?query=Karajan&fmt=json&limit=3';
+        var res=await fetch(url,{headers:{Accept:'application/json'}});
+        if(!res.ok){ log('❌ MusicBrainz 응답 오류: HTTP '+res.status+' (연결은 됐으나 거부)'); progHide(); setBtns(false); return; }
+        var j=await res.json();
+        var names=(j.artists||[]).slice(0,3).map(function(a){return a.name;}).join(', ');
+        log('✅ MusicBrainz 연결 성공! (검색결과: '+names+')');
+        log('→ 브라우저에서 직접 호출 가능. 본격 보강 진행할 수 있어요.');
+      }catch(e){
+        log('❌ MusicBrainz 연결 실패: '+e.message);
+        log('→ 브라우저 직접 호출 불가(CORS 추정). 다른 방식(프록시 등)이 필요합니다.');
+      }
+      progHide(); setBtns(false);
+    }
     document.querySelectorAll('.collect-btn').forEach(function(b){
+      if(b.id==='mbTestBtn'){ b.addEventListener('click',mbTest); return; }
       b.addEventListener('click',function(){ collect(b.getAttribute('data-mode'), b.getAttribute('data-occ'), b.getAttribute('data-field'), b.textContent.trim()); });
     });
   </script>
