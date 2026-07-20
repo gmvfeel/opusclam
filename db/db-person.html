@@ -106,6 +106,8 @@
   .pdb-table .c-org,.pdb-table th.c-org{text-align:center}
   .pdb-empty{text-align:center;padding:64px 0;color:var(--text-3);font-size:14px}
   .nd{color:var(--text-3);opacity:.45}
+  .pdb-table tr.row-focus{animation:rowflash 2.6s ease}
+  @keyframes rowflash{0%,18%{background:rgba(124,99,176,.22)}100%{background:transparent}}
   .pdb-table .c-school{max-width:170px;overflow:hidden;text-overflow:ellipsis}
   .pdb-table .c-name{min-width:160px}
 
@@ -1320,7 +1322,7 @@ if('serviceWorker' in navigator){
       +'<a href="'+esc(p.link_wiki||'#')+'" class="lk" title="위키">'+I_WIKI+'</a>'
       +'<a href="'+esc(p.link_audio||'#')+'" class="lk" title="음원">'+I_AUDIO+'</a>'
       +'<a href="'+esc(p.link_video||'#')+'" class="lk" title="영상">'+I_VIDEO+'</a></span>';
-    return '<tr>'
+    return '<tr data-id="'+esc(p.id)+'">'
       +'<td class="c-no">'+esc(p.sort_no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ava(p.name_ko))+'</span></td>'
       +'<td class="c-name"><a href="db-person-view.html?id='+encodeURIComponent(p.id)+'&p='+cur+'">'+esc(p.name_ko)+oc+((p.name_en&&p.name_en!==p.name_ko)?'<span class="c-name-en">'+esc(p.name_en)+'</span>':'')+'</a></td>'
@@ -1336,6 +1338,7 @@ if('serviceWorker' in navigator){
   }
   var PAGE=20, cur=1, total=0;
   var pager=document.querySelector('.pdb-pager');
+  var focusId=new URLSearchParams(location.search).get('focus');
   var searchState={q:'',regionParam:'',fieldParam:'',order:'sort_no.desc'};
   function readSearch(){
     var inp=document.querySelector('.pdb-search input');
@@ -1394,6 +1397,7 @@ if('serviceWorker' in navigator){
           } else {
             tbody.innerHTML=rows.map(row).join('');
             renderPager();
+            if(focusId){ var _fr=tbody.querySelector('tr[data-id="'+focusId+'"]'); if(_fr){ _fr.classList.add('row-focus'); try{_fr.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){} } focusId=null; }
           }
         }
       })
