@@ -599,9 +599,10 @@
   .pdb-crumb .on{color:var(--text-2)}
   /* 상시 노출 서브메뉴 바 (현재 페이지 하이라이트) */
   .pdb-subnav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:34px}
-  .pdb-subnav a{font-size:13px;color:var(--text-2);padding:8px 17px;border:1px solid var(--line);border-radius:999px;text-decoration:none;white-space:nowrap;transition:border-color .15s ease,color .15s ease,background .15s ease}
+  .pdb-subnav a{font-size:13px;color:var(--text-2);padding:8px 17px;border:1px solid var(--line);border-radius:999px;text-decoration:none;white-space:nowrap;background:#fff;transition:border-color .15s ease,color .15s ease,background .15s ease}
   .pdb-subnav a:hover{border-color:var(--text-3);color:var(--text)}
   .pdb-subnav a.active{background:var(--violet);border-color:var(--violet);color:#fff;font-weight:700}
+  html[data-theme="dark"] .pdb-subnav a:not(.active){background:#17171a}
   /* 모바일: DB 탭 2열 정렬 (마지막 항목은 한 줄 꽉) */
   @media(max-width:600px){
     .pdb-subnav{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
