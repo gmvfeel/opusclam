@@ -243,13 +243,14 @@
       var krC=kr?' ?item wdt:P27 wd:Q884 . ':'';
       var pop='FILTER NOT EXISTS { ?item wdt:P136 ?g. ?g wdt:P279* wd:Q373342 } FILTER NOT EXISTS { ?item wdt:P136 wd:Q37073 } FILTER NOT EXISTS { ?item wdt:P106 wd:Q33999 }';
       var popInst=pop+' FILTER NOT EXISTS { ?item wdt:P106 wd:Q177220 }';
+      var popLight='FILTER NOT EXISTS { ?item wdt:P136 wd:Q37073 } FILTER NOT EXISTS { ?item wdt:P106 wd:Q33999 } FILTER NOT EXISTS { ?item wdt:P106 wd:Q177220 }';
       var classReq=' VALUES ?fam { wd:Q9730 wd:Q1344 } ?item wdt:P136/wdt:P279* ?fam . ';
       var sub;
       if(mode==='classical'){
         sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . '+krC+classReq+(kr?pop:'');
       } else if(mode==='instrument'){
-        if(kr) sub='?item wdt:P1303 ?anyi ; wikibase:sitelinks ?sl . '+krC+classReq+popInst;
-        else sub='?item wdt:P1303 ?anyi ; wdt:P106 ?mo ; wikibase:sitelinks ?sl . VALUES ?mo { wd:Q639669 wd:Q486748 wd:Q1259917 wd:Q13219637 wd:Q16003954 wd:Q12377274 } FILTER(?sl > 12) '+popInst;
+        if(kr) sub='?item wdt:P1303 ?anyi ; wikibase:sitelinks ?sl . '+krC+classReq+popLight;
+        else sub='?item wdt:P1303 ?anyi ; wdt:P106 ?mo ; wikibase:sitelinks ?sl . VALUES ?mo { wd:Q639669 wd:Q486748 wd:Q1259917 wd:Q13219637 wd:Q16003954 wd:Q12377274 } FILTER(?sl > 12) '+popLight;
       } else {
         sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?1:8)+') '+krC+pop;
       }
