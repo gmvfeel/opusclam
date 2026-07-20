@@ -312,6 +312,7 @@
         }
         got+=Math.min(CH2,qids.length-i); progSet(Math.round(got/(qids.length||1)*100)); log('상세정보 '+got+'/'+qids.length);
       }
+      persons.forEach(function(pp){ delete pp._loc; });
       log('정리 완료: '+persons.length+'명 → 저장(업서트) 중…'); progShow('DB에 저장 중…',false); progSet(0);
       var CH=100, done=0;
       for(var k=0;k<persons.length;k+=CH){
