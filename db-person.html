@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>인물DB · OPUSCLAM.COM Database</title>
 <link rel="manifest" href="/manifest.webmanifest">
@@ -1642,8 +1643,8 @@ if('serviceWorker' in navigator){
   if(!btn)return;
   var root=document.documentElement;
   btn.addEventListener('click',function(){
-    if(root.getAttribute('data-theme')==='dark'){root.removeAttribute('data-theme');}
-    else{root.setAttribute('data-theme','dark');}
+    if(root.getAttribute('data-theme')==='dark'){root.removeAttribute('data-theme');try{localStorage.setItem('oc-theme','light');}catch(e){}}
+    else{root.setAttribute('data-theme','dark');try{localStorage.setItem('oc-theme','dark');}catch(e){}}
   });
 })();
 
