@@ -1543,7 +1543,14 @@ if('serviceWorker' in navigator){
      var wl=document.querySelector('ul.pv-worklist');if(wl&&x.programs)wl.innerHTML=String(x.programs).split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
      var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('유형',esc(x.type||''))+fact('소재지',esc(x.location||''))+fact('개관',esc(x.opened||''))+fact('좌석수',esc(x.seats||''))+fact('운영주체',esc(x.operator||''))+fact('상주단체',esc(x.resident||''))+fact('대표 프로그램',esc(x.programs||''));
      var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
-     document.title=nm+' · 공연장DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+          (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
+       var _k=encodeURIComponent((x.name_ko||x.name_en||'').trim());
+       var _e=encodeURIComponent((x.name_en||x.name_ko||'').trim());
+       var _loc=encodeURIComponent(((x.name_ko||x.name_en||'')+' '+(x.location||'')).trim());
+       var _u=[((x.link_home&&x.link_home!=='#')?x.link_home:'https://www.google.com/search?q='+_k),((x.link_wiki&&x.link_wiki!=='#')?x.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k),((x.link_video&&x.link_video!=='#')?x.link_video:'https://www.youtube.com/results?search_query='+_k),'https://www.google.com/maps/search/?api=1&query='+_loc];
+       for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
+     }})();
+document.title=nm+' · 공연장DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
    }).catch(function(e){console.error('공연장DB view 로드 실패:',e);});
 })();
 </script>

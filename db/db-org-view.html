@@ -1541,7 +1541,13 @@ if('serviceWorker' in navigator){
      var wl=document.querySelector('ul.pv-worklist');if(wl&&o.activities)wl.innerHTML=o.activities.split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
      var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('유형',esc(o.type||''))+fact('소재지',esc(o.location||''))+fact('창단',esc(o.founded||''))+fact('상임지휘자',esc(o.leader||''))+fact('연고 공연장',esc(o.home_venue||''));
      var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
-     document.title=nm+' · 음악단체DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+          (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
+       var _k=encodeURIComponent((o.name_ko||o.name_en||'').trim());
+       var _e=encodeURIComponent((o.name_en||o.name_ko||'').trim());
+       var _u=[((o.link_home&&o.link_home!=='#')?o.link_home:'https://www.google.com/search?q='+_k),((o.link_wiki&&o.link_wiki!=='#')?o.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k),((o.link_video&&o.link_video!=='#')?o.link_video:'https://www.youtube.com/results?search_query='+_k),'https://music.youtube.com/search?q='+_k];
+       for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
+     }})();
+document.title=nm+' · 음악단체DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
    }).catch(function(e){console.error('org view 로드 실패:',e);});
 })();
 </script>

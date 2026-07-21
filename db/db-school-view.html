@@ -1552,7 +1552,14 @@ if('serviceWorker' in navigator){
      var wl=document.querySelector('ul.pv-worklist');if(wl&&x.departments)wl.innerHTML=String(x.departments).split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
      var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('구분',esc(x.category||''))+fact('소재지',esc(x.location||''))+fact('설립',esc(x.founded||''))+fact('설립구분',esc(x.estab_type||''))+fact('대표 학과',esc(x.departments||''))+fact('저명 동문',esc(x.alumni||''))+fact('대표 특성',esc(x.features||''));
      var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
-     document.title=nm+' · 음악학교DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+          (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
+       var _k=encodeURIComponent((x.name_ko||x.name_en||'').trim());
+       var _e=encodeURIComponent((x.name_en||x.name_ko||'').trim());
+       var _loc=encodeURIComponent(((x.name_ko||x.name_en||'')+' '+(x.location||'')).trim());
+       var _u=[((x.link_home&&x.link_home!=='#')?x.link_home:'https://www.google.com/search?q='+_k),((x.link_wiki&&x.link_wiki!=='#')?x.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k),((x.link_video&&x.link_video!=='#')?x.link_video:'https://www.youtube.com/results?search_query='+_k),'https://www.google.com/maps/search/?api=1&query='+_loc];
+       for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
+     }})();
+document.title=nm+' · 음악학교DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
    }).catch(function(e){console.error('음악학교DB view 로드 실패:',e);});
 })();
 </script>

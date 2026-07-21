@@ -1525,7 +1525,13 @@ if('serviceWorker' in navigator){
      var wl=document.querySelector('ul.pv-worklist');if(wl&&x.keywords)wl.innerHTML=String(x.keywords).split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
      var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('유형',esc(x.type||''))+fact('저자',esc(x.author||''))+fact('발행',esc(x.pub_year||''))+fact('발행처',esc(x.publisher||''))+fact('분야',esc(x.field||''))+fact('키워드',esc(x.keywords||''))+fact('언어',esc(x.language||''));
      var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
-     document.title=nm+' · 학술DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+          (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
+       var _k=encodeURIComponent((x.name_ko||x.name_en||'').trim());
+       var _e=encodeURIComponent((x.name_en||x.name_ko||'').trim());
+       var _u=[((x.link_full&&x.link_full!=='#')?x.link_full:'https://scholar.google.com/scholar?q='+_k),((x.link_cite&&x.link_cite!=='#')?x.link_cite:'https://scholar.google.com/scholar?q='+_k),'https://www.google.com/search?q='+encodeURIComponent((x.publisher||x.name_ko||'').trim()),'https://scholar.google.com/scholar?q='+_k];
+       for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
+     }})();
+document.title=nm+' · 학술DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
    }).catch(function(e){console.error('학술DB view 로드 실패:',e);});
 })();
 </script>
