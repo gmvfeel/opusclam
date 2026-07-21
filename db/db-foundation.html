@@ -177,6 +177,10 @@
 
 
 
+  .nd{color:var(--text-3);opacity:.45}
+  .pdb-empty{text-align:center;padding:64px 0;color:var(--text-3);font-size:14px}
+  .pdb-table tr.row-focus{animation:rowflash 2.6s ease}
+  @keyframes rowflash{0%,18%{background:rgba(124,99,176,.22)}100%{background:transparent}}
 </style>
 </head>
 <body>
@@ -950,237 +954,117 @@ if('serviceWorker' in navigator){
 
 </script>
 <script>
-/* ===== Supabase 연동: 목록 데이터 로드 ===== */
+/* 재단·기관DB: 검색·필터·페이징 (인물/음악단체 DB와 동일 틀) */
 (function(){
-  const SUPABASE_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  const H = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
-
-  function fmtDate(d){
-    if(!d) return '';
-    const p = String(d).split('-');       // YYYY-MM-DD
-    if(p.length < 3) return d;
-    return p[0].slice(2) + '.' + p[1] + '.' + p[2];   // 21.11.22
+  var SUPA='https://ptdxzxkgddvkusamkiol.supabase.co';
+  var KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var tb=document.getElementById('foundation-list'); if(!tb) return;
+  var IC={
+    home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>',
+    wiki:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>',
+    video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>',
+    audio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>',
+    full:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M14 2v6h6"/></svg>',
+    cite:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 8h4v5H8a3 3 0 0 1-1-2z"/><path d="M14 8h4v5h-3a3 3 0 0 1-1-2z"/></svg>'
+  };
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function ini(n){n=(n||'').trim();return n?esc(n[0]):'?';}
+  function nd(v){return (v!=null&&String(v).trim())?esc(v):'<span class="nd">\u2014</span>';}
+  function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
+  var cur=1;
+  function row(o,no){
+    var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
+    var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
+    var av=o.logo_url?'<img src="'+esc(o.logo_url)+'" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko);
+    var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
+    return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
+      +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
+      +'<td class="c-name"><a href="db-foundation-view.html?id='+encodeURIComponent(o.id)+'&p='+cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
+      +'<td class="c-field">'+(o.type?'<span class="tag">'+esc(o.type)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
+      +'<td class="c-nation">'+nd(o.location)+'</td>'
+      +'<td class="c-life">'+nd(o.founded)+'</td>'
+      +'<td class="c-org">'+nd(o.estab_type)+'</td>'
+      +'<td class="c-era">'+nd(o.subsidiary)+'</td>'
+      +'<td class="c-work">'+nd(o.business)+'</td>'
+      +'<td class="c-school">'+nd(o.field)+'</td>'
+      +'<td class="c-link">'+links+'</td></tr>';
   }
-
-  async function sbGet(query){
-    const res = await fetch(SUPABASE_URL + '/rest/v1/' + query, { headers: H });
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
+  var PAGE=20, total=0;
+  var pager=document.querySelector('.pdb-pager');
+  var focusId=new URLSearchParams(location.search).get('focus');
+  var st={q:'',filters:'',order:'sort_no.desc'};
+  function readSearch(){
+    var inp=document.querySelector('.pdb-search input');
+    st.q=(inp?inp.value:'').trim().replace(/[(),*]/g,' ').replace(/\s+/g,' ').trim();
+    var sels=document.querySelectorAll('.pdb-selects select');
+    var extra='', ord='sort_no.desc';
+    var region=sels[0]?sels[0].value:'';
+    if(region==='국내') extra+='&location=ilike.*'+encodeURIComponent('대한민국')+'*';
+    else if(region==='국외') extra+='&location=not.ilike.*'+encodeURIComponent('대한민국')+'*';
+    else if(region && region.indexOf('국내')<0 && region!=='기타') extra+='&location=ilike.*'+encodeURIComponent(region)+'*';
+    var f2=sels[1]?sels[1].value:''; if(f2 && f2.indexOf('전체')<0) extra+='&type=eq.'+encodeURIComponent(f2);
+    var sort=sels[2]?sels[2].value:'';
+    if(sort.indexOf('오래된')>=0)ord='sort_no.asc';
+    else if(sort.indexOf('역순')>=0)ord='name_ko.desc';
+    else if(sort.indexOf('가나다')>=0)ord='name_ko.asc';
+    else if(sort.indexOf('A')>=0)ord='name_en.asc';
+    else if(sort.indexOf('설립')>=0)ord='founded.asc';
+    else if(sort.indexOf('유형')>=0)ord='type.asc';
+    else if(sort.indexOf('소재지')>=0)ord='location.asc';
+    st.filters=extra; st.order=ord;
   }
-
-  // 카드에 클릭 링크(투명 덮개) 적용 — 실제 주소가 있을 때만
-  function setCardLink(card, link){
-    let a = card.querySelector(':scope > a.card-link');
-    if(!link || link === '#'){ if(a) a.remove(); return; }
-    if(!a){
-      a = document.createElement('a');
-      a.className = 'card-link';
-      a.textContent = '자세히 보기';
-      if(getComputedStyle(card).position === 'static') card.style.position = 'relative';
-      card.appendChild(a);
-    }
-    a.href = link;
+  function buildUrl(off){
+    var u=SUPA+'/rest/v1/foundations?select=*';
+    if(st.q){var t=encodeURIComponent(st.q);u+='&or=('+'name_ko.ilike.*'+t+'*,name_en.ilike.*'+t+'*,location.ilike.*'+t+'*,business.ilike.*'+t+'*,field.ilike.*'+t+'*'+')';}
+    u+=st.filters+'&order='+st.order+'&limit='+PAGE+'&offset='+off;
+    return u;
   }
-
-  // 공지사항 / 콩쿨 — 제목 + 날짜
-  async function loadDateList(elId, table){
-    const list = document.getElementById(elId);
-    if(!list) return;
-    try{
-      const rows = await sbGet(table + '?select=title,link,posted_on&order=sort_order.asc');
-      if(!Array.isArray(rows) || !rows.length) return;
-      list.innerHTML = '';
-      rows.forEach(function(r){
-        const li = document.createElement('li');
-        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
-        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = fmtDate(r.posted_on);
-        li.appendChild(a); li.appendChild(dt);
-        list.appendChild(li);
-      });
-    }catch(e){ console.error(table + ' 로드 실패:', e); }
+  function doSearch(){readSearch();loadPage(1);}
+  function renderPager(){
+    if(!pager) return;
+    var pages=Math.max(1,Math.ceil(total/PAGE));
+    var mob=window.innerWidth<=520;
+    var w=mob?2:4;
+    var start=Math.max(1,cur-(mob?1:2)), end=Math.min(pages,start+w); start=Math.max(1,end-w);
+    var nums='';
+    for(var i=start;i<=end;i++){ nums+='<a href="#" data-pg="'+i+'"'+(i===cur?' class="on"':'')+'>'+i+'</a>'; }
+    var hidF=(cur<=1?' style="visibility:hidden"':''), hidL=(cur>=pages?' style="visibility:hidden"':'');
+    var html='';
+    if(!mob) html+='<a class="pg-nav" data-pg="1" href="#"'+hidF+'>\u00ab 맨앞</a>';
+    html+='<a class="pg-nav" data-pg="'+(cur-1)+'" href="#"'+hidF+'>\u2039 이전</a>'
+      +'<div class="pg-nums">'+nums+'</div>'
+      +'<a class="pg-nav" data-pg="'+(cur+1)+'" href="#"'+hidL+'>다음 \u203a</a>';
+    if(!mob) html+='<a class="pg-nav" data-pg="'+pages+'" href="#"'+hidL+'>맨뒤 \u00bb</a>';
+    pager.innerHTML=html;
   }
-
-  // 지원금 — 제목 + 마감일(텍스트)
-  async function loadFunding(){
-    const list = document.getElementById('funding-list');
-    if(!list) return;
-    try{
-      const rows = await sbGet('funding?select=title,link,deadline&order=sort_order.asc');
-      if(!Array.isArray(rows) || !rows.length) return;
-      list.innerHTML = '';
-      rows.forEach(function(r){
-        const li = document.createElement('li');
-        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
-        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.deadline || '';
-        li.appendChild(a); li.appendChild(dt);
-        list.appendChild(li);
-      });
-    }catch(e){ console.error('funding 로드 실패:', e); }
-  }
-
-  // 악보·자료 — 아이콘 + 제목
-  const DL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>';
-  async function loadScores(){
-    const list = document.getElementById('scores-list');
-    if(!list) return;
-    try{
-      const rows = await sbGet('scores?select=title,link&order=sort_order.asc');
-      if(!Array.isArray(rows) || !rows.length) return;
-      list.innerHTML = '';
-      rows.forEach(function(r){
-        const li = document.createElement('li');
-        const icon = document.createElement('span'); icon.className = 'icon'; icon.innerHTML = DL_ICON;
-        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
-        li.appendChild(icon); li.appendChild(a);
-        list.appendChild(li);
-      });
-    }catch(e){ console.error('scores 로드 실패:', e); }
-  }
-
-  // 카드형 콘텐츠 — 핫토픽 / 이달의 음악학교 / 갤러리 / 현대음악 (각 1건)
-  function fmtDot(d){
-    if(!d) return '';
-    const p = String(d).split('-');
-    if(p.length < 3) return d;
-    return p[0] + '.' + p[1] + '.' + p[2];   // 2021.11.22
-  }
-  async function loadFeature(cardId, slot){
-    const card = document.getElementById(cardId);
-    if(!card) return;
-    try{
-      const rows = await sbGet('features?slot=eq.' + slot + '&select=title,summary,image_url,link,posted_on&order=sort_order.asc,created_at.desc&limit=1');
-      if(!Array.isArray(rows) || !rows.length) return;
-      const r = rows[0];
-      const h = card.querySelector('h4'); if(h) h.textContent = r.title || '';
-      const p = card.querySelector('p'); if(p && r.summary != null) p.textContent = r.summary;
-      const dt = card.querySelector('.dt'); if(dt) dt.textContent = fmtDot(r.posted_on);
-      const vm = card.querySelector('a.vm'); if(vm && r.link) vm.href = r.link;
-      setCardLink(card, r.link);
-      if(r.image_url){
-        const th = card.querySelector('.thumb');
-        if(th){ th.classList.remove('ph'); th.style.backgroundImage = 'url("' + r.image_url + '")'; th.style.backgroundSize = 'cover'; th.style.backgroundPosition = 'center'; }
+  function loadPage(pg){
+    var off=(pg-1)*PAGE;
+    var hh={apikey:KEY,Authorization:'Bearer '+KEY,Prefer:'count=exact'};
+    fetch(buildUrl(off),{headers:hh}).then(function(r){
+      var crg=r.headers.get('content-range'); if(crg){var t=crg.split('/')[1]; if(t&&t!=='*') total=parseInt(t,10)||total;}
+      if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+    }).then(function(rows){
+      if(Array.isArray(rows)){
+        cur=pg;
+        var cnt=document.querySelector('.pdb-count b'); if(cnt) cnt.textContent=(total||0).toLocaleString();
+        if(rows.length===0){ tb.innerHTML='<tr><td colspan="11" class="pdb-empty">요청하신 검색 결과가 없습니다.</td></tr>'; if(pager)pager.innerHTML=''; }
+        else { tb.innerHTML=rows.map(function(rw,ix){return row(rw, off+ix+1);}).join(''); renderPager();
+          if(focusId){var _fr=tb.querySelector('tr[data-id="'+focusId+'"]');if(_fr){_fr.classList.add('row-focus');try{_fr.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}}focusId=null;} }
       }
-    }catch(e){ console.error(slot + ' 로드 실패:', e); }
+    }).catch(function(e){console.error('로드 실패:',e);});
   }
-
-  // Self PR 연주자 목록
-  async function loadArtists(){
-    const box = document.getElementById('artists-list');
-    if(!box) return;
-    try{
-      const rows = await sbGet('artists?select=name,role,bio,image_url,link&order=sort_order.asc');
-      if(!Array.isArray(rows) || !rows.length) return;
-      box.innerHTML = '';
-      rows.forEach(function(r, i){
-        const wrap = document.createElement('div');
-        wrap.className = 'artist';
-        if(i === rows.length - 1) wrap.style.borderBottom = '0';
-        const ava = document.createElement('div');
-        ava.className = 'ava' + (r.image_url ? '' : ' ph');
-        if(r.image_url){ ava.style.backgroundImage = 'url("' + r.image_url + '")'; ava.style.backgroundSize = 'cover'; ava.style.backgroundPosition = 'center'; }
-        const info = document.createElement('div');
-        const role = document.createElement('div'); role.className = 'role'; role.textContent = r.role || '';
-        const h = document.createElement('h4'); h.textContent = r.name || '';
-        const bio = document.createElement('p'); bio.textContent = r.bio || '';
-        info.appendChild(role); info.appendChild(h); info.appendChild(bio);
-        wrap.appendChild(ava); wrap.appendChild(info);
-        setCardLink(wrap, r.link);
-        box.appendChild(wrap);
-      });
-    }catch(e){ console.error('artists 로드 실패:', e); }
-  }
-
-  // 한여름밤 배너(Concert PR)
-  async function loadConcertPR(){
-    const card = document.getElementById('concert-pr');
-    if(!card) return;
-    try{
-      const rows = await sbGet('features?slot=eq.concert_pr&select=label,title,summary,image_url,link&order=sort_order.asc,created_at.desc&limit=1');
-      if(!Array.isArray(rows) || !rows.length) return;
-      const r = rows[0];
-      const lbl = card.querySelector('.en-s'); if(lbl && r.label != null) lbl.textContent = r.label;
-      const h = card.querySelector('h4'); if(h) h.textContent = r.title || '';
-      const p = card.querySelector('p'); if(p && r.summary != null) p.textContent = r.summary;
-      setCardLink(card, r.link);
-      if(r.image_url){ const img = card.querySelector('.img'); if(img){ img.classList.remove('ph'); img.style.backgroundImage = 'url("' + r.image_url + '")'; img.style.backgroundSize = 'cover'; img.style.backgroundPosition = 'center'; } }
-    }catch(e){ console.error('concert_pr 로드 실패:', e); }
-  }
-
-  // 빅배너(히어로) 슬라이드
-  async function loadHeroSlides(){
-    const wrap = document.querySelector('.hero .wrap');
-    const dotsBox = document.querySelector('.hero-dots');
-    if(!wrap || !dotsBox) return;
-    try{
-      const rows = await sbGet('hero_slides?select=eyebrow,title,subtitle,schedule,venue,time_text,image_url,link&order=sort_order.asc');
-      if(!Array.isArray(rows) || !rows.length) return;
-      wrap.innerHTML = '';
-      dotsBox.innerHTML = '';
-      rows.forEach(function(r, idx){
-        const sl = document.createElement('div');
-        sl.className = 'hslide' + (idx === 0 ? ' on' : '');
-        if(r.eyebrow){ const eb = document.createElement('div'); eb.className = 'eyebrow'; eb.textContent = r.eyebrow; sl.appendChild(eb); }
-        const h1 = document.createElement('h1');
-        String(r.title || '').split('\n').forEach(function(line, li){
-          if(li > 0) h1.appendChild(document.createElement('br'));
-          h1.appendChild(document.createTextNode(line));
-        });
-        sl.appendChild(h1);
-        if(r.subtitle){ const sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = r.subtitle; sl.appendChild(sub); }
-        const meta = document.createElement('div'); meta.className = 'meta';
-        if(r.schedule){ const s = document.createElement('span'); s.appendChild(document.createTextNode('일정 ')); const bx = document.createElement('b'); bx.textContent = r.schedule; s.appendChild(bx); meta.appendChild(s); }
-        if(r.venue){ const s = document.createElement('span'); s.appendChild(document.createTextNode('장소 ')); const bx = document.createElement('b'); bx.textContent = r.venue; s.appendChild(bx); meta.appendChild(s); }
-        if(r.time_text){ const s = document.createElement('span'); s.textContent = r.time_text; meta.appendChild(s); }
-        sl.appendChild(meta);
-        wrap.appendChild(sl);
-        const dot = document.createElement('i'); if(idx === 0) dot.className = 'on'; dotsBox.appendChild(dot);
-      });
-      if(window.initHeroRotation) window.initHeroRotation();
-    }catch(e){ console.error('hero_slides 로드 실패:', e); }
-  }
-
-  // 상단 뉴스 티커
-  async function loadTicker(){
-    const box = document.getElementById('ticker-list');
-    if(!box) return;
-    try{
-      const rows = await sbGet('ticker?select=label,headline,posted_on,link&order=sort_order.asc');
-      if(!Array.isArray(rows) || !rows.length) return;
-      box.innerHTML = '';
-      rows.forEach(function(r){
-        const tk = document.createElement('div'); tk.className = 'tk';
-        const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = r.label || '';
-        const txt = document.createElement('span'); txt.className = 'txt'; txt.textContent = r.headline || '';
-        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.posted_on || '';
-        const a = document.createElement('a'); a.className = 'more en'; a.href = (r.link && r.link !== '#') ? r.link : '#'; a.innerHTML = 'VIEW DETAIL &rarr;';
-        tk.appendChild(lbl); tk.appendChild(txt); tk.appendChild(dt); tk.appendChild(a);
-        box.appendChild(tk);
-      });
-    }catch(e){ console.error('ticker 로드 실패:', e); }
-  }
-
-  function init(){
-    loadHeroSlides();
-    loadTicker();
-    loadFeature('card-self-picture', 'self_picture');
-    loadDateList('notice-list', 'notices');
-    loadDateList('concours-list', 'concours');
-    loadFunding();
-    loadScores();
-    loadFeature('card-hot-topic', 'hot_topic');
-    loadFeature('card-music-school', 'music_school');
-    loadFeature('card-gallery', 'gallery');
-    loadFeature('card-contemporary', 'contemporary');
-    loadFeature('card-notice-lead', 'notice_lead');
-    loadFeature('card-concours-lead', 'concours_lead');
-    loadArtists();
-    loadConcertPR();
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', init);
-  } else { init(); }
+  if(pager){ pager.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[data-pg]');if(!a)return;e.preventDefault();var pg=parseInt(a.getAttribute('data-pg'),10);var pages=Math.max(1,Math.ceil(total/PAGE));if(pg>=1&&pg<=pages&&pg!==cur){loadPage(pg);if(window.scrollTo)window.scrollTo({top:0,behavior:'smooth'});}}); }
+  (function(){
+    var inp=document.querySelector('.pdb-search input');
+    if(inp){ inp.setAttribute('placeholder','기관·재단명 · 사업 · 키워드로 검색'); inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doSearch();}}); }
+    var sic=document.querySelector('.pdb-search svg'); if(sic){ sic.style.cursor='pointer'; sic.addEventListener('click',doSearch); }
+    document.querySelectorAll('.pdb-selects select').forEach(function(sel){sel.addEventListener('change',doSearch);});
+  })();
+  function setStickyTop(){var h=document.querySelector('.site-header');var t=h?Math.round(h.getBoundingClientRect().height):64;document.querySelectorAll('.pdb-table thead th').forEach(function(th){th.style.top=t+'px';});}
+  setStickyTop(); window.addEventListener('resize',setStickyTop);
+  window.addEventListener('resize',function(){if(total)renderPager();});
+  var _sp=parseInt(new URLSearchParams(location.search).get('p'),10)||1;
+  loadPage(_sp>=1?_sp:1);
 })();
 </script>
 
