@@ -1586,12 +1586,34 @@ if('serviceWorker' in navigator){
      }})();
 document.title=nm+' · 인물DB · OPUSCLAM.COM';
      var cr=document.querySelector('.pdb-crumb .on'); if(cr) cr.textContent=nm;
-     // 데이터 없는 섹션 숨김: 사진·갤러리 / 영상 / 악보 / 음원
-     document.querySelectorAll('.pv-sec').forEach(function(sec){
-       var hh=sec.querySelector('.pv-h'); if(!hh) return; var t=hh.textContent;
-       if(t.indexOf('사진')>=0||t.indexOf('영상')>=0||t.indexOf('악보')>=0||t.indexOf('음원')>=0) sec.style.display='none';
-     });
-     // 위키백과에서 생애·이력 + 사진 실시간 로드
+     // ===== 하단 콘텐츠 섹션 채우기 (사진=위키미디어 실제 / 영상·음원·악보=검색 연결) =====
+     (function(){
+       var _nk=encodeURIComponent((p.name_ko||p.name_en||'').trim());
+       var _ne=encodeURIComponent((p.name_en||p.name_ko||'').trim());
+       var _nko=(p.name_ko||p.name_en||'').trim();
+       var _works=(p.works&&p.works.trim())?p.works.split('\u00b7').map(function(w){return w.trim();}).filter(Boolean).slice(0,4):[];
+       function _sec(kw){var f=null;document.querySelectorAll('.pv-sec').forEach(function(s){var h=s.querySelector('.pv-h');if(h&&h.textContent.indexOf(kw)>=0)f=s;});return f;}
+       var _VID='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>';
+       var _AUD='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>';
+       var _SCO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>';
+       (function(){var sec=_sec('영상');if(!sec)return;var tr=sec.querySelector('.pv-track');if(!tr)return;
+         var cs=[{t:_nko+' 연주·공연 영상',s:'YouTube 검색',q:_nk}];
+         _works.forEach(function(w){cs.push({t:w,s:'YouTube 검색',q:encodeURIComponent(_nko+' '+w)});});
+         tr.innerHTML=cs.map(function(c){return '<a class="pv-card" href="https://www.youtube.com/results?search_query='+c.q+'" target="_blank" rel="noopener"><span class="pv-thumb">'+_VID+'</span><span class="pv-cardbody"><span class="pv-ct">'+esc(c.t)+'</span><span class="pv-cs">'+c.s+'</span></span></a>';}).join('');
+       })();
+       (function(){var sec=_sec('음원');if(!sec)return;var li=sec.querySelector('.pv-list');if(!li)return;
+         var rs=[{b:_nko+' 음원',s:'YouTube Music 검색',q:_nk}];
+         _works.forEach(function(w){rs.push({b:w,s:'YouTube Music 검색',q:encodeURIComponent(_nko+' '+w)});});
+         li.innerHTML=rs.map(function(r){return '<a class="pv-lirow" href="https://music.youtube.com/search?q='+r.q+'" target="_blank" rel="noopener"><span class="pv-li-ic">'+_AUD+'</span><span class="pv-li-main"><b>'+esc(r.b)+'</b><span>'+r.s+'</span></span><span class="pv-li-act">듣기 →</span></a>';}).join('');
+       })();
+       (function(){var sec=_sec('악보');if(!sec)return;var li=sec.querySelector('.pv-list');if(!li)return;
+         var rs=[{b:(p.name_en||p.name_ko||'')+' — IMSLP',s:'악보 검색',q:_ne}];
+         _works.forEach(function(w){rs.push({b:w,s:'IMSLP 검색',q:encodeURIComponent(w)});});
+         li.innerHTML=rs.map(function(r){return '<a class="pv-lirow" href="https://imslp.org/index.php?title=Special:Search&search='+r.q+'" target="_blank" rel="noopener"><span class="pv-li-ic">'+_SCO+'</span><span class="pv-li-main"><b>'+esc(r.b)+'</b><span>'+r.s+'</span></span><span class="pv-li-act">보기 →</span></a>';}).join('');
+       })();
+       var _ph=_sec('사진'); if(_ph) _ph.style.display='none';
+     })();
+     // 위키백과에서 생애·이력 + 사진(갤러리) 실시간 로드
      (function(){
        function tryWiki(lang,title){ if(!title)return Promise.resolve(null);
          return fetch('https://'+lang+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(title))
@@ -1599,13 +1621,26 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
        function apply(w){
          if(!w||w.type==='disambiguation'||!w.extract) return false;
          var bio=document.querySelector('.pv-prose'); if(bio) bio.innerHTML='<p>'+esc(w.extract)+'</p>';
-         var lead=document.querySelector('.pv-lead'); if(lead) lead.textContent=(w.extract.length>120?w.extract.slice(0,120)+'…':w.extract);
+         var lead=document.querySelector('.pv-lead'); if(lead) lead.textContent=(w.extract.length>120?w.extract.slice(0,120)+'\u2026':w.extract);
          var img=(w.thumbnail&&w.thumbnail.source)||(w.originalimage&&w.originalimage.source);
          if(img){ var por=document.querySelector('.pv-portrait'); if(por){ por.innerHTML=''; por.style.overflow='hidden'; var im=document.createElement('img'); im.src=img; im.alt=nm; im.style.cssText='width:100%;height:100%;object-fit:cover'; por.appendChild(im);} }
          return true;
        }
+       function gallery(lang,title){ if(!title)return;
+         var ph=null;document.querySelectorAll('.pv-sec').forEach(function(s){var h=s.querySelector('.pv-h');if(h&&h.textContent.indexOf('사진')>=0)ph=s;});
+         if(!ph)return; var tr=ph.querySelector('.pv-track'); if(!tr)return;
+         fetch('https://'+lang+'.wikipedia.org/api/rest_v1/page/media-list/'+encodeURIComponent(title))
+           .then(function(r){return r.ok?r.json():null;}).then(function(m){
+             if(!m||!m.items)return;
+             var imgs=m.items.filter(function(it){return it.type==='image'&&it.srcset&&it.srcset.length;}).slice(0,12);
+             if(!imgs.length)return;
+             tr.innerHTML=imgs.map(function(it){var src=it.srcset[0].src;if(src.indexOf('//')===0)src='https:'+src;var href=it.title?'https://commons.wikimedia.org/wiki/'+encodeURIComponent(it.title):'#';return '<a class="pv-tile" href="'+href+'" target="_blank" rel="noopener" style="padding:0;overflow:hidden"><img src="'+src+'" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover"></a>';}).join('');
+             ph.style.display='';
+           }).catch(function(){});
+       }
+       function run(lang,title){ return tryWiki(lang,title).then(function(w){ if(w&&apply(w)){ gallery(w.lang||lang,(w.titles&&w.titles.canonical)||w.title||title); return true; } return false; }); }
        var ko=(p.name_ko||'').trim(), en=(p.name_en||'').trim();
-       tryWiki('ko', ko||en).then(function(w){ if(apply(w)) return; return tryWiki('en', en).then(apply); });
+       run('ko', ko||en).then(function(ok){ if(ok)return; return run('en', en); });
      })();
    })
    .catch(function(e){console.error('person view 로드 실패:',e);});
