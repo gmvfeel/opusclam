@@ -357,7 +357,7 @@
       if(mode==='classical'){
         sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . '+krC+classReq+(kr?pop:'');
       } else if(mode==='instrument'){
-        sub='?item wdt:P106 ?mo ; wikibase:sitelinks ?sl . VALUES ?mo { wd:Q486748 wd:Q1259917 wd:Q13219637 wd:Q16003954 wd:Q12377274 } FILTER(?sl > '+(kr?0:10)+') '+krC+popLight;
+        sub='?item wdt:P106 ?mo ; wikibase:sitelinks ?sl . VALUES ?mo { wd:Q486748 wd:Q1259917 wd:Q13219637 wd:Q16003954 wd:Q12377274 wd:Q12902372 wd:Q118865 wd:Q12310971 wd:Q765778 wd:Q3127709 wd:Q544972 wd:Q899758 wd:Q1214796 wd:Q5371902 } FILTER(?sl > '+(kr?0:10)+') '+krC+popLight;
       } else {
         sub='?item wdt:P106 wd:'+occ+' ; wikibase:sitelinks ?sl . FILTER(?sl > '+(kr?1:8)+') '+krC+pop;
       }
