@@ -1574,7 +1574,17 @@ if('serviceWorker' in navigator){
      }
      // 아직 데이터 없는 섹션 숨김: 관련 인물
      var ppl=document.querySelector('.pv-people'); if(ppl){var sec=ppl.closest('.pv-sec'); if(sec) sec.style.display='none';}
-     document.title=nm+' · 인물DB · OPUSCLAM.COM';
+          (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
+       var _k=encodeURIComponent((p.name_ko||p.name_en||'').trim());
+       var _e=encodeURIComponent((p.name_en||p.name_ko||'').trim());
+       var _wiki=(p.link_wiki&&p.link_wiki!=='#')?p.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k;
+       var _aud=(p.link_audio&&p.link_audio!=='#')?p.link_audio:'https://music.youtube.com/search?q='+_k;
+       var _vid=(p.link_video&&p.link_video!=='#')?p.link_video:'https://www.youtube.com/results?search_query='+_k;
+       var _sco='https://imslp.org/index.php?title=Special:Search&search='+_e;
+       var _u=[_wiki,_aud,_vid,_sco];
+       for(var _i=0;_i<4;_i++){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}
+     }})();
+document.title=nm+' · 인물DB · OPUSCLAM.COM';
      var cr=document.querySelector('.pdb-crumb .on'); if(cr) cr.textContent=nm;
      // 데이터 없는 섹션 숨김: 사진·갤러리 / 영상 / 악보 / 음원
      document.querySelectorAll('.pv-sec').forEach(function(sec){
