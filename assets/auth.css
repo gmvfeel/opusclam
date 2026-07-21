@@ -28,20 +28,20 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 a{text-decoration:none;color:inherit}
 /* GNB */
 .gnb{background:var(--bg);border-bottom:1px solid var(--line)}
-.gnb .in{max-width:1320px;margin:0 auto;padding:0 26px}
+.gnb .in{max-width:1320px;margin:0 auto;padding:0 20px}
 .util{background:var(--bg2)}
-.util .in{display:flex;align-items:center;justify-content:space-between;height:36px}
-.util a{color:var(--util-tx);font-size:9.5px;letter-spacing:.13em;font-weight:600;transition:color .2s}
-.util .l a{margin-right:22px}.util a:hover{color:var(--navh)}
+.util .in{max-width:1180px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:34px}
+.util a{color:var(--util-tx);font-size:8px;letter-spacing:.05em;font-weight:600;transition:color .2s}
+.util .l a{margin-right:18px}.util a:hover{color:var(--navh)}
 .mast{border-top:1px solid var(--hair)}
-.mast .in{display:flex;align-items:center;height:78px;gap:30px}
-.logo img{height:36px;filter:var(--logo-filter)}
-.nav{display:flex;gap:28px;margin-left:8px}
-.nav a{font-size:15px;font-weight:600;color:var(--nav);padding:27px 0;transition:.2s}.nav a:hover{color:var(--navh)}
-.tools{margin-left:auto;display:flex;align-items:center;gap:13px}
-.school{background:var(--chip);color:var(--tx);font-weight:600;font-size:12.5px;padding:9px 16px;border-radius:20px;border:1px solid var(--line2);transition:.2s}.school:hover{background:var(--chip-h)}
+.mast .in{display:flex;align-items:center;height:78px;gap:24px}
+.logo img{height:34px;filter:var(--logo-filter)}
+.nav{display:flex;gap:40px;flex-wrap:nowrap}
+.nav a{font-size:15px;font-weight:600;color:var(--nav);padding:27px 0;letter-spacing:-.01em;white-space:nowrap;transition:.2s}.nav a:hover{color:var(--navh)}
+.tools{margin-left:auto;display:flex;align-items:center;gap:12px}
+.school{background:var(--chip);color:var(--tx);font-weight:700;font-size:12px;padding:8px 14px;border-radius:20px;border:1px solid var(--line2);transition:.2s}.school:hover{background:var(--chip-h)}
 .authlink{font-size:13px;color:var(--authlink)}.authlink a:hover{color:var(--navh)}
-.circ{width:36px;height:36px;border:1px solid var(--icon-b);border-radius:50%;display:grid;place-items:center;color:var(--icon-tx);cursor:pointer}.circ svg{width:17px;height:17px}
+.circ{width:34px;height:34px;border:1px solid var(--icon-b);border-radius:50%;display:grid;place-items:center;color:var(--icon-tx);cursor:pointer}.circ svg{width:17px;height:17px}
 .burger{width:40px;height:40px;background:transparent;border:1px solid var(--icon-b);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}.burger span{width:18px;height:2px;background:var(--icon-tx);border-radius:2px}
 /* 레이아웃 */
 main{width:100%;flex:1}
