@@ -462,59 +462,51 @@
         </select>
         <select aria-label="분야">
           <option>전체 분야</option>
-          <optgroup label="작곡·지휘·이론">
+          <optgroup label="역할">
             <option>작곡</option>
             <option>편곡</option>
             <option>지휘</option>
-            <option>음악학·이론</option>
-            <option>평론</option>
-            <option>교육</option>
+            <option>연주</option>
+            <option>성악</option>
+            <option>음악학</option>
+            <option>음악교육</option>
           </optgroup>
           <optgroup label="건반">
-            <option>Piano</option>
-            <option>Organ</option>
-            <option>Harpsichord</option>
-            <option>Accordion</option>
+            <option>피아노</option>
+            <option>오르간</option>
+            <option>하프시코드</option>
+            <option>아코디언</option>
+            <option>건반악기</option>
           </optgroup>
           <optgroup label="현악">
-            <option>Violin</option>
-            <option>Viola</option>
-            <option>Cello</option>
-            <option>Double Bass</option>
-            <option>Harp</option>
-            <option>Classical Guitar</option>
+            <option>바이올린</option>
+            <option>비올라</option>
+            <option>첼로</option>
+            <option>콘트라베이스</option>
+            <option>하프</option>
+            <option>기타</option>
+            <option>류트</option>
+            <option>비올족</option>
           </optgroup>
           <optgroup label="목관">
-            <option>Flute</option>
-            <option>Oboe</option>
-            <option>Clarinet</option>
-            <option>Bassoon</option>
-            <option>Piccolo</option>
-            <option>English Horn</option>
-            <option>Saxophone</option>
-            <option>Recorder</option>
+            <option>플루트</option>
+            <option>오보에</option>
+            <option>클라리넷</option>
+            <option>바순</option>
+            <option>색소폰</option>
+            <option>리코더</option>
           </optgroup>
           <optgroup label="금관">
-            <option>Horn</option>
-            <option>Trumpet</option>
-            <option>Trombone</option>
-            <option>Tuba</option>
-            <option>Euphonium</option>
+            <option>호른</option>
+            <option>트럼펫</option>
+            <option>트롬본</option>
+            <option>튜바</option>
           </optgroup>
           <optgroup label="타악">
-            <option>Percussion</option>
-            <option>Timpani</option>
-            <option>Marimba</option>
-            <option>Xylophone</option>
+            <option>타악기</option>
           </optgroup>
-          <optgroup label="성악">
-            <option>Soprano</option>
-            <option>Mezzo-soprano</option>
-            <option>Alto</option>
-            <option>Tenor</option>
-            <option>Baritone</option>
-            <option>Bass</option>
-            <option>Countertenor</option>
+          <optgroup label="미분류">
+            <option>그외</option>
           </optgroup>
         </select>
         <select aria-label="정렬">
@@ -1353,13 +1345,14 @@ if('serviceWorker' in navigator){
     if(region==='국내') searchState.regionParam='&nationality=eq.'+encodeURIComponent('대한민국');
     else if(region==='국외') searchState.regionParam='&nationality=neq.'+encodeURIComponent('대한민국');
     else if(region && region!=='국내 · 국외' && region!=='기타') searchState.regionParam='&nationality=eq.'+encodeURIComponent(region);
-    searchState.fieldParam=(field&&field!=='전체 분야')?('&field=ilike.*'+encodeURIComponent(field)+'*'):'';
+    var ROLES=['작곡','편곡','지휘','연주','성악','음악학','음악교육','평론']; if(field&&field!=='전체 분야'){ searchState.fieldParam=(ROLES.indexOf(field)>=0)?('&field=eq.'+encodeURIComponent(field)):('&instrument=eq.'+encodeURIComponent(field)); } else { searchState.fieldParam=''; }
     var ord='sort_no.desc';
     if(sort.indexOf('오래된순')>=0)ord='sort_no.asc';
     else if(sort.indexOf('가나다순')>=0)ord='name_ko.asc';
     else if(sort.indexOf('가나다 역순')>=0)ord='name_ko.desc';
     else if(sort.indexOf('A–Z')>=0)ord='name_en.asc';
     else if(sort.indexOf('Z–A')>=0)ord='name_en.desc';
+    else if(sort.indexOf('분야순')>=0)ord='field.asc';
     searchState.order=ord;
   }
   function buildUrl(off){

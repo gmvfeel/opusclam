@@ -344,6 +344,36 @@
       }
       log('❌ 위키데이터 반복 실패(혼잡/시간초과). 잠시 후 다시 시도하거나 인원을 줄여보세요.'); return null;
     }
+    function normInst(v){
+      if(!v) return '';
+      var m={
+        '피아노':'피아노','재즈 피아노':'피아노','전기 피아노':'피아노','포르테피아노':'피아노','grand piano':'피아노','upright piano':'피아노','prepared piano':'피아노',
+        '오르간':'오르간','파이프 오르간':'오르간','해먼드 오르간':'오르간','theatre organ':'오르간','Wood organ':'오르간','하모늄':'오르간','physharmonica':'오르간',
+        '하프시코드':'하프시코드','클라비코드':'하프시코드',
+        '아코디언':'아코디언','반도네온':'아코디언','piano accordion':'아코디언','멜로디언':'아코디언',
+        '건반':'건반악기','건반 악기':'건반악기','키보드':'건반악기','숄더 키보드':'건반악기','첼레스타':'건반악기','omniwerk':'건반악기',
+        '바이올린':'바이올린','jazz violin':'바이올린','피들':'바이올린','Viotti Stradivarius':'바이올린',
+        '비올라':'비올라','비올라 다모레':'비올라','viola da braccio':'비올라',
+        '첼로':'첼로','Davidov cello Stradivarius':'첼로',
+        '콘트라베이스':'콘트라베이스','더블베이스':'콘트라베이스','bass':'콘트라베이스','electric double bass':'콘트라베이스',
+        '하프':'하프',
+        '기타':'기타','클래식 기타':'기타','Baroque guitar':'기타','baritone guitar':'기타','Russian guitar':'기타',
+        '류트':'류트','vihuela':'류트',
+        '비올족':'비올족',
+        '플루트':'플루트','콘서트 플루트':'플루트','Baroque flute':'플루트','eunuch flute':'플루트','피콜로':'플루트',
+        '오보에':'오보에','잉글리시 호른':'오보에','musette de cour':'오보에',
+        '클라리넷':'클라리넷','basset horn':'클라리넷','basset clarinet':'클라리넷','contrabass clarinet':'클라리넷','tárogató':'클라리넷',
+        '바순':'바순',
+        '색소폰':'색소폰','소프라노 색소폰':'색소폰','알토 색소폰':'색소폰','테너 색소폰':'색소폰','manzello':'색소폰',
+        '리코더':'리코더',
+        '호른':'호른','natural horn':'호른',
+        '트럼펫':'트럼펫','piccolo trumpet':'트럼펫','코넷':'트럼펫','플루겔호른':'트럼펫',
+        '트롬본':'트롬본','튜바':'튜바',
+        '타악기':'타악기','팀파니':'타악기','드럼 세트':'타악기','비브라폰':'타악기','탐탐':'타악기','마림바':'타악기','실로폰':'타악기',
+        '목소리':'','보이 소프라노':'','소프라니스트':'','테너':''
+      };
+      return m.hasOwnProperty(v)?m[v]:'그외';
+    }
     async function collect(mode, occ, field, label){
       var limit=parseInt(document.getElementById('collectLimit').value,10)||200;
       if(limit>5000)limit=5000; if(limit<10)limit=10;
@@ -424,7 +454,7 @@
         if(r2){ r2.forEach(function(b){
           var qid=b.item.value.split('/').pop(); var p=byId[qid]; if(!p)return;
           if(b.school&&b.school.value) p.school=b.school.value;
-          if(b.instrument&&b.instrument.value) p.instrument=b.instrument.value;
+          if(b.instrument&&b.instrument.value) p.instrument=normInst(b.instrument.value);
           if(b.image&&b.image.value) p.image_url=b.image.value.replace('http://','https://')+(b.image.value.indexOf('?')>=0?'&':'?')+'width=200';
           p._loc=(b.locwork&&b.locwork.value)?b.locwork.value:((b.locres&&b.locres.value)?b.locres.value:'');
           if(mode!=='classical'){
@@ -434,7 +464,7 @@
             var parts=mem.concat(awd).concat(lab); if(p._loc)parts.push(p._loc);
             p.works=parts.join(' · ');
           }
-          if(mode==='instrument') p.field=p.instrument||'연주';
+          if(mode==='instrument') p.field='연주';
         }); }
         if(mode==='classical'){
           var q3='SELECT ?item (GROUP_CONCAT(DISTINCT ?wL;separator=" · ") AS ?revworks) WHERE { VALUES ?item { '+chunk+' } ?work wdt:P86 ?item. ?work wikibase:sitelinks ?wsl. FILTER(?wsl > 15) ?work rdfs:label ?wL FILTER(LANG(?wL)="en") } GROUP BY ?item';
