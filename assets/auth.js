@@ -107,7 +107,7 @@
     var common = {}, extra = {}, missing = false;
     var CK = ['username','password','password2','name','email','phone','birth','address'];
     els.forEach(function(el){
-      if(el.offsetParent === null) return;
+      var _grp = el.closest('[data-group]'); if(_grp && _grp.style.display === 'none') return;
       var k = el.getAttribute('data-k');
       if(el.type === 'checkbox'){
         if(el.hasAttribute('data-multi')){ extra[k] = extra[k] || []; if(el.checked) extra[k].push(el.value); }
@@ -189,6 +189,19 @@
       document.addEventListener('click',function(ev){ if(!w.contains(ev.target)) pop.classList.remove('open'); });
     });
   }
-  function init(){ net(); eyes(); guide(); cal(); }
+  function email(){
+    document.querySelectorAll('input[data-k="email"]').forEach(function(inp){
+      if(inp.dataset.emok) return; inp.dataset.emok='1';
+      inp.type='hidden';
+      var box=document.createElement('div'); box.className='oc-email';
+      box.innerHTML='<input type="text" class="inp oc-em-id" placeholder="이메일" autocomplete="off"><span class="oc-em-at">@</span><input type="text" class="inp oc-em-dom" placeholder="직접입력" autocomplete="off"><select class="inp oc-em-sel"><option value="">직접입력</option><option>naver.com</option><option>gmail.com</option><option>daum.net</option><option>hanmail.net</option><option>nate.com</option><option>kakao.com</option><option>outlook.com</option><option>icloud.com</option></select>';
+      inp.parentNode.insertBefore(box, inp.nextSibling);
+      var idEl=box.querySelector('.oc-em-id'), domEl=box.querySelector('.oc-em-dom'), selEl=box.querySelector('.oc-em-sel');
+      function sync(){ var a=idEl.value.trim(), b=domEl.value.trim(); inp.value=(a&&b)?(a+'@'+b):''; }
+      selEl.addEventListener('change',function(){ if(selEl.value){ domEl.value=selEl.value; domEl.readOnly=true; } else { domEl.readOnly=false; domEl.value=''; domEl.focus(); } sync(); });
+      idEl.addEventListener('input',sync); domEl.addEventListener('input',sync);
+    });
+  }
+  function init(){ net(); eyes(); guide(); cal(); email(); }
   if(document.readyState!=='loading') init(); else document.addEventListener('DOMContentLoaded', init);
 })();
