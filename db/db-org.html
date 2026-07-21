@@ -172,6 +172,10 @@
 
 
 
+  .nd{color:var(--text-3);opacity:.45}
+  .pdb-empty{text-align:center;padding:64px 0;color:var(--text-3);font-size:14px}
+  .pdb-table tr.row-focus{animation:rowflash 2.6s ease}
+  @keyframes rowflash{0%,18%{background:rgba(124,99,176,.22)}100%{background:transparent}}
 </style>
 </head>
 <body>
@@ -1231,29 +1235,108 @@ if('serviceWorker' in navigator){
 })();
 </script>
 <script>
-/* 음악단체DB: Supabase 목록 로드 */
+/* 음악단체DB: 검색·필터·페이징 (인물 DB와 동일 틀) */
 (function(){
-  var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var H={apikey:KEY,Authorization:'Bearer '+KEY};
+  var SUPA='https://ptdxzxkgddvkusamkiol.supabase.co';
+  var KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var tb=document.getElementById('orgs-list'); if(!tb) return;
   var IC={home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>',wiki:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>',video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>'};
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function ini(n){n=(n||'').trim();return n?esc(n[0]):'?';}
+  function nd(v){return (v!=null&&String(v).trim())?esc(v):'<span class="nd">\u2014</span>';}
   function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
-  function row(o){
+  function row(o,no){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
-    var en=o.name_en?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
+    var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
     var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
-    return '<tr><td class="c-no">'+esc(o.sort_no)+'</td><td class="c-ava"><span class="ava">'+ini(o.name_ko)+'</span></td>'+
-      '<td class="c-name"><a href="db-org-view.html?id='+encodeURIComponent(o.id)+'">'+esc(o.name_ko)+oc+en+'</a></td>'+
-      '<td class="c-field"><span class="tag">'+esc(o.type||'')+'</span></td>'+
-      '<td class="c-nation">'+esc(o.location||'')+'</td><td class="c-life">'+esc(o.founded||'')+'</td>'+
-      '<td class="c-org">'+esc(o.leader||'')+'</td><td class="c-work">'+esc(o.activities||'')+'</td>'+
-      '<td class="c-school">'+esc(o.home_venue||'')+'</td><td class="c-link">'+links+'</td></tr>';
+    return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
+      +'<td class="c-ava"><span class="ava">'+(o.logo_url?'<img src="'+esc(o.logo_url)+'" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko))+'</span></td>'
+      +'<td class="c-name"><a href="db-org-view.html?id='+encodeURIComponent(o.id)+'&p='+cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
+      +'<td class="c-field">'+(o.type?'<span class="tag">'+esc(o.type)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
+      +'<td class="c-nation">'+nd(o.location)+'</td>'
+      +'<td class="c-life">'+nd(o.founded)+'</td>'
+      +'<td class="c-org">'+nd(o.leader)+'</td>'
+      +'<td class="c-work">'+nd(o.activities)+'</td>'
+      +'<td class="c-school">'+nd(o.home_venue)+'</td>'
+      +'<td class="c-link">'+links+'</td></tr>';
   }
-  fetch(URL+'/rest/v1/orgs?select=*&order=sort_no.desc',{headers:H}).then(function(r){if(!r.ok)throw 0;return r.json();})
-   .then(function(rows){if(!Array.isArray(rows)||!rows.length)return;tb.innerHTML=rows.map(row).join('');var c=document.querySelector('.pdb-count b');if(c)c.textContent=rows.length;})
-   .catch(function(e){console.error('orgs 로드 실패:',e);});
+  var PAGE=20, cur=1, total=0;
+  var pager=document.querySelector('.pdb-pager');
+  var focusId=new URLSearchParams(location.search).get('focus');
+  var st={q:'',regionParam:'',typeParam:'',order:'sort_no.desc'};
+  function readSearch(){
+    var inp=document.querySelector('.pdb-search input');
+    st.q=(inp?inp.value:'').trim().replace(/[(),*]/g,' ').replace(/\s+/g,' ').trim();
+    var sels=document.querySelectorAll('.pdb-selects select');
+    var region=sels[0]?sels[0].value:'', type=sels[1]?sels[1].value:'', sort=sels[2]?sels[2].value:'';
+    st.regionParam='';
+    if(region==='국내') st.regionParam='&location=ilike.*'+encodeURIComponent('대한민국')+'*';
+    else if(region==='국외') st.regionParam='&location=not.ilike.*'+encodeURIComponent('대한민국')+'*';
+    else if(region && region!=='국내 · 국외' && region!=='기타') st.regionParam='&location=ilike.*'+encodeURIComponent(region)+'*';
+    st.typeParam=(type&&type!=='전체 유형')?('&type=eq.'+encodeURIComponent(type)):'';
+    var ord='sort_no.desc';
+    if(sort.indexOf('오래된순')>=0)ord='sort_no.asc';
+    else if(sort.indexOf('가나다순')>=0)ord='name_ko.asc';
+    else if(sort.indexOf('가나다 역순')>=0)ord='name_ko.desc';
+    else if(sort.indexOf('A\u2013Z')>=0)ord='name_en.asc';
+    else if(sort.indexOf('창단연도순')>=0)ord='founded.asc';
+    else if(sort.indexOf('유형순')>=0)ord='type.asc';
+    else if(sort.indexOf('소재지순')>=0)ord='location.asc';
+    st.order=ord;
+  }
+  function buildUrl(off){
+    var u=SUPA+'/rest/v1/orgs?select=*';
+    if(st.q){var t=encodeURIComponent(st.q);u+='&or=(name_ko.ilike.*'+t+'*,name_en.ilike.*'+t+'*,location.ilike.*'+t+'*,leader.ilike.*'+t+'*)';}
+    u+=st.regionParam+st.typeParam;
+    u+='&order='+st.order+'&limit='+PAGE+'&offset='+off;
+    return u;
+  }
+  function doSearch(){readSearch();loadPage(1);}
+  function renderPager(){
+    if(!pager) return;
+    var pages=Math.max(1,Math.ceil(total/PAGE));
+    var mob=window.innerWidth<=520;
+    var w=mob?2:4;
+    var start=Math.max(1,cur-(mob?1:2)), end=Math.min(pages,start+w); start=Math.max(1,end-w);
+    var nums='';
+    for(var i=start;i<=end;i++){ nums+='<a href="#" data-pg="'+i+'"'+(i===cur?' class="on"':'')+'>'+i+'</a>'; }
+    var hidF=(cur<=1?' style="visibility:hidden"':''), hidL=(cur>=pages?' style="visibility:hidden"':'');
+    var html='';
+    if(!mob) html+='<a class="pg-nav" data-pg="1" href="#"'+hidF+'>\u00ab 맨앞</a>';
+    html+='<a class="pg-nav" data-pg="'+(cur-1)+'" href="#"'+hidF+'>\u2039 이전</a>'
+      +'<div class="pg-nums">'+nums+'</div>'
+      +'<a class="pg-nav" data-pg="'+(cur+1)+'" href="#"'+hidL+'>다음 \u203a</a>';
+    if(!mob) html+='<a class="pg-nav" data-pg="'+pages+'" href="#"'+hidL+'>맨뒤 \u00bb</a>';
+    pager.innerHTML=html;
+  }
+  function loadPage(pg){
+    var off=(pg-1)*PAGE;
+    var hh={apikey:KEY,Authorization:'Bearer '+KEY,Prefer:'count=exact'};
+    fetch(buildUrl(off),{headers:hh}).then(function(r){
+      var crg=r.headers.get('content-range'); if(crg){var t=crg.split('/')[1]; if(t&&t!=='*') total=parseInt(t,10)||total;}
+      if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+    }).then(function(rows){
+      if(Array.isArray(rows)){
+        cur=pg;
+        var cnt=document.querySelector('.pdb-count b'); if(cnt) cnt.textContent=(total||0).toLocaleString();
+        if(rows.length===0){ tb.innerHTML='<tr><td colspan="10" class="pdb-empty">요청하신 검색 결과가 없습니다.</td></tr>'; if(pager)pager.innerHTML=''; }
+        else { tb.innerHTML=rows.map(function(rw,ix){return row(rw, off+ix+1);}).join(''); renderPager();
+          if(focusId){var _fr=tb.querySelector('tr[data-id="'+focusId+'"]');if(_fr){_fr.classList.add('row-focus');try{_fr.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}}focusId=null;} }
+      }
+    }).catch(function(e){console.error('orgs 로드 실패:',e);});
+  }
+  if(pager){ pager.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[data-pg]');if(!a)return;e.preventDefault();var pg=parseInt(a.getAttribute('data-pg'),10);var pages=Math.max(1,Math.ceil(total/PAGE));if(pg>=1&&pg<=pages&&pg!==cur){loadPage(pg);if(window.scrollTo)window.scrollTo({top:0,behavior:'smooth'});}}); }
+  (function(){
+    var inp=document.querySelector('.pdb-search input');
+    if(inp){ inp.setAttribute('placeholder','단체명 · 소재지 · 키워드로 검색'); inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doSearch();}}); }
+    var sic=document.querySelector('.pdb-search svg'); if(sic){ sic.style.cursor='pointer'; sic.addEventListener('click',doSearch); }
+    document.querySelectorAll('.pdb-selects select').forEach(function(sel){sel.addEventListener('change',doSearch);});
+  })();
+  function setStickyTop(){var h=document.querySelector('.site-header');var t=h?Math.round(h.getBoundingClientRect().height):64;document.querySelectorAll('.pdb-table thead th').forEach(function(th){th.style.top=t+'px';});}
+  setStickyTop(); window.addEventListener('resize',setStickyTop);
+  window.addEventListener('resize',function(){if(total)renderPager();});
+  var _sp=parseInt(new URLSearchParams(location.search).get('p'),10)||1;
+  loadPage(_sp>=1?_sp:1);
 })();
 </script>
 </body>
