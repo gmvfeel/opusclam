@@ -462,16 +462,21 @@
         </select>
         <select aria-label="분야">
           <option>전체 분야</option>
-          <optgroup label="역할">
+          <optgroup label="작곡·지휘·이론">
+            <option>작곡·지휘·이론 전체</option>
             <option>작곡</option>
             <option>편곡</option>
             <option>지휘</option>
-            <option>연주</option>
-            <option>성악</option>
             <option>음악학</option>
             <option>음악교육</option>
+            <option>평론</option>
+          </optgroup>
+          <optgroup label="연주·성악">
+            <option>연주 전체</option>
+            <option>성악</option>
           </optgroup>
           <optgroup label="건반">
+            <option>건반 전체</option>
             <option>피아노</option>
             <option>오르간</option>
             <option>하프시코드</option>
@@ -479,6 +484,7 @@
             <option>건반악기</option>
           </optgroup>
           <optgroup label="현악">
+            <option>현악 전체</option>
             <option>바이올린</option>
             <option>비올라</option>
             <option>첼로</option>
@@ -489,6 +495,7 @@
             <option>비올족</option>
           </optgroup>
           <optgroup label="목관">
+            <option>목관 전체</option>
             <option>플루트</option>
             <option>오보에</option>
             <option>클라리넷</option>
@@ -497,6 +504,7 @@
             <option>리코더</option>
           </optgroup>
           <optgroup label="금관">
+            <option>금관 전체</option>
             <option>호른</option>
             <option>트럼펫</option>
             <option>트롬본</option>
@@ -1345,7 +1353,7 @@ if('serviceWorker' in navigator){
     if(region==='국내') searchState.regionParam='&nationality=eq.'+encodeURIComponent('대한민국');
     else if(region==='국외') searchState.regionParam='&nationality=neq.'+encodeURIComponent('대한민국');
     else if(region && region!=='국내 · 국외' && region!=='기타') searchState.regionParam='&nationality=eq.'+encodeURIComponent(region);
-    var ROLES=['작곡','편곡','지휘','연주','성악','음악학','음악교육','평론']; if(field&&field!=='전체 분야'){ searchState.fieldParam=(ROLES.indexOf(field)>=0)?('&field=eq.'+encodeURIComponent(field)):('&instrument=eq.'+encodeURIComponent(field)); } else { searchState.fieldParam=''; }
+    var ROLES=['작곡','편곡','지휘','연주','성악','음악학','음악교육','평론']; var GROUPS={'작곡·지휘·이론 전체':{c:'field',v:['작곡','편곡','지휘','음악학','음악교육','평론']},'연주 전체':{c:'field',v:['연주']},'건반 전체':{c:'instrument',v:['피아노','오르간','하프시코드','아코디언','건반악기']},'현악 전체':{c:'instrument',v:['바이올린','비올라','첼로','콘트라베이스','하프','기타','류트','비올족']},'목관 전체':{c:'instrument',v:['플루트','오보에','클라리넷','바순','색소폰','리코더']},'금관 전체':{c:'instrument',v:['호른','트럼펫','트롬본','튜바']}}; if(field&&field!=='전체 분야'){ if(GROUPS[field]){ var g=GROUPS[field]; searchState.fieldParam='&'+g.c+'=in.('+g.v.map(function(x){return encodeURIComponent(x);}).join(',')+')'; } else if(ROLES.indexOf(field)>=0){ searchState.fieldParam='&field=eq.'+encodeURIComponent(field); } else { searchState.fieldParam='&instrument=eq.'+encodeURIComponent(field); } } else { searchState.fieldParam=''; }
     var ord='sort_no.desc';
     if(sort.indexOf('오래된순')>=0)ord='sort_no.asc';
     else if(sort.indexOf('가나다순')>=0)ord='name_ko.asc';
