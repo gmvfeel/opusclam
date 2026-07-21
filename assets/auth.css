@@ -26,6 +26,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
 a{text-decoration:none;color:inherit}
+button,input,select,textarea{font-family:inherit}
 /* GNB */
 .gnb{background:var(--bg);border-bottom:1px solid var(--line)}
 .gnb .in{max-width:1320px;margin:0 auto;padding:0 20px}
@@ -34,11 +35,11 @@ a{text-decoration:none;color:inherit}
 .util a{color:var(--util-tx);font-size:8px;letter-spacing:.05em;font-weight:600;transition:color .2s}
 .util .l a{margin-right:18px}.util a:hover{color:var(--navh)}
 .mast{border-top:1px solid var(--hair)}
-.mast .in{display:flex;align-items:center;height:78px;gap:24px}
+.mast .in{display:flex;align-items:center;justify-content:space-between;height:78px;gap:24px}
 .logo img{height:34px;filter:var(--logo-filter)}
 .nav{display:flex;gap:40px;flex-wrap:nowrap}
 .nav a{font-size:15px;font-weight:600;color:var(--nav);padding:27px 0;letter-spacing:-.01em;white-space:nowrap;transition:.2s}.nav a:hover{color:var(--navh)}
-.tools{margin-left:auto;display:flex;align-items:center;gap:12px}
+.tools{display:flex;align-items:center;gap:12px}
 .school{background:var(--chip);color:var(--tx);font-weight:700;font-size:12px;padding:8px 14px;border-radius:20px;border:1px solid var(--line2);transition:.2s}.school:hover{background:var(--chip-h)}
 .authlink{font-size:13px;color:var(--authlink)}.authlink a:hover{color:var(--navh)}
 .circ{width:34px;height:34px;border:1px solid var(--icon-b);border-radius:50%;display:grid;place-items:center;color:var(--icon-tx);cursor:pointer}.circ svg{width:17px;height:17px}
@@ -79,11 +80,18 @@ select.inp{appearance:none}
 .ftab{flex:1;text-align:center;padding:14px;font-size:14px;font-weight:600;color:var(--tx2);background:transparent;border:0;cursor:pointer}
 .ftab.on{background:var(--pri);color:var(--prit)}
 /* 소셜 */
-.social{display:flex;flex-direction:column;gap:10px;margin-top:6px}
-.divider{display:flex;align-items:center;gap:12px;color:var(--tx4);font-size:12px;margin:26px 0}
+.divider{display:flex;align-items:center;gap:12px;color:var(--tx4);font-size:12px;margin:24px 0 18px}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
-.soc{display:flex;align-items:center;justify-content:center;gap:9px;height:50px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent}
-.soc.kakao{background:#FEE500;color:#191600}.soc.google{background:#fff;color:#3c4043;border-color:#dadce0}.soc.naver{background:#03C75A;color:#fff}
+.social{display:flex;justify-content:center;gap:22px;margin-top:4px}
+.soc{display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:0;cursor:pointer;font-size:11.5px;font-weight:500;color:var(--tx3);font-family:inherit}
+.soc .ic{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;transition:.16s}
+.soc:hover .ic{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.soc:hover{color:var(--tx)}
+.soc .ic b{font-weight:800;font-size:22px}.soc .ic svg{width:26px;height:26px}
+.soc.kakao .ic{background:#FEE500;color:#3c1e1e}
+.soc.google .ic{background:#fff;border:1px solid #dadce0;color:#4285F4}
+.soc.naver .ic{background:#03C75A;color:#fff}
+.soc.dim{opacity:.55}
 /* 버튼 */
 .actions{display:flex;gap:12px;justify-content:center;margin-top:34px}
 .btn{padding:15px 44px;border-radius:8px;font-size:14.5px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:.2s;text-align:center}
@@ -91,6 +99,8 @@ select.inp{appearance:none}
 .btn.ghost{background:var(--chip);color:var(--tx2);border:1px solid var(--line2)}.btn.ghost:hover{color:var(--tx)}
 .btn.block{width:100%}
 .err{font-size:12.5px;color:var(--danger);margin-top:14px;min-height:15px;text-align:center}
+.db-consent{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--tx2);line-height:1.6;cursor:pointer}
+.db-consent input{width:15px;height:15px;accent-color:var(--accent);margin-top:2px;flex:0 0 auto}
 /* 완료 */
 .done{text-align:center;max-width:640px;margin:0 auto}
 .done .big{font-size:28px;font-weight:800;color:var(--h1);line-height:1.4;margin:24px 0 16px}
