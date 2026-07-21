@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>비밀번호 찾기 · OPUSCLAM.COM</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="/assets/auth.css">
+</head>
+<body>
+<div class="gnb">
+  <div class="util"><div class="in">
+    <div class="l"><a href="#">WIXON ASSOCIATES INC</a><a href="#">LPSTOCK</a><a href="#">OPUSCLAM COMMUNITY</a></div>
+    <div class="r"><a href="#">CUSTOMER CENTER &rsaquo;</a></div>
+  </div></div>
+  <div class="mast"><div class="in">
+    <a class="logo" href="/home.html"><img src="/assets/logo.png" alt="OPUSCLAM.COM"></a>
+    <nav class="nav"><a href="/home.html">DATABASE</a><a href="#">OC커뮤니티</a><a href="#">정보SPOT</a><a href="#">레슨 : ON</a><a href="#">리쿠르트</a><a href="#">SHOPPING</a></nav>
+    <div class="tools">
+      <a class="school" href="#">학교등록</a>
+      <span class="authlink"><a href="/login.html">로그인</a> <a href="/join.html">회원가입</a></span>
+      <span class="circ" title="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span>
+      <span class="circ theme-toggle" title="테마 전환"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
+      <button class="burger" title="전체메뉴"><span></span><span></span><span></span></button>
+    </div>
+  </div></div>
+</div><main><div class="wrap narrow" style="margin-top:70px"><div class="authcard"><div class="tab2"><a class="" href="/find-id.html">아이디 찾기</a><a class="on" href="/find-pw.html">비밀번호 찾기</a></div><h2>비밀번호 찾기</h2><div class="sub">비밀번호를 찾고자 하는 아이디를 입력해 주세요.<br>등록된 이메일로 재설정 링크를 보내드립니다.</div><div class="fg"><label class="fl">아이디</label><input class="inp" id="f-id" placeholder="아이디"></div><div class="fg"><label class="fl">이메일</label><input class="inp" type="email" id="f-email" placeholder="가입 시 이메일"></div><div class="err" id="f-msg"></div><div class="actions"><button class="btn primary block" id="f-btn">다음</button></div></div></div></main><footer><p>ⓒ OPUSCLAM &amp; WIXON ASSOCIATES INC. ALL RIGHTS RESERVED. · <a href="/terms.html">서비스약관</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="/data-policy.html">데이터 정책</a></p></footer><script>document.getElementById("f-btn").addEventListener("click",function(){document.getElementById("f-msg").style.color="#8a94a6";document.getElementById("f-msg").textContent="이메일/휴대폰 인증 연동 후 제공됩니다.";});</script>
+<script src="/assets/auth.js"></script>
+</body>
+</html>
