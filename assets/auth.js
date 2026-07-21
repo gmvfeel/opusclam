@@ -1,3 +1,18 @@
+/* 테마(다크/화이트) 토글 — .theme-toggle 클릭 시 전환, localStorage 저장 */
+(function(){
+  try{ if(localStorage.getItem('oc-theme')==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){}
+  function ready(){
+    document.addEventListener('click', function(e){
+      var t = e.target.closest && e.target.closest('.theme-toggle'); if(!t) return;
+      var toDark = document.documentElement.getAttribute('data-theme') !== 'dark';
+      if(toDark) document.documentElement.setAttribute('data-theme','dark');
+      else document.documentElement.removeAttribute('data-theme');
+      try{ localStorage.setItem('oc-theme', toDark ? 'dark' : 'light'); }catch(e){}
+    });
+  }
+  if(document.readyState !== 'loading') ready(); else document.addEventListener('DOMContentLoaded', ready);
+})();
+
 /* ===== OPUSCLAM 회원 인증 공통 스크립트 =====
    Supabase Auth 연동: 로그인(아이디→이메일 변환), 소셜 로그인,
    아이디 중복확인, 세션 확인/로그아웃.
@@ -52,6 +67,26 @@
       });
     },
 
+    /* 회원가입: 아이디 중복확인 → 계정 생성 → members 프로필 저장
+       p = { type, username, password, name, email, phone, birth, address, extra } */
+    signup: async function(p){
+      var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
+      var avail = await this.usernameAvailable(p.username);
+      if(!avail) return { ok:false, msg:'이미 사용 중인 아이디입니다.' };
+      var su = await c.auth.signUp({ email:p.email, password:p.password });
+      if(su.error) return { ok:false, msg: su.error.message || '가입 처리 중 오류' };
+      var uid = su.data && su.data.user && su.data.user.id;
+      if(!uid) return { ok:false, msg:'가입 처리 중 오류 (이메일 인증 설정을 확인하세요)' };
+      var status = (p.type === 'general') ? 'approved' : 'pending';
+      var ins = await c.from('members').insert({
+        id: uid, username: p.username, member_type: p.type, status: status,
+        name: p.name || null, email: p.email || null, phone: p.phone || null,
+        birth: p.birth || null, address: p.address || null, extra: p.extra || {}
+      });
+      if(ins.error) return { ok:false, msg: ins.error.message || '프로필 저장 오류' };
+      return { ok:true, status: status };
+    },
+
     /* 현재 로그인 세션 */
     session: async function(){
       var c = sb(); if(!c) return null;
@@ -64,6 +99,30 @@
       await c.auth.signOut();
       location.href = '/home.html';
     }
+  };
+
+  /* 폼 자동 수집 → 가입: [data-k] 요소를 모아 common/extra 분류 후 signup 호출 */
+  ocAuth.formSignup = async function(scope, type){
+    var els = scope.querySelectorAll('[data-k]');
+    var common = {}, extra = {}, missing = false;
+    var CK = ['username','password','password2','name','email','phone','birth','address'];
+    els.forEach(function(el){
+      if(el.offsetParent === null) return;
+      var k = el.getAttribute('data-k');
+      if(el.type === 'checkbox'){
+        if(el.hasAttribute('data-multi')){ extra[k] = extra[k] || []; if(el.checked) extra[k].push(el.value); }
+        else { extra[k] = el.checked; }
+        return;
+      }
+      var val = (el.value || '').trim();
+      el.style.borderColor = '';
+      if(el.hasAttribute('data-req') && !val){ missing = true; el.style.borderColor = '#f2777a'; }
+      if(CK.indexOf(k) >= 0) common[k] = val; else if(val) extra[k] = val;
+    });
+    if(missing) return { ok:false, msg:'필수 항목을 모두 입력해 주세요.' };
+    if(common.password && common.password !== common.password2) return { ok:false, msg:'비밀번호가 일치하지 않습니다.' };
+    delete common.password2;
+    return await ocAuth.signup(Object.assign({ type:type, extra:extra }, common));
   };
 
   window.ocAuth = ocAuth;
