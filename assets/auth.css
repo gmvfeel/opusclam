@@ -176,7 +176,7 @@ footer a{color:var(--tx4)}
 @media(max-width:540px){.jtypes{grid-template-columns:1fr}}
 
 /* ===== UI 향상 ===== */
-.oc-net{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;-webkit-mask-image:radial-gradient(135% 105% at 74% 6%,#000 40%,transparent 100%);mask-image:radial-gradient(135% 105% at 74% 6%,#000 40%,transparent 100%)}
+.oc-net{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.4;-webkit-mask-image:radial-gradient(135% 105% at 74% 6%,#000 40%,transparent 100%);mask-image:radial-gradient(135% 105% at 74% 6%,#000 40%,transparent 100%)}
 .oc-net svg{width:100%;height:100%;display:block}
 .oc-net .ln line{stroke:#c06fa2;stroke-width:.7}
 [data-theme="dark"] .oc-net .ln line{stroke:#7d6fae}

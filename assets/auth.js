@@ -135,7 +135,9 @@
 /* ===== 회원 페이지 UI 향상: 네트워크 배경 · 눈 아이콘 · 비번 가이드 · 캘린더 ===== */
 (function(){
   function net(){
-    var el=document.getElementById('oc-net'); if(!el||el.dataset.done) return; el.dataset.done='1';
+    var el=document.getElementById('oc-net');
+    if(!el){ el=document.createElement('div'); el.id='oc-net'; el.className='oc-net'; el.setAttribute('aria-hidden','true'); document.body.insertBefore(el, document.body.firstChild); }
+    if(el.dataset.done) return; el.dataset.done='1';
     var W=1280,H=880,N=44,R=178,pts=[],i,a,b;
     for(i=0;i<N;i++) pts.push({x:Math.random()*W,y:Math.random()*H});
     var L=''; for(a=0;a<N;a++) for(b=a+1;b<N;b++){var dx=pts[a].x-pts[b].x,dy=pts[a].y-pts[b].y,d=Math.sqrt(dx*dx+dy*dy);
