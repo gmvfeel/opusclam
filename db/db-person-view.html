@@ -1599,7 +1599,7 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
        (function(){var sec=_sec('영상');if(!sec)return;var tr=sec.querySelector('.pv-track');if(!tr)return;
          var cs=[{t:_nko+' 연주·공연 영상',s:'YouTube 검색',q:_nk}];
          _works.forEach(function(w){cs.push({t:w,s:'YouTube 검색',q:encodeURIComponent(_nko+' '+w)});});
-         tr.innerHTML=cs.map(function(c){return '<a class="pv-card" href="https://www.youtube.com/results?search_query='+c.q+'" target="_blank" rel="noopener"><span class="pv-thumb">'+_VID+'</span><span class="pv-cardbody"><span class="pv-ct">'+esc(c.t)+'</span><span class="pv-cs">'+c.s+'</span></span></a>';}).join('');
+         tr.innerHTML=cs.map(function(c){return '<a class="pv-card" href="https://www.youtube.com/results?search_query='+c.q+'" target="_blank" rel="noopener"><span class="pv-thumb" style="background:linear-gradient(135deg,#1f1f1f,#3a1515);border-bottom:none;color:#fff"><span style="display:inline-grid;place-items:center;width:56px;height:40px;background:#ff0000;border-radius:11px;box-shadow:0 2px 8px rgba(0,0,0,.35)"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M9 7.5v9l8-4.5z" fill="#fff"/></svg></span></span><span class="pv-cardbody"><span class="pv-ct">'+esc(c.t)+'</span><span class="pv-cs">'+c.s+'</span></span></a>';}).join('');
        })();
        (function(){var sec=_sec('음원');if(!sec)return;var li=sec.querySelector('.pv-list');if(!li)return;
          var rs=[{b:_nko+' 음원',s:'YouTube Music 검색',q:_nk}];
