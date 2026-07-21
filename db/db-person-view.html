@@ -1590,7 +1590,7 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
      (function(){
        var REC=p;
        function api(lang,title){ if(!title)return Promise.resolve(null);
-         var u='https://'+lang+'.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts%7Cpageimages&exintro=1&explaintext=1&piprop=thumbnail&pithumbsize=520&titles='+encodeURIComponent(title);
+         var u='https://'+lang+'.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=extracts%7Cpageimages&explaintext=1&exchars=4500&piprop=thumbnail&pithumbsize=520&titles='+encodeURIComponent(title);
          return fetch(u).then(function(r){return r.ok?r.json():null;}).then(function(d){
            try{ var pg=d.query.pages, k=Object.keys(pg)[0], it=pg[k];
              if(!it||it.missing!==undefined||!it.extract) return null;
@@ -1600,7 +1600,7 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
        function paras(t){ return t.split(/\n+/).map(function(s){return s.trim();}).filter(Boolean).map(function(s){return '<p>'+esc(s)+'</p>';}).join(''); }
        function apply(w){ if(!w||!w.extract) return false;
          var bio=document.querySelector('.pv-prose');
-         if(bio) bio.innerHTML=paras(w.extract)+'<p style="margin-top:12px;font-size:.8em;color:var(--text-3)">출처: <a href="'+esc(w.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">위키백과</a> · CC BY-SA</p>';
+         if(bio) bio.innerHTML=paras(w.extract)+'<p style="margin-top:12px;font-size:.8em;color:var(--text-3)">출처: <a href="'+esc(w.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">위키백과에서 전체 보기 →</a> · CC BY-SA</p>';
          var lead=document.querySelector('.pv-lead'); if(lead){ var f=(w.extract.split(/\n+/)[0]||w.extract); lead.textContent=(f.length>120?f.slice(0,120)+'\u2026':f); }
          if(w.thumb){ var por=document.querySelector('.pv-portrait'); if(por){ por.innerHTML=''; por.style.overflow='hidden'; var im=document.createElement('img'); im.src=w.thumb; im.alt=nm; im.style.cssText='width:100%;height:100%;object-fit:cover'; por.appendChild(im);} }
          return true; }
