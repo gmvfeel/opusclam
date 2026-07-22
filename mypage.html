@@ -89,6 +89,8 @@
 
   function render(m, session){
     var qual = m.status==="approved" && QUAL.indexOf(m.member_type)>=0;
+    var prov = session.user.app_metadata && session.user.app_metadata.provider;
+    var isEmail = (!prov || prov==='email');
     var statusCls = m.status||"pending";
     var html=""
       +'<div class="mp-badges">'
@@ -104,6 +106,7 @@
       +'</ul>'
       +'<div class="mp-actions">'
       +  (qual?'<a class="mp-btn primary" href="/db/db-write.html">DB 등록 · 보강 하러 가기</a>':'')
+      +  (isEmail?'<a class="mp-btn ghost" href="/change-password.html">비밀번호 변경</a>':'')
       +  '<button class="mp-btn ghost" id="mpLogout">로그아웃</button>'
       +'</div>';
     box.innerHTML=html;
