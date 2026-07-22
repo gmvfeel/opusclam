@@ -112,6 +112,33 @@
   #members .mem-btn{font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;border:1px solid;background:none;font-family:inherit}
   #members .mem-btn.ok{color:#6fcf8f;border-color:rgba(111,207,143,.5)}
   #members .mem-btn.no{color:#e08585;border-color:rgba(224,133,133,.5)}
+  /* ===== 제출 검수 ===== */
+  #review .rv-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  #review .rv-tab{padding:8px 16px;border:1px solid rgba(255,255,255,.18);border-radius:20px;font-size:13px;font-weight:600;color:#cfc9e2;background:none;cursor:pointer;font-family:inherit}
+  #review .rv-tab.on{background:var(--violet-2,#7C63B0);color:#fff;border-color:var(--violet-2,#7C63B0)}
+  #review .rv-tab .c{opacity:.7;margin-left:4px;font-size:11.5px}
+  #review .rv-list{display:flex;flex-direction:column;gap:14px}
+  #review .rv-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:18px 20px}
+  #review .rv-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  #review .rv-kind{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid}
+  #review .rv-kind.create{color:#6fcf8f;border-color:rgba(111,207,143,.45)}
+  #review .rv-kind.update{color:#e0b352;border-color:rgba(224,179,82,.45)}
+  #review .rv-target{font-weight:700;font-size:15px}
+  #review .rv-meta{color:#9a9cb0;font-size:12px;margin-left:auto}
+  #review .rv-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
+  #review .rv-badge.pending{color:#e0b352;border-color:rgba(224,179,82,.45)}
+  #review .rv-badge.approved{color:#6fcf8f;border-color:rgba(111,207,143,.45)}
+  #review .rv-badge.rejected{color:#e08585;border-color:rgba(224,133,133,.45)}
+  #review .rv-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px 18px;margin-bottom:12px}
+  #review .rv-f{font-size:13px;line-height:1.5;color:#e2e2ee;border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:6px}
+  #review .rv-f .k{color:#9a9cb0;font-size:11.5px;display:block;margin-bottom:2px}
+  #review .rv-src{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;font-size:12px;color:#b9b9cc;line-height:1.6;margin-bottom:12px}
+  #review .rv-src a{color:#9db8e0;word-break:break-all}
+  #review .rv-act{display:flex;gap:8px;flex-wrap:wrap}
+  #review .rv-btn{font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;cursor:pointer;border:1px solid;background:none;font-family:inherit}
+  #review .rv-btn.ok{color:#6fcf8f;border-color:rgba(111,207,143,.5)}
+  #review .rv-btn.no{color:#e08585;border-color:rgba(224,133,133,.5)}
+  #review .rv-empty{color:#9a9cb0;padding:40px;text-align:center}
 </style>
 </head>
 <body>
@@ -134,6 +161,7 @@
         <div class="card clickable" id="cardCollect"><h3>데이터 수집</h3><p>위키데이터에서 클래식 작곡가 정보를 자동으로 가져와 인물DB에 채웁니다.</p><span class="go">수집하기 →</span></div>
         <div class="card clickable" id="cardManage"><h3>DB 관리 · 정제</h3><p>음악과 무관한 의심 인물(비음악 키워드·유명 비음악인)을 자동 표시하고, 확인 후 삭제합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card clickable" id="cardMembers"><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
+        <div class="card clickable" id="cardReview"><h3>제출 검수</h3><p>자격 회원이 등록·보강 제출한 내용을 확인하고, 승인 시 실제 DB에 반영합니다.</p><span class="go">검수하기 →</span></div>
         <div class="card"><h3>DB 관리</h3><p>인물·단체·공연장 등 7개 데이터베이스의 항목을 직접 추가·수정합니다.</p><span class="soon">준비 중</span></div>
       </div>
     </div>
@@ -224,11 +252,26 @@
     </div>
   </div>
 
+  <div class="view" id="review">
+    <div class="topbar"><img class="logo" src="/assets/logo.png" alt="OPUSCLAM" id="rvLogo"><div class="right"><span id="who5"></span><button class="logout" id="logoutBtn5">로그아웃</button></div></div>
+    <div class="body">
+      <button class="back" id="rvBack">← 대시보드</button>
+      <h1>제출 검수</h1><p class="hi">자격 회원이 등록·보강 제출한 내용을 확인합니다. <b>승인</b>하면 실제 DB에 반영되고, <b>반려</b>하면 대기함에만 기록됩니다.</p>
+      <div class="rv-tabs">
+        <button class="rv-tab on" data-s="pending">검수 대기<span class="c" data-rcnt="pending"></span></button>
+        <button class="rv-tab" data-s="approved">승인됨<span class="c" data-rcnt="approved"></span></button>
+        <button class="rv-tab" data-s="rejected">반려됨<span class="c" data-rcnt="rejected"></span></button>
+        <button class="rv-tab" data-s="">전체<span class="c" data-rcnt=""></span></button>
+      </div>
+      <div class="rv-list" id="rvList"><div class="rv-empty">불러오는 중…</div></div>
+    </div>
+  </div>
+
   <script>
     var SUPABASE_URL='https://ptdxzxkgddvkusamkiol.supabase.co';
     var SUPABASE_KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
     var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    var views={login:document.getElementById('loginWrap'),dash:document.getElementById('dash'),hero:document.getElementById('hero'),collect:document.getElementById('collect'),manage:document.getElementById('manage'),members:document.getElementById('members')};
+    var views={login:document.getElementById('loginWrap'),dash:document.getElementById('dash'),hero:document.getElementById('hero'),collect:document.getElementById('collect'),manage:document.getElementById('manage'),members:document.getElementById('members'),review:document.getElementById('review')};
     function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');}
     var mgData=[]; var mgPage=0;
     var MG_NONMUSIC=['정치인','정치가','대통령','국회의원','장관','시장','주지사','영화배우','탤런트','영화감독','드라마','예능','개그맨','코미디언','희극','소설가','시인','만화가','웹툰','축구','야구','농구','배구','골프','테니스','운동선수','물리학자','과학자','수학자','철학자','경제학자','기업인','사업가','최고경영자','아이돌','래퍼','힙합','유튜버','인플루언서','방송인','성우','아나운서','기자','모델'];
@@ -291,7 +334,7 @@
       renderManage();
       alert(ids.length+'명 삭제 + 차단 목록 등록 완료.');
     }
-    function setWho(e){e=e||'';['who','who2','who3','who4'].forEach(function(id){document.getElementById(id).textContent=e;});}
+    function setWho(e){e=e||'';['who','who2','who3','who4','who5'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=e;});}
     var msg=document.getElementById('msg'), btn=document.getElementById('loginBtn');
     sb.auth.getSession().then(function(r){if(r.data&&r.data.session){setWho(r.data.session.user.email);show('dash');}else show('login');});
     async function doLogin(){
@@ -305,8 +348,8 @@
     btn.addEventListener('click',doLogin);
     document.getElementById('password').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
     async function logout(){await sb.auth.signOut();document.getElementById('password').value='';show('login');}
-    ['logoutBtn','logoutBtn2','logoutBtn3','logoutBtn4'].forEach(function(id){document.getElementById(id).addEventListener('click',logout);});
-    ['dashLogo','heroLogo','colLogo','memLogo'].forEach(function(id){document.getElementById(id).addEventListener('click',function(){show('dash');});});
+    ['logoutBtn','logoutBtn2','logoutBtn3','logoutBtn4','logoutBtn5'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('click',logout);});
+    ['dashLogo','heroLogo','colLogo','memLogo','rvLogo'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('click',function(){show('dash');});});
     document.getElementById('heroBack').addEventListener('click',function(){show('dash');});
     document.getElementById('colBack').addEventListener('click',function(){show('dash');});
     document.getElementById('cardHero').addEventListener('click',function(){show('hero');loadSlides();});
@@ -362,6 +405,91 @@
       if(!confirm(act==='approve'?'이 회원을 승인하시겠습니까?':'이 회원을 반려하시겠습니까?'))return;
       b.disabled=true;b.textContent='처리 중…';
       var ok=await memSetStatus(id,to); if(ok) loadMembers();
+    });
+
+    // ===== 제출 검수 =====
+    var REV_TABLE_LABEL={persons:'인물',orgs:'음악단체',venues:'공연장',schools:'음악학교',modern_composers:'현대음악',foundations:'재단·기관',academic:'학술'};
+    var REV_FIELD_LABEL={name_ko:'이름(국문)',name_en:'이름(영문)',field:'분야',nationality:'국적',life:'생몰',era_name:'사조',era_yr:'활동시기',instrument:'주요 악기',school:'출신학교',works:'대표작',description:'소개·이력',image_url:'대표 이미지',link_wiki:'링크'};
+    var REV_STATUS_LABEL={pending:'검수 대기',approved:'승인됨',rejected:'반려됨'};
+    var rvCur='pending';
+    function rvFmt(x){ if(!x)return '-'; try{var d=new Date(x);return d.getFullYear()+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+('0'+d.getDate()).slice(-2);}catch(e){return '-';} }
+    function rvSetActive(){ document.querySelectorAll('#review .rv-tab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-s')===rvCur); }); }
+    function rvCleanPayload(p){ var o={}; for(var k in p){ if(p.hasOwnProperty(k) && k.charAt(0)!=='_') o[k]=p[k]; } return o; }
+    async function loadRevCounts(){
+      var r=await sb.from('submissions').select('status'); if(r.error)return;
+      var c={pending:0,approved:0,rejected:0}; (r.data||[]).forEach(function(s){if(c[s.status]!=null)c[s.status]++;});
+      var set=function(sel,n){var e=document.querySelector('[data-rcnt="'+sel+'"]'); if(e)e.textContent='('+n+')';};
+      set('pending',c.pending);set('approved',c.approved);set('rejected',c.rejected);
+      var tot=document.querySelector('[data-rcnt=""]'); if(tot)tot.textContent='('+((r.data||[]).length)+')';
+    }
+    async function loadReviews(){
+      var el=document.getElementById('rvList'); el.innerHTML='<div class="rv-empty">불러오는 중…</div>';
+      var q=sb.from('submissions').select('*').order('created_at',{ascending:false});
+      if(rvCur) q=q.eq('status',rvCur);
+      var r=await q;
+      if(r.error){ el.innerHTML='<div class="rv-empty">오류: '+mgEsc(r.error.message)+'</div>'; return; }
+      var rows=r.data||[]; loadRevCounts();
+      if(!rows.length){ el.innerHTML='<div class="rv-empty">해당하는 제출 건이 없습니다.</div>'; return; }
+      el.innerHTML=rows.map(function(s){
+        var pl=s.payload||{};
+        var fields=Object.keys(pl).filter(function(k){return k.charAt(0)!=='_' && pl[k]!=null && pl[k]!=='';}).map(function(k){
+          return '<div class="rv-f"><span class="k">'+mgEsc(REV_FIELD_LABEL[k]||k)+'</span>'+mgEsc(String(pl[k]))+'</div>';
+        }).join('');
+        var src='';
+        if(pl._src_url||pl._src_memo){
+          src='<div class="rv-src"><b>출처</b>'+(pl._src_url?' · <a href="'+mgEsc(pl._src_url)+'" target="_blank" rel="noopener">'+mgEsc(pl._src_url)+'</a>':'')+(pl._src_memo?'<br>'+mgEsc(pl._src_memo):'')+'</div>';
+        }
+        var kind=s.action==='update'?'<span class="rv-kind update">보강</span>':'<span class="rv-kind create">신규 등록</span>';
+        var act;
+        if(s.status==='pending'){
+          act='<button class="rv-btn ok" data-act="approve" data-id="'+s.id+'">승인 · DB 반영</button><button class="rv-btn no" data-act="reject" data-id="'+s.id+'">반려</button>';
+        } else {
+          act='<span class="rv-badge '+mgEsc(s.status)+'">'+(REV_STATUS_LABEL[s.status]||mgEsc(s.status))+'</span>';
+        }
+        return '<div class="rv-card"><div class="rv-head">'+kind+'<span class="rv-target">'+(REV_TABLE_LABEL[s.target_table]||mgEsc(s.target_table))+'</span><span class="rv-meta">'+rvFmt(s.created_at)+'</span></div>'
+          +'<div class="rv-fields">'+(fields||'<div class="rv-f">(내용 없음)</div>')+'</div>'
+          +src+'<div class="rv-act">'+act+'</div></div>';
+      }).join('');
+    }
+    async function rvApprove(s){
+      var clean=rvCleanPayload(s.payload||{});
+      if(Object.keys(clean).length===0){ alert('반영할 내용이 없습니다.'); return false; }
+      var res;
+      if(s.action==='update' && s.target_id){
+        res=await sb.from(s.target_table).update(clean).eq('id',s.target_id);
+      } else {
+        res=await sb.from(s.target_table).insert(clean);
+      }
+      if(res.error){ alert('DB 반영 실패: '+res.error.message+'\n\n('+s.target_table+' 테이블 쓰기 권한(RLS)을 확인해야 할 수 있습니다.)'); return false; }
+      var sess=await sb.auth.getSession(); var uid=(sess.data&&sess.data.session)?sess.data.session.user.id:null;
+      var up=await sb.from('submissions').update({status:'approved',reviewed_by:uid,reviewed_at:new Date().toISOString()}).eq('id',s.id);
+      if(up.error){ alert('DB엔 반영됐으나 검수 상태 기록 실패: '+up.error.message); }
+      return true;
+    }
+    async function rvReject(s){
+      var sess=await sb.auth.getSession(); var uid=(sess.data&&sess.data.session)?sess.data.session.user.id:null;
+      var up=await sb.from('submissions').update({status:'rejected',reviewed_by:uid,reviewed_at:new Date().toISOString()}).eq('id',s.id);
+      if(up.error){ alert('반려 처리 실패: '+up.error.message); return false; } return true;
+    }
+    var _cardReview=document.getElementById('cardReview');
+    if(_cardReview) _cardReview.addEventListener('click',function(){ show('review'); rvCur='pending'; rvSetActive(); loadReviews(); });
+    document.getElementById('rvBack').addEventListener('click',function(){show('dash');});
+    document.querySelectorAll('#review .rv-tab').forEach(function(b){ b.addEventListener('click',function(){ rvCur=b.getAttribute('data-s'); rvSetActive(); loadReviews(); }); });
+    document.getElementById('rvList').addEventListener('click', async function(e){
+      var b=e.target.closest('.rv-btn'); if(!b)return;
+      var id=b.getAttribute('data-id'), act=b.getAttribute('data-act');
+      var r=await sb.from('submissions').select('*').eq('id',id).single();
+      if(r.error||!r.data){ alert('제출 건을 불러오지 못했습니다.'); return; }
+      var s=r.data;
+      if(act==='approve'){
+        if(!confirm('이 내용을 실제 '+(REV_TABLE_LABEL[s.target_table]||s.target_table)+' DB에 반영하시겠습니까?')) return;
+        b.disabled=true;b.textContent='반영 중…';
+        var ok=await rvApprove(s); if(ok){ alert('승인 완료. DB에 반영되었습니다.'); loadReviews(); } else { b.disabled=false;b.textContent='승인 · DB 반영'; }
+      } else if(act==='reject'){
+        if(!confirm('이 제출을 반려하시겠습니까?')) return;
+        b.disabled=true;b.textContent='처리 중…';
+        var ok2=await rvReject(s); if(ok2){ loadReviews(); } else { b.disabled=false;b.textContent='반려'; }
+      }
     });
 
     // ===== 히어로 슬라이드 =====

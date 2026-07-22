@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DB 등록 · 보강 · OPUSCLAM.COM</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+  <style>  /* 컬럼 폭(기본) */
+  .pdb-table th.c-no{width:3.5%}
+  .pdb-table th.c-ava{width:4.5%}
+  .pdb-table th.c-name{width:11%}
+  .pdb-table th.c-field{width:13%}
+  .pdb-table th.c-nation{width:9%}
+  .pdb-table th.c-life{width:7.5%}
+  .pdb-table th.c-era{width:7%}
+  .pdb-table th.c-work{width:15%}
+  .pdb-table th.c-org{width:12%}
+  .pdb-table th.c-school{width:8.5%}
+  .pdb-table th.c-link{width:9%}
+  /* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
+  @media(max-width:840px){
+    .pdb-table .c-no,.pdb-table .c-ava,.pdb-table .c-era,.pdb-table .c-school{display:none}
+    .pdb-table th.c-no,.pdb-table th.c-ava,.pdb-table th.c-era,.pdb-table th.c-school{width:0}
+    .pdb-table th.c-name{width:14%}
+    .pdb-table th.c-field{width:16%}
+    .pdb-table th.c-nation{width:11%}
+    .pdb-table th.c-life{width:9%}
+    .pdb-table th.c-work{width:24%}
+    .pdb-table th.c-org{width:15%}
+    .pdb-table th.c-link{width:11%}
+  }
+  /* ===== 휴대폰: 핵심(이름·분야·국적·대표작·링크)만 ===== */
+  @media(max-width:520px){
+    .pdb-table .c-life,.pdb-table .c-org{display:none}
+    .pdb-table th.c-life,.pdb-table th.c-org{width:0}
+    .pdb-table th.c-name{width:19%}
+    .pdb-table th.c-field{width:20%}
+    .pdb-table th.c-nation{width:17%}
+    .pdb-table th.c-work{width:22%}
+    .pdb-table th.c-link{width:22%}
+    .pdb-table th,.pdb-table td{padding-left:6px;padding-right:6px}
+    .pdb-table .c-field{white-space:normal}
+    .pdb-table .nat-code{display:none}
+    .pdb-table .c-link .lk{width:22px;height:22px;margin-right:2px}
+    .pdb-table .c-link .lk svg{width:12px;height:12px}
+  }
+  .pdb-table th{text-align:left;font-size:1.15em;letter-spacing:0;text-transform:none;color:var(--text-2);font-weight:700;padding:20px 9px;border-top:3px solid var(--text);border-bottom:2px solid var(--text)}
+  .pdb-table td{padding:14px 9px;border-top:1px solid var(--line);color:var(--text-2);font-size:1em;white-space:nowrap;vertical-align:middle;overflow:hidden}
+  .pdb-table tbody tr{transition:background .15s ease}
+
+  .pdb-table .c-no{width:64px;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .pdb-table .c-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+  .pdb-table .c-name a{color:var(--text);font-weight:600;font-size:1em;text-decoration:none;letter-spacing:-.01em;transition:color .15s ease}
+
+  .pdb-table .c-field{width:112px}
+  .pdb-table .tag{display:inline-block;font-size:.92em;color:var(--text-2);border:1px solid var(--line-2);border-radius:20px;padding:3px 11px;white-space:nowrap}
+  .pdb-table .c-birth{width:130px;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .pdb-table .c-school{color:var(--text-3)}
+
+  /* 표 하단 구분선 */
+  .pdb-divider{border-top:1px solid var(--line-2);margin-top:48px}
+  .pdb-pager{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:60px}
+  .pdb-pager .pg-nums{display:flex;gap:4px}
+  .pdb-pager .pg-nums a{min-width:38px;height:38px;display:grid;place-items:center;border-radius:9px;font-size:13px;color:var(--text-2);text-decoration:none;transition:background .15s ease,color .15s ease}
+  .pdb-pager .pg-nums a:hover{background:var(--paper-2);color:var(--text)}
+  .pdb-pager .pg-nums a.on{background:var(--text);color:var(--paper);font-weight:700}
+  .pdb-pager .pg-nav{font-size:13px;color:var(--text-2);text-decoration:none;padding:8px 10px;transition:color .15s ease}
+  .pdb-pager .pg-nav:hover{color:var(--text)}
+
+  /* ================= 인물 상세(뷰) ================= */
+  /* ===== DB 등록·보강 폼 ===== */
+  .wr{max-width:860px;margin:30px auto 0;padding:34px 0 24px;position:relative}
+  .wr::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:calc(100% + 100px);height:2px;background:var(--line-2)}
+  .wr-top{border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:28px;background:var(--paper-2)}
+  .wr-modetabs{display:inline-flex;background:var(--paper-3);border-radius:10px;padding:4px;gap:4px}
+  .wr-mtab{border:0;background:transparent;color:var(--text-2);font-family:inherit;font-size:13.5px;font-weight:600;padding:8px 20px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s}
+  .wr-mtab.active{background:#4a3a7d;color:#fff}
+  .wr-modedesc{margin:13px 0 0;font-size:13px;color:var(--text-2)}
+  .wr-perm{margin-top:9px;font-size:12px;color:var(--text-3)}
+  .wr-step{margin-bottom:28px}
+  .wr-steph{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;color:var(--text);margin:0 0 14px}
+  .wr-num{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#4a3a7d;color:#fff;font-size:13px;font-weight:700}
+  .wr-dblabel{font-style:normal;font-size:13px;font-weight:600;color:var(--violet-2);margin-left:2px}
+  .wr-dbpick{display:flex;flex-wrap:wrap;gap:8px}
+  .wr-db{border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);font-family:inherit;font-size:13.5px;font-weight:600;padding:9px 18px;border-radius:9px;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+  .wr-db:hover{border-color:#4a3a7d;color:#4a3a7d}
+  .wr-db.active{background:#4a3a7d;border-color:#4a3a7d;color:#fff}
+  .wr-fields{display:grid;grid-template-columns:1fr 1fr;gap:15px 16px}
+  .wr-f{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .wr-f-full{grid-column:1 / -1}
+  .wr-l{font-size:12.5px;font-weight:600;color:var(--text-2)}
+  .wr-in{font-family:inherit;font-size:14px;color:var(--text);background:var(--paper);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;width:100%;box-sizing:border-box;transition:border-color .15s}
+  .wr-in:focus{outline:none;border-color:var(--violet-2)}
+  textarea.wr-in{resize:vertical;line-height:1.6}
+  .wr-upload{border:1.5px dashed var(--line-2);border-radius:9px;padding:20px;text-align:center;font-size:13px;color:var(--text-3);cursor:pointer;transition:border-color .15s,color .15s}
+  .wr-upload:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  .wr-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:6px;padding-top:26px;position:relative}
+  .wr-actions::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:calc(100% + 100px);height:2px;background:var(--line-2)}
+  .wr-btn{font-family:inherit;font-size:14px;font-weight:600;padding:12px 26px;border-radius:11px;cursor:pointer;border:1px solid transparent;transition:background .15s,border-color .15s,color .15s}
+  .wr-ghost{background:var(--paper);border-color:var(--line-2);color:var(--text-2)}
+  .wr-ghost:hover{border-color:var(--text-3);color:var(--text)}
+  .wr-primary{background:var(--orange);color:#fff;box-shadow:0 8px 20px -6px rgba(236,122,28,.5)}
+  .wr-primary:hover{background:#d86d12}
+  .wr-cancel{background:var(--paper);border-color:var(--line-2);color:var(--text-3)}
+  .wr-cancel:hover{border-color:var(--text-3);color:var(--text)}
+  .wr-foot{text-align:right;font-size:11.5px;color:var(--text-3);margin-top:12px}
+  @media(max-width:640px){.wr-fields{grid-template-columns:1fr}.wr-f-full{grid-column:auto}.wr::before,.wr-actions::before{width:100%}}
+  .pv{max-width:940px;margin:0 auto;font-size:var(--pv-fs,14px)}
+  .pv-utility{margin:32px 0 24px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+  .pv-topline{border-top:3px solid var(--text);margin-top:30px}
+  .pv-tools{display:flex;gap:8px;flex-wrap:wrap}
+  .pv-tool{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);border:1px solid var(--line-2);background:var(--paper);border-radius:8px;padding:7px 12px;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s,background .15s}
+  .pv-tool:hover{border-color:var(--text-3);color:var(--text)}
+  .pv-tool svg{width:15px;height:15px}
+  .pv-tool[aria-pressed="true"]{color:var(--violet-2);border-color:var(--violet-2);background:rgba(124,99,176,.09)}
+  .pv-tool[aria-pressed="true"] svg{fill:var(--violet-2);stroke:var(--violet-2)}
+  .pv-track .pv-card{flex:0 0 auto;width:280px}
+  .pv-hero{display:flex;gap:34px;align-items:flex-start;padding-bottom:34px;border-bottom:1px solid var(--line)}
+  .pv-portrait{flex:0 0 auto;width:132px;height:132px;border-radius:18px;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:52px;color:var(--text-3);overflow:hidden}
+  .pv-headinfo{flex:1;min-width:0}
+  .pv-eyebrow{font-family:var(--serif);letter-spacing:.32em;font-size:11px;color:var(--text-3);text-transform:uppercase}
+  .pv-name{font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:-.015em;line-height:1.05;color:var(--text);margin-top:8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .pv-name-sub{font-family:var(--serif);font-size:16px;font-weight:400;color:var(--text-3);letter-spacing:0}
+  .pv-tags{display:flex;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+  .pv-tags .tag{display:inline-block;font-size:12px;color:var(--text-2);border:1px solid var(--line-2);border-radius:20px;padding:3px 12px}
+  .pv-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 28px;margin-top:20px}
+  .pv-facts>div{display:flex;gap:12px;font-size:13.5px}
+  .pv-facts dt{flex:0 0 auto;white-space:nowrap;color:var(--text-3)}
+  .pv-facts dd{color:var(--text);margin:0}
+  .pv-facts .nat-code{font-size:11px;opacity:.6}
+  .pv-actions{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap}
+  .pv-link{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--text-2);border:1px solid var(--line-2);border-radius:9px;padding:9px 15px;text-decoration:none;transition:border-color .15s,color .15s}
+  .pv-link:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  .pv-link svg{width:15px;height:15px}
+  .pv-lead{margin-top:30px;font-size:1.05em;line-height:1.75;color:var(--text-2)}
+  /* 국/영문 병기 */
+  .pv-en{color:var(--text-3);font-weight:400}
+  .pv-tags .tag-en{color:var(--text-3);font-size:.82em;font-weight:400;margin-left:3px}
+  .pv-h-en{font-family:var(--serif);font-size:13px;font-weight:400;color:var(--text-3);letter-spacing:.01em;margin-left:9px}
+  .pv-lead-en{display:block;margin-top:11px;font-size:.9em;line-height:1.7;color:var(--text-3)}
+  .pv-prose .pv-prose-en{color:var(--text-3);font-size:.95em}
+  .pv-worklist em{font-style:normal;color:var(--text-3);font-weight:400;font-size:.82em;margin-left:5px}
+  .pv-deflist dd .pv-en{display:block;font-size:.85em;margin-top:2px}
+  .pv-schoollink{color:var(--text);text-decoration:none;transition:color .15s}
+  .pv-schoolgo{display:inline-flex;align-items:center;gap:3px;margin:0 0 0 8px;font-size:11px;color:var(--violet-2);background:rgba(124,99,176,.1);border:1px solid rgba(124,99,176,.32);border-radius:20px;padding:2px 9px;white-space:nowrap;vertical-align:middle;font-weight:600;transition:background .15s,color .15s,border-color .15s}
+  .pv-schoolgo svg{width:11px;height:11px}
+  .pv-schoollink:hover{color:var(--violet-2)}
+  .pv-schoollink:hover .pv-schoolgo{background:var(--violet-2);color:#fff;border-color:var(--violet-2)}
+  .pv-schoollink:hover{color:var(--violet-2);border-color:var(--violet-2)}
+  .pv-sec{margin-top:46px}
+  .pv-sechead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+  .pv-h{font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--text);padding-left:12px;border-left:3px solid var(--violet-2);line-height:1.15;margin:0 0 18px}
+  .pv-sechead .pv-h{margin:0}
+  .pv-auto{font-size:11px;letter-spacing:.05em;color:var(--text-3);border:1px dashed var(--line-2);border-radius:20px;padding:4px 11px;white-space:nowrap}
+  .pv-prose p{font-size:1em;line-height:1.85;color:var(--text-2);margin:0 0 14px}
+  .pv-prose p:last-child{margin-bottom:0}
+  .pv-worklist{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
+  .pv-worklist li{font-size:1em;color:var(--text);padding:11px 0 11px 20px;border-bottom:1px solid var(--line);position:relative}
+  .pv-worklist li::before{content:"";position:absolute;left:2px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:var(--violet-2)}
+  .pv-worklist li span{color:var(--text-3);font-size:.82em;margin-left:6px}
+  .pv-metagrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px}
+  .pv-metagrid>div{display:flex;flex-direction:column;gap:5px;padding:16px 18px;background:var(--paper-2);border:1px solid var(--line);border-radius:12px}
+  .pv-metagrid dt{font-size:12px;color:var(--text-3)}
+  .pv-metagrid dd{margin:0;font-size:1em;color:var(--text)}
+  .pv-gallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .pv-tile{aspect-ratio:1/1;border:1px solid var(--line);border-radius:12px;display:grid;place-items:center;color:var(--text-3);background:repeating-linear-gradient(45deg,#f5f3fa 0 14px,#efedf7 14px 28px)}
+  .pv-tile svg{width:26px;height:26px}
+  .pv-media{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .pv-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--paper);text-decoration:none;transition:border-color .15s,transform .15s,box-shadow .2s;display:flex;flex-direction:column}
+  .pv-card:hover{border-color:var(--violet-2);transform:translateY(-2px);box-shadow:0 14px 30px -16px rgba(30,20,60,.28)}
+  .pv-thumb{aspect-ratio:16/10;display:grid;place-items:center;color:var(--violet-2);background:repeating-linear-gradient(45deg,#f5f3fa 0 14px,#efedf7 14px 28px);border-bottom:1px solid var(--line)}
+  .pv-thumb svg{width:34px;height:34px}
+  .pv-cardbody{padding:13px 15px}
+  .pv-ct{display:block;font-size:13.5px;color:var(--text);font-weight:600;line-height:1.4}
+  .pv-cs{display:block;font-size:12px;color:var(--text-3);margin-top:3px}
+  .pv-linkcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .pv-lc{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--text);transition:border-color .15s}
+  .pv-lc:hover{border-color:var(--violet-2)}
+  .pv-lcicon{width:34px;height:34px;border-radius:9px;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;color:var(--violet-2);flex:0 0 auto}
+  .pv-lcicon svg{width:16px;height:16px}
+  .pv-lc b{font-size:13.5px;font-weight:600}
+  .pv-lc span span{display:block;font-size:12px;color:var(--text-3);margin-top:2px;font-weight:400}
+  .pv-people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .pv-person{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;text-decoration:none;transition:border-color .15s,transform .15s}
+  .pv-person:hover{border-color:var(--violet-2);transform:translateY(-2px)}
+  .pv-person .ava{width:44px;height:44px;border-radius:50%;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--display);font-weight:700;color:var(--text-3);flex:0 0 auto}
+  .pv-person .pn{display:block;font-size:13.5px;color:var(--text);font-weight:600}
+  .pv-person .pf{display:block;font-size:12px;color:var(--text-3);margin-top:2px}
+  .pv-nav{display:flex;align-items:stretch;gap:12px;margin-top:54px;padding-top:34px;border-top:1px solid var(--line)}
+  .pv-prevnext{flex:1;display:flex;flex-direction:column;gap:3px;padding:14px 18px;border:1px solid var(--line);border-radius:12px;text-decoration:none;transition:border-color .15s}
+  .pv-prevnext:hover{border-color:var(--violet-2)}
+  .pv-prevnext.next{text-align:right}
+  .pv-prevnext .dir{font-size:12px;color:var(--text-3)}
+  .pv-prevnext .nm{font-size:14px;color:var(--text);font-weight:600}
+  .pv-tolist{flex:0 0 auto;display:grid;place-items:center;padding:0 26px;border-radius:12px;background:var(--violet-2);color:#fff;font-weight:700;font-size:13px;text-decoration:none;transition:background .15s}
+  .pv-tolist:hover{background:var(--violet)}
+  /* 왼쪽 고정 리스트 탭 */
+  /* 뷰 하단: DB보강 + 출처 안내 */
+  .pv-contrib{margin-top:48px;padding-top:32px;border-top:1px solid var(--line)}
+  .pv-enhance{display:flex;width:fit-content;max-width:100%;margin:0 auto;align-items:center;gap:13px;background:var(--orange);color:#fff;text-decoration:none;padding:16px 32px;border-radius:14px;box-shadow:0 10px 26px -8px rgba(236,122,28,.55);transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+  .pv-enhance:hover{background:#d86d12;transform:translateY(-2px);box-shadow:0 16px 34px -8px rgba(236,122,28,.65)}
+  .pv-enhance svg{width:22px;height:22px;flex:0 0 auto}
+  .pv-enhance b{font-size:16px;font-weight:700;display:block;line-height:1.2}
+  .pv-enhance small{font-size:12px;opacity:.92;display:block;margin-top:2px;font-weight:400}
+  .pv-source{margin-top:20px;background:rgba(124,99,176,.05);border:1px solid var(--line);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  .pv-source-t{margin:0;font-size:12.5px;line-height:1.7;color:var(--text-3);flex:1;min-width:260px}
+  .pv-source-t b{color:var(--text-2);font-weight:600}
+  .pv-mailbtn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);border-radius:9px;padding:10px 17px;font-size:13px;font-weight:600;text-decoration:none;transition:border-color .15s,color .15s}
+  .pv-mailbtn:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  .pv-mailbtn svg{width:15px;height:15px}
+  .pv-listtab{position:fixed;left:max(8px, calc(50% - 676px));top:560px;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;align-items:center;gap:10px;background:#372a5c;color:#fff;text-decoration:none;padding:24px 13px 24px 10px;border-radius:0 13px 13px 0;box-shadow:0 14px 32px -8px rgba(45,33,73,.6);transition:background .15s ease,padding-left .15s ease,opacity .25s ease,visibility .25s ease}
+  .pv-listtab:hover{background:#281d45;padding-left:16px}
+  .pv-listtab-arrow{font-size:20px;line-height:1;font-weight:400}
+  .pv-listtab-text{writing-mode:vertical-rl;text-orientation:mixed;font-size:13px;font-weight:700;letter-spacing:.18em}
+  @media(max-width:600px){.pv-listtab{padding:13px 7px 13px 5px}.pv-listtab-text{font-size:11px}}
+  /* 좁은 화면: 본문과 겹치면 탭 숨김 (상단 위치표시·서브메뉴로 이동) */
+  @media(max-width:1040px){.pv-listtab{display:none}}
+  /* 갤러리 라이트박스 */
+  .pv-tile{cursor:zoom-in}
+  .pv-lightbox{position:fixed;inset:0;z-index:200;background:rgba(14,18,48,.84);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:44px}
+  .pv-lightbox.open{display:flex}
+  .pv-lb-close{position:absolute;top:20px;right:24px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:background .15s}
+  .pv-lb-close:hover{background:rgba(255,255,255,.2)}
+  .pv-lb-content{max-width:min(92vw,1100px);max-height:86vh;display:flex;align-items:center;justify-content:center}
+  .pv-lb-content img{max-width:100%;max-height:86vh;border-radius:8px;display:block}
+  .pv-lb-ph{width:min(84vw,560px);aspect-ratio:4/3;border-radius:14px;display:grid;place-items:center;gap:14px;color:#cfc9e6;background:repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 16px,rgba(255,255,255,.03) 16px 32px);border:1px solid rgba(255,255,255,.15)}
+  .pv-lb-ph svg{width:56px;height:56px}
+  .pv-lb-ph span{font-size:13px;letter-spacing:.02em}
+  /* 2단 정보 배치 */
+  .pv-split{display:grid;grid-template-columns:1.45fr 1fr;gap:40px;margin-top:46px;align-items:start}
+  .pv-worklist--single{grid-template-columns:1fr;gap:0}
+  .pv-deflist{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+  .pv-deflist>div{display:flex;gap:20px;align-items:baseline;padding:13px 2px;border-bottom:1px solid var(--line);font-size:.95em}
+  .pv-deflist dt{color:var(--text-3);flex:0 0 96px}
+  .pv-deflist dd{margin:0;color:var(--text);text-align:left;flex:1}
+  /* 갤러리 캐러셀 */
+  .pv-carousel{position:relative}
+  .pv-track{display:flex;gap:12px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;padding:2px 1px}
+  .pv-track::-webkit-scrollbar{display:none}
+  .pv-track .pv-tile{flex:0 0 auto;width:190px;height:190px;aspect-ratio:auto}
+  .pv-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:40px;height:40px;border-radius:50%;border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);display:grid;place-items:center;cursor:pointer;font-size:20px;line-height:1;box-shadow:0 6px 18px -8px rgba(30,20,60,.32);transition:background .15s,color .15s,border-color .15s,opacity .15s}
+  .pv-arrow:hover{background:var(--violet-2);color:#fff;border-color:var(--violet-2)}
+  .pv-arrow:disabled{opacity:.32;cursor:default;box-shadow:none}
+  .pv-arrow--prev{left:-8px}
+  .pv-arrow--next{right:-8px}
+  /* 리스트(악보·음원) */
+  .pv-list{border-top:1px solid var(--line)}
+  .pv-lirow{display:flex;align-items:center;gap:14px;padding:14px 6px;border-bottom:1px solid var(--line);text-decoration:none;transition:background .15s}
+  .pv-lirow:hover{background:var(--paper-2)}
+  .pv-li-ic{width:38px;height:38px;border-radius:9px;background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center;color:var(--violet-2);flex:0 0 auto}
+  .pv-li-ic svg{width:18px;height:18px}
+  .pv-li-main{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pv-li-main b{font-size:1em;color:var(--text);font-weight:600}
+  .pv-li-main b .pv-en{font-weight:400;font-size:.85em;margin-left:5px}
+  .pv-li-main span{font-size:.85em;color:var(--text-3);margin-left:10px}
+  .pv-li-main span::before{content:'·';margin-right:9px;color:var(--line-2)}
+  .pv-li-act{flex:0 0 auto;font-size:12.5px;color:var(--text-3);white-space:nowrap;transition:color .15s}
+  .pv-lirow:hover .pv-li-act{color:var(--violet-2)}
+  /* 하단 목록 버튼 */
+  .pv-back{margin-top:54px;padding-top:34px;border-top:1px solid var(--line);display:flex;justify-content:center}
+  .pv-back .pv-tolist{padding:13px 44px}
+  @media(max-width:760px){
+    .pv-split{grid-template-columns:1fr;gap:6px}
+    .pv-track .pv-tile{width:150px;height:150px}
+  }
+  @media(max-width:760px){
+    .pv-hero{flex-direction:column;gap:22px}
+    .pv-name{font-size:30px}
+    .pv-facts,.pv-worklist,.pv-metagrid,.pv-linkcards{grid-template-columns:1fr}
+    .pv-gallery{grid-template-columns:repeat(2,1fr)}
+    .pv-media,.pv-people{grid-template-columns:1fr}
+    .pv-nav{flex-wrap:wrap}
+    .pv-tolist{order:-1;flex:1 0 100%;padding:14px}
+  }
+
+  @media(max-width:720px){
+    .pdb{padding:140px 0 46px}
+    .pdb-title{font-size:34px}
+    .pdb-titlebar{flex-direction:column;align-items:flex-start;gap:16px}
+    .pdb-toolbar{margin-top:34px}
+  }
+
+
+  /* 서브페이지 헤더: 기본 어두운(메인 GNB 느낌) → 호버 시 흰색 */
+  .site-header:not(.solid){background:linear-gradient(115deg,#0E1230 0%,#241a44 55%,#3a2456 100%)}
+  html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115deg,#0a0a0a 0%,#161616 55%,#222 100%)}
+
+
+  /* 풍성한 컬럼 */
+  .pdb-table .c-ava{width:56px;padding-right:0}
+  .pdb-table .ava{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--paper-2);border:1px solid var(--line);font-family:var(--display);font-weight:700;font-size:13px;color:var(--text-3);background-size:cover;background-position:center}
+  .pdb-table .c-nation{color:var(--text-2);overflow:hidden;text-overflow:ellipsis}
+  .pdb-table .nat-code{font-size:.85em;opacity:.6;margin-left:1px}
+  .pdb-table .c-life{width:118px;color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pdb-table .c-era{width:96px;color:var(--text-2)}
+
+
+  /* 대표작·소속 컬럼 */
+  .pdb-table .c-work{min-width:180px;max-width:270px;color:var(--text-2);white-space:normal;line-height:1.5}
+  .pdb-table .c-org{min-width:120px;max-width:170px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pdb-table .c-school{max-width:170px;overflow:hidden;text-overflow:ellipsis}
+  .pdb-table .c-name{min-width:120px}
+
+
+  /* 행 호버: 짙은 퍼플 배경 + 흰색 텍스트 */
+  .pdb-table tbody tr:hover td{background:#322152;color:#fff}
+  .pdb-table tbody tr:hover td a{color:#fff}
+  .pdb-table tbody tr:hover .tag{color:#fff;border-color:rgba(255,255,255,.45)}
+  .pdb-table tbody tr:hover .ava{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+
+
+  /* 복수 태그 */
+  .pdb-table .c-field{white-space:nowrap;overflow:hidden}
+  .pdb-table .c-field .tag{margin:0 4px 3px 0}
+  /* 사조 2줄 */
+  .pdb-table .c-era{white-space:nowrap}
+  .pdb-table .c-era .era-name{display:block;color:var(--text-2)}
+  .pdb-table .c-era .era-yr{display:block;font-size:.85em;color:var(--text-3);margin-top:2px}
+  /* 관련 링크 아이콘 */
+  .pdb-table .c-link{width:112px}
+  .pdb-table .c-link .lk{display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;color:var(--text-3);border:1px solid var(--line);border-radius:7px;margin-right:5px;transition:color .15s ease,border-color .15s ease}
+  .pdb-table .c-link .lk svg{width:14px;height:14px}
+  .pdb-table .c-link .lk:hover{color:var(--text);border-color:var(--text-3)}
+
+  /* 데이터 컬럼(분야·국적·생몰·사조·링크) 가운데 정렬 — 대표작·소속·출신학교는 왼쪽 */
+  .pdb-table th.c-field, .pdb-table td.c-field,
+  .pdb-table th.c-nation, .pdb-table td.c-nation,
+  .pdb-table th.c-life, .pdb-table td.c-life,
+  .pdb-table th.c-era, .pdb-table td.c-era,
+  .pdb-table th.c-link, .pdb-table td.c-link{text-align:center}
+  .pdb-table .c-field .tag{margin:0 1px}
+  /* 호버(퍼플) 시 추가 요소도 흰색 */
+  .pdb-table tbody tr:hover .era-name,
+  .pdb-table tbody tr:hover .era-yr{color:#fff}
+  .pdb-table tbody tr:hover .lk{color:#fff;border-color:rgba(255,255,255,.4)}
+
+
+  .pdb-table thead th[class]{color:var(--text-2)}
+
+
+  /* 행 호버 색 전환을 부드럽게 */
+  .pdb-table td,
+  .pdb-table td a,
+  .pdb-table .tag,
+  .pdb-table .ava,
+  .pdb-table .era-name,
+  .pdb-table .era-yr,
+  .pdb-table .lk{transition:background-color .25s ease, color .25s ease, border-color .25s ease}
+
+
+  /* OC 회원 배지 (별표 대체) */
+  .oc-badge{display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-size:9px;font-weight:800;letter-spacing:.03em;color:#fff;background:#EC7A1C;border-radius:4px;padding:2px 5px;margin-left:6px;vertical-align:middle;line-height:1}
+  .pdb-legend .oc-badge{margin-left:0;margin-right:5px}
+
+
+
+
+  /* ALLIANCE WXN: 빅배너 바로 위, 어두운 텍스트 */
+  .wxn-sub{margin:0 0 14px}
+  .wxn-sub .wxn-run{color:var(--text-2)}
+
+
+  /* 헤더 배경: 메인 4번째 패턴(scene-net 별자리) */
+  .pdb{position:relative}
+  .pdb-bg{position:absolute;top:0;left:0;right:0;height:470px;z-index:0;overflow:hidden;pointer-events:none;opacity:.55;-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%)}
+  .pdb-bg .wave{position:absolute;inset:0;width:100%;height:100%;transform:none;-webkit-mask-image:none;mask-image:none}
+  .pdb-bg .scene{position:absolute;inset:0;opacity:1}
+  .pdb-bg .scene svg{width:100%;height:100%;display:block}
+  .pdb-inner{position:relative;z-index:1}
+
+
+  /* 다크모드 행 호버: 순수 블랙 */
+  html[data-theme="dark"] .pdb-table tbody tr:hover td{background:#000}
+
+
+
+</style>
+</head>
+<body>
+
+<!-- ===== header (transparent overlay) ===== -->
+<div class="site-header" id="siteHeader">
+<div class="util">
+  <div class="wrap">
+    <div class="left">
+      <a href="#">WIXON ASSOCIATES INC</a>
+      <a href="#">LPSTOCK</a>
+      <a href="#">OPUSCLAM COMMUNITY</a>
+    </div>
+    <div class="right"><a href="#">CUSTOMER CENTER &rsaquo;</a></div>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap mast-row">
+    <a class="brand" href="../home.html">
+      <img class="logo-img" src="/assets/logo.png" alt="OPUSCLAM.COM · Classic Speciality">
+    </a>
+    <nav class="main" id="mainNav">
+      <button class="nav-close" id="navClose" aria-label="메뉴 닫기">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="nav-item nav-item--db">
+        <a href="#" class="active">DATABASE</a>
+        <div class="dropdown"><div class="dropdown-inner">
+          <a href="db-person.html">인물 DB</a>
+          <a href="db-org.html">음악단체 DB</a>
+          <a href="db-venue.html">공연장 DB</a>
+          <a href="db-school.html">음악학교 DB</a>
+          <a href="db-modern.html">현대음악 DB</a>
+          <a href="db-foundation.html">관련기관·재단 DB</a>
+          <a href="db-academic.html">학술 DB</a>
+        </div></div>
+      </div>
+      <div class="nav-item">
+        <a href="#">OC커뮤니티</a>
+        <div class="dropdown"><div class="dropdown-inner">
+          <a href="#">핫토픽</a>
+          <a href="#">공연사진 / 영상</a>
+          <a href="#">입시</a>
+          <a href="#">지식나눔</a>
+          <a href="#">SELF PR</a>
+          <a href="#">이달의 음악학교</a>
+          <a href="#">뉴스</a>
+          <a href="#">현대음악</a>
+          <a href="#">유틸리티 / 악보 / 자료</a>
+          <a href="#">태교음악</a>
+          <a href="#">연주회 티켓신청</a>
+        </div></div>
+      </div>
+      <div class="nav-item">
+        <a href="#">정보SPOT</a>
+        <div class="dropdown"><div class="dropdown-inner">
+          <a href="#">해외 페스티벌·콩쿨정보</a>
+          <a href="#">국내 콩쿨정보</a>
+          <a href="#">지원금 / 정책자금정보</a>
+          <a href="#">공연정보</a>
+          <a href="#">관련사이트</a>
+          <a href="#">음원 / 동영상</a>
+          <a href="#">각 분야별 악보</a>
+        </div></div>
+      </div>
+      <div class="nav-item">
+        <a href="#">레슨 : ON</a>
+        <div class="dropdown"><div class="dropdown-inner">
+          <a href="#">마스터클래스</a>
+          <a href="#">공개레슨</a>
+          <a href="#">진행중 레슨</a>
+          <a href="#">분야별 1:1 레슨</a>
+          <a href="#">분야별 그룹레슨</a>
+          <a href="#">인스트럭터 정보</a>
+          <a href="#">인스트럭터 신청</a>
+          <a href="#">분야별 레슨신청</a>
+        </div></div>
+      </div>
+      <div class="nav-item">
+        <a href="#">리쿠르트</a>
+        <div class="dropdown"><div class="dropdown-inner">
+          <a href="#">채용정보</a>
+          <a href="#">인재정보</a>
+          <a href="#">채용등록</a>
+          <a href="#">인재등록</a>
+          <a href="#">서비스안내</a>
+        </div></div>
+      </div>
+      <div class="nav-item">
+        <a href="#">SHOPPING</a>
+        <div class="dropdown"><div class="dropdown-inner">
+          <a href="#">LPSTOCK</a>
+          <a href="#">LIFEPOP</a>
+          <a href="#">입점문의/안내</a>
+        </div></div>
+      </div>
+      <div class="m-actions">
+        <a href="#" class="m-school">학교등록</a>
+        <a href="#">로그인</a>
+        <a href="#">회원가입</a>
+      </div>
+      <a href="#" class="m-community" target="_blank" rel="noopener">OPUSCLAM COMMUNITY ↗</a>
+    </nav>
+    <div class="mast-tools">
+      <a href="#" class="school">학교등록</a>
+      <a href="#" class="link-txt">로그인</a>
+      <a href="#" class="link-txt">회원가입</a>
+      <a href="#" class="search" aria-label="검색">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </a>
+      <button class="theme-toggle" id="themeToggle" aria-label="다크/화이트 모드 전환">
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+      </button>
+      <button class="fullmenu-btn" id="fullMenuBtn" aria-label="전체 메뉴 열기" aria-expanded="false"><span></span><span></span><span></span></button>
+      <button class="burger" id="burger" aria-label="메뉴 열기" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+</div>
+<div class="nav-overlay" id="navOverlay"></div>
+
+<!-- ===== full menu ===== -->
+<div class="fullmenu" id="fullMenu">
+  <div class="fullmenu-panel">
+    <div class="wrap fullmenu-head">
+      <a href="../home.html" class="fm-logolink"><img class="fm-logo" alt="OPUSCLAM.COM"></a>
+      <button class="fullmenu-close" data-fm-close aria-label="전체 메뉴 닫기">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="fullmenu-body">
+      <div class="wrap">
+        <div class="fullmenu-grid">
+          <div class="fm-col">
+            <div class="fm-num">01</div>
+            <h4>DATABASE</h4>
+            <a href="db-person.html">인물 DB</a>
+            <a href="db-org.html">음악단체 DB</a>
+            <a href="db-venue.html">공연장 DB</a>
+            <a href="db-school.html">음악학교 DB</a>
+            <a href="db-modern.html">현대음악 DB</a>
+            <a href="db-foundation.html">관련기관·재단 DB</a>
+            <a href="db-academic.html">학술 DB</a>
+          </div>
+          <div class="fm-col">
+            <div class="fm-num">02</div>
+            <h4>OC커뮤니티</h4>
+            <a href="#">핫토픽</a>
+            <a href="#">공연사진 / 영상</a>
+            <a href="#">입시</a>
+            <a href="#">지식나눔</a>
+            <a href="#">SELF PR</a>
+            <a href="#">이달의 음악학교</a>
+            <a href="#">뉴스</a>
+            <a href="#">현대음악</a>
+            <a href="#">유틸리티 / 악보 / 자료</a>
+            <a href="#">태교음악</a>
+            <a href="#">연주회 티켓신청</a>
+          </div>
+          <div class="fm-col">
+            <div class="fm-num">03</div>
+            <h4>정보SPOT</h4>
+            <a href="#">해외 페스티벌·콩쿨정보</a>
+            <a href="#">국내 콩쿨정보</a>
+            <a href="#">지원금 / 정책자금정보</a>
+            <a href="#">공연정보</a>
+            <a href="#">관련사이트</a>
+            <a href="#">음원 / 동영상</a>
+            <a href="#">각 분야별 악보</a>
+          </div>
+          <div class="fm-col">
+            <div class="fm-num">04</div>
+            <h4>레슨 : ON</h4>
+            <a href="#">마스터클래스</a>
+            <a href="#">공개레슨</a>
+            <a href="#">진행중 레슨</a>
+            <a href="#">분야별 1:1 레슨</a>
+            <a href="#">분야별 그룹레슨</a>
+            <a href="#">인스트럭터 정보</a>
+            <a href="#">인스트럭터 신청</a>
+            <a href="#">분야별 레슨신청</a>
+          </div>
+          <div class="fm-col">
+            <div class="fm-num">05</div>
+            <h4>리쿠르트</h4>
+            <a href="#">채용정보</a>
+            <a href="#">인재정보</a>
+            <a href="#">채용등록</a>
+            <a href="#">인재등록</a>
+            <a href="#">서비스안내</a>
+          </div>
+          <div class="fm-col">
+            <div class="fm-num">06</div>
+            <h4>SHOPPING</h4>
+            <a href="#">LPSTOCK</a>
+            <a href="#">LIFEPOP</a>
+            <a href="#">입점문의/안내</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== people database (data-centric) ===== -->
+<section class="pdb">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-net on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="../home.html">홈</a><span>/</span><a href="#">Database</a><span>/</span><span class="on">DB 등록 · 보강</span>
+    </nav>
+
+    <nav class="pdb-subnav" aria-label="DATABASE 하위 메뉴">
+      <a href="db-person.html">인물 DB</a>
+      <a href="db-org.html">음악단체 DB</a>
+      <a href="db-venue.html">공연장 DB</a>
+      <a href="db-school.html">음악학교 DB</a>
+      <a href="db-modern.html">현대음악 DB</a>
+      <a href="db-foundation.html">관련기관·재단 DB</a>
+      <a href="db-academic.html">학술 DB</a>
+    </nav>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">CONTRIBUTE · DATABASE</div>
+          <h1 class="pdb-title">DB 등록 · 보강</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">자격 회원이 새 데이터를 등록하거나, 기존 항목의 정보를 보강하는 페이지입니다.</p>
+    </header>
+
+    <!-- ===== DB 등록 · 보강 폼 ===== -->
+    <div class="wr">
+      <div class="wr-top">
+        <div class="wr-modetabs" role="group" aria-label="모드 선택">
+          <button type="button" class="wr-mtab active" data-mode="new">신규 등록</button>
+          <button type="button" class="wr-mtab" data-mode="enhance">DB보강</button>
+        </div>
+        <p class="wr-modedesc" id="wrModeDesc">새로운 데이터를 등록합니다. 제출 시 자격 회원 검수 후 반영됩니다.</p>
+        <div class="wr-perm">🔒 일정 자격을 갖춘 회원만 등록·보강할 수 있습니다. (로그인 필요)</div>
+      </div>
+
+      <section class="wr-step">
+        <h2 class="wr-steph"><span class="wr-num">1</span> DB 선택</h2>
+        <div class="wr-dbpick">
+          <button type="button" class="wr-db active" data-db="person">인물</button>
+          <button type="button" class="wr-db" data-db="org">음악단체</button>
+          <button type="button" class="wr-db" data-db="venue">공연장</button>
+          <button type="button" class="wr-db" data-db="school">음악학교</button>
+          <button type="button" class="wr-db" data-db="modern">현대음악</button>
+          <button type="button" class="wr-db" data-db="foundation">관련기관·재단</button>
+          <button type="button" class="wr-db" data-db="academic">학술</button>
+        </div>
+      </section>
+
+      <section class="wr-step">
+        <h2 class="wr-steph"><span class="wr-num">2</span> 항목 입력 <em class="wr-dblabel" id="wrDbLabel">인물DB</em></h2>
+        <div class="wr-fields" id="wrFields"></div>
+      </section>
+
+      <section class="wr-step">
+        <h2 class="wr-steph"><span class="wr-num">3</span> 출처 · 근거</h2>
+        <div class="wr-fields">
+          <div class="wr-f wr-f-full"><label class="wr-l">출처 URL</label><input type="url" class="wr-in" id="wrSrcUrl" placeholder="https:// 참고한 페이지 주소"></div>
+          <div class="wr-f wr-f-full"><label class="wr-l">출처 메모</label><textarea class="wr-in" id="wrSrcMemo" rows="2" placeholder="참고한 자료·근거를 적어주세요"></textarea></div>
+        </div>
+      </section>
+
+      <div class="wr-actions">
+        <button type="button" class="wr-btn wr-cancel" onclick="history.back()">취소</button>
+        <button type="button" class="wr-btn wr-ghost">미리보기</button>
+        <button type="button" class="wr-btn wr-primary" id="wrSubmit">제출 (검수 요청)</button>
+      </div>
+      <p class="wr-foot">제출된 내용은 자격 회원 검수 후 반영되며, 반영까지 다소 시간이 걸릴 수 있습니다.</p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ===== list bottom ad banners ===== -->
+<section class="bigban">
+  <div class="wrap">
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+  </div>
+</section>
+
+
+<!-- ===== triple banner ===== -->
+<div class="wxn-eyebrow wxn-sub"><span class="wxn-run">ALLIANCE WXN</span></div>
+<section class="triple">
+  <button class="tb-arrow tb-prev" id="tbPrev" aria-label="이전">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+  </button>
+  <div class="tb-viewport">
+    <div class="tb-track" id="tbTrack"></div>
+  </div>
+  <button class="tb-arrow tb-next" id="tbNext" aria-label="다음">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+</section>
+
+<!-- ===== footer ===== -->
+<div id="oc-footer"></div>
+
+<button class="to-top" id="toTop" aria-label="맨 위로 가기">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<!-- ===== PWA install banner ===== -->
+<div class="pwa-install" id="pwaInstall" role="dialog" aria-label="앱 설치 안내">
+  <span class="pwa-ico">OC</span>
+  <span class="pwa-txt">홈 화면에 설치하면 앱처럼 바로 열 수 있어요.</span>
+  <button class="pwa-btn" id="pwaInstallBtn">설치</button>
+  <button class="pwa-close" id="pwaInstallClose" aria-label="닫기">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+</div>
+
+<script>
+/* hero animated backgrounds — 4 scenes on rotation */
+(function(){
+  var W=600,H=340,SVGNS='http://www.w3.org/2000/svg';
+  function el(t){return document.createElementNS(SVGNS,t);}
+
+  /* scene 1 · equalizer */
+  var eq=document.querySelector('.scene-eq g');
+  if(eq){
+    var n=82, gap=W/n;
+    for(var i=0;i<n;i++){
+      var h=26+Math.abs(Math.sin(i*0.5))*98+Math.random()*44;
+      var r=el('rect');
+      r.setAttribute('x',i*gap+3);r.setAttribute('y',(H-h)/2);
+      r.setAttribute('width',gap*0.5);r.setAttribute('height',h);r.setAttribute('rx',gap*0.25);
+      r.style.animationDuration=(3.6+Math.random()*2.6).toFixed(2)+'s';
+      r.style.animationDelay=(-Math.random()*3.5).toFixed(2)+'s';
+      eq.appendChild(r);
+    }
+  }
+
+  /* scene 2 · flowing sine lines */
+  var fl=document.querySelector('.scene-flow g');
+  if(fl){
+    var TWO_PI=Math.PI*2;
+    function sine(base,amp,wl,ph,xmax){
+      var d='M0 '+base;
+      for(var x=0;x<=xmax;x+=16){d+=' L'+x+' '+(base+Math.sin(x/wl+ph)*amp).toFixed(1);}
+      return d;
+    }
+    [[86,18,82],[112,24,92],[140,30,110],[166,20,102],[192,26,120],[218,22,114],[244,28,132],[270,20,100]].forEach(function(c,k){
+      var wl=c[2];
+      var period=TWO_PI*wl;            // 한 파장 = 이동 거리 (이음매 완벽)
+      var xmax=W+period+40;            // 화면폭 + 한 파장 + 여유 (빈칸 방지)
+      var p=el('path');
+      p.setAttribute('d',sine(c[0],c[1],wl,k*1.4,xmax));
+      p.style.setProperty('--flow-shift',(-period).toFixed(1)+'px');
+      p.style.animationDuration=(16+k*5)+'s';
+      p.style.opacity=(0.6-k*0.09).toFixed(2);
+      fl.appendChild(p);
+    });
+  }
+
+  /* scene 3 · dot grid wave */
+  var gd=document.querySelector('.scene-rings g');
+  if(gd){
+    var cols=24, rows=10, sx=W/cols, sy=H/rows;
+    var cx0=(cols-1)/2, cy0=(rows-1)/2;
+    for(var cc=0;cc<cols;cc++){
+      for(var rr=0;rr<rows;rr++){
+        var dot=el('circle');
+        dot.setAttribute('cx',(cc*sx+sx/2).toFixed(1));
+        dot.setAttribute('cy',(rr*sy+sy/2).toFixed(1));
+        dot.setAttribute('r','2.4');
+        dot.style.animationDuration='2.8s';
+        var dist=Math.sqrt((cc-cx0)*(cc-cx0)+(rr-cy0)*(rr-cy0));
+        dot.style.animationDelay=(-dist*0.3).toFixed(2)+'s';
+        gd.appendChild(dot);
+      }
+    }
+  }
+
+  /* scene 4 · network constellation */
+  var net=document.querySelector('.scene-net g');
+  if(net){
+    var nodes=[], NN=36, maxD=118;
+    for(var q=0;q<NN;q++){
+      nodes.push({x:26+Math.random()*(W-52), y:30+Math.random()*(H-60)});
+    }
+    /* connect nearby nodes with lines (drawn first, behind nodes) */
+    for(var a=0;a<nodes.length;a++){
+      for(var bb=a+1;bb<nodes.length;bb++){
+        var ddx=nodes[a].x-nodes[bb].x, ddy=nodes[a].y-nodes[bb].y;
+        var dist=Math.sqrt(ddx*ddx+ddy*ddy);
+        if(dist<maxD){
+          var ln=el('line');
+          ln.setAttribute('x1',nodes[a].x.toFixed(1));ln.setAttribute('y1',nodes[a].y.toFixed(1));
+          ln.setAttribute('x2',nodes[bb].x.toFixed(1));ln.setAttribute('y2',nodes[bb].y.toFixed(1));
+          ln.style.animationDuration=(3.2+Math.random()*3.2).toFixed(2)+'s';
+          ln.style.animationDelay=(-Math.random()*4.5).toFixed(2)+'s';
+          net.appendChild(ln);
+        }
+      }
+    }
+    /* nodes on top */
+    nodes.forEach(function(nd){
+      var c=el('circle');
+      c.setAttribute('cx',nd.x.toFixed(1));c.setAttribute('cy',nd.y.toFixed(1));
+      c.setAttribute('r',(1.6+Math.random()*2.6).toFixed(1));
+      c.style.animationDuration=(3+Math.random()*3).toFixed(2)+'s';
+      c.style.animationDelay=(-Math.random()*4).toFixed(2)+'s';
+      net.appendChild(c);
+    });
+  }
+
+  /* rotate background scenes automatically */
+  var scenes=document.querySelectorAll('.wave .scene');
+  if(scenes.length>1){
+    var bidx=0;
+    setInterval(function(){
+      scenes[bidx].classList.remove('on');
+      bidx=(bidx+1)%scenes.length;
+      scenes[bidx].classList.add('on');
+    },6000);
+  }
+})();
+
+/* hero concert slides — dots control these (재초기화 가능) */
+(function(){
+  var heroTimer=null;
+  window.initHeroRotation=function(){
+    var slides=document.querySelectorAll('.hslide');
+    var dots=document.querySelectorAll('.hero-dots i');
+    if(heroTimer){clearInterval(heroTimer);heroTimer=null;}
+    if(slides.length<2)return;
+    var i=0;
+    function go(n){
+      slides[i].classList.remove('on'); if(dots[i])dots[i].classList.remove('on');
+      i=(n+slides.length)%slides.length;
+      slides[i].classList.add('on'); if(dots[i])dots[i].classList.add('on');
+    }
+    function auto(){heroTimer=setInterval(function(){go(i+1);},6500);}
+    dots.forEach(function(d,k){
+      d.setAttribute('role','button');
+      d.addEventListener('click',function(){clearInterval(heroTimer);go(k);auto();});
+    });
+    auto();
+  };
+  window.initHeroRotation();
+})();
+/* header: transparent over hero, solid on hover or after scrolling past hero */
+(function(){
+  var sh=document.getElementById('siteHeader');
+  var hero=document.querySelector('.hero');
+  if(!sh)return;
+  if(!hero){
+    if(window.innerWidth<=880){ sh.classList.add('solid'); return; }
+    var subHover=false;
+    function subUpd(){
+      if(subHover || window.scrollY>40){ sh.classList.add('solid'); }
+      else { sh.classList.remove('solid'); }
+    }
+    sh.addEventListener('mouseenter',function(){subHover=true;subUpd();});
+    sh.addEventListener('mouseleave',function(){subHover=false;subUpd();});
+    window.addEventListener('scroll',subUpd,{passive:true});
+    subUpd();
+    return;
+  }
+  var hovering=false;
+  function update(){
+    var solid;
+    if(window.innerWidth<=880){
+      solid = window.scrollY>8;               // 모바일: 맨 위는 투명, 스크롤하면 불투명
+    } else {
+      var trigger=hero.offsetHeight-sh.offsetHeight-8;
+      solid = hovering || window.scrollY>Math.max(trigger,60);
+    }
+    sh.classList.toggle('solid', solid);
+  }
+  sh.addEventListener('mouseenter',function(){hovering=true;update();});
+  sh.addEventListener('mouseleave',function(){hovering=false;update();});
+  window.addEventListener('scroll',update,{passive:true});
+  window.addEventListener('resize',update);
+  update();
+})();
+
+document.querySelectorAll('.tabs').forEach(function(t){
+  t.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click',function(){
+      t.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+    });
+  });
+});
+
+/* back to top */
+(function(){
+  var btn=document.getElementById('toTop');
+  if(!btn)return;
+  window.addEventListener('scroll',function(){
+    if(window.scrollY>420)btn.classList.add('show');else btn.classList.remove('show');
+  },{passive:true});
+  btn.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+})();
+
+/* mobile menu: drawer + accordion */
+(function(){
+  var burger=document.getElementById('burger');
+  var nav=document.getElementById('mainNav');
+  var overlay=document.getElementById('navOverlay');
+  var sh=document.getElementById('siteHeader');
+  if(!burger||!nav||!overlay)return;
+  function open(){nav.classList.add('open');overlay.classList.add('open');burger.classList.add('open');burger.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';if(sh)sh.style.zIndex='95';}
+  function close(){nav.classList.remove('open');overlay.classList.remove('open');burger.classList.remove('open');burger.setAttribute('aria-expanded','false');document.body.style.overflow='';if(sh)sh.style.zIndex='';}
+  burger.addEventListener('click',function(){nav.classList.contains('open')?close():open();});
+  overlay.addEventListener('click',close);
+  var navClose=document.getElementById('navClose');
+  if(navClose)navClose.addEventListener('click',close);
+  /* accordion: only on mobile widths */
+  nav.querySelectorAll('.nav-item > a').forEach(function(a){
+    a.addEventListener('click',function(e){
+      if(window.innerWidth>880)return;      /* desktop keeps hover behavior */
+      var item=a.parentElement;
+      if(item.querySelector('.dropdown')){
+        e.preventDefault();
+        /* 아코디언: 다른 열린 메뉴는 닫고 이 메뉴만 토글 */
+        nav.querySelectorAll('.nav-item.open').forEach(function(o){ if(o!==item) o.classList.remove('open'); });
+        item.classList.toggle('open');
+      }
+    });
+  });
+  /* reset when resizing back to desktop */
+  window.addEventListener('resize',function(){if(window.innerWidth>880)close();});
+})();
+
+/* full menu */
+(function(){
+  var btn=document.getElementById('fullMenuBtn');
+  var fm=document.getElementById('fullMenu');
+  if(!btn||!fm)return;
+  /* 헤더 로고를 전체 메뉴에도 재사용 */
+  var hdrLogo=document.querySelector('.brand .logo-img');
+  var fmLogo=fm.querySelector('.fm-logo');
+  if(hdrLogo&&fmLogo)fmLogo.src=hdrLogo.src;
+  function openFm(){fm.classList.add('open');btn.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
+  function closeFm(){fm.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+  btn.addEventListener('click',openFm);
+  fm.querySelectorAll('[data-fm-close]').forEach(function(el){el.addEventListener('click',closeFm);});
+  fm.querySelectorAll('.fm-col a').forEach(function(a){a.addEventListener('click',closeFm);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&fm.classList.contains('open'))closeFm();});
+})();
+
+/* PWA install banner */
+(function(){
+  var banner=document.getElementById('pwaInstall');
+  var installBtn=document.getElementById('pwaInstallBtn');
+  var closeBtn=document.getElementById('pwaInstallClose');
+  if(!banner||!installBtn||!closeBtn)return;
+  var deferred=null;
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    deferred=e;
+    banner.classList.add('show');
+  });
+  installBtn.addEventListener('click',function(){
+    if(!deferred)return;
+    deferred.prompt();
+    deferred.userChoice.then(function(){deferred=null;banner.classList.remove('show');});
+  });
+  closeBtn.addEventListener('click',function(){banner.classList.remove('show');});
+  window.addEventListener('appinstalled',function(){banner.classList.remove('show');});
+})();
+
+/* 서비스워커 등록 (PWA 설치 가능 조건) */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+
+/* WXN project showcase — infinite marquee */
+(function(){
+  var track=document.getElementById('tbTrack');
+  if(!track)return;
+  var IC={
+    search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v10a1.6 1.6 0 0 0-1.6-1.6H4z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v10a1.6 1.6 0 0 1 1.6-1.6H20z"/><circle cx="17.5" cy="18" r="3"/><path d="m21.5 22-1.7-1.7"/></svg>',
+    vinyl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/></svg>',
+    wave:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h2l2-6 3 15 3-11 2 5h6"/></svg>',
+    headphones:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 14v-2a7 7 0 0 1 14 0v2"/><rect x="3" y="13" width="4" height="7" rx="1.6"/><rect x="17" y="13" width="4" height="7" rx="1.6"/></svg>',
+    chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-8M4 20h16" stroke-linecap="round"/></svg>',
+    shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    people:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.5a3 3 0 0 1 0 6M18 20c0-2.6-1.3-4.4-3-5.2" opacity=".7"/></svg>'
+  };
+  var PROJECTS=[
+    {ko:'부클립스',en:'Book · LP · Search',desc:'희귀·절판 도서·음반 통합 검색',icon:'search',pat:'search',url:'https://booklps.vercel.app'},
+    {ko:'LPSTOCK',en:'Used Classical LP',desc:'클래식 LP 레코드 익스체인지',icon:'vinyl',pat:'vinyl',url:'#'},
+    {ko:'현대음악 DB',en:'Contemporary Music',desc:'현대음악 데이터베이스',icon:'wave',pat:'wave',url:'#'},
+    {ko:'엘파그 LPAUG',en:'LP · Audio Guide',desc:'LP·오디오 입문 가이드',icon:'headphones',pat:'headphones',url:'https://lpaug.vercel.app'},
+    {ko:'한눈에셋',en:'Asset Dashboard',desc:'전 자산 한눈에 · 실시간 시세',icon:'chart',pat:'chart',url:'https://myasset-share2.vercel.app'},
+    {ko:'치킬 CheatKill',en:'Fraud Report',desc:'온라인 사기·피싱 신고·블랙리스트',icon:'shield',pat:'shield',url:'https://cheatkill-web.vercel.app'},
+    {ko:'구역노트 cellnote',en:'Cell Group',desc:'교회 구역 모임 관리',icon:'people',pat:'people',url:'https://cellnote-k7bb.vercel.app'}
+  ];
+  /* shuffle */
+  for(var i=PROJECTS.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=PROJECTS[i];PROJECTS[i]=PROJECTS[j];PROJECTS[j]=t;}
+  function card(p){
+    var ext=(p.url&&p.url!=='#')?' target="_blank" rel="noopener"':'';
+    return '<a class="tb" href="'+p.url+'"'+ext+' data-pat="'+p.pat+'">'
+      +'<span class="ic">'+IC[p.icon]+'</span>'
+      +'<div><div class="en-s">'+p.en+'</div><h3>'+p.ko+'</h3><p>'+p.desc+'</p></div></a>';
+  }
+  var html=PROJECTS.map(card).join('');
+  track.innerHTML=html+html; /* duplicate for seamless loop */
+
+  var offset=0,setW=0,speed=0.4,paused=false;
+  function measure(){setW=track.scrollWidth/2;}
+  measure();
+  window.addEventListener('resize',measure);
+  function tick(){
+    if(!paused&&setW>0){
+      offset-=speed;
+      if(-offset>=setW)offset+=setW;
+      track.style.transform='translateX('+offset.toFixed(2)+'px)';
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  var vp=track.parentNode;
+  vp.addEventListener('mouseenter',function(){paused=true;});
+  vp.addEventListener('mouseleave',function(){paused=false;});
+
+  function step(dir){
+    var card1=track.querySelector('.tb');
+    var w=card1?card1.getBoundingClientRect().width:320;
+    offset+=dir*w;
+    if(offset>0)offset-=setW;
+    if(-offset>=setW)offset+=setW;
+    track.style.transform='translateX('+offset.toFixed(2)+'px)';
+  }
+  var prev=document.getElementById('tbPrev'),next=document.getElementById('tbNext');
+  if(prev)prev.addEventListener('click',function(){step(1);});
+  if(next)next.addEventListener('click',function(){step(-1);});
+})();
+
+/* Dark / White theme toggle */
+(function(){
+  var btn=document.getElementById('themeToggle');
+  if(!btn)return;
+  var root=document.documentElement;
+  btn.addEventListener('click',function(){
+    if(root.getAttribute('data-theme')==='dark'){root.removeAttribute('data-theme');try{localStorage.setItem('oc-theme','light');}catch(e){}}
+    else{root.setAttribute('data-theme','dark');try{localStorage.setItem('oc-theme','dark');}catch(e){}}
+  });
+})();
+
+</script>
+<script>
+/* ===== Supabase 연동: 목록 데이터 로드 ===== */
+(function(){
+  const SUPABASE_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  const H = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+
+  function fmtDate(d){
+    if(!d) return '';
+    const p = String(d).split('-');       // YYYY-MM-DD
+    if(p.length < 3) return d;
+    return p[0].slice(2) + '.' + p[1] + '.' + p[2];   // 21.11.22
+  }
+
+  async function sbGet(query){
+    const res = await fetch(SUPABASE_URL + '/rest/v1/' + query, { headers: H });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+
+  // 카드에 클릭 링크(투명 덮개) 적용 — 실제 주소가 있을 때만
+  function setCardLink(card, link){
+    let a = card.querySelector(':scope > a.card-link');
+    if(!link || link === '#'){ if(a) a.remove(); return; }
+    if(!a){
+      a = document.createElement('a');
+      a.className = 'card-link';
+      a.textContent = '자세히 보기';
+      if(getComputedStyle(card).position === 'static') card.style.position = 'relative';
+      card.appendChild(a);
+    }
+    a.href = link;
+  }
+
+  // 공지사항 / 콩쿨 — 제목 + 날짜
+  async function loadDateList(elId, table){
+    const list = document.getElementById(elId);
+    if(!list) return;
+    try{
+      const rows = await sbGet(table + '?select=title,link,posted_on&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      list.innerHTML = '';
+      rows.forEach(function(r){
+        const li = document.createElement('li');
+        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
+        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = fmtDate(r.posted_on);
+        li.appendChild(a); li.appendChild(dt);
+        list.appendChild(li);
+      });
+    }catch(e){ console.error(table + ' 로드 실패:', e); }
+  }
+
+  // 지원금 — 제목 + 마감일(텍스트)
+  async function loadFunding(){
+    const list = document.getElementById('funding-list');
+    if(!list) return;
+    try{
+      const rows = await sbGet('funding?select=title,link,deadline&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      list.innerHTML = '';
+      rows.forEach(function(r){
+        const li = document.createElement('li');
+        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
+        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.deadline || '';
+        li.appendChild(a); li.appendChild(dt);
+        list.appendChild(li);
+      });
+    }catch(e){ console.error('funding 로드 실패:', e); }
+  }
+
+  // 악보·자료 — 아이콘 + 제목
+  const DL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>';
+  async function loadScores(){
+    const list = document.getElementById('scores-list');
+    if(!list) return;
+    try{
+      const rows = await sbGet('scores?select=title,link&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      list.innerHTML = '';
+      rows.forEach(function(r){
+        const li = document.createElement('li');
+        const icon = document.createElement('span'); icon.className = 'icon'; icon.innerHTML = DL_ICON;
+        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
+        li.appendChild(icon); li.appendChild(a);
+        list.appendChild(li);
+      });
+    }catch(e){ console.error('scores 로드 실패:', e); }
+  }
+
+  // 카드형 콘텐츠 — 핫토픽 / 이달의 음악학교 / 갤러리 / 현대음악 (각 1건)
+  function fmtDot(d){
+    if(!d) return '';
+    const p = String(d).split('-');
+    if(p.length < 3) return d;
+    return p[0] + '.' + p[1] + '.' + p[2];   // 2021.11.22
+  }
+  async function loadFeature(cardId, slot){
+    const card = document.getElementById(cardId);
+    if(!card) return;
+    try{
+      const rows = await sbGet('features?slot=eq.' + slot + '&select=title,summary,image_url,link,posted_on&order=sort_order.asc,created_at.desc&limit=1');
+      if(!Array.isArray(rows) || !rows.length) return;
+      const r = rows[0];
+      const h = card.querySelector('h4'); if(h) h.textContent = r.title || '';
+      const p = card.querySelector('p'); if(p && r.summary != null) p.textContent = r.summary;
+      const dt = card.querySelector('.dt'); if(dt) dt.textContent = fmtDot(r.posted_on);
+      const vm = card.querySelector('a.vm'); if(vm && r.link) vm.href = r.link;
+      setCardLink(card, r.link);
+      if(r.image_url){
+        const th = card.querySelector('.thumb');
+        if(th){ th.classList.remove('ph'); th.style.backgroundImage = 'url("' + r.image_url + '")'; th.style.backgroundSize = 'cover'; th.style.backgroundPosition = 'center'; }
+      }
+    }catch(e){ console.error(slot + ' 로드 실패:', e); }
+  }
+
+  // Self PR 연주자 목록
+  async function loadArtists(){
+    const box = document.getElementById('artists-list');
+    if(!box) return;
+    try{
+      const rows = await sbGet('artists?select=name,role,bio,image_url,link&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      box.innerHTML = '';
+      rows.forEach(function(r, i){
+        const wrap = document.createElement('div');
+        wrap.className = 'artist';
+        if(i === rows.length - 1) wrap.style.borderBottom = '0';
+        const ava = document.createElement('div');
+        ava.className = 'ava' + (r.image_url ? '' : ' ph');
+        if(r.image_url){ ava.style.backgroundImage = 'url("' + r.image_url + '")'; ava.style.backgroundSize = 'cover'; ava.style.backgroundPosition = 'center'; }
+        const info = document.createElement('div');
+        const role = document.createElement('div'); role.className = 'role'; role.textContent = r.role || '';
+        const h = document.createElement('h4'); h.textContent = r.name || '';
+        const bio = document.createElement('p'); bio.textContent = r.bio || '';
+        info.appendChild(role); info.appendChild(h); info.appendChild(bio);
+        wrap.appendChild(ava); wrap.appendChild(info);
+        setCardLink(wrap, r.link);
+        box.appendChild(wrap);
+      });
+    }catch(e){ console.error('artists 로드 실패:', e); }
+  }
+
+  // 한여름밤 배너(Concert PR)
+  async function loadConcertPR(){
+    const card = document.getElementById('concert-pr');
+    if(!card) return;
+    try{
+      const rows = await sbGet('features?slot=eq.concert_pr&select=label,title,summary,image_url,link&order=sort_order.asc,created_at.desc&limit=1');
+      if(!Array.isArray(rows) || !rows.length) return;
+      const r = rows[0];
+      const lbl = card.querySelector('.en-s'); if(lbl && r.label != null) lbl.textContent = r.label;
+      const h = card.querySelector('h4'); if(h) h.textContent = r.title || '';
+      const p = card.querySelector('p'); if(p && r.summary != null) p.textContent = r.summary;
+      setCardLink(card, r.link);
+      if(r.image_url){ const img = card.querySelector('.img'); if(img){ img.classList.remove('ph'); img.style.backgroundImage = 'url("' + r.image_url + '")'; img.style.backgroundSize = 'cover'; img.style.backgroundPosition = 'center'; } }
+    }catch(e){ console.error('concert_pr 로드 실패:', e); }
+  }
+
+  // 빅배너(히어로) 슬라이드
+  async function loadHeroSlides(){
+    const wrap = document.querySelector('.hero .wrap');
+    const dotsBox = document.querySelector('.hero-dots');
+    if(!wrap || !dotsBox) return;
+    try{
+      const rows = await sbGet('hero_slides?select=eyebrow,title,subtitle,schedule,venue,time_text,image_url,link&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      wrap.innerHTML = '';
+      dotsBox.innerHTML = '';
+      rows.forEach(function(r, idx){
+        const sl = document.createElement('div');
+        sl.className = 'hslide' + (idx === 0 ? ' on' : '');
+        if(r.eyebrow){ const eb = document.createElement('div'); eb.className = 'eyebrow'; eb.textContent = r.eyebrow; sl.appendChild(eb); }
+        const h1 = document.createElement('h1');
+        String(r.title || '').split('\n').forEach(function(line, li){
+          if(li > 0) h1.appendChild(document.createElement('br'));
+          h1.appendChild(document.createTextNode(line));
+        });
+        sl.appendChild(h1);
+        if(r.subtitle){ const sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = r.subtitle; sl.appendChild(sub); }
+        const meta = document.createElement('div'); meta.className = 'meta';
+        if(r.schedule){ const s = document.createElement('span'); s.appendChild(document.createTextNode('일정 ')); const bx = document.createElement('b'); bx.textContent = r.schedule; s.appendChild(bx); meta.appendChild(s); }
+        if(r.venue){ const s = document.createElement('span'); s.appendChild(document.createTextNode('장소 ')); const bx = document.createElement('b'); bx.textContent = r.venue; s.appendChild(bx); meta.appendChild(s); }
+        if(r.time_text){ const s = document.createElement('span'); s.textContent = r.time_text; meta.appendChild(s); }
+        sl.appendChild(meta);
+        wrap.appendChild(sl);
+        const dot = document.createElement('i'); if(idx === 0) dot.className = 'on'; dotsBox.appendChild(dot);
+      });
+      if(window.initHeroRotation) window.initHeroRotation();
+    }catch(e){ console.error('hero_slides 로드 실패:', e); }
+  }
+
+  // 상단 뉴스 티커
+  async function loadTicker(){
+    const box = document.getElementById('ticker-list');
+    if(!box) return;
+    try{
+      const rows = await sbGet('ticker?select=label,headline,posted_on,link&order=sort_order.asc');
+      if(!Array.isArray(rows) || !rows.length) return;
+      box.innerHTML = '';
+      rows.forEach(function(r){
+        const tk = document.createElement('div'); tk.className = 'tk';
+        const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = r.label || '';
+        const txt = document.createElement('span'); txt.className = 'txt'; txt.textContent = r.headline || '';
+        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.posted_on || '';
+        const a = document.createElement('a'); a.className = 'more en'; a.href = (r.link && r.link !== '#') ? r.link : '#'; a.innerHTML = 'VIEW DETAIL &rarr;';
+        tk.appendChild(lbl); tk.appendChild(txt); tk.appendChild(dt); tk.appendChild(a);
+        box.appendChild(tk);
+      });
+    }catch(e){ console.error('ticker 로드 실패:', e); }
+  }
+
+  function init(){
+    loadHeroSlides();
+    loadTicker();
+    loadFeature('card-self-picture', 'self_picture');
+    loadDateList('notice-list', 'notices');
+    loadDateList('concours-list', 'concours');
+    loadFunding();
+    loadScores();
+    loadFeature('card-hot-topic', 'hot_topic');
+    loadFeature('card-music-school', 'music_school');
+    loadFeature('card-gallery', 'gallery');
+    loadFeature('card-contemporary', 'contemporary');
+    loadFeature('card-notice-lead', 'notice_lead');
+    loadFeature('card-concours-lead', 'concours_lead');
+    loadArtists();
+    loadConcertPR();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else { init(); }
+})();
+</script>
+
+<script>
+/* 인물DB 헤더 배경: 촘촘·작은 별자리 (공용 빌더 결과 재생성) */
+(function(){
+  var g=document.querySelector('.pdb-bg .scene-net g');
+  if(!g)return;
+  g.innerHTML='';
+  var W=1280,H=460,NN=70,maxD=132,NS='http://www.w3.org/2000/svg';
+  function el(t){return document.createElementNS(NS,t);}
+  var nodes=[];
+  for(var i=0;i<NN;i++) nodes.push({x:Math.random()*W, y:Math.random()*H});
+  for(var a=0;a<nodes.length;a++){
+    for(var b=a+1;b<nodes.length;b++){
+      var dx=nodes[a].x-nodes[b].x, dy=nodes[a].y-nodes[b].y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<maxD){
+        var ln=el('line');
+        ln.setAttribute('x1',nodes[a].x.toFixed(1));ln.setAttribute('y1',nodes[a].y.toFixed(1));
+        ln.setAttribute('x2',nodes[b].x.toFixed(1));ln.setAttribute('y2',nodes[b].y.toFixed(1));
+        ln.style.animationDuration=(3.2+Math.random()*3.2).toFixed(2)+'s';
+        ln.style.animationDelay=(-Math.random()*4.5).toFixed(2)+'s';
+        g.appendChild(ln);
+      }
+    }
+  }
+  nodes.forEach(function(n){
+    var c=el('circle');
+    c.setAttribute('cx',n.x.toFixed(1));c.setAttribute('cy',n.y.toFixed(1));
+    c.setAttribute('r',(1.1+Math.random()*1.7).toFixed(1));
+    c.style.animationDuration=(3+Math.random()*3).toFixed(2)+'s';
+    c.style.animationDelay=(-Math.random()*4).toFixed(2)+'s';
+    g.appendChild(c);
+  });
+})();
+</script>
+<script>
+/* 게시판/자료실 글자 크기 조절 */
+(function(){
+  var root=document.querySelector('.pv');
+  var btns=document.querySelectorAll('.pdb-fontsize .fs-btn');
+  if(!root||!btns.length)return;
+  var sizes=[12,14,16,18,20], idx=1;
+  function apply(){ root.style.setProperty('--pv-fs', sizes[idx]+'px'); }
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.getAttribute('data-fs');
+      if(k==='up') idx=Math.min(sizes.length-1, idx+1);
+      else if(k==='down') idx=Math.max(0, idx-1);
+      else idx=1;
+      apply();
+    });
+  });
+})();
+</script>
+<div class="pv-lightbox" id="pvLightbox" aria-hidden="true">
+  <button type="button" class="pv-lb-close" aria-label="닫기">&#10005;</button>
+  <div class="pv-lb-content" id="pvLbContent"></div>
+</div>
+
+<script>
+/* 갤러리 캐러셀 화살표 */
+(function(){
+  document.querySelectorAll('.pv-carousel').forEach(function(c){
+    var track=c.querySelector('.pv-track');
+    var prev=c.querySelector('.pv-arrow--prev');
+    var next=c.querySelector('.pv-arrow--next');
+    if(!track)return;
+    function upd(){
+      var overflow=track.scrollWidth>track.clientWidth+2;
+      [prev,next].forEach(function(b){ if(b) b.style.display=overflow?'grid':'none'; });
+      var max=track.scrollWidth-track.clientWidth-1;
+      if(prev) prev.disabled=track.scrollLeft<=0;
+      if(next) next.disabled=track.scrollLeft>=max;
+    }
+    function step(d){ track.scrollBy({left:d*Math.max(240,track.clientWidth*0.8),behavior:'smooth'}); }
+    if(prev) prev.addEventListener('click',function(){step(-1);});
+    if(next) next.addEventListener('click',function(){step(1);});
+    track.addEventListener('scroll',upd,{passive:true});
+    window.addEventListener('resize',upd);
+    upd();
+  });
+})();
+/* 상단 기능 버튼 */
+(function(){
+  document.querySelectorAll('.pv-tool[data-toggle]').forEach(function(b){
+    b.addEventListener('click',function(){ b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')==='true'?'false':'true'); });
+  });
+  document.querySelectorAll('.pv-tool[data-share]').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(navigator.share){ navigator.share({title:document.title, url:location.href}).catch(function(){}); }
+      else if(navigator.clipboard){ navigator.clipboard.writeText(location.href); }
+    });
+  });
+})();
+</script>
+<script>
+/* 갤러리 라이트박스 */
+(function(){
+  var lb=document.getElementById('pvLightbox');
+  var content=document.getElementById('pvLbContent');
+  if(!lb||!content)return;
+  var ph='<div class="pv-lb-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg><span>원본 이미지 · 자동 수집 시 표시됩니다</span></div>';
+  function open(html){ content.innerHTML=html; lb.classList.add('open'); document.body.style.overflow='hidden'; }
+  function close(){ lb.classList.remove('open'); content.innerHTML=''; document.body.style.overflow=''; }
+  document.querySelectorAll('.pv-tile').forEach(function(t){
+    t.addEventListener('click',function(){
+      var full=t.getAttribute('data-full');
+      open(full ? '<img src="'+full+'" alt="">' : ph);
+    });
+  });
+  lb.addEventListener('click',function(e){ if(e.target===lb) close(); });
+  var cb=lb.querySelector('.pv-lb-close'); if(cb) cb.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+})();
+</script>
+<script>
+/* 리스트 탭: 하단 배너/푸터 겹침 방지 */
+(function(){
+  var tab=document.querySelector('.pv-listtab');
+  var stop=document.querySelector('.bigban')||document.querySelector('.triple')||document.querySelector('footer');
+  if(!tab||!stop)return;
+  function upd(){
+    var s=stop.getBoundingClientRect().top;
+    var t=tab.getBoundingClientRect().bottom;
+    var hide=s < t + 20;
+    tab.style.opacity=hide?'0':'1';
+    tab.style.visibility=hide?'hidden':'visible';
+  }
+  window.addEventListener('scroll',upd,{passive:true});
+  window.addEventListener('resize',upd);
+  upd();
+})();
+</script>
+<script>
+/* DB 등록·보강 폼: DB별 동적 입력칸 */
+(function(){
+  var F={
+   person:{label:'인물DB',f:[
+    {l:'이름 (국문)',t:'text',k:'name_ko',h:'half'},{l:'이름 (영문)',t:'text',k:'name_en',h:'half'},
+    {l:'분야 (태그)',t:'tags',k:'field',h:'full'},
+    {l:'국적',t:'text',k:'nationality',h:'half'},{l:'생몰',t:'text',k:'life',h:'half'},
+    {l:'사조',t:'text',k:'era_name',h:'half'},{l:'활동 시기',t:'text',k:'era_yr',h:'half'},
+    {l:'주요 악기',t:'text',k:'instrument',h:'half'},{l:'출신학교',t:'text',k:'school',h:'half'},
+    {l:'대표작',t:'text',k:'works',h:'full'},
+    {l:'소개 · 이력',t:'textarea',k:'description',h:'full'},
+    {l:'대표 이미지',t:'image',k:'image_url',h:'half'},{l:'링크 (위키·음원·영상·악보 URL)',t:'text',k:'link_wiki',h:'half',ph:'쉼표로 구분'}]},
+   org:{label:'음악단체DB',f:[
+    {l:'단체명 (국문)',t:'text',h:'half'},{l:'단체명 (영문)',t:'text',h:'half'},
+    {l:'유형',t:'select',o:['오케스트라','실내악','합창단','오페라단','크로스오버','음악관계사','기타'],h:'half'},
+    {l:'소재지',t:'text',h:'half'},{l:'창단',t:'text',h:'half'},{l:'대표 · 지휘자',t:'text',h:'half'},
+    {l:'연고 공연장',t:'text',h:'half'},{l:'홈페이지',t:'url',h:'half'},
+    {l:'대표 활동 · 공연',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   venue:{label:'공연장DB',f:[
+    {l:'공연장명 (국문)',t:'text',h:'half'},{l:'공연장명 (영문)',t:'text',h:'half'},
+    {l:'유형',t:'select',o:['콘서트홀','오페라하우스','다목적홀','실내악홀','야외공연장','복합공연장','기타'],h:'half'},
+    {l:'소재지',t:'text',h:'half'},{l:'개관',t:'text',h:'half'},{l:'좌석수',t:'text',h:'half'},
+    {l:'운영주체',t:'text',h:'half'},{l:'상주단체',t:'text',h:'half'},
+    {l:'대표 프로그램',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   school:{label:'음악학교DB',f:[
+    {l:'학교명 (국문)',t:'text',h:'half'},{l:'학교명 (영문)',t:'text',h:'half'},
+    {l:'구분',t:'select',o:['예술중학교','예술고등학교','음악대학','예술대학','대학원','음악원','음악학교','기타'],h:'half'},
+    {l:'소재지',t:'text',h:'half'},{l:'설립',t:'text',h:'half'},
+    {l:'설립구분',t:'select',o:['국립','공립','사립'],h:'half'},
+    {l:'대표 학과',t:'text',h:'full'},{l:'저명 동문',t:'text',h:'full'},
+    {l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   modern:{label:'현대음악DB',f:[
+    {l:'작곡가명 (국문)',t:'text',h:'half'},{l:'작곡가명 (영문)',t:'text',h:'half'},
+    {l:'사조·유파',t:'select',o:['표현주의·12음','총렬주의','미니멀리즘','전자음악','우연성·실험','스펙트럴','음향주의','신고전주의','동서 융합','다원주의·포스트모던','기타'],h:'half'},
+    {l:'국적',t:'text',h:'half'},{l:'생몰',t:'text',h:'half'},{l:'대표 기법',t:'text',h:'half'},
+    {l:'사사 (계보)',t:'text',h:'half'},{l:'활동시기',t:'text',h:'half'},
+    {l:'대표작',t:'text',h:'full'},{l:'사진',t:'image',h:'half'},{l:'링크',t:'text',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   foundation:{label:'관련기관·재단DB',f:[
+    {l:'기관·재단명 (국문)',t:'text',h:'half'},{l:'기관·재단명 (영문)',t:'text',h:'half'},
+    {l:'유형',t:'select',o:['재단','협회','공공기관','기획사','음반사','콩쿠르·시상','지원기관','기타'],h:'half'},
+    {l:'소재지',t:'text',h:'half'},{l:'설립',t:'text',h:'half'},
+    {l:'설립구분',t:'select',o:['공공','민간','민간(기업)'],h:'half'},
+    {l:'산하 · 운영',t:'text',h:'half'},{l:'관련 분야',t:'text',h:'half'},
+    {l:'주요 사업',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   academic:{label:'학술DB',f:[
+    {l:'제목 (국문)',t:'text',h:'full'},{l:'제목 (영문)',t:'text',h:'full'},
+    {l:'유형',t:'select',o:['학술논문','학위논문','저널·학술지','연구서','평론','자료','기타'],h:'half'},
+    {l:'저자',t:'text',h:'half'},{l:'발행처',t:'text',h:'half'},{l:'발행연도',t:'text',h:'half'},
+    {l:'분야',t:'text',h:'half'},{l:'언어',t:'select',o:['국문','영문','독문','기타'],h:'half'},
+    {l:'키워드',t:'tags',h:'full'},{l:'원문 링크',t:'url',h:'full'},{l:'초록',t:'textarea',h:'full'}]}
+  };
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function fld(f,rec){
+    var full=f.h==='full'?' wr-f-full':'';
+    var v=esc(rec&&f.k?(rec[f.k]==null?'':rec[f.k]):(f.v||'')), ph=esc(f.ph||'');
+    var dk=' data-k="'+esc(f.k||'')+'"';
+    var inner;
+    if(f.t==='textarea') inner='<textarea class="wr-in"'+dk+' rows="3" placeholder="'+ph+'">'+v+'</textarea>';
+    else if(f.t==='select') inner='<select class="wr-in"'+dk+'>'+f.o.map(function(o){return '<option>'+esc(o)+'</option>';}).join('')+'</select>';
+    else if(f.t==='image') inner='<div class="wr-upload">클릭 또는 드래그하여 이미지 업로드</div>';
+    else if(f.t==='tags') inner='<input class="wr-in"'+dk+' value="'+v+'" placeholder="쉼표로 구분 (예: 작곡, 오르간)">';
+    else inner='<input type="'+(f.t==='url'?'url':'text')+'" class="wr-in"'+dk+' value="'+v+'" placeholder="'+ph+'">';
+    return '<div class="wr-f'+full+'"><label class="wr-l">'+esc(f.l)+'</label>'+inner+'</div>';
+  }
+  var curDb='person', curRec=null;
+  function render(db, rec){
+    curDb=db; curRec=rec||null;
+    var d=F[db]; if(!d) return;
+    document.getElementById('wrDbLabel').textContent=d.label;
+    document.getElementById('wrFields').innerHTML=d.f.map(function(f){return fld(f,curRec);}).join('');
+  }
+  document.querySelectorAll('.wr-db').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.wr-db').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active'); render(b.getAttribute('data-db'), null);
+    });
+  });
+  var desc={'new':'새로운 데이터를 등록합니다. 제출 시 자격 회원 검수 후 반영됩니다.','enhance':'기존 항목의 정보를 수정·보강합니다. 상세 페이지의 “DB보강” 버튼으로 들어오면 해당 데이터가 채워집니다.'};
+  document.querySelectorAll('.wr-mtab').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.wr-mtab').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');
+      var m=b.getAttribute('data-mode');
+      document.getElementById('wrModeDesc').textContent=desc[m];
+      if(m==='new') render(curDb, null); else render(curDb, curRec);
+    });
+  });
+  var _U='https://ptdxzxkgddvkusamkiol.supabase.co', _K='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var _params=new URLSearchParams(location.search);
+  var _db=_params.get('db')||'person', _mode=_params.get('mode')||'new', _id=_params.get('id');
+  document.querySelectorAll('.wr-db').forEach(function(x){x.classList.toggle('active', x.getAttribute('data-db')===_db);});
+  document.querySelectorAll('.wr-mtab').forEach(function(x){x.classList.toggle('active', x.getAttribute('data-mode')===(_mode==='enhance'?'enhance':'new'));});
+  document.getElementById('wrModeDesc').textContent=desc[_mode==='enhance'?'enhance':'new'];
+  if(_mode==='enhance' && _id && _db==='person'){
+    fetch(_U+'/rest/v1/persons?select=*&id=eq.'+encodeURIComponent(_id),{headers:{apikey:_K,Authorization:'Bearer '+_K}})
+      .then(function(r){return r.json();}).then(function(a){ render(_db,(a&&a[0])||null); })
+      .catch(function(){ render(_db,null); });
+  } else { render(_db, null); }
+
+  /* ===== 제출(검수 요청) 저장 — 현재 인물(person)만 연결 ===== */
+  var _sb = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(_U,_K) : null;
+  var _QUAL = ['major','industry','org','school'];
+
+  async function _getMe(){
+    if(!_sb) return {session:null, me:null};
+    var s = await _sb.auth.getSession();
+    var session = (s && s.data) ? s.data.session : null;
+    if(!session) return {session:null, me:null};
+    var r = await _sb.from('members').select('member_type,status,name').eq('id', session.user.id).single();
+    return {session:session, me:(r && r.data) || null};
+  }
+  function _isQualified(me){
+    return !!(me && me.status==='approved' && _QUAL.indexOf(me.member_type)>=0);
+  }
+
+  /* 상단 자격 배지: 로그인/자격 상태 안내 */
+  (async function _initPerm(){
+    var el = document.querySelector('.wr-perm');
+    if(!el || !_sb) return;
+    try{
+      var info = await _getMe();
+      if(!info.session){
+        el.innerHTML = '🔒 로그인이 필요합니다. <a href="/login.html" style="color:inherit;text-decoration:underline">로그인하기</a>';
+      } else if(_isQualified(info.me)){
+        el.innerHTML = '✅ ' + ((info.me && info.me.name) || '회원') + '님, 등록·보강 자격이 확인되었습니다.';
+      } else {
+        el.innerHTML = '⚠️ 자격 회원(승인 완료)만 등록·보강할 수 있습니다. 현재 계정은 권한이 없습니다.';
+      }
+    }catch(e){ /* 조용히 무시 */ }
+  })();
+
+  var _submitBtn = document.getElementById('wrSubmit');
+  if(_submitBtn){
+    _submitBtn.addEventListener('click', async function(){
+      if(curDb !== 'person'){
+        alert('현재는 인물(person) DB만 제출 저장이 연결되어 있습니다.\n다른 DB는 순차적으로 연결할 예정입니다.');
+        return;
+      }
+      if(!_sb){ alert('저장 도구를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'); return; }
+
+      var _orig = _submitBtn.textContent;
+      _submitBtn.disabled = true; _submitBtn.textContent = '제출 중…';
+      try{
+        var info = await _getMe();
+        if(!info.session){ alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.'); location.href='/login.html'; return; }
+        if(!_isQualified(info.me)){ alert('자격 회원(승인 완료)만 등록·보강할 수 있습니다.'); return; }
+
+        /* 폼 값 수집 (data-k 있는 칸만) */
+        var payload = {};
+        document.querySelectorAll('#wrFields [data-k]').forEach(function(elm){
+          var k = elm.getAttribute('data-k'); if(!k) return;
+          var val = (elm.value || '').trim();
+          if(val) payload[k] = val;
+        });
+        if(!payload.name_ko){ alert('이름(국문)은 필수입니다.'); return; }
+
+        /* 출처 정보: 밑줄(_) 접두사 → 실제 반영 시 제외됨 */
+        var su = document.getElementById('wrSrcUrl'), sm = document.getElementById('wrSrcMemo');
+        if(su && su.value.trim()) payload._src_url = su.value.trim();
+        if(sm && sm.value.trim()) payload._src_memo = sm.value.trim();
+
+        var row = {
+          submitter_id: info.session.user.id,
+          action: (_mode==='enhance' ? 'update' : 'create'),
+          target_table: 'persons',
+          target_id: (_mode==='enhance' && _id) ? _id : null,
+          payload: payload,
+          status: 'pending'
+        };
+        var ins = await _sb.from('submissions').insert(row);
+        if(ins.error){ alert('제출 실패: ' + ins.error.message); return; }
+
+        alert('제출되었습니다. 자격 회원 검수 후 반영됩니다. 감사합니다.');
+        /* 폼 초기화 (신규 등록 계속 가능) */
+        render(curDb, null);
+        if(su) su.value = ''; if(sm) sm.value = '';
+      }catch(e){
+        alert('오류가 발생했습니다: ' + (e && e.message ? e.message : e));
+      }finally{
+        _submitBtn.disabled = false; _submitBtn.textContent = _orig;
+      }
+    });
+  }
+})();
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
