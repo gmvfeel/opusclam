@@ -1,0 +1,25 @@
+name: Collect venues (weekly)
+
+# 매주 월요일 새벽 3시(한국시간)에 자동 실행 + 언제든 수동 실행 가능
+on:
+  schedule:
+    - cron: '0 18 * * 0'   # 일요일 18:00 UTC = 월요일 03:00 KST
+  workflow_dispatch: {}
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run venue collector
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node scripts/collect-venues.mjs
