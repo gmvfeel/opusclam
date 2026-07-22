@@ -16,6 +16,7 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <link rel="stylesheet" href="/style.css">
   <style>  /* 컬럼 폭(기본) */
+  .pdb-table{table-layout:fixed;width:100%}
   .pdb-table th.c-no{width:3.5%}
   .pdb-table th.c-ava{width:4.5%}
   .pdb-table th.c-name{width:24%}
@@ -56,7 +57,7 @@
   .pdb-table tbody tr{transition:background .15s ease}
 
   .pdb-table .c-no{width:64px;color:var(--text-3);font-variant-numeric:tabular-nums}
-  .pdb-table .c-name{white-space:normal;line-height:1.35}
+  .pdb-table .c-name{white-space:normal;line-height:1.35;word-break:break-word}
   .pdb-table .c-name a{color:var(--text);font-weight:600;font-size:1em;text-decoration:none;letter-spacing:-.01em;transition:color .15s ease}
   .pdb-table .c-name-en{font-size:.82em;color:var(--text-3);font-weight:400;margin-left:6px}
 
@@ -98,8 +99,8 @@
 
 
   /* 대표작·소속 컬럼 */
-  .pdb-table .c-work{min-width:180px;max-width:270px;color:var(--text-2);white-space:normal;line-height:1.5}
-  .pdb-table .c-org{min-width:120px;max-width:170px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pdb-table .c-work{display:none}
+  .pdb-table .c-org{display:none}
   .pdb-table .c-school{color:var(--text-2);white-space:normal;line-height:1.5}
   .pdb-table .c-name{}
 
