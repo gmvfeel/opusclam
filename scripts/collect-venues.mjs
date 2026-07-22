@@ -25,7 +25,7 @@ const CLASSES = [
 
 function buildQuery(clsQid) {
   return `
-SELECT ?item ?nameKo ?nameEn ?country ?inception ?capacity ?countryKo ?countryEn ?cityKo ?cityEn ?operatorKo ?operatorEn ?image ?koArticle ?enArticle WHERE {
+SELECT ?item ?nameKo ?nameEn ?country ?inception ?capacity ?countryKo ?countryEn ?cityKo ?cityEn ?operatorKo ?operatorEn ?image ?website ?residentKo ?residentEn ?koArticle ?enArticle WHERE {
   ?item wdt:P31 wd:${clsQid} .
   OPTIONAL { ?item rdfs:label ?nameKo. FILTER(LANG(?nameKo)="ko") }
   OPTIONAL { ?item rdfs:label ?nameEn. FILTER(LANG(?nameEn)="en") }
@@ -41,6 +41,10 @@ SELECT ?item ?nameKo ?nameEn ?country ?inception ?capacity ?countryKo ?countryEn
     OPTIONAL { ?operator rdfs:label ?operatorKo. FILTER(LANG(?operatorKo)="ko") }
     OPTIONAL { ?operator rdfs:label ?operatorEn. FILTER(LANG(?operatorEn)="en") } }
   OPTIONAL { ?item wdt:P18 ?image. }
+  OPTIONAL { ?item wdt:P856 ?website. }
+  OPTIONAL { ?item wdt:P466 ?occupant.
+    OPTIONAL { ?occupant rdfs:label ?residentKo. FILTER(LANG(?residentKo)="ko") }
+    OPTIONAL { ?occupant rdfs:label ?residentEn. FILTER(LANG(?residentEn)="en") } }
   OPTIONAL { ?koArticle schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>. }
   OPTIONAL { ?enArticle schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
 }
@@ -85,6 +89,8 @@ function toRow(b, type) {
     name_ko, name_en: nameEn || '',
     type, location, opened, seats, operator,
     logo_url: val(b, 'image') || '',
+    link_home: val(b, 'website') || '',
+    resident: val(b, 'residentKo') || val(b, 'residentEn') || '',
     link_wiki: koArticle || val(b, 'enArticle') || '',
     source: 'auto',
     _domestic: qidOf(val(b, 'country')) === KR_QID || country === '대한민국' || country === 'South Korea',
@@ -118,7 +124,7 @@ async function sbUpdate(id, patch) {
   if (!res.ok) throw new Error('UPDATE ' + id + ' → ' + res.status + ' ' + await res.text());
 }
 
-const FILL_COLS = ['name_en', 'type', 'location', 'opened', 'seats', 'operator', 'logo_url', 'link_wiki'];
+const FILL_COLS = ['name_en', 'type', 'location', 'opened', 'seats', 'operator', 'logo_url', 'link_home', 'resident', 'link_wiki'];
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const strip = (r) => { const o = { ...r }; Object.keys(o).forEach(k => { if (k[0] === '_') delete o[k]; }); return o; };
 
@@ -139,7 +145,7 @@ async function main() {
   const kept = [...collected.values()].filter(r => r._domestic || r._notable);
   console.log('■ 필터 통과:', kept.length, '곳 (제외', collected.size - kept.length, ')');
 
-  const existing = await sbGet('venues?select=id,wikidata_id,name_ko,name_en,type,location,opened,seats,operator,logo_url,link_wiki,sort_no');
+  const existing = await sbGet('venues?select=id,wikidata_id,name_ko,name_en,type,location,opened,seats,operator,logo_url,link_home,resident,link_wiki,sort_no');
   const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
   for (const r of existing) {
     if (r.wikidata_id) byWid.set(r.wikidata_id, r);
