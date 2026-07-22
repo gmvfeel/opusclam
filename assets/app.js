@@ -39,8 +39,10 @@
     links.login.forEach(function(a){ a.setAttribute("href","/login.html"); a.onclick=null; });
     links.join.forEach(function(a){ a.setAttribute("href","/join.html"); a.onclick=null; });
   }
-  function setLoggedIn(links, name, sb){
-    links.login.forEach(function(a){ a.textContent=name+"님"; a.setAttribute("href","#"); a.onclick=function(e){e.preventDefault();}; });
+  var OC_TYPE_LABEL={major:"전공자",industry:"음악관계자",org:"단체·기업",school:"음악학교",general:"일반"};
+  function setLoggedIn(links, name, typeLabel, sb){
+    var label=name+"님"+(typeLabel?" ("+typeLabel+")":"");
+    links.login.forEach(function(a){ a.textContent=label; a.setAttribute("href","/mypage.html"); a.onclick=null; });
     links.join.forEach(function(a){ a.textContent="로그아웃"; a.setAttribute("href","#"); a.onclick=function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); }; });
   }
   function updateHeaderAuth(){
@@ -52,10 +54,11 @@
       sb.auth.getSession().then(function(r){
         var session=(r.data && r.data.session)?r.data.session:null;
         if(!session){ setLoggedOut(links); return; }
-        sb.from("members").select("name,username").eq("id",session.user.id).single().then(function(mr){
-          var nm=(mr.data && (mr.data.name||mr.data.username)) || (session.user.email||"회원");
-          setLoggedIn(links, nm, sb);
-        }, function(){ setLoggedIn(links, (session.user.email||"회원"), sb); });
+        sb.from("members").select("name,username,member_type").eq("id",session.user.id).single().then(function(mr){
+          var d=mr.data||{};
+          var nm=(d.name||d.username) || (session.user.email||"회원");
+          setLoggedIn(links, nm, OC_TYPE_LABEL[d.member_type]||"", sb);
+        }, function(){ setLoggedIn(links, (session.user.email||"회원"), "", sb); });
       });
     });
   }

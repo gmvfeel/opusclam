@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마이페이지 · OPUSCLAM.COM</title>
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="/assets/auth.css">
+<style>
+  .mp-wrap{max-width:640px;margin:56px auto;padding:0 20px}
+  .mp-head{margin-bottom:26px}
+  .mp-head .jtag{margin-bottom:14px}
+  .mp-head h1{font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--tx)}
+  .mp-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 32px;box-shadow:0 6px 18px rgba(40,40,70,.12)}
+  .mp-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+  .mp-badge{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;border:1px solid var(--line2);color:var(--tx2)}
+  .mp-badge.type{background:var(--tagbg);color:var(--tx)}
+  .mp-badge.approved{color:#3a9d63;border-color:rgba(58,157,99,.4)}
+  .mp-badge.pending{color:#c99a2e;border-color:rgba(201,154,46,.4)}
+  .mp-badge.rejected{color:#c05a5a;border-color:rgba(192,90,90,.4)}
+  .mp-list{list-style:none;padding:0;margin:0 0 26px}
+  .mp-list li{display:flex;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid var(--hair);font-size:14px}
+  .mp-list li:last-child{border-bottom:0}
+  .mp-list .k{color:var(--tx3);flex:0 0 auto}
+  .mp-list .v{color:var(--tx);font-weight:600;text-align:right;word-break:break-all}
+  .mp-actions{display:flex;flex-direction:column;gap:10px}
+  .mp-btn{width:100%;padding:14px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:1px solid var(--line2);font-family:inherit;text-align:center;display:block}
+  .mp-btn.primary{background:var(--pri);color:var(--prit);border:none}
+  .mp-btn.ghost{background:var(--chip);color:var(--tx2)}
+  .mp-msg{padding:30px 0;text-align:center;color:var(--tx3);line-height:1.7}
+</style>
+</head>
+<body>
+<div id="oc-net" class="oc-net" aria-hidden="true"></div>
+<div class="gnb">
+  <div class="util"><div class="in">
+    <div class="l"><a href="#">WIXON ASSOCIATES INC</a><a href="#">LPSTOCK</a><a href="#">OPUSCLAM COMMUNITY</a></div>
+    <div class="r"><a href="#">CUSTOMER CENTER &rsaquo;</a></div>
+  </div></div>
+  <div class="mast"><div class="in">
+    <a class="logo" href="/home.html"><img src="/assets/logo.png" alt="OPUSCLAM.COM"></a>
+    <nav class="nav"><a href="/home.html">DATABASE</a><a href="#">OC커뮤니티</a><a href="#">정보SPOT</a><a href="#">레슨 : ON</a><a href="#">리쿠르트</a><a href="#">SHOPPING</a></nav>
+    <div class="tools">
+      <a class="school" href="#">학교등록</a>
+      <span class="authlink"><a href="/login.html">로그인</a> <a href="/join.html">회원가입</a></span>
+      <span class="circ" title="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span>
+      <span class="circ theme-toggle" title="테마 전환"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
+      <button class="burger" title="전체메뉴"><span></span><span></span><span></span></button>
+    </div>
+  </div></div>
+</div>
+<main>
+  <div class="mp-wrap">
+    <div class="mp-head">
+      <span class="jtag">MY PAGE</span>
+      <h1>마이페이지</h1>
+    </div>
+    <div class="mp-card" id="mpBody">
+      <div class="mp-msg">불러오는 중…</div>
+    </div>
+  </div>
+</main>
+<footer><p>ⓒ OPUSCLAM &amp; WIXON ASSOCIATES INC. ALL RIGHTS RESERVED. · <a href="/terms.html">서비스약관</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="/data-policy.html">데이터 정책</a></p></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script>
+(function(){
+  var URL="https://ptdxzxkgddvkusamkiol.supabase.co";
+  var KEY="sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu";
+  var TYPE={major:"전공자",industry:"음악관계자",org:"단체·기업",school:"음악학교",general:"일반"};
+  var STATUS={pending:"승인 대기",approved:"승인 완료",rejected:"반려됨"};
+  var QUAL=["major","industry","org","school"];
+  var sb=window.supabase.createClient(URL,KEY);
+  var box=document.getElementById("mpBody");
+  function esc(s){return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+  function fmt(x){ if(!x)return "-"; try{var d=new Date(x);return d.getFullYear()+"."+("0"+(d.getMonth()+1)).slice(-2)+"."+("0"+d.getDate()).slice(-2);}catch(e){return "-";} }
+  function doLogout(){ sb.auth.signOut().then(function(){ location.href="/home.html"; }); }
+
+  function headerLoggedIn(m, session){
+    var al=document.querySelector(".authlink"); if(!al) return;
+    var nm=(m&&(m.name||m.username))||(session.user.email)||"회원";
+    var tl=(m&&TYPE[m.member_type])||"";
+    al.innerHTML='<a href="/mypage.html">'+esc(nm)+'님'+(tl?" ("+tl+")":"")+'</a> <a href="#" id="mpHdrLogout">로그아웃</a>';
+    var lo=document.getElementById("mpHdrLogout");
+    if(lo) lo.addEventListener("click",function(e){e.preventDefault();doLogout();});
+  }
+
+  function render(m, session){
+    var qual = m.status==="approved" && QUAL.indexOf(m.member_type)>=0;
+    var statusCls = m.status||"pending";
+    var html=""
+      +'<div class="mp-badges">'
+      +  '<span class="mp-badge type">'+esc(TYPE[m.member_type]||m.member_type||"회원")+'</span>'
+      +  '<span class="mp-badge '+esc(statusCls)+'">'+esc(STATUS[m.status]||m.status||"-")+'</span>'
+      +'</div>'
+      +'<ul class="mp-list">'
+      +  '<li><span class="k">이름</span><span class="v">'+esc(m.name||"-")+'</span></li>'
+      +  '<li><span class="k">아이디</span><span class="v">'+esc(m.username||"-")+'</span></li>'
+      +  '<li><span class="k">이메일</span><span class="v">'+esc(m.email||"-")+'</span></li>'
+      +  '<li><span class="k">휴대폰</span><span class="v">'+esc(m.phone||"-")+'</span></li>'
+      +  '<li><span class="k">가입일</span><span class="v">'+fmt(m.created_at)+'</span></li>'
+      +'</ul>'
+      +'<div class="mp-actions">'
+      +  (qual?'<a class="mp-btn primary" href="/db/db-write.html">DB 등록 · 보강 하러 가기</a>':'')
+      +  '<button class="mp-btn ghost" id="mpLogout">로그아웃</button>'
+      +'</div>';
+    box.innerHTML=html;
+    var lo=document.getElementById("mpLogout"); if(lo) lo.addEventListener("click",doLogout);
+  }
+
+  sb.auth.getSession().then(function(r){
+    var session=(r.data&&r.data.session)?r.data.session:null;
+    if(!session){
+      box.innerHTML='<div class="mp-msg">로그인이 필요합니다.<br><br><a class="mp-btn primary" href="/login.html">로그인하기</a></div>';
+      return;
+    }
+    sb.from("members").select("*").eq("id",session.user.id).single().then(function(mr){
+      if(mr.error||!mr.data){
+        box.innerHTML='<div class="mp-msg">회원 정보를 찾을 수 없습니다.<br>고객센터로 문의해 주세요.</div>';
+        return;
+      }
+      render(mr.data, session);
+      headerLoggedIn(mr.data, session);
+    });
+  });
+})();
+</script>
+</body>
+</html>
