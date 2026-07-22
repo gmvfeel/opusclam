@@ -1,7 +1,7 @@
 // ============================================================
 // OPUSCLAM 현대음악(modern_composers) 자동 수집기 (v2: 대중/영화 장르 제외)
 // - 소스: 위키데이터 · 대상: 1900년 이후 출생 작곡가(P106=작곡가)
-// - 범위: 국내 전부 + 한국어 위키 등재 작곡가
+// - 범위: 국내는 (대중/영화 직업 제외 후) 전부 · 해외는 클래식 신호(사조 or 클래식 장르) 있는 사람만
 // - 제외: 대중/영화 직업(가수·송라이터·래퍼·프로듀서·DJ·영화음악가) 보유자 + 대중/영화 장르 전용
 // - 원칙: 신규추가 / 빈칸만 보강 / 사람값 보호, 중복방지, 국내 우선 정렬
 // - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
@@ -18,7 +18,8 @@ const KR_QID = 'Q884';
 const CLASS_KW = ['classical','contemporary classical','20th-century classical','21st-century classical','21st century classical','opera','operetta','chamber','orchestral','symphon','choral','art song','lied','avant-garde','experimental','serial','twelve-tone','minimal','modernism','postminimal','sacred','liturgical','concert music','new music','electroacoustic','musique concr','microtonal','spectral','contemporary music','oratorio','cantata'];
 const POPFILM_KW = ['film score','film music','soundtrack','video game','anime','pop music','pop rock','k-pop','synth-pop','dance-pop','electropop',' pop','pop ','rock music','hard rock','punk','metal','indie','hip hop','hip-hop','rap','trap','jazz','blues','rhythm and blues','r&b','soul music','funk','disco','reggae','electronic music','electronic dance','edm','techno','house music','trance','ambient','new-age','new age','country music','folk music','singer-songwriter','musical theatre','musical theater','trot','ballad'];
 
-function baseQuery(constraint) {
+function baseQuery(constraint, requireClassical) {
+  const cls = requireClassical ? '  FILTER( EXISTS { ?item wdt:P135 ?anyMv } || EXISTS { ?item wdt:P136 ?anyG . ?anyG wdt:P279* wd:Q9730 } )\n' : '';
   return `
 SELECT ?item
   (SAMPLE(?nameKo_) AS ?nameKo) (SAMPLE(?nameEn_) AS ?nameEn)
@@ -33,7 +34,7 @@ WHERE {
   ?item wdt:P569 ?birth_ . FILTER(YEAR(?birth_) >= 1900)
   # 대중/영화 직업 제외: 가수·송라이터·래퍼·프로듀서·DJ·영화음악가 + 밴드(기타/베이스/드럼/키보드)·배우
   FILTER NOT EXISTS { ?item wdt:P106 ?exOcc . VALUES ?exOcc { wd:Q177220 wd:Q753110 wd:Q488205 wd:Q2252262 wd:Q183945 wd:Q130857 wd:Q1415090 wd:Q855091 wd:Q584301 wd:Q386854 wd:Q1622272 wd:Q33999 } }
-  ${constraint}
+${cls}  ${constraint}
   OPTIONAL { ?item rdfs:label ?nameKo_. FILTER(LANG(?nameKo_)="ko") }
   OPTIONAL { ?item rdfs:label ?nameEn_. FILTER(LANG(?nameEn_)="en") }
   OPTIONAL { ?item wdt:P570 ?death_. }
@@ -51,8 +52,8 @@ WHERE {
 GROUP BY ?item
 LIMIT 5000`;
 }
-const Q_KR = baseQuery('?item wdt:P27 wd:Q884 .');
-const Q_KO = baseQuery('?koArticle_ schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>.');
+const Q_KR = baseQuery('?item wdt:P27 wd:Q884 .', false);
+const Q_KO = baseQuery('?koArticle_ schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>.', true);
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const val = (b, k) => (b[k] && b[k].value) ? b[k].value : '';
