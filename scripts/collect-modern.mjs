@@ -1,7 +1,7 @@
 // ============================================================
 // OPUSCLAM 현대음악(modern_composers) 자동 수집기 (v2: 대중/영화 장르 제외)
 // - 소스: 위키데이터 · 대상: 1900년 이후 출생 작곡가(P106=작곡가)
-// - 범위: 국내는 (대중/영화 직업 제외 후) 전부 · 해외는 클래식 신호(사조 or 클래식 장르) 있는 사람만
+// - 범위: 국내·해외 동일 — 클래식 신호(사조 P135 or 클래식 장르 P136⊆Q9730) 있는 작곡가만
 // - 제외: 대중/영화 직업(가수·송라이터·래퍼·프로듀서·DJ·영화음악가) 보유자 + 대중/영화 장르 전용
 // - 원칙: 신규추가 / 빈칸만 보강 / 사람값 보호, 중복방지, 국내 우선 정렬
 // - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
@@ -52,7 +52,7 @@ ${cls}  ${constraint}
 GROUP BY ?item
 LIMIT 5000`;
 }
-const Q_KR = baseQuery('?item wdt:P27 wd:Q884 .', false);
+const Q_KR = baseQuery('?item wdt:P27 wd:Q884 .', true);
 const Q_KO = baseQuery('?koArticle_ schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>.', true);
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
