@@ -94,6 +94,24 @@
   #manage .mg-pager button{padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e8e8f2;cursor:pointer;font-size:13px}
   #manage .mg-pager button:disabled{opacity:.35;cursor:default}
   #manage .mg-pginfo{font-size:13px;color:#cfc9e2}
+  #members .mem-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  #members .mem-tab{padding:8px 16px;border:1px solid rgba(255,255,255,.18);border-radius:20px;font-size:13px;font-weight:600;color:#cfc9e2;background:none;cursor:pointer}
+  #members .mem-tab.on{background:var(--violet-2,#7C63B0);color:#fff;border-color:var(--violet-2,#7C63B0)}
+  #members .mem-tab .c{opacity:.7;margin-left:4px;font-size:11.5px}
+  #members .mem-tablewrap{max-height:64vh;overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:10px}
+  #members .mem-table{width:100%;border-collapse:collapse;font-size:13px;min-width:820px}
+  #members .mem-table th{position:sticky;top:0;background:#23233c;color:#cfc9e2;text-align:left;padding:11px 12px;font-weight:700;border-bottom:1px solid rgba(255,255,255,.12);white-space:nowrap;z-index:2}
+  #members .mem-table td{padding:11px 12px;border-top:1px solid rgba(255,255,255,.07);color:#e2e2ee;vertical-align:middle}
+  #members .mem-table .nm{font-weight:700}
+  #members .mem-table .sub{color:#9a9cb0;font-size:12px}
+  #members .mem-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
+  #members .mem-badge.pending{color:#e0b352;border-color:rgba(224,179,82,.45)}
+  #members .mem-badge.approved{color:#6fcf8f;border-color:rgba(111,207,143,.45)}
+  #members .mem-badge.rejected{color:#e08585;border-color:rgba(224,133,133,.45)}
+  #members .mem-act{display:flex;gap:6px;white-space:nowrap}
+  #members .mem-btn{font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;border:1px solid;background:none;font-family:inherit}
+  #members .mem-btn.ok{color:#6fcf8f;border-color:rgba(111,207,143,.5)}
+  #members .mem-btn.no{color:#e08585;border-color:rgba(224,133,133,.5)}
 </style>
 </head>
 <body>
@@ -115,6 +133,7 @@
         <div class="card clickable" id="cardHero"><h3>콘텐츠 · 광고 관리</h3><p>메인 히어로 슬라이드(상단 큰 배너)의 문구·이미지·링크를 수정합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card clickable" id="cardCollect"><h3>데이터 수집</h3><p>위키데이터에서 클래식 작곡가 정보를 자동으로 가져와 인물DB에 채웁니다.</p><span class="go">수집하기 →</span></div>
         <div class="card clickable" id="cardManage"><h3>DB 관리 · 정제</h3><p>음악과 무관한 의심 인물(비음악 키워드·유명 비음악인)을 자동 표시하고, 확인 후 삭제합니다.</p><span class="go">관리하기 →</span></div>
+        <div class="card clickable" id="cardMembers"><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card"><h3>DB 관리</h3><p>인물·단체·공연장 등 7개 데이터베이스의 항목을 직접 추가·수정합니다.</p><span class="soon">준비 중</span></div>
       </div>
     </div>
@@ -185,11 +204,31 @@
     </div>
   </div>
 
+  <div class="view" id="members">
+    <div class="topbar"><img class="logo" src="/assets/logo.png" alt="OPUSCLAM" id="memLogo"><div class="right"><span id="who4"></span><button class="logout" id="logoutBtn4">로그아웃</button></div></div>
+    <div class="body">
+      <button class="back" id="memBack">← 대시보드</button>
+      <h1>회원 관리 · 승인</h1><p class="hi">자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리합니다. 일반 회원은 가입 즉시 이용됩니다.</p>
+      <div class="mem-tabs">
+        <button class="mem-tab on" data-s="pending">승인 대기<span class="c" data-cnt="pending"></span></button>
+        <button class="mem-tab" data-s="approved">승인됨<span class="c" data-cnt="approved"></span></button>
+        <button class="mem-tab" data-s="rejected">반려됨<span class="c" data-cnt="rejected"></span></button>
+        <button class="mem-tab" data-s="">전체<span class="c" data-cnt=""></span></button>
+      </div>
+      <div class="mem-tablewrap">
+        <table class="mem-table">
+          <thead><tr><th>이름</th><th>아이디</th><th>유형</th><th>이메일</th><th>휴대폰</th><th>가입일</th><th>상태</th><th>처리</th></tr></thead>
+          <tbody id="memBody"><tr><td colspan="8" class="loading">불러오는 중…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <script>
     var SUPABASE_URL='https://ptdxzxkgddvkusamkiol.supabase.co';
     var SUPABASE_KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
     var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    var views={login:document.getElementById('loginWrap'),dash:document.getElementById('dash'),hero:document.getElementById('hero'),collect:document.getElementById('collect'),manage:document.getElementById('manage')};
+    var views={login:document.getElementById('loginWrap'),dash:document.getElementById('dash'),hero:document.getElementById('hero'),collect:document.getElementById('collect'),manage:document.getElementById('manage'),members:document.getElementById('members')};
     function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');}
     var mgData=[]; var mgPage=0;
     var MG_NONMUSIC=['정치인','정치가','대통령','국회의원','장관','시장','주지사','영화배우','탤런트','영화감독','드라마','예능','개그맨','코미디언','희극','소설가','시인','만화가','웹툰','축구','야구','농구','배구','골프','테니스','운동선수','물리학자','과학자','수학자','철학자','경제학자','기업인','사업가','최고경영자','아이돌','래퍼','힙합','유튜버','인플루언서','방송인','성우','아나운서','기자','모델'];
@@ -252,7 +291,7 @@
       renderManage();
       alert(ids.length+'명 삭제 + 차단 목록 등록 완료.');
     }
-    function setWho(e){e=e||'';['who','who2','who3'].forEach(function(id){document.getElementById(id).textContent=e;});}
+    function setWho(e){e=e||'';['who','who2','who3','who4'].forEach(function(id){document.getElementById(id).textContent=e;});}
     var msg=document.getElementById('msg'), btn=document.getElementById('loginBtn');
     sb.auth.getSession().then(function(r){if(r.data&&r.data.session){setWho(r.data.session.user.email);show('dash');}else show('login');});
     async function doLogin(){
@@ -266,8 +305,8 @@
     btn.addEventListener('click',doLogin);
     document.getElementById('password').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
     async function logout(){await sb.auth.signOut();document.getElementById('password').value='';show('login');}
-    ['logoutBtn','logoutBtn2','logoutBtn3'].forEach(function(id){document.getElementById(id).addEventListener('click',logout);});
-    ['dashLogo','heroLogo','colLogo'].forEach(function(id){document.getElementById(id).addEventListener('click',function(){show('dash');});});
+    ['logoutBtn','logoutBtn2','logoutBtn3','logoutBtn4'].forEach(function(id){document.getElementById(id).addEventListener('click',logout);});
+    ['dashLogo','heroLogo','colLogo','memLogo'].forEach(function(id){document.getElementById(id).addEventListener('click',function(){show('dash');});});
     document.getElementById('heroBack').addEventListener('click',function(){show('dash');});
     document.getElementById('colBack').addEventListener('click',function(){show('dash');});
     document.getElementById('cardHero').addEventListener('click',function(){show('hero');loadSlides();});
@@ -279,6 +318,51 @@
     document.getElementById('mgPager').addEventListener('click',function(e){var b=e.target.closest('[data-mgpg]'); if(!b||b.disabled)return; var v=parseInt(b.getAttribute('data-mgpg'),10); if(v>=0){mgPage=v; renderManage(); var tw=document.querySelector('#manage .mg-tablewrap'); if(tw)tw.scrollTop=0;}});
     document.getElementById('mgDelBtn').addEventListener('click',mgDelete);
     document.getElementById('mgAll').addEventListener('change',function(){var on=this.checked;document.querySelectorAll('.mg-cb').forEach(function(c){c.checked=on;});});
+
+    // ===== 회원 관리 · 승인 =====
+    var MEM_TYPE={major:'전공자',industry:'음악관계자',org:'단체·기업',school:'음악학교',general:'일반'};
+    var MEM_LABEL={pending:'승인 대기',approved:'승인됨',rejected:'반려됨'};
+    var memCur='pending';
+    function memFmt(x){ if(!x)return '-'; try{var d=new Date(x);return d.getFullYear()+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+('0'+d.getDate()).slice(-2);}catch(e){return '-';} }
+    function memSetActive(){ document.querySelectorAll('#members .mem-tab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-s')===memCur); }); }
+    async function loadMembers(){
+      var body=document.getElementById('memBody'); body.innerHTML='<tr><td colspan="8" class="loading">불러오는 중…</td></tr>';
+      var q=sb.from('members').select('id,username,member_type,status,name,email,phone,created_at').order('created_at',{ascending:false});
+      if(memCur) q=q.eq('status',memCur);
+      var r=await q;
+      if(r.error){ body.innerHTML='<tr><td colspan="8">오류: '+mgEsc(r.error.message)+'</td></tr>'; return; }
+      var rows=r.data||[];
+      if(!rows.length){ body.innerHTML='<tr><td colspan="8" class="loading">해당하는 회원이 없습니다.</td></tr>'; loadMemCounts(); return; }
+      body.innerHTML=rows.map(function(m){
+        var act='';
+        if(m.status!=='approved') act+='<button class="mem-btn ok" data-act="approve" data-id="'+m.id+'">승인</button>';
+        if(m.status!=='rejected') act+='<button class="mem-btn no" data-act="reject" data-id="'+m.id+'">반려</button>';
+        return '<tr><td class="nm">'+mgEsc(m.name||'-')+'</td><td class="sub">'+mgEsc(m.username||'-')+'</td><td>'+(MEM_TYPE[m.member_type]||mgEsc(m.member_type||'-'))+'</td><td class="sub">'+mgEsc(m.email||'-')+'</td><td class="sub">'+mgEsc(m.phone||'-')+'</td><td class="sub">'+memFmt(m.created_at)+'</td><td><span class="mem-badge '+mgEsc(m.status)+'">'+(MEM_LABEL[m.status]||mgEsc(m.status))+'</span></td><td><div class="mem-act">'+(act||'-')+'</div></td></tr>';
+      }).join('');
+      loadMemCounts();
+    }
+    async function loadMemCounts(){
+      var r=await sb.from('members').select('status'); if(r.error)return;
+      var c={pending:0,approved:0,rejected:0}; (r.data||[]).forEach(function(m){if(c[m.status]!=null)c[m.status]++;});
+      var set=function(sel,n){var e=document.querySelector('[data-cnt="'+sel+'"]'); if(e)e.textContent='('+n+')';};
+      set('pending',c.pending);set('approved',c.approved);set('rejected',c.rejected);
+      var tot=document.querySelector('[data-cnt=""]'); if(tot)tot.textContent='('+((r.data||[]).length)+')';
+    }
+    async function memSetStatus(id,to){
+      var r=await sb.from('members').update({status:to}).eq('id',id);
+      if(r.error){ alert('처리 실패: '+r.error.message); return false; } return true;
+    }
+    var _cardMem=document.getElementById('cardMembers');
+    if(_cardMem) _cardMem.addEventListener('click',function(){ show('members'); memCur='pending'; memSetActive(); loadMembers(); });
+    document.getElementById('memBack').addEventListener('click',function(){show('dash');});
+    document.querySelectorAll('#members .mem-tab').forEach(function(b){ b.addEventListener('click',function(){ memCur=b.getAttribute('data-s'); memSetActive(); loadMembers(); }); });
+    document.getElementById('memBody').addEventListener('click', async function(e){
+      var b=e.target.closest('.mem-btn'); if(!b)return;
+      var id=b.getAttribute('data-id'), act=b.getAttribute('data-act'), to=act==='approve'?'approved':'rejected';
+      if(!confirm(act==='approve'?'이 회원을 승인하시겠습니까?':'이 회원을 반려하시겠습니까?'))return;
+      b.disabled=true;b.textContent='처리 중…';
+      var ok=await memSetStatus(id,to); if(ok) loadMembers();
+    });
 
     // ===== 히어로 슬라이드 =====
     var FIELDS=[
