@@ -15,6 +15,52 @@
       });
     }catch(e){}
   }
-  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", injectFooter); }
-  else { injectFooter(); }
+  // ===== 헤더 로그인 상태 반영 (로그인 시 이름/로그아웃으로 교체) =====
+  var SB_URL="https://ptdxzxkgddvkusamkiol.supabase.co";
+  var SB_KEY="sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu";
+  function loadSupabase(cb){
+    if(window.supabase && window.supabase.createClient){ cb(); return; }
+    var s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    s.onload=cb; s.onerror=function(){};
+    document.head.appendChild(s);
+  }
+  function collectAuthLinks(){
+    var login=[], join=[];
+    var els=document.querySelectorAll(".mast-tools .link-txt, .m-actions a");
+    for(var i=0;i<els.length;i++){
+      var t=(els[i].textContent||"").trim();
+      if(t==="로그인") login.push(els[i]);
+      else if(t==="회원가입") join.push(els[i]);
+    }
+    return {login:login, join:join};
+  }
+  function setLoggedOut(links){
+    links.login.forEach(function(a){ a.setAttribute("href","/login.html"); a.onclick=null; });
+    links.join.forEach(function(a){ a.setAttribute("href","/join.html"); a.onclick=null; });
+  }
+  function setLoggedIn(links, name, sb){
+    links.login.forEach(function(a){ a.textContent=name+"님"; a.setAttribute("href","#"); a.onclick=function(e){e.preventDefault();}; });
+    links.join.forEach(function(a){ a.textContent="로그아웃"; a.setAttribute("href","#"); a.onclick=function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); }; });
+  }
+  function updateHeaderAuth(){
+    var links=collectAuthLinks();
+    if(!links.login.length && !links.join.length) return; // 헤더가 없는 페이지
+    loadSupabase(function(){
+      if(!(window.supabase && window.supabase.createClient)) return;
+      var sb=window.supabase.createClient(SB_URL, SB_KEY);
+      sb.auth.getSession().then(function(r){
+        var session=(r.data && r.data.session)?r.data.session:null;
+        if(!session){ setLoggedOut(links); return; }
+        sb.from("members").select("name,username").eq("id",session.user.id).single().then(function(mr){
+          var nm=(mr.data && (mr.data.name||mr.data.username)) || (session.user.email||"회원");
+          setLoggedIn(links, nm, sb);
+        }, function(){ setLoggedIn(links, (session.user.email||"회원"), sb); });
+      });
+    });
+  }
+
+  function ocInit(){ injectFooter(); updateHeaderAuth(); }
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", ocInit); }
+  else { ocInit(); }
 })();
