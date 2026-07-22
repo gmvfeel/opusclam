@@ -2,7 +2,7 @@
 // OPUSCLAM 현대음악(modern_composers) 자동 수집기 (v2: 대중/영화 장르 제외)
 // - 소스: 위키데이터 · 대상: 1900년 이후 출생 작곡가(P106=작곡가)
 // - 범위: 국내 전부 + 한국어 위키 등재 작곡가
-// - 제외: 대중음악·영화음악 등 장르만 있고 클래식 장르가 없는 인물
+// - 제외: 대중/영화 직업(가수·송라이터·래퍼·프로듀서·DJ·영화음악가) 보유자 + 대중/영화 장르 전용
 // - 원칙: 신규추가 / 빈칸만 보강 / 사람값 보호, 중복방지, 국내 우선 정렬
 // - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
 // ============================================================
@@ -31,6 +31,8 @@ SELECT ?item
 WHERE {
   ?item wdt:P106 wd:Q36834 .
   ?item wdt:P569 ?birth_ . FILTER(YEAR(?birth_) >= 1900)
+  # 대중/영화 직업 제외: 가수·송라이터·싱어송라이터·래퍼·음반프로듀서·DJ·영화음악 작곡가
+  FILTER NOT EXISTS { ?item wdt:P106 ?exOcc . VALUES ?exOcc { wd:Q177220 wd:Q753110 wd:Q488205 wd:Q2252262 wd:Q183945 wd:Q130857 wd:Q1415090 } }
   ${constraint}
   OPTIONAL { ?item rdfs:label ?nameKo_. FILTER(LANG(?nameKo_)="ko") }
   OPTIONAL { ?item rdfs:label ?nameEn_. FILTER(LANG(?nameEn_)="en") }
