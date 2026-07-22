@@ -257,3 +257,43 @@
   function init(){ net(); eyes(); guide(); cal(); email(); }
   if(document.readyState!=='loading') init(); else document.addEventListener('DOMContentLoaded', init);
 })();
+
+/* ===== 이미 로그인한 상태로 로그인/가입/찾기 페이지 접근 시 안내 배너 ===== */
+(function(){
+  "use strict";
+  // 배너를 띄울 '비로그인 전용' 페이지들 (완료/결과/마이페이지/재설정은 제외)
+  var GUEST_PAGES = ['/login.html','/join.html','/join-general.html','/join-major.html','/join-industry.html','/join-school.html','/join-consent.html','/find-id.html','/find-pw.html','/join-check.html'];
+  function pageMatch(){
+    var p = location.pathname;
+    for(var i=0;i<GUEST_PAGES.length;i++){ if(p === GUEST_PAGES[i] || p.slice(-GUEST_PAGES[i].length) === GUEST_PAGES[i]) return true; }
+    return false;
+  }
+  function showBanner(name){
+    if(document.getElementById('oc-guest-bar')) return;
+    var bar = document.createElement('div');
+    bar.id = 'oc-guest-bar';
+    bar.setAttribute('style','position:relative;z-index:2;background:var(--tagbg,#f3eefb);border-bottom:1px solid var(--line2,#dedbe4);color:var(--tx,#1a1a2e);padding:12px 20px;text-align:center;font-size:13px;line-height:1.6;');
+    bar.innerHTML = '이미 <strong>'+name+'</strong>님으로 로그인되어 있습니다. '
+      + '<a href="/mypage.html" style="color:var(--navh,#EC7A1C);font-weight:700;text-decoration:underline;margin:0 4px;">마이페이지</a>'
+      + '<a href="#" id="oc-guest-logout" style="color:var(--tx3,#8a8a9a);text-decoration:underline;margin-left:8px;">로그아웃</a>';
+    var gnb = document.querySelector('.gnb');
+    if(gnb && gnb.parentNode) gnb.parentNode.insertBefore(bar, gnb.nextSibling);
+    else document.body.insertBefore(bar, document.body.firstChild);
+    var lo = document.getElementById('oc-guest-logout');
+    if(lo) lo.addEventListener('click', function(e){ e.preventDefault(); if(window.ocAuth && window.ocAuth.logout) window.ocAuth.logout(); });
+  }
+  function check(){
+    if(!pageMatch()) return;
+    if(!window.ocAuth || !window.ocAuth.session) return;
+    window.ocAuth.session().then(function(s){
+      if(!s) return;
+      if(window.ocAuth.myMember){
+        window.ocAuth.myMember().then(function(m){
+          var name = (m && (m.name || m.username)) || (s.user && s.user.email) || '회원';
+          showBanner(name);
+        }, function(){ showBanner('회원'); });
+      } else { showBanner('회원'); }
+    });
+  }
+  if(document.readyState !== 'loading') check(); else document.addEventListener('DOMContentLoaded', check);
+})();
