@@ -1526,7 +1526,8 @@ if('serviceWorker' in navigator){
      var lead=document.querySelector('.pv-lead');if(lead)lead.textContent=desc;
      var bio=document.querySelector('.pv-prose');if(bio)bio.innerHTML='<p>'+esc(desc)+'</p>'+((x.description&&x.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
      var wl=document.querySelector('ul.pv-worklist');if(wl&&x.departments)wl.innerHTML=String(x.departments).split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
-     var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('구분',esc(x.category||''))+fact('소재지',esc(x.location||''))+fact('설립',esc(x.founded||''))+fact('설립구분',esc(x.estab_type||''))+fact('대표 학과',esc(x.departments||''))+fact('저명 동문',esc(x.alumni||''))+fact('대표 특성',esc(x.features||''));
+     var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=(x.category?fact('구분',esc(x.category)):'')+(x.location?fact('소재지',esc(x.location)):'')+(x.founded?fact('설립',esc(x.founded)):'')+(x.estab_type?fact('설립구분',esc(x.estab_type)):'')+(x.departments?fact('대표 학과',esc(x.departments)):'')+(x.alumni?fact('저명 동문',esc(x.alumni)):'')+(x.features?fact('대표 특성',esc(x.features)):'');
+     (function(){document.querySelectorAll('.pv-sec, .pv-block').forEach(function(sec){var h=sec.querySelector('.pv-h');if(h&&/(주요 전공|캠퍼스|갤러리|영상|학과 · 전공 안내|입시|모집|관련 학교)/.test(h.textContent))sec.style.display='none';});})();
      var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
           (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
        var _k=encodeURIComponent((x.name_ko||x.name_en||'').trim());
