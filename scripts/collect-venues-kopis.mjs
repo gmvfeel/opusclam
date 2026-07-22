@@ -132,6 +132,12 @@ async function main() {
       type: v.type || '', location, opened: v.opened || '', seats, link_home,
     };
 
+    // 충실도 컷오프: '비공연장' 시설 제외 + 좌석수 있는 곳만 (신규 기준; 기존 매칭은 보강 유지)
+    const isNonVenue = (v.type || '').indexOf('비공연장') >= 0;
+    const hasSeats = !!(seats && seats.trim());
+    const preMatch = byKopis.get(v.kopis_id) || byName.get(norm(v.name_ko));
+    if (!preMatch && (isNonVenue || !hasSeats)) { skipped++; continue; }
+
     const match = byKopis.get(v.kopis_id) || byName.get(norm(v.name_ko));
     if (match) {
       const patch = {};
@@ -148,6 +154,6 @@ async function main() {
   }
   for (let i = 0; i < toIns.length; i += 100) await sbInsert(toIns.slice(i, i + 100));
 
-  console.log('■ 완료 — 신규추가:', toIns.length, '· 빈칸보강:', updated, '· 변경없음:', skipped, '· 상세오류:', detailErr);
+  console.log('■ 완료 — 신규추가:', toIns.length, '· 빈칸보강:', updated, '· 제외/변경없음:', skipped, '· 상세오류:', detailErr);
 }
 main().catch((e) => { console.error('오류:', e.message); process.exit(1); });
