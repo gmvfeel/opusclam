@@ -7,6 +7,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="/assets/auth.css">
+<style>
+  /* 탭에 따라 폼 배경 구분: 단체·기업 선택 시 연한 색조 */
+  .fbox{transition:background .25s ease}
+  .fbox.org-mode{background:#eef4fc}
+</style>
 </head>
 <body>
 <div class="gnb">
@@ -34,6 +39,7 @@
   function setType(t){ TYPE=t;
     document.querySelectorAll('[data-group]').forEach(function(g){ g.style.display=(g.getAttribute('data-group')===t)?'':'none'; });
     tabs.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-t')===t); });
+    var fbox=document.querySelector('.fbox'); if(fbox) fbox.classList.toggle('org-mode', t==='org');
   }
   tabs.forEach(function(b){ b.addEventListener('click',function(){ setType(b.getAttribute('data-t')); }); });
   setType('industry');
