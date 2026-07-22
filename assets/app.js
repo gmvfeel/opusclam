@@ -45,6 +45,14 @@
     links.login.forEach(function(a){ a.textContent=label; a.setAttribute("href","/mypage.html"); a.onclick=null; });
     links.join.forEach(function(a){ a.textContent="로그아웃"; a.setAttribute("href","#"); a.onclick=function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); }; });
   }
+  function showPendingBanner(){
+    if(document.getElementById("oc-pending-bar")) return;
+    var bar=document.createElement("div");
+    bar.id="oc-pending-bar";
+    bar.setAttribute("style","background:#fdf3e0;border-bottom:1px solid #f0d9a8;color:#9a6512;padding:11px 20px;text-align:center;font-size:13px;line-height:1.6;");
+    bar.innerHTML="🕐 <strong>승인 대기 중</strong>입니다. 관리자 승인 후 데이터 등록·보강 기능을 이용하실 수 있습니다. (자료 열람은 지금도 가능합니다)";
+    document.body.insertBefore(bar, document.body.firstChild);
+  }
   function updateHeaderAuth(){
     var links=collectAuthLinks();
     if(!links.login.length && !links.join.length) return; // 헤더가 없는 페이지
@@ -54,10 +62,11 @@
       sb.auth.getSession().then(function(r){
         var session=(r.data && r.data.session)?r.data.session:null;
         if(!session){ setLoggedOut(links); return; }
-        sb.from("members").select("name,username,member_type").eq("id",session.user.id).single().then(function(mr){
+        sb.from("members").select("name,username,member_type,status").eq("id",session.user.id).single().then(function(mr){
           var d=mr.data||{};
           var nm=(d.name||d.username) || (session.user.email||"회원");
           setLoggedIn(links, nm, OC_TYPE_LABEL[d.member_type]||"", sb);
+          if(d.status==='pending' && ['major','industry','org','school'].indexOf(d.member_type)>=0) showPendingBanner();
         }, function(){ setLoggedIn(links, (session.user.email||"회원"), "", sb); });
       });
     });
