@@ -111,6 +111,14 @@
   #members .mem-badge.approved{color:#6fcf8f;border-color:rgba(111,207,143,.45)}
   #members .mem-badge.rejected{color:#e08585;border-color:rgba(224,133,133,.45)}
   #members .mem-badge.withdrawn{color:#9a9cb0;border-color:rgba(255,255,255,.22)}
+  /* ===== 대시보드 회원 통계 ===== */
+  #dash .dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:12px}
+  #dash .dstat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px 18px}
+  #dash .dstat .n{font-size:26px;font-weight:800;color:#fff;line-height:1}
+  #dash .dstat .l{font-size:12px;color:#9a9cb0;margin-top:7px}
+  #dash .dstat.alert .n{color:#e0b352}
+  #dash .dash-types{display:flex;gap:18px;flex-wrap:wrap;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 18px;margin-bottom:24px;font-size:13px;color:#cfc9e2}
+  #dash .dash-types b{color:#fff;margin-left:5px}
   #members .mem-act{display:flex;gap:6px;white-space:nowrap}
   #members .mem-btn{font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;border:1px solid;background:none;font-family:inherit}
   #members .mem-btn.ok{color:#6fcf8f;border-color:rgba(111,207,143,.5)}
@@ -180,6 +188,15 @@
     <div class="topbar"><img class="logo" src="/assets/logo.png" alt="OPUSCLAM" id="dashLogo"><div class="right"><span id="who"></span><button class="logout" id="logoutBtn">로그아웃</button></div></div>
     <div class="body">
       <h1>관리자 대시보드</h1><p class="hi">환영합니다. 여기서 오퍼스클램의 콘텐츠와 데이터를 관리합니다.</p>
+      <div class="dash-stats" id="dashStats">
+        <div class="dstat"><div class="n" data-st="total">-</div><div class="l">전체 회원</div></div>
+        <div class="dstat alert"><div class="n" data-st="pending">-</div><div class="l">승인 대기</div></div>
+        <div class="dstat"><div class="n" data-st="today">-</div><div class="l">오늘 가입</div></div>
+        <div class="dstat"><div class="n" data-st="withdrawn">-</div><div class="l">탈퇴</div></div>
+      </div>
+      <div class="dash-types" id="dashTypes">
+        <span>전공자<b data-ty="major">-</b></span><span>음악관계자<b data-ty="industry">-</b></span><span>단체·기업<b data-ty="org">-</b></span><span>음악학교<b data-ty="school">-</b></span><span>일반<b data-ty="general">-</b></span>
+      </div>
       <div class="cards">
         <div class="card clickable" id="cardHero"><h3>콘텐츠 · 광고 관리</h3><p>메인 히어로 슬라이드(상단 큰 배너)의 문구·이미지·링크를 수정합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card clickable" id="cardCollect"><h3>데이터 수집</h3><p>위키데이터에서 클래식 작곡가 정보를 자동으로 가져와 인물DB에 채웁니다.</p><span class="go">수집하기 →</span></div>
@@ -300,7 +317,22 @@
     var SUPABASE_KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
     var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     var views={login:document.getElementById('loginWrap'),dash:document.getElementById('dash'),hero:document.getElementById('hero'),collect:document.getElementById('collect'),manage:document.getElementById('manage'),members:document.getElementById('members'),review:document.getElementById('review')};
-    function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');if(v==='dash'&&typeof updateDashBadges==='function')updateDashBadges();}
+    function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');if(v==='dash'){if(typeof updateDashBadges==='function')updateDashBadges();if(typeof loadDashStats==='function')loadDashStats();}}
+    async function loadDashStats(){
+      var r=await sb.from('members').select('status,member_type,created_at'); if(r.error)return;
+      var rows=r.data||[];
+      var d=new Date(); var ymd=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+      var st={total:rows.length,pending:0,today:0,withdrawn:0};
+      var ty={major:0,industry:0,org:0,school:0,general:0};
+      rows.forEach(function(m){
+        if(m.status==='pending')st.pending++;
+        if(m.status==='withdrawn')st.withdrawn++;
+        if(m.created_at && String(m.created_at).slice(0,10)===ymd)st.today++;
+        if(ty[m.member_type]!=null)ty[m.member_type]++;
+      });
+      var k; for(k in st){var e=document.querySelector('[data-st="'+k+'"]'); if(e)e.textContent=st[k];}
+      for(k in ty){var e2=document.querySelector('[data-ty="'+k+'"]'); if(e2)e2.textContent=ty[k];}
+    }
     function setBadge(id,n){var e=document.getElementById(id);if(!e)return;if(n>0){e.textContent=n>99?'99+':n;e.classList.add('on');}else{e.classList.remove('on');}}
     async function updateDashBadges(){
       try{var m=await sb.from('members').select('id',{count:'exact',head:true}).eq('status','pending');setBadge('badgeMembers',m.count||0);}catch(e){}
