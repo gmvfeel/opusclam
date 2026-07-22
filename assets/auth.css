@@ -60,7 +60,7 @@ main{width:100%;flex:1}
 .psub{color:var(--tx3);font-size:13.5px;margin-bottom:28px}
 .ptitle .req-note{float:right;font-size:12px;color:var(--tx3);font-weight:500;margin-top:10px}
 /* 폼 카드 */
-.fbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:36px 34px}
+.fbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:36px 34px;box-shadow:0 6px 18px rgba(40,40,70,.12)}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
 .fg{margin-bottom:18px}.fg.full{grid-column:1/-1}
 label.fl{display:block;font-size:11.5px;font-weight:600;color:var(--tx2);letter-spacing:.4px;margin-bottom:8px;text-transform:uppercase}
@@ -160,7 +160,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 @media(max-width:540px){.jtypes{grid-template-columns:1fr}.jtype{border-right:0;border-bottom:1px solid var(--line)}}
 /* ===== 동의 (join-consent.html) ===== */
 .ctitle{font-size:20px;font-weight:700;color:var(--h1);text-align:center;margin-bottom:30px}
-.tbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin-bottom:14px}
+.tbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin-bottom:14px;box-shadow:0 5px 16px rgba(40,40,70,.11)}
 .tbox h4{font-size:13.5px;font-weight:700;color:var(--tx);margin-bottom:12px}.tbox h4 .req{color:var(--tx2);font-weight:600;font-size:12px}
 .terms{height:150px;overflow:auto;font-size:12.5px;color:var(--tx2);line-height:1.8;padding-right:8px}
 .agree{display:flex;align-items:center;gap:9px;margin-top:14px;font-size:13px;color:var(--tx);cursor:pointer}
@@ -213,3 +213,5 @@ footer a{color:var(--tx4)}
 .oc-email .oc-em-sel{flex:0 0 130px}
 .oc-email .oc-em-at{color:var(--tx3);flex:0 0 auto;font-size:14px}
 @media(max-width:520px){.oc-email{flex-wrap:wrap}.oc-email .oc-em-sel{flex:1 0 100%}}
+[data-theme="dark"] .fbox{box-shadow:0 6px 20px rgba(0,0,0,.55)}
+[data-theme="dark"] .tbox{box-shadow:0 5px 17px rgba(0,0,0,.5)}
