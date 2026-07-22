@@ -138,8 +138,51 @@ const FILL_COLS = ['name_en', 'school_style', 'nationality', 'nat_code', 'life',
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const strip = (r) => { const o = { ...r }; Object.keys(o).forEach(k => { if (k[0] === '_') delete o[k]; }); return o; };
 
+async function reverseWorks(qids) {
+  // 대표작: 역방향 P86(이 작곡가가 작곡한 작품) 중 저명한 것(sitelinks>8)
+  const out = {}; const CH = 40;
+  for (let i = 0; i < qids.length; i += CH) {
+    const chunk = qids.slice(i, i + CH).map(q => 'wd:' + q).join(' ');
+    const q = 'SELECT ?item (GROUP_CONCAT(DISTINCT ?wL; separator=", ") AS ?works) WHERE {'
+      + ' VALUES ?item { ' + chunk + ' }'
+      + ' ?work wdt:P86 ?item. ?work wikibase:sitelinks ?sl. FILTER(?sl > 8)'
+      + ' OPTIONAL { ?work rdfs:label ?wKo. FILTER(LANG(?wKo)="ko") }'
+      + ' OPTIONAL { ?work rdfs:label ?wEn. FILTER(LANG(?wEn)="en") }'
+      + ' BIND(COALESCE(?wKo,?wEn) AS ?wL) FILTER(BOUND(?wL))'
+      + ' } GROUP BY ?item';
+    let rows = [];
+    try { rows = await sparql(q); } catch (e) { console.log('    (대표작 배치 오류, 계속):', e.message); }
+    rows.forEach(b => { const id = qidOf(val(b, 'item')); const w = val(b, 'works'); if (w) out[id] = w.split(', ').filter(Boolean).slice(0, 3).join(', '); });
+    await sleep(1200);
+  }
+  return out;
+}
+
+function richness(r) {
+  let sc = 0;
+  if (r.works && String(r.works).trim()) sc += 3;
+  if (r.lineage && String(r.lineage).trim()) sc += 2;
+  if (r.school_style && String(r.school_style).trim()) sc += 2;
+  if (r.image_url && String(r.image_url).trim()) sc += 1;
+  if (r.nat_code && String(r.nat_code).trim()) sc += 1;
+  if (r.life && String(r.life).trim()) sc += 1;
+  if (r.nationality && String(r.nationality).trim()) sc += 1;
+  if (r.link_wiki && String(r.link_wiki).trim()) sc += 1;
+  if (r.source && r.source !== 'auto') sc += 6; // 정식/회원 데이터 우선
+  return sc;
+}
+
+async function rerank() {
+  const rows = await sbGet('modern_composers?select=id,source,works,lineage,school_style,image_url,nat_code,life,nationality,link_wiki,sort_no');
+  // 충실도 오름차순 → 빈약한 항목이 낮은 sort_no(뒤), 충실한 항목이 높은 sort_no(앞)
+  rows.sort((a, b) => richness(a) - richness(b));
+  let n = 0, done = 0;
+  for (const r of rows) { n++; if (r.sort_no !== n) { await sbUpdate(r.id, { sort_no: n }); done++; } }
+  console.log('■ 재정렬(빈약한 항목 뒤로):', rows.length, '행 · sort_no 갱신', done);
+}
+
 async function main() {
-  console.log('■ 현대음악 수집 시작(v2)', new Date().toISOString());
+  console.log('■ 현대음악 수집 시작(v3)', new Date().toISOString());
   const collected = new Map();
   for (const [label, q] of [['국내 국적', Q_KR], ['한국어 등재', Q_KO]]) {
     console.log('  · 위키데이터 조회:', label);
@@ -150,23 +193,30 @@ async function main() {
   }
   console.log('■ 수집(고유, 대중/영화 제외 후):', collected.size, '명');
 
+  const allQids = [...collected.keys()];
+  console.log('  · 대표작(작곡 작품) 역방향 보강 중…', allQids.length, '명');
+  const rw = await reverseWorks(allQids);
+  let wc = 0;
+  for (const [qid, row] of collected) { if (rw[qid]) { row.works = rw[qid]; wc++; } }
+  console.log('    → 대표작 보강', wc, '명');
+
   const existing = await sbGet('modern_composers?select=id,wikidata_id,name_ko,name_en,school_style,nationality,nat_code,life,works,lineage,active_period,image_url,link_wiki,sort_no');
   const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
   for (const r of existing) { if (r.wikidata_id) byWid.set(r.wikidata_id, r); if (r.name_ko) nameSet.add(norm(r.name_ko)); if (typeof r.sort_no === 'number' && r.sort_no > maxSort) maxSort = r.sort_no; }
   console.log('■ 기존:', existing.length, '명');
 
-  const insFore = [], insDom = []; let updated = 0, skipped = 0, dupName = 0;
+  const toIns = []; let updated = 0, skipped = 0, dupName = 0;
   for (const row of collected.values()) {
     const cur = byWid.get(row.wikidata_id);
     if (cur) { const patch = {}; for (const k of FILL_COLS) if (isEmpty(cur[k]) && !isEmpty(row[k])) patch[k] = row[k]; if (Object.keys(patch).length) { await sbUpdate(cur.id, patch); updated++; } else skipped++; continue; }
     if (nameSet.has(norm(row.name_ko))) { dupName++; continue; }
     nameSet.add(norm(row.name_ko));
-    (row._domestic ? insDom : insFore).push(row);
+    toIns.push(Object.assign(strip(row), { sort_no: ++maxSort }));
   }
-  const ordered = [...insFore, ...insDom].map(r => { const o = strip(r); o.sort_no = ++maxSort; return o; });
-  for (let i = 0; i < ordered.length; i += 100) await sbInsert(ordered.slice(i, i + 100));
+  for (let i = 0; i < toIns.length; i += 100) await sbInsert(toIns.slice(i, i + 100));
+  console.log('■ 신규추가:', toIns.length, '· 빈칸보강:', updated, '· 변경없음:', skipped, '· 이름중복스킵:', dupName);
 
-  console.log('■ 완료 — 신규추가:', ordered.length, '(국내', insDom.length, '· 해외', insFore.length, ')',
-              '· 빈칸보강:', updated, '· 변경없음:', skipped, '· 이름중복스킵:', dupName);
+  await rerank();
+  console.log('■ 완료');
 }
 main().catch((e) => { console.error('오류:', e.message); process.exit(1); });
