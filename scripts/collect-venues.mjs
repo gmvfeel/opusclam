@@ -115,7 +115,7 @@ function substanceCount(r) {
   return c;
 }
 const bioOK = (r) => (r.description || '').trim().length >= 150;
-function keep(r) { return bioOK(r) || substanceCount(r) >= 2; }
+function keep(r) { return bioOK(r) || substanceCount(r) >= 3; }
 function richness(r) {
   let sc = 0;
   if ((r.description || '').trim().length >= 150) sc += 2;
@@ -139,8 +139,22 @@ const FILL_COLS = ['name_en', 'type', 'location', 'opened', 'seats', 'operator',
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const strip = (r) => { const o = { ...r }; Object.keys(o).forEach(k => { if (k[0] === '_') delete o[k]; }); return o; };
 
+async function sbGetAll(table, select) {
+  // Supabase 1000행 제한 우회: Range 헤더로 전체 페이지 읽기
+  const out = []; const STEP = 1000; let from = 0;
+  while (true) {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select,
+      { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
+    if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
+    const batch = await r.json();
+    out.push(...batch);
+    if (batch.length < STEP) break;
+    from += STEP;
+  }
+  return out;
+}
 async function rerank() {
-  const rows = await sbGet('venues?select=id,source,description,resident,operator,seats,opened,link_home,logo_url,location,sort_no');
+  const rows = await sbGetAll('venues', 'id,source,description,resident,operator,seats,opened,link_home,logo_url,location,sort_no');
   rows.sort((a, b) => richness(a) - richness(b));
   let n = 0, done = 0;
   for (const r of rows) { n++; if (r.sort_no !== n) { await sbUpdate(r.id, { sort_no: n }); done++; } }
