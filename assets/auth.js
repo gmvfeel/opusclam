@@ -59,6 +59,8 @@
       }
       var r = await c.auth.signInWithPassword({ email: email, password: password });
       if(r.error) return { ok:false, msg:'아이디 또는 비밀번호를 확인해 주세요.' };
+      var me = await c.from('members').select('status').eq('id', r.data.user.id).single();
+      if(me && me.data && me.data.status === 'withdrawn'){ await c.auth.signOut(); return { ok:false, msg:'탈퇴한 계정입니다. 재가입하시거나 고객센터로 문의해 주세요.' }; }
       return { ok:true };
     },
 
@@ -134,6 +136,15 @@
       var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
       var r = await c.auth.signInWithOtp({ email: email, options: { shouldCreateUser:false, emailRedirectTo: location.origin + (redirectPath || '/mypage.html') } });
       if(r.error) return { ok:false, msg: r.error.message };
+      return { ok:true };
+    },
+
+    /* 회원 탈퇴: 본인 계정을 '탈퇴' 상태로 표시하고 로그아웃 */
+    withdraw: async function(){
+      var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
+      var r = await c.rpc('withdraw_me');
+      if(r.error) return { ok:false, msg: r.error.message };
+      await c.auth.signOut();
       return { ok:true };
     }
   };

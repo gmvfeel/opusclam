@@ -108,7 +108,8 @@
       +  (qual?'<a class="mp-btn primary" href="/db/db-write.html">DB 등록 · 보강 하러 가기</a>':'')
       +  (isEmail?'<a class="mp-btn ghost" href="/change-password.html">비밀번호 변경</a>':'')
       +  '<button class="mp-btn ghost" id="mpLogout">로그아웃</button>'
-      +'</div>';
+      +'</div>'
+      +'<div style="text-align:center;margin-top:18px"><a href="/withdraw.html" style="font-size:12px;color:var(--tx3);text-decoration:underline">회원 탈퇴</a></div>';
     box.innerHTML=html;
     var lo=document.getElementById("mpLogout"); if(lo) lo.addEventListener("click",doLogout);
   }
