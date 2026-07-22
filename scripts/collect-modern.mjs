@@ -28,6 +28,11 @@ SELECT ?item
   (SAMPLE(?movementKo_) AS ?movementKo) (SAMPLE(?movementEn_) AS ?movementEn)
   (SAMPLE(?image_) AS ?image)
   (SAMPLE(?koArticle_) AS ?koArticle) (SAMPLE(?enArticle_) AS ?enArticle)
+  (SAMPLE(?natCode_) AS ?natCode)
+  (GROUP_CONCAT(DISTINCT ?workKo_; separator=", ") AS ?worksKo)
+  (GROUP_CONCAT(DISTINCT ?workEn_; separator=", ") AS ?worksEn)
+  (GROUP_CONCAT(DISTINCT ?teacherKo_; separator=", ") AS ?teachersKo)
+  (GROUP_CONCAT(DISTINCT ?teacherEn_; separator=", ") AS ?teachersEn)
   (GROUP_CONCAT(DISTINCT ?genreEn_; separator=" | ") AS ?genres)
 WHERE {
   ?item wdt:P106 wd:Q36834 .
@@ -40,10 +45,17 @@ ${cls}  ${constraint}
   OPTIONAL { ?item wdt:P570 ?death_. }
   OPTIONAL { ?item wdt:P27 ?country_.
     OPTIONAL { ?country_ rdfs:label ?countryKo_. FILTER(LANG(?countryKo_)="ko") }
-    OPTIONAL { ?country_ rdfs:label ?countryEn_. FILTER(LANG(?countryEn_)="en") } }
+    OPTIONAL { ?country_ rdfs:label ?countryEn_. FILTER(LANG(?countryEn_)="en") }
+    OPTIONAL { ?country_ wdt:P297 ?natCode_. } }
   OPTIONAL { ?item wdt:P135 ?movement_.
     OPTIONAL { ?movement_ rdfs:label ?movementKo_. FILTER(LANG(?movementKo_)="ko") }
     OPTIONAL { ?movement_ rdfs:label ?movementEn_. FILTER(LANG(?movementEn_)="en") } }
+  OPTIONAL { ?item wdt:P800 ?work_.
+    OPTIONAL { ?work_ rdfs:label ?workKo_. FILTER(LANG(?workKo_)="ko") }
+    OPTIONAL { ?work_ rdfs:label ?workEn_. FILTER(LANG(?workEn_)="en") } }
+  OPTIONAL { ?item wdt:P1066 ?teacher_.
+    OPTIONAL { ?teacher_ rdfs:label ?teacherKo_. FILTER(LANG(?teacherKo_)="ko") }
+    OPTIONAL { ?teacher_ rdfs:label ?teacherEn_. FILTER(LANG(?teacherEn_)="en") } }
   OPTIONAL { ?item wdt:P136 ?genre_. ?genre_ rdfs:label ?genreEn_. FILTER(LANG(?genreEn_)="en") }
   OPTIONAL { ?item wdt:P18 ?image_. }
   OPTIONAL { ?koArticle_ schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>. }
@@ -91,12 +103,16 @@ function toRow(b) {
   const life = by ? (by + '–' + (dy || '')) : '';
   const nationality = val(b, 'countryKo') || val(b, 'countryEn') || '';
   const school_style = val(b, 'movementKo') || val(b, 'movementEn') || '';
+  const cap3 = (t) => t ? t.split(', ').filter(Boolean).slice(0, 3).join(', ') : '';
+  const works = cap3(val(b, 'worksKo') || val(b, 'worksEn'));
+  const lineage = cap3(val(b, 'teachersKo') || val(b, 'teachersEn'));
+  const nat_code = (val(b, 'natCode') || '').toUpperCase();
   const byNum = parseInt(by, 10);
   const active_period = byNum >= 2000 ? '21세기' : (byNum >= 1900 ? '20세기' : '');
   return {
     wikidata_id: qidOf(val(b, 'item')),
     name_ko, name_en: nameEn || '',
-    school_style, nationality, life, active_period,
+    school_style, nationality, nat_code, life, works, lineage, active_period,
     image_url: val(b, 'image') || '',
     link_wiki: val(b, 'koArticle') || val(b, 'enArticle') || '',
     source: 'auto',
@@ -118,7 +134,7 @@ async function sbGet(p) { const r = await fetch(SUPABASE_URL + '/rest/v1/' + p, 
 async function sbInsert(rows) { if (!rows.length) return; const r = await fetch(SUPABASE_URL + '/rest/v1/modern_composers', { method: 'POST', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(rows) }); if (!r.ok) throw new Error('INSERT ' + r.status + ' ' + await r.text()); }
 async function sbUpdate(id, patch) { const r = await fetch(SUPABASE_URL + '/rest/v1/modern_composers?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(patch) }); if (!r.ok) throw new Error('UPDATE ' + r.status + ' ' + await r.text()); }
 
-const FILL_COLS = ['name_en', 'school_style', 'nationality', 'life', 'active_period', 'image_url', 'link_wiki'];
+const FILL_COLS = ['name_en', 'school_style', 'nationality', 'nat_code', 'life', 'works', 'lineage', 'active_period', 'image_url', 'link_wiki'];
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const strip = (r) => { const o = { ...r }; Object.keys(o).forEach(k => { if (k[0] === '_') delete o[k]; }); return o; };
 
@@ -134,7 +150,7 @@ async function main() {
   }
   console.log('■ 수집(고유, 대중/영화 제외 후):', collected.size, '명');
 
-  const existing = await sbGet('modern_composers?select=id,wikidata_id,name_ko,name_en,school_style,nationality,life,active_period,image_url,link_wiki,sort_no');
+  const existing = await sbGet('modern_composers?select=id,wikidata_id,name_ko,name_en,school_style,nationality,nat_code,life,works,lineage,active_period,image_url,link_wiki,sort_no');
   const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
   for (const r of existing) { if (r.wikidata_id) byWid.set(r.wikidata_id, r); if (r.name_ko) nameSet.add(norm(r.name_ko)); if (typeof r.sort_no === 'number' && r.sort_no > maxSort) maxSort = r.sort_no; }
   console.log('■ 기존:', existing.length, '명');
