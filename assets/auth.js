@@ -174,7 +174,10 @@
     }
     if(common.password && common.password !== common.password2) return { ok:false, msg:'비밀번호가 일치하지 않습니다.' };
     delete common.password2;
-    if(!common.name && extra.company) common.name = extra.company;
+    if(!common.name){
+      if(extra.company) common.name = extra.company;             // 단체·기업 → 단체명
+      else if(extra.school_name) common.name = extra.school_name; // 음악학교 → 학교명
+    }
     return await ocAuth.signup(Object.assign({ type:type, extra:extra }, common));
   };
 
