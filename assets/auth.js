@@ -297,3 +297,30 @@
   }
   if(document.readyState !== 'loading') check(); else document.addEventListener('DOMContentLoaded', check);
 })();
+
+/* ===== 회원 페이지 헤더(.authlink) 로그인 상태 반영 ===== */
+(function(){
+  "use strict";
+  var TYPE = {major:'전공자',industry:'음악관계자',org:'단체·기업',school:'음악학교',general:'일반'};
+  function esc(str){ var d=document.createElement('div'); d.textContent=(str==null?'':String(str)); return d.innerHTML; }
+  function updateAuthlink(){
+    var al = document.querySelector('.authlink');
+    if(!al || !window.ocAuth || !window.ocAuth.session) return;
+    window.ocAuth.session().then(function(s){
+      if(!s) return; // 비로그인: 기존 '로그인 / 회원가입' 그대로 둠
+      function paint(name, typeLabel){
+        al.innerHTML = '<a href="/mypage.html">'+esc(name)+'님'+(typeLabel?' ('+esc(typeLabel)+')':'')+'</a> '
+          + '<a href="#" id="oc-hdr-logout">로그아웃</a>';
+        var lo = document.getElementById('oc-hdr-logout');
+        if(lo) lo.addEventListener('click', function(e){ e.preventDefault(); if(window.ocAuth.logout) window.ocAuth.logout(); });
+      }
+      if(window.ocAuth.myMember){
+        window.ocAuth.myMember().then(function(m){
+          var name = (m && (m.name || m.username)) || (s.user && s.user.email) || '회원';
+          paint(name, (m && TYPE[m.member_type]) || '');
+        }, function(){ paint('회원',''); });
+      } else { paint('회원',''); }
+    });
+  }
+  if(document.readyState !== 'loading') updateAuthlink(); else document.addEventListener('DOMContentLoaded', updateAuthlink);
+})();
