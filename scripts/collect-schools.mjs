@@ -57,28 +57,32 @@ async function sparql(query, tries = 3) {
   }
   return [];
 }
-async function wikiSummary(host, title) {
-  if (!title) return '';
+async function wikiFetch(host, title) {
+  // 위키백과 본문(약 1800자) + 대표 이미지(썸네일)를 한 번에
+  if (!title) return { text: '', image: '' };
+  const u = 'https://' + host + '/w/api.php?format=json&action=query&prop=extracts%7Cpageimages'
+    + '&explaintext=1&exchars=1800&piprop=thumbnail&pithumbsize=480&redirects=1&titles=' + title;
   try {
-    const r = await fetch('https://' + host + '/api/rest_v1/page/summary/' + title, { headers: { 'User-Agent': UA } });
-    if (!r.ok) return '';
+    const r = await fetch(u, { headers: { 'User-Agent': UA } });
+    if (!r.ok) return { text: '', image: '' };
     const j = await r.json();
-    return (j.extract || '').trim();
-  } catch (e) { return ''; }
+    const pages = j && j.query && j.query.pages;
+    if (!pages) return { text: '', image: '' };
+    const pg = Object.values(pages)[0] || {};
+    return { text: (pg.extract || '').trim(), image: (pg.thumbnail && pg.thumbnail.source) || '' };
+  } catch (e) { return { text: '', image: '' }; }
 }
-async function wikiExtract(koUrl, enUrl) {
+async function wikiEnrich(koUrl, enUrl) {
   // 한국어 위키 우선, 없으면 영어 위키
   if (koUrl && koUrl.indexOf('ko.wikipedia.org') >= 0) {
     const t = koUrl.split('/wiki/')[1] || '';
-    const ko = await wikiSummary('ko.wikipedia.org', t);
-    if (ko) return ko;
+    if (t) { const w = await wikiFetch('ko.wikipedia.org', t); if (w.text || w.image) return w; }
   }
   if (enUrl && enUrl.indexOf('en.wikipedia.org') >= 0) {
     const t = enUrl.split('/wiki/')[1] || '';
-    const en = await wikiSummary('en.wikipedia.org', t);
-    if (en) return en;
+    if (t) { const w = await wikiFetch('en.wikipedia.org', t); return w; }
   }
-  return '';
+  return { text: '', image: '' };
 }
 async function reverseAlumni(qids) {
   // 저명 동문: 역방향 P69(이 학교에서 교육받은 사람) 중 저명한 이(sitelinks>10)
@@ -199,10 +203,15 @@ async function main() {
   console.log('    → 저명 동문 보강', ac, '곳');
 
   const withWiki = [...collected.values()].filter(r => r._koWiki || r._enWiki);
-  console.log('  · 위키백과 소개 보강 중(한국어 우선, 없으면 영어)…', withWiki.length, '곳');
-  let bc = 0;
-  for (const r of withWiki) { const ex = await wikiExtract(r._koWiki, r._enWiki); if (ex) { r.description = ex.slice(0, 700); bc++; } await sleep(120); }
-  console.log('    → 소개 보강', bc, '곳');
+  console.log('  · 위키백과 본문·대표이미지 보강 중(한국어 우선, 없으면 영어)…', withWiki.length, '곳');
+  let bc = 0, ic = 0;
+  for (const r of withWiki) {
+    const w = await wikiEnrich(r._koWiki, r._enWiki);
+    if (w.text) { r.description = w.text.slice(0, 1200); bc++; }
+    if (w.image && !r.logo_url) { r.logo_url = w.image; ic++; }
+    await sleep(120);
+  }
+  console.log('    → 소개 보강', bc, '곳 · 대표이미지 보강', ic, '곳');
 
   const kept = [...collected.values()].filter(keep);
   console.log('■ 충실도 통과:', kept.length, '곳 (제외', collected.size - kept.length, ')');
