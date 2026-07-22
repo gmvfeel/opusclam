@@ -20,7 +20,7 @@ const CLASSES = [
 
 function buildQuery(anchor) {
   return `
-SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inception ?image ?website ?koArticle ?enArticle WHERE {
+SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inception ?image ?logo ?website ?koArticle ?enArticle WHERE {
   ?item wdt:P31/wdt:P279* wd:${anchor} .
   OPTIONAL { ?item rdfs:label ?nameKo. FILTER(LANG(?nameKo)="ko") }
   OPTIONAL { ?item rdfs:label ?nameEn. FILTER(LANG(?nameEn)="en") }
@@ -32,6 +32,7 @@ SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inc
     OPTIONAL { ?city rdfs:label ?cityKo. FILTER(LANG(?cityKo)="ko") }
     OPTIONAL { ?city rdfs:label ?cityEn. FILTER(LANG(?cityEn)="en") } }
   OPTIONAL { ?item wdt:P18 ?image. }
+  OPTIONAL { ?item wdt:P154 ?logo. }
   OPTIONAL { ?item wdt:P856 ?website. }
   OPTIONAL { ?koArticle schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>. }
   OPTIONAL { ?enArticle schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
@@ -56,16 +57,28 @@ async function sparql(query, tries = 3) {
   }
   return [];
 }
-async function wikiExtract(url) {
-  if (!url || url.indexOf('ko.wikipedia.org') < 0) return '';
-  const title = (url.split('/wiki/')[1] || '');
+async function wikiSummary(host, title) {
   if (!title) return '';
   try {
-    const r = await fetch('https://ko.wikipedia.org/api/rest_v1/page/summary/' + title, { headers: { 'User-Agent': UA } });
+    const r = await fetch('https://' + host + '/api/rest_v1/page/summary/' + title, { headers: { 'User-Agent': UA } });
     if (!r.ok) return '';
     const j = await r.json();
     return (j.extract || '').trim();
   } catch (e) { return ''; }
+}
+async function wikiExtract(koUrl, enUrl) {
+  // 한국어 위키 우선, 없으면 영어 위키
+  if (koUrl && koUrl.indexOf('ko.wikipedia.org') >= 0) {
+    const t = koUrl.split('/wiki/')[1] || '';
+    const ko = await wikiSummary('ko.wikipedia.org', t);
+    if (ko) return ko;
+  }
+  if (enUrl && enUrl.indexOf('en.wikipedia.org') >= 0) {
+    const t = enUrl.split('/wiki/')[1] || '';
+    const en = await wikiSummary('en.wikipedia.org', t);
+    if (en) return en;
+  }
+  return '';
 }
 async function reverseAlumni(qids) {
   // 저명 동문: 역방향 P69(이 학교에서 교육받은 사람) 중 저명한 이(sitelinks>10)
@@ -100,10 +113,13 @@ function toRow(b, cat) {
     name_ko, name_en: nameEn || '',
     category: cat, location, founded,
     alumni: '',
-    logo_url: val(b, 'image') || '',
+    logo_url: val(b, 'image') || val(b, 'logo') || '',
     link_home: val(b, 'website') || '',
     link_wiki: val(b, 'koArticle') || val(b, 'enArticle') || '',
+    link_video: 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name_ko),
     description: '',
+    _koWiki: val(b, 'koArticle') || '',
+    _enWiki: val(b, 'enArticle') || '',
     source: 'auto',
     _domestic: qidOf(val(b, 'country')) === KR_QID || country === '대한민국' || country === 'South Korea',
   };
@@ -151,7 +167,7 @@ async function sbGetAll(table, select) {
 async function sbInsert(rows) { if (!rows.length) return; const r = await fetch(SUPABASE_URL + '/rest/v1/schools', { method: 'POST', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(rows) }); if (!r.ok) throw new Error('INSERT ' + r.status + ' ' + await r.text()); }
 async function sbUpdate(id, patch) { const r = await fetch(SUPABASE_URL + '/rest/v1/schools?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(patch) }); if (!r.ok) throw new Error('UPDATE ' + r.status + ' ' + await r.text()); }
 
-const FILL_COLS = ['name_en', 'category', 'location', 'founded', 'alumni', 'logo_url', 'link_home', 'link_wiki', 'description'];
+const FILL_COLS = ['name_en', 'category', 'location', 'founded', 'alumni', 'logo_url', 'link_home', 'link_wiki', 'link_video', 'description'];
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const strip = (r) => { const o = { ...r }; Object.keys(o).forEach(k => { if (k[0] === '_') delete o[k]; }); return o; };
 
@@ -178,12 +194,14 @@ async function main() {
   const allQids = [...collected.keys()];
   console.log('  · 저명 동문 역방향 보강 중…');
   const al = await reverseAlumni(allQids);
-  for (const [qid, row] of collected) { if (al[qid]) row.alumni = al[qid]; }
+  let ac = 0;
+  for (const [qid, row] of collected) { if (al[qid]) { row.alumni = al[qid]; ac++; } }
+  console.log('    → 저명 동문 보강', ac, '곳');
 
-  const withKo = [...collected.values()].filter(r => (r.link_wiki || '').indexOf('ko.wikipedia.org') >= 0);
-  console.log('  · 한국어 위키백과 소개 보강 중…', withKo.length, '곳');
+  const withWiki = [...collected.values()].filter(r => r._koWiki || r._enWiki);
+  console.log('  · 위키백과 소개 보강 중(한국어 우선, 없으면 영어)…', withWiki.length, '곳');
   let bc = 0;
-  for (const r of withKo) { const ex = await wikiExtract(r.link_wiki); if (ex) { r.description = ex.slice(0, 500); bc++; } await sleep(120); }
+  for (const r of withWiki) { const ex = await wikiExtract(r._koWiki, r._enWiki); if (ex) { r.description = ex.slice(0, 700); bc++; } await sleep(120); }
   console.log('    → 소개 보강', bc, '곳');
 
   const kept = [...collected.values()].filter(keep);
