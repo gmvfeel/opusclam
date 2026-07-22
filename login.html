@@ -48,6 +48,11 @@
       </div>
       <button type="button" class="btn-primary" id="lg-btn">로그인하기</button>
       <div class="err" id="lg-err"></div>
+      <div class="divider"><span>간편 로그인</span></div>
+      <div class="social">
+        <button type="button" class="soc google" data-p="google"><span class="ic"><b>G</b></span>Google</button>
+        <button type="button" class="soc kakao" data-p="kakao"><span class="ic"><b>K</b></span>Kakao</button>
+      </div>
       <div class="aflinks"><a href="/join-check.html">가입여부 확인</a><span>•</span><a href="/find-id.html">아이디 찾기</a><span>•</span><a href="/find-pw.html">비밀번호 찾기</a></div>
     </div>
   </div>
@@ -71,6 +76,7 @@
   document.getElementById('lg-btn').addEventListener('click', doLogin);
   pwEl.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
   idEl.addEventListener('keydown', function(e){ if(e.key==='Enter') pwEl.focus(); });
+  document.querySelectorAll('.soc[data-p]').forEach(function(b){ b.addEventListener('click',function(){ if(window.ocAuth&&window.ocAuth.social) window.ocAuth.social(b.getAttribute('data-p')); }); });
   try{ var s=localStorage.getItem('oc-saved-id'); if(s){ idEl.value=s; document.getElementById('save-id').checked=true; } }catch(e){}
 })();
 </script>

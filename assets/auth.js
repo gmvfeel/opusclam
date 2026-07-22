@@ -50,9 +50,13 @@
     /* 아이디 + 비밀번호 로그인 (아이디를 이메일로 변환 후 로그인) */
     login: async function(username, password){
       var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
-      var er = await c.rpc('email_for_username', { p_username: username });
-      var email = er && er.data;
-      if(!email) return { ok:false, msg:'아이디 또는 비밀번호를 확인해 주세요.' };
+      var email;
+      if(username.indexOf('@') >= 0){ email = username; }
+      else {
+        var er = await c.rpc('email_for_username', { p_username: username });
+        email = er && er.data;
+        if(!email) return { ok:false, msg:'아이디 또는 비밀번호를 확인해 주세요.' };
+      }
       var r = await c.auth.signInWithPassword({ email: email, password: password });
       if(r.error) return { ok:false, msg:'아이디 또는 비밀번호를 확인해 주세요.' };
       return { ok:true };
@@ -98,6 +102,22 @@
       var c = sb(); if(!c) return;
       await c.auth.signOut();
       location.href = '/home.html';
+    },
+
+    /* 비밀번호 재설정 메일 발송 */
+    sendPasswordReset: async function(email){
+      var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
+      var r = await c.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/reset-password.html' });
+      if(r.error) return { ok:false, msg: r.error.message || '메일 발송 오류' };
+      return { ok:true };
+    },
+
+    /* 새 비밀번호로 변경 (재설정 링크로 들어온 세션에서) */
+    updatePassword: async function(newPw){
+      var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
+      var r = await c.auth.updateUser({ password: newPw });
+      if(r.error) return { ok:false, msg: r.error.message || '변경 오류' };
+      return { ok:true };
     }
   };
 
@@ -126,6 +146,7 @@
     }
     if(common.password && common.password !== common.password2) return { ok:false, msg:'비밀번호가 일치하지 않습니다.' };
     delete common.password2;
+    if(!common.name && extra.company) common.name = extra.company;
     return await ocAuth.signup(Object.assign({ type:type, extra:extra }, common));
   };
 

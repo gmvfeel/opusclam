@@ -34,7 +34,9 @@
   .body h1{font-size:25px;font-weight:700;margin-bottom:6px}
   .body .hi{color:#b0aac8;font-size:14px;margin-bottom:32px}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
-  .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:26px 22px;transition:border-color .15s,background .15s}
+  .card{position:relative;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:26px 22px;transition:border-color .15s,background .15s}
+  .card .cbadge{position:absolute;top:14px;right:14px;min-width:22px;height:22px;padding:0 7px;border-radius:12px;background:#e0574f;color:#fff;font-size:12px;font-weight:700;display:none;align-items:center;justify-content:center;line-height:1;box-shadow:0 2px 8px rgba(224,87,79,.4)}
+  .card .cbadge.on{display:inline-flex}
   .card.clickable{cursor:pointer}.card.clickable:hover{border-color:var(--violet-3);background:rgba(124,99,176,.12)}
   .card h3{font-size:17px;font-weight:700;margin-bottom:8px}
   .card p{font-size:13px;color:#a49dc0;line-height:1.6}
@@ -134,10 +136,11 @@
   #review .rv-f .k{color:#9a9cb0;font-size:11.5px;display:block;margin-bottom:2px}
   #review .rv-src{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;font-size:12px;color:#b9b9cc;line-height:1.6;margin-bottom:12px}
   #review .rv-src a{color:#9db8e0;word-break:break-all}
-  #review .rv-act{display:flex;gap:8px;flex-wrap:wrap}
+  #review .rv-act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   #review .rv-btn{font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;cursor:pointer;border:1px solid;background:none;font-family:inherit}
   #review .rv-btn.ok{color:#6fcf8f;border-color:rgba(111,207,143,.5)}
   #review .rv-btn.no{color:#e08585;border-color:rgba(224,133,133,.5)}
+  #review .rv-btn.del{color:#9a9cb0;border-color:rgba(255,255,255,.2);font-size:12px;padding:6px 12px}
   #review .rv-empty{color:#9a9cb0;padding:40px;text-align:center}
 </style>
 </head>
@@ -160,8 +163,8 @@
         <div class="card clickable" id="cardHero"><h3>콘텐츠 · 광고 관리</h3><p>메인 히어로 슬라이드(상단 큰 배너)의 문구·이미지·링크를 수정합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card clickable" id="cardCollect"><h3>데이터 수집</h3><p>위키데이터에서 클래식 작곡가 정보를 자동으로 가져와 인물DB에 채웁니다.</p><span class="go">수집하기 →</span></div>
         <div class="card clickable" id="cardManage"><h3>DB 관리 · 정제</h3><p>음악과 무관한 의심 인물(비음악 키워드·유명 비음악인)을 자동 표시하고, 확인 후 삭제합니다.</p><span class="go">관리하기 →</span></div>
-        <div class="card clickable" id="cardMembers"><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
-        <div class="card clickable" id="cardReview"><h3>제출 검수</h3><p>자격 회원이 등록·보강 제출한 내용을 확인하고, 승인 시 실제 DB에 반영합니다.</p><span class="go">검수하기 →</span></div>
+        <div class="card clickable" id="cardMembers"><span class="cbadge" id="badgeMembers"></span><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
+        <div class="card clickable" id="cardReview"><span class="cbadge" id="badgeReview"></span><h3>제출 검수</h3><p>자격 회원이 등록·보강 제출한 내용을 확인하고, 승인 시 실제 DB에 반영합니다.</p><span class="go">검수하기 →</span></div>
         <div class="card"><h3>DB 관리</h3><p>인물·단체·공연장 등 7개 데이터베이스의 항목을 직접 추가·수정합니다.</p><span class="soon">준비 중</span></div>
       </div>
     </div>
@@ -272,7 +275,12 @@
     var SUPABASE_KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
     var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     var views={login:document.getElementById('loginWrap'),dash:document.getElementById('dash'),hero:document.getElementById('hero'),collect:document.getElementById('collect'),manage:document.getElementById('manage'),members:document.getElementById('members'),review:document.getElementById('review')};
-    function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');}
+    function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');if(v==='dash'&&typeof updateDashBadges==='function')updateDashBadges();}
+    function setBadge(id,n){var e=document.getElementById(id);if(!e)return;if(n>0){e.textContent=n>99?'99+':n;e.classList.add('on');}else{e.classList.remove('on');}}
+    async function updateDashBadges(){
+      try{var m=await sb.from('members').select('id',{count:'exact',head:true}).eq('status','pending');setBadge('badgeMembers',m.count||0);}catch(e){}
+      try{var s=await sb.from('submissions').select('id',{count:'exact',head:true}).eq('status','pending');setBadge('badgeReview',s.count||0);}catch(e){}
+    }
     var mgData=[]; var mgPage=0;
     var MG_NONMUSIC=['정치인','정치가','대통령','국회의원','장관','시장','주지사','영화배우','탤런트','영화감독','드라마','예능','개그맨','코미디언','희극','소설가','시인','만화가','웹툰','축구','야구','농구','배구','골프','테니스','운동선수','물리학자','과학자','수학자','철학자','경제학자','기업인','사업가','최고경영자','아이돌','래퍼','힙합','유튜버','인플루언서','방송인','성우','아나운서','기자','모델'];
     var MG_FAMOUS=['아인슈타인','einstein','클린턴','clinton','톰 크루즈','tom cruise','트럼프','trump','오바마','obama','푸틴','putin','만델라','mandela','간디','gandhi','링컨','lincoln','케네디','kennedy','처칠','churchill','나폴레옹','napoleon','괴테','goethe','펠레','pel\u00e9','조던','jordan','히틀러','hitler'];
@@ -336,13 +344,24 @@
     }
     function setWho(e){e=e||'';['who','who2','who3','who4','who5'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=e;});}
     var msg=document.getElementById('msg'), btn=document.getElementById('loginBtn');
-    sb.auth.getSession().then(function(r){if(r.data&&r.data.session){setWho(r.data.session.user.email);show('dash');}else show('login');});
+    async function checkAdmin(uid){
+      try{ var ar=await sb.from('members').select('is_admin').eq('id',uid).single(); return !!(ar.data&&ar.data.is_admin); }catch(e){ return false; }
+    }
+    sb.auth.getSession().then(async function(r){
+      if(r.data&&r.data.session){
+        var okA=await checkAdmin(r.data.session.user.id);
+        if(okA){ setWho(r.data.session.user.email); show('dash'); } else { show('login'); }
+      } else show('login');
+    });
     async function doLogin(){
       var email=document.getElementById('email').value.trim(), pw=document.getElementById('password').value;
       if(!email||!pw){msg.textContent='이메일과 비밀번호를 입력하세요.';msg.className='msg err';return;}
       btn.disabled=true;msg.textContent='로그인 중...';msg.className='msg';
-      var r=await sb.auth.signInWithPassword({email:email,password:pw});btn.disabled=false;
-      if(r.error){msg.textContent='로그인 실패: '+(r.error.message||'확인하세요');msg.className='msg err';return;}
+      var r=await sb.auth.signInWithPassword({email:email,password:pw});
+      if(r.error){btn.disabled=false;msg.textContent='로그인 실패: '+(r.error.message||'확인하세요');msg.className='msg err';return;}
+      var okA=await checkAdmin(r.data.user.id);
+      btn.disabled=false;
+      if(!okA){ msg.textContent='관리자 계정만 접근할 수 있습니다.';msg.className='msg err'; return; }
       msg.textContent='';setWho(r.data.user.email);show('dash');
     }
     btn.addEventListener('click',doLogin);
@@ -444,7 +463,7 @@
         if(s.status==='pending'){
           act='<button class="rv-btn ok" data-act="approve" data-id="'+s.id+'">승인 · DB 반영</button><button class="rv-btn no" data-act="reject" data-id="'+s.id+'">반려</button>';
         } else {
-          act='<span class="rv-badge '+mgEsc(s.status)+'">'+(REV_STATUS_LABEL[s.status]||mgEsc(s.status))+'</span>';
+          act='<span class="rv-badge '+mgEsc(s.status)+'">'+(REV_STATUS_LABEL[s.status]||mgEsc(s.status))+'</span><button class="rv-btn del" data-act="delete" data-id="'+s.id+'">기록 삭제</button>';
         }
         return '<div class="rv-card"><div class="rv-head">'+kind+'<span class="rv-target">'+(REV_TABLE_LABEL[s.target_table]||mgEsc(s.target_table))+'</span><span class="rv-meta">'+rvFmt(s.created_at)+'</span></div>'
           +'<div class="rv-fields">'+(fields||'<div class="rv-f">(내용 없음)</div>')+'</div>'
@@ -489,6 +508,13 @@
         if(!confirm('이 제출을 반려하시겠습니까?')) return;
         b.disabled=true;b.textContent='처리 중…';
         var ok2=await rvReject(s); if(ok2){ loadReviews(); } else { b.disabled=false;b.textContent='반려'; }
+      } else if(act==='delete'){
+        if(s.status==='pending'){ alert('검수 대기 중인 건은 삭제할 수 없습니다. 먼저 승인 또는 반려해 주세요.'); return; }
+        if(!confirm('이 검수 기록을 삭제하시겠습니까?\n\n실제 DB 데이터는 그대로 남고, 검수 이력만 지워집니다.')) return;
+        b.disabled=true;b.textContent='삭제 중…';
+        var dr=await sb.from('submissions').delete().eq('id',id);
+        if(dr.error){ alert('삭제 실패: '+dr.error.message); b.disabled=false;b.textContent='기록 삭제'; return; }
+        loadReviews();
       }
     });
 
