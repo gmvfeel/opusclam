@@ -356,6 +356,9 @@
 </style>
 </head>
 <body>
+<div id="pv-loading" aria-hidden="true"><div class="pv-load-spin"></div></div>
+<style>#pv-loading{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;transition:opacity .35s ease}#pv-loading.hide{opacity:0;pointer-events:none}#pv-loading .pv-load-spin{width:44px;height:44px;border-radius:50%;border:3px solid rgba(150,130,200,.25);border-top-color:var(--violet-2,#9C7FD6);animation:pvspin .8s linear infinite}@keyframes pvspin{to{transform:rotate(360deg)}}</style>
+<script>(function(){var l=document.getElementById("pv-loading");if(l){try{l.style.background=getComputedStyle(document.body).backgroundColor||"#0a0d24";}catch(e){l.style.background="#0a0d24";}}setTimeout(function(){var x=document.getElementById("pv-loading");if(x)x.classList.add("hide");},8000);})();</script>
 
 <!-- ===== header (transparent overlay) ===== -->
 <div class="site-header" id="siteHeader">
@@ -1532,7 +1535,7 @@ if('serviceWorker' in navigator){
        for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
      }})();
 document.title=nm+' · 관련기관·재단DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
-   }).catch(function(e){console.error('관련기관·재단DB view 로드 실패:',e);});
+   }).catch(function(e){console.error('관련기관·재단DB view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
 })();
 </script>
 <script src="/assets/app.js" defer></script>
