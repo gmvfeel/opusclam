@@ -1,9 +1,9 @@
 // ============================================================
-// OPUSCLAM 현대음악(modern_composers) 자동 수집기
-// - 소스: 위키데이터(SPARQL)  · 대상: 1900년 이후 출생 작곡가(P106=작곡가)
-// - 수집 범위: 국내(대한민국)는 전부 · 해외는 한국어 위키에 등재된 작곡가
-// - 원칙: ① 신규 추가 ② 기존은 '빈 칸만' 보강 ③ 사람이 채운 값 보호
-// - 중복 방지(wikidata_id + name_ko) · 국내 우선 정렬
+// OPUSCLAM 현대음악(modern_composers) 자동 수집기 (v2: 대중/영화 장르 제외)
+// - 소스: 위키데이터 · 대상: 1900년 이후 출생 작곡가(P106=작곡가)
+// - 범위: 국내 전부 + 한국어 위키 등재 작곡가
+// - 제외: 대중음악·영화음악 등 장르만 있고 클래식 장르가 없는 인물
+// - 원칙: 신규추가 / 빈칸만 보강 / 사람값 보호, 중복방지, 국내 우선 정렬
 // - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
 // ============================================================
 
@@ -14,32 +14,43 @@ if (!SUPABASE_URL || !SERVICE_KEY) { console.error('환경변수 필요: SUPABAS
 const UA = 'OpusclamBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
 const KR_QID = 'Q884';
 
+// 클래식 장르 키워드(있으면 유지) / 대중·영화 장르 키워드(이것만 있으면 제외)
+const CLASS_KW = ['classical','contemporary classical','20th-century classical','21st-century classical','21st century classical','opera','operetta','chamber','orchestral','symphon','choral','art song','lied','avant-garde','experimental','serial','twelve-tone','minimal','modernism','postminimal','sacred','liturgical','concert music','new music','electroacoustic','musique concr','microtonal','spectral','contemporary music','oratorio','cantata'];
+const POPFILM_KW = ['film score','film music','soundtrack','video game','anime','pop music','pop rock','k-pop','synth-pop','dance-pop','electropop',' pop','pop ','rock music','hard rock','punk','metal','indie','hip hop','hip-hop','rap','trap','jazz','blues','rhythm and blues','r&b','soul music','funk','disco','reggae','electronic music','electronic dance','edm','techno','house music','trance','ambient','new-age','new age','country music','folk music','singer-songwriter','musical theatre','musical theater','trot','ballad'];
+
 function baseQuery(constraint) {
   return `
-SELECT ?item ?nameKo ?nameEn ?birth ?death ?country ?countryKo ?countryEn ?movementKo ?movementEn ?genreKo ?genreEn ?image ?koArticle ?enArticle WHERE {
+SELECT ?item
+  (SAMPLE(?nameKo_) AS ?nameKo) (SAMPLE(?nameEn_) AS ?nameEn)
+  (SAMPLE(?birth_) AS ?birth) (SAMPLE(?death_) AS ?death)
+  (SAMPLE(?country_) AS ?country) (SAMPLE(?countryKo_) AS ?countryKo) (SAMPLE(?countryEn_) AS ?countryEn)
+  (SAMPLE(?movementKo_) AS ?movementKo) (SAMPLE(?movementEn_) AS ?movementEn)
+  (SAMPLE(?image_) AS ?image)
+  (SAMPLE(?koArticle_) AS ?koArticle) (SAMPLE(?enArticle_) AS ?enArticle)
+  (GROUP_CONCAT(DISTINCT ?genreEn_; separator=" | ") AS ?genres)
+WHERE {
   ?item wdt:P106 wd:Q36834 .
-  ?item wdt:P569 ?birth . FILTER(YEAR(?birth) >= 1900)
+  ?item wdt:P569 ?birth_ . FILTER(YEAR(?birth_) >= 1900)
   ${constraint}
-  OPTIONAL { ?item rdfs:label ?nameKo. FILTER(LANG(?nameKo)="ko") }
-  OPTIONAL { ?item rdfs:label ?nameEn. FILTER(LANG(?nameEn)="en") }
-  OPTIONAL { ?item wdt:P570 ?death. }
-  OPTIONAL { ?item wdt:P27 ?country.
-    OPTIONAL { ?country rdfs:label ?countryKo. FILTER(LANG(?countryKo)="ko") }
-    OPTIONAL { ?country rdfs:label ?countryEn. FILTER(LANG(?countryEn)="en") } }
-  OPTIONAL { ?item wdt:P135 ?movement.
-    OPTIONAL { ?movement rdfs:label ?movementKo. FILTER(LANG(?movementKo)="ko") }
-    OPTIONAL { ?movement rdfs:label ?movementEn. FILTER(LANG(?movementEn)="en") } }
-  OPTIONAL { ?item wdt:P136 ?genre.
-    OPTIONAL { ?genre rdfs:label ?genreKo. FILTER(LANG(?genreKo)="ko") }
-    OPTIONAL { ?genre rdfs:label ?genreEn. FILTER(LANG(?genreEn)="en") } }
-  OPTIONAL { ?item wdt:P18 ?image. }
-  OPTIONAL { ?koArticle schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>. }
-  OPTIONAL { ?enArticle schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
+  OPTIONAL { ?item rdfs:label ?nameKo_. FILTER(LANG(?nameKo_)="ko") }
+  OPTIONAL { ?item rdfs:label ?nameEn_. FILTER(LANG(?nameEn_)="en") }
+  OPTIONAL { ?item wdt:P570 ?death_. }
+  OPTIONAL { ?item wdt:P27 ?country_.
+    OPTIONAL { ?country_ rdfs:label ?countryKo_. FILTER(LANG(?countryKo_)="ko") }
+    OPTIONAL { ?country_ rdfs:label ?countryEn_. FILTER(LANG(?countryEn_)="en") } }
+  OPTIONAL { ?item wdt:P135 ?movement_.
+    OPTIONAL { ?movement_ rdfs:label ?movementKo_. FILTER(LANG(?movementKo_)="ko") }
+    OPTIONAL { ?movement_ rdfs:label ?movementEn_. FILTER(LANG(?movementEn_)="en") } }
+  OPTIONAL { ?item wdt:P136 ?genre_. ?genre_ rdfs:label ?genreEn_. FILTER(LANG(?genreEn_)="en") }
+  OPTIONAL { ?item wdt:P18 ?image_. }
+  OPTIONAL { ?koArticle_ schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>. }
+  OPTIONAL { ?enArticle_ schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
 }
+GROUP BY ?item
 LIMIT 5000`;
 }
 const Q_KR = baseQuery('?item wdt:P27 wd:Q884 .');
-const Q_KO = baseQuery('?koArticle schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>.');
+const Q_KO = baseQuery('?koArticle_ schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>.');
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const val = (b, k) => (b[k] && b[k].value) ? b[k].value : '';
@@ -64,17 +75,25 @@ function toRow(b) {
   const nameKo = val(b, 'nameKo'), nameEn = val(b, 'nameEn');
   const name_ko = nameKo || nameEn;
   if (!name_ko) return null;
+
+  // 장르 판정: 대중/영화만 있고 클래식 없으면 제외
+  const genres = (val(b, 'genres') || '').toLowerCase();
+  if (genres) {
+    const hasClass = CLASS_KW.some(k => genres.includes(k));
+    const hasPop = POPFILM_KW.some(k => genres.includes(k));
+    if (hasPop && !hasClass) return null;
+  }
+
   const by = yr(val(b, 'birth')), dy = yr(val(b, 'death'));
   const life = by ? (by + '–' + (dy || '')) : '';
   const nationality = val(b, 'countryKo') || val(b, 'countryEn') || '';
-  const school_style = val(b, 'movementKo') || val(b, 'movementEn') || val(b, 'genreKo') || val(b, 'genreEn') || '';
+  const school_style = val(b, 'movementKo') || val(b, 'movementEn') || '';
   const byNum = parseInt(by, 10);
   const active_period = byNum >= 2000 ? '21세기' : (byNum >= 1900 ? '20세기' : '');
   return {
     wikidata_id: qidOf(val(b, 'item')),
     name_ko, name_en: nameEn || '',
-    school_style, nationality, life,
-    active_period,
+    school_style, nationality, life, active_period,
     image_url: val(b, 'image') || '',
     link_wiki: val(b, 'koArticle') || val(b, 'enArticle') || '',
     source: 'auto',
@@ -101,7 +120,7 @@ const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const strip = (r) => { const o = { ...r }; Object.keys(o).forEach(k => { if (k[0] === '_') delete o[k]; }); return o; };
 
 async function main() {
-  console.log('■ 현대음악 수집 시작', new Date().toISOString());
+  console.log('■ 현대음악 수집 시작(v2)', new Date().toISOString());
   const collected = new Map();
   for (const [label, q] of [['국내 국적', Q_KR], ['한국어 등재', Q_KO]]) {
     console.log('  · 위키데이터 조회:', label);
@@ -110,7 +129,7 @@ async function main() {
     for (const b of rows) mergeById(collected, toRow(b));
     await sleep(1500);
   }
-  console.log('■ 수집(고유):', collected.size, '명');
+  console.log('■ 수집(고유, 대중/영화 제외 후):', collected.size, '명');
 
   const existing = await sbGet('modern_composers?select=id,wikidata_id,name_ko,name_en,school_style,nationality,life,active_period,image_url,link_wiki,sort_no');
   const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
