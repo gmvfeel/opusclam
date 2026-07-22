@@ -344,3 +344,21 @@
   }
   if(document.readyState !== 'loading') updateAuthlink(); else document.addEventListener('DOMContentLoaded', updateAuthlink);
 })();
+
+/* ===== 탈퇴 회원 공통 차단 (이메일·소셜 등 모든 로그인 경로) ===== */
+(function(){
+  "use strict";
+  function check(){
+    if(!window.ocAuth || !window.ocAuth.session || !window.ocAuth.myMember) return;
+    window.ocAuth.session().then(function(s){
+      if(!s) return;
+      window.ocAuth.myMember().then(function(m){
+        if(m && m.status === 'withdrawn'){
+          alert('탈퇴한 계정입니다. 재가입을 원하시면 고객센터(cser@wixon.co.kr)로 문의해 주세요.');
+          if(window.ocAuth.logout) window.ocAuth.logout();
+        }
+      }, function(){ /* 조회 실패 시 무시 */ });
+    });
+  }
+  if(document.readyState !== 'loading') check(); else document.addEventListener('DOMContentLoaded', check);
+})();
