@@ -1514,7 +1514,8 @@ if('serviceWorker' in navigator){
      var desc=(o.description&&o.description.trim())?o.description.trim():((o.location?o.location+'의 ':'')+(o.type||'음악단체')+'.');
      var lead=document.querySelector('.pv-lead');if(lead)lead.textContent=desc;
      var bio=document.querySelector('.pv-prose');if(bio)bio.innerHTML='<p>'+esc(desc)+'</p>'+((o.description&&o.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
-     var wl=document.querySelector('ul.pv-worklist');if(wl&&o.activities)wl.innerHTML=o.activities.split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
+     var wl=document.querySelector('ul.pv-worklist');if(wl){var _ac=(o.activities&&String(o.activities).trim())?String(o.activities).split(/[\u00b7,]/).map(function(w){return w.trim();}).filter(Boolean):[];wl.innerHTML=_ac.length?_ac.map(function(w){return '<li>'+esc(w)+'</li>';}).join(''):'<li style="color:var(--text-3)">등록된 활동 정보가 없습니다.</li>';}
+     (function(){document.querySelectorAll('.pv-sec, .pv-block').forEach(function(sec){var h=sec.querySelector('.pv-h');if(h&&/(사진|갤러리|영상|대표 음반|음원|관련 단체)/.test(h.textContent))sec.style.display='none';});})();
      var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('유형',esc(o.type||''))+fact('소재지',esc(o.location||''))+fact('창단',esc(o.founded||''))+fact('상임지휘자',esc(o.leader||''))+fact('연고 공연장',esc(o.home_venue||''));
      var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
           (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
