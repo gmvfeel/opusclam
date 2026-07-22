@@ -3,12 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>가입완료 · OPUSCLAM.COM</title>
+<title>가입 완료 · OPUSCLAM.COM</title>
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="/assets/auth.css">
+<style>
+  .jc-card{text-align:center;padding:48px 40px}
+  .jc-ic{width:66px;height:66px;border-radius:50%;display:inline-grid;place-items:center;margin-bottom:22px}
+  .jc-ic.ok{background:rgba(58,157,99,.12);color:#3a9d63}
+  .jc-ic.wait{background:rgba(201,154,46,.12);color:#c99a2e}
+  .jc-ic svg{width:32px;height:32px}
+  .jc-card h2{font-size:22px;font-weight:800;color:var(--tx);margin:0 0 14px;letter-spacing:-.02em}
+  .jc-card .jc-desc{font-size:14px;line-height:1.75;color:var(--tx2);margin:0 0 10px}
+  .jc-badge{display:inline-block;font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;background:var(--tagbg);border:1px solid var(--line2);color:var(--tx);margin-bottom:22px}
+  .jc-actions{display:flex;flex-direction:column;gap:10px;margin-top:30px}
+  .jc-btn{display:block;width:100%;padding:14px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;text-align:center;cursor:pointer;border:1px solid var(--line2)}
+  .jc-btn.primary{background:var(--pri);color:var(--prit);border:none}
+  .jc-btn.ghost{background:var(--chip);color:var(--tx2)}
+  .jc-loading{padding:30px;text-align:center;color:var(--tx3)}
+</style>
 </head>
 <body>
+<div id="oc-net" class="oc-net" aria-hidden="true"></div>
 <div class="gnb">
   <div class="util"><div class="in">
     <div class="l"><a href="#">WIXON ASSOCIATES INC</a><a href="#">LPSTOCK</a><a href="#">OPUSCLAM COMMUNITY</a></div>
@@ -25,7 +42,51 @@
       <button class="burger" title="전체메뉴"><span></span><span></span><span></span></button>
     </div>
   </div></div>
-</div><main><div class="wrap narrow"><div class="steps"><div class="step"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>약관동의</div><div class="sep">•••</div><div class="step"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20h9"/><path d="M16.5 3.5a2 2 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>정보입력</div><div class="sep">•••</div><div class="step on"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6L9 17l-5-5"/></svg></div>가입완료</div></div><div class="done"><div class="big">클래식 스페셜리스트 오퍼스클램의<br>회원가입이 완료되었습니다!</div><div class="benefit"><h4>OPUSCLAM MEMBERSHIP</h4><p>방대한 국내외 순수음악 데이터베이스를 이용하실 수 있습니다.<br>카테고리별 회원 커뮤니티에 참여하고 전문적인 답변을 받아보실 수 있습니다.<br>다양한 음원·영상과 구하기 힘든 전문 자료를 활용하실 수 있습니다.<br><span style="color:#64748b;font-size:12.5px">※ 자격 회원(전공자·관계자·단체·학교)은 관리자 승인 후 데이터 등록·보강 기능이 활성화됩니다.</span></p></div><div class="actions"><a class="btn primary" href="/login.html">로그인</a><a class="btn ghost" href="/home.html">메인으로</a></div></div></div></main><footer><p>ⓒ OPUSCLAM &amp; WIXON ASSOCIATES INC. ALL RIGHTS RESERVED. · <a href="/terms.html">서비스약관</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="/data-policy.html">데이터 정책</a></p></footer>
+</div><main><div class="wrap narrow" style="margin-top:70px"><div class="authcard jc-card" id="jc-card"><div class="jc-loading">확인 중…</div></div></div></main><footer><p>ⓒ OPUSCLAM &amp; WIXON ASSOCIATES INC. ALL RIGHTS RESERVED. · <a href="/terms.html">서비스약관</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="/data-policy.html">데이터 정책</a></p></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
+<script>
+(function(){
+  var card=document.getElementById('jc-card');
+  var TYPE={major:'전공자',industry:'음악관계자',org:'단체·기업',school:'음악학교',general:'일반'};
+  var CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+  var CLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+  function renderApproved(name){
+    card.innerHTML=''
+      +'<div class="jc-ic ok">'+CHECK+'</div>'
+      +'<h2>가입이 완료되었습니다</h2>'
+      +'<p class="jc-desc">환영합니다'+(name?', <strong>'+esc(name)+'</strong>님':'')+'.<br>지금 바로 오퍼스클램의 서비스를 이용하실 수 있습니다.</p>'
+      +'<div class="jc-actions"><a class="jc-btn primary" href="/home.html">홈으로 가기</a><a class="jc-btn ghost" href="/mypage.html">마이페이지</a></div>';
+  }
+  function renderPending(name, typeLabel){
+    card.innerHTML=''
+      +'<div class="jc-ic wait">'+CLOCK+'</div>'
+      +'<h2>가입 신청이 완료되었습니다</h2>'
+      +(typeLabel?'<div class="jc-badge">'+esc(typeLabel)+' 회원 신청</div>':'')
+      +'<p class="jc-desc"><strong>'+esc(name||'회원')+'</strong>님, 신청해 주셔서 감사합니다.<br>관리자 승인 후 데이터 등록·보강 기능을 이용하실 수 있습니다.<br>승인 전에도 로그인과 자료 열람은 가능합니다.</p>'
+      +'<div class="jc-actions"><a class="jc-btn primary" href="/home.html">홈으로 가기</a><a class="jc-btn ghost" href="/mypage.html">내 신청 상태 보기</a></div>';
+  }
+  function renderGeneric(){
+    card.innerHTML=''
+      +'<div class="jc-ic ok">'+CHECK+'</div>'
+      +'<h2>가입이 완료되었습니다</h2>'
+      +'<p class="jc-desc">오퍼스클램 회원이 되신 것을 환영합니다.<br>로그인 후 서비스를 이용해 주세요.</p>'
+      +'<div class="jc-actions"><a class="jc-btn primary" href="/login.html">로그인하기</a><a class="jc-btn ghost" href="/home.html">홈으로 가기</a></div>';
+  }
+
+  if(!window.ocAuth){ renderGeneric(); return; }
+  window.ocAuth.session().then(function(s){
+    if(!s){ renderGeneric(); return; }
+    window.ocAuth.myMember().then(function(m){
+      if(!m){ renderGeneric(); return; }
+      var name=m.name||m.username||'';
+      if(m.status==='approved') renderApproved(name);
+      else renderPending(name, TYPE[m.member_type]||'');
+    }, function(){ renderGeneric(); });
+  }, function(){ renderGeneric(); });
+})();
+</script>
 </body>
 </html>
