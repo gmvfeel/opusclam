@@ -19,7 +19,7 @@ const CLASSES = [
 
 function buildQuery(anchor) {
   return `
-SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inception ?conductorKo ?conductorEn ?image ?website ?koArticle ?enArticle WHERE {
+SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inception ?conductorKo ?conductorEn ?venueKo ?venueEn ?image ?website ?koArticle ?enArticle WHERE {
   ?item wdt:P31/wdt:P279* wd:${anchor} .
   OPTIONAL { ?item rdfs:label ?nameKo. FILTER(LANG(?nameKo)="ko") }
   OPTIONAL { ?item rdfs:label ?nameEn. FILTER(LANG(?nameEn)="en") }
@@ -33,6 +33,9 @@ SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inc
   OPTIONAL { ?item wdt:P3300 ?conductor.
     OPTIONAL { ?conductor rdfs:label ?conductorKo. FILTER(LANG(?conductorKo)="ko") }
     OPTIONAL { ?conductor rdfs:label ?conductorEn. FILTER(LANG(?conductorEn)="en") } }
+  OPTIONAL { ?item wdt:P115 ?venue.
+    OPTIONAL { ?venue rdfs:label ?venueKo. FILTER(LANG(?venueKo)="ko") }
+    OPTIONAL { ?venue rdfs:label ?venueEn. FILTER(LANG(?venueEn)="en") } }
   OPTIONAL { ?item wdt:P18 ?image. }
   OPTIONAL { ?item wdt:P856 ?website. }
   OPTIONAL { ?koArticle schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>. }
@@ -83,6 +86,7 @@ function toRow(b, type) {
     name_ko, name_en: nameEn || '',
     type, location, founded,
     leader: val(b, 'conductorKo') || val(b, 'conductorEn') || '',
+    home_venue: val(b, 'venueKo') || val(b, 'venueEn') || '',
     logo_url: val(b, 'image') || '',
     link_home: val(b, 'website') || '',
     link_wiki: val(b, 'koArticle') || val(b, 'enArticle') || '',
@@ -103,15 +107,16 @@ function mergeById(map, row) {
 
 function substanceCount(r) {
   let c = 0;
-  ['founded', 'leader', 'logo_url', 'link_home'].forEach(k => { if (r[k] && String(r[k]).trim()) c++; });
+  ['founded', 'leader', 'home_venue', 'logo_url', 'link_home'].forEach(k => { if (r[k] && String(r[k]).trim()) c++; });
   return c;
 }
 const bioOK = (r) => (r.description || '').trim().length >= 150;
-function keep(r) { return bioOK(r) || substanceCount(r) >= 2; }
+function keep(r) { return bioOK(r) || substanceCount(r) >= 3; }
 function richness(r) {
   let sc = 0;
   if ((r.description || '').trim().length >= 150) sc += 2;
   if (r.leader && String(r.leader).trim()) sc += 1;
+  if (r.home_venue && String(r.home_venue).trim()) sc += 1;
   if (r.founded && String(r.founded).trim()) sc += 1;
   if (r.logo_url && String(r.logo_url).trim()) sc += 1;
   if (r.link_home && String(r.link_home).trim()) sc += 1;
@@ -135,12 +140,12 @@ async function sbGetAll(table, select) {
 async function sbInsert(rows) { if (!rows.length) return; const r = await fetch(SUPABASE_URL + '/rest/v1/orgs', { method: 'POST', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(rows) }); if (!r.ok) throw new Error('INSERT ' + r.status + ' ' + await r.text()); }
 async function sbUpdate(id, patch) { const r = await fetch(SUPABASE_URL + '/rest/v1/orgs?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(patch) }); if (!r.ok) throw new Error('UPDATE ' + r.status + ' ' + await r.text()); }
 
-const FILL_COLS = ['name_en', 'type', 'location', 'founded', 'leader', 'logo_url', 'link_home', 'link_wiki', 'description'];
+const FILL_COLS = ['name_en', 'type', 'location', 'founded', 'leader', 'home_venue', 'logo_url', 'link_home', 'link_wiki', 'description'];
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const strip = (r) => { const o = { ...r }; Object.keys(o).forEach(k => { if (k[0] === '_') delete o[k]; }); return o; };
 
 async function rerank() {
-  const rows = await sbGetAll('orgs', 'id,source,description,leader,founded,logo_url,link_home,location,sort_no');
+  const rows = await sbGetAll('orgs', 'id,source,description,leader,founded,home_venue,logo_url,link_home,location,sort_no');
   rows.sort((a, b) => richness(a) - richness(b));
   let n = 0, done = 0;
   for (const r of rows) { n++; if (r.sort_no !== n) { await sbUpdate(r.id, { sort_no: n }); done++; } }
@@ -168,7 +173,7 @@ async function main() {
   const kept = [...collected.values()].filter(keep);
   console.log('■ 충실도 통과:', kept.length, '곳 (제외', collected.size - kept.length, ')');
 
-  const existing = await sbGetAll('orgs', 'id,wikidata_id,name_ko,name_en,type,location,founded,leader,logo_url,link_home,link_wiki,description,sort_no');
+  const existing = await sbGetAll('orgs', 'id,wikidata_id,name_ko,name_en,type,location,founded,leader,home_venue,logo_url,link_home,link_wiki,description,sort_no');
   const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
   for (const r of existing) { if (r.wikidata_id) byWid.set(r.wikidata_id, r); if (r.name_ko) nameSet.add(norm(r.name_ko)); if (typeof r.sort_no === 'number' && r.sort_no > maxSort) maxSort = r.sort_no; }
   console.log('■ 기존 orgs:', existing.length, '행');
