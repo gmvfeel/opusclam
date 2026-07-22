@@ -129,6 +129,27 @@
     return await ocAuth.signup(Object.assign({ type:type, extra:extra }, common));
   };
 
+  /* 관리자: 내 회원정보 / 회원목록 / 상태변경 */
+  ocAuth.myMember = async function(){
+    var c = sb(); if(!c) return null;
+    var u = await c.auth.getUser(); var uid = u && u.data && u.data.user && u.data.user.id; if(!uid) return null;
+    var r = await c.from('members').select('*').eq('id', uid).maybeSingle();
+    return r.data || null;
+  };
+  ocAuth.listMembers = async function(status){
+    var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
+    var q = c.from('members').select('id,username,member_type,status,name,email,phone,created_at,extra').order('created_at', { ascending:false });
+    if(status) q = q.eq('status', status);
+    var r = await q; if(r.error) return { ok:false, msg:r.error.message };
+    return { ok:true, rows:r.data || [] };
+  };
+  ocAuth.setMemberStatus = async function(id, status){
+    var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
+    var r = await c.from('members').update({ status:status }).eq('id', id);
+    if(r.error) return { ok:false, msg:r.error.message };
+    return { ok:true };
+  };
+
   window.ocAuth = ocAuth;
 })();
 
