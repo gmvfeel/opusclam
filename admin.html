@@ -142,6 +142,26 @@
   #review .rv-btn.no{color:#e08585;border-color:rgba(224,133,133,.5)}
   #review .rv-btn.del{color:#9a9cb0;border-color:rgba(255,255,255,.2);font-size:12px;padding:6px 12px}
   #review .rv-empty{color:#9a9cb0;padding:40px;text-align:center}
+  /* ===== 회원 관리 강화: 검색 + 상세 모달 ===== */
+  #members .mem-search{width:100%;max-width:340px;padding:10px 14px;margin-bottom:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#e2e2ee;font-size:13px;font-family:inherit;outline:none}
+  #members .mem-search::placeholder{color:#7a7a92}
+  #members .mem-btn.detail{color:#9db8e0;border-color:rgba(157,184,224,.5)}
+  .mem-modal{position:fixed;inset:0;background:rgba(6,7,11,.7);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:40px 16px;overflow:auto}
+  .mem-modal.on{display:flex}
+  .mem-modal-card{background:#1a1a2e;border:1px solid rgba(255,255,255,.14);border-radius:16px;max-width:560px;width:100%;padding:30px 32px}
+  .mem-modal-card h3{font-size:19px;font-weight:800;color:#fff;margin:0 0 4px}
+  .mem-modal-card .mm-sub{color:#9a9cb0;font-size:13px;margin-bottom:20px}
+  .mem-modal-card .mm-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .mem-modal-card .mm-badge{font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);color:#cfc9e2}
+  .mem-modal-card ul{list-style:none;padding:0;margin:0 0 22px}
+  .mem-modal-card li{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px}
+  .mem-modal-card li .k{flex:0 0 110px;color:#9a9cb0}
+  .mem-modal-card li .v{color:#e8e8f2;word-break:break-word;white-space:pre-wrap}
+  .mem-modal-act{display:flex;gap:8px;justify-content:flex-end}
+  .mem-modal-act button{font-size:13px;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;border:1px solid;background:none;font-family:inherit}
+  .mem-modal-act .ok{color:#6fcf8f;border-color:rgba(111,207,143,.5)}
+  .mem-modal-act .no{color:#e08585;border-color:rgba(224,133,133,.5)}
+  .mem-modal-act .close{color:#cfc9e2;border-color:rgba(255,255,255,.2)}
 </style>
 </head>
 <body>
@@ -246,6 +266,7 @@
         <button class="mem-tab" data-s="rejected">반려됨<span class="c" data-cnt="rejected"></span></button>
         <button class="mem-tab" data-s="">전체<span class="c" data-cnt=""></span></button>
       </div>
+      <input type="text" class="mem-search" id="memSearch" placeholder="이름 · 아이디 · 이메일 검색">
       <div class="mem-tablewrap">
         <table class="mem-table">
           <thead><tr><th>이름</th><th>아이디</th><th>유형</th><th>이메일</th><th>휴대폰</th><th>가입일</th><th>상태</th><th>처리</th></tr></thead>
@@ -254,6 +275,8 @@
       </div>
     </div>
   </div>
+
+  <div class="mem-modal" id="memModal"><div class="mem-modal-card" id="memModalCard"></div></div>
 
   <div class="view" id="review">
     <div class="topbar"><img class="logo" src="/assets/logo.png" alt="OPUSCLAM" id="rvLogo"><div class="right"><span id="who5"></span><button class="logout" id="logoutBtn5">로그아웃</button></div></div>
@@ -387,21 +410,29 @@
     var memCur='pending';
     function memFmt(x){ if(!x)return '-'; try{var d=new Date(x);return d.getFullYear()+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+('0'+d.getDate()).slice(-2);}catch(e){return '-';} }
     function memSetActive(){ document.querySelectorAll('#members .mem-tab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-s')===memCur); }); }
+    var memRows=[];
     async function loadMembers(){
       var body=document.getElementById('memBody'); body.innerHTML='<tr><td colspan="8" class="loading">불러오는 중…</td></tr>';
-      var q=sb.from('members').select('id,username,member_type,status,name,email,phone,created_at').order('created_at',{ascending:false});
+      var q=sb.from('members').select('id,username,member_type,status,name,email,phone,birth,address,extra,created_at').order('created_at',{ascending:false});
       if(memCur) q=q.eq('status',memCur);
       var r=await q;
       if(r.error){ body.innerHTML='<tr><td colspan="8">오류: '+mgEsc(r.error.message)+'</td></tr>'; return; }
-      var rows=r.data||[];
-      if(!rows.length){ body.innerHTML='<tr><td colspan="8" class="loading">해당하는 회원이 없습니다.</td></tr>'; loadMemCounts(); return; }
+      memRows=r.data||[];
+      renderMembers();
+      loadMemCounts();
+    }
+    function renderMembers(){
+      var body=document.getElementById('memBody');
+      var kw=((document.getElementById('memSearch')||{}).value||'').trim().toLowerCase();
+      var rows=memRows;
+      if(kw){ rows=memRows.filter(function(m){ return ((m.name||'')+' '+(m.username||'')+' '+(m.email||'')).toLowerCase().indexOf(kw)>=0; }); }
+      if(!rows.length){ body.innerHTML='<tr><td colspan="8" class="loading">해당하는 회원이 없습니다.</td></tr>'; return; }
       body.innerHTML=rows.map(function(m){
-        var act='';
+        var act='<button class="mem-btn detail" data-act="detail" data-id="'+m.id+'">상세</button>';
         if(m.status!=='approved') act+='<button class="mem-btn ok" data-act="approve" data-id="'+m.id+'">승인</button>';
         if(m.status!=='rejected') act+='<button class="mem-btn no" data-act="reject" data-id="'+m.id+'">반려</button>';
-        return '<tr><td class="nm">'+mgEsc(m.name||'-')+'</td><td class="sub">'+mgEsc(m.username||'-')+'</td><td>'+(MEM_TYPE[m.member_type]||mgEsc(m.member_type||'-'))+'</td><td class="sub">'+mgEsc(m.email||'-')+'</td><td class="sub">'+mgEsc(m.phone||'-')+'</td><td class="sub">'+memFmt(m.created_at)+'</td><td><span class="mem-badge '+mgEsc(m.status)+'">'+(MEM_LABEL[m.status]||mgEsc(m.status))+'</span></td><td><div class="mem-act">'+(act||'-')+'</div></td></tr>';
+        return '<tr><td class="nm">'+mgEsc(m.name||'-')+'</td><td class="sub">'+mgEsc(m.username||'-')+'</td><td>'+(MEM_TYPE[m.member_type]||mgEsc(m.member_type||'-'))+'</td><td class="sub">'+mgEsc(m.email||'-')+'</td><td class="sub">'+mgEsc(m.phone||'-')+'</td><td class="sub">'+memFmt(m.created_at)+'</td><td><span class="mem-badge '+mgEsc(m.status)+'">'+(MEM_LABEL[m.status]||mgEsc(m.status))+'</span></td><td><div class="mem-act">'+act+'</div></td></tr>';
       }).join('');
-      loadMemCounts();
     }
     async function loadMemCounts(){
       var r=await sb.from('members').select('status'); if(r.error)return;
@@ -418,9 +449,40 @@
     if(_cardMem) _cardMem.addEventListener('click',function(){ show('members'); memCur='pending'; memSetActive(); loadMembers(); });
     document.getElementById('memBack').addEventListener('click',function(){show('dash');});
     document.querySelectorAll('#members .mem-tab').forEach(function(b){ b.addEventListener('click',function(){ memCur=b.getAttribute('data-s'); memSetActive(); loadMembers(); }); });
+    var MEM_EXTRA_LABEL={company:'회사·단체명',position:'부서·직책',link_video:'관련 영상',name_en:'영문명',biz_no:'사업자번호',link_home:'홈페이지',founded:'설립연도',leader:'대표자·지휘자',home_venue:'연고 공연장',description:'소개',field1:'분야',instrument:'주요 악기',school:'출신학교',career:'경력',works:'대표작',interest:'관심분야',db_consent:'DB등록 동의'};
+    function memShowDetail(m){
+      var card=document.getElementById('memModalCard');
+      function row(k,v){ if(v==null||v==='')return ''; return '<li><span class="k">'+mgEsc(k)+'</span><span class="v">'+mgEsc(String(v))+'</span></li>'; }
+      var info=row('아이디',m.username)+row('이메일',m.email)+row('휴대폰',m.phone)+row('생년월일',m.birth)+row('주소',m.address)+row('가입일',memFmt(m.created_at));
+      var ex=m.extra||{}, exRows='';
+      for(var k in ex){ if(!Object.prototype.hasOwnProperty.call(ex,k))continue; var v=ex[k]; if(typeof v==='boolean')v=v?'예':'아니오'; if(Array.isArray(v))v=v.join(', '); exRows+=row(MEM_EXTRA_LABEL[k]||k, v); }
+      var act='';
+      if(m.status!=='approved') act+='<button class="ok" data-act="approve" data-id="'+m.id+'">승인</button>';
+      if(m.status!=='rejected') act+='<button class="no" data-act="reject" data-id="'+m.id+'">반려</button>';
+      card.innerHTML='<h3>'+mgEsc(m.name||m.username||'-')+'</h3><div class="mm-sub">'+mgEsc(m.username||'')+'</div>'
+        +'<div class="mm-badges"><span class="mm-badge">'+(MEM_TYPE[m.member_type]||mgEsc(m.member_type||'-'))+'</span><span class="mm-badge">'+(MEM_LABEL[m.status]||mgEsc(m.status))+'</span></div>'
+        +'<ul>'+info+exRows+'</ul>'
+        +'<div class="mem-modal-act">'+act+'<button class="close" data-act="close">닫기</button></div>';
+      document.getElementById('memModal').classList.add('on');
+    }
+    function memCloseModal(){ document.getElementById('memModal').classList.remove('on'); }
+    var _memSearch=document.getElementById('memSearch'); if(_memSearch) _memSearch.addEventListener('input', renderMembers);
+    document.getElementById('memModal').addEventListener('click', async function(e){
+      if(e.target.id==='memModal'){ memCloseModal(); return; }
+      var b=e.target.closest('button'); if(!b)return;
+      var act=b.getAttribute('data-act'), id=b.getAttribute('data-id');
+      if(act==='close'){ memCloseModal(); return; }
+      if(act==='approve'||act==='reject'){
+        var to=act==='approve'?'approved':'rejected';
+        if(!confirm(act==='approve'?'이 회원을 승인하시겠습니까?':'이 회원을 반려하시겠습니까?'))return;
+        var ok=await memSetStatus(id,to); if(ok){ memCloseModal(); loadMembers(); }
+      }
+    });
     document.getElementById('memBody').addEventListener('click', async function(e){
       var b=e.target.closest('.mem-btn'); if(!b)return;
-      var id=b.getAttribute('data-id'), act=b.getAttribute('data-act'), to=act==='approve'?'approved':'rejected';
+      var id=b.getAttribute('data-id'), act=b.getAttribute('data-act');
+      if(act==='detail'){ var mm=memRows.filter(function(x){return String(x.id)===String(id);})[0]; if(mm) memShowDetail(mm); return; }
+      var to=act==='approve'?'approved':'rejected';
       if(!confirm(act==='approve'?'이 회원을 승인하시겠습니까?':'이 회원을 반려하시겠습니까?'))return;
       b.disabled=true;b.textContent='처리 중…';
       var ok=await memSetStatus(id,to); if(ok) loadMembers();
