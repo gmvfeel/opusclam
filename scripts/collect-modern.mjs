@@ -31,8 +31,8 @@ SELECT ?item
 WHERE {
   ?item wdt:P106 wd:Q36834 .
   ?item wdt:P569 ?birth_ . FILTER(YEAR(?birth_) >= 1900)
-  # 대중/영화 직업 제외: 가수·송라이터·싱어송라이터·래퍼·음반프로듀서·DJ·영화음악 작곡가
-  FILTER NOT EXISTS { ?item wdt:P106 ?exOcc . VALUES ?exOcc { wd:Q177220 wd:Q753110 wd:Q488205 wd:Q2252262 wd:Q183945 wd:Q130857 wd:Q1415090 } }
+  # 대중/영화 직업 제외: 가수·송라이터·래퍼·프로듀서·DJ·영화음악가 + 밴드(기타/베이스/드럼/키보드)·배우
+  FILTER NOT EXISTS { ?item wdt:P106 ?exOcc . VALUES ?exOcc { wd:Q177220 wd:Q753110 wd:Q488205 wd:Q2252262 wd:Q183945 wd:Q130857 wd:Q1415090 wd:Q855091 wd:Q584301 wd:Q386854 wd:Q1622272 wd:Q33999 } }
   ${constraint}
   OPTIONAL { ?item rdfs:label ?nameKo_. FILTER(LANG(?nameKo_)="ko") }
   OPTIONAL { ?item rdfs:label ?nameEn_. FILTER(LANG(?nameEn_)="en") }
