@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>확인 결과 · OPUSCLAM.COM</title>
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="/assets/auth.css">
+<style>
+  .fr-val{padding:14px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;font-size:15px;font-weight:700;color:var(--tx)}
+  .btn.block{display:block;text-align:center;width:100%}
+  .btn.ghost.block{margin-top:10px}
+</style>
+</head>
+<body>
+<div class="gnb">
+  <div class="util"><div class="in">
+    <div class="l"><a href="#">WIXON ASSOCIATES INC</a><a href="#">LPSTOCK</a><a href="#">OPUSCLAM COMMUNITY</a></div>
+    <div class="r"><a href="#">CUSTOMER CENTER &rsaquo;</a></div>
+  </div></div>
+  <div class="mast"><div class="in">
+    <a class="logo" href="/home.html"><img src="/assets/logo.png" alt="OPUSCLAM.COM"></a>
+    <nav class="nav"><a href="/home.html">DATABASE</a><a href="#">OC커뮤니티</a><a href="#">정보SPOT</a><a href="#">레슨 : ON</a><a href="#">리쿠르트</a><a href="#">SHOPPING</a></nav>
+    <div class="tools">
+      <a class="school" href="#">학교등록</a>
+      <span class="authlink"><a href="/login.html">로그인</a> <a href="/join.html">회원가입</a></span>
+      <span class="circ" title="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span>
+      <span class="circ theme-toggle" title="테마 전환"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
+      <button class="burger" title="전체메뉴"><span></span><span></span><span></span></button>
+    </div>
+  </div></div>
+</div><main><div class="wrap narrow" style="margin-top:70px"><div class="authcard"><h2>확인 결과</h2><div id="fr-body"><div class="sub">확인 중…</div></div></div></div></main><footer><p>ⓒ OPUSCLAM &amp; WIXON ASSOCIATES INC. ALL RIGHTS RESERVED. · <a href="/terms.html">서비스약관</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="/data-policy.html">데이터 정책</a></p></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script>
+(function(){
+  var box=document.getElementById('fr-body');
+  var TYPE={major:'전공자',industry:'음악관계자',org:'단체·기업',school:'음악학교',general:'일반'};
+  var STATUS={pending:'승인 대기',approved:'승인 완료',rejected:'반려됨'};
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function fail(){
+    box.innerHTML='<div class="sub" style="color:#f2777a">링크가 만료되었거나 잘못되었습니다. 다시 시도해 주세요.</div><div class="actions"><a class="btn primary block" href="/find-id.html">아이디 찾기 다시하기</a></div>';
+  }
+  if(!window.ocAuth){ fail(); return; }
+  window.ocAuth.session().then(function(s){
+    if(!s){ fail(); return; }
+    window.ocAuth.myMember().then(function(m){
+      if(!m){ box.innerHTML='<div class="sub">본인 확인은 되었으나 회원 정보를 찾을 수 없습니다. 고객센터로 문의해 주세요.</div>'; return; }
+      box.innerHTML=''
+        +'<div class="sub">본인 확인이 완료되었습니다. 가입된 계정 정보입니다.</div>'
+        +'<div class="fg"><label class="fl">아이디</label><div class="fr-val">'+esc(m.username||'-')+'</div></div>'
+        +'<div class="fg"><label class="fl">회원 유형</label><div class="fr-val">'+esc(TYPE[m.member_type]||m.member_type||'-')+' · '+esc(STATUS[m.status]||m.status||'-')+'</div></div>'
+        +'<div class="actions"><a class="btn primary block" href="/mypage.html">마이페이지로 이동</a><a class="btn ghost block" href="#" id="fr-logout">로그아웃하고 로그인 화면으로</a></div>';
+      var lo=document.getElementById('fr-logout');
+      if(lo) lo.addEventListener('click',function(e){ e.preventDefault(); window.ocAuth.logout(); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

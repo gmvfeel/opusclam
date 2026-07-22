@@ -118,6 +118,14 @@
       var r = await c.auth.updateUser({ password: newPw });
       if(r.error) return { ok:false, msg: r.error.message || '변경 오류' };
       return { ok:true };
+    },
+
+    /* 아이디 찾기/가입확인용: 가입된 이메일에만 본인확인 링크 발송 */
+    sendLoginLink: async function(email, redirectPath){
+      var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
+      var r = await c.auth.signInWithOtp({ email: email, options: { shouldCreateUser:false, emailRedirectTo: location.origin + (redirectPath || '/mypage.html') } });
+      if(r.error) return { ok:false, msg: r.error.message };
+      return { ok:true };
     }
   };
 
