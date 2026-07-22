@@ -1516,7 +1516,8 @@ if('serviceWorker' in navigator){
      var desc=(x.description&&x.description.trim())?x.description.trim():(lead0||'공연장DB');
      var lead=document.querySelector('.pv-lead');if(lead)lead.textContent=desc;
      var bio=document.querySelector('.pv-prose');if(bio)bio.innerHTML='<p>'+esc(desc)+'</p>'+((x.description&&x.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
-     var wl=document.querySelector('ul.pv-worklist');if(wl&&x.programs)wl.innerHTML=String(x.programs).split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
+     var wl=document.querySelector('ul.pv-worklist');if(wl){var _pg=(x.programs&&String(x.programs).trim())?String(x.programs).split(/[\u00b7,]/).map(function(w){return w.trim();}).filter(Boolean):[];wl.innerHTML=_pg.length?_pg.map(function(w){return '<li>'+esc(w)+'</li>';}).join(''):'<li style="color:var(--text-3)">등록된 프로그램 정보가 없습니다.</li>';}
+     (function(){document.querySelectorAll('.pv-sec, .pv-block').forEach(function(sec){var h=sec.querySelector('.pv-h');if(h&&/(영상|사진|갤러리|홀 구성|관람 안내|관련 공연장)/.test(h.textContent))sec.style.display='none';});})();
      var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('유형',esc(x.type||''))+fact('소재지',esc(x.location||''))+fact('개관',esc(x.opened||''))+fact('좌석수',esc(x.seats||''))+fact('운영주체',esc(x.operator||''))+fact('상주단체',esc(x.resident||''))+fact('대표 프로그램',esc(x.programs||''));
      var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
           (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
