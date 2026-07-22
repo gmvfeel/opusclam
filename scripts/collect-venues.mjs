@@ -1,7 +1,7 @@
 // ============================================================
 // OPUSCLAM 공연장(venues) 자동 수집기  (v2: 품질 강화)
 // - 소스: 위키데이터(SPARQL)
-// - 수집 범위: 국내(대한민국)는 전부 · 해외는 한국어에 등재된(유명한) 곳만
+// - 수집 범위: 국내(대한민국)는 전부 · 해외는 한국어 등재 또는 좌석수 있는 곳
 // - 원칙: ① 신규 추가  ② 기존은 '빈 칸만' 보강  ③ 사람이 채운 값 보호
 // - 중복 방지: wikidata_id + 이름(name_ko) 중복 시 스킵(정식 데이터 보호)
 // - 정렬: 국내가 위쪽(높은 sort_no)에 오도록 부여
@@ -88,7 +88,7 @@ function toRow(b, type) {
     link_wiki: koArticle || val(b, 'enArticle') || '',
     source: 'auto',
     _domestic: qidOf(val(b, 'country')) === KR_QID || country === '대한민국' || country === 'South Korea',
-    _notable: !!nameKo || !!koArticle,   // 한국어 라벨 or 한국어 위키 문서 = 유명
+    _notable: !!nameKo || !!koArticle || !!seats,   // 한국어 등재 or 좌석수 있음 = 포함
   };
 }
 
