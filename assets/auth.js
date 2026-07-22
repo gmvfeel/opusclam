@@ -113,6 +113,15 @@
     },
 
     /* 새 비밀번호로 변경 (재설정 링크로 들어온 세션에서) */
+    verifyCurrentPassword: async function(currentPw){
+      var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
+      var sr = await c.auth.getUser();
+      var email = sr && sr.data && sr.data.user && sr.data.user.email;
+      if(!email) return { ok:false, msg:'로그인이 필요합니다.' };
+      var r = await c.auth.signInWithPassword({ email: email, password: currentPw });
+      if(r.error) return { ok:false, msg:'현재 비밀번호가 일치하지 않습니다.' };
+      return { ok:true };
+    },
     updatePassword: async function(newPw){
       var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
       var r = await c.auth.updateUser({ password: newPw });
