@@ -154,7 +154,7 @@ window.OCBoard = (function () {
       checkAdmin().then(function (m) {
         if (!m) return;
         var bar = document.querySelector('.board-actions');
-        if (bar) bar.innerHTML = '<a class="board-write-btn" href="' + cfg.writePage + '">글쓰기</a>';
+        if (bar) bar.innerHTML = '<a class="pdb-reg" href="' + cfg.writePage + '"><span class="plus">+</span> 글쓰기</a>';
       });
     }
 

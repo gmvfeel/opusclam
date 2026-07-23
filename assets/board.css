@@ -9,24 +9,16 @@
 .board-titlebar .tt{min-width:0}
 .board-eyebrow{font-family:var(--display);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--violet-2);font-weight:700}
 .board-title-h{font-family:var(--display);font-size:38px;font-weight:800;color:var(--text);margin:6px 0 0;line-height:1.1}
-.board-count{font-size:13px;color:var(--text-3);margin-top:8px}
-.board-count b{color:var(--violet-2)}
 
-/* 툴바: 카테고리 탭 + 검색 + 글쓰기 */
-.board-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:18px;border-bottom:2px solid var(--text)}
+/* 툴바 — 인물DB 스타일 재사용: 마크업에 style.css의 .pdb-toolbar/.pdb-search/.pdb-searchbtn/
+   .pdb-meta/.pdb-count/.pdb-reg 클래스를 함께 부여해 그대로 물려받는다(중복 CSS 없음).
+   board.js 훅(.board-cats/.board-search/.board-searchbtn/.board-count b/.board-actions)은 유지.
+   분류탭은 인물DB에 없는 뉴스 전용 요소라 여기서 스타일 유지. */
 .board-cats{display:flex;gap:6px;flex-wrap:wrap}
 .board-cat-tab{font-family:var(--display);font-size:14px;font-weight:600;color:var(--text-3);background:none;border:1px solid var(--line-2);border-radius:999px;padding:7px 16px;cursor:pointer;transition:all .15s ease}
 .board-cat-tab:hover{color:var(--text);border-color:var(--text-3)}
 .board-cat-tab.on{color:#fff;background:var(--violet-2);border-color:var(--violet-2)}
-.board-bar .spring{flex:1 1 auto}
-.board-search{position:relative;display:flex;align-items:center}
-.board-search input{font-size:14px;color:var(--text);background:var(--paper);border:1px solid var(--line-2);border-radius:999px;padding:9px 40px 9px 16px;width:240px;max-width:52vw;outline:none;transition:border-color .15s ease}
-.board-search input:focus{border-color:var(--violet-2)}
-.board-searchbtn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;background:none;cursor:pointer;color:var(--text-3);display:grid;place-items:center}
-.board-searchbtn:hover{color:var(--violet-2)}
 .board-actions{display:flex;align-items:center}
-.board-write-btn{font-family:var(--display);font-size:14px;font-weight:700;color:#fff;background:var(--ink);border-radius:999px;padding:9px 20px;text-decoration:none;transition:background .15s ease}
-.board-write-btn:hover{background:var(--violet-2)}
 
 /* 목록 */
 .board-list{border-top:1px solid var(--line)}
@@ -97,5 +89,4 @@
   .board-title-h{font-size:30px}
   .bv-title{font-size:24px}
   .board-meta .board-views{display:none}
-  .board-search input{width:170px}
 }
