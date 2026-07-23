@@ -52,6 +52,8 @@
     .pdb-table .c-link .lk{width:22px;height:22px;margin-right:2px}
     .pdb-table .c-link .lk svg{width:12px;height:12px}
   }
+  /* sticky 헤더 고정 시 위·아래 굵은 라인 유지 (border-collapse가 box-shadow를 지우는 버그 회피) */
+  .pdb-table{border-collapse:separate;border-spacing:0}
   .pdb-table th{text-align:left;font-size:1.15em;letter-spacing:0;text-transform:none;color:var(--text-2);font-weight:700;padding:20px 9px;box-shadow:inset 0 3px 0 var(--text),inset 0 -2px 0 var(--text)}
   .pdb-table td{padding:14px 9px;border-top:1px solid var(--line);color:var(--text-2);font-size:1em;white-space:nowrap;vertical-align:middle;overflow:hidden}
   .pdb-table tbody tr{transition:background .15s ease}
