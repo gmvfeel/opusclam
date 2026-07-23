@@ -15,7 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <link rel="stylesheet" href="/style.css">
-  <style>  /* 컬럼 폭(기본) */
+<link rel="stylesheet" href="/assets/base.css">
+  <style>/* 컬럼 폭(기본) */  
   .pdb-table th.c-no{width:3.5%}
   .pdb-table th.c-ava{width:4.5%}
   .pdb-table th.c-name{width:16%}
@@ -26,8 +27,8 @@
   .pdb-table th.c-era{width:11%}
   .pdb-table th.c-work{width:12%}
   .pdb-table th.c-school{width:12.5%}
-  .pdb-table th.c-link{width:8%}
-  /* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
+  .pdb-table th.c-link{width:8%}/* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
+  
   @media(max-width:840px){
     .pdb-table .c-no,.pdb-table .c-ava,.pdb-table .c-school{display:none}
     .pdb-table th.c-no,.pdb-table th.c-ava,.pdb-table th.c-school{width:0}
@@ -39,8 +40,8 @@
     .pdb-table th.c-era{width:14%}
     .pdb-table th.c-work{width:16%}
     .pdb-table th.c-link{width:12%}
-  }
-  /* ===== 휴대폰: 핵심(이름·분야·국적·대표작·링크)만 ===== */
+  }/* ===== 휴대폰: 핵심(이름·분야·국적·대표작·링크)만 ===== */
+  
   @media(max-width:520px){
     .pdb-table .c-life,.pdb-table .c-org,.pdb-table .c-work,.pdb-table .c-era{display:none}
     .pdb-table th.c-life,.pdb-table th.c-org,.pdb-table th.c-work,.pdb-table th.c-era{width:0}
@@ -51,142 +52,40 @@
     .pdb-table th,.pdb-table td{padding-left:6px;padding-right:6px}
     .pdb-table .c-field{white-space:normal}
   }
-  .pdb-table th{text-align:left;font-size:1.15em;letter-spacing:0;text-transform:none;color:var(--text-2);font-weight:700;padding:20px 9px;box-shadow:inset 0 3px 0 var(--text),inset 0 -2px 0 var(--text)}
-  .pdb-table td{padding:14px 9px;border-top:1px solid var(--line);color:var(--text-2);font-size:1em;white-space:nowrap;vertical-align:middle;overflow:hidden}
-  .pdb-table tbody tr{transition:background .15s ease}
-
-  .pdb-table .c-no{width:64px;color:var(--text-3);font-variant-numeric:tabular-nums}
   .pdb-table .c-name{white-space:normal;line-height:1.35}
-  .pdb-table .c-name a{color:var(--text);font-weight:600;font-size:1em;text-decoration:none;letter-spacing:-.01em;transition:color .15s ease}
-  .pdb-table .c-name-en{font-size:.82em;color:var(--text-3);font-weight:400;margin-left:6px}
 
   .pdb-table .c-field{width:112px}
-  .pdb-table .tag{display:inline-block;font-size:.92em;color:var(--text-2);border:1px solid var(--line-2);border-radius:20px;padding:3px 11px;white-space:nowrap}
-  .pdb-table .c-birth{width:130px;color:var(--text-3);font-variant-numeric:tabular-nums}
-  .pdb-table .c-school{color:var(--text-3)}
-
-  /* 표 하단 구분선 */
-  .pdb-divider{border-top:1px solid var(--line-2);margin-top:48px}
-  /* ===== 페이저 (새 디자인) ===== */
-  .pdb-pager{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:60px}
-  .pdb-pager .pg-nums{display:flex;gap:6px}
-  .pdb-pager .pg-nums a{min-width:40px;height:40px;display:grid;place-items:center;border-radius:10px;font-size:13.5px;font-weight:500;color:var(--text-2);text-decoration:none;border:1px solid transparent;transition:all .15s ease}
-  .pdb-pager .pg-nums a:hover{border-color:var(--line-2);color:var(--text);background:var(--paper)}
-  .pdb-pager .pg-nums a.on{background:var(--violet-2);color:#fff;font-weight:700;border-color:var(--violet-2);box-shadow:0 6px 16px -6px rgba(124,99,176,.55)}
-  .pdb-pager .pg-nav{display:inline-flex;align-items:center;height:40px;padding:0 15px;border:1px solid var(--line-2);border-radius:10px;font-size:13px;color:var(--text-2);text-decoration:none;transition:all .15s ease}
-  .pdb-pager .pg-nav:hover{border-color:var(--violet-2);color:var(--violet-2)}
-  /* ===== 로딩 스켈레톤 ===== */
-  .pdb-skelrow td{padding:16px 9px}
-  .pdb-skel{display:block;width:100%;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--line) 25%,var(--line-2) 37%,var(--line) 63%);background-size:400% 100%;animation:pdbShimmer 1.3s ease-in-out infinite}
-  .pdb-skel.ava{width:32px;height:32px;border-radius:50%;margin:0 auto}
-  @keyframes pdbShimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+  .pdb-table .c-school{color:var(--text-3)}/* 표 하단 구분선 *//* ===== 페이저 (새 디자인) ===== *//* ===== 로딩 스켈레톤 ===== */
 
   @media(max-width:720px){
     .pdb{padding:140px 0 46px}
     .pdb-title{font-size:34px}
     .pdb-titlebar{flex-direction:column;align-items:flex-start;gap:16px}
     .pdb-toolbar{margin-top:34px}
-  }
+  }/* 서브페이지 헤더: 기본 어두운(메인 GNB 느낌) → 호버 시 흰색 *//* 풍성한 컬럼 */
+  .pdb-table .c-era{width:96px;color:var(--text-2)}/* 대표작·소속 컬럼 */
 
 
-  /* 서브페이지 헤더: 기본 어두운(메인 GNB 느낌) → 호버 시 흰색 */
-  .site-header:not(.solid){background:linear-gradient(115deg,#0E1230 0%,#241a44 55%,#3a2456 100%)}
-  html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115deg,#0a0a0a 0%,#161616 55%,#222 100%)}
-
-
-  /* 풍성한 컬럼 */
-  .pdb-table .c-ava{width:56px;padding-right:0}
-  .pdb-table .ava{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--paper-2);border:1px solid var(--line);font-family:var(--display);font-weight:700;font-size:13px;color:var(--text-3);background-size:cover;background-position:center}
-  .pdb-table .c-nation{color:var(--text-2);overflow:hidden;text-overflow:ellipsis}
-  .pdb-table .nat-code{font-size:.85em;opacity:.6;margin-left:1px}
-  .pdb-table .c-life{width:118px;color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .pdb-table .c-era{width:96px;color:var(--text-2)}
-
-
-  /* 대표작·소속 컬럼 */
+  
   .pdb-table .c-work{min-width:180px;max-width:270px;color:var(--text-2);white-space:normal;line-height:1.5}
   .pdb-table .c-org{min-width:120px;max-width:170px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pdb-table .c-school{max-width:170px;overflow:hidden;text-overflow:ellipsis}
-  .pdb-table .c-name{min-width:120px}
+  .pdb-table .c-name{min-width:120px}/* 행 호버: 짙은 퍼플 배경 + 흰색 텍스트 *//* 복수 태그 */
 
 
-  /* 행 호버: 짙은 퍼플 배경 + 흰색 텍스트 */
-  .pdb-table tbody tr:hover td{background:#322152;color:#fff}
-  .pdb-table tbody tr:hover td a{color:#fff}
-  .pdb-table tbody tr:hover .tag{color:#fff;border-color:rgba(255,255,255,.45)}
-  .pdb-table tbody tr:hover .ava{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
-
-
-  /* 복수 태그 */
+  
   .pdb-table .c-field{white-space:nowrap;overflow:hidden}
-  .pdb-table .c-field .tag{margin:0 4px 3px 0}
-  /* 사조 2줄 */
-  .pdb-table .c-era{white-space:nowrap}
-  .pdb-table .c-era .era-name{display:block;color:var(--text-2)}
-  .pdb-table .c-era .era-yr{display:block;font-size:.85em;color:var(--text-3);margin-top:2px}
-  /* 관련 링크 아이콘 */
-  .pdb-table .c-link{width:112px}
-  .pdb-table .c-link .lk{display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;color:var(--text-3);border:1px solid var(--line);border-radius:7px;margin-right:5px;transition:color .15s ease,border-color .15s ease}
-  .pdb-table .c-link .lk svg{width:14px;height:14px}
-  .pdb-table .c-link .lk:hover{color:var(--text);border-color:var(--text-3)}
+  .pdb-table .c-field .tag{margin:0 4px 3px 0}/* 사조 2줄 */
+  
+  .pdb-table .c-era{white-space:nowrap}/* 관련 링크 아이콘 *//* 데이터 컬럼(유형·창단·홈페이지) 가운데 정렬 — 단체명·소재지·대표지휘자는 왼쪽 */
 
-  /* 데이터 컬럼(유형·창단·홈페이지) 가운데 정렬 — 단체명·소재지·대표지휘자는 왼쪽 */
+  
   .pdb-table th.c-field, .pdb-table td.c-field,
   .pdb-table th.c-life, .pdb-table td.c-life,
   .pdb-table th.c-org, .pdb-table td.c-org,
   .pdb-table th.c-link, .pdb-table td.c-link{text-align:center}
-  .pdb-table .c-field .tag{margin:0 1px}
-  /* 호버(퍼플) 시 추가 요소도 흰색 */
-  .pdb-table tbody tr:hover .era-name,
-  .pdb-table tbody tr:hover .era-yr{color:#fff}
-  .pdb-table tbody tr:hover .lk{color:#fff;border-color:rgba(255,255,255,.4)}
-
-
-  .pdb-table thead th[class]{color:var(--text-2)}
-
-
-  /* 행 호버 색 전환을 부드럽게 */
-  .pdb-table td,
-  .pdb-table td a,
-  .pdb-table .tag,
-  .pdb-table .ava,
-  .pdb-table .era-name,
-  .pdb-table .era-yr,
-  .pdb-table .lk{transition:background-color .25s ease, color .25s ease, border-color .25s ease}
-
-
-  /* OC 회원 배지 (별표 대체) */
-  .oc-badge{display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-size:9px;font-weight:800;letter-spacing:.03em;color:#fff;background:#EC7A1C;border-radius:4px;padding:2px 5px;margin-left:6px;vertical-align:middle;line-height:1}
-  .pdb-legend .oc-badge{margin-left:0;margin-right:5px}
-
-
-
-
-  /* ALLIANCE WXN: 빅배너 바로 위, 어두운 텍스트 */
-  .wxn-sub{margin:0 0 14px}
-  .wxn-sub .wxn-run{color:var(--text-2)}
-
-
-  /* 헤더 배경: 메인 4번째 패턴(scene-net 별자리) */
-  .pdb{position:relative}
-  .pdb-bg{position:absolute;top:0;left:0;right:0;height:470px;z-index:0;overflow:hidden;pointer-events:none;opacity:.55;-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%)}
-  .pdb-bg .wave{position:absolute;inset:0;width:100%;height:100%;transform:none;-webkit-mask-image:none;mask-image:none}
-  .pdb-bg .scene{position:absolute;inset:0;opacity:1}
-  .pdb-bg .scene svg{width:100%;height:100%;display:block}
-  .pdb-inner{position:relative;z-index:1}
-
-
-  /* 다크모드 행 호버: 순수 블랙 */
-  html[data-theme="dark"] .pdb-table tbody tr:hover td{background:#000}
-
-
-
-  .nd{color:var(--text-3);opacity:.45}
-  .pdb-empty{text-align:center;padding:64px 0;color:var(--text-3);font-size:14px}
-  .pdb-table tr.row-focus{animation:rowflash 2.6s ease}
-  @keyframes rowflash{0%,18%{background:rgba(124,99,176,.22)}100%{background:transparent}}
-  @media(max-width:768px){.util{display:none}}
-</style>
+  .pdb-table .c-field .tag{margin:0 1px}/* 호버(퍼플) 시 추가 요소도 흰색 *//* 행 호버 색 전환을 부드럽게 *//* OC 회원 배지 (별표 대체) *//* ALLIANCE WXN: 빅배너 바로 위, 어두운 텍스트 *//* 헤더 배경: 메인 4번째 패턴(scene-net 별자리) *//* 다크모드 행 호버: 순수 블랙 */
+  @media(max-width:768px){.util{display:none}}</style>
 </head>
 <body>
 
