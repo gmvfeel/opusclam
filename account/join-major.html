@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전공자 회원가입 · OPUSCLAM.COM</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="/assets/auth.css">
+</head>
+<body>
+<!-- ===== header (partials/header-auth.html 에서 공통 관리) ===== -->
+<div id="oc-header-auth"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/app.js"></script><main><div class="wrap"><div class="steps"><div class="step"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>약관동의</div><div class="sep">•••</div><div class="step on"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20h9"/><path d="M16.5 3.5a2 2 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>정보입력</div><div class="sep">•••</div><div class="step"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6L9 17l-5-5"/></svg></div>가입완료</div></div><div class="ptitle">전공자 회원가입<span class="req-note"><span class="req" style="color:#c98b6a">*</span> 필수 입력 항목</span></div><div class="psub">자격 심사(관리자 승인) 후 데이터 등록·보강 권한이 부여됩니다.</div><div class="fbox"><div class="frow"><div class="fg full"><label class="fl">아이디 <span class="req">*</span></label><div class="inrow"><input class="inp" type="text" data-k="username" data-req placeholder="영문·숫자 조합"><button type="button" class="mini-btn" id="chk-id">중복확인</button></div><div class="hint" id="id-msg"></div></div><div class="fg"><label class="fl">비밀번호 <span class="req">*</span></label><input class="inp" type="password" data-k="password" data-req placeholder="8~16자 영문·숫자·특수문자 조합"></div><div class="fg"><label class="fl">비밀번호 확인 <span class="req">*</span></label><input class="inp" type="password" data-k="password2" data-req placeholder="비밀번호 재입력"></div><div class="fg"><label class="fl">이름 <span class="req">*</span></label><input class="inp" type="text" data-k="name" data-req placeholder=""></div><div class="fg"><label class="fl">영문명</label><input class="inp" type="text" data-k="name_en" placeholder="(선택) 예: Hong Gildong"></div><div class="fg"><label class="fl">생년월일</label><input class="inp" type="date" data-k="birth" placeholder=""></div><div class="fg"><label class="fl">국적</label><input class="inp" type="text" data-k="nationality" placeholder="대한민국"></div><div class="fg"><label class="fl">이메일 <span class="req">*</span></label><input class="inp" type="email" data-k="email" data-req placeholder="name@example.com"></div><div class="fg"><label class="fl">휴대폰</label><input class="inp" type="text" data-k="phone" placeholder="010-0000-0000"></div><div class="fg full"><label class="fl">주소</label><input class="inp" type="text" data-k="address" placeholder=""></div><div class="fg"><label class="fl">소속</label><input class="inp" type="text" data-k="org" placeholder="소속 단체·기관"></div><div class="fg"><label class="fl">주요 악기</label><input class="inp" type="text" data-k="instrument" placeholder="예: 피아노"></div><div class="fg full"><label class="fl">분야 선택 <span class="req">*</span></label><div class="inrow"><select class="inp" data-k="field1" data-req><option value="">대분류</option><option>연주</option><option>작곡</option><option>지휘</option><option>성악</option><option>음악학</option><option>기획·평론</option></select><select class="inp" data-k="field2"><option value="">중분류</option><option>기악</option><option>관현악</option><option>실내악</option><option>합창</option><option>오페라</option></select><select class="inp" data-k="field3"><option value="">소분류</option><option>피아노</option><option>바이올린</option><option>첼로</option><option>플루트</option><option>기타</option></select></div></div><div class="fg full"><label class="fl">출신학교</label><div class="inrow"><select class="inp" data-k="school_country"><option value="">국가</option><option>국내</option><option>국외</option></select><input class="inp" data-k="school_name" placeholder="학교명"><select class="inp" data-k="school_degree"><option value="">학위</option><option>학사</option><option>석사</option><option>박사</option><option>디플롬</option></select></div><div class="hint">복수 학교 입력은 추후 지원됩니다.</div></div><div class="fg full"><label class="fl">대표작 / 대표 연주</label><input class="inp" type="text" data-k="works" placeholder="· 로 구분하여 입력"></div><div class="fg full"><label class="fl">경력사항</label><textarea class="inp" data-k="career" placeholder="주요 경력을 입력하세요"></textarea></div><div class="fg full"><label class="fl">소개</label><textarea class="inp" data-k="description" placeholder="자기소개 (인물 DB의 생애·이력에 활용됩니다)"></textarea></div><div class="fg full"><label class="fl">프로필 사진</label><input class="inp" type="file" data-k="photo"><div class="hint">권장 사이즈 332×400, JPG/PNG</div></div><div class="fg full"><label class="fl">활동 사진</label><input class="inp" type="file" data-k="photos"></div><div class="fg full"><label class="fl">관련 영상</label><input class="inp" type="text" data-k="link_video" placeholder="YouTube 등 URL"></div><div class="fg full"><label class="db-consent"><input type="checkbox" data-k="db_consent" checked> <span>작성한 정보가 오퍼스클램 인물 데이터베이스에 등록되는 것에 동의합니다. (관리자 승인 후 반영)</span></label></div></div></div><div class="err" id="form-err"></div><div class="actions"><button class="btn primary" id="submit-btn">회원가입 완료</button><a class="btn ghost" href="/account/join.html">취소</a></div></div></main><div id="oc-footer"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script>
+(function(){
+  
+  var idBtn=document.getElementById('chk-id');
+  if(idBtn) idBtn.addEventListener('click', async function(){
+    var el=document.querySelector('[data-k="username"]'); var msg=document.getElementById('id-msg');
+    var u=(el.value||'').trim(); if(!u){msg.textContent='아이디를 입력하세요';msg.style.color='#f2777a';return;}
+    if(!window.ocAuth||!window.ocAuth.client()){msg.textContent='(미리보기) Supabase 설정 후 확인됩니다';msg.style.color='#8a94a6';return;}
+    var ok=await window.ocAuth.usernameAvailable(u); msg.textContent=ok?'사용 가능한 아이디입니다.':'이미 사용 중인 아이디입니다.'; msg.style.color=ok?'#7bd88f':'#f2777a';
+  });
+  document.getElementById('submit-btn').addEventListener('click', async function(){
+    var err=document.getElementById('form-err'); err.textContent='';
+    if(!window.ocAuth){err.textContent='초기화 중입니다. 잠시 후 다시 시도해 주세요.';return;}
+    var r=await window.ocAuth.formSignup(document, 'major');
+    if(!r||!r.ok){err.textContent=(r&&r.msg)||'가입 처리 중 오류가 발생했습니다.';return;}
+    location.href='/account/join-complete.html';
+  });
+})();
+</script>
+</body>
+</html>

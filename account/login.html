@@ -39,7 +39,7 @@
         <button type="button" class="soc google" data-p="google"><span class="ic"><b>G</b></span>Google</button>
         <button type="button" class="soc kakao" data-p="kakao"><span class="ic"><b>K</b></span>Kakao</button>
       </div>
-      <div class="aflinks"><a href="/join-check.html">가입여부 확인</a><span>•</span><a href="/find-id.html">아이디 찾기</a><span>•</span><a href="/find-pw.html">비밀번호 찾기</a></div>
+      <div class="aflinks"><a href="/account/join-check.html">가입여부 확인</a><span>•</span><a href="/account/find-id.html">아이디 찾기</a><span>•</span><a href="/account/find-pw.html">비밀번호 찾기</a></div>
     </div>
   </div>
 </div></main>
@@ -49,7 +49,7 @@
 <script>
 (function(){
   var idEl=document.getElementById('user-id'), pwEl=document.getElementById('user-pw'), errEl=document.getElementById('lg-err');
-  document.getElementById('tab-join').addEventListener('click',function(){ location.href='/join.html'; });
+  document.getElementById('tab-join').addEventListener('click',function(){ location.href='/account/join.html'; });
   async function doLogin(){
     errEl.textContent='';
     var id=idEl.value.trim(), pw=pwEl.value;

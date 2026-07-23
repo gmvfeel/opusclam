@@ -109,7 +109,7 @@
     /* 비밀번호 재설정 메일 발송 */
     sendPasswordReset: async function(email){
       var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
-      var r = await c.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/reset-password.html' });
+      var r = await c.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/account/reset-password.html' });
       if(r.error) return { ok:false, msg: r.error.message || '메일 발송 오류' };
       return { ok:true };
     },
@@ -134,7 +134,7 @@
     /* 아이디 찾기/가입확인용: 가입된 이메일에만 본인확인 링크 발송 */
     sendLoginLink: async function(email, redirectPath){
       var c = sb(); if(!c) return { ok:false, msg:'초기화 오류' };
-      var r = await c.auth.signInWithOtp({ email: email, options: { shouldCreateUser:false, emailRedirectTo: location.origin + (redirectPath || '/mypage.html') } });
+      var r = await c.auth.signInWithOtp({ email: email, options: { shouldCreateUser:false, emailRedirectTo: location.origin + (redirectPath || '/account/mypage.html') } });
       if(r.error) return { ok:false, msg: r.error.message };
       return { ok:true };
     },
@@ -285,7 +285,7 @@
 (function(){
   "use strict";
   // 배너를 띄울 '비로그인 전용' 페이지들 (완료/결과/마이페이지/재설정은 제외)
-  var GUEST_PAGES = ['/login.html','/join.html','/join-general.html','/join-major.html','/join-industry.html','/join-school.html','/join-consent.html','/find-id.html','/find-pw.html','/join-check.html'];
+  var GUEST_PAGES = ['/account/login.html','/account/join.html','/account/join-general.html','/account/join-major.html','/account/join-industry.html','/account/join-school.html','/account/join-consent.html','/account/find-id.html','/account/find-pw.html','/account/join-check.html'];
   function pageMatch(){
     var p = location.pathname;
     for(var i=0;i<GUEST_PAGES.length;i++){ if(p === GUEST_PAGES[i] || p.slice(-GUEST_PAGES[i].length) === GUEST_PAGES[i]) return true; }
@@ -297,7 +297,7 @@
     bar.id = 'oc-guest-bar';
     bar.setAttribute('style','position:relative;z-index:2;background:var(--tagbg,#f3eefb);border-bottom:1px solid var(--line2,#dedbe4);color:var(--tx,#1a1a2e);padding:12px 20px;text-align:center;font-size:13px;line-height:1.6;');
     bar.innerHTML = '이미 <strong>'+name+'</strong>님으로 로그인되어 있습니다. '
-      + '<a href="/mypage.html" style="color:var(--navh,#EC7A1C);font-weight:700;text-decoration:underline;margin:0 4px;">마이페이지</a>'
+      + '<a href="/account/mypage.html" style="color:var(--navh,#EC7A1C);font-weight:700;text-decoration:underline;margin:0 4px;">마이페이지</a>'
       + '<a href="#" id="oc-guest-logout" style="color:var(--tx3,#8a8a9a);text-decoration:underline;margin-left:8px;">로그아웃</a>';
     var gnb = document.querySelector('.gnb');
     if(gnb && gnb.parentNode) gnb.parentNode.insertBefore(bar, gnb.nextSibling);
@@ -332,7 +332,7 @@
     window.ocAuth.session().then(function(s){
       if(!s) return; // 비로그인: 기존 '로그인 / 회원가입' 그대로 둠
       function paint(name, typeLabel){
-        al.innerHTML = '<a href="/mypage.html">'+esc(name)+'님'+(typeLabel?' ('+esc(typeLabel)+')':'')+'</a> '
+        al.innerHTML = '<a href="/account/mypage.html">'+esc(name)+'님'+(typeLabel?' ('+esc(typeLabel)+')':'')+'</a> '
           + '<a href="#" id="oc-hdr-logout">로그아웃</a>';
         var lo = document.getElementById('oc-hdr-logout');
         if(lo) lo.addEventListener('click', function(e){ e.preventDefault(); if(window.ocAuth.logout) window.ocAuth.logout(); });

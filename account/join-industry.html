@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>음악관계자 및 단체·기업 회원가입 · OPUSCLAM.COM</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="/assets/auth.css">
+<style>
+  /* 탭에 따라 폼 배경 구분: 단체·기업 선택 시 연한 색조 */
+  .fbox{transition:background .25s ease}
+  .fbox.org-mode{background:#ffffff}
+</style>
+</head>
+<body>
+<!-- ===== header (partials/header-auth.html 에서 공통 관리) ===== -->
+<div id="oc-header-auth"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/app.js"></script><main><div class="wrap"><div class="steps"><div class="step"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>약관동의</div><div class="sep">•••</div><div class="step on"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20h9"/><path d="M16.5 3.5a2 2 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>정보입력</div><div class="sep">•••</div><div class="step"><div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6L9 17l-5-5"/></svg></div>가입완료</div></div><div class="ptitle">음악관계자 및 단체<span class="req-note"><span class="req" style="color:#c98b6a">*</span> 필수 입력 항목</span></div><div class="psub">자격 심사(관리자 승인) 후 데이터 등록·보강 권한이 부여됩니다.</div><div class="fbox"><div class="ftabs"><button type="button" class="ftab on" data-t="industry">음악관계자</button><button type="button" class="ftab" data-t="org">단체·기업</button></div><div class="frow"><div class="fg full"><label class="fl">아이디 <span class="req">*</span></label><div class="inrow"><input class="inp" type="text" data-k="username" data-req placeholder="영문·숫자 조합"><button type="button" class="mini-btn" id="chk-id">중복확인</button></div><div class="hint" id="id-msg"></div></div><div class="fg"><label class="fl">비밀번호 <span class="req">*</span></label><input class="inp" type="password" data-k="password" data-req placeholder="8~16자 영문·숫자·특수문자 조합"></div><div class="fg"><label class="fl">비밀번호 확인 <span class="req">*</span></label><input class="inp" type="password" data-k="password2" data-req placeholder="비밀번호 재입력"></div></div><div data-group="industry"><div class="frow"><div class="fg"><label class="fl">이름 <span class="req">*</span></label><input class="inp" type="text" data-k="name" data-req placeholder=""></div><div class="fg"><label class="fl">생년월일</label><input class="inp" type="date" data-k="birth" placeholder=""></div><div class="fg"><label class="fl">회사(단체)명</label><input class="inp" type="text" data-k="company" placeholder="소속 회사·단체"></div><div class="fg"><label class="fl">부서/직책</label><input class="inp" type="text" data-k="position" placeholder=""></div><div class="fg full"><label class="fl">주소</label><input class="inp" type="text" data-k="address" placeholder=""></div><div class="fg full"><label class="fl">관련 영상</label><input class="inp" type="text" data-k="link_video" placeholder="URL"></div></div></div><div data-group="org"><div class="frow"><div class="fg"><label class="fl">단체(기업)명 <span class="req">*</span></label><input class="inp" type="text" data-k="company" data-req placeholder=""></div><div class="fg"><label class="fl">영문명</label><input class="inp" type="text" data-k="name_en" placeholder="(선택)"></div><div class="fg"><label class="fl">사업자번호</label><input class="inp" type="text" data-k="biz_no" placeholder=""></div><div class="fg"><label class="fl">홈페이지</label><input class="inp" type="text" data-k="link_home" placeholder="https://"></div><div class="fg"><label class="fl">창단/설립 연도</label><input class="inp" type="text" data-k="founded" placeholder="예: 1998"></div><div class="fg"><label class="fl">대표자·지휘자</label><input class="inp" type="text" data-k="leader" placeholder=""></div><div class="fg"><label class="fl">연고 공연장</label><input class="inp" type="text" data-k="home_venue" placeholder=""></div><div class="fg"><label class="fl">부서/직책</label><input class="inp" type="text" data-k="position" placeholder=""></div><div class="fg full"><label class="fl">주소</label><input class="inp" type="text" data-k="address" placeholder=""></div><div class="fg full"><label class="fl">단체 소개</label><textarea class="inp" data-k="description" placeholder=""></textarea></div><div class="fg full"><label class="fl">로고</label><input class="inp" type="file" data-k="logo"><div class="hint">권장 사이즈 정사각, JPG/PNG</div></div><div class="fg full"><label class="fl">관련 영상</label><input class="inp" type="text" data-k="link_video" placeholder="URL"></div></div></div><div class="frow"><div class="fg"><label class="fl">이메일 <span class="req">*</span></label><input class="inp" type="email" data-k="email" data-req placeholder="name@example.com"></div><div class="fg"><label class="fl">휴대폰</label><input class="inp" type="text" data-k="phone" placeholder="010-0000-0000"></div><div class="fg full"><label class="fl">분야 선택</label><select class="inp" data-k="field1"><option value="">선택하세요</option><option>공연기획</option><option>공연제작</option><option>매니지먼트</option><option>평론</option><option>악기/음향</option><option>출판/미디어</option><option>기타</option></select></div></div><div class="fg full"><label class="db-consent"><input type="checkbox" data-k="db_consent" checked> <span>작성한 정보가 오퍼스클램 데이터베이스에 등록되는 것에 동의합니다. (관리자 승인 후 반영)</span></label></div></div><div class="err" id="form-err"></div><div class="actions"><button class="btn primary" id="submit-btn">회원가입 완료</button><a class="btn ghost" href="/account/join.html">취소</a></div></div></main><div id="oc-footer"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script>
+(function(){
+  var TYPE='industry';
+  var tabs=document.querySelectorAll('.ftab');
+  function setType(t){ TYPE=t;
+    document.querySelectorAll('[data-group]').forEach(function(g){ g.style.display=(g.getAttribute('data-group')===t)?'':'none'; });
+    tabs.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-t')===t); });
+    var fbox=document.querySelector('.fbox'); if(fbox) fbox.classList.toggle('org-mode', t==='org');
+  }
+  tabs.forEach(function(b){ b.addEventListener('click',function(){ setType(b.getAttribute('data-t')); }); });
+  setType('industry');
+  var idBtn=document.getElementById('chk-id');
+  if(idBtn) idBtn.addEventListener('click', async function(){
+    var el=document.querySelector('[data-k="username"]'); var msg=document.getElementById('id-msg');
+    var u=(el.value||'').trim(); if(!u){msg.textContent='아이디를 입력하세요';msg.style.color='#f2777a';return;}
+    if(!window.ocAuth||!window.ocAuth.client()){msg.textContent='(미리보기) Supabase 설정 후 확인됩니다';msg.style.color='#8a94a6';return;}
+    var ok=await window.ocAuth.usernameAvailable(u); msg.textContent=ok?'사용 가능한 아이디입니다.':'이미 사용 중인 아이디입니다.'; msg.style.color=ok?'#7bd88f':'#f2777a';
+  });
+  document.getElementById('submit-btn').addEventListener('click', async function(){
+    var err=document.getElementById('form-err'); err.textContent='';
+    if(!window.ocAuth){err.textContent='초기화 중입니다. 잠시 후 다시 시도해 주세요.';return;}
+    var r=await window.ocAuth.formSignup(document, TYPE);
+    if(!r||!r.ok){err.textContent=(r&&r.msg)||'가입 처리 중 오류가 발생했습니다.';return;}
+    location.href='/account/join-complete.html';
+  });
+})();
+</script>
+</body>
+</html>

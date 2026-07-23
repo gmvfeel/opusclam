@@ -33,7 +33,7 @@
   var URL="https://ptdxzxkgddvkusamkiol.supabase.co", KEY="sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu";
   var sb=window.supabase.createClient(URL,KEY);
   var body=document.getElementById('wd-body');
-  function needLogin(){ body.innerHTML='<div class="wd-msg">로그인이 필요합니다.<br><br><a class="btn primary block" href="/login.html">로그인하기</a></div>'; }
+  function needLogin(){ body.innerHTML='<div class="wd-msg">로그인이 필요합니다.<br><br><a class="btn primary block" href="/account/login.html">로그인하기</a></div>'; }
   function form(){
     body.innerHTML=''
       +'<div class="wd-notice">회원 탈퇴 시 아래 내용을 확인해 주세요.<br>'
@@ -42,7 +42,7 @@
       +'· 재가입을 원하시면 고객센터(cser@wixon.co.kr)로 문의해 주세요.</div>'
       +'<label class="wd-check"><input type="checkbox" id="wd-agree"><span>위 내용을 확인했으며, 회원 탈퇴에 동의합니다.</span></label>'
       +'<div class="err" id="wd-err"></div>'
-      +'<div class="actions"><button class="btn danger block" id="wd-btn" disabled>회원 탈퇴하기</button><a class="btn ghost block" href="/mypage.html">취소하고 돌아가기</a></div>';
+      +'<div class="actions"><button class="btn danger block" id="wd-btn" disabled>회원 탈퇴하기</button><a class="btn ghost block" href="/account/mypage.html">취소하고 돌아가기</a></div>';
     var agree=document.getElementById('wd-agree'), btn=document.getElementById('wd-btn'), err=document.getElementById('wd-err');
     agree.addEventListener('change', function(){ btn.disabled=!agree.checked; });
     btn.addEventListener('click', async function(){

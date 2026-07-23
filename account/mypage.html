@@ -69,7 +69,7 @@
     var al=document.querySelector(".authlink"); if(!al) return;
     var nm=(m&&(m.name||m.username))||(session.user.email)||"회원";
     var tl=(m&&TYPE[m.member_type])||"";
-    al.innerHTML='<a href="/mypage.html">'+esc(nm)+'님'+(tl?" ("+tl+")":"")+'</a> <a href="#" id="mpHdrLogout">로그아웃</a>';
+    al.innerHTML='<a href="/account/mypage.html">'+esc(nm)+'님'+(tl?" ("+tl+")":"")+'</a> <a href="#" id="mpHdrLogout">로그아웃</a>';
     var lo=document.getElementById("mpHdrLogout");
     if(lo) lo.addEventListener("click",function(e){e.preventDefault();doLogout();});
   }
@@ -92,11 +92,11 @@
       +  '<li><span class="k">가입일</span><span class="v">'+fmt(m.created_at)+'</span></li>'
       +'</ul>'
       +'<div class="mp-actions">'
-      +  (qual?'<a class="mp-btn primary" href="/db/write.html">DB 등록 · 보강 하러 가기</a>':'')
-      +  (isEmail?'<a class="mp-btn ghost" href="/change-password.html">비밀번호 변경</a>':'')
+      +  (qual?'<a class="mp-btn primary" href="/db/db-write.html">DB 등록 · 보강 하러 가기</a>':'')
+      +  (isEmail?'<a class="mp-btn ghost" href="/account/change-password.html">비밀번호 변경</a>':'')
       +  '<button class="mp-btn ghost" id="mpLogout">로그아웃</button>'
       +'</div>'
-      +'<div style="text-align:center;margin-top:18px"><a href="/withdraw.html" style="font-size:12px;color:var(--tx3);text-decoration:underline">회원 탈퇴</a></div>';
+      +'<div style="text-align:center;margin-top:18px"><a href="/account/withdraw.html" style="font-size:12px;color:var(--tx3);text-decoration:underline">회원 탈퇴</a></div>';
     box.innerHTML=html;
     var lo=document.getElementById("mpLogout"); if(lo) lo.addEventListener("click",doLogout);
   }
@@ -104,7 +104,7 @@
   sb.auth.getSession().then(function(r){
     var session=(r.data&&r.data.session)?r.data.session:null;
     if(!session){
-      box.innerHTML='<div class="mp-msg">로그인이 필요합니다.<br><br><a class="mp-btn primary" href="/login.html">로그인하기</a></div>';
+      box.innerHTML='<div class="mp-msg">로그인이 필요합니다.<br><br><a class="mp-btn primary" href="/account/login.html">로그인하기</a></div>';
       return;
     }
     sb.from("members").select("*").eq("id",session.user.id).single().then(function(mr){

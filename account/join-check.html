@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>비밀번호 찾기 · OPUSCLAM.COM</title>
+<title>가입여부 확인 · OPUSCLAM.COM</title>
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -13,23 +13,23 @@
 <!-- ===== header (partials/header-auth.html 에서 공통 관리) ===== -->
 <div id="oc-header-auth"></div>
 <script src="/assets/include.js"></script>
-<script src="/assets/app.js"></script><main><div class="wrap narrow" style="margin-top:70px"><div class="authcard"><div class="tab2"><a class="" href="/find-id.html">아이디 찾기</a><a class="on" href="/find-pw.html">비밀번호 찾기</a></div><h2>비밀번호 찾기</h2><div class="sub">가입하신 이메일로 비밀번호 재설정 링크를 보내드립니다.</div><div class="fg"><label class="fl">이메일</label><input class="inp" type="email" id="p-email" placeholder="name@example.com"></div><div class="err" id="p-msg"></div><div class="actions"><button class="btn primary block" id="p-btn">재설정 메일 받기</button></div></div></div></main><div id="oc-footer"></div>
+<script src="/assets/app.js"></script><main><div class="wrap narrow" style="margin-top:70px"><div class="authcard"><h2>가입여부 확인</h2><div class="sub">입력한 이메일로 가입된 계정이 있는지 확인합니다.<br>본인 확인 메일의 링크를 클릭하면 가입 정보를 볼 수 있습니다.</div><div class="fg"><label class="fl">이메일</label><input class="inp" type="email" id="c-email" placeholder="name@example.com"></div><div class="err" id="c-msg"></div><div class="actions"><button class="btn primary block" id="c-btn">가입여부 확인 메일 받기</button></div></div></div></main><div id="oc-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
 <script>
 (function(){
-  var emailEl=document.getElementById('p-email'), msg=document.getElementById('p-msg'), btn=document.getElementById('p-btn');
+  var emailEl=document.getElementById('c-email'), msg=document.getElementById('c-msg'), btn=document.getElementById('c-btn');
   async function send(){
     msg.style.color=''; msg.textContent='';
     var email=(emailEl.value||'').trim();
     if(!email){ msg.style.color='#f2777a'; msg.textContent='이메일을 입력해 주세요.'; return; }
     if(!window.ocAuth){ msg.textContent='초기화 중입니다. 잠시 후 다시 시도해 주세요.'; return; }
     btn.disabled=true; btn.textContent='발송 중…';
-    var r=await window.ocAuth.sendPasswordReset(email);
-    btn.disabled=false; btn.textContent='재설정 메일 받기';
-    if(!r.ok){ msg.style.color='#f2777a'; msg.textContent=r.msg||'메일 발송에 실패했습니다.'; return; }
+    var r=await window.ocAuth.sendLoginLink(email, '/account/find-id-result.html');
+    btn.disabled=false; btn.textContent='가입여부 확인 메일 받기';
+    if(!r.ok){ msg.style.color='#f2777a'; msg.textContent='메일 발송에 실패했습니다. 이메일을 다시 확인해 주세요.'; return; }
     msg.style.color='#3a9d63';
-    msg.textContent='재설정 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.';
+    msg.textContent='가입된 이메일이면 확인 메일이 발송됩니다. 메일이 오지 않으면 가입 내역이 없는 것입니다. (스팸함도 확인해 주세요)';
   }
   btn.addEventListener('click', send);
   emailEl.addEventListener('keydown', function(e){ if(e.key==='Enter') send(); });

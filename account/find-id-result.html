@@ -28,7 +28,7 @@
   var STATUS={pending:'승인 대기',approved:'승인 완료',rejected:'반려됨'};
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fail(){
-    box.innerHTML='<div class="sub" style="color:#f2777a">링크가 만료되었거나 잘못되었습니다. 다시 시도해 주세요.</div><div class="actions"><a class="btn primary block" href="/find-id.html">아이디 찾기 다시하기</a></div>';
+    box.innerHTML='<div class="sub" style="color:#f2777a">링크가 만료되었거나 잘못되었습니다. 다시 시도해 주세요.</div><div class="actions"><a class="btn primary block" href="/account/find-id.html">아이디 찾기 다시하기</a></div>';
   }
   if(!window.ocAuth){ fail(); return; }
   window.ocAuth.session().then(function(s){
@@ -39,7 +39,7 @@
         +'<div class="sub">본인 확인이 완료되었습니다. 가입된 계정 정보입니다.</div>'
         +'<div class="fg"><label class="fl">아이디</label><div class="fr-val">'+esc(m.username||'-')+'</div></div>'
         +'<div class="fg"><label class="fl">회원 유형</label><div class="fr-val">'+esc(TYPE[m.member_type]||m.member_type||'-')+' · '+esc(STATUS[m.status]||m.status||'-')+'</div></div>'
-        +'<div class="actions"><a class="btn primary block" href="/mypage.html">마이페이지로 이동</a><a class="btn ghost block" href="#" id="fr-logout">로그아웃하고 로그인 화면으로</a></div>';
+        +'<div class="actions"><a class="btn primary block" href="/account/mypage.html">마이페이지로 이동</a><a class="btn ghost block" href="#" id="fr-logout">로그아웃하고 로그인 화면으로</a></div>';
       var lo=document.getElementById('fr-logout');
       if(lo) lo.addEventListener('click',function(e){ e.preventDefault(); window.ocAuth.logout(); });
     });
