@@ -75,14 +75,22 @@
       <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
     </div>
     <div class="pdb-selects">
+      <select class="board-catsel" aria-label="분류"></select>
       <select class="board-sort" aria-label="정렬">
         <option value="created_at">최신순</option>
         <option value="view_count">인기순</option>
         <option value="comment_count">댓글순</option>
       </select>
     </div>
+    <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+      <span class="fs-label">글자크기</span>
+      <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+      <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+      <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+    </div>
   </div>
 
+  <div class="board-count">전체 <b>0</b>건</div>
   <div class="board-list"></div>
 
   <div class="board-foot">
@@ -117,6 +125,7 @@
     OCBoard.list({
       table:'news', pageSize:20, viewPage:'news-view.html', writePage:'news-write.html',
       searchCols:['title','body'],
+      categories:[{value:'',label:'전체'},{value:'국내',label:'국내'},{value:'해외',label:'해외'}],
       articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at'
     });
   });

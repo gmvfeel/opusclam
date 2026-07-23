@@ -90,6 +90,31 @@ window.OCBoard = (function () {
       });
     }
 
+    /* 카테고리 드롭다운 생성 (탭 대신 select 를 쓰는 게시판용) */
+    var catSel = document.querySelector('.board-catsel');
+    if (catSel && cfg.categories && cfg.categories.length) {
+      catSel.innerHTML = cfg.categories.map(function (c) {
+        return '<option value="' + esc(c.value) + '">' + esc(c.label) + '</option>';
+      }).join('');
+      catSel.addEventListener('change', function () { cat = catSel.value || ''; loadPage(1); });
+    }
+
+    /* 글자 크기 조절 (인물DB와 동일 단계, .board-list 의 --board-fs 조정) */
+    var fsBtns = document.querySelectorAll('.pdb-fontsize .fs-btn');
+    if (fsBtns.length && listEl) {
+      var fsSizes = [13, 15, 17, 19, 21], fsIdx = 1;
+      var fsApply = function () { listEl.style.setProperty('--board-fs', fsSizes[fsIdx] + 'px'); };
+      fsBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var k = b.getAttribute('data-fs');
+          if (k === 'up') fsIdx = Math.min(fsSizes.length - 1, fsIdx + 1);
+          else if (k === 'down') fsIdx = Math.max(0, fsIdx - 1);
+          else fsIdx = 1;
+          fsApply();
+        });
+      });
+    }
+
     function buildUrl(off) {
       var u = SB_URL + '/rest/v1/' + cfg.table + '?select=*';
       if (q && cfg.searchCols && cfg.searchCols.length) {
@@ -122,10 +147,11 @@ window.OCBoard = (function () {
     function ccHtml(rec) { var c = rec.comment_count || 0; return c > 0 ? '<span class="board-cc">[' + c + ']</span>' : ''; }
     function tagHtml(rec) { return rec.category ? '<span class="board-tag">' + esc(rec.category) + '</span>' : ''; }
     function featuredHtml(rec) {
+      var flame = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z"/></svg>';
       return '<a class="board-feat" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
-        + '<span class="board-hot">\ud654\uc81c</span>'
+        + '<span class="board-hot">' + flame + 'HOT</span>'
         + '<div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + '</div>'
-        + '<p class="board-prev">' + previewText(rec.body, 160) + '</p>'
+        + '<p class="board-prev board-feat-prev">' + previewText(rec.body, 200) + '</p>'
         + '<div class="board-feat-meta">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></div>'
         + '</a>';
     }
