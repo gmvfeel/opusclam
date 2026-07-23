@@ -12,7 +12,7 @@
 <div id="oc-net" class="oc-net" aria-hidden="true"></div>
 <div class="gnb">
   <div class="util"><div class="in">
-    <div class="l"><a href="#">WIXON ASSOCIATES INC</a><a href="#">LPSTOCK</a><a href="#">OPUSCLAM COMMUNITY</a></div>
+    <div class="l"><a href="https://wxn.co.kr" target="_blank" rel="noopener">WIXON ASSOCIATES INC</a><a href="https://lpstock.co.kr" target="_blank" rel="noopener">LPSTOCK</a><a href="https://opusclam.com" target="_blank" rel="noopener">OPUSCLAM COMMUNITY</a></div>
     <div class="r"><a href="#">CUSTOMER CENTER &rsaquo;</a></div>
   </div></div>
   <div class="mast"><div class="in">
@@ -44,15 +44,19 @@
       <div class="fg"><label for="user-pw">Password</label><input type="password" id="user-pw" placeholder="비밀번호를 입력하세요" autocomplete="current-password"></div>
       <div class="opts">
         <label><input type="checkbox" id="save-id"> 아이디 저장</label>
-        <label><input type="checkbox" checked> IP 보안 ON</label>
       </div>
       <button type="button" class="btn-primary" id="lg-btn">로그인하기</button>
       <div class="err" id="lg-err"></div>
+      <div class="divider"><span>간편 로그인</span></div>
+      <div class="social">
+        <button type="button" class="soc google" data-p="google"><span class="ic"><b>G</b></span>Google</button>
+        <button type="button" class="soc kakao" data-p="kakao"><span class="ic"><b>K</b></span>Kakao</button>
+      </div>
       <div class="aflinks"><a href="/join-check.html">가입여부 확인</a><span>•</span><a href="/find-id.html">아이디 찾기</a><span>•</span><a href="/find-pw.html">비밀번호 찾기</a></div>
     </div>
   </div>
 </div></main>
-<footer><p class="foot-links"><a href="/terms.html">서비스약관</a><a href="/privacy.html">개인정보처리방침</a><a href="/data-policy.html">데이터 정책</a></p><p class="foot-copy">ⓒ OPUSCLAM &amp; WIXON ASSOCIATES INC. ALL RIGHTS RESERVED.</p></footer>
+<footer><p>ⓒ OPUSCLAM &amp; WIXON ASSOCIATES INC. ALL RIGHTS RESERVED. · <a href="/terms.html">서비스약관</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="/data-policy.html">데이터 정책</a></p></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
 <script>
@@ -71,6 +75,7 @@
   document.getElementById('lg-btn').addEventListener('click', doLogin);
   pwEl.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
   idEl.addEventListener('keydown', function(e){ if(e.key==='Enter') pwEl.focus(); });
+  document.querySelectorAll('.soc[data-p]').forEach(function(b){ b.addEventListener('click',function(){ if(window.ocAuth&&window.ocAuth.social) window.ocAuth.social(b.getAttribute('data-p')); }); });
   try{ var s=localStorage.getItem('oc-saved-id'); if(s){ idEl.value=s; document.getElementById('save-id').checked=true; } }catch(e){}
 })();
 </script>

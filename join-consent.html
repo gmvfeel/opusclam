@@ -7,11 +7,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="/assets/auth.css">
+<style>
+  /* 바깥 폼(카드): 흰 배경 + 외곽선만 + 넉넉한 여백 */
+  .tbox{background:#ffffff;border:1px solid #e2e0ea;box-shadow:none;padding:56px 34px 50px;margin-bottom:26px}
+  /* 안쪽 약관 스크롤 박스 */
+  .terms{max-height:300px;background:#ffffff;color:#2a2a35;border-color:#ececf2}
+  .terms *{color:#2a2a35}
+  .terms h1{font-size:17px;font-weight:800;margin:2px 0 8px}
+  .terms h2{font-size:15px;font-weight:700;margin:10px 0 6px}
+  .terms h3{font-size:14px;font-weight:700;margin:8px 0 5px}
+</style>
 </head>
 <body>
 <div class="gnb">
   <div class="util"><div class="in">
-    <div class="l"><a href="#">WIXON ASSOCIATES INC</a><a href="#">LPSTOCK</a><a href="#">OPUSCLAM COMMUNITY</a></div>
+    <div class="l"><a href="https://wxn.co.kr" target="_blank" rel="noopener">WIXON ASSOCIATES INC</a><a href="https://lpstock.co.kr" target="_blank" rel="noopener">LPSTOCK</a><a href="https://opusclam.com" target="_blank" rel="noopener">OPUSCLAM COMMUNITY</a></div>
     <div class="r"><a href="#">CUSTOMER CENTER &rsaquo;</a></div>
   </div></div>
   <div class="mast"><div class="in">
@@ -43,7 +53,8 @@
   <div class="err" id="cs-err"></div>
   <div class="actions"><button class="btn primary" id="cs-next">다음 단계</button><a class="btn ghost" href="/join.html">취소</a></div>
 </div></main>
-<footer><p class="foot-links"><a href="/terms.html">서비스약관</a><a href="/privacy.html">개인정보처리방침</a><a href="/data-policy.html">데이터 정책</a></p><p class="foot-copy">ⓒ OPUSCLAM &amp; WIXON ASSOCIATES INC. ALL RIGHTS RESERVED.</p></footer>
+<footer><p>ⓒ OPUSCLAM &amp; WIXON ASSOCIATES INC. ALL RIGHTS RESERVED. · <a href="/terms.html">서비스약관</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="/data-policy.html">데이터 정책</a></p></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
 <script>
 (function(){
