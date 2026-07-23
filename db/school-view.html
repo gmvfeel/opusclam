@@ -410,7 +410,7 @@
       <div class="pv-tools">
         <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.5 9.7l5.9-.9z"/></svg>즐겨찾기</button>
         <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v18l-6-4-6 4z"/></svg>킵</button>
-        <button type="button" class="pv-tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>저장</button>
+        <button type="button" class="pv-tool" data-save aria-haspopup="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>저장</button>
         <button type="button" class="pv-tool" data-share><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.1 10.9l7.8-4.7M8.1 13.1l7.8 4.7"/></svg>공유</button>
       </div>
       <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
@@ -1260,22 +1260,7 @@ if('serviceWorker' in navigator){
     upd();
   });
 })();
-/* 상단 기능 버튼 */
-(function(){
-  document.querySelectorAll('.pv-tool[data-toggle]').forEach(function(b){
-    b.addEventListener('click',function(){ b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')==='true'?'false':'true'); });
-  });
-  document.querySelectorAll('.pv-tool[data-share]').forEach(function(b){
-    b.addEventListener('click',function(){
-      var url=location.href, title=(document.title||'OPUSCLAM').trim();
-      function toast(msg){ var el=document.createElement('div'); el.textContent=msg; el.setAttribute('style','position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:rgba(20,22,34,.94);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 8px 24px -8px rgba(0,0,0,.5);opacity:0;transition:opacity .2s'); document.body.appendChild(el); requestAnimationFrame(function(){el.style.opacity='1';}); setTimeout(function(){el.style.opacity='0';setTimeout(function(){el.remove();},250);},1600); }
-      function copyFallback(text){ try{ var ta=document.createElement('textarea'); ta.value=text; ta.setAttribute('style','position:fixed;opacity:0;left:0;top:0'); document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); ta.remove(); toast('링크가 복사되었습니다'); }catch(e){ window.prompt('링크를 복사하세요:', text); } }
-      if(navigator.share){ navigator.share({title:title,url:url}).catch(function(){}); return; }
-      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){ toast('링크가 복사되었습니다'); }, function(){ copyFallback(url); }); return; }
-      copyFallback(url);
-    });
-  });
-})();
+/* 뷰 상단 버튼(즐겨찾기·킵·공유·저장) 로직은 /assets/pv.js 로 이동됨 */
 </script>
 <script>
 /* 갤러리 라이트박스 */
@@ -1347,7 +1332,7 @@ document.title=nm+' · 음악학교DB · OPUSCLAM.COM';var cr=document.querySele
    }).catch(function(e){console.error('음악학교DB view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
 })();
 </script>
+<script src="/assets/pv.js" defer></script>
 <script src="/assets/app.js" defer></script>
-<script>(function(){try{var q=new URLSearchParams(location.search);var _id=q.get("id"),_pp=q.get("p");if(_pp){document.querySelectorAll('a[href="school.html"]').forEach(function(a){a.setAttribute("href","school.html?p="+encodeURIComponent(_pp)+(_id?"&focus="+encodeURIComponent(_id):""));});}}catch(e){}})();</script>
 </body>
 </html>
