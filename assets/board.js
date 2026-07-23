@@ -1,0 +1,222 @@
+/* ============================================================
+   OPUSCLAM 공용 게시판 엔진 — assets/board.js
+   ------------------------------------------------------------
+   '목록 + 상세' 를 config 로 재사용. (뉴스/공지가 첫 사용처)
+   다른 게시판(핫토픽·입시 등)은 config 만 바꿔 그대로 재사용한다.
+
+   목록:  OCBoard.list({
+            table:'news', pageSize:20, viewPage:'news-view.html',
+            searchCols:['title','body'],
+            categories:[{value:'',label:'전체'},{value:'공지',label:'공지'},{value:'뉴스',label:'뉴스'}],
+            pinnedFirst:true
+          });
+   상세:  OCBoard.view({
+            table:'news', listPage:'news.html', writePage:'news-write.html',
+            incrementFn:'news_increment_view',
+            itemType:'news'   // 관리자 수정/삭제 링크에 사용
+          });
+   ============================================================ */
+window.OCBoard = (function () {
+  'use strict';
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var HDR = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+
+  function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso); if (isNaN(d)) return esc(String(iso).slice(0, 10));
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate());
+  }
+  function nl2br(s) { return esc(s).replace(/\r\n|\r|\n/g, '<br>'); }
+  function loadScript(src) {
+    return new Promise(function (res, rej) {
+      if (document.querySelector('script[src="' + src + '"]')) return res();
+      var s = document.createElement('script'); s.src = src;
+      s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+  function catClass(c) { return c === '공지' ? 'is-notice' : 'is-news'; }
+
+  /* ── 관리자 여부 (auth.js 의 ocAuth 사용, 없으면 false) ── */
+  function checkAdmin() {
+    return new Promise(function (res) {
+      if (!window.ocAuth || !window.ocAuth.myMember) return res(null);
+      try {
+        window.ocAuth.myMember().then(function (m) { res(m && m.is_admin ? m : null); }).catch(function () { res(null); });
+      } catch (e) { res(null); }
+    });
+  }
+
+  /* ============================ 목록 ============================ */
+  function list(cfg) {
+    var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '';
+    var listEl = document.querySelector('.board-list');
+    var pager = document.querySelector('.board-pager');
+    var catsEl = document.querySelector('.board-cats');
+
+    /* 카테고리 탭 생성 */
+    if (catsEl && cfg.categories && cfg.categories.length) {
+      catsEl.innerHTML = cfg.categories.map(function (c, i) {
+        return '<button type="button" class="board-cat-tab' + (i === 0 ? ' on' : '') + '" data-cat="' + esc(c.value) + '">' + esc(c.label) + '</button>';
+      }).join('');
+      catsEl.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('.board-cat-tab'); if (!b) return;
+        cat = b.getAttribute('data-cat') || '';
+        catsEl.querySelectorAll('.board-cat-tab').forEach(function (x) { x.classList.toggle('on', x === b); });
+        loadPage(1);
+      });
+    }
+
+    function buildUrl(off) {
+      var u = SB_URL + '/rest/v1/' + cfg.table + '?select=*';
+      if (q && cfg.searchCols && cfg.searchCols.length) {
+        var t = encodeURIComponent(q);
+        u += '&or=(' + cfg.searchCols.map(function (c) { return c + '.ilike.*' + t + '*'; }).join(',') + ')';
+      }
+      if (cat) u += '&category=eq.' + encodeURIComponent(cat);
+      u += '&order=' + (cfg.pinnedFirst ? 'is_pinned.desc,created_at.desc' : 'created_at.desc');
+      u += '&limit=' + PAGE + '&offset=' + off;
+      return u;
+    }
+
+    function itemHtml(rec) {
+      if (cfg.renderItem) return cfg.renderItem(rec, { esc: esc, fmtDate: fmtDate });
+      var pin = rec.is_pinned ? ' board-item-pin' : '';
+      var linkIcon = rec.link_url ? '<span class="board-linkicon" title="외부 링크">\u2197</span>' : '';
+      return '<a class="board-item' + pin + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
+        + '<span class="board-cat ' + catClass(rec.category) + '">' + esc(rec.category || '') + '</span>'
+        + '<span class="board-title">' + esc(rec.title || '') + linkIcon + '</span>'
+        + '<span class="board-meta"><span class="board-date">' + fmtDate(rec.created_at) + '</span>'
+        + '<span class="board-views">\uc870\ud68c ' + (rec.view_count || 0) + '</span></span>'
+        + '</a>';
+    }
+
+    function skeleton(n) {
+      var r = '<div class="board-item board-skel"><span class="board-cat"><span class="sk"></span></span><span class="board-title"><span class="sk"></span></span><span class="board-meta"><span class="sk sk-sm"></span></span></div>';
+      var o = ''; for (var i = 0; i < n; i++) o += r; return o;
+    }
+
+    function renderPager() {
+      if (!pager) return;
+      var pages = Math.max(1, Math.ceil(total / PAGE));
+      var mob = window.innerWidth <= 520, w = mob ? 2 : 4;
+      var start = Math.max(1, cur - (mob ? 1 : 2)), end = Math.min(pages, start + w); start = Math.max(1, end - w);
+      var nums = '';
+      for (var i = start; i <= end; i++) nums += '<a href="#" data-pg="' + i + '"' + (i === cur ? ' class="on"' : '') + '>' + i + '</a>';
+      var hF = cur <= 1 ? ' style="visibility:hidden"' : '', hL = cur >= pages ? ' style="visibility:hidden"' : '';
+      var h = '';
+      if (!mob) h += '<a class="pg-nav" data-pg="1" href="#"' + hF + '>\u00ab \uba3c\uc55e</a>';
+      h += '<a class="pg-nav" data-pg="' + (cur - 1) + '" href="#"' + hF + '>\u2039 \uc774\uc804</a>'
+        + '<div class="pg-nums">' + nums + '</div>'
+        + '<a class="pg-nav" data-pg="' + (cur + 1) + '" href="#"' + hL + '>\ub2e4\uc74c \u203a</a>';
+      if (!mob) h += '<a class="pg-nav" data-pg="' + pages + '" href="#"' + hL + '>\uba3c\ub4a4 \u00bb</a>';
+      pager.innerHTML = h;
+    }
+
+    function loadPage(pg) {
+      if (listEl) listEl.innerHTML = skeleton(6);
+      fetch(buildUrl((pg - 1) * PAGE), { headers: Object.assign({ Prefer: 'count=exact' }, HDR) })
+        .then(function (r) {
+          var crg = r.headers.get('content-range'); if (crg) { var t = crg.split('/')[1]; if (t && t !== '*') total = parseInt(t, 10) || total; }
+          if (!r.ok) throw new Error('HTTP ' + r.status); return r.json();
+        })
+        .then(function (rows) {
+          if (!Array.isArray(rows)) return;
+          cur = pg;
+          var cnt = document.querySelector('.board-count b'); if (cnt) cnt.textContent = (total || 0).toLocaleString();
+          if (!rows.length) {
+            if (listEl) listEl.innerHTML = '<div class="board-empty">아직 등록된 글이 없습니다.</div>';
+            if (pager) pager.innerHTML = '';
+          } else {
+            if (listEl) listEl.innerHTML = rows.map(itemHtml).join('');
+            renderPager();
+          }
+        })
+        .catch(function (e) { console.error((cfg.table) + ' 목록 로드 실패:', e); if (listEl) listEl.innerHTML = '<div class="board-empty">목록을 불러오지 못했습니다.</div>'; });
+    }
+
+    if (pager) pager.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[data-pg]'); if (!a) return; e.preventDefault();
+      var pg = parseInt(a.getAttribute('data-pg'), 10), pages = Math.max(1, Math.ceil(total / PAGE));
+      if (pg >= 1 && pg <= pages && pg !== cur) { loadPage(pg); if (window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    });
+
+    var inp = document.querySelector('.board-search input');
+    function doSearch() { q = (inp ? inp.value : '').trim().replace(/[(),*]/g, ' ').replace(/\s+/g, ' ').trim(); loadPage(1); }
+    if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
+    var sb = document.querySelector('.board-searchbtn'); if (sb) sb.addEventListener('click', doSearch);
+
+    /* 관리자면 '글쓰기' 버튼 노출 */
+    if (cfg.writePage) {
+      checkAdmin().then(function (m) {
+        if (!m) return;
+        var bar = document.querySelector('.board-actions');
+        if (bar) bar.innerHTML = '<a class="board-write-btn" href="' + cfg.writePage + '">글쓰기</a>';
+      });
+    }
+
+    loadPage(1);
+  }
+
+  /* ============================ 상세 ============================ */
+  function view(cfg) {
+    var box = document.querySelector('.board-view');
+    var id = new URLSearchParams(location.search).get('id');
+    if (!box) return;
+    if (!id) { box.innerHTML = '<div class="board-empty">잘못된 접근입니다.</div>'; return; }
+
+    fetch(SB_URL + '/rest/v1/' + cfg.table + '?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1', { headers: HDR })
+      .then(function (r) { return r.json(); })
+      .then(function (rows) {
+        if (!rows || !rows.length) { box.innerHTML = '<div class="board-empty">글을 찾을 수 없습니다.</div>'; return; }
+        var o = rows[0];
+        document.title = (o.title || '뉴스') + ' · OPUSCLAM';
+        var thumb = o.thumb_url ? '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' : '';
+        var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
+        var body = o.body ? '<div class="bv-body">' + nl2br(o.body) + '</div>' : '';
+        box.innerHTML =
+          '<div class="bv-head">'
+          + '<span class="board-cat ' + catClass(o.category) + '">' + esc(o.category || '') + '</span>'
+          + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'
+          + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
+          + '</div>'
+          + thumb + body + link
+          + '<div class="bv-foot"><a class="bv-back" href="' + cfg.listPage + '">\u2039 목록으로</a><span class="bv-admin"></span></div>';
+
+        /* 조회수 +1 (best-effort) */
+        if (cfg.incrementFn) {
+          fetch(SB_URL + '/rest/v1/rpc/' + cfg.incrementFn, {
+            method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, HDR),
+            body: JSON.stringify({ p_id: isNaN(+id) ? id : +id })
+          }).catch(function () {});
+        }
+
+        /* 관리자면 수정/삭제 버튼 */
+        if (cfg.writePage) {
+          checkAdmin().then(function (m) {
+            if (!m) return;
+            var a = box.querySelector('.bv-admin'); if (!a) return;
+            a.innerHTML = '<a class="bv-edit" href="' + cfg.writePage + '?id=' + encodeURIComponent(o.id) + '">수정</a>'
+              + '<button type="button" class="bv-del">삭제</button>';
+            var del = a.querySelector('.bv-del');
+            if (del) del.addEventListener('click', function () {
+              if (!confirm('이 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
+              del.disabled = true;
+              loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2').then(function () {
+                var c = window.supabase.createClient(SB_URL, SB_KEY);
+                c.from(cfg.table).delete().eq('id', o.id).then(function (res) {
+                  if (res.error) { alert('삭제 실패: ' + res.error.message); del.disabled = false; return; }
+                  location.href = cfg.listPage;
+                });
+              });
+            });
+          });
+        }
+      })
+      .catch(function (e) { console.error('상세 로드 실패:', e); box.innerHTML = '<div class="board-empty">불러오지 못했습니다.</div>'; });
+  }
+
+  return { list: list, view: view, esc: esc, fmtDate: fmtDate };
+})();
