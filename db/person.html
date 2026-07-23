@@ -67,13 +67,19 @@
 
   /* 표 하단 구분선 */
   .pdb-divider{border-top:1px solid var(--line-2);margin-top:48px}
-  .pdb-pager{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:60px}
-  .pdb-pager .pg-nums{display:flex;gap:4px}
-  .pdb-pager .pg-nums a{min-width:38px;height:38px;display:grid;place-items:center;border-radius:9px;font-size:13px;color:var(--text-2);text-decoration:none;transition:background .15s ease,color .15s ease}
-  .pdb-pager .pg-nums a:hover{background:var(--paper-2);color:var(--text)}
-  .pdb-pager .pg-nums a.on{background:var(--text);color:var(--paper);font-weight:700}
-  .pdb-pager .pg-nav{font-size:13px;color:var(--text-2);text-decoration:none;padding:8px 10px;transition:color .15s ease}
-  .pdb-pager .pg-nav:hover{color:var(--text)}
+  /* ===== 페이저 (새 디자인) ===== */
+  .pdb-pager{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:60px}
+  .pdb-pager .pg-nums{display:flex;gap:6px}
+  .pdb-pager .pg-nums a{min-width:40px;height:40px;display:grid;place-items:center;border-radius:10px;font-size:13.5px;font-weight:500;color:var(--text-2);text-decoration:none;border:1px solid transparent;transition:all .15s ease}
+  .pdb-pager .pg-nums a:hover{border-color:var(--line-2);color:var(--text);background:var(--paper)}
+  .pdb-pager .pg-nums a.on{background:var(--violet-2);color:#fff;font-weight:700;border-color:var(--violet-2);box-shadow:0 6px 16px -6px rgba(124,99,176,.55)}
+  .pdb-pager .pg-nav{display:inline-flex;align-items:center;height:40px;padding:0 15px;border:1px solid var(--line-2);border-radius:10px;font-size:13px;color:var(--text-2);text-decoration:none;transition:all .15s ease}
+  .pdb-pager .pg-nav:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  /* ===== 로딩 스켈레톤 ===== */
+  .pdb-skelrow td{padding:16px 9px}
+  .pdb-skel{display:block;width:100%;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--line) 25%,var(--line-2) 37%,var(--line) 63%);background-size:400% 100%;animation:pdbShimmer 1.3s ease-in-out infinite}
+  .pdb-skel.ava{width:32px;height:32px;border-radius:50%;margin:0 auto}
+  @keyframes pdbShimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
   @media(max-width:520px){
     .pdb-pager{gap:6px;margin-top:34px;flex-wrap:wrap;justify-content:center}
     .pdb-pager .pg-nums{gap:3px}
@@ -1116,7 +1122,7 @@ if('serviceWorker' in navigator){
       +'<td class="c-link">'+lk+'</td>'
       +'</tr>';
   }
-  var PAGE=20, cur=1, total=0;
+  var PAGE=30, cur=1, total=0;
   var pager=document.querySelector('.pdb-pager');
   var focusId=new URLSearchParams(location.search).get('focus');
   var searchState={q:'',regionParam:'',fieldParam:'',order:'sort_no.desc'};
@@ -1164,8 +1170,14 @@ if('serviceWorker' in navigator){
     if(!mob) html+='<a class="pg-nav" data-pg="'+pages+'" href="#"'+hidL+'>\uba3c\ub4a4 \u00bb</a>';
     pager.innerHTML=html;
   }
+  function skeletonRows(n){
+    var ths=document.querySelectorAll('.pdb-table thead th');
+    var cells=''; ths.forEach(function(th){ var isAva=/c-ava/.test(th.className||''); cells+='<td class="'+(th.className||'')+'"><span class="pdb-skel'+(isAva?' ava':'')+'"></span></td>'; });
+    var r='<tr class="pdb-skelrow">'+cells+'</tr>'; var out=''; for(var i=0;i<n;i++) out+=r; return out;
+  }
   function loadPage(pg){
     var off=(pg-1)*PAGE;
+    if(tbody) tbody.innerHTML=skeletonRows(10);
     var hh={apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,Prefer:'count=exact'};
     fetch(buildUrl(off),{headers:hh})
       .then(function(r){
