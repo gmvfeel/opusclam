@@ -4,17 +4,7 @@
    색·폰트는 사이트 토큰(style.css :root) 사용.
    ============================================================ */
 
-/* 공용 히어로 — DB페이지와 동일: 어두운 히어로 그라데이션 위에 GNB가 흰색으로 투명하게 얹힌다.
-   DB가 쓰는 --hero-grad 를 그대로 사용해 형태를 일치시킨다. 모든 게시판이 재사용. */
-.board-hero{position:relative;background:var(--hero-grad);color:#fff;overflow:hidden}
-.board-hero::after{content:"";position:absolute;inset:0;background:radial-gradient(1100px 360px at 80% -35%,rgba(156,127,214,.4),transparent 60%);pointer-events:none}
-.board-hero-inner{position:relative;z-index:1;max-width:var(--wrap,1180px);margin:0 auto;padding:150px 24px 46px}
-.board-hero .board-eyebrow{font-family:var(--display);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.7);font-weight:700}
-.board-hero .board-title-h{font-family:var(--display);font-size:46px;font-weight:800;color:#fff;margin:10px 0 0;line-height:1.02;letter-spacing:-.015em}
-.board-hero .board-count{font-size:13px;color:rgba(255,255,255,.62);margin-top:16px}
-.board-hero .board-count b{color:#fff}
-
-.board{max-width:var(--wrap,1180px);margin:0 auto;padding:40px 24px 80px}
+.board{max-width:var(--wrap,1180px);margin:0 auto;padding:24px 24px 80px}
 .board-titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
 .board-titlebar .tt{min-width:0}
 .board-eyebrow{font-family:var(--display);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--violet-2);font-weight:700}
@@ -108,9 +98,7 @@
 .bf-gate{padding:90px 10px;text-align:center;color:var(--text-3);font-size:15px}
 
 @media(max-width:720px){
-  .board-hero-inner{padding:104px 16px 34px}
-  .board-hero .board-title-h{font-size:30px}
-  .board{padding:28px 16px 60px}
+  .board{padding:20px 16px 60px}
   .board-title-h{font-size:30px}
   .bv-title{font-size:24px}
   .board-meta .board-views{display:none}

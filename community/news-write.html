@@ -15,17 +15,56 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
 <link rel="stylesheet" href="/assets/board.css">
 </head>
 <body data-header="overlay">
 <div id="oc-header"></div>
 <script src="/assets/include.js"></script>
 <script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
 
-<div class="board-hero"><div class="board-hero-inner">
-  <div class="board-eyebrow">OC COMMUNITY</div>
-  <h1 class="board-title-h" id="bwHead">뉴스 · 공지 작성</h1>
-</div></div>
+<section class="pdb">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-net on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/news.html">뉴스 · 공지사항</a><span>/</span><span class="on">글쓰기</span>
+    </nav>
+
+    <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
+      <a href="#">핫토픽</a>
+      <a href="#">공연사진 / 영상</a>
+      <a href="#">입시</a>
+      <a href="#">지식나눔</a>
+      <a href="#">SELF PR</a>
+      <a href="#">이달의 음악학교</a>
+      <a href="/community/news.html" class="active">뉴스</a>
+      <a href="#">현대음악</a>
+      <a href="#">유틸리티 / 악보 / 자료</a>
+      <a href="#">태교음악</a>
+      <a href="#">연주회 티켓신청</a>
+    </nav>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OC COMMUNITY</div>
+          <h1 class="pdb-title" id="bwHead">뉴스 · 공지 작성</h1>
+        </div>
+      </div>
+    </header>
+  </div>
+</section>
 
 <main class="board">
   <div id="bwGate" class="bf-gate">확인 중…</div>
