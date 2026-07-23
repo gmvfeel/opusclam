@@ -759,7 +759,7 @@ if('serviceWorker' in navigator){
   function row(o,no){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
     var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
-    var av=o.logo_url?'<img src="'+esc(o.logo_url)+'" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko);
+    var av=o.logo_url?'<img src="'+esc(wikiThumb(o.logo_url,128))+'" data-full="'+esc(o.logo_url)+'" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko);
     var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
@@ -772,6 +772,17 @@ if('serviceWorker' in navigator){
       +'<td class="c-work">'+nd(o.business)+'</td>'
       +'<td class="c-school">'+nd(o.field)+'</td>'
       +'<td class="c-link">'+links+'</td></tr>';
+  }
+  function wikiThumb(u,w){
+    if(!u||u.indexOf('upload.wikimedia.org')<0||u.indexOf('/thumb/')>=0) return u;
+    var i=u.indexOf('/wikipedia/'); if(i<0) return u;
+    var parts=u.slice(i+11).split('/');
+    if(parts.length<4) return u;
+    var proj=parts[0],a=parts[1],b=parts[2],fn=parts.slice(3).join('/');
+    if(a.length!==1||b.length!==2) return u;
+    var t=u.slice(0,i+11)+proj+'/thumb/'+a+'/'+b+'/'+fn+'/'+w+'px-'+fn;
+    if(fn.toLowerCase().slice(-4)==='.svg') t+='.png';
+    return t;
   }
   var PAGE=30, total=0;
   var pager=document.querySelector('.pdb-pager');
