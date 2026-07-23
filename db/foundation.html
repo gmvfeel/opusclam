@@ -51,7 +51,7 @@
     .pdb-table th,.pdb-table td{padding-left:6px;padding-right:6px}
     .pdb-table .c-field{white-space:normal}
   }
-  .pdb-table th{text-align:left;font-size:1.15em;letter-spacing:0;text-transform:none;color:var(--text-2);font-weight:700;padding:20px 9px;border-top:3px solid var(--text);border-bottom:2px solid var(--text)}
+  .pdb-table th{text-align:left;font-size:1.15em;letter-spacing:0;text-transform:none;color:var(--text-2);font-weight:700;padding:20px 9px;box-shadow:inset 0 3px 0 var(--text),inset 0 -2px 0 var(--text)}
   .pdb-table td{padding:14px 9px;border-top:1px solid var(--line);color:var(--text-2);font-size:1em;white-space:nowrap;vertical-align:middle;overflow:hidden}
   .pdb-table tbody tr{transition:background .15s ease}
 
@@ -737,42 +737,15 @@ if('serviceWorker' in navigator){
 })();
 
 </script>
+<script src="/assets/db-list.js" defer></script>
 <script>
-/* 재단·기관DB: 검색·필터·페이징 (인물/음악단체 DB와 동일 틀) */
+/* 기관·재단DB: config → 공용 엔진(db-list.js) */
 (function(){
-  var SUPA='https://ptdxzxkgddvkusamkiol.supabase.co';
-  var KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var tb=document.getElementById('foundation-list'); if(!tb) return;
-  var IC={
-    home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>',
-    wiki:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>',
-    video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>',
-    audio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>',
-    full:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M14 2v6h6"/></svg>',
-    cite:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 8h4v5H8a3 3 0 0 1-1-2z"/><path d="M14 8h4v5h-3a3 3 0 0 1-1-2z"/></svg>'
-  };
+  var IC={home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>',wiki:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>',video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>'};
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function ini(n){n=(n||'').trim();return n?esc(n[0]):'?';}
   function nd(v){return (v!=null&&String(v).trim())?esc(v):'<span class="nd">\u2014</span>';}
   function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
-  var cur=1;
-  function row(o,no){
-    var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
-    var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
-    var av=o.logo_url?'<img src="'+esc(wikiThumb(o.logo_url,128))+'" data-full="'+esc(o.logo_url)+'" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko);
-    var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
-    return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
-      +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
-      +'<td class="c-name"><a href="foundation-view.html?id='+encodeURIComponent(o.id)+'&p='+cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
-      +'<td class="c-field">'+(o.type?'<span class="tag">'+esc(o.type)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
-      +'<td class="c-nation">'+nd(o.location)+'</td>'
-      +'<td class="c-life">'+nd(o.founded)+'</td>'
-      +'<td class="c-org">'+nd(o.estab_type)+'</td>'
-      +'<td class="c-era">'+nd(o.subsidiary)+'</td>'
-      +'<td class="c-work">'+nd(o.business)+'</td>'
-      +'<td class="c-school">'+nd(o.field)+'</td>'
-      +'<td class="c-link">'+links+'</td></tr>';
-  }
   function wikiThumb(u,w){
     if(!u||u.indexOf('upload.wikimedia.org')<0||u.indexOf('/thumb/')>=0) return u;
     var i=u.indexOf('/wikipedia/'); if(i<0) return u;
@@ -784,21 +757,34 @@ if('serviceWorker' in navigator){
     if(fn.toLowerCase().slice(-4)==='.svg') t+='.png';
     return t;
   }
-  var PAGE=30, total=0;
-  var pager=document.querySelector('.pdb-pager');
-  var focusId=new URLSearchParams(location.search).get('focus');
-  var st={q:'',filters:'',order:'sort_no.desc'};
-  function readSearch(){
-    var inp=document.querySelector('.pdb-search input');
-    st.q=(inp?inp.value:'').trim().replace(/[(),*]/g,' ').replace(/\s+/g,' ').trim();
-    var sels=document.querySelectorAll('.pdb-selects select');
-    var extra='', ord='sort_no.desc';
+  function renderRow(o,no,ctx){
+    var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
+    var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
+    var av=o.logo_url?'<img src="'+esc(wikiThumb(o.logo_url,128))+'" data-full="'+esc(o.logo_url)+'" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko);
+    var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
+    return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
+      +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
+      +'<td class="c-name"><a href="foundation-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
+      +'<td class="c-field">'+(o.type?'<span class="tag">'+esc(o.type)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
+      +'<td class="c-nation">'+nd(o.location)+'</td>'
+      +'<td class="c-life">'+nd(o.founded)+'</td>'
+      +'<td class="c-org">'+nd(o.estab_type)+'</td>'
+      +'<td class="c-era">'+nd(o.subsidiary)+'</td>'
+      +'<td class="c-work">'+nd(o.business)+'</td>'
+      +'<td class="c-school">'+nd(o.field)+'</td>'
+      +'<td class="c-link">'+links+'</td></tr>';
+  }
+  function buildFilters(sels){
+    var extra='';
     var region=sels[0]?sels[0].value:'';
     if(region==='국내') extra+='&location=ilike.*'+encodeURIComponent('대한민국')+'*';
     else if(region==='국외') extra+='&location=not.ilike.*'+encodeURIComponent('대한민국')+'*';
     else if(region && region.indexOf('국내')<0 && region!=='기타') extra+='&location=ilike.*'+encodeURIComponent(region)+'*';
     var f2=sels[1]?sels[1].value:''; if(f2 && f2.indexOf('전체')<0) extra+='&type=eq.'+encodeURIComponent(f2);
-    var sort=sels[2]?sels[2].value:'';
+    return extra;
+  }
+  function buildOrder(sels){
+    var sort=sels[2]?sels[2].value:'', ord='sort_no.desc';
     if(sort.indexOf('오래된')>=0)ord='sort_no.asc';
     else if(sort.indexOf('역순')>=0)ord='name_ko.desc';
     else if(sort.indexOf('가나다')>=0)ord='name_ko.asc';
@@ -806,66 +792,15 @@ if('serviceWorker' in navigator){
     else if(sort.indexOf('설립')>=0)ord='founded.asc';
     else if(sort.indexOf('유형')>=0)ord='type.asc';
     else if(sort.indexOf('소재지')>=0)ord='location.asc';
-    st.filters=extra; st.order=ord;
+    return ord;
   }
-  function buildUrl(off){
-    var u=SUPA+'/rest/v1/foundations?select=*';
-    if(st.q){var t=encodeURIComponent(st.q);u+='&or=('+'name_ko.ilike.*'+t+'*,name_en.ilike.*'+t+'*,location.ilike.*'+t+'*,business.ilike.*'+t+'*,field.ilike.*'+t+'*'+')';}
-    u+=st.filters+'&order='+st.order+'&limit='+PAGE+'&offset='+off;
-    return u;
-  }
-  function doSearch(){readSearch();loadPage(1);}
-  function renderPager(){
-    if(!pager) return;
-    var pages=Math.max(1,Math.ceil(total/PAGE));
-    var mob=window.innerWidth<=520;
-    var w=mob?2:4;
-    var start=Math.max(1,cur-(mob?1:2)), end=Math.min(pages,start+w); start=Math.max(1,end-w);
-    var nums='';
-    for(var i=start;i<=end;i++){ nums+='<a href="#" data-pg="'+i+'"'+(i===cur?' class="on"':'')+'>'+i+'</a>'; }
-    var hidF=(cur<=1?' style="visibility:hidden"':''), hidL=(cur>=pages?' style="visibility:hidden"':'');
-    var html='';
-    if(!mob) html+='<a class="pg-nav" data-pg="1" href="#"'+hidF+'>\u00ab 맨앞</a>';
-    html+='<a class="pg-nav" data-pg="'+(cur-1)+'" href="#"'+hidF+'>\u2039 이전</a>'
-      +'<div class="pg-nums">'+nums+'</div>'
-      +'<a class="pg-nav" data-pg="'+(cur+1)+'" href="#"'+hidL+'>다음 \u203a</a>';
-    if(!mob) html+='<a class="pg-nav" data-pg="'+pages+'" href="#"'+hidL+'>맨뒤 \u00bb</a>';
-    pager.innerHTML=html;
-  }
-  function skeletonRows(n){
-    var ths=document.querySelectorAll('.pdb-table thead th');
-    var cells=''; ths.forEach(function(th){ var isAva=/c-ava/.test(th.className||''); cells+='<td class="'+(th.className||'')+'"><span class="pdb-skel'+(isAva?' ava':'')+'"></span></td>'; });
-    var r='<tr class="pdb-skelrow">'+cells+'</tr>'; var out=''; for(var i=0;i<n;i++) out+=r; return out;
-  }
-  function loadPage(pg){
-    var off=(pg-1)*PAGE;
-    var _skb=document.querySelector('.pdb-table tbody'); if(_skb) _skb.innerHTML=skeletonRows(10);
-    var hh={apikey:KEY,Authorization:'Bearer '+KEY,Prefer:'count=exact'};
-    fetch(buildUrl(off),{headers:hh}).then(function(r){
-      var crg=r.headers.get('content-range'); if(crg){var t=crg.split('/')[1]; if(t&&t!=='*') total=parseInt(t,10)||total;}
-      if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
-    }).then(function(rows){
-      if(Array.isArray(rows)){
-        cur=pg;
-        var cnt=document.querySelector('.pdb-count b'); if(cnt) cnt.textContent=(total||0).toLocaleString();
-        if(rows.length===0){ tb.innerHTML='<tr><td colspan="11" class="pdb-empty">요청하신 검색 결과가 없습니다.</td></tr>'; if(pager)pager.innerHTML=''; }
-        else { tb.innerHTML=rows.map(function(rw,ix){return row(rw, off+ix+1);}).join(''); renderPager();
-          if(focusId){var _fr=tb.querySelector('tr[data-id="'+focusId+'"]');if(_fr){_fr.classList.add('row-focus');try{_fr.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}}focusId=null;} }
-      }
-    }).catch(function(e){console.error('로드 실패:',e);});
-  }
-  if(pager){ pager.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[data-pg]');if(!a)return;e.preventDefault();var pg=parseInt(a.getAttribute('data-pg'),10);var pages=Math.max(1,Math.ceil(total/PAGE));if(pg>=1&&pg<=pages&&pg!==cur){loadPage(pg);if(window.scrollTo)window.scrollTo({top:0,behavior:'smooth'});}}); }
-  (function(){
-    var inp=document.querySelector('.pdb-search input');
-    if(inp){ inp.setAttribute('placeholder','기관·재단명 · 사업 · 키워드로 검색'); inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doSearch();}}); }
-    var sic=document.querySelector('.pdb-search svg'); if(sic){ sic.style.cursor='pointer'; sic.addEventListener('click',doSearch); }
-    document.querySelectorAll('.pdb-selects select').forEach(function(sel){sel.addEventListener('change',doSearch);});
-  })();
-  function setStickyTop(){var h=document.querySelector('.site-header');var t=h?Math.round(h.getBoundingClientRect().height):64;document.querySelectorAll('.pdb-table thead th').forEach(function(th){th.style.top=t+'px';});}
-  setStickyTop(); window.addEventListener('resize',setStickyTop);
-  window.addEventListener('resize',function(){if(total)renderPager();});
-  var _sp=parseInt(new URLSearchParams(location.search).get('p'),10)||1;
-  loadPage(_sp>=1?_sp:1);
+  document.addEventListener('DOMContentLoaded',function(){
+    OCList.init({
+      table:'foundations', pageSize:30, orderDefault:'sort_no.desc',
+      searchCols:['name_ko','name_en','location','business','field'], entity:'foundations',
+      buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
+    });
+  });
 })();
 </script>
 
