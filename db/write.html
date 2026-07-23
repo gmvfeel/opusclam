@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>서울대학교 음악대학 · 음악학교DB · OPUSCLAM.COM</title>
+<title>DB 등록 · 보강 · OPUSCLAM.COM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -78,6 +78,43 @@
   .pdb-pager .pg-nav:hover{color:var(--text)}
 
   /* ================= 인물 상세(뷰) ================= */
+  /* ===== DB 등록·보강 폼 ===== */
+  .wr{max-width:860px;margin:30px auto 0;padding:34px 0 24px;position:relative}
+  .wr::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:calc(100% + 100px);height:2px;background:var(--line-2)}
+  .wr-top{border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:28px;background:var(--paper-2)}
+  .wr-modetabs{display:inline-flex;background:var(--paper-3);border-radius:10px;padding:4px;gap:4px}
+  .wr-mtab{border:0;background:transparent;color:var(--text-2);font-family:inherit;font-size:13.5px;font-weight:600;padding:8px 20px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s}
+  .wr-mtab.active{background:#4a3a7d;color:#fff}
+  .wr-modedesc{margin:13px 0 0;font-size:13px;color:var(--text-2)}
+  .wr-perm{margin-top:9px;font-size:12px;color:var(--text-3)}
+  .wr-step{margin-bottom:28px}
+  .wr-steph{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;color:var(--text);margin:0 0 14px}
+  .wr-num{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#4a3a7d;color:#fff;font-size:13px;font-weight:700}
+  .wr-dblabel{font-style:normal;font-size:13px;font-weight:600;color:var(--violet-2);margin-left:2px}
+  .wr-dbpick{display:flex;flex-wrap:wrap;gap:8px}
+  .wr-db{border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);font-family:inherit;font-size:13.5px;font-weight:600;padding:9px 18px;border-radius:9px;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+  .wr-db:hover{border-color:#4a3a7d;color:#4a3a7d}
+  .wr-db.active{background:#4a3a7d;border-color:#4a3a7d;color:#fff}
+  .wr-fields{display:grid;grid-template-columns:1fr 1fr;gap:15px 16px}
+  .wr-f{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .wr-f-full{grid-column:1 / -1}
+  .wr-l{font-size:12.5px;font-weight:600;color:var(--text-2)}
+  .wr-in{font-family:inherit;font-size:14px;color:var(--text);background:var(--paper);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;width:100%;box-sizing:border-box;transition:border-color .15s}
+  .wr-in:focus{outline:none;border-color:var(--violet-2)}
+  textarea.wr-in{resize:vertical;line-height:1.6}
+  .wr-upload{border:1.5px dashed var(--line-2);border-radius:9px;padding:20px;text-align:center;font-size:13px;color:var(--text-3);cursor:pointer;transition:border-color .15s,color .15s}
+  .wr-upload:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  .wr-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:6px;padding-top:26px;position:relative}
+  .wr-actions::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:calc(100% + 100px);height:2px;background:var(--line-2)}
+  .wr-btn{font-family:inherit;font-size:14px;font-weight:600;padding:12px 26px;border-radius:11px;cursor:pointer;border:1px solid transparent;transition:background .15s,border-color .15s,color .15s}
+  .wr-ghost{background:var(--paper);border-color:var(--line-2);color:var(--text-2)}
+  .wr-ghost:hover{border-color:var(--text-3);color:var(--text)}
+  .wr-primary{background:var(--orange);color:#fff;box-shadow:0 8px 20px -6px rgba(236,122,28,.5)}
+  .wr-primary:hover{background:#d86d12}
+  .wr-cancel{background:var(--paper);border-color:var(--line-2);color:var(--text-3)}
+  .wr-cancel:hover{border-color:var(--text-3);color:var(--text)}
+  .wr-foot{text-align:right;font-size:11.5px;color:var(--text-3);margin-top:12px}
+  @media(max-width:640px){.wr-fields{grid-template-columns:1fr}.wr-f-full{grid-column:auto}.wr::before,.wr-actions::before{width:100%}}
   .pv{max-width:940px;margin:0 auto;font-size:var(--pv-fs,14px)}
   .pv-utility{margin:32px 0 24px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
   .pv-topline{border-top:3px solid var(--text);margin-top:30px}
@@ -181,12 +218,6 @@
   .pv-mailbtn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);border-radius:9px;padding:10px 17px;font-size:13px;font-weight:600;text-decoration:none;transition:border-color .15s,color .15s}
   .pv-mailbtn:hover{border-color:var(--violet-2);color:var(--violet-2)}
   .pv-mailbtn svg{width:15px;height:15px}
-  /* 모바일: 가로형 목록으로 버튼 (세로 탭 숨김 시 노출) */
-  .pv-tolist-m{display:none}
-  @media(max-width:1040px){
-    .pv-tolist-m{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:34px 0 0;padding:15px;border:1px solid var(--line-2);border-radius:12px;color:var(--text-2);text-decoration:none;font-weight:600;font-size:14px;background:var(--paper);transition:border-color .15s,color .15s}
-    .pv-tolist-m:active,.pv-tolist-m:hover{border-color:var(--violet-2);color:var(--violet-2)}
-  }
   .pv-listtab{position:fixed;left:max(8px, calc(50% - 676px));top:560px;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;align-items:center;gap:10px;background:#372a5c;color:#fff;text-decoration:none;padding:24px 13px 24px 10px;border-radius:0 13px 13px 0;box-shadow:0 14px 32px -8px rgba(45,33,73,.6);transition:background .15s ease,padding-left .15s ease,opacity .25s ease,visibility .25s ease}
   .pv-listtab:hover{background:#281d45;padding-left:16px}
   .pv-listtab-arrow{font-size:20px;line-height:1;font-weight:400}
@@ -357,9 +388,6 @@
 </style>
 </head>
 <body>
-<div id="pv-loading" aria-hidden="true"><div class="pv-load-spin"></div></div>
-<style>#pv-loading{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;transition:opacity .35s ease}#pv-loading.hide{opacity:0;pointer-events:none}#pv-loading .pv-load-spin{width:44px;height:44px;border-radius:50%;border:3px solid rgba(150,130,200,.25);border-top-color:var(--violet-2,#9C7FD6);animation:pvspin .8s linear infinite}@keyframes pvspin{to{transform:rotate(360deg)}}</style>
-<script>(function(){var l=document.getElementById("pv-loading");if(l){try{l.style.background=getComputedStyle(document.body).backgroundColor||"#0a0d24";}catch(e){l.style.background="#0a0d24";}}setTimeout(function(){var x=document.getElementById("pv-loading");if(x)x.classList.add("hide");},8000);})();</script>
 
 <!-- ===== header (partials/header.html 에서 공통 관리) ===== -->
 <div id="oc-header"></div>
@@ -380,182 +408,73 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="../home.html">홈</a><span>/</span><a href="#">Database</a><span>/</span><a href="db-school.html">음악학교DB</a><span>/</span><span class="on">서울대학교 음악대학</span>
+      <a href="../home.html">홈</a><span>/</span><a href="#">Database</a><span>/</span><span class="on">DB 등록 · 보강</span>
     </nav>
 
     <nav class="pdb-subnav" aria-label="DATABASE 하위 메뉴">
-      <a href="db-person.html">인물 DB</a>
-      <a href="db-org.html">음악단체 DB</a>
-      <a href="db-venue.html">공연장 DB</a>
-      <a href="db-school.html" class="active">음악학교 DB</a>
-      <a href="db-modern.html">현대음악 DB</a>
-      <a href="db-foundation.html">관련기관·재단 DB</a>
-      <a href="db-academic.html">학술 DB</a>
+      <a href="person.html">인물 DB</a>
+      <a href="org.html">음악단체 DB</a>
+      <a href="venue.html">공연장 DB</a>
+      <a href="school.html">음악학교 DB</a>
+      <a href="modern.html">현대음악 DB</a>
+      <a href="foundation.html">관련기관·재단 DB</a>
+      <a href="academic.html">학술 DB</a>
     </nav>
 
     <header class="pdb-head">
       <div class="pdb-titlebar">
         <div>
-          <div class="pdb-eyebrow">SCHOOL · DATABASE</div>
-          <h1 class="pdb-title">음악학교DB</h1>
+          <div class="pdb-eyebrow">CONTRIBUTE · DATABASE</div>
+          <h1 class="pdb-title">DB 등록 · 보강</h1>
         </div>
       </div>
-      <p class="pdb-lead">국내외 음악대학 · 예술고 · 음악원 등 음악학교 아카이브 — 학교 정보와 학과를 한곳에서 확인하세요.</p>
+      <p class="pdb-lead">자격 회원이 새 데이터를 등록하거나, 기존 항목의 정보를 보강하는 페이지입니다.</p>
     </header>
 
-    <!-- ===== 인물 상세(뷰) 본문 ===== -->
-    <div class="pv-topline"></div>
+    <!-- ===== DB 등록 · 보강 폼 ===== -->
+    <div class="wr">
+      <div class="wr-top">
+        <div class="wr-modetabs" role="group" aria-label="모드 선택">
+          <button type="button" class="wr-mtab active" data-mode="new">신규 등록</button>
+          <button type="button" class="wr-mtab" data-mode="enhance">DB보강</button>
+        </div>
+        <p class="wr-modedesc" id="wrModeDesc">새로운 데이터를 등록합니다. 제출 시 자격 회원 검수 후 반영됩니다.</p>
+        <div class="wr-perm">🔒 일정 자격을 갖춘 회원만 등록·보강할 수 있습니다. (로그인 필요)</div>
+      </div>
 
-    <div class="pv-utility">
-      <div class="pv-tools">
-        <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.5 9.7l5.9-.9z"/></svg>즐겨찾기</button>
-        <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v18l-6-4-6 4z"/></svg>킵</button>
-        <button type="button" class="pv-tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>저장</button>
-        <button type="button" class="pv-tool" data-share><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.1 10.9l7.8-4.7M8.1 13.1l7.8 4.7"/></svg>공유</button>
+      <section class="wr-step">
+        <h2 class="wr-steph"><span class="wr-num">1</span> DB 선택</h2>
+        <div class="wr-dbpick">
+          <button type="button" class="wr-db active" data-db="person">인물</button>
+          <button type="button" class="wr-db" data-db="org">음악단체</button>
+          <button type="button" class="wr-db" data-db="venue">공연장</button>
+          <button type="button" class="wr-db" data-db="school">음악학교</button>
+          <button type="button" class="wr-db" data-db="modern">현대음악</button>
+          <button type="button" class="wr-db" data-db="foundation">관련기관·재단</button>
+          <button type="button" class="wr-db" data-db="academic">학술</button>
+        </div>
+      </section>
+
+      <section class="wr-step">
+        <h2 class="wr-steph"><span class="wr-num">2</span> 항목 입력 <em class="wr-dblabel" id="wrDbLabel">인물DB</em></h2>
+        <div class="wr-fields" id="wrFields"></div>
+      </section>
+
+      <section class="wr-step">
+        <h2 class="wr-steph"><span class="wr-num">3</span> 출처 · 근거</h2>
+        <div class="wr-fields">
+          <div class="wr-f wr-f-full"><label class="wr-l">출처 URL</label><input type="url" class="wr-in" placeholder="https:// 참고한 페이지 주소"></div>
+          <div class="wr-f wr-f-full"><label class="wr-l">출처 메모</label><textarea class="wr-in" rows="2" placeholder="참고한 자료·근거를 적어주세요"></textarea></div>
+        </div>
+      </section>
+
+      <div class="wr-actions">
+        <button type="button" class="wr-btn wr-cancel" onclick="history.back()">취소</button>
+        <button type="button" class="wr-btn wr-ghost">미리보기</button>
+        <button type="button" class="wr-btn wr-primary">제출 (검수 요청)</button>
       </div>
-      <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
-        <span class="fs-label">글자크기</span>
-        <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
-        <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
-        <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
-      </div>
+      <p class="wr-foot">제출된 내용은 자격 회원 검수 후 반영되며, 반영까지 다소 시간이 걸릴 수 있습니다.</p>
     </div>
-
-    <article class="pv">
-      <header class="pv-hero">
-        <div class="pv-portrait" aria-hidden="true"><span>서</span></div>
-        <div class="pv-headinfo">
-          <div class="pv-eyebrow">SCHOOL · DATABASE</div>
-          <h2 class="pv-name">서울대학교 음악대학 <span class="pv-name-sub">Seoul National Univ. College of Music</span></h2>
-          <div class="pv-tags">
-            <span class="tag">음악대학 <span class="tag-en">College of Music</span></span>
-            <span class="oc-badge">OC</span>
-          </div>
-          <dl class="pv-facts">
-            <div><dt>소재지</dt><dd>대한민국 · 서울 <span class="pv-en">Seoul</span></dd></div>
-            <div><dt>설립</dt><dd>1946</dd></div>
-            <div><dt>설립구분</dt><dd>국립 <span class="pv-en">National</span></dd></div>
-            <div><dt>대표 학과</dt><dd>작곡 · 기악 · 성악 · 국악</dd></div>
-          </dl>
-          <div class="pv-actions">
-            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>홈페이지 <span class="pv-en">Website</span></a>
-            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>위키 <span class="pv-en">Wiki</span></a>
-            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>영상 <span class="pv-en">Video</span></a>
-            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s7-6.3 7-11a7 7 0 0 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>위치 <span class="pv-en">Map</span></a>
-          </div>
-        </div>
-      </header>
-
-      <p class="pv-lead">1946년 설립된 대한민국의 대표적인 국립대학 음악대학.<span class="pv-lead-en">Founded in 1946, the College of Music at Seoul National University is one of Korea's leading music schools.</span></p>
-
-      <section class="pv-sec">
-        <h2 class="pv-h">연혁 <span class="pv-h-en">History</span></h2>
-        <div class="pv-prose">
-          <p>1946년 서울대학교 예술대학 음악부로 출발하여, 대한민국 클래식 음악 교육의 중심 역할을 해왔다. 작곡·성악·기악·국악·음악학 등 폭넓은 전공을 운영한다.</p>
-          <p class="pv-prose-en">Founded in 1946 as the music division of Seoul National University, it has been a central institution in Korea's classical music education, offering composition, voice, instrumental studies, Korean traditional music and musicology.</p>
-          <p>수많은 연주자·작곡가·교육자를 배출하며 국내외 무대에서 활약하는 동문을 다수 보유하고 있다.</p>
-          <p class="pv-prose-en">It has produced many performers, composers and educators who are active on stages at home and abroad.</p>
-        </div>
-      </section>
-
-      <div class="pv-split">
-        <section class="pv-block">
-          <h2 class="pv-h">주요 전공 <span class="pv-h-en">Departments</span></h2>
-          <ul class="pv-worklist pv-worklist--single">
-            <li>작곡과 <em>Composition</em></li>
-            <li>성악과 <em>Voice</em></li>
-            <li>기악과 (피아노) <em>Piano</em></li>
-            <li>기악과 (관현악) <em>Orchestral Instruments</em></li>
-            <li>국악과 <em>Korean Music</em></li>
-            <li>음악학과 <em>Musicology</em></li>
-          </ul>
-        </section>
-        <section class="pv-block">
-          <h2 class="pv-h">학교 정보 <span class="pv-h-en">Profile</span></h2>
-          <dl class="pv-deflist">
-            <div><dt>소재지</dt><dd>서울 관악구 <span class="pv-en">Gwanak, Seoul</span></dd></div>
-            <div><dt>설립</dt><dd>1946년</dd></div>
-            <div><dt>설립구분</dt><dd>국립</dd></div>
-            <div><dt>상위기관</dt><dd><a class="pv-schoollink" href="#" title="관련 기관 보기">서울대학교 <span class="pv-schoolgo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h13M13 6l6 6-6 6"/></svg>기관 보기</span></a></dd></div>
-            <div><dt>대표 학과</dt><dd>작곡 · 기악 · 성악 · 국악</dd></div>
-            <div><dt>홈페이지</dt><dd>music.snu.ac.kr</dd></div>
-          </dl>
-        </section>
-      </div>
-
-      <section class="pv-sec">
-        <h2 class="pv-h">저명 동문 <span class="pv-h-en">Notable Alumni</span></h2>
-        <div class="pv-people">
-          <a class="pv-person" href="db-person.html"><span class="ava">조</span><span><span class="pn">조수미 <span style="color:var(--text-3);font-weight:400;font-size:.85em">Sumi Jo</span></span><span class="pf">성악 · 소프라노</span></span></a>
-          <a class="pv-person" href="db-person.html"><span class="ava">정</span><span><span class="pn">정명화 <span style="color:var(--text-3);font-weight:400;font-size:.85em">Myung-wha Chung</span></span><span class="pf">첼로</span></span></a>
-          <a class="pv-person" href="db-person.html"><span class="ava">백</span><span><span class="pn">백혜선 <span style="color:var(--text-3);font-weight:400;font-size:.85em">Hie-sun Paik</span></span><span class="pf">피아노</span></span></a>
-        </div>
-      </section>
-
-      <section class="pv-sec">
-        <div class="pv-sechead"><h2 class="pv-h">캠퍼스 · 갤러리</h2><span class="pv-auto">자동 수집 영역</span></div>
-        <div class="pv-carousel">
-          <button type="button" class="pv-arrow pv-arrow--prev" aria-label="이전 사진">&#8249;</button>
-          <div class="pv-track"><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div><div class="pv-tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg></div></div>
-          <button type="button" class="pv-arrow pv-arrow--next" aria-label="다음 사진">&#8250;</button>
-        </div>
-      </section>
-
-      <section class="pv-sec">
-        <div class="pv-sechead"><h2 class="pv-h">영상</h2><span class="pv-auto">YouTube 등 연동</span></div>
-        <div class="pv-carousel">
-          <button type="button" class="pv-arrow pv-arrow--prev" aria-label="이전 영상">&#8249;</button>
-          <div class="pv-track"><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">정기연주회 실황</span><span class="pv-cs">오케스트라</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">졸업연주회</span><span class="pv-cs">성악·기악</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">캠퍼스 투어</span><span class="pv-cs">시설 소개</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">작곡과 신작 발표</span><span class="pv-cs">현대음악</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">국악과 공연</span><span class="pv-cs">전통음악</span></span></a><a class="pv-card" href="#"><span class="pv-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></span><span class="pv-cardbody"><span class="pv-ct">동문 음악회</span><span class="pv-cs">아카이브</span></span></a></div>
-          <button type="button" class="pv-arrow pv-arrow--next" aria-label="다음 영상">&#8250;</button>
-        </div>
-      </section>
-
-      <section class="pv-sec">
-        <div class="pv-sechead"><h2 class="pv-h">학과 · 전공 안내</h2><span class="pv-auto">학교 정보 연동</span></div>
-        <div class="pv-list">
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-5 9 5-9 5z"/><path d="M6 11v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg></span><span class="pv-li-main"><b>작곡과 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Composition</span></b><span>작곡 · 이론 · 지휘</span></span><span class="pv-li-act">보기 →</span></a>
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-5 9 5-9 5z"/><path d="M6 11v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg></span><span class="pv-li-main"><b>기악과 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Instrumental</span></b><span>피아노 · 현악 · 관악 · 타악</span></span><span class="pv-li-act">보기 →</span></a>
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-5 9 5-9 5z"/><path d="M6 11v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg></span><span class="pv-li-main"><b>성악과 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Voice</span></b><span>성악 · 오페라</span></span><span class="pv-li-act">보기 →</span></a>
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-5 9 5-9 5z"/><path d="M6 11v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg></span><span class="pv-li-main"><b>국악과 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Korean Music</span></b><span>전통 기악 · 성악 · 작곡</span></span><span class="pv-li-act">보기 →</span></a>
-        </div>
-      </section>
-
-      <section class="pv-sec">
-        <div class="pv-sechead"><h2 class="pv-h">입시 · 모집 안내</h2><span class="pv-auto">자동 연동</span></div>
-        <div class="pv-list">
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></span><span class="pv-li-main"><b>입학 안내 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Admissions</span></b><span>수시 · 정시 전형</span></span><span class="pv-li-act">바로가기 →</span></a>
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></span><span class="pv-li-main"><b>실기 요강 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Audition</span></b><span>전공별 지정곡 · 일정</span></span><span class="pv-li-act">안내 →</span></a>
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s7-6.3 7-11a7 7 0 0 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="pv-li-main"><b>오시는 길 <span class="pv-en" style="font-weight:400;font-size:.85em;margin-left:5px;color:var(--text-3)">Directions</span></b><span>서울 관악구 · 지하철 2호선</span></span><span class="pv-li-act">지도 →</span></a>
-        </div>
-      </section>
-
-      <section class="pv-sec">
-        <h2 class="pv-h">관련 학교 <span class="pv-h-en">Related Schools</span></h2>
-        <div class="pv-people">
-          <a class="pv-person" href="#"><span class="ava">한</span><span><span class="pn">한국예술종합학교 <span style="color:var(--text-3);font-weight:400;font-size:.85em">KNUA</span></span><span class="pf">음악원 · 서울</span></span></a>
-          <a class="pv-person" href="#"><span class="ava">연</span><span><span class="pn">연세대학교 음악대학 <span style="color:var(--text-3);font-weight:400;font-size:.85em">Yonsei Univ.</span></span><span class="pf">음악대학 · 서울</span></span></a>
-          <a class="pv-person" href="#"><span class="ava">이</span><span><span class="pn">이화여자대학교 음악대학 <span style="color:var(--text-3);font-weight:400;font-size:.85em">Ewha Univ.</span></span><span class="pf">음악대학 · 서울</span></span></a>
-        </div>
-      </section>
-
-      <section class="pv-contrib">
-        <a class="pv-enhance" href="db-write.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-          <span><b>DB보강하기</b><small>이 항목의 정보를 수정하거나 내용을 추가할 수 있습니다 · 자격 회원</small></span>
-        </a>
-        <div class="pv-source">
-          <p class="pv-source-t">본 오퍼스클램 데이터는 웹상에 공개된 내용을 취합·수집하여 등록되므로, 잘못된 정보를 포함할 수 있습니다. 잘못된 정보의 수정을 원하시거나 보강할 내용이 있는 경우, 아래 <b>메일문의하기</b> 또는 <b>DB보강</b>을 통해 알려주시면 신속히 반영하겠습니다.</p>
-          <a class="pv-mailbtn" href="mailto:contact@opusclam.com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg> 메일문의하기</a>
-        </div>
-      </section>
-
-      <a class="pv-tolist-m" href="db-school.html">&#8592; 목록으로</a>
-
-      <a class="pv-listtab" href="db-school.html" aria-label="리스트로 가기">
-        <span class="pv-listtab-arrow">&#8249;</span>
-        <span class="pv-listtab-text">리스트</span>
-      </a>
-    </article>
 
   </div>
 </section>
@@ -1312,35 +1231,103 @@ if('serviceWorker' in navigator){
 })();
 </script>
 <script>
-/* 음악학교DB 뷰: ?id 로드 */
+/* DB 등록·보강 폼: DB별 동적 입력칸 */
 (function(){
-  var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',H={apikey:KEY,Authorization:'Bearer '+KEY};
-  var id=new URLSearchParams(location.search).get('id'); if(!id) return;
+  var F={
+   person:{label:'인물DB',f:[
+    {l:'이름 (국문)',t:'text',k:'name_ko',h:'half'},{l:'이름 (영문)',t:'text',k:'name_en',h:'half'},
+    {l:'분야 (태그)',t:'tags',k:'field',h:'full'},
+    {l:'국적',t:'text',k:'nationality',h:'half'},{l:'생몰',t:'text',k:'life',h:'half'},
+    {l:'사조',t:'text',k:'era_name',h:'half'},{l:'활동 시기',t:'text',k:'era_yr',h:'half'},
+    {l:'주요 악기',t:'text',k:'instrument',h:'half'},{l:'출신학교',t:'text',k:'school',h:'half'},
+    {l:'대표작',t:'text',k:'works',h:'full'},
+    {l:'소개 · 이력',t:'textarea',k:'description',h:'full'},
+    {l:'대표 이미지',t:'image',k:'image_url',h:'half'},{l:'링크 (위키·음원·영상·악보 URL)',t:'text',k:'link_wiki',h:'half',ph:'쉼표로 구분'}]},
+   org:{label:'음악단체DB',f:[
+    {l:'단체명 (국문)',t:'text',h:'half'},{l:'단체명 (영문)',t:'text',h:'half'},
+    {l:'유형',t:'select',o:['오케스트라','실내악','합창단','오페라단','크로스오버','음악관계사','기타'],h:'half'},
+    {l:'소재지',t:'text',h:'half'},{l:'창단',t:'text',h:'half'},{l:'대표 · 지휘자',t:'text',h:'half'},
+    {l:'연고 공연장',t:'text',h:'half'},{l:'홈페이지',t:'url',h:'half'},
+    {l:'대표 활동 · 공연',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   venue:{label:'공연장DB',f:[
+    {l:'공연장명 (국문)',t:'text',h:'half'},{l:'공연장명 (영문)',t:'text',h:'half'},
+    {l:'유형',t:'select',o:['콘서트홀','오페라하우스','다목적홀','실내악홀','야외공연장','복합공연장','기타'],h:'half'},
+    {l:'소재지',t:'text',h:'half'},{l:'개관',t:'text',h:'half'},{l:'좌석수',t:'text',h:'half'},
+    {l:'운영주체',t:'text',h:'half'},{l:'상주단체',t:'text',h:'half'},
+    {l:'대표 프로그램',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   school:{label:'음악학교DB',f:[
+    {l:'학교명 (국문)',t:'text',h:'half'},{l:'학교명 (영문)',t:'text',h:'half'},
+    {l:'구분',t:'select',o:['예술중학교','예술고등학교','음악대학','예술대학','대학원','음악원','음악학교','기타'],h:'half'},
+    {l:'소재지',t:'text',h:'half'},{l:'설립',t:'text',h:'half'},
+    {l:'설립구분',t:'select',o:['국립','공립','사립'],h:'half'},
+    {l:'대표 학과',t:'text',h:'full'},{l:'저명 동문',t:'text',h:'full'},
+    {l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   modern:{label:'현대음악DB',f:[
+    {l:'작곡가명 (국문)',t:'text',h:'half'},{l:'작곡가명 (영문)',t:'text',h:'half'},
+    {l:'사조·유파',t:'select',o:['표현주의·12음','총렬주의','미니멀리즘','전자음악','우연성·실험','스펙트럴','음향주의','신고전주의','동서 융합','다원주의·포스트모던','기타'],h:'half'},
+    {l:'국적',t:'text',h:'half'},{l:'생몰',t:'text',h:'half'},{l:'대표 기법',t:'text',h:'half'},
+    {l:'사사 (계보)',t:'text',h:'half'},{l:'활동시기',t:'text',h:'half'},
+    {l:'대표작',t:'text',h:'full'},{l:'사진',t:'image',h:'half'},{l:'링크',t:'text',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   foundation:{label:'관련기관·재단DB',f:[
+    {l:'기관·재단명 (국문)',t:'text',h:'half'},{l:'기관·재단명 (영문)',t:'text',h:'half'},
+    {l:'유형',t:'select',o:['재단','협회','공공기관','기획사','음반사','콩쿠르·시상','지원기관','기타'],h:'half'},
+    {l:'소재지',t:'text',h:'half'},{l:'설립',t:'text',h:'half'},
+    {l:'설립구분',t:'select',o:['공공','민간','민간(기업)'],h:'half'},
+    {l:'산하 · 운영',t:'text',h:'half'},{l:'관련 분야',t:'text',h:'half'},
+    {l:'주요 사업',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   academic:{label:'학술DB',f:[
+    {l:'제목 (국문)',t:'text',h:'full'},{l:'제목 (영문)',t:'text',h:'full'},
+    {l:'유형',t:'select',o:['학술논문','학위논문','저널·학술지','연구서','평론','자료','기타'],h:'half'},
+    {l:'저자',t:'text',h:'half'},{l:'발행처',t:'text',h:'half'},{l:'발행연도',t:'text',h:'half'},
+    {l:'분야',t:'text',h:'half'},{l:'언어',t:'select',o:['국문','영문','독문','기타'],h:'half'},
+    {l:'키워드',t:'tags',h:'full'},{l:'원문 링크',t:'url',h:'full'},{l:'초록',t:'textarea',h:'full'}]}
+  };
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  function fact(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
-  fetch(URL+'/rest/v1/schools?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})
-   .then(function(a){if(!a||!a.length)return;var x=a[0];var nm=(x.name_ko||'').trim();
-     var por=document.querySelector('.pv-portrait span');if(por)por.textContent=(function(n){n=(x.name_ko||'').trim();return n?n[0]:'?';})();
-     var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(x.name_en){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=x.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
-     var tg=document.querySelector('.pv-tags');if(tg){var html=x.category?'<span class="tag">'+esc(x.category)+'</span>':'';if(x.is_oc)html+='<span class="oc-badge">OC</span>';tg.innerHTML=html;}
-     var fc=document.querySelector('.pv-facts');if(fc)fc.innerHTML=fact('구분',esc(x.category||''))+fact('소재지',esc(x.location||''))+fact('설립',esc(x.founded||''))+fact('설립구분',esc(x.estab_type||''));
-     var lead0=(esc(x.location||'')+' · '+esc(x.category||'')).replace(/(^| · )+/g,function(m,p,o){return o===0?'':' · ';}).replace(/^ · | · $/g,'');
-     var desc=(x.description&&x.description.trim())?x.description.trim():(lead0||'음악학교DB');
-     var lead=document.querySelector('.pv-lead');if(lead)lead.textContent=desc;
-     var bio=document.querySelector('.pv-prose');if(bio)bio.innerHTML='<p>'+esc(desc)+'</p>'+((x.description&&x.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
-     var wl=document.querySelector('ul.pv-worklist');if(wl&&x.departments)wl.innerHTML=String(x.departments).split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
-     var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=(x.category?fact('구분',esc(x.category)):'')+(x.location?fact('소재지',esc(x.location)):'')+(x.founded?fact('설립',esc(x.founded)):'')+(x.estab_type?fact('설립구분',esc(x.estab_type)):'')+(x.departments?fact('대표 학과',esc(x.departments)):'')+(x.alumni?fact('저명 동문',esc(x.alumni)):'')+(x.features?fact('대표 특성',esc(x.features)):'');
-     (function(){document.querySelectorAll('.pv-sec, .pv-block').forEach(function(sec){var h=sec.querySelector('.pv-h');if(h&&/(주요 전공|캠퍼스|갤러리|영상|학과 · 전공 안내|입시|모집|관련 학교)/.test(h.textContent))sec.style.display='none';});})();
-     var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
-          (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
-       var _k=encodeURIComponent((x.name_ko||x.name_en||'').trim());
-       var _e=encodeURIComponent((x.name_en||x.name_ko||'').trim());
-       var _loc=encodeURIComponent(((x.name_ko||x.name_en||'')+' '+(x.location||'')).trim());
-       var _u=[((x.link_home&&x.link_home!=='#')?x.link_home:'https://www.google.com/search?q='+_k),((x.link_wiki&&x.link_wiki!=='#')?x.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k),((x.link_video&&x.link_video!=='#')?x.link_video:'https://www.youtube.com/results?search_query='+_k),'https://www.google.com/maps/search/?api=1&query='+_loc];
-       for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
-     }})();
-document.title=nm+' · 음악학교DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
-   }).catch(function(e){console.error('음악학교DB view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
+  function fld(f,rec){
+    var full=f.h==='full'?' wr-f-full':'';
+    var v=esc(rec&&f.k?(rec[f.k]==null?'':rec[f.k]):(f.v||'')), ph=esc(f.ph||'');
+    var inner;
+    if(f.t==='textarea') inner='<textarea class="wr-in" rows="3" placeholder="'+ph+'">'+v+'</textarea>';
+    else if(f.t==='select') inner='<select class="wr-in">'+f.o.map(function(o){return '<option>'+esc(o)+'</option>';}).join('')+'</select>';
+    else if(f.t==='image') inner='<div class="wr-upload">클릭 또는 드래그하여 이미지 업로드</div>';
+    else if(f.t==='tags') inner='<input class="wr-in" value="'+v+'" placeholder="쉼표로 구분 (예: 작곡, 오르간)">';
+    else inner='<input type="'+(f.t==='url'?'url':'text')+'" class="wr-in" value="'+v+'" placeholder="'+ph+'">';
+    return '<div class="wr-f'+full+'"><label class="wr-l">'+esc(f.l)+'</label>'+inner+'</div>';
+  }
+  var curDb='person', curRec=null;
+  function render(db, rec){
+    curDb=db; curRec=rec||null;
+    var d=F[db]; if(!d) return;
+    document.getElementById('wrDbLabel').textContent=d.label;
+    document.getElementById('wrFields').innerHTML=d.f.map(function(f){return fld(f,curRec);}).join('');
+  }
+  document.querySelectorAll('.wr-db').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.wr-db').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active'); render(b.getAttribute('data-db'), null);
+    });
+  });
+  var desc={'new':'새로운 데이터를 등록합니다. 제출 시 자격 회원 검수 후 반영됩니다.','enhance':'기존 항목의 정보를 수정·보강합니다. 상세 페이지의 “DB보강” 버튼으로 들어오면 해당 데이터가 채워집니다.'};
+  document.querySelectorAll('.wr-mtab').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.wr-mtab').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');
+      var m=b.getAttribute('data-mode');
+      document.getElementById('wrModeDesc').textContent=desc[m];
+      if(m==='new') render(curDb, null); else render(curDb, curRec);
+    });
+  });
+  var _U='https://ptdxzxkgddvkusamkiol.supabase.co', _K='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var _params=new URLSearchParams(location.search);
+  var _db=_params.get('db')||'person', _mode=_params.get('mode')||'new', _id=_params.get('id');
+  document.querySelectorAll('.wr-db').forEach(function(x){x.classList.toggle('active', x.getAttribute('data-db')===_db);});
+  document.querySelectorAll('.wr-mtab').forEach(function(x){x.classList.toggle('active', x.getAttribute('data-mode')===(_mode==='enhance'?'enhance':'new'));});
+  document.getElementById('wrModeDesc').textContent=desc[_mode==='enhance'?'enhance':'new'];
+  if(_mode==='enhance' && _id && _db==='person'){
+    fetch(_U+'/rest/v1/persons?select=*&id=eq.'+encodeURIComponent(_id),{headers:{apikey:_K,Authorization:'Bearer '+_K}})
+      .then(function(r){return r.json();}).then(function(a){ render(_db,(a&&a[0])||null); })
+      .catch(function(){ render(_db,null); });
+  } else { render(_db, null); }
 })();
 </script>
 <script src="/assets/app.js" defer></script>

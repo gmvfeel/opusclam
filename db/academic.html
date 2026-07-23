@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>음악학교DB · OPUSCLAM.COM Database</title>
+<title>학술DB · OPUSCLAM.COM Database</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -18,26 +18,26 @@
   <style>  /* 컬럼 폭(기본) */
   .pdb-table th.c-no{width:3.5%}
   .pdb-table th.c-ava{width:4.5%}
-  .pdb-table th.c-name{width:16%}
-  .pdb-table th.c-field{width:8%}
-  .pdb-table th.c-nation{width:11%}
+  .pdb-table th.c-name{width:28%}
+  .pdb-table th.c-field{width:7%}
+  .pdb-table th.c-nation{width:8%}
   .pdb-table th.c-life{width:6%}
-  .pdb-table th.c-org{width:12%}
+  .pdb-table th.c-org{width:11%}
   .pdb-table th.c-work{width:8%}
-  .pdb-table th.c-era{width:13%}
-  .pdb-table th.c-school{width:10%}
-  .pdb-table th.c-link{width:8%}
+  .pdb-table th.c-era{width:11%}
+  .pdb-table th.c-school{width:6%}
+  .pdb-table th.c-link{width:7%}
   /* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
   @media(max-width:840px){
     .pdb-table .c-no,.pdb-table .c-ava,.pdb-table .c-school{display:none}
     .pdb-table th.c-no,.pdb-table th.c-ava,.pdb-table th.c-school{width:0}
-    .pdb-table th.c-name{width:20%}
-    .pdb-table th.c-field{width:9%}
-    .pdb-table th.c-nation{width:12%}
+    .pdb-table th.c-name{width:30%}
+    .pdb-table th.c-field{width:8%}
+    .pdb-table th.c-nation{width:10%}
     .pdb-table th.c-life{width:8%}
-    .pdb-table th.c-org{width:15%}
+    .pdb-table th.c-org{width:12%}
     .pdb-table th.c-work{width:9%}
-    .pdb-table th.c-era{width:17%}
+    .pdb-table th.c-era{width:13%}
     .pdb-table th.c-link{width:10%}
   }
   /* ===== 휴대폰: 핵심(이름·분야·국적·대표작·링크)만 ===== */
@@ -56,7 +56,7 @@
   .pdb-table tbody tr{transition:background .15s ease}
 
   .pdb-table .c-no{width:64px;color:var(--text-3);font-variant-numeric:tabular-nums}
-  .pdb-table .c-name{white-space:normal;line-height:1.35}
+  .pdb-table .c-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pdb-table .c-name a{color:var(--text);font-weight:600;font-size:1em;text-decoration:none;letter-spacing:-.01em;transition:color .15s ease}
   .pdb-table .c-name-en{font-size:.82em;color:var(--text-3);font-weight:400;margin-left:6px}
 
@@ -98,8 +98,8 @@
 
 
   /* 대표작·소속 컬럼 */
-  .pdb-table .c-work{display:none}
-  .pdb-table .c-org{display:none}
+  .pdb-table .c-work{min-width:180px;max-width:270px;color:var(--text-2);white-space:normal;line-height:1.5}
+  .pdb-table .c-org{min-width:120px;max-width:170px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pdb-table .c-school{max-width:170px;overflow:hidden;text-overflow:ellipsis}
   .pdb-table .c-name{min-width:120px}
 
@@ -115,7 +115,7 @@
   .pdb-table .c-field{white-space:nowrap;overflow:hidden}
   .pdb-table .c-field .tag{margin:0 4px 3px 0}
   /* 사조 2줄 */
-  .pdb-table .c-era{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pdb-table .c-era{white-space:nowrap}
   .pdb-table .c-era .era-name{display:block;color:var(--text-2)}
   .pdb-table .c-era .era-yr{display:block;font-size:.85em;color:var(--text-3);margin-top:2px}
   /* 관련 링크 아이콘 */
@@ -124,11 +124,10 @@
   .pdb-table .c-link .lk svg{width:14px;height:14px}
   .pdb-table .c-link .lk:hover{color:var(--text);border-color:var(--text-3)}
 
-  /* 데이터 컬럼(구분·설립·설립구분·저명동문·링크) 가운데 정렬 */
+  /* 데이터 컬럼(유형·창단·홈페이지) 가운데 정렬 — 단체명·소재지·대표지휘자는 왼쪽 */
   .pdb-table th.c-field, .pdb-table td.c-field,
   .pdb-table th.c-life, .pdb-table td.c-life,
-  .pdb-table th.c-work, .pdb-table td.c-work,
-  .pdb-table th.c-era, .pdb-table td.c-era,
+  .pdb-table th.c-school, .pdb-table td.c-school,
   .pdb-table th.c-link, .pdb-table td.c-link{text-align:center}
   .pdb-table .c-field .tag{margin:0 1px}
   /* 호버(퍼플) 시 추가 요소도 흰색 */
@@ -204,27 +203,27 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="../home.html">홈</a><span>/</span><a href="#">Database</a><span>/</span><span class="on">음악학교DB</span>
+      <a href="../home.html">홈</a><span>/</span><a href="#">Database</a><span>/</span><span class="on">학술DB</span>
     </nav>
 
     <nav class="pdb-subnav" aria-label="DATABASE 하위 메뉴">
-      <a href="db-person.html">인물 DB</a>
-      <a href="db-org.html">음악단체 DB</a>
-      <a href="db-venue.html">공연장 DB</a>
-      <a href="db-school.html" class="active">음악학교 DB</a>
-      <a href="db-modern.html">현대음악 DB</a>
-      <a href="db-foundation.html">관련기관·재단 DB</a>
-      <a href="db-academic.html">학술 DB</a>
+      <a href="person.html">인물 DB</a>
+      <a href="org.html">음악단체 DB</a>
+      <a href="venue.html">공연장 DB</a>
+      <a href="school.html">음악학교 DB</a>
+      <a href="modern.html">현대음악 DB</a>
+      <a href="foundation.html">관련기관·재단 DB</a>
+      <a href="academic.html" class="active">학술 DB</a>
     </nav>
 
     <header class="pdb-head">
       <div class="pdb-titlebar">
         <div>
-          <div class="pdb-eyebrow">SCHOOL · DATABASE</div>
-          <h1 class="pdb-title">음악학교DB</h1>
+          <div class="pdb-eyebrow">SCHOLARSHIP · DATABASE</div>
+          <h1 class="pdb-title">학술DB</h1>
         </div>
       </div>
-      <p class="pdb-lead">국내외 음악대학 · 예술고 · 음악원 등 음악학교 아카이브 — 학교 정보와 학과를 한곳에서 확인하세요.</p>
+      <p class="pdb-lead">국내외 음악 논문 · 학위논문 · 저널 · 연구서 아카이브 — 학술 문헌을 한곳에서 검색·확인하세요.</p>
     </header>
 
     <div class="pdb-toolbar">
@@ -233,36 +232,21 @@
         <input type="text" placeholder="이름 · 출신학교 · 키워드로 검색">
       </div>
       <div class="pdb-selects">
-        <select aria-label="국내/외">
-          <option>국내 · 국외</option>
-          <option>국내</option>
-          <option>국외</option>
-          <optgroup label="주요 국가">
-            <option>대한민국</option>
-            <option>독일</option>
-            <option>오스트리아</option>
-            <option>이탈리아</option>
-            <option>프랑스</option>
-            <option>러시아</option>
-            <option>영국</option>
-            <option>미국</option>
-            <option>체코</option>
-            <option>폴란드</option>
-            <option>헝가리</option>
-            <option>일본</option>
-            <option>중국</option>
-          </optgroup>
+        <select aria-label="언어">
+          <option>전체 언어</option>
+          <option>국문</option>
+          <option>영문</option>
+          <option>독문</option>
           <option>기타</option>
         </select>
-        <select aria-label="구분">
-          <option>전체 구분</option>
-          <option>예술중학교</option>
-          <option>예술고등학교</option>
-          <option>음악대학</option>
-          <option>예술대학</option>
-          <option>대학원</option>
-          <option>음악원</option>
-          <option>음악학교</option>
+        <select aria-label="유형">
+          <option>전체 유형</option>
+          <option>학술논문</option>
+          <option>학위논문</option>
+          <option>저널 · 학술지</option>
+          <option>연구서</option>
+          <option>평론</option>
+          <option>자료</option>
           <option>기타</option>
         </select>
         <select aria-label="정렬">
@@ -270,29 +254,25 @@
             <option>최신순</option>
             <option>오래된순</option>
           </optgroup>
-          <optgroup label="이름순">
-            <option>가나다순 (ㄱ→ㅎ)</option>
-            <option>가나다 역순 (ㅎ→ㄱ)</option>
-            <option>이름 A–Z</option>
-          </optgroup>
-          <optgroup label="학교 속성">
-            <option>설립연도순</option>
-            <option>구분순</option>
-            <option>소재지순</option>
+          <optgroup label="문헌 속성">
+            <option>발행연도순</option>
+            <option>유형순</option>
+            <option>분야순</option>
+            <option>제목순</option>
           </optgroup>
           <optgroup label="기타">
-            <option>OC등록 우선</option>
+            <option>인용순</option>
             <option>조회수순</option>
           </optgroup>
         </select>
       </div>
-      <a class="pdb-reg" href="db-write.html"><span class="plus">+</span> DB 등록</a>
+      <a class="pdb-reg" href="write.html"><span class="plus">+</span> DB 등록</a>
     </div>
 
     <div class="pdb-meta">
-      <div class="pdb-count">전체 <b>180</b>개</div>
+      <div class="pdb-count">전체 <b>1,860</b>건</div>
       <div class="pdb-meta-right">
-        <div class="pdb-legend"><span class="oc-badge">OC</span> 오퍼스클램 등록 학교</div>
+        <div class="pdb-legend"><span class="oc-badge">OC</span> 오퍼스클램 검증 문헌</div>
         <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
           <span class="fs-label">글자크기</span>
           <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
@@ -305,29 +285,29 @@
     <div class="pdb-tablewrap">
       <table class="pdb-table">
         <thead>
-          <tr><th class="c-no">No</th><th class="c-ava"></th><th class="c-name">학교명</th><th class="c-field">구분</th><th class="c-nation">소재지</th><th class="c-life">설립</th><th class="c-era">저명 동문</th><th class="c-school">소개</th><th class="c-link">링크</th></tr>
+          <tr><th class="c-no">No</th><th class="c-ava"></th><th class="c-name">제목</th><th class="c-field">유형</th><th class="c-nation">저자</th><th class="c-life">발행</th><th class="c-org">발행처</th><th class="c-work">분야</th><th class="c-era">키워드</th><th class="c-school">언어</th><th class="c-link">링크</th></tr>
         </thead>
-        <tbody id="schools-list">
-          <tr><td class="c-no">20</td><td class="c-ava"><span class="ava">서</span></td><td class="c-name"><a href="db-school-view.html">서울대학교 음악대학 <span class="oc-badge">OC</span><span class="c-name-en">Seoul National Univ.</span></a></td><td class="c-field"><span class="tag">음악대학</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1946</td><td class="c-org">작곡·기악·성악·국악</td><td class="c-work">국립</td><td class="c-era">조수미 외</td><td class="c-school">종합대 음대</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">19</td><td class="c-ava"><span class="ava">한</span></td><td class="c-name"><a href="db-school-view.html">한국예술종합학교 <span class="oc-badge">OC</span><span class="c-name-en">Korea National Univ. of Arts</span></a></td><td class="c-field"><span class="tag">음악원</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1993</td><td class="c-org">기악·작곡·성악·지휘</td><td class="c-work">국립</td><td class="c-era">김선욱 외</td><td class="c-school">영재교육 중심</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">18</td><td class="c-ava"><span class="ava">연</span></td><td class="c-name"><a href="db-school-view.html">연세대학교 음악대학<span class="c-name-en">Yonsei Univ.</span></a></td><td class="c-field"><span class="tag">음악대학</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1915</td><td class="c-org">기악·작곡·교회음악</td><td class="c-work">사립</td><td class="c-era">강동석 외</td><td class="c-school">교회음악 강세</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">17</td><td class="c-ava"><span class="ava">이</span></td><td class="c-name"><a href="db-school-view.html">이화여자대학교 음악대학<span class="c-name-en">Ewha Womans Univ.</span></a></td><td class="c-field"><span class="tag">음악대학</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1925</td><td class="c-org">기악·작곡·성악</td><td class="c-work">사립</td><td class="c-era">외 다수</td><td class="c-school">여성 음악교육</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">16</td><td class="c-ava"><span class="ava">한</span></td><td class="c-name"><a href="db-school-view.html">한양대학교 음악대학<span class="c-name-en">Hanyang Univ.</span></a></td><td class="c-field"><span class="tag">음악대학</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1959</td><td class="c-org">기악·작곡·성악</td><td class="c-work">사립</td><td class="c-era">외 다수</td><td class="c-school">실용·클래식</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">15</td><td class="c-ava"><span class="ava">서</span></td><td class="c-name"><a href="db-school-view.html">서울예술고등학교<span class="c-name-en">Seoul Arts High School</span></a></td><td class="c-field"><span class="tag">예술고등학교</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1953</td><td class="c-org">음악·미술·무용</td><td class="c-work">사립</td><td class="c-era">조성진 외</td><td class="c-school">예술 전문 고교</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">14</td><td class="c-ava"><span class="ava">선</span></td><td class="c-name"><a href="db-school-view.html">선화예술중학교<span class="c-name-en">Sunhwa Arts School</span></a></td><td class="c-field"><span class="tag">예술중학교</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1974</td><td class="c-org">음악·미술·무용</td><td class="c-work">사립</td><td class="c-era">사라 장 외</td><td class="c-school">예술 영재 교육</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">13</td><td class="c-ava"><span class="ava">예</span></td><td class="c-name"><a href="db-school-view.html">예원학교<span class="c-name-en">Yewon School</span></a></td><td class="c-field"><span class="tag">예술중학교</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1965</td><td class="c-org">음악·미술</td><td class="c-work">사립</td><td class="c-era">임윤찬 외</td><td class="c-school">명문 예술중</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">12</td><td class="c-ava"><span class="ava">C</span></td><td class="c-name"><a href="db-school-view.html">커티스 음악원<span class="c-name-en">Curtis Institute</span></a></td><td class="c-field"><span class="tag">음악원</span></td><td class="c-nation">미국 · 필라델피아</td><td class="c-life">1924</td><td class="c-org">기악·작곡·성악·지휘</td><td class="c-work">사립</td><td class="c-era">랑랑 외</td><td class="c-school">전액 장학</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">11</td><td class="c-ava"><span class="ava">J</span></td><td class="c-name"><a href="db-school-view.html">줄리아드 스쿨<span class="c-name-en">The Juilliard School</span></a></td><td class="c-field"><span class="tag">음악원</span></td><td class="c-nation">미국 · 뉴욕</td><td class="c-life">1905</td><td class="c-org">음악·무용·연극</td><td class="c-work">사립</td><td class="c-era">정경화 외</td><td class="c-school">종합 공연예술</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">10</td><td class="c-ava"><span class="ava">N</span></td><td class="c-name"><a href="db-school-view.html">뉴잉글랜드 음악원<span class="c-name-en">New England Conservatory</span></a></td><td class="c-field"><span class="tag">음악원</span></td><td class="c-nation">미국 · 보스턴</td><td class="c-life">1867</td><td class="c-org">기악·작곡·재즈</td><td class="c-work">사립</td><td class="c-era">외 다수</td><td class="c-school">재즈 강세</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">09</td><td class="c-ava"><span class="ava">P</span></td><td class="c-name"><a href="db-school-view.html">파리 국립고등음악원<span class="c-name-en">Paris Conservatoire</span></a></td><td class="c-field"><span class="tag">음악원</span></td><td class="c-nation">프랑스 · 파리</td><td class="c-life">1795</td><td class="c-org">기악·작곡·성악·지휘</td><td class="c-work">국립</td><td class="c-era">드뷔시 · 라벨</td><td class="c-school">최고 국립음악원</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">08</td><td class="c-ava"><span class="ava">W</span></td><td class="c-name"><a href="db-school-view.html">빈 국립음악대학<span class="c-name-en">Univ. of Music Vienna</span></a></td><td class="c-field"><span class="tag">음악대학</span></td><td class="c-nation">오스트리아 · 빈</td><td class="c-life">1817</td><td class="c-org">기악·작곡·지휘</td><td class="c-work">국립</td><td class="c-era">외 다수</td><td class="c-school">유럽 명문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">07</td><td class="c-ava"><span class="ava">B</span></td><td class="c-name"><a href="db-school-view.html">베를린 예술대학<span class="c-name-en">Berlin Univ. of the Arts</span></a></td><td class="c-field"><span class="tag">예술대학</span></td><td class="c-nation">독일 · 베를린</td><td class="c-life">1975</td><td class="c-org">음악·미술·디자인</td><td class="c-work">국립</td><td class="c-era">외 다수</td><td class="c-school">종합 예술대</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">06</td><td class="c-ava"><span class="ava">M</span></td><td class="c-name"><a href="db-school-view.html">모스크바 국립음악원<span class="c-name-en">Moscow Conservatory</span></a></td><td class="c-field"><span class="tag">음악원</span></td><td class="c-nation">러시아 · 모스크바</td><td class="c-life">1866</td><td class="c-org">기악·작곡·성악</td><td class="c-work">국립</td><td class="c-era">라흐마니노프</td><td class="c-school">러시아 전통</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">05</td><td class="c-ava"><span class="ava">R</span></td><td class="c-name"><a href="db-school-view.html">왕립음악원<span class="c-name-en">Royal Academy of Music</span></a></td><td class="c-field"><span class="tag">음악원</span></td><td class="c-nation">영국 · 런던</td><td class="c-life">1822</td><td class="c-org">기악·작곡·성악</td><td class="c-work">사립</td><td class="c-era">사이먼 래틀</td><td class="c-school">영국 명문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">04</td><td class="c-ava"><span class="ava">M</span></td><td class="c-name"><a href="db-school-view.html">잘츠부르크 모차르테움<span class="c-name-en">Mozarteum</span></a></td><td class="c-field"><span class="tag">음악대학</span></td><td class="c-nation">오스트리아 · 잘츠부르크</td><td class="c-life">1841</td><td class="c-org">기악·작곡·지휘</td><td class="c-work">국립</td><td class="c-era">카라얀</td><td class="c-school">모차르트 전통</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">03</td><td class="c-ava"><span class="ava">M</span></td><td class="c-name"><a href="db-school-view.html">밀라노 베르디 음악원<span class="c-name-en">Milan Conservatory</span></a></td><td class="c-field"><span class="tag">음악원</span></td><td class="c-nation">이탈리아 · 밀라노</td><td class="c-life">1807</td><td class="c-org">기악·작곡·성악</td><td class="c-work">국립</td><td class="c-era">아바도 외</td><td class="c-school">이탈리아 명문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">02</td><td class="c-ava"><span class="ava">경</span></td><td class="c-name"><a href="db-school-view.html">경희대학교 음악대학<span class="c-name-en">Kyung Hee Univ.</span></a></td><td class="c-field"><span class="tag">음악대학</span></td><td class="c-nation">대한민국 · 서울</td><td class="c-life">1955</td><td class="c-org">기악·작곡·성악</td><td class="c-work">사립</td><td class="c-era">외 다수</td><td class="c-school">포스트모던 음악</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
-          <tr><td class="c-no">01</td><td class="c-ava"><span class="ava">계</span></td><td class="c-name"><a href="db-school-view.html">계원예술고등학교<span class="c-name-en">Kaywon Arts High School</span></a></td><td class="c-field"><span class="tag">예술고등학교</span></td><td class="c-nation">대한민국 · 의왕</td><td class="c-life">1993</td><td class="c-org">음악·미술</td><td class="c-work">사립</td><td class="c-era">외 다수</td><td class="c-school">예술 전문 고교</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="홈페이지"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></a><a href="#" class="lk" title="위키"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg></a><a href="#" class="lk" title="영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a></span></td></tr>
+        <tbody id="academic-list">
+          <tr><td class="c-no">20</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">베토벤 후기 현악4중주의 화성 연구 <span class="oc-badge">OC</span><span class="c-name-en">Harmony in Beethoven's Late Quartets</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">김서연</td><td class="c-life">2021</td><td class="c-org">한국음악학회지</td><td class="c-work">음악이론</td><td class="c-era">베토벤·현악4중주·화성</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">19</td><td class="c-ava"><span class="ava">학</span></td><td class="c-name"><a href="academic-view.html">진은숙 음악의 음색 기법 연구<span class="c-name-en">Timbre in Unsuk Chin's Music</span></a></td><td class="c-field"><span class="tag">학위논문</span></td><td class="c-nation">이준호</td><td class="c-life">2020</td><td class="c-org">서울대 박사논문</td><td class="c-work">작곡</td><td class="c-era">진은숙·음색·관현악법</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">18</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">바흐 평균율의 수사학적 해석<span class="c-name-en">Rhetoric in Bach's WTC</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">박지민</td><td class="c-life">2019</td><td class="c-org">음악과 문화</td><td class="c-work">음악사</td><td class="c-era">바흐·평균율·수사학</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">17</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">한국 창작 국악의 정체성 <span class="oc-badge">OC</span><span class="c-name-en">Identity of Korean Creative Gugak</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">최유진</td><td class="c-life">2022</td><td class="c-org">국악원논문집</td><td class="c-work">국악</td><td class="c-era">국악·창작·정체성</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">16</td><td class="c-ava"><span class="ava">저</span></td><td class="c-name"><a href="academic-view.html">쇤베르크 12음기법 재고<span class="c-name-en">Schoenberg's Twelve-Tone Method Reconsidered</span></a></td><td class="c-field"><span class="tag">저널 · 학술지</span></td><td class="c-nation">A. Smith</td><td class="c-life">2018</td><td class="c-org">JAMS</td><td class="c-work">음악이론</td><td class="c-era">쇤베르크·12음·무조성</td><td class="c-school">영문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">15</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">음악교육에서의 즉흥연주<span class="c-name-en">Improvisation in Music Education</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">정민재</td><td class="c-life">2021</td><td class="c-org">음악교육연구</td><td class="c-work">음악교육</td><td class="c-era">음악교육·즉흥연주</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">14</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">오페라 자막과 번역의 문제<span class="c-name-en">Opera Surtitles and Translation</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">한소희</td><td class="c-life">2020</td><td class="c-org">서양음악학</td><td class="c-work">연주·공연</td><td class="c-era">오페라·자막·번역</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">13</td><td class="c-ava"><span class="ava">학</span></td><td class="c-name"><a href="academic-view.html">스펙트럴 음악의 음향 분석<span class="c-name-en">Analysis of Spectral Music</span></a></td><td class="c-field"><span class="tag">학위논문</span></td><td class="c-nation">윤도현</td><td class="c-life">2019</td><td class="c-org">연세대 석사논문</td><td class="c-work">작곡</td><td class="c-era">스펙트럴·음향분석</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">12</td><td class="c-ava"><span class="ava">서</span></td><td class="c-name"><a href="academic-view.html">바로크 바이올린 연주법<span class="c-name-en">Performance Practice in Baroque Violin</span></a></td><td class="c-field"><span class="tag">연구서</span></td><td class="c-nation">J. Doe</td><td class="c-life">2017</td><td class="c-org">Oxford Univ. Press</td><td class="c-work">연주·공연</td><td class="c-era">바로크·바이올린·연주법</td><td class="c-school">영문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">11</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">20세기 한국 가곡의 양식 변천<span class="c-name-en">Style in 20C Korean Art Songs</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">강예린</td><td class="c-life">2022</td><td class="c-org">한국음악사학보</td><td class="c-work">음악사</td><td class="c-era">가곡·양식·한국음악</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">10</td><td class="c-ava"><span class="ava">학</span></td><td class="c-name"><a href="academic-view.html">리게티 에튀드의 리듬 구조<span class="c-name-en">Rhythm in Ligeti's Études</span></a></td><td class="c-field"><span class="tag">학위논문</span></td><td class="c-nation">조성우</td><td class="c-life">2021</td><td class="c-org">한예종 전문사논문</td><td class="c-work">음악이론</td><td class="c-era">리게티·에튀드·리듬</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">09</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">디지털 시대의 음악 저작권<span class="c-name-en">Music Copyright in the Digital Age</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">임하늘</td><td class="c-life">2023</td><td class="c-org">문화정책논총</td><td class="c-work">음악산업</td><td class="c-era">저작권·디지털·음악산업</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">08</td><td class="c-ava"><span class="ava">저</span></td><td class="c-name"><a href="academic-view.html">말러의 관현악법<span class="c-name-en">Mahler's Orchestration Techniques</span></a></td><td class="c-field"><span class="tag">저널 · 학술지</span></td><td class="c-nation">K. Müller</td><td class="c-life">2016</td><td class="c-org">Music Analysis</td><td class="c-work">음악이론</td><td class="c-era">말러·관현악법·오케스트레이션</td><td class="c-school">영문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">07</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">판소리 장단의 음악적 특성<span class="c-name-en">Rhythmic Features of Pansori</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">서은우</td><td class="c-life">2020</td><td class="c-org">판소리연구</td><td class="c-work">국악</td><td class="c-era">판소리·장단·리듬</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">06</td><td class="c-ava"><span class="ava">서</span></td><td class="c-name"><a href="academic-view.html">음악 심리학과 청취 경험<span class="c-name-en">Music Psychology and Listening</span></a></td><td class="c-field"><span class="tag">연구서</span></td><td class="c-nation">백지훈</td><td class="c-life">2018</td><td class="c-org">음악세계</td><td class="c-work">음악학</td><td class="c-era">음악심리·청취·인지</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">05</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">현악기 제작의 음향학<span class="c-name-en">Acoustics of String Instruments</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">노아름</td><td class="c-life">2019</td><td class="c-org">한국음향학회지</td><td class="c-work">음향학</td><td class="c-era">현악기·음향학·제작</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">04</td><td class="c-ava"><span class="ava">저</span></td><td class="c-name"><a href="academic-view.html">후기 낭만주의와 민족주의<span class="c-name-en">Nationalism in Late Romantic Music</span></a></td><td class="c-field"><span class="tag">저널 · 학술지</span></td><td class="c-nation">L. Brown</td><td class="c-life">2015</td><td class="c-org">19th-Century Music</td><td class="c-work">음악사</td><td class="c-era">낭만주의·민족주의·19세기</td><td class="c-school">영문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">03</td><td class="c-ava"><span class="ava">학</span></td><td class="c-name"><a href="academic-view.html">합창 지휘의 제스처 분석<span class="c-name-en">Gesture Analysis in Choral Conducting</span></a></td><td class="c-field"><span class="tag">학위논문</span></td><td class="c-nation">문가온</td><td class="c-life">2021</td><td class="c-org">이화여대 박사논문</td><td class="c-work">지휘</td><td class="c-era">합창·지휘·제스처</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">02</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">AI 작곡 기술의 음악적 함의<span class="c-name-en">Musical Implications of AI Composition</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">남우진</td><td class="c-life">2023</td><td class="c-org">음악과 과학</td><td class="c-work">음악공학</td><td class="c-era">AI·작곡·음악공학</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
+          <tr><td class="c-no">01</td><td class="c-ava"><span class="ava">논</span></td><td class="c-name"><a href="academic-view.html">오르간 음악의 예배 기능<span class="c-name-en">Liturgical Function of Organ Music</span></a></td><td class="c-field"><span class="tag">학술논문</span></td><td class="c-nation">홍세라</td><td class="c-life">2019</td><td class="c-org">교회음악연구</td><td class="c-work">교회음악</td><td class="c-era">오르간·예배·교회음악</td><td class="c-school">국문</td><td class="c-link"><span class="c-link"><a href="#" class="lk" title="원문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg></a><a href="#" class="lk" title="인용"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></a></span></td></tr>
         </tbody>
       </table>
     </div>
@@ -729,11 +709,11 @@ if('serviceWorker' in navigator){
 
 </script>
 <script>
-/* 교육기관DB: 검색·필터·페이징 (인물/음악단체 DB와 동일 틀) */
+/* 학술DB: 검색·필터·페이징 (인물/음악단체 DB와 동일 틀) */
 (function(){
   var SUPA='https://ptdxzxkgddvkusamkiol.supabase.co';
   var KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var tb=document.getElementById('schools-list'); if(!tb) return;
+  var tb=document.getElementById('academic-list'); if(!tb) return;
   var IC={
     home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>',
     wiki:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>',
@@ -750,16 +730,18 @@ if('serviceWorker' in navigator){
   function row(o,no){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
     var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
-    var av=o.logo_url?'<img src="'+esc(o.logo_url)+'" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko);
-    var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
+    var av=(o.ava&&String(o.ava).trim())?esc(o.ava):ini(o.name_ko);
+    var links='<span class="c-link">'+lk(o.link_full,'전문',IC.full)+lk(o.link_cite,'인용',IC.cite)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
-      +'<td class="c-name"><a href="db-school-view.html?id='+encodeURIComponent(o.id)+'&p='+cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
-      +'<td class="c-field">'+(o.category?'<span class="tag">'+esc(o.category)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
-      +'<td class="c-nation">'+nd(o.location)+'</td>'
-      +'<td class="c-life">'+nd(o.founded)+'</td>'
-      +'<td class="c-era">'+nd(o.alumni)+'</td>'
-      +'<td class="c-school">'+nd(o.description?(o.description.length>70?o.description.slice(0,70)+'\u2026':o.description):'')+'</td>'
+      +'<td class="c-name"><a href="academic-view.html?id='+encodeURIComponent(o.id)+'&p='+cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
+      +'<td class="c-field">'+(o.type?'<span class="tag">'+esc(o.type)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
+      +'<td class="c-nation">'+nd(o.author)+'</td>'
+      +'<td class="c-life">'+nd(o.pub_year)+'</td>'
+      +'<td class="c-org">'+nd(o.publisher)+'</td>'
+      +'<td class="c-work">'+nd(o.field)+'</td>'
+      +'<td class="c-era">'+nd(o.keywords)+'</td>'
+      +'<td class="c-school">'+nd(o.language)+'</td>'
       +'<td class="c-link">'+links+'</td></tr>';
   }
   var PAGE=20, total=0;
@@ -771,24 +753,19 @@ if('serviceWorker' in navigator){
     st.q=(inp?inp.value:'').trim().replace(/[(),*]/g,' ').replace(/\s+/g,' ').trim();
     var sels=document.querySelectorAll('.pdb-selects select');
     var extra='', ord='sort_no.desc';
-    var region=sels[0]?sels[0].value:'';
-    if(region==='국내') extra+='&location=ilike.*'+encodeURIComponent('대한민국')+'*';
-    else if(region==='국외') extra+='&location=not.ilike.*'+encodeURIComponent('대한민국')+'*';
-    else if(region && region.indexOf('국내')<0 && region!=='기타') extra+='&location=ilike.*'+encodeURIComponent(region)+'*';
-    var f2=sels[1]?sels[1].value:''; if(f2 && f2.indexOf('전체')<0) extra+='&category=eq.'+encodeURIComponent(f2);
+    var lang=sels[0]?sels[0].value:''; if(lang && lang.indexOf('전체')<0 && lang!=='언어') extra+='&language=eq.'+encodeURIComponent(lang);
+    var ty=sels[1]?sels[1].value:''; if(ty && ty.indexOf('전체')<0) extra+='&type=eq.'+encodeURIComponent(ty);
     var sort=sels[2]?sels[2].value:'';
     if(sort.indexOf('오래된')>=0)ord='sort_no.asc';
     else if(sort.indexOf('역순')>=0)ord='name_ko.desc';
     else if(sort.indexOf('가나다')>=0)ord='name_ko.asc';
-    else if(sort.indexOf('A')>=0)ord='name_en.asc';
-    else if(sort.indexOf('설립')>=0)ord='founded.asc';
-    else if(sort.indexOf('구분')>=0)ord='category.asc';
-    else if(sort.indexOf('소재지')>=0)ord='location.asc';
+    else if(sort.indexOf('발행')>=0)ord='pub_year.desc';
+    else if(sort.indexOf('분야')>=0)ord='field.asc';
     st.filters=extra; st.order=ord;
   }
   function buildUrl(off){
-    var u=SUPA+'/rest/v1/schools?select=*';
-    if(st.q){var t=encodeURIComponent(st.q);u+='&or=('+'name_ko.ilike.*'+t+'*,name_en.ilike.*'+t+'*,location.ilike.*'+t+'*,departments.ilike.*'+t+'*,alumni.ilike.*'+t+'*'+')';}
+    var u=SUPA+'/rest/v1/academic?select=*';
+    if(st.q){var t=encodeURIComponent(st.q);u+='&or=('+'name_ko.ilike.*'+t+'*,author.ilike.*'+t+'*,keywords.ilike.*'+t+'*,field.ilike.*'+t+'*,publisher.ilike.*'+t+'*'+')';}
     u+=st.filters+'&order='+st.order+'&limit='+PAGE+'&offset='+off;
     return u;
   }
@@ -820,7 +797,7 @@ if('serviceWorker' in navigator){
       if(Array.isArray(rows)){
         cur=pg;
         var cnt=document.querySelector('.pdb-count b'); if(cnt) cnt.textContent=(total||0).toLocaleString();
-        if(rows.length===0){ tb.innerHTML='<tr><td colspan="9" class="pdb-empty">요청하신 검색 결과가 없습니다.</td></tr>'; if(pager)pager.innerHTML=''; }
+        if(rows.length===0){ tb.innerHTML='<tr><td colspan="11" class="pdb-empty">요청하신 검색 결과가 없습니다.</td></tr>'; if(pager)pager.innerHTML=''; }
         else { tb.innerHTML=rows.map(function(rw,ix){return row(rw, off+ix+1);}).join(''); renderPager();
           if(focusId){var _fr=tb.querySelector('tr[data-id="'+focusId+'"]');if(_fr){_fr.classList.add('row-focus');try{_fr.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}}focusId=null;} }
       }
@@ -829,7 +806,7 @@ if('serviceWorker' in navigator){
   if(pager){ pager.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[data-pg]');if(!a)return;e.preventDefault();var pg=parseInt(a.getAttribute('data-pg'),10);var pages=Math.max(1,Math.ceil(total/PAGE));if(pg>=1&&pg<=pages&&pg!==cur){loadPage(pg);if(window.scrollTo)window.scrollTo({top:0,behavior:'smooth'});}}); }
   (function(){
     var inp=document.querySelector('.pdb-search input');
-    if(inp){ inp.setAttribute('placeholder','학교명 · 학과 · 키워드로 검색'); inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doSearch();}}); }
+    if(inp){ inp.setAttribute('placeholder','제목 · 저자 · 키워드로 검색'); inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doSearch();}}); }
     var sic=document.querySelector('.pdb-search svg'); if(sic){ sic.style.cursor='pointer'; sic.addEventListener('click',doSearch); }
     document.querySelectorAll('.pdb-selects select').forEach(function(sel){sel.addEventListener('change',doSearch);});
   })();
@@ -891,6 +868,30 @@ if('serviceWorker' in navigator){
       apply();
     });
   });
+})();
+</script>
+<script>
+/* 학술DB 리스트: Supabase 로드 */
+(function(){
+  var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',H={apikey:KEY,Authorization:'Bearer '+KEY};
+  var tb=document.getElementById('academic-list'); if(!tb) return;
+  var IC={quote:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 12h8M12 8v8\"/></svg>',link:'<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1\"/><path d=\"M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1\"/></svg>'};
+
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function ini(n){n=(n||'').trim();return n?esc(n[0]):'?';}
+  function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
+  function row(x){
+    var oc=x.is_oc?' <span class="oc-badge">OC</span>':'';
+    var en=x.name_en?'<span class="c-name-en">'+esc(x.name_en)+'</span>':'';
+    var links='<span class="c-link">'+lk(x.link_full,'원문',IC.link)+lk(x.link_cite,'인용',IC.quote)+'</span>';
+    return '<tr><td class="c-no">'+esc(x.sort_no)+'</td><td class="c-ava"><span class="ava">'+esc(x.ava||'?')+'</span></td>'+
+      '<td class="c-name"><a href="academic-view.html?id='+encodeURIComponent(x.id)+'">'+esc(x.name_ko)+oc+en+'</a></td>'+
+      '<td class="c-field"><span class="tag">'+esc(x.type||'')+'</span></td>'+'<td class="c-nation">'+esc(x.author||'')+'</td>'+'<td class="c-life">'+esc(x.pub_year||'')+'</td>'+'<td class="c-org">'+esc(x.publisher||'')+'</td>'+'<td class="c-work">'+esc(x.field||'')+'</td>'+'<td class="c-era">'+esc(x.keywords||'')+'</td>'+'<td class="c-school">'+esc(x.language||'')+'</td>'+
+      '<td class="c-link">'+links+'</td></tr>';
+  }
+  fetch(URL+'/rest/v1/academic?select=*&order=sort_no.desc',{headers:H}).then(function(r){if(!r.ok)throw 0;return r.json();})
+   .then(function(rows){if(!Array.isArray(rows)||!rows.length)return;tb.innerHTML=rows.map(row).join('');var c=document.querySelector('.pdb-count b');if(c)c.textContent=rows.length;})
+   .catch(function(e){console.error('academic 로드 실패:',e);});
 })();
 </script>
 <script src="/assets/app.js" defer></script>
