@@ -51,6 +51,8 @@
   }
   .pdb-table th{text-align:left;font-size:1.15em;letter-spacing:0;text-transform:none;color:var(--text-2);font-weight:700;padding:20px 9px;border-top:3px solid var(--text);border-bottom:2px solid var(--text)}
   .pdb-table td{padding:14px 9px;border-top:1px solid var(--line);color:var(--text-2);font-size:1em;white-space:nowrap;vertical-align:middle;overflow:hidden}
+  /* 스크롤 성능: 화면 밖 행 렌더 건너뛰기(실험) */
+  .pdb-table tbody tr{content-visibility:auto;contain-intrinsic-size:auto 58px}
   .pdb-table tbody tr{transition:background .15s ease}
 
   .pdb-table .c-no{width:64px;color:var(--text-3);font-variant-numeric:tabular-nums}
