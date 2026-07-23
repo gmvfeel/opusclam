@@ -46,12 +46,71 @@
       });
     })();
 
-    /* ── 2) 즐겨찾기 · 킵 (현재: 화면 토글 / 로그인 DB연동은 이후 이 파일에 추가) ── */
-    document.querySelectorAll('.pv-tool[data-toggle]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+    /* ── 2) 즐겨찾기 · 킵 (로그인 회원 · Supabase 저장) ── */
+    (function () {
+      var toggles = document.querySelectorAll('.pv-tool[data-toggle]');
+      if (!toggles.length) return;
+      var q = new URLSearchParams(location.search);
+      var itemId = q.get('id');
+      var itemType = location.pathname.split('/').pop().replace('-view.html', '');
+      var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+      var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+      var client = null;
+
+      function kindOf(b) { return /킵/.test(b.textContent) ? 'keep' : 'favorite'; }
+      function hasSession() {
+        try { return Object.keys(localStorage).some(function (k) { return /^sb-.*-auth-token$/.test(k) && localStorage.getItem(k); }); }
+        catch (e) { return false; }
+      }
+      function needSupabase() { return (window.supabase && window.supabase.createClient) ? Promise.resolve() : loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'); }
+      function getClient() { if (!client) client = window.supabase.createClient(SB_URL, SB_KEY); return client; }
+      function askLogin() { if (confirm('로그인이 필요한 기능입니다. 로그인 페이지로 이동할까요?')) location.href = '/account/login.html'; }
+
+      // 클릭 → 저장/해제
+      toggles.forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!itemId) return;
+          if (!hasSession()) { askLogin(); return; }
+          var kind = kindOf(b);
+          var wasPressed = b.getAttribute('aria-pressed') === 'true';
+          b.setAttribute('aria-pressed', wasPressed ? 'false' : 'true');  // 낙관적 토글
+          b.disabled = true;
+          needSupabase()
+            .then(function () {
+              var c = getClient();
+              return c.auth.getUser().then(function (u) {
+                var uid = u && u.data && u.data.user && u.data.user.id;
+                if (!uid) throw new Error('no-session');
+                if (wasPressed) return c.from('member_favorites').delete().eq('item_type', itemType).eq('item_id', String(itemId)).eq('kind', kind);
+                return c.from('member_favorites').insert({ item_type: itemType, item_id: String(itemId), kind: kind });
+              });
+            })
+            .then(function (res) {
+              if (res && res.error) throw res.error;
+              toast(kind === 'favorite' ? (wasPressed ? '즐겨찾기에서 뺐습니다' : '즐겨찾기에 추가했습니다')
+                                        : (wasPressed ? '킵에서 뺐습니다' : '킵에 저장했습니다'));
+            })
+            .catch(function (e) {
+              b.setAttribute('aria-pressed', wasPressed ? 'true' : 'false');  // 롤백
+              if (e && e.message === 'no-session') askLogin();
+              else toast('처리 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.');
+            })
+            .finally(function () { b.disabled = false; });
+        });
       });
-    });
+
+      // 로드 시 → 로그인 상태면 저장된 상태 표시
+      if (itemId && hasSession()) {
+        needSupabase()
+          .then(function () { return getClient().from('member_favorites').select('kind').eq('item_type', itemType).eq('item_id', String(itemId)); })
+          .then(function (res) {
+            if (!res || res.error || !res.data) return;
+            var kinds = res.data.map(function (r) { return r.kind; });
+            toggles.forEach(function (b) { if (kinds.indexOf(kindOf(b)) >= 0) b.setAttribute('aria-pressed', 'true'); });
+          })
+          .catch(function () {});
+      }
+    })();
 
     /* ── 3) 공유 ── */
     var shareBtn = document.querySelector('[data-share]');
