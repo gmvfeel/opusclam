@@ -4,16 +4,15 @@
    색·폰트는 사이트 토큰(style.css :root) 사용.
    ============================================================ */
 
-/* 공용 히어로 — DB페이지처럼 '밝은 톤 + 옅은 보라 네트워크 워시 + 큰 어두운 제목'.
-   GNB는 솔리드(밝은 헤더)로 그 위에 얹힌다. 모든 게시판이 이 히어로를 재사용한다.
-   배경은 토큰(--paper 계열)으로 만들어 다크모드에서도 자동으로 어두워진다. */
-.board-hero{position:relative;background:linear-gradient(180deg,var(--paper-3) 0%,var(--paper-2) 52%,var(--paper) 100%);overflow:hidden;border-bottom:1px solid var(--line)}
-.board-hero::after{content:"";position:absolute;inset:0;background:radial-gradient(900px 300px at 82% -34%,rgba(124,99,176,.16),transparent 62%);pointer-events:none}
-.board-hero-inner{position:relative;z-index:1;max-width:var(--wrap,1180px);margin:0 auto;padding:150px 24px 44px}
-.board-hero .board-eyebrow{font-family:var(--display);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--violet-2);font-weight:700}
-.board-hero .board-title-h{font-family:var(--display);font-size:46px;font-weight:800;color:var(--text);margin:10px 0 0;line-height:1.02;letter-spacing:-.015em}
-.board-hero .board-count{font-size:13px;color:var(--text-3);margin-top:16px}
-.board-hero .board-count b{color:var(--violet-2)}
+/* 공용 히어로 — DB페이지와 동일: 어두운 히어로 그라데이션 위에 GNB가 흰색으로 투명하게 얹힌다.
+   DB가 쓰는 --hero-grad 를 그대로 사용해 형태를 일치시킨다. 모든 게시판이 재사용. */
+.board-hero{position:relative;background:var(--hero-grad);color:#fff;overflow:hidden}
+.board-hero::after{content:"";position:absolute;inset:0;background:radial-gradient(1100px 360px at 80% -35%,rgba(156,127,214,.4),transparent 60%);pointer-events:none}
+.board-hero-inner{position:relative;z-index:1;max-width:var(--wrap,1180px);margin:0 auto;padding:150px 24px 46px}
+.board-hero .board-eyebrow{font-family:var(--display);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.7);font-weight:700}
+.board-hero .board-title-h{font-family:var(--display);font-size:46px;font-weight:800;color:#fff;margin:10px 0 0;line-height:1.02;letter-spacing:-.015em}
+.board-hero .board-count{font-size:13px;color:rgba(255,255,255,.62);margin-top:16px}
+.board-hero .board-count b{color:#fff}
 
 .board{max-width:var(--wrap,1180px);margin:0 auto;padding:40px 24px 80px}
 .board-titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
