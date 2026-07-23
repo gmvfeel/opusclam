@@ -662,7 +662,7 @@
     .pdb-pager .pg-nav{padding:6px 7px;font-size:12px}
     .pg-nums{gap:2px}
   }
-  .pdb-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:var(--tbl-fs,13px)}
+  .pdb-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:var(--tbl-fs,13px)}
 
 
 /* ===== 모바일: 페이징 축소 (공통, 각 페이지 인라인보다 우선) ===== */
