@@ -33,8 +33,9 @@
     } catch (e) {}
   }
 
-  // 헤더: 지금 즉시(동기)
-  inject('oc-header', '/partials/header.html');
+  // 헤더: 지금 즉시(동기). 페이지는 둘 중 하나의 자리만 가진다.
+  inject('oc-header', '/partials/header.html');            // db·home 등 메인 헤더
+  inject('oc-header-auth', '/partials/header-auth.html');  // 회원 페이지 단순 헤더
   markActiveMenu();
 
   // 푸터: 자리표가 페이지 하단에 있으므로, 문서가 다 그려진 뒤에 넣는다
