@@ -31,6 +31,21 @@
   .mp-btn.ghost{background:var(--chip);color:var(--tx2)}
   .mp-msg{padding:30px 0;text-align:center;color:var(--tx3);line-height:1.7}
 </style>
+<style>
+  #mpFavs .mp-fav-group{margin-bottom:22px}
+  #mpFavs .mp-fav-group:last-child{margin-bottom:0}
+  #mpFavs h3{font-size:14px;font-weight:700;color:var(--tx,#20223a);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  #mpFavs h3 .mp-fav-cnt{font-size:12px;font-weight:600;color:#fff;background:var(--accent,#7C63B0);border-radius:999px;padding:1px 8px}
+  #mpFavs .mp-fav-list{list-style:none;margin:0;padding:0}
+  #mpFavs .mp-fav-list li{display:flex;align-items:center;gap:10px;padding:10px 2px;border-top:1px solid var(--line,#efeae0)}
+  #mpFavs .mp-fav-list li:first-child{border-top:0}
+  #mpFavs .mp-fav-list a{flex:1;color:var(--tx,#20223a);text-decoration:none;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #mpFavs .mp-fav-list a:hover{color:var(--accent,#7C63B0);text-decoration:underline}
+  #mpFavs .mp-fav-cat{flex:none;font-size:11px;color:var(--tx3,#8f90a6);border:1px solid var(--line2,#e4ded2);border-radius:6px;padding:2px 7px}
+  #mpFavs .mp-fav-del{flex:none;width:24px;height:24px;border:0;background:none;color:var(--tx3,#8f90a6);font-size:18px;line-height:1;cursor:pointer;border-radius:6px}
+  #mpFavs .mp-fav-del:hover{background:rgba(0,0,0,.06);color:var(--tx,#20223a)}
+  #mpFavs .mp-fav-empty{font-size:13px;color:var(--tx3,#8f90a6);padding:4px 2px}
+</style>
 </head>
 <body>
 <div id="oc-net" class="oc-net" aria-hidden="true"></div>
@@ -45,6 +60,14 @@
       <h1>마이페이지</h1>
     </div>
     <div class="mp-card" id="mpBody">
+      <div class="mp-msg">불러오는 중…</div>
+    </div>
+
+    <div class="mp-head" style="margin-top:44px">
+      <span class="jtag">SAVED</span>
+      <h1 style="font-size:24px">내 즐겨찾기 · 킵</h1>
+    </div>
+    <div class="mp-card" id="mpFavs">
       <div class="mp-msg">불러오는 중…</div>
     </div>
   </div>
@@ -92,13 +115,70 @@
       +  '<li><span class="k">가입일</span><span class="v">'+fmt(m.created_at)+'</span></li>'
       +'</ul>'
       +'<div class="mp-actions">'
-      +  (qual?'<a class="mp-btn primary" href="/db/write.html">DB 등록 · 보강 하러 가기</a>':'')
+      +  (qual?'<a class="mp-btn primary" href="/db/db-write.html">DB 등록 · 보강 하러 가기</a>':'')
       +  (isEmail?'<a class="mp-btn ghost" href="/account/change-password.html">비밀번호 변경</a>':'')
       +  '<button class="mp-btn ghost" id="mpLogout">로그아웃</button>'
       +'</div>'
       +'<div style="text-align:center;margin-top:18px"><a href="/account/withdraw.html" style="font-size:12px;color:var(--tx3);text-decoration:underline">회원 탈퇴</a></div>';
     box.innerHTML=html;
     var lo=document.getElementById("mpLogout"); if(lo) lo.addEventListener("click",doLogout);
+  }
+
+  var FAV_META={
+    person:{table:"persons",view:"person-view.html",label:"인물"},
+    org:{table:"orgs",view:"org-view.html",label:"음악단체"},
+    venue:{table:"venues",view:"venue-view.html",label:"공연장"},
+    school:{table:"schools",view:"school-view.html",label:"음악학교"},
+    modern:{table:"modern_composers",view:"modern-view.html",label:"현대음악"},
+    foundation:{table:"foundations",view:"foundation-view.html",label:"기관·재단"},
+    academic:{table:"academic",view:"academic-view.html",label:"학술"}
+  };
+  function renderFavs(rows, nameMap){
+    var favBox=document.getElementById("mpFavs"); if(!favBox) return;
+    function itemHtml(x){
+      var meta=FAV_META[x.item_type]||{};
+      var nm=(nameMap[x.item_type]&&nameMap[x.item_type][String(x.item_id)])||("#"+x.item_id);
+      var href="/db/"+(meta.view||"#")+"?id="+encodeURIComponent(x.item_id);
+      return '<li><a href="'+href+'">'+esc(nm)+'</a>'
+        +'<span class="mp-fav-cat">'+esc(meta.label||x.item_type)+'</span>'
+        +'<button type="button" class="mp-fav-del" data-fid="'+esc(x.id)+'" aria-label="삭제">\u00d7</button></li>';
+    }
+    function group(title, list){
+      return '<div class="mp-fav-group"><h3>'+title+' <span class="mp-fav-cnt">'+list.length+'</span></h3>'
+        +(list.length?'<ul class="mp-fav-list">'+list.map(itemHtml).join("")+'</ul>':'<div class="mp-fav-empty">아직 없습니다.</div>')+'</div>';
+    }
+    var favs=rows.filter(function(x){return x.kind==="favorite";});
+    var keeps=rows.filter(function(x){return x.kind==="keep";});
+    favBox.innerHTML=group("즐겨찾기", favs)+group("킵", keeps);
+    favBox.querySelectorAll(".mp-fav-del").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var fid=btn.getAttribute("data-fid"); btn.disabled=true;
+        sb.from("member_favorites").delete().eq("id",fid).then(function(dr){
+          if(dr.error){ btn.disabled=false; return; }
+          var li=btn.closest("li"); if(li) li.remove();
+        });
+      });
+    });
+  }
+  function loadFavs(){
+    var favBox=document.getElementById("mpFavs"); if(!favBox) return;
+    sb.from("member_favorites").select("*").order("created_at",{ascending:false}).then(function(r){
+      if(r.error){ favBox.innerHTML='<div class="mp-msg">목록을 불러오지 못했습니다.</div>'; return; }
+      var rows=r.data||[];
+      if(!rows.length){ favBox.innerHTML='<div class="mp-msg">아직 저장한 즐겨찾기·킵이 없습니다.<br><br>상세페이지에서 즐겨찾기·킵 버튼으로 저장할 수 있어요.</div>'; return; }
+      var byType={}; rows.forEach(function(x){ (byType[x.item_type]=byType[x.item_type]||[]).push(x); });
+      var jobs=Object.keys(byType).map(function(tp){
+        var meta=FAV_META[tp]; if(!meta) return Promise.resolve({tp:tp,names:{}});
+        var ids=byType[tp].map(function(x){return x.item_id;});
+        return sb.from(meta.table).select("id,name_ko").in("id",ids).then(function(nr){
+          var map={}; (nr.data||[]).forEach(function(o){ map[String(o.id)]=o.name_ko; }); return {tp:tp,names:map};
+        }).catch(function(){ return {tp:tp,names:{}}; });
+      });
+      Promise.all(jobs).then(function(res){
+        var nameMap={}; res.forEach(function(o){ nameMap[o.tp]=o.names; });
+        renderFavs(rows, nameMap);
+      });
+    });
   }
 
   sb.auth.getSession().then(function(r){
@@ -114,6 +194,7 @@
       }
       render(mr.data, session);
       headerLoggedIn(mr.data, session);
+      loadFavs();
     });
   });
 })();
