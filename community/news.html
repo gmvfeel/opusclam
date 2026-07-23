@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>뉴스 · 공지사항 · OPUSCLAM</title>
+<title>뉴스 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -38,7 +38,7 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><span class="on">뉴스 · 공지사항</span>
+      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><span class="on">뉴스</span>
     </nav>
 
     <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
@@ -59,10 +59,10 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OC COMMUNITY</div>
-          <h1 class="pdb-title">뉴스 · 공지사항</h1>
+          <h1 class="pdb-title">뉴스</h1>
         </div>
       </div>
-      <p class="pdb-lead">오퍼스클램의 공지와 국내외 클래식 음악계 소식을 한곳에서 확인하세요.</p>
+      <p class="pdb-lead">국내외 클래식 음악계 소식을 회원들과 함께 나누는 공간입니다.</p>
     </header>
   </div>
 </section>
@@ -74,16 +74,21 @@
       <input type="text" placeholder="제목·내용 검색" aria-label="검색">
       <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
     </div>
-    <div class="board-cats"></div>
-    <div class="board-actions"></div>
-  </div>
-
-  <div class="board-meta pdb-meta">
-    <div class="board-count pdb-count">전체 <b>0</b>건</div>
+    <div class="pdb-selects">
+      <select class="board-sort" aria-label="정렬">
+        <option value="created_at">최신순</option>
+        <option value="view_count">인기순</option>
+        <option value="comment_count">댓글순</option>
+      </select>
+    </div>
   </div>
 
   <div class="board-list"></div>
-  <div class="board-pager"></div>
+
+  <div class="board-foot">
+    <div class="board-pager"></div>
+    <div class="board-actions"></div>
+  </div>
 </main>
 
 <!-- ===== list bottom ad banners (인물DB와 동일) ===== -->
@@ -112,8 +117,7 @@
     OCBoard.list({
       table:'news', pageSize:20, viewPage:'news-view.html', writePage:'news-write.html',
       searchCols:['title','body'],
-      categories:[{value:'',label:'전체'},{value:'공지',label:'공지'},{value:'뉴스',label:'뉴스'}],
-      pinnedFirst:true
+      articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at'
     });
   });
 </script>

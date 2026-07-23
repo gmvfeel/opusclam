@@ -49,13 +49,33 @@ window.OCBoard = (function () {
     });
   }
 
+  /* ── 로그인 회원 여부 (is_admin 무관, 로그인만 확인) ── */
+  function checkMember() {
+    return new Promise(function (res) {
+      if (!window.ocAuth || !window.ocAuth.myMember) return res(null);
+      try {
+        window.ocAuth.myMember().then(function (m) { res(m || null); }).catch(function () { res(null); });
+      } catch (e) { res(null); }
+    });
+  }
+
+  /* 본문 미리보기: 줄바꿈·공백 정리 후 잘라내기 (CSS로 2줄 제한) */
+  function previewText(s, n) {
+    var t = (s == null ? '' : String(s)).replace(/\s+/g, ' ').trim();
+    n = n || 120;
+    return esc(t.length > n ? t.slice(0, n) + '\u2026' : t);
+  }
+
   /* ============================ 목록 ============================ */
   function list(cfg) {
     var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '';
+    var sortCol = cfg.defaultSort || 'created_at';
     var listEl = document.querySelector('.board-list');
     var pager = document.querySelector('.board-pager');
     if (pager) pager.classList.add('pdb-pager');
     var catsEl = document.querySelector('.board-cats');
+    var sortEl = document.querySelector('.board-sort');
+    if (sortEl) sortEl.addEventListener('change', function () { sortCol = sortEl.value || 'created_at'; loadPage(1); });
 
     /* 카테고리 탭 생성 */
     if (catsEl && cfg.categories && cfg.categories.length) {
@@ -77,7 +97,7 @@ window.OCBoard = (function () {
         u += '&or=(' + cfg.searchCols.map(function (c) { return c + '.ilike.*' + t + '*'; }).join(',') + ')';
       }
       if (cat) u += '&category=eq.' + encodeURIComponent(cat);
-      u += '&order=' + (cfg.pinnedFirst ? 'is_pinned.desc,created_at.desc' : 'created_at.desc');
+      u += '&order=' + (cfg.pinnedFirst ? 'is_pinned.desc,' + sortCol + '.desc' : sortCol + '.desc');
       u += '&limit=' + PAGE + '&offset=' + off;
       return u;
     }
@@ -92,6 +112,39 @@ window.OCBoard = (function () {
         + '<span class="board-meta"><span class="board-date">' + fmtDate(rec.created_at) + '</span>'
         + '<span class="board-views">\uc870\ud68c ' + (rec.view_count || 0) + '</span></span>'
         + '</a>';
+    }
+
+    /* ── 뉴스형(article) 렌더링 ── */
+    function metaLine(rec) {
+      var src = rec.source ? esc(rec.source) : '', au = rec.author_name ? esc(rec.author_name) : '';
+      return src && au ? src + ' \u00b7 ' + au : (src || au);
+    }
+    function ccHtml(rec) { var c = rec.comment_count || 0; return c > 0 ? '<span class="board-cc">[' + c + ']</span>' : ''; }
+    function tagHtml(rec) { return rec.category ? '<span class="board-tag">' + esc(rec.category) + '</span>' : ''; }
+    function featuredHtml(rec) {
+      return '<a class="board-feat" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
+        + '<span class="board-hot">\ud654\uc81c</span>'
+        + '<div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + '</div>'
+        + '<p class="board-prev">' + previewText(rec.body, 160) + '</p>'
+        + '<div class="board-feat-meta">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></div>'
+        + '</a>';
+    }
+    function articleRowHtml(rec, no) {
+      return '<a class="board-row" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
+        + '<span class="board-row-no">' + (no > 0 && no < 10 ? '0' + no : no) + '</span>'
+        + '<span class="board-row-main"><span class="board-row-title">' + esc(rec.title || '') + ccHtml(rec) + '</span>'
+        + '<span class="board-prev">' + previewText(rec.body, 140) + '</span></span>'
+        + '<span class="board-row-right">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></span>'
+        + '</a>';
+    }
+    function renderArticles(rows, offset) {
+      var out = '';
+      for (var i = 0; i < rows.length; i++) {
+        var rec = rows[i];
+        if (rec.is_pinned && cur === 1) out += featuredHtml(rec);
+        else out += articleRowHtml(rec, total - offset - i);
+      }
+      return out;
     }
 
     function skeleton(n) {
@@ -131,7 +184,7 @@ window.OCBoard = (function () {
             if (listEl) listEl.innerHTML = '<div class="board-empty">아직 등록된 글이 없습니다.</div>';
             if (pager) pager.innerHTML = '';
           } else {
-            if (listEl) listEl.innerHTML = rows.map(itemHtml).join('');
+            if (listEl) listEl.innerHTML = cfg.articleStyle ? renderArticles(rows, (pg - 1) * PAGE) : rows.map(itemHtml).join('');
             renderPager();
           }
         })
@@ -149,12 +202,13 @@ window.OCBoard = (function () {
     if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
     var sb = document.querySelector('.board-searchbtn'); if (sb) sb.addEventListener('click', doSearch);
 
-    /* 관리자면 '글쓰기' 버튼 노출 */
+    /* '글쓰기' 버튼 — writeRole:'member'면 로그인 회원 누구나, 아니면 관리자만 */
     if (cfg.writePage) {
-      checkAdmin().then(function (m) {
+      var gate = cfg.writeRole === 'member' ? checkMember : checkAdmin;
+      gate().then(function (m) {
         if (!m) return;
         var bar = document.querySelector('.board-actions');
-        if (bar) bar.innerHTML = '<a class="pdb-reg" href="' + cfg.writePage + '"><span class="plus">+</span> 글쓰기</a>';
+        if (bar) bar.innerHTML = '<a class="board-write" href="' + cfg.writePage + '">\uae00\uc4f0\uae30</a>';
       });
     }
 
