@@ -1431,5 +1431,28 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
 })();
 </script>
 <script src="/assets/app.js" defer></script>
+<script>(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  ready(function(){
+    var btn=document.querySelector('[data-share]'); if(!btn) return;
+    function toast(msg){
+      var el=document.createElement('div'); el.textContent=msg;
+      el.setAttribute('style','position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:rgba(20,22,34,.94);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 8px 24px -8px rgba(0,0,0,.5);opacity:0;transition:opacity .2s');
+      document.body.appendChild(el);
+      requestAnimationFrame(function(){ el.style.opacity='1'; });
+      setTimeout(function(){ el.style.opacity='0'; setTimeout(function(){ el.remove(); },250); },1600);
+    }
+    function copyFallback(text){
+      try{ var ta=document.createElement('textarea'); ta.value=text; ta.setAttribute('style','position:fixed;opacity:0;left:0;top:0'); document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); ta.remove(); toast('링크가 복사되었습니다'); }
+      catch(e){ window.prompt('링크를 복사하세요:', text); }
+    }
+    btn.addEventListener('click',function(){
+      var url=location.href, title=(document.title||'OPUSCLAM').trim();
+      if(navigator.share){ navigator.share({title:title,url:url}).catch(function(){}); return; }
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){ toast('링크가 복사되었습니다'); }, function(){ copyFallback(url); }); return; }
+      copyFallback(url);
+    });
+  });
+})();</script>
 </body>
 </html>
