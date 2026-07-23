@@ -208,6 +208,10 @@
 /* ===== 회원 페이지 UI 향상: 네트워크 배경 · 눈 아이콘 · 비번 가이드 · 캘린더 ===== */
 (function(){
   function net(){
+    /* 네트워크 배경은 회원 페이지 전용. 이 배경을 꾸며주는 auth.css 가
+       로드된 페이지에서만 그린다. (auth.js 만 쓰는 게시판 등 다른 페이지에
+       점 덩어리가 잘못 끼어드는 것을 방지) */
+    if(!document.querySelector('link[href*="auth.css"]')) return;
     var el=document.getElementById('oc-net');
     if(!el){ el=document.createElement('div'); el.id='oc-net'; el.className='oc-net'; el.setAttribute('aria-hidden','true'); document.body.insertBefore(el, document.body.firstChild); }
     if(el.dataset.done) return; el.dataset.done='1';
