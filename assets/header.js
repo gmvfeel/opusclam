@@ -1,37 +1,46 @@
 /* ============================================================
    OPUSCLAM 공용 헤더 동작 — assets/header.js
    헤더 솔리드/스티키 · 드롭다운 · 햄버거 · 전체메뉴 · 테마토글.
+   헤더 표시 모드는 페이지가 <body data-header="overlay"> 로 지정한다
+   (지정 안 하면 항상 solid = 흰 배경 페이지 기본값). 상세는 아래 참조.
    include.js(동기)로 헤더가 DOM에 들어간 "뒤"에 실행되어야 함.
    각 요소가 없으면 자동으로 건너뛰도록(guard) 되어 있어 어느 페이지든 안전.
    ※ 지금은 커뮤니티(게시판) 페이지에서 사용. 추후 DB 페이지의
      인라인 헤더 스크립트도 이 파일로 대체하면 복붙이 사라진다.
    ============================================================ */
-/* header: transparent over hero, solid on hover or after scrolling past hero */
+/* ------------------------------------------------------------
+   헤더 표시 모드 — 페이지가 <body data-header="..."> 로 명시한다.
+   (DOM 구조를 추측하지 않으므로 페이지가 바뀌어도 안 깨진다)
+
+   · 기본(속성 없음)     = 항상 solid(불투명).
+       흰 배경의 일반/게시판 페이지. 헤더가 늘 보인다.
+   · data-header="overlay" = 투명하게 히어로 위에 얹혔다가
+       스크롤/호버 시 solid. 상단이 어두운 히어로인 홈·DB 페이지용.
+       (히어로 요소는 .hero / .pdb / .pdb-bg 중 하나를 자동 인식)
+   ------------------------------------------------------------ */
 (function(){
   var sh=document.getElementById('siteHeader');
-  var hero=document.querySelector('.hero');
   if(!sh)return;
-  if(!hero){
-    if(window.innerWidth<=880){ sh.classList.add('solid'); return; }
-    var subHover=false;
-    function subUpd(){
-      if(subHover || window.scrollY>40){ sh.classList.add('solid'); }
-      else { sh.classList.remove('solid'); }
-    }
-    sh.addEventListener('mouseenter',function(){subHover=true;subUpd();});
-    sh.addEventListener('mouseleave',function(){subHover=false;subUpd();});
-    window.addEventListener('scroll',subUpd,{passive:true});
-    subUpd();
+  var mode=(document.body.getAttribute('data-header')||'').toLowerCase();
+
+  /* 기본: 항상 solid */
+  if(mode!=='overlay'){
+    sh.classList.add('solid');
     return;
   }
+
+  /* overlay: 투명 → 스크롤/호버 시 solid */
+  var hero=document.querySelector('.hero, .pdb, .pdb-bg');
   var hovering=false;
   function update(){
     var solid;
     if(window.innerWidth<=880){
       solid = window.scrollY>8;               // 모바일: 맨 위는 투명, 스크롤하면 불투명
-    } else {
+    } else if(hero){
       var trigger=hero.offsetHeight-sh.offsetHeight-8;
       solid = hovering || window.scrollY>Math.max(trigger,60);
+    } else {
+      solid = hovering || window.scrollY>40;  // overlay인데 히어로를 못 찾은 예외 대비
     }
     sh.classList.toggle('solid', solid);
   }
