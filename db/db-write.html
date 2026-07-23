@@ -5,7 +5,6 @@
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DB 등록 · 보강 · OPUSCLAM.COM</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -385,6 +384,7 @@
 
 
 
+  @media(max-width:768px){.util{display:none}}
 </style>
 </head>
 <body>
@@ -661,15 +661,15 @@
       <section class="wr-step">
         <h2 class="wr-steph"><span class="wr-num">3</span> 출처 · 근거</h2>
         <div class="wr-fields">
-          <div class="wr-f wr-f-full"><label class="wr-l">출처 URL</label><input type="url" class="wr-in" id="wrSrcUrl" placeholder="https:// 참고한 페이지 주소"></div>
-          <div class="wr-f wr-f-full"><label class="wr-l">출처 메모</label><textarea class="wr-in" id="wrSrcMemo" rows="2" placeholder="참고한 자료·근거를 적어주세요"></textarea></div>
+          <div class="wr-f wr-f-full"><label class="wr-l">출처 URL</label><input type="url" class="wr-in" placeholder="https:// 참고한 페이지 주소"></div>
+          <div class="wr-f wr-f-full"><label class="wr-l">출처 메모</label><textarea class="wr-in" rows="2" placeholder="참고한 자료·근거를 적어주세요"></textarea></div>
         </div>
       </section>
 
       <div class="wr-actions">
         <button type="button" class="wr-btn wr-cancel" onclick="history.back()">취소</button>
         <button type="button" class="wr-btn wr-ghost">미리보기</button>
-        <button type="button" class="wr-btn wr-primary" id="wrSubmit">제출 (검수 요청)</button>
+        <button type="button" class="wr-btn wr-primary">제출 (검수 요청)</button>
       </div>
       <p class="wr-foot">제출된 내용은 자격 회원 검수 후 반영되며, 반영까지 다소 시간이 걸릴 수 있습니다.</p>
     </div>
@@ -1484,13 +1484,12 @@ if('serviceWorker' in navigator){
   function fld(f,rec){
     var full=f.h==='full'?' wr-f-full':'';
     var v=esc(rec&&f.k?(rec[f.k]==null?'':rec[f.k]):(f.v||'')), ph=esc(f.ph||'');
-    var dk=' data-k="'+esc(f.k||'')+'"';
     var inner;
-    if(f.t==='textarea') inner='<textarea class="wr-in"'+dk+' rows="3" placeholder="'+ph+'">'+v+'</textarea>';
-    else if(f.t==='select') inner='<select class="wr-in"'+dk+'>'+f.o.map(function(o){return '<option>'+esc(o)+'</option>';}).join('')+'</select>';
+    if(f.t==='textarea') inner='<textarea class="wr-in" rows="3" placeholder="'+ph+'">'+v+'</textarea>';
+    else if(f.t==='select') inner='<select class="wr-in">'+f.o.map(function(o){return '<option>'+esc(o)+'</option>';}).join('')+'</select>';
     else if(f.t==='image') inner='<div class="wr-upload">클릭 또는 드래그하여 이미지 업로드</div>';
-    else if(f.t==='tags') inner='<input class="wr-in"'+dk+' value="'+v+'" placeholder="쉼표로 구분 (예: 작곡, 오르간)">';
-    else inner='<input type="'+(f.t==='url'?'url':'text')+'" class="wr-in"'+dk+' value="'+v+'" placeholder="'+ph+'">';
+    else if(f.t==='tags') inner='<input class="wr-in" value="'+v+'" placeholder="쉼표로 구분 (예: 작곡, 오르간)">';
+    else inner='<input type="'+(f.t==='url'?'url':'text')+'" class="wr-in" value="'+v+'" placeholder="'+ph+'">';
     return '<div class="wr-f'+full+'"><label class="wr-l">'+esc(f.l)+'</label>'+inner+'</div>';
   }
   var curDb='person', curRec=null;
@@ -1527,91 +1526,6 @@ if('serviceWorker' in navigator){
       .then(function(r){return r.json();}).then(function(a){ render(_db,(a&&a[0])||null); })
       .catch(function(){ render(_db,null); });
   } else { render(_db, null); }
-
-  /* ===== 제출(검수 요청) 저장 — 현재 인물(person)만 연결 ===== */
-  var _sb = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(_U,_K) : null;
-  var _QUAL = ['major','industry','org','school'];
-
-  async function _getMe(){
-    if(!_sb) return {session:null, me:null};
-    var s = await _sb.auth.getSession();
-    var session = (s && s.data) ? s.data.session : null;
-    if(!session) return {session:null, me:null};
-    var r = await _sb.from('members').select('member_type,status,name').eq('id', session.user.id).single();
-    return {session:session, me:(r && r.data) || null};
-  }
-  function _isQualified(me){
-    return !!(me && me.status==='approved' && _QUAL.indexOf(me.member_type)>=0);
-  }
-
-  /* 상단 자격 배지: 로그인/자격 상태 안내 */
-  (async function _initPerm(){
-    var el = document.querySelector('.wr-perm');
-    if(!el || !_sb) return;
-    try{
-      var info = await _getMe();
-      if(!info.session){
-        el.innerHTML = '🔒 로그인이 필요합니다. <a href="/login.html" style="color:inherit;text-decoration:underline">로그인하기</a>';
-      } else if(_isQualified(info.me)){
-        el.innerHTML = '✅ ' + ((info.me && info.me.name) || '회원') + '님, 등록·보강 자격이 확인되었습니다.';
-      } else {
-        el.innerHTML = '⚠️ 자격 회원(승인 완료)만 등록·보강할 수 있습니다. 현재 계정은 권한이 없습니다.';
-      }
-    }catch(e){ /* 조용히 무시 */ }
-  })();
-
-  var _submitBtn = document.getElementById('wrSubmit');
-  if(_submitBtn){
-    _submitBtn.addEventListener('click', async function(){
-      if(curDb !== 'person'){
-        alert('현재는 인물(person) DB만 제출 저장이 연결되어 있습니다.\n다른 DB는 순차적으로 연결할 예정입니다.');
-        return;
-      }
-      if(!_sb){ alert('저장 도구를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'); return; }
-
-      var _orig = _submitBtn.textContent;
-      _submitBtn.disabled = true; _submitBtn.textContent = '제출 중…';
-      try{
-        var info = await _getMe();
-        if(!info.session){ alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.'); location.href='/login.html'; return; }
-        if(!_isQualified(info.me)){ alert('자격 회원(승인 완료)만 등록·보강할 수 있습니다.'); return; }
-
-        /* 폼 값 수집 (data-k 있는 칸만) */
-        var payload = {};
-        document.querySelectorAll('#wrFields [data-k]').forEach(function(elm){
-          var k = elm.getAttribute('data-k'); if(!k) return;
-          var val = (elm.value || '').trim();
-          if(val) payload[k] = val;
-        });
-        if(!payload.name_ko){ alert('이름(국문)은 필수입니다.'); return; }
-
-        /* 출처 정보: 밑줄(_) 접두사 → 실제 반영 시 제외됨 */
-        var su = document.getElementById('wrSrcUrl'), sm = document.getElementById('wrSrcMemo');
-        if(su && su.value.trim()) payload._src_url = su.value.trim();
-        if(sm && sm.value.trim()) payload._src_memo = sm.value.trim();
-
-        var row = {
-          submitter_id: info.session.user.id,
-          action: (_mode==='enhance' ? 'update' : 'create'),
-          target_table: 'persons',
-          target_id: (_mode==='enhance' && _id) ? _id : null,
-          payload: payload,
-          status: 'pending'
-        };
-        var ins = await _sb.from('submissions').insert(row);
-        if(ins.error){ alert('제출 실패: ' + ins.error.message); return; }
-
-        alert('제출되었습니다. 자격 회원 검수 후 반영됩니다. 감사합니다.');
-        /* 폼 초기화 (신규 등록 계속 가능) */
-        render(curDb, null);
-        if(su) su.value = ''; if(sm) sm.value = '';
-      }catch(e){
-        alert('오류가 발생했습니다: ' + (e && e.message ? e.message : e));
-      }finally{
-        _submitBtn.disabled = false; _submitBtn.textContent = _orig;
-      }
-    });
-  }
 })();
 </script>
 <script src="/assets/app.js" defer></script>

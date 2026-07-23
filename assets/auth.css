@@ -75,7 +75,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .mini-btn{padding:0 16px;background:var(--chip);border:1px solid var(--line2);border-radius:8px;color:var(--tx);font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}.mini-btn:hover{background:var(--chip-h)}
 .checks{display:flex;flex-wrap:wrap;gap:12px 18px;padding:4px 0}
 .checks label{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--tx);cursor:pointer}
-.checks input{width:15px;height:15px;accent-color:#20223a}
+.checks input{width:15px;height:15px;accent-color:var(--accent)}
 /* 유형 토글 */
 .ftabs{display:flex;margin-bottom:26px;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
 .ftab{flex:1;text-align:center;padding:14px;font-size:14px;font-weight:600;color:var(--tx2);background:transparent;border:0;cursor:pointer}
@@ -101,7 +101,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .btn.block{width:100%}
 .err{font-size:12.5px;color:var(--danger);margin-top:14px;min-height:15px;text-align:center}
 .db-consent{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--tx2);line-height:1.6;cursor:pointer}
-.db-consent input{width:15px;height:15px;accent-color:#20223a;margin-top:2px;flex:0 0 auto}
+.db-consent input{width:15px;height:15px;accent-color:var(--accent);margin-top:2px;flex:0 0 auto}
 /* 완료 */
 .done{text-align:center;max-width:640px;margin:0 auto}
 .done .big{font-size:28px;font-weight:800;color:var(--h1);line-height:1.4;margin:24px 0 16px}
@@ -134,7 +134,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .hero .fg input::placeholder{color:var(--ph)}
 .hero .fg input:focus{border-color:var(--tx2)}
 .opts{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--tx2);margin:16px 0 24px}
-.opts label{display:flex;align-items:center;gap:7px;cursor:pointer}.opts input{accent-color:#20223a;width:15px;height:15px}
+.opts label{display:flex;align-items:center;gap:7px;cursor:pointer}.opts input{accent-color:var(--accent);width:15px;height:15px}
 .btn-primary{width:100%;padding:15px;background:var(--pri);border:none;border-radius:8px;color:var(--prit);font-size:14px;font-weight:700;cursor:pointer}
 .aflinks{display:flex;justify-content:center;gap:16px;margin-top:24px;padding-top:20px;border-top:1px solid var(--line);font-size:12px}
 .aflinks a{color:var(--tx4)}.aflinks a:hover{color:var(--tx2)}.aflinks span{color:var(--line2)}
@@ -164,12 +164,13 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .tbox h4{font-size:13.5px;font-weight:700;color:var(--tx);margin-bottom:12px}.tbox h4 .req{color:var(--tx2);font-weight:600;font-size:12px}
 .terms{height:150px;overflow:auto;font-size:12.5px;color:var(--tx2);line-height:1.8;padding-right:8px}
 .agree{display:flex;align-items:center;gap:9px;margin-top:14px;font-size:13px;color:var(--tx);cursor:pointer}
-.agree input{width:16px;height:16px;accent-color:#20223a}.agree a{color:var(--tx2);text-decoration:underline;margin-left:4px}
-.allbox{display:flex;align-items:center;gap:9px;padding:18px 26px;background:var(--tagbg);border:1px solid var(--line2);border-radius:12px;font-size:14px;font-weight:700;color:var(--tx);cursor:pointer;margin-top:4px}.allbox input{width:17px;height:17px;accent-color:#20223a}
+.agree input{width:16px;height:16px;accent-color:var(--accent)}.agree a{color:var(--tx2);text-decoration:underline;margin-left:4px}
+.allbox{display:flex;align-items:center;gap:9px;padding:18px 26px;background:var(--tagbg);border:1px solid var(--line2);border-radius:12px;font-size:14px;font-weight:700;color:var(--tx);cursor:pointer;margin-top:4px}.allbox input{width:17px;height:17px;accent-color:var(--accent)}
 /* 푸터 */
 footer{text-align:center;padding:28px;font-size:11px;color:var(--tx4);border-top:1px solid var(--hair);letter-spacing:.5px}
 footer a{color:var(--tx4)}
 @media(max-width:960px){.nav,.authlink,.school,.circ{display:none}}
+@media(max-width:768px){.util{display:none}}
 @media(max-width:900px){.hero{grid-template-columns:1fr;gap:40px}.hero h1{font-size:34px}}
 @media(max-width:680px){.frow{grid-template-columns:1fr}}
 @media(max-width:900px){.jtypes{grid-template-columns:repeat(2,1fr)}}
