@@ -51,8 +51,6 @@
   }
   .pdb-table th{text-align:left;font-size:1.15em;letter-spacing:0;text-transform:none;color:var(--text-2);font-weight:700;padding:20px 9px;border-top:3px solid var(--text);border-bottom:2px solid var(--text)}
   .pdb-table td{padding:14px 9px;border-top:1px solid var(--line);color:var(--text-2);font-size:1em;white-space:nowrap;vertical-align:middle;overflow:hidden}
-  /* 스크롤 성능: 화면 밖 행 렌더 건너뛰기(실험) */
-  .pdb-table tbody tr{content-visibility:auto;contain-intrinsic-size:auto 58px}
   .pdb-table tbody tr{transition:background .15s ease}
 
   .pdb-table .c-no{width:64px;color:var(--text-3);font-variant-numeric:tabular-nums}
@@ -690,12 +688,12 @@ if('serviceWorker' in navigator){
   var html=PROJECTS.map(card).join('');
   track.innerHTML=html+html; /* duplicate for seamless loop */
 
-  var offset=0,setW=0,speed=0.4,paused=false,_off=false;
+  var offset=0,setW=0,speed=0.4,paused=false;
   function measure(){setW=track.scrollWidth/2;}
   measure();
   window.addEventListener('resize',measure);
   function tick(){
-    if(!paused&&!_off&&setW>0){
+    if(!paused&&setW>0){
       offset-=speed;
       if(-offset>=setW)offset+=setW;
       track.style.transform='translateX('+offset.toFixed(2)+'px)';
@@ -707,7 +705,6 @@ if('serviceWorker' in navigator){
   var vp=track.parentNode;
   vp.addEventListener('mouseenter',function(){paused=true;});
   vp.addEventListener('mouseleave',function(){paused=false;});
-  if('IntersectionObserver' in window){ try{ new IntersectionObserver(function(es){ _off=!es[0].isIntersecting; },{threshold:0}).observe(vp); }catch(e){} }
 
   function step(dir){
     var card1=track.querySelector('.tb');
@@ -1032,12 +1029,23 @@ if('serviceWorker' in navigator){
   function ini(n){n=(n||'').trim();return n?esc(n[0]):'?';}
   function nd(v){return (v!=null&&String(v).trim())?esc(v):'<span class="nd">\u2014</span>';}
   function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
+  function wikiThumb(u,w){
+    if(!u||u.indexOf('upload.wikimedia.org')<0||u.indexOf('/thumb/')>=0) return u;
+    var i=u.indexOf('/wikipedia/'); if(i<0) return u;
+    var parts=u.slice(i+11).split('/');
+    if(parts.length<4) return u;
+    var proj=parts[0],a=parts[1],b=parts[2],fn=parts.slice(3).join('/');
+    if(a.length!==1||b.length!==2) return u;
+    var t=u.slice(0,i+11)+proj+'/thumb/'+a+'/'+b+'/'+fn+'/'+w+'px-'+fn;
+    if(fn.toLowerCase().slice(-4)==='.svg') t+='.png';
+    return t;
+  }
   function row(o,no){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
     var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
     var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
-      +'<td class="c-ava"><span class="ava">'+(o.logo_url?'<img src="'+esc(o.logo_url)+'" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko))+'</span></td>'
+      +'<td class="c-ava"><span class="ava">'+(o.logo_url?'<img src="'+esc(wikiThumb(o.logo_url,128))+'" data-full="'+esc(o.logo_url)+'" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko))+'</span></td>'
       +'<td class="c-name"><a href="org-view.html?id='+encodeURIComponent(o.id)+'&p='+cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
       +'<td class="c-field">'+(o.type?'<span class="tag">'+esc(o.type)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
       +'<td class="c-nation">'+nd(o.location)+'</td>'
