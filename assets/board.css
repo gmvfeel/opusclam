@@ -4,7 +4,7 @@
    색·폰트는 사이트 토큰(style.css :root) 사용.
    ============================================================ */
 
-.board{max-width:var(--wrap,1180px);margin:0 auto;padding:24px 24px 80px}
+.board{max-width:1360px;margin:0 auto;padding:24px 24px 80px}
 .board-titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
 .board-titlebar .tt{min-width:0}
 .board-eyebrow{font-family:var(--display);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--violet-2);font-weight:700}
