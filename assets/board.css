@@ -4,7 +4,8 @@
    색·폰트는 사이트 토큰(style.css :root) 사용.
    ============================================================ */
 
-.board{max-width:1360px;margin:0 auto;padding:24px 24px 80px}
+.board{max-width:1360px;margin:0 auto;padding:0 24px 80px}
+.pdb-board{padding-bottom:0}
 .board-titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
 .board-titlebar .tt{min-width:0}
 .board-eyebrow{font-family:var(--display);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--violet-2);font-weight:700}
@@ -37,8 +38,7 @@
 /* ── 뉴스형(article) 목록 ── */
 .board-bar{margin-bottom:22px}
 .board-sort{min-width:120px}
-.board-count{font-size:14px;color:var(--text-3);margin:0 0 14px 2px}
-.board-count b{color:var(--text);font-weight:700}
+.board-count{margin:0 0 16px 2px}
 .board-list{font-size:var(--board-fs,15px)}
 .board-prev{font-size:.87em;color:var(--text-2);line-height:1.6;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .board-tag{display:inline-flex;align-items:center;font-size:.8em;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--paper);color:var(--text-2);border:1px solid var(--line-2);white-space:nowrap}
