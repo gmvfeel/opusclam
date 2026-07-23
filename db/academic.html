@@ -802,7 +802,7 @@ if('serviceWorker' in navigator){
   }
   function loadPage(pg){
     var off=(pg-1)*PAGE;
-    if(tbody) tbody.innerHTML=skeletonRows(10);
+    var _skb=document.querySelector('.pdb-table tbody'); if(_skb) _skb.innerHTML=skeletonRows(10);
     var hh={apikey:KEY,Authorization:'Bearer '+KEY,Prefer:'count=exact'};
     fetch(buildUrl(off),{headers:hh}).then(function(r){
       var crg=r.headers.get('content-range'); if(crg){var t=crg.split('/')[1]; if(t&&t!=='*') total=parseInt(t,10)||total;}
@@ -909,6 +909,6 @@ if('serviceWorker' in navigator){
 })();
 </script>
 <script src="/assets/app.js" defer></script>
-<script>document.addEventListener('DOMContentLoaded',function(){var b=document.querySelector('.pdb-searchbtn');if(b)b.addEventListener('click',function(){var i=document.querySelector('.pdb-search input');if(i)i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));});});</script>
+<script>document.addEventListener('DOMContentLoaded',function(){var b=document.querySelector('.pdb-searchbtn');if(b)b.addEventListener('click',function(){var ic=document.querySelector('.pdb-search svg');if(ic&&ic.click){ic.click();}else{var i=document.querySelector('.pdb-search input');if(i)i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));}});});</script>
 </body>
 </html>
