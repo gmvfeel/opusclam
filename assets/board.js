@@ -54,6 +54,7 @@ window.OCBoard = (function () {
     var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '';
     var listEl = document.querySelector('.board-list');
     var pager = document.querySelector('.board-pager');
+    if (pager) pager.classList.add('pdb-pager');
     var catsEl = document.querySelector('.board-cats');
 
     /* 카테고리 탭 생성 */
