@@ -1,6 +1,6 @@
 /* ============================================================
    OPUSCLAM 공용 헤더 동작 — assets/header.js
-   헤더 솔리드/스티키 · 드롭다운 · 햄버거 · 전체메뉴 · 테마토글.
+   헤더 솔리드/스티키 · 드롭다운 · 햄버거 · 전체메뉴. (테마토글은 auth.js 담당)
    헤더 표시 모드는 페이지가 <body data-header="overlay"> 로 지정한다
    (지정 안 하면 항상 solid = 흰 배경 페이지 기본값). 상세는 아래 참조.
    include.js(동기)로 헤더가 DOM에 들어간 "뒤"에 실행되어야 함.
@@ -8,6 +8,10 @@
    ※ 지금은 커뮤니티(게시판) 페이지에서 사용. 추후 DB 페이지의
      인라인 헤더 스크립트도 이 파일로 대체하면 복붙이 사라진다.
    ============================================================ */
+/* ※ 테마(다크/화이트) 토글은 auth.js가 단독으로 담당한다.
+   (게시판·계정 등 auth.js를 로드하는 모든 페이지에서 .theme-toggle 클릭 처리)
+   여기서 또 붙이면 클릭당 두 번 토글되어 다크모드가 안 켜지므로 넣지 않는다. */
+
 /* ------------------------------------------------------------
    헤더 표시 모드 — 페이지가 <body data-header="..."> 로 명시한다.
    (DOM 구조를 추측하지 않으므로 페이지가 바뀌어도 안 깨진다)
@@ -30,7 +34,7 @@
   }
 
   /* overlay: 투명 → 스크롤/호버 시 solid */
-  var hero=document.querySelector('.hero, .pdb, .pdb-bg');
+  var hero=document.querySelector('.hero, .pdb, .pdb-bg, .board-hero');
   var hovering=false;
   function update(){
     var solid;
@@ -207,16 +211,5 @@ if('serviceWorker' in navigator){
   var prev=document.getElementById('tbPrev'),next=document.getElementById('tbNext');
   if(prev)prev.addEventListener('click',function(){step(1);});
   if(next)next.addEventListener('click',function(){step(-1);});
-})();
-
-/* Dark / White theme toggle */
-(function(){
-  var btn=document.getElementById('themeToggle');
-  if(!btn)return;
-  var root=document.documentElement;
-  btn.addEventListener('click',function(){
-    if(root.getAttribute('data-theme')==='dark'){root.removeAttribute('data-theme');try{localStorage.setItem('oc-theme','light');}catch(e){}}
-    else{root.setAttribute('data-theme','dark');try{localStorage.setItem('oc-theme','dark');}catch(e){}}
-  });
 })();
 
