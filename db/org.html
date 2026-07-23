@@ -688,12 +688,12 @@ if('serviceWorker' in navigator){
   var html=PROJECTS.map(card).join('');
   track.innerHTML=html+html; /* duplicate for seamless loop */
 
-  var offset=0,setW=0,speed=0.4,paused=false;
+  var offset=0,setW=0,speed=0.4,paused=false,_off=false;
   function measure(){setW=track.scrollWidth/2;}
   measure();
   window.addEventListener('resize',measure);
   function tick(){
-    if(!paused&&setW>0){
+    if(!paused&&!_off&&setW>0){
       offset-=speed;
       if(-offset>=setW)offset+=setW;
       track.style.transform='translateX('+offset.toFixed(2)+'px)';
@@ -705,6 +705,7 @@ if('serviceWorker' in navigator){
   var vp=track.parentNode;
   vp.addEventListener('mouseenter',function(){paused=true;});
   vp.addEventListener('mouseleave',function(){paused=false;});
+  if('IntersectionObserver' in window){ try{ new IntersectionObserver(function(es){ _off=!es[0].isIntersecting; },{threshold:0}).observe(vp); }catch(e){} }
 
   function step(dir){
     var card1=track.querySelector('.tb');
