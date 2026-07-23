@@ -146,14 +146,21 @@ window.OCBoard = (function () {
     }
     function ccHtml(rec) { var c = rec.comment_count || 0; return c > 0 ? '<span class="board-cc">[' + c + ']</span>' : ''; }
     function tagHtml(rec) { return rec.category ? '<span class="board-tag">' + esc(rec.category) + '</span>' : ''; }
-    function featuredHtml(rec) {
-      var flame = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z"/></svg>';
-      return '<a class="board-feat" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
-        + '<span class="board-hot">' + flame + 'HOT</span>'
+    function featuredHtml(rec, related) {
+      var rel = '';
+      if (related && related.length) {
+        rel = '<div class="board-feat-div"></div><div class="board-feat-rel"><span class="board-rel-label">관련기사</span><ul class="board-rel-list">'
+          + related.map(function (r) { return '<li><a href="' + cfg.viewPage + '?id=' + encodeURIComponent(r.id) + '">- ' + esc(r.title || '') + '</a></li>'; }).join('')
+          + '</ul></div>';
+      }
+      return '<div class="board-feat">'
+        + '<span class="board-ribbon">HOT</span>'
+        + '<a class="board-feat-body" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
         + '<div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + '</div>'
         + '<p class="board-prev board-feat-prev">' + previewText(rec.body, 200) + '</p>'
         + '<div class="board-feat-meta">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></div>'
-        + '</a>';
+        + '</a>' + rel
+        + '</div>';
     }
     function articleRowHtml(rec, no) {
       return '<a class="board-row" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
@@ -164,10 +171,16 @@ window.OCBoard = (function () {
         + '</a>';
     }
     function renderArticles(rows, offset) {
+      var feat = null, i, related = [];
+      for (i = 0; i < rows.length; i++) { if (rows[i].is_pinned && cur === 1) { feat = rows[i]; break; } }
+      if (feat) {
+        for (i = 0; i < rows.length && related.length < 3; i++) { if (rows[i] !== feat && rows[i].category === feat.category) related.push(rows[i]); }
+        for (i = 0; i < rows.length && related.length < 3; i++) { if (rows[i] !== feat && related.indexOf(rows[i]) < 0) related.push(rows[i]); }
+      }
       var out = '';
-      for (var i = 0; i < rows.length; i++) {
+      for (i = 0; i < rows.length; i++) {
         var rec = rows[i];
-        if (rec.is_pinned && cur === 1) out += featuredHtml(rec);
+        if (rec.is_pinned && cur === 1) out += featuredHtml(rec, related);
         else out += articleRowHtml(rec, total - offset - i);
       }
       return out;
