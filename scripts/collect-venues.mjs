@@ -63,16 +63,30 @@ async function sparql(query, tries = 3) {
   }
   return [];
 }
-async function wikiExtract(url) {
-  if (!url || url.indexOf('ko.wikipedia.org') < 0) return '';
-  const title = (url.split('/wiki/')[1] || '');
-  if (!title) return '';
+async function wikiFetch(host, title) {
+  if (!title) return { text: '', image: '' };
+  const u = 'https://' + host + '/w/api.php?format=json&action=query&prop=extracts%7Cpageimages'
+    + '&explaintext=1&exchars=1800&piprop=thumbnail&pithumbsize=480&redirects=1&titles=' + title;
   try {
-    const r = await fetch('https://ko.wikipedia.org/api/rest_v1/page/summary/' + title, { headers: { 'User-Agent': UA } });
-    if (!r.ok) return '';
+    const r = await fetch(u, { headers: { 'User-Agent': UA } });
+    if (!r.ok) return { text: '', image: '' };
     const j = await r.json();
-    return (j.extract || '').trim();
-  } catch (e) { return ''; }
+    const pages = j && j.query && j.query.pages;
+    if (!pages) return { text: '', image: '' };
+    const pg = Object.values(pages)[0] || {};
+    return { text: (pg.extract || '').trim(), image: (pg.thumbnail && pg.thumbnail.source) || '' };
+  } catch (e) { return { text: '', image: '' }; }
+}
+async function wikiEnrich(koUrl, enUrl) {
+  if (koUrl && koUrl.indexOf('ko.wikipedia.org') >= 0) {
+    const t = koUrl.split('/wiki/')[1] || '';
+    if (t) { const w = await wikiFetch('ko.wikipedia.org', t); if (w.text || w.image) return w; }
+  }
+  if (enUrl && enUrl.indexOf('en.wikipedia.org') >= 0) {
+    const t = enUrl.split('/wiki/')[1] || '';
+    if (t) { const w = await wikiFetch('en.wikipedia.org', t); return w; }
+  }
+  return { text: '', image: '' };
 }
 
 function toRow(b, type) {
@@ -94,6 +108,8 @@ function toRow(b, type) {
     logo_url: val(b, 'image') || '',
     link_home: val(b, 'website') || '',
     link_wiki: val(b, 'koArticle') || val(b, 'enArticle') || '',
+    _koWiki: val(b, 'koArticle') || '',
+    _enWiki: val(b, 'enArticle') || '',
     description: '',
     source: 'auto',
     _domestic: qidOf(val(b, 'country')) === KR_QID || country === '대한민국' || country === 'South Korea',
@@ -115,7 +131,7 @@ function substanceCount(r) {
   return c;
 }
 const bioOK = (r) => (r.description || '').trim().length >= 150;
-function keep(r) { return bioOK(r) || substanceCount(r) >= 3; }
+function keep(r) { return bioOK(r) || substanceCount(r) >= 4; }
 function richness(r) {
   let sc = 0;
   if ((r.description || '').trim().length >= 150) sc += 2;
@@ -173,11 +189,16 @@ async function main() {
   }
   console.log('■ 수집(고유):', collected.size, '곳');
 
-  const withKo = [...collected.values()].filter(r => (r.link_wiki || '').indexOf('ko.wikipedia.org') >= 0);
-  console.log('  · 한국어 위키백과 소개 보강 중…', withKo.length, '곳');
-  let bc = 0;
-  for (const r of withKo) { const ex = await wikiExtract(r.link_wiki); if (ex) { r.description = ex.slice(0, 500); bc++; } await sleep(120); }
-  console.log('    → 소개 보강', bc, '곳');
+  const withWiki = [...collected.values()].filter(r => r._koWiki || r._enWiki);
+  console.log('  · 위키백과 본문·대표이미지 보강 중(한국어 우선, 없으면 영어)…', withWiki.length, '곳');
+  let bc = 0, ic = 0;
+  for (const r of withWiki) {
+    const w = await wikiEnrich(r._koWiki, r._enWiki);
+    if (w.text) { r.description = w.text.slice(0, 1200); bc++; }
+    if (w.image && !r.logo_url) { r.logo_url = w.image; ic++; }
+    await sleep(120);
+  }
+  console.log('    → 소개 보강', bc, '곳 · 대표이미지 보강', ic, '곳');
 
   const kept = [...collected.values()].filter(keep);
   console.log('■ 충실도 통과:', kept.length, '곳 (제외', collected.size - kept.length, ')');
