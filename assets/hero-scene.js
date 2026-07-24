@@ -14,21 +14,24 @@
     var gR = document.querySelector('.pdb-bg .scene-orbit g');
     if (gR) {
       gR.innerHTML = '';
-      var K = 9 + Math.floor(Math.random() * 5);      /* 9~13 무리, 매번 다름 */
-      for (var k = 0; k < K; k++) {
-        var cx = 40 + Math.random() * 1200;
-        var cy = 30 + Math.random() * 400;
-        var base = 18 + Math.random() * 12;           /* 무리 크기 18~30 */
-        var n = 4 + Math.floor(Math.random() * 3);    /* 링 4~6겹 */
-        for (var i = 0; i < n; i++) {
-          var cir = el('circle');
-          cir.setAttribute('cx', cx.toFixed(1)); cir.setAttribute('cy', cy.toFixed(1));
-          cir.setAttribute('r', (base * (i + 1)).toFixed(1));
-          cir.setAttribute('fill', 'none');
-          cir.setAttribute('stroke', 'url(#dg)');
-          cir.setAttribute('stroke-width', (1.6 - i * 0.08).toFixed(2));
-          cir.setAttribute('opacity', Math.max(0.15, 0.5 - i * 0.07).toFixed(2));
-          gR.appendChild(cir);
+      var cols = 4, rows = 3, cellW = 1280 / cols, cellH = 460 / rows;
+      for (var gy = 0; gy < rows; gy++) {
+        for (var gx = 0; gx < cols; gx++) {
+          if (Math.random() < 0.15) continue;                 /* 가끔 빈 칸 → 자연스럽게 */
+          var cx = gx * cellW + cellW * (0.25 + Math.random() * 0.5);
+          var cy = gy * cellH + cellH * (0.25 + Math.random() * 0.5);
+          var base = 18 + Math.random() * 12;                 /* 무리 크기 18~30 */
+          var n = 4 + Math.floor(Math.random() * 3);          /* 링 4~6겹 */
+          for (var i = 0; i < n; i++) {
+            var cir = el('circle');
+            cir.setAttribute('cx', cx.toFixed(1)); cir.setAttribute('cy', cy.toFixed(1));
+            cir.setAttribute('r', (base * (i + 1)).toFixed(1));
+            cir.setAttribute('fill', 'none');
+            cir.setAttribute('stroke', 'url(#dg)');
+            cir.setAttribute('stroke-width', (1.6 - i * 0.08).toFixed(2));
+            cir.setAttribute('opacity', Math.max(0.15, 0.5 - i * 0.07).toFixed(2));
+            gR.appendChild(cir);
+          }
         }
       }
       return;
