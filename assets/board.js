@@ -312,9 +312,10 @@ window.OCBoard = (function () {
           var tabs = document.querySelector('.pv-sidetabs');
           if (!tabs) return;
           function upd() {
-            var stop = document.querySelector('.bigban') || document.querySelector('#oc-footer') || document.querySelector('footer');
-            if (!stop) return;
-            var hide = stop.getBoundingClientRect().top < tabs.getBoundingClientRect().bottom + 20;
+            var stop = document.querySelector('.bigban') || document.querySelector('.triple') || document.querySelector('footer') || document.querySelector('#oc-footer');
+            var hide;
+            if (stop) hide = stop.getBoundingClientRect().top < tabs.getBoundingClientRect().bottom + 20;
+            else hide = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 360);
             tabs.style.opacity = hide ? '0' : '1';
             tabs.style.visibility = hide ? 'hidden' : 'visible';
           }
