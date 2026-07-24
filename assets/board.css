@@ -216,7 +216,7 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 
 /* 화제 카드 추천/비추천 표시 (cfg.reactions) */
 .board-feat-titlerow{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
-.board-feat-react{flex:0 0 auto;display:flex;gap:12px;align-items:center;padding-top:5px}
+.board-feat-react{flex:0 0 auto;display:flex;gap:12px;align-items:center;padding-top:5px;margin-right:48px}
 .board-feat-react .rc{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--text-3);font-variant-numeric:tabular-nums}
 .board-feat-react .rc.down svg{transform:rotate(180deg)}
 
