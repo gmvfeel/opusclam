@@ -14,31 +14,23 @@
     var gR = document.querySelector('.pdb-bg .scene-orbit g');
     if (gR) {
       gR.innerHTML = '';
-      var centers = [
-        { x: 140, y: 110, base: 24, n: 5 },
-        { x: 360, y: 300, base: 28, n: 6 },
-        { x: 560, y: 130, base: 22, n: 5 },
-        { x: 760, y: 340, base: 26, n: 5 },
-        { x: 960, y: 150, base: 24, n: 6 },
-        { x: 1140, y: 300, base: 26, n: 5 },
-        { x: 280, y: 430, base: 22, n: 4 },
-        { x: 1130, y: 65, base: 22, n: 5 },
-        { x: 640, y: 430, base: 24, n: 4 },
-        { x: 1030, y: 430, base: 22, n: 4 },
-        { x: 70, y: 310, base: 20, n: 4 }
-      ];
-      centers.forEach(function (c) {
-        for (var i = 0; i < c.n; i++) {
+      var K = 9 + Math.floor(Math.random() * 5);      /* 9~13 무리, 매번 다름 */
+      for (var k = 0; k < K; k++) {
+        var cx = 40 + Math.random() * 1200;
+        var cy = 30 + Math.random() * 400;
+        var base = 18 + Math.random() * 12;           /* 무리 크기 18~30 */
+        var n = 4 + Math.floor(Math.random() * 3);    /* 링 4~6겹 */
+        for (var i = 0; i < n; i++) {
           var cir = el('circle');
-          cir.setAttribute('cx', c.x); cir.setAttribute('cy', c.y);
-          cir.setAttribute('r', c.base * (i + 1));
+          cir.setAttribute('cx', cx.toFixed(1)); cir.setAttribute('cy', cy.toFixed(1));
+          cir.setAttribute('r', (base * (i + 1)).toFixed(1));
           cir.setAttribute('fill', 'none');
           cir.setAttribute('stroke', 'url(#dg)');
           cir.setAttribute('stroke-width', (1.6 - i * 0.08).toFixed(2));
           cir.setAttribute('opacity', Math.max(0.15, 0.5 - i * 0.07).toFixed(2));
           gR.appendChild(cir);
         }
-      });
+      }
       return;
     }
 
