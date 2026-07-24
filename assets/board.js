@@ -30,6 +30,12 @@ window.OCBoard = (function () {
     return d.getFullYear() + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate());
   }
   function nl2br(s) { return esc(s).replace(/\r\n|\r|\n/g, '<br>'); }
+  function fmtDateTime(iso) {
+    if (!iso) return '';
+    var d = new Date(iso); if (isNaN(d)) return esc(String(iso).slice(0, 16));
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
   function loadScript(src) {
     return new Promise(function (res, rej) {
       if (document.querySelector('script[src="' + src + '"]')) return res();
@@ -284,6 +290,25 @@ window.OCBoard = (function () {
           + '<span class="bv-foot-right"><span class="bv-write"></span>'
           + '<a class="bv-list" href="' + cfg.listPage + '">목록</a></span></div>';
 
+        if (cfg.commentsTable) mountComments(cfg, o.id);
+
+        /* 글자 크기 조절 (상단 툴바) → 본문 --bv-fs */
+        (function () {
+          var fsB = document.querySelectorAll('.pdb-fontsize .fs-btn');
+          if (!fsB.length) return;
+          var szs = [13, 15, 17, 19, 21], fi = 1;
+          function ap() { box.style.setProperty('--bv-fs', szs[fi] + 'px'); }
+          fsB.forEach(function (b) {
+            b.addEventListener('click', function () {
+              var k = b.getAttribute('data-fs');
+              if (k === 'up') fi = Math.min(szs.length - 1, fi + 1);
+              else if (k === 'down') fi = Math.max(0, fi - 1);
+              else fi = 1;
+              ap();
+            });
+          });
+        })();
+
         /* 조회수 +1 (best-effort) */
         if (cfg.incrementFn) {
           fetch(SB_URL + '/rest/v1/rpc/' + cfg.incrementFn, {
@@ -340,6 +365,75 @@ window.OCBoard = (function () {
         }
       })
       .catch(function (e) { console.error('상세 로드 실패:', e); box.innerHTML = '<div class="board-empty">불러오지 못했습니다.</div>'; });
+  }
+
+  /* ============================ 댓글 ============================ */
+  function mountComments(cfg, newsId) {
+    var wrap = document.querySelector('.bv-comments');
+    if (!wrap || !cfg.commentsTable) return;
+    var PAGE_C = 5, off = 0, total = 0, loading = false;
+    wrap.innerHTML =
+      '<h2 class="bvc-h">댓글 <b class="bvc-count">0</b></h2>'
+      + '<div class="bvc-form"><textarea class="bvc-input" rows="2" placeholder="댓글을 남기려면 로그인이 필요합니다." disabled></textarea>'
+      + '<button type="button" class="bvc-submit" disabled>댓글등록</button></div>'
+      + '<ul class="bvc-list"></ul>'
+      + '<div class="bvc-more-wrap"><button type="button" class="bvc-more" style="display:none">더보기</button></div>';
+    var listEl = wrap.querySelector('.bvc-list');
+    var moreBtn = wrap.querySelector('.bvc-more');
+    var input = wrap.querySelector('.bvc-input');
+    var submit = wrap.querySelector('.bvc-submit');
+    var countEl = wrap.querySelector('.bvc-count');
+
+    function itemHtml(c) {
+      return '<li class="bvc-item"><div class="bvc-top"><span class="bvc-name">' + esc(c.author_name || '회원') + '</span>'
+        + '<span class="bvc-date">' + fmtDateTime(c.created_at) + '</span></div>'
+        + '<div class="bvc-body">' + nl2br(c.body || '') + '</div></li>';
+    }
+    function load(reset) {
+      if (loading) return; loading = true;
+      if (reset) { off = 0; listEl.innerHTML = ''; }
+      fetch(SB_URL + '/rest/v1/' + cfg.commentsTable + '?select=*&news_id=eq.' + encodeURIComponent(newsId) + '&order=created_at.desc&limit=' + PAGE_C + '&offset=' + off,
+        { headers: Object.assign({ Prefer: 'count=exact' }, HDR) })
+        .then(function (r) { var crg = r.headers.get('content-range'); if (crg) { var t = crg.split('/')[1]; if (t && t !== '*') total = parseInt(t, 10) || 0; } return r.json(); })
+        .then(function (rows) {
+          loading = false;
+          if (!Array.isArray(rows)) return;
+          if (off === 0 && !rows.length) listEl.innerHTML = '<li class="bvc-empty">첫 댓글을 남겨보세요.</li>';
+          else listEl.insertAdjacentHTML('beforeend', rows.map(itemHtml).join(''));
+          off += rows.length;
+          if (countEl) countEl.textContent = total;
+          if (moreBtn) moreBtn.style.display = off < total ? '' : 'none';
+        })
+        .catch(function () { loading = false; });
+    }
+    if (moreBtn) moreBtn.addEventListener('click', function () { load(false); });
+
+    /* 로그인 회원이면 입력창 활성화 + 등록 동작 */
+    checkMember().then(function (m) {
+      if (!m) return;
+      var who = m.name || m.nickname || m.display_name || m.username || '회원';
+      input.disabled = false; submit.disabled = false;
+      input.placeholder = '따뜻한 의견을 남겨주세요.';
+      submit.addEventListener('click', function () {
+        var text = (input.value || '').trim();
+        if (!text) { input.focus(); return; }
+        submit.disabled = true;
+        loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2').then(function () {
+          var c = window.supabase.createClient(SB_URL, SB_KEY);
+          c.auth.getUser().then(function (res) {
+            var user = res && res.data && res.data.user;
+            if (!user) { alert('로그인이 필요합니다.'); submit.disabled = false; return; }
+            c.from(cfg.commentsTable).insert({ news_id: newsId, author_id: user.id, author_name: who, body: text }).then(function (r2) {
+              submit.disabled = false;
+              if (r2.error) { alert('등록 실패: ' + r2.error.message); return; }
+              input.value = ''; load(true);
+            });
+          });
+        });
+      });
+    });
+
+    load(true);
   }
 
   return { list: list, view: view, esc: esc, fmtDate: fmtDate };
