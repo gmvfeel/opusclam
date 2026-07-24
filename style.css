@@ -650,7 +650,6 @@
 
   .pdb-tablewrap{overflow:visible}
   .pdb-table thead th{position:sticky;top:0;z-index:3;background:var(--paper)}
-  .pdb-table thead th::after{content:"";position:absolute;left:-9px;right:-9px;top:100%;height:12px;pointer-events:none;background:linear-gradient(180deg,rgba(30,20,60,.1),rgba(30,20,60,0))}
   @media(max-width:640px){.pdb-tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}}
   @media(max-width:640px){.pdb-table thead th{position:static}}
   @media(max-width:520px){
