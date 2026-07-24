@@ -101,10 +101,9 @@ html[data-theme="dark"] .board-row:hover{background:#000}
 .bv-link:hover{background:var(--ink)}
 .bv-rel{display:none}
 .bv-rel.is-on{display:flex;gap:14px;align-items:flex-start;margin-top:34px;padding-top:22px;border-top:1px solid var(--line);font-size:15px}
-.bv-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:40px;padding-top:22px;border-top:1px solid var(--line)}
-.bv-foot-left,.bv-foot-right{display:flex;gap:8px;align-items:center}
-.bv-write{display:contents}
-.bv-list,.bv-write-btn,.bv-edit,.bv-del{font-family:var(--display);font-size:14px;font-weight:600;border-radius:8px;padding:13px 30px;cursor:pointer;text-decoration:none;transition:all .15s ease;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.bv-foot{display:flex;align-items:center;gap:8px;margin-top:40px;padding-top:22px;border-top:1px solid var(--line)}
+.bv-foot:empty{display:none}
+.bv-edit,.bv-del{font-family:var(--display);font-size:14px;font-weight:600;border-radius:8px;padding:13px 30px;cursor:pointer;text-decoration:none;transition:all .15s ease;line-height:1;display:inline-flex;align-items:center;justify-content:center}
 .bv-edit{border:1px solid var(--line-2);background:var(--paper);color:var(--text-2)}
 .bv-edit:hover{border-color:var(--text-3);color:var(--text)}
 .bv-del{border:1px solid rgba(192,57,43,.35);background:var(--paper);color:#c0392b}
@@ -141,19 +140,21 @@ html[data-theme="dark"] .board-row:hover{background:#000}
 .pv-tool svg{width:15px;height:15px}
 .pv-tool[aria-pressed="true"]{color:var(--violet-2);border-color:var(--violet-2);background:rgba(124,99,176,.09)}
 .pv-tool[aria-pressed="true"] svg{fill:var(--violet-2);stroke:var(--violet-2)}
-.pv-listtab{position:fixed;left:max(8px, calc(50% - 706px));top:52%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;align-items:center;gap:10px;background:#372a5c;color:#fff;text-decoration:none;padding:24px 13px 24px 10px;border-radius:0 13px 13px 0;box-shadow:0 14px 32px -8px rgba(45,33,73,.6);transition:background .15s ease,padding-left .15s ease}
+.pv-sidetabs{position:fixed;left:max(8px, calc(50% - 706px));top:52%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;gap:8px}
+.pv-listtab,.pv-writetab{display:flex;flex-direction:column;align-items:center;gap:10px;color:#fff;text-decoration:none;padding:22px 13px 22px 10px;border-radius:0 13px 13px 0;box-shadow:0 14px 32px -8px rgba(45,33,73,.5);transition:background .15s ease,padding-left .15s ease}
+.pv-listtab{background:#372a5c}
 .pv-listtab:hover{background:#281d45;padding-left:16px}
-.pv-listtab-arrow{font-size:20px;line-height:1}
-.pv-listtab-text{writing-mode:vertical-rl;text-orientation:mixed;font-size:13px;font-weight:700;letter-spacing:.18em}
+.pv-writetab{background:var(--violet-2)}
+.pv-writetab:hover{background:var(--violet);padding-left:16px}
+.pv-listtab-arrow,.pv-writetab-ic{font-size:18px;line-height:1;font-weight:400}
+.pv-listtab-text,.pv-writetab-text{writing-mode:vertical-rl;text-orientation:mixed;font-size:13px;font-weight:700;letter-spacing:.18em}
 .pv-tolist-m{display:none}
-@media(max-width:600px){.pv-listtab{padding:13px 7px 13px 5px}.pv-listtab-text{font-size:11px}}
+@media(max-width:600px){.pv-listtab,.pv-writetab{padding:12px 7px 12px 5px}.pv-listtab-text,.pv-writetab-text{font-size:11px}}
 @media(max-width:1040px){
-  .pv-listtab{display:none}
+  .pv-sidetabs{display:none}
   .pv-tolist-m{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;max-width:820px;margin:30px auto 0;padding:15px;border:1px solid var(--line-2);border-radius:12px;color:var(--text-2);text-decoration:none;font-weight:600;font-size:14px;background:var(--paper);transition:border-color .15s,color .15s}
   .pv-tolist-m:active,.pv-tolist-m:hover{border-color:var(--violet-2);color:var(--violet-2)}
 }
-.bv-list,.bv-write-btn{border:0;background:var(--ink);color:#fff;font-weight:700}
-.bv-list:hover,.bv-write-btn:hover{background:var(--violet-2)}
 
 /* 글쓰기 폼 (관리자) */
 .board-form{max-width:820px;margin:0 auto}

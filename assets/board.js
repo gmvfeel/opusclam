@@ -286,9 +286,7 @@ window.OCBoard = (function () {
           + '</div>'
           + thumb + body + link
           + '<div class="bv-rel"></div>'
-          + '<div class="bv-foot"><span class="bv-foot-left"></span>'
-          + '<span class="bv-foot-right"><span class="bv-write"></span>'
-          + '<a class="bv-list" href="' + cfg.listPage + '">목록</a></span></div>';
+          + '<div class="bv-foot"></div>';
 
         if (cfg.commentsTable) mountComments(cfg, o.id);
 
@@ -317,10 +315,19 @@ window.OCBoard = (function () {
           }).catch(function () {});
         }
 
-        /* 관련기사 (같은 분류 최근글) */
-        if (o.category && cfg.viewPage) {
-          fetch(SB_URL + '/rest/v1/' + cfg.table + '?select=id,title&category=eq.' + encodeURIComponent(o.category) + '&id=neq.' + encodeURIComponent(o.id) + '&order=created_at.desc&limit=4', { headers: HDR })
-            .then(function (r) { return r.json(); })
+        /* 관련기사 (같은 분류 우선, 없으면 최근글) */
+        if (cfg.viewPage) {
+          var recentUrl = SB_URL + '/rest/v1/' + cfg.table + '?select=id,title&id=neq.' + encodeURIComponent(o.id) + '&order=created_at.desc&limit=4';
+          var firstUrl = o.category
+            ? SB_URL + '/rest/v1/' + cfg.table + '?select=id,title&category=eq.' + encodeURIComponent(o.category) + '&id=neq.' + encodeURIComponent(o.id) + '&order=created_at.desc&limit=4'
+            : recentUrl;
+          fetch(firstUrl, { headers: HDR }).then(function (r) { return r.json(); })
+            .then(function (rel) {
+              if ((!Array.isArray(rel) || !rel.length) && firstUrl !== recentUrl) {
+                return fetch(recentUrl, { headers: HDR }).then(function (r) { return r.json(); });
+              }
+              return rel;
+            })
             .then(function (rel) {
               if (!Array.isArray(rel) || !rel.length) return;
               var relBox = box.querySelector('.bv-rel'); if (!relBox) return;
@@ -331,13 +338,13 @@ window.OCBoard = (function () {
             }).catch(function () {});
         }
 
-        /* 글쓰기(로그인 회원) */
+        /* 글쓰기 버튼 → 왼쪽 사이드탭(리스트 아래)으로 노출(로그인 회원) */
         if (cfg.writePage) {
           var wGate = cfg.writeRole === 'member' ? checkMember : checkAdmin;
           wGate().then(function (m) {
             if (!m) return;
-            var w = box.querySelector('.bv-write');
-            if (w) w.innerHTML = '<a class="bv-write-btn" href="' + cfg.writePage + '">글쓰기</a>';
+            var wt = document.querySelector('.pv-writetab');
+            if (wt) { wt.setAttribute('href', cfg.writePage); wt.style.display = ''; }
           });
         }
 
@@ -346,7 +353,7 @@ window.OCBoard = (function () {
           checkMember().then(function (m) {
             var mine = m && (m.is_admin || m.id === o.author_id || m.user_id === o.author_id || m.uid === o.author_id);
             if (!mine) return;
-            var l = box.querySelector('.bv-foot-left'); if (!l) return;
+            var l = box.querySelector('.bv-foot'); if (!l) return;
             l.innerHTML = '<a class="bv-edit" href="' + cfg.writePage + '?id=' + encodeURIComponent(o.id) + '">수정</a>'
               + '<button type="button" class="bv-del">삭제</button>';
             var del = l.querySelector('.bv-del');
