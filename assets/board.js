@@ -159,12 +159,16 @@ window.OCBoard = (function () {
           + related.map(function (r) { return '<li><a href="' + cfg.viewPage + '?id=' + encodeURIComponent(r.id) + '">- ' + esc(r.title || '') + '</a></li>'; }).join('')
           + '</ul></div>';
       }
+      var img = rec.thumb_url ? '<img class="board-feat-img" src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">' : '';
       return '<div class="board-feat">'
         + '<span class="board-ribbon">HOT</span>'
-        + '<a class="board-feat-body" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
+        + '<a class="board-feat-body' + (img ? ' has-img' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
+        + img
+        + '<div class="board-feat-text">'
         + '<div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + '</div>'
         + '<p class="board-prev board-feat-prev">' + previewText(rec.body, 200) + '</p>'
         + '<div class="board-feat-meta">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></div>'
+        + '</div>'
         + '</a>' + rel
         + '</div>';
     }
