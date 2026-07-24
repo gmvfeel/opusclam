@@ -332,27 +332,31 @@ window.OCBoard = (function () {
           }).catch(function () {});
         }
 
-        /* 관련기사 (같은 분류 우선, 없으면 최근글) */
+        /* 관련기사 (검색어 우선 → 같은 분류 → 최근글) */
         if (cfg.viewPage) {
-          var recentUrl = SB_URL + '/rest/v1/' + cfg.table + '?select=id,title&id=neq.' + encodeURIComponent(o.id) + '&order=created_at.desc&limit=4';
-          var firstUrl = o.category
-            ? SB_URL + '/rest/v1/' + cfg.table + '?select=id,title&category=eq.' + encodeURIComponent(o.category) + '&id=neq.' + encodeURIComponent(o.id) + '&order=created_at.desc&limit=4'
-            : recentUrl;
-          fetch(firstUrl, { headers: HDR }).then(function (r) { return r.json(); })
-            .then(function (rel) {
-              if ((!Array.isArray(rel) || !rel.length) && firstUrl !== recentUrl) {
-                return fetch(recentUrl, { headers: HDR }).then(function (r) { return r.json(); });
-              }
-              return rel;
-            })
-            .then(function (rel) {
-              if (!Array.isArray(rel) || !rel.length) return;
-              var relBox = box.querySelector('.bv-rel'); if (!relBox) return;
-              relBox.innerHTML = '<span class="board-rel-label">관련기사</span><ul class="board-rel-list">'
-                + rel.map(function (r) { return '<li><a href="' + cfg.viewPage + '?id=' + encodeURIComponent(r.id) + '">- ' + esc(r.title || '') + '</a></li>'; }).join('')
-                + '</ul>';
-              relBox.classList.add('is-on');
-            }).catch(function () {});
+          var base = SB_URL + '/rest/v1/' + cfg.table + '?select=id,title&id=neq.' + encodeURIComponent(o.id);
+          var recentUrl = base + '&order=created_at.desc&limit=4';
+          var urls = [];
+          var kws = (o.keywords || '').split(',').map(function (s) { return s.replace(/[(),*]/g, ' ').trim(); }).filter(function (s) { return s.length >= 2; }).slice(0, 5);
+          if (kws.length) {
+            var conds = [];
+            kws.forEach(function (t) { var e = encodeURIComponent(t); conds.push('keywords.ilike.*' + e + '*'); conds.push('title.ilike.*' + e + '*'); });
+            urls.push(base + '&or=(' + conds.join(',') + ')&order=created_at.desc&limit=4');
+          }
+          if (o.category) urls.push(base + '&category=eq.' + encodeURIComponent(o.category) + '&order=created_at.desc&limit=4');
+          urls.push(recentUrl);
+          (function tryNext(i) {
+            if (i >= urls.length) return;
+            fetch(urls[i], { headers: HDR }).then(function (r) { return r.json(); }).then(function (rel) {
+              if (Array.isArray(rel) && rel.length) {
+                var relBox = box.querySelector('.bv-rel'); if (!relBox) return;
+                relBox.innerHTML = '<span class="board-rel-label">관련기사</span><ul class="board-rel-list">'
+                  + rel.map(function (r) { return '<li><a href="' + cfg.viewPage + '?id=' + encodeURIComponent(r.id) + '">- ' + esc(r.title || '') + '</a></li>'; }).join('')
+                  + '</ul>';
+                relBox.classList.add('is-on');
+              } else { tryNext(i + 1); }
+            }).catch(function () { tryNext(i + 1); });
+          })(0);
         }
 
         /* 글쓰기 버튼 → 왼쪽 사이드탭(리스트 아래)으로 노출(로그인 회원) */
