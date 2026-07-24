@@ -21,6 +21,7 @@ window.OCBoard = (function () {
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var HDR = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+  var THUMB = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M2 21h3V9H2v12zM22 10c0-1.1-.9-2-2-2h-6.3l1-4.6c.02-.1.03-.2.03-.3 0-.4-.17-.8-.44-1.06L13.2 1 7.6 6.6C7.22 7 7 7.5 7 8v10c0 1.1.9 2 2 2h8c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1z"/></svg>';
 
   function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function fmtDate(iso) {
@@ -160,12 +161,15 @@ window.OCBoard = (function () {
           + '</ul></div>';
       }
       var img = rec.thumb_url ? '<img class="board-feat-img" src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">' : '';
+      var react = cfg.reactions
+        ? '<div class="board-feat-react"><span class="rc up">' + THUMB + '<b>' + (rec.like_count || 0) + '</b></span><span class="rc down">' + THUMB + '<b>' + (rec.dislike_count || 0) + '</b></span></div>'
+        : '';
       return '<div class="board-feat">'
         + '<span class="board-ribbon">HOT</span>'
         + '<a class="board-feat-body' + (img ? ' has-img' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
         + img
         + '<div class="board-feat-text">'
-        + '<div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + '</div>'
+        + '<div class="board-feat-titlerow"><div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + '</div>' + react + '</div>'
         + '<p class="board-prev board-feat-prev">' + previewText(rec.body, 200) + '</p>'
         + '<div class="board-feat-meta">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></div>'
         + '</div>'
@@ -302,10 +306,12 @@ window.OCBoard = (function () {
           + '<span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
           + '</div>'
           + thumb + body + link
+          + (cfg.votesTable ? '<div class="bv-votes"></div>' : '')
           + '<div class="bv-rel"></div>'
           + '<div class="bv-foot"></div>';
 
         if (cfg.commentsTable) mountComments(cfg, o.id);
+        if (cfg.votesTable) mountVotes(cfg, o);
 
         /* 글자 크기 조절 (상단 툴바) → 본문 --bv-fs */
         (function () {
@@ -479,6 +485,53 @@ window.OCBoard = (function () {
     });
 
     load(true);
+  }
+
+  /* ============================ 추천/비추천 ============================ */
+  function mountVotes(cfg, post) {
+    var box = document.querySelector('.bv-votes');
+    if (!box) return;
+    var like = post.like_count || 0, dislike = post.dislike_count || 0, mine = null;
+    var client = null, uid = null, busy = false;
+
+    function render() {
+      box.innerHTML =
+        '<button type="button" class="bv-vote up' + (mine === 'like' ? ' on' : '') + '" data-v="like">' + THUMB + ' 추천 <b>' + like + '</b></button>'
+        + '<button type="button" class="bv-vote down' + (mine === 'dislike' ? ' on' : '') + '" data-v="dislike">' + THUMB + ' 비추천 <b>' + dislike + '</b></button>';
+      box.querySelectorAll('.bv-vote').forEach(function (b) { b.addEventListener('click', function () { onVote(b.getAttribute('data-v')); }); });
+    }
+    function ensureClient() {
+      return loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2').then(function () {
+        if (!client) client = window.supabase.createClient(SB_URL, SB_KEY);
+        return client.auth.getUser().then(function (r) { uid = r && r.data && r.data.user && r.data.user.id; return uid; });
+      });
+    }
+    function refreshCounts() {
+      return client.from(cfg.table).select('like_count,dislike_count').eq('id', post.id).single().then(function (r) {
+        if (r.data) { like = r.data.like_count || 0; dislike = r.data.dislike_count || 0; }
+      });
+    }
+    function onVote(v) {
+      if (busy) return; busy = true;
+      ensureClient().then(function (id) {
+        if (!id) { busy = false; if (confirm('로그인이 필요한 기능입니다. 로그인 페이지로 이동할까요?')) location.href = '/account/login.html'; return; }
+        var op;
+        if (mine === v) { op = client.from(cfg.votesTable).delete().eq('post_id', post.id).eq('user_id', id); mine = null; }
+        else { op = client.from(cfg.votesTable).upsert({ user_id: id, post_id: post.id, value: v }, { onConflict: 'user_id,post_id' }); mine = v; }
+        op.then(function (res) {
+          if (res.error) { busy = false; alert('처리 실패: ' + res.error.message); return; }
+          refreshCounts().then(function () { busy = false; render(); });
+        });
+      }).catch(function () { busy = false; });
+    }
+
+    render();
+    ensureClient().then(function (id) {
+      if (!id) return;
+      client.from(cfg.votesTable).select('value').eq('post_id', post.id).eq('user_id', id).maybeSingle().then(function (r) {
+        if (r.data) { mine = r.data.value; render(); }
+      });
+    }).catch(function () {});
   }
 
   return { list: list, view: view, esc: esc, fmtDate: fmtDate };

@@ -213,3 +213,17 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 /* 커뮤니티 히어로 동심원 링 — 아주 느린 은은한 숨쉬기(투명도만) */
 @keyframes orbitbreath{0%,100%{opacity:.64}50%{opacity:.92}}
 .scene-orbit g{animation:orbitbreath 9s ease-in-out infinite}
+
+/* 화제 카드 추천/비추천 표시 (cfg.reactions) */
+.board-feat-titlerow{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.board-feat-react{flex:0 0 auto;display:flex;gap:12px;align-items:center;padding-top:5px}
+.board-feat-react .rc{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--text-3);font-variant-numeric:tabular-nums}
+.board-feat-react .rc.down svg{transform:rotate(180deg)}
+
+/* 상세 추천/비추천 투표 버튼 (cfg.votesTable) */
+.bv-votes{display:flex;gap:10px;justify-content:center;margin:30px 0 4px}
+.bv-vote{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-2);background:var(--paper);border-radius:999px;padding:10px 24px;font-family:var(--display);font-size:14px;font-weight:700;color:var(--text-2);cursor:pointer;transition:all .15s ease}
+.bv-vote b{font-variant-numeric:tabular-nums}
+.bv-vote.up:hover,.bv-vote.up.on{border-color:#2f8a4e;color:#2f8a4e;background:rgba(47,138,78,.08)}
+.bv-vote.down:hover,.bv-vote.down.on{border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)}
+.bv-vote.down svg{transform:rotate(180deg)}
