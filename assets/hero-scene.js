@@ -15,14 +15,17 @@
     if (gR) {
       gR.innerHTML = '';
       var centers = [
-        { x: 150, y: 120, base: 16, n: 5 },
-        { x: 380, y: 300, base: 18, n: 5 },
-        { x: 600, y: 110, base: 15, n: 4 },
-        { x: 800, y: 330, base: 18, n: 5 },
-        { x: 1000, y: 150, base: 16, n: 5 },
-        { x: 300, y: 420, base: 14, n: 4 },
-        { x: 1160, y: 320, base: 17, n: 4 },
-        { x: 1120, y: 55, base: 14, n: 4 }
+        { x: 140, y: 110, base: 24, n: 5 },
+        { x: 360, y: 300, base: 28, n: 6 },
+        { x: 560, y: 130, base: 22, n: 5 },
+        { x: 760, y: 340, base: 26, n: 5 },
+        { x: 960, y: 150, base: 24, n: 6 },
+        { x: 1140, y: 300, base: 26, n: 5 },
+        { x: 280, y: 430, base: 22, n: 4 },
+        { x: 1130, y: 65, base: 22, n: 5 },
+        { x: 640, y: 430, base: 24, n: 4 },
+        { x: 1030, y: 430, base: 22, n: 4 },
+        { x: 70, y: 310, base: 20, n: 4 }
       ];
       centers.forEach(function (c) {
         for (var i = 0; i < c.n; i++) {
@@ -31,8 +34,8 @@
           cir.setAttribute('r', c.base * (i + 1));
           cir.setAttribute('fill', 'none');
           cir.setAttribute('stroke', 'url(#dg)');
-          cir.setAttribute('stroke-width', (1.1 - i * 0.07).toFixed(2));
-          cir.setAttribute('opacity', Math.max(0.1, 0.4 - i * 0.06).toFixed(2));
+          cir.setAttribute('stroke-width', (1.2 - i * 0.07).toFixed(2));
+          cir.setAttribute('opacity', Math.max(0.1, 0.4 - i * 0.055).toFixed(2));
           gR.appendChild(cir);
         }
       });
