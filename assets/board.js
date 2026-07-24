@@ -257,6 +257,19 @@ window.OCBoard = (function () {
       });
     }
 
+    /* 화제 카드 고정 위치 = 고정 헤더 높이 (기기/상태별 실측) */
+    (function () {
+      function applyTop() {
+        var h = document.querySelector('.site-header') || document.querySelector('header.masthead') || document.querySelector('header');
+        if (h && h.offsetHeight) document.documentElement.style.setProperty('--feat-top', h.offsetHeight + 'px');
+      }
+      applyTop();
+      window.addEventListener('load', applyTop);
+      window.addEventListener('resize', applyTop);
+      setTimeout(applyTop, 300);
+      setTimeout(applyTop, 1000);
+    })();
+
     loadPage(1);
   }
 
