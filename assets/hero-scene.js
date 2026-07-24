@@ -34,8 +34,8 @@
           cir.setAttribute('r', c.base * (i + 1));
           cir.setAttribute('fill', 'none');
           cir.setAttribute('stroke', 'url(#dg)');
-          cir.setAttribute('stroke-width', (1.2 - i * 0.07).toFixed(2));
-          cir.setAttribute('opacity', Math.max(0.1, 0.4 - i * 0.055).toFixed(2));
+          cir.setAttribute('stroke-width', (1.6 - i * 0.08).toFixed(2));
+          cir.setAttribute('opacity', Math.max(0.2, 0.62 - i * 0.07).toFixed(2));
           gR.appendChild(cir);
         }
       });

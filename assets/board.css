@@ -206,5 +206,5 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 }
 
 /* 커뮤니티 히어로 동심원 링 — 아주 느린 은은한 숨쉬기(투명도만) */
-@keyframes orbitbreath{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes orbitbreath{0%,100%{opacity:.72}50%{opacity:1}}
 .scene-orbit g{animation:orbitbreath 9s ease-in-out infinite}
