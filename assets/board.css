@@ -140,7 +140,7 @@ html[data-theme="dark"] .board-row:hover{background:#000}
 .pv-tool svg{width:15px;height:15px}
 .pv-tool[aria-pressed="true"]{color:var(--violet-2);border-color:var(--violet-2);background:rgba(124,99,176,.09)}
 .pv-tool[aria-pressed="true"] svg{fill:var(--violet-2);stroke:var(--violet-2)}
-.pv-sidetabs{position:fixed;left:max(8px, calc(50% - 706px));top:52%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;gap:8px}
+.pv-sidetabs{position:fixed;left:max(8px, calc(50% - 706px));top:52%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;gap:8px;transition:opacity .25s ease,visibility .25s ease}
 .pv-listtab,.pv-writetab{display:flex;flex-direction:column;align-items:center;gap:10px;color:#fff;text-decoration:none;padding:22px 13px 22px 10px;border-radius:0 13px 13px 0;box-shadow:0 14px 32px -8px rgba(45,33,73,.5);transition:background .15s ease,padding-left .15s ease}
 .pv-listtab{background:#372a5c}
 .pv-listtab:hover{background:#281d45;padding-left:16px}

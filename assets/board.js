@@ -307,6 +307,22 @@ window.OCBoard = (function () {
           });
         })();
 
+        /* 사이드탭: 하단(빅배너/푸터) 겹침 방지 → 근처 오면 숨김 (인물DB와 동일) */
+        (function () {
+          var tabs = document.querySelector('.pv-sidetabs');
+          if (!tabs) return;
+          function upd() {
+            var stop = document.querySelector('.bigban') || document.querySelector('#oc-footer') || document.querySelector('footer');
+            if (!stop) return;
+            var hide = stop.getBoundingClientRect().top < tabs.getBoundingClientRect().bottom + 20;
+            tabs.style.opacity = hide ? '0' : '1';
+            tabs.style.visibility = hide ? 'hidden' : 'visible';
+          }
+          window.addEventListener('scroll', upd, { passive: true });
+          window.addEventListener('resize', upd);
+          upd();
+        })();
+
         /* 조회수 +1 (best-effort) */
         if (cfg.incrementFn) {
           fetch(SB_URL + '/rest/v1/rpc/' + cfg.incrementFn, {
