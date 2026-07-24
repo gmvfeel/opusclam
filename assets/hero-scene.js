@@ -15,9 +15,14 @@
     if (gR) {
       gR.innerHTML = '';
       var centers = [
-        { x: 240, y: 150, base: 30, n: 6 },
-        { x: 770, y: 300, base: 40, n: 6 },
-        { x: 1120, y: 110, base: 32, n: 5 }
+        { x: 150, y: 120, base: 16, n: 5 },
+        { x: 380, y: 300, base: 18, n: 5 },
+        { x: 600, y: 110, base: 15, n: 4 },
+        { x: 800, y: 330, base: 18, n: 5 },
+        { x: 1000, y: 150, base: 16, n: 5 },
+        { x: 300, y: 420, base: 14, n: 4 },
+        { x: 1160, y: 320, base: 17, n: 4 },
+        { x: 1120, y: 55, base: 14, n: 4 }
       ];
       centers.forEach(function (c) {
         for (var i = 0; i < c.n; i++) {
@@ -26,8 +31,8 @@
           cir.setAttribute('r', c.base * (i + 1));
           cir.setAttribute('fill', 'none');
           cir.setAttribute('stroke', 'url(#dg)');
-          cir.setAttribute('stroke-width', (1.3 - i * 0.09).toFixed(2));
-          cir.setAttribute('opacity', Math.max(0.1, 0.42 - i * 0.05).toFixed(2));
+          cir.setAttribute('stroke-width', (1.1 - i * 0.07).toFixed(2));
+          cir.setAttribute('opacity', Math.max(0.1, 0.4 - i * 0.06).toFixed(2));
           gR.appendChild(cir);
         }
       });
