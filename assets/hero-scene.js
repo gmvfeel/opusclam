@@ -7,11 +7,38 @@
    ============================================================ */
 (function () {
   function draw() {
+    var NS = 'http://www.w3.org/2000/svg';
+    function el(t) { return document.createElementNS(NS, t); }
+
+    /* 커뮤니티(뉴스 등) 히어로: 동심원 링(scene-orbit) — 정적·우아 */
+    var gR = document.querySelector('.pdb-bg .scene-orbit g');
+    if (gR) {
+      gR.innerHTML = '';
+      var centers = [
+        { x: 240, y: 150, base: 30, n: 6 },
+        { x: 770, y: 300, base: 40, n: 6 },
+        { x: 1120, y: 110, base: 32, n: 5 }
+      ];
+      centers.forEach(function (c) {
+        for (var i = 0; i < c.n; i++) {
+          var cir = el('circle');
+          cir.setAttribute('cx', c.x); cir.setAttribute('cy', c.y);
+          cir.setAttribute('r', c.base * (i + 1));
+          cir.setAttribute('fill', 'none');
+          cir.setAttribute('stroke', 'url(#dg)');
+          cir.setAttribute('stroke-width', (1.3 - i * 0.09).toFixed(2));
+          cir.setAttribute('opacity', Math.max(0.1, 0.42 - i * 0.05).toFixed(2));
+          gR.appendChild(cir);
+        }
+      });
+      return;
+    }
+
+    /* DB 등 기본 히어로: 촘촘한 별자리(scene-net) */
     var g = document.querySelector('.pdb-bg .scene-net g');
     if (!g) return;
     g.innerHTML = '';
-    var W = 1280, H = 460, NN = 70, maxD = 132, NS = 'http://www.w3.org/2000/svg';
-    function el(t) { return document.createElementNS(NS, t); }
+    var W = 1280, H = 460, NN = 70, maxD = 132;
     var nodes = [];
     for (var i = 0; i < NN; i++) nodes.push({ x: Math.random() * W, y: Math.random() * H });
     for (var a = 0; a < nodes.length; a++) {
