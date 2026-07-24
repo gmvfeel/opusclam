@@ -227,3 +227,15 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 .bv-vote.up:hover,.bv-vote.up.on{border-color:#2f8a4e;color:#2f8a4e;background:rgba(47,138,78,.08)}
 .bv-vote.down:hover,.bv-vote.down.on{border-color:#c0392b;color:#c0392b;background:rgba(192,57,43,.08)}
 .bv-vote.down svg{transform:rotate(180deg)}
+
+/* NEW 뱃지 (cfg.newDays) */
+.board-new{display:inline-block;margin-left:6px;font-family:var(--display);font-size:.62em;font-weight:800;letter-spacing:.04em;color:#fff;background:#dc2626;border-radius:4px;padding:2px 5px;vertical-align:middle;transform:translateY(-1px)}
+
+/* 목록 행 썸네일 (cfg.rowThumb) */
+.board-row-thumb{flex:none;width:96px;height:64px;border-radius:8px;overflow:hidden;background:var(--paper-3)}
+.board-row-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* 분류 배지 색상 (공연사진/영상 등) */
+.board-tag[data-cat="국내공연"]{color:#dc2626;border-color:rgba(220,38,38,.4)}
+.board-tag[data-cat="해외공연"]{color:var(--violet-2);border-color:rgba(124,99,176,.5)}
+.board-tag[data-cat="SELF PICTURE"]{color:#0f9b8e;border-color:rgba(15,155,142,.45)}

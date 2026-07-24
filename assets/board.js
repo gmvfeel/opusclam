@@ -152,7 +152,8 @@ window.OCBoard = (function () {
       return src && au ? src + ' \u00b7 ' + au : (src || au);
     }
     function ccHtml(rec) { var c = rec.comment_count || 0; return c > 0 ? '<span class="board-cc">[' + c + ']</span>' : ''; }
-    function tagHtml(rec) { return rec.category ? '<span class="board-tag">' + esc(rec.category) + '</span>' : ''; }
+    function newHtml(rec) { if (!cfg.newDays || !rec.created_at) return ''; var d = new Date(rec.created_at); if (isNaN(d)) return ''; return ((Date.now() - d.getTime()) / 86400000) <= cfg.newDays ? '<span class="board-new">NEW</span>' : ''; }
+    function tagHtml(rec) { return rec.category ? '<span class="board-tag" data-cat="' + esc(rec.category) + '">' + esc(rec.category) + '</span>' : ''; }
     function featuredHtml(rec, related) {
       var rel = '';
       if (related && related.length) {
@@ -169,7 +170,7 @@ window.OCBoard = (function () {
         + '<a class="board-feat-body' + (img ? ' has-img' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
         + img
         + '<div class="board-feat-text">'
-        + '<div class="board-feat-titlerow"><div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + '</div>' + react + '</div>'
+        + '<div class="board-feat-titlerow"><div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + newHtml(rec) + '</div>' + react + '</div>'
         + '<p class="board-prev board-feat-prev">' + previewText(rec.body, 200) + '</p>'
         + '<div class="board-feat-meta">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></div>'
         + '</div>'
@@ -177,9 +178,11 @@ window.OCBoard = (function () {
         + '</div>';
     }
     function articleRowHtml(rec, no) {
-      return '<a class="board-row" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
+      var th = cfg.rowThumb ? '<span class="board-row-thumb">' + (rec.thumb_url ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">' : '') + '</span>' : '';
+      return '<a class="board-row' + (cfg.rowThumb ? ' has-thumb' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
         + '<span class="board-row-no">' + (no > 0 && no < 10 ? '0' + no : no) + '</span>'
-        + '<span class="board-row-main"><span class="board-row-title">' + esc(rec.title || '') + ccHtml(rec) + '</span>'
+        + th
+        + '<span class="board-row-main"><span class="board-row-title">' + esc(rec.title || '') + ccHtml(rec) + newHtml(rec) + '</span>'
         + '<span class="board-prev">' + previewText(rec.body, 140) + '</span></span>'
         + '<span class="board-row-right">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></span>'
         + '</a>';

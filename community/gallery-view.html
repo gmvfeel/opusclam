@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>뉴스 · OPUSCLAM</title>
+<title>공연사진 / 영상 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -38,17 +38,17 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/news.html">뉴스</a>
+      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/gallery.html">공연사진 / 영상</a>
     </nav>
 
     <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
       <a href="/community/hottopic.html">핫토픽</a>
-      <a href="/community/gallery.html">공연사진 / 영상</a>
+      <a href="/community/gallery.html" class="active">공연사진 / 영상</a>
       <a href="#">입시</a>
       <a href="#">지식나눔</a>
       <a href="#">SELF PR</a>
       <a href="#">이달의 음악학교</a>
-      <a href="/community/news.html" class="active">뉴스</a>
+      <a href="/community/news.html">뉴스</a>
       <a href="#">현대음악</a>
       <a href="#">유틸리티 / 악보 / 자료</a>
       <a href="#">태교음악</a>
@@ -58,7 +58,7 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OC COMMUNITY</div>
-          <h1 class="pdb-title">뉴스</h1>
+          <h1 class="pdb-title">공연사진 / 영상</h1>
         </div>
       </div>
     </header>
@@ -85,15 +85,15 @@
     <div class="board-empty">불러오는 중…</div>
   </article>
   <section class="bv-comments"></section>
-  <a class="pv-tolist-m" href="news.html">&#8592; 목록으로</a>
+  <a class="pv-tolist-m" href="gallery.html">&#8592; 목록으로</a>
 </main>
 
 <div class="pv-sidetabs">
-  <a class="pv-listtab" href="news.html" aria-label="리스트로 가기">
+  <a class="pv-listtab" href="gallery.html" aria-label="리스트로 가기">
     <span class="pv-listtab-arrow">&#8249;</span>
     <span class="pv-listtab-text">리스트</span>
   </a>
-  <a class="pv-writetab" href="news-write.html" aria-label="글쓰기" style="display:none">
+  <a class="pv-writetab" href="gallery-write.html" aria-label="글쓰기" style="display:none">
     <span class="pv-writetab-ic">&#43;</span>
     <span class="pv-writetab-text">글쓰기</span>
   </a>
@@ -109,8 +109,8 @@
 <script>
   document.addEventListener('DOMContentLoaded', function(){
     OCBoard.view({
-      table:'news', listPage:'news.html', viewPage:'news-view.html', writePage:'news-write.html',
-      writeRole:'member', incrementFn:'news_increment_view', commentsTable:'news_comments'
+      table:'gallery', listPage:'gallery.html', viewPage:'gallery-view.html', writePage:'gallery-write.html',
+      writeRole:'member', incrementFn:'gallery_increment_view', commentsTable:'gallery_comments', votesTable:'gallery_votes'
     });
   });
 </script>
