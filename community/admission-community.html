@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>핫토픽 · OPUSCLAM</title>
+<title>입시커뮤니티 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -38,13 +38,13 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/hottopic.html">핫토픽</a>
+      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><span class="on">입시커뮤니티</span>
     </nav>
 
     <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
-      <a href="/community/hottopic.html" class="active">핫토픽</a>
+      <a href="/community/hottopic.html">핫토픽</a>
       <a href="/community/gallery.html">공연사진 / 영상</a>
-      <a href="/community/admission-community.html">입시</a>
+      <a href="/community/admission-community.html" class="active">입시</a>
       <a href="#">지식나눔</a>
       <a href="#">SELF PR</a>
       <a href="#">이달의 음악학교</a>
@@ -58,20 +58,28 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OC COMMUNITY</div>
-          <h1 class="pdb-title">핫토픽</h1>
+          <h1 class="pdb-title">입시커뮤니티</h1>
         </div>
       </div>
+      <p class="pdb-lead">음대·입시와 진로에 관한 이야기를 회원들과 함께 나누는 공간입니다.</p>
     </header>
   </div>
 </section>
 
 <main class="board">
-  <div class="pv-utility">
-    <div class="pv-tools">
-      <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.5 9.7l5.9-.9z"/></svg>즐겨찾기</button>
-      <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v18l-6-4-6 4z"/></svg>킵</button>
-      <button type="button" class="pv-tool" data-save aria-haspopup="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>저장</button>
-      <button type="button" class="pv-tool" data-share><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.1 10.9l7.8-4.7M8.1 13.1l7.8 4.7"/></svg>공유</button>
+  <div class="board-bar pdb-toolbar">
+    <div class="board-search pdb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" placeholder="제목·내용 검색" aria-label="검색">
+      <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
+    </div>
+    <div class="pdb-selects">
+      <select class="board-catsel" aria-label="분류"></select>
+      <select class="board-sort" aria-label="정렬">
+        <option value="created_at">최신순</option>
+        <option value="view_count">인기순</option>
+        <option value="comment_count">댓글순</option>
+      </select>
     </div>
     <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
       <span class="fs-label">글자크기</span>
@@ -81,36 +89,42 @@
     </div>
   </div>
 
-  <article class="board-view pv">
-    <div class="board-empty">불러오는 중…</div>
-  </article>
-  <section class="bv-comments"></section>
-  <a class="pv-tolist-m" href="hottopic.html">&#8592; 목록으로</a>
+  <div class="board-count pdb-count">전체 <b>0</b>건</div>
+  <div class="board-list"></div>
+
+  <div class="board-foot">
+    <div class="board-pager"></div>
+    <div class="board-actions"></div>
+  </div>
 </main>
 
-<div class="pv-sidetabs">
-  <a class="pv-listtab" href="hottopic.html" aria-label="리스트로 가기">
-    <span class="pv-listtab-arrow">&#8249;</span>
-    <span class="pv-listtab-text">리스트</span>
-  </a>
-  <a class="pv-writetab" href="hottopic-write.html" aria-label="글쓰기" style="display:none">
-    <span class="pv-writetab-ic">&#43;</span>
-    <span class="pv-writetab-text">글쓰기</span>
-  </a>
-</div>
+<section class="bigban">
+  <div class="wrap">
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+  </div>
+</section>
 
 <div id="oc-footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <script src="/assets/auth.js"></script>
 <script src="/assets/board.js"></script>
-<script src="/assets/pv.js" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
-    OCBoard.view({
-      table:'hottopic', listPage:'hottopic.html', viewPage:'hottopic-view.html', writePage:'hottopic-write.html',
-      writeRole:'member', incrementFn:'hottopic_increment_view', commentsTable:'hottopic_comments', votesTable:'hottopic_votes'
+    OCBoard.list({
+      table:'admission_community', pageSize:20, viewPage:'admission-community-view.html', writePage:'admission-community-write.html',
+      searchCols:['title','body','keywords'],
+      categories:[{value:'',label:'전체'},{value:'입시',label:'입시'},{value:'진로',label:'진로'},{value:'전공',label:'전공'},{value:'레슨',label:'레슨'},{value:'콩쿨',label:'콩쿨'},{value:'공연/연주',label:'공연/연주'}],
+      articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at', reactions:true
     });
   });
 </script>

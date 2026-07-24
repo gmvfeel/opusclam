@@ -240,3 +240,11 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 .board-tag[data-cat="국내공연"]{color:#dc2626;border-color:rgba(220,38,38,.4)}
 .board-tag[data-cat="해외공연"]{color:var(--violet-2);border-color:rgba(124,99,176,.5)}
 .board-tag[data-cat="SELF PICTURE"]{color:#0f9b8e;border-color:rgba(15,155,142,.45)}
+
+/* 입시커뮤니티 분류 배지 색상 */
+.board-tag[data-cat="입시"]{color:#2f8a4e;border-color:rgba(47,138,78,.4)}
+.board-tag[data-cat="진로"]{color:#2563eb;border-color:rgba(37,99,235,.4)}
+.board-tag[data-cat="전공"]{color:var(--violet-2);border-color:rgba(124,99,176,.5)}
+.board-tag[data-cat="레슨"]{color:#db2777;border-color:rgba(219,39,119,.4)}
+.board-tag[data-cat="콩쿨"]{color:#dc2626;border-color:rgba(220,38,38,.4)}
+.board-tag[data-cat="공연/연주"]{color:#0f9b8e;border-color:rgba(15,155,142,.45)}

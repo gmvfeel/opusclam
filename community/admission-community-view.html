@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>핫토픽 · OPUSCLAM</title>
+<title>입시커뮤니티 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -38,13 +38,13 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/hottopic.html">핫토픽</a>
+      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/admission-community.html">입시커뮤니티</a>
     </nav>
 
     <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
-      <a href="/community/hottopic.html" class="active">핫토픽</a>
+      <a href="/community/hottopic.html">핫토픽</a>
       <a href="/community/gallery.html">공연사진 / 영상</a>
-      <a href="/community/admission-community.html">입시</a>
+      <a href="/community/admission-community.html" class="active">입시</a>
       <a href="#">지식나눔</a>
       <a href="#">SELF PR</a>
       <a href="#">이달의 음악학교</a>
@@ -58,7 +58,7 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OC COMMUNITY</div>
-          <h1 class="pdb-title">핫토픽</h1>
+          <h1 class="pdb-title">입시커뮤니티</h1>
         </div>
       </div>
     </header>
@@ -85,15 +85,15 @@
     <div class="board-empty">불러오는 중…</div>
   </article>
   <section class="bv-comments"></section>
-  <a class="pv-tolist-m" href="hottopic.html">&#8592; 목록으로</a>
+  <a class="pv-tolist-m" href="admission-community.html">&#8592; 목록으로</a>
 </main>
 
 <div class="pv-sidetabs">
-  <a class="pv-listtab" href="hottopic.html" aria-label="리스트로 가기">
+  <a class="pv-listtab" href="admission-community.html" aria-label="리스트로 가기">
     <span class="pv-listtab-arrow">&#8249;</span>
     <span class="pv-listtab-text">리스트</span>
   </a>
-  <a class="pv-writetab" href="hottopic-write.html" aria-label="글쓰기" style="display:none">
+  <a class="pv-writetab" href="admission-community-write.html" aria-label="글쓰기" style="display:none">
     <span class="pv-writetab-ic">&#43;</span>
     <span class="pv-writetab-text">글쓰기</span>
   </a>
@@ -109,8 +109,8 @@
 <script>
   document.addEventListener('DOMContentLoaded', function(){
     OCBoard.view({
-      table:'hottopic', listPage:'hottopic.html', viewPage:'hottopic-view.html', writePage:'hottopic-write.html',
-      writeRole:'member', incrementFn:'hottopic_increment_view', commentsTable:'hottopic_comments', votesTable:'hottopic_votes'
+      table:'admission_community', listPage:'admission-community.html', viewPage:'admission-community-view.html', writePage:'admission-community-write.html',
+      writeRole:'member', incrementFn:'admission_community_increment_view', commentsTable:'admission_community_comments', votesTable:'admission_community_votes'
     });
   });
 </script>
