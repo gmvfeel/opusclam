@@ -76,6 +76,7 @@
       <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
     </div>
     <div class="pdb-selects">
+      <select class="board-regionsel" aria-label="국내/해외"></select>
       <select class="board-catsel" aria-label="구분"></select>
       <select class="board-yearsel" aria-label="년도"></select>
     </div>
@@ -116,6 +117,7 @@
       table:'admission', pageSize:20, viewPage:'admission-view.html', writePage:'admission-write.html',
       searchCols:['title','body','keywords'],
       categories:[{value:'',label:'구분선택'},{value:'대학',label:'대학'},{value:'예고',label:'예고'},{value:'대학원',label:'대학원'}],
+      regions:[{value:'',label:'국내/해외'},{value:'국내',label:'국내'},{value:'해외',label:'해외'}],
       docStyle:true, yearFilter:true, writeRole:'member', pinnedFirst:false, defaultSort:'created_at'
     });
   });

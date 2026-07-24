@@ -21,6 +21,11 @@
       var opts = cfg.categories.map(function (c) { return '<option value="' + esc(c.value) + '">' + esc(c.label || c.value) + '</option>'; }).join('');
       catRow = '<div class="bf-row" style="max-width:220px"><label>분류 *</label><select id="f-category">' + opts + '</select></div>';
     }
+    var regionRow = '';
+    if (cfg.regions && cfg.regions.length) {
+      var ropts = cfg.regions.map(function (r) { return '<option value="' + esc(r.value) + '">' + esc(r.label || r.value) + '</option>'; }).join('');
+      regionRow = '<div class="bf-row" style="max-width:220px"><label>국내/해외 *</label><select id="f-region">' + ropts + '</select></div>';
+    }
     var docRows = '';
     if (cfg.docFields) {
       docRows = '<div class="bf-row"><label>홈페이지 <span style="color:var(--text-3);font-weight:400">(선택)</span></label><input type="text" id="f-home" placeholder="관련 홈페이지 주소"></div>'
@@ -32,6 +37,7 @@
       + '<form class="board-form" id="bwForm" style="display:none" onsubmit="return false">'
       + '<div class="bf-formhead">' + esc(cfg.formTitle || '등록') + ' <span class="bf-req">* 필수입력사항입니다.</span></div>'
       + catRow
+      + regionRow
       + '<div class="bf-row"><label>제목 *</label><input type="text" id="f-title" placeholder="제목을 입력하세요"></div>'
       + '<div class="bf-row"><label>내용 *</label><div class="bf-editor">'
       + '<div class="bf-etools" id="f-tools">'
@@ -144,6 +150,7 @@
           if (r.error || !r.data) { $('bwMsg').textContent = '글을 불러오지 못했습니다.'; return; }
           var o = r.data;
           if ($('f-category')) $('f-category').value = o.category || (cfg.categories && cfg.categories[0] ? cfg.categories[0].value : '');
+          if ($('f-region')) $('f-region').value = o.region || (cfg.regions && cfg.regions[0] ? cfg.regions[0].value : '');
           $('f-title').value = o.title || '';
           $('f-body').innerHTML = clean(o.body || '');
           $('f-keywords').value = o.keywords || '';
@@ -191,6 +198,7 @@
 
       var row = { title: title, body: bodyHtml, thumb_url: thumb, keywords: $('f-keywords').value.trim() || null };
       if ($('f-category')) row.category = $('f-category').value;
+      if ($('f-region')) row.region = $('f-region').value;
       if (cfg.docFields) {
         row.link_url = ($('f-home').value || '').trim() || null;
         if (logoUrl) row.logo_url = logoUrl;

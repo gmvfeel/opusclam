@@ -75,7 +75,7 @@ window.OCBoard = (function () {
 
   /* ============================ 목록 ============================ */
   function list(cfg) {
-    var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '', yr = '';
+    var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '', yr = '', region = '';
     var sortCol = cfg.defaultSort || 'created_at';
     var listEl = document.querySelector('.board-list');
     var pager = document.querySelector('.board-pager');
@@ -117,6 +117,13 @@ window.OCBoard = (function () {
       yearSel.addEventListener('change', function () { yr = yearSel.value || ''; loadPage(1); });
     }
 
+    /* 지역(국내/해외 등) 필터 (cfg.regions) */
+    var regionSel = document.querySelector('.board-regionsel');
+    if (regionSel && cfg.regions && cfg.regions.length) {
+      regionSel.innerHTML = cfg.regions.map(function (r) { return '<option value="' + esc(r.value) + '">' + esc(r.label || r.value) + '</option>'; }).join('');
+      regionSel.addEventListener('change', function () { region = regionSel.value || ''; loadPage(1); });
+    }
+
     /* 글자 크기 조절 (인물DB와 동일 단계, .board-list 의 --board-fs 조정) */
     var fsBtns = document.querySelectorAll('.pdb-fontsize .fs-btn');
     if (fsBtns.length && listEl) {
@@ -141,6 +148,7 @@ window.OCBoard = (function () {
       }
       if (cat) u += '&category=eq.' + encodeURIComponent(cat);
       if (yr) u += '&title=ilike.*' + encodeURIComponent(yr) + '*';
+      if (region) u += '&region=eq.' + encodeURIComponent(region);
       u += '&order=' + (cfg.pinnedFirst ? 'is_pinned.desc,' + sortCol + '.desc' : sortCol + '.desc');
       u += '&limit=' + PAGE + '&offset=' + off;
       return u;
@@ -204,10 +212,16 @@ window.OCBoard = (function () {
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" download>DOWNLOAD</a>' : '';
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);
+      var badges = (rec.region || rec.category)
+        ? '<div class="doc-tags">'
+          + (rec.region ? '<span class="board-tag" data-cat="' + esc(rec.region) + '">' + esc(rec.region) + '</span>' : '')
+          + (rec.category ? '<span class="board-tag" data-cat="' + esc(rec.category) + '">' + esc(rec.category) + '</span>' : '')
+          + '</div>'
+        : '';
       return '<div class="doc-row">'
         + '<a class="doc-logo" href="' + vp + '">' + logo + '</a>'
         + '<div class="doc-main"><a class="doc-title" href="' + vp + '">' + esc(rec.title || '') + ccHtml(rec) + '</a>'
-        + '<p class="doc-desc">' + previewText(rec.body, 120) + '</p>' + home + '</div>'
+        + '<p class="doc-desc">' + previewText(rec.body, 120) + '</p>' + home + badges + '</div>'
         + '<span class="doc-date">' + fmtDate(rec.created_at) + '</span>'
         + dl
         + '</div>';
@@ -332,6 +346,7 @@ window.OCBoard = (function () {
             '<div class="bv-dochead">'
             + (o.logo_url ? '<img class="bv-doclogo" src="' + esc(o.logo_url) + '" alt="">' : '')
             + '<div class="bv-dochead-t">'
+            + (o.region ? '<span class="board-tag" data-cat="' + esc(o.region) + '">' + esc(o.region) + '</span> ' : '')
             + (o.category ? '<span class="board-tag" data-cat="' + esc(o.category) + '">' + esc(o.category) + '</span>' : '')
             + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'
             + (o.link_url ? '<div class="bv-dochome">관련홈페이지 <a href="' + esc(o.link_url) + '" target="_blank" rel="noopener">' + esc(o.link_url) + '</a></div>' : '')
