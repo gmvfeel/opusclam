@@ -248,3 +248,53 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 .board-tag[data-cat="레슨"]{color:#db2777;border-color:rgba(219,39,119,.4)}
 .board-tag[data-cat="콩쿨"]{color:#dc2626;border-color:rgba(220,38,38,.4)}
 .board-tag[data-cat="공연/연주"]{color:#0f9b8e;border-color:rgba(15,155,142,.45)}
+
+/* ===== 자료형 게시판 (입시요강 등) ===== */
+/* 목록 행 */
+.doc-row{display:flex;align-items:flex-start;gap:18px;padding:20px 6px;border-bottom:1px solid var(--line);transition:background .15s ease}
+.doc-row:hover{background:var(--paper-2)}
+.doc-logo{flex:none;width:56px;height:56px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--paper-2);border:1px solid var(--line)}
+.doc-logo img{width:100%;height:100%;object-fit:contain}
+.doc-logo-ph{width:26px;height:26px;border-radius:6px;background:var(--line-2)}
+.doc-main{flex:1;min-width:0}
+.doc-title{display:inline-block;font-size:16px;font-weight:700;color:var(--text);text-decoration:none;letter-spacing:-.01em}
+.doc-title:hover{color:var(--violet-2)}
+.doc-desc{font-size:13.5px;color:var(--text-2);line-height:1.55;margin:5px 0 6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.doc-home{font-size:12.5px;color:var(--text-3)}
+.doc-home a{color:var(--text-3);text-decoration:none}
+.doc-home a:hover{color:var(--violet-2);text-decoration:underline}
+.doc-date{flex:none;font-size:13px;color:var(--text-3);align-self:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.doc-dl{flex:none;align-self:center;display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-size:12.5px;font-weight:700;color:var(--violet-2);text-decoration:none;white-space:nowrap}
+.doc-dl:hover{color:var(--ink)}
+@media(max-width:640px){
+  .doc-row{flex-wrap:wrap;gap:12px}
+  .doc-main{flex:1 1 100%;order:2}
+  .doc-date{order:3}.doc-dl{order:3;margin-left:auto}
+}
+/* 상세 */
+.bv-dochead{display:flex;gap:18px;align-items:flex-start;padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.bv-doclogo{flex:none;width:64px;height:64px;object-fit:contain;border-radius:10px;border:1px solid var(--line);background:var(--paper-2);padding:4px}
+.bv-dochead-t{flex:1;min-width:0}
+.bv-dochead-t .board-tag{margin-bottom:9px}
+.bv-dochome{font-size:13px;color:var(--text-3);margin:9px 0}
+.bv-dochome a{color:var(--violet-2);text-decoration:none;word-break:break-all}
+.bv-dochome a:hover{text-decoration:underline}
+.bv-docdl{display:inline-flex;align-items:center;gap:9px;margin-bottom:24px;padding:12px 20px;border:1px solid var(--line-2);border-radius:10px;background:var(--paper-2);color:var(--text);text-decoration:none;font-family:var(--display);font-weight:700;font-size:14px;transition:border-color .15s,color .15s}
+.bv-docdl:hover{border-color:var(--violet-2);color:var(--violet-2)}
+.bv-docdl em{font-style:normal;font-weight:400;font-size:13px;color:var(--text-3)}
+/* 입시요강 분류 배지 색 */
+.board-tag[data-cat="대학"]{color:#2563eb;border-color:rgba(37,99,235,.4)}
+.board-tag[data-cat="예고"]{color:#0f9b8e;border-color:rgba(15,155,142,.45)}
+.board-tag[data-cat="대학원"]{color:var(--violet-2);border-color:rgba(124,99,176,.5)}
+
+/* 글쓰기 파일 선택(로고/첨부) */
+.bf-file{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bf-filebtn{border:1px solid var(--line-2);background:var(--paper);border-radius:8px;padding:9px 16px;font-family:inherit;font-size:13px;color:var(--text-2);cursor:pointer;font-weight:600;transition:border-color .15s,color .15s}
+.bf-filebtn:hover{border-color:var(--violet-2);color:var(--violet-2)}
+.bf-filename{font-size:13px;color:var(--text-3)}
+
+/* 입시 요강↔커뮤니티 전환 탭 */
+.ac-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.ac-tabs a{font-family:var(--display);font-size:15px;font-weight:700;color:var(--text-3);text-decoration:none;padding:11px 22px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+.ac-tabs a.on{color:var(--violet-2);border-bottom-color:var(--violet-2)}
+.ac-tabs a:hover{color:var(--text)}

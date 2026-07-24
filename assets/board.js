@@ -75,7 +75,7 @@ window.OCBoard = (function () {
 
   /* ============================ 목록 ============================ */
   function list(cfg) {
-    var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '';
+    var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '', yr = '';
     var sortCol = cfg.defaultSort || 'created_at';
     var listEl = document.querySelector('.board-list');
     var pager = document.querySelector('.board-pager');
@@ -106,6 +106,17 @@ window.OCBoard = (function () {
       catSel.addEventListener('change', function () { cat = catSel.value || ''; loadPage(1); });
     }
 
+    /* 년도 선택 (자료형 게시판용, cfg.yearFilter) — 제목에 해당 연도 포함으로 필터 */
+    var yearSel = document.querySelector('.board-yearsel');
+    if (yearSel) {
+      if (yearSel.options.length <= 1) {
+        var yNow = new Date().getFullYear(), yo = '<option value="">년도선택</option>';
+        for (var yy = yNow; yy >= yNow - 12; yy--) yo += '<option value="' + yy + '">' + yy + '년도</option>';
+        yearSel.innerHTML = yo;
+      }
+      yearSel.addEventListener('change', function () { yr = yearSel.value || ''; loadPage(1); });
+    }
+
     /* 글자 크기 조절 (인물DB와 동일 단계, .board-list 의 --board-fs 조정) */
     var fsBtns = document.querySelectorAll('.pdb-fontsize .fs-btn');
     if (fsBtns.length && listEl) {
@@ -129,6 +140,7 @@ window.OCBoard = (function () {
         u += '&or=(' + cfg.searchCols.map(function (c) { return c + '.ilike.*' + t + '*'; }).join(',') + ')';
       }
       if (cat) u += '&category=eq.' + encodeURIComponent(cat);
+      if (yr) u += '&title=ilike.*' + encodeURIComponent(yr) + '*';
       u += '&order=' + (cfg.pinnedFirst ? 'is_pinned.desc,' + sortCol + '.desc' : sortCol + '.desc');
       u += '&limit=' + PAGE + '&offset=' + off;
       return u;
@@ -187,6 +199,19 @@ window.OCBoard = (function () {
         + '<span class="board-row-right">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></span>'
         + '</a>';
     }
+    function docRowHtml(rec) {
+      var logo = rec.logo_url ? '<img src="' + esc(rec.logo_url) + '" alt="" loading="lazy">' : '<span class="doc-logo-ph"></span>';
+      var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
+      var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" download>DOWNLOAD</a>' : '';
+      var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);
+      return '<div class="doc-row">'
+        + '<a class="doc-logo" href="' + vp + '">' + logo + '</a>'
+        + '<div class="doc-main"><a class="doc-title" href="' + vp + '">' + esc(rec.title || '') + ccHtml(rec) + '</a>'
+        + '<p class="doc-desc">' + previewText(rec.body, 120) + '</p>' + home + '</div>'
+        + '<span class="doc-date">' + fmtDate(rec.created_at) + '</span>'
+        + dl
+        + '</div>';
+    }
     function renderArticles(rows, offset) {
       var feat = null, i, related = [];
       for (i = 0; i < rows.length; i++) { if (rows[i].is_pinned && cur === 1) { feat = rows[i]; break; } }
@@ -240,7 +265,7 @@ window.OCBoard = (function () {
             if (listEl) listEl.innerHTML = '<div class="board-empty">아직 등록된 글이 없습니다.</div>';
             if (pager) pager.innerHTML = '';
           } else {
-            if (listEl) listEl.innerHTML = cfg.articleStyle ? renderArticles(rows, (pg - 1) * PAGE) : rows.map(itemHtml).join('');
+            if (listEl) listEl.innerHTML = cfg.docStyle ? rows.map(docRowHtml).join('') : (cfg.articleStyle ? renderArticles(rows, (pg - 1) * PAGE) : rows.map(itemHtml).join(''));
             renderPager();
           }
         })
@@ -302,6 +327,20 @@ window.OCBoard = (function () {
         var thumb = o.thumb_url ? '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' : '';
         var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
         var body = o.body ? '<div class="bv-body">' + (window.DOMPurify ? window.DOMPurify.sanitize(o.body, { ADD_ATTR: ['target', 'style'] }) : nl2br(o.body)) + '</div>' : '';
+        if (cfg.docView) {
+          box.innerHTML =
+            '<div class="bv-dochead">'
+            + (o.logo_url ? '<img class="bv-doclogo" src="' + esc(o.logo_url) + '" alt="">' : '')
+            + '<div class="bv-dochead-t">'
+            + (o.category ? '<span class="board-tag" data-cat="' + esc(o.category) + '">' + esc(o.category) + '</span>' : '')
+            + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'
+            + (o.link_url ? '<div class="bv-dochome">관련홈페이지 <a href="' + esc(o.link_url) + '" target="_blank" rel="noopener">' + esc(o.link_url) + '</a></div>' : '')
+            + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
+            + '</div></div>'
+            + (o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" download><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span>첨부문서 다운로드</span>' + (o.file_name ? '<em>' + esc(o.file_name) + '</em>' : '') + '</a>' : '')
+            + body
+            + '<div class="bv-foot"></div>';
+        } else {
         box.innerHTML =
           '<div class="bv-head">'
           + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'
@@ -312,6 +351,7 @@ window.OCBoard = (function () {
           + (cfg.votesTable ? '<div class="bv-votes"></div>' : '')
           + '<div class="bv-rel"></div>'
           + '<div class="bv-foot"></div>';
+        }
 
         if (cfg.commentsTable) mountComments(cfg, o.id);
         if (cfg.votesTable) mountVotes(cfg, o);
@@ -359,7 +399,7 @@ window.OCBoard = (function () {
         }
 
         /* 관련기사 (검색어 우선 → 같은 분류 → 최근글) */
-        if (cfg.viewPage) {
+        if (cfg.viewPage && !cfg.docView) {
           var base = SB_URL + '/rest/v1/' + cfg.table + '?select=id,title&id=neq.' + encodeURIComponent(o.id);
           var recentUrl = base + '&order=created_at.desc&limit=4';
           var urls = [];

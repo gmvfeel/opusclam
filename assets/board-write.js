@@ -21,6 +21,12 @@
       var opts = cfg.categories.map(function (c) { return '<option value="' + esc(c.value) + '">' + esc(c.label || c.value) + '</option>'; }).join('');
       catRow = '<div class="bf-row" style="max-width:220px"><label>분류 *</label><select id="f-category">' + opts + '</select></div>';
     }
+    var docRows = '';
+    if (cfg.docFields) {
+      docRows = '<div class="bf-row"><label>홈페이지 <span style="color:var(--text-3);font-weight:400">(선택)</span></label><input type="text" id="f-home" placeholder="관련 홈페이지 주소"></div>'
+        + '<div class="bf-row"><label>로고등록 <span style="color:var(--text-3);font-weight:400">(학교/기관 로고, 선택)</span></label><div class="bf-file"><button type="button" class="bf-filebtn" id="f-logobtn">이미지 선택</button><span class="bf-filename" id="f-logoname">선택된 파일 없음</span></div><input type="file" id="f-logofile" accept="image/*" style="display:none"></div>'
+        + '<div class="bf-row"><label>첨부파일 <span style="color:var(--text-3);font-weight:400">(요강 문서 hwp·pdf·doc 등, 선택)</span></label><div class="bf-file"><button type="button" class="bf-filebtn" id="f-docbtn">파일 선택</button><span class="bf-filename" id="f-docname">선택된 파일 없음</span></div><input type="file" id="f-docfile" style="display:none"></div>';
+    }
     return ''
       + '<div id="bwGate" class="bf-gate">확인 중…</div>'
       + '<form class="board-form" id="bwForm" style="display:none" onsubmit="return false">'
@@ -45,6 +51,7 @@
       + '</div>'
       + '<div class="bf-earea" id="f-body" contenteditable="true" data-ph="내용을 입력하세요."></div>'
       + '</div><input type="file" id="f-imgfile" accept="image/*" multiple style="display:none"></div>'
+      + docRows
       + '<div class="bf-row"><label>검색어 <span style="color:var(--text-3);font-weight:400">(선택)</span></label><input type="text" id="f-keywords" placeholder="쉼표(,)로 구분"></div>'
       + '<label class="bf-consent"><span class="bf-consent-t">등록하신 콘텐츠가 성격에 맞지 않거나 비속어 등이 사용된 것으로 판단된 경우, 예고 없이 등록하신 데이터가 삭제될 수 있습니다.<br>데이터 등록이 승인된 경우, 모든 유료서비스에 사용할 수 있는 액티브포인트가 적립됩니다.(등록한 데이터별 100 액티브포인트 제공)</span>'
       + '<span class="bf-consent-c"><input type="checkbox" id="f-agree"> 동의</span></label>'
@@ -62,7 +69,7 @@
 
     var sb = window.supabase.createClient(SB_URL, SB_KEY);
     var editId = new URLSearchParams(location.search).get('id');
-    var me = null, thumbMap = {}, savedRange = null;
+    var me = null, thumbMap = {}, savedRange = null, logoUrl = null, fileUrl = null, fileName = null;
 
     function gate(msg) { var g = $('bwGate'); g.style.display = ''; g.innerHTML = esc(msg) + '<br><br><a class="bf-cancel" href="' + esc(cfg.listPage) + '">목록으로</a>'; }
 
@@ -129,6 +136,7 @@
       $('bwGate').style.display = 'none';
       $('bwForm').style.display = '';
       initEditor();
+      if (cfg.docFields) initDocFields();
       if (editId) {
         var h = $('bwHead'); if (h) h.textContent = (h.textContent || '').replace('작성', '수정') || '수정';
         $('bwSubmit').textContent = '수정완료';
@@ -140,9 +148,31 @@
           $('f-body').innerHTML = clean(o.body || '');
           $('f-keywords').value = o.keywords || '';
           $('f-agree').checked = true;
+          if (cfg.docFields) {
+            if ($('f-home')) $('f-home').value = o.link_url || '';
+            if (o.logo_url) { logoUrl = o.logo_url; $('f-logoname').textContent = '기존 로고 유지'; }
+            if (o.file_url) { fileUrl = o.file_url; fileName = o.file_name; $('f-docname').textContent = o.file_name || '기존 파일 유지'; }
+          }
         });
       }
       $('bwSubmit').addEventListener('click', submit);
+    }
+
+    function uploadSingle(file, prefix, cb) {
+      var safe = (file.name || 'file').replace(/[^\w.\-\uAC00-\uD7A3]/g, '_');
+      var p = me.id + '/' + prefix + '_' + Date.now() + '_' + safe;
+      $('bwMsg').textContent = '업로드 중…';
+      sb.storage.from(cfg.bucket).upload(p, file, { upsert: false }).then(function (r) {
+        if (r.error) { $('bwMsg').textContent = '업로드 실패: ' + r.error.message; return; }
+        $('bwMsg').textContent = '';
+        cb(sb.storage.from(cfg.bucket).getPublicUrl(p).data.publicUrl);
+      });
+    }
+    function initDocFields() {
+      $('f-logobtn').addEventListener('click', function () { $('f-logofile').click(); });
+      $('f-logofile').addEventListener('change', function () { var f = this.files[0]; if (!f) return; uploadSingle(f, 'logo', function (url) { logoUrl = url; $('f-logoname').textContent = f.name; }); });
+      $('f-docbtn').addEventListener('click', function () { $('f-docfile').click(); });
+      $('f-docfile').addEventListener('change', function () { var f = this.files[0]; if (!f) return; uploadSingle(f, 'file', function (url) { fileUrl = url; fileName = f.name; $('f-docname').textContent = f.name; }); });
     }
 
     function submit() {
@@ -161,6 +191,11 @@
 
       var row = { title: title, body: bodyHtml, thumb_url: thumb, keywords: $('f-keywords').value.trim() || null };
       if ($('f-category')) row.category = $('f-category').value;
+      if (cfg.docFields) {
+        row.link_url = ($('f-home').value || '').trim() || null;
+        if (logoUrl) row.logo_url = logoUrl;
+        if (fileUrl) { row.file_url = fileUrl; row.file_name = fileName; }
+      }
       btn.disabled = true; $('bwMsg').textContent = '저장 중…';
 
       var op;
