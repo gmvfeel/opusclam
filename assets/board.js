@@ -267,17 +267,22 @@ window.OCBoard = (function () {
         if (!rows || !rows.length) { box.innerHTML = '<div class="board-empty">글을 찾을 수 없습니다.</div>'; return; }
         var o = rows[0];
         document.title = (o.title || '뉴스') + ' · OPUSCLAM';
+        var srcAu = [o.source, o.author_name].filter(Boolean).map(esc).join(' · ');
+        var tag = o.category ? '<span class="board-tag">' + esc(o.category) + '</span>' : '';
         var thumb = o.thumb_url ? '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' : '';
         var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
         var body = o.body ? '<div class="bv-body">' + nl2br(o.body) + '</div>' : '';
         box.innerHTML =
           '<div class="bv-head">'
-          + '<span class="board-cat ' + catClass(o.category) + '">' + esc(o.category || '') + '</span>'
           + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'
-          + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
+          + '<div class="bv-meta">' + tag + (srcAu ? '<span>' + srcAu + '</span>' : '')
+          + '<span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
           + '</div>'
           + thumb + body + link
-          + '<div class="bv-foot"><a class="bv-back" href="' + cfg.listPage + '">\u2039 목록으로</a><span class="bv-admin"></span></div>';
+          + '<div class="bv-rel"></div>'
+          + '<div class="bv-foot"><span class="bv-foot-left"></span>'
+          + '<span class="bv-foot-right"><span class="bv-write"></span>'
+          + '<a class="bv-list" href="' + cfg.listPage + '">목록</a></span></div>';
 
         /* 조회수 +1 (best-effort) */
         if (cfg.incrementFn) {
@@ -287,14 +292,39 @@ window.OCBoard = (function () {
           }).catch(function () {});
         }
 
-        /* 관리자면 수정/삭제 버튼 */
+        /* 관련기사 (같은 분류 최근글) */
+        if (o.category && cfg.viewPage) {
+          fetch(SB_URL + '/rest/v1/' + cfg.table + '?select=id,title&category=eq.' + encodeURIComponent(o.category) + '&id=neq.' + encodeURIComponent(o.id) + '&order=created_at.desc&limit=4', { headers: HDR })
+            .then(function (r) { return r.json(); })
+            .then(function (rel) {
+              if (!Array.isArray(rel) || !rel.length) return;
+              var relBox = box.querySelector('.bv-rel'); if (!relBox) return;
+              relBox.innerHTML = '<span class="board-rel-label">관련기사</span><ul class="board-rel-list">'
+                + rel.map(function (r) { return '<li><a href="' + cfg.viewPage + '?id=' + encodeURIComponent(r.id) + '">- ' + esc(r.title || '') + '</a></li>'; }).join('')
+                + '</ul>';
+              relBox.classList.add('is-on');
+            }).catch(function () {});
+        }
+
+        /* 글쓰기(로그인 회원) */
         if (cfg.writePage) {
-          checkAdmin().then(function (m) {
+          var wGate = cfg.writeRole === 'member' ? checkMember : checkAdmin;
+          wGate().then(function (m) {
             if (!m) return;
-            var a = box.querySelector('.bv-admin'); if (!a) return;
-            a.innerHTML = '<a class="bv-edit" href="' + cfg.writePage + '?id=' + encodeURIComponent(o.id) + '">수정</a>'
+            var w = box.querySelector('.bv-write');
+            if (w) w.innerHTML = '<a class="bv-write-btn" href="' + cfg.writePage + '">글쓰기</a>';
+          });
+        }
+
+        /* 수정·삭제 (작성자 본인 또는 관리자) */
+        if (cfg.writePage) {
+          checkMember().then(function (m) {
+            var mine = m && (m.is_admin || m.id === o.author_id || m.user_id === o.author_id || m.uid === o.author_id);
+            if (!mine) return;
+            var l = box.querySelector('.bv-foot-left'); if (!l) return;
+            l.innerHTML = '<a class="bv-edit" href="' + cfg.writePage + '?id=' + encodeURIComponent(o.id) + '">수정</a>'
               + '<button type="button" class="bv-del">삭제</button>';
-            var del = a.querySelector('.bv-del');
+            var del = l.querySelector('.bv-del');
             if (del) del.addEventListener('click', function () {
               if (!confirm('이 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
               del.disabled = true;

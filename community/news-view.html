@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>뉴스 · 공지사항 · OPUSCLAM</title>
+<title>뉴스 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -24,7 +24,7 @@
 <script src="/assets/header.js"></script>
 <script src="/assets/hero-scene.js" defer></script>
 
-<section class="pdb">
+<section class="pdb pdb-board">
   <div class="pdb-bg" aria-hidden="true">
     <div class="wave">
       <div class="scene scene-net on">
@@ -38,7 +38,7 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/news.html">뉴스 · 공지사항</a>
+      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/news.html">뉴스</a>
     </nav>
 
     <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
@@ -59,7 +59,7 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OC COMMUNITY</div>
-          <h1 class="pdb-title">뉴스 · 공지사항</h1>
+          <h1 class="pdb-title">뉴스</h1>
         </div>
       </div>
     </header>
@@ -80,8 +80,8 @@
 <script>
   document.addEventListener('DOMContentLoaded', function(){
     OCBoard.view({
-      table:'news', listPage:'news.html', writePage:'news-write.html',
-      incrementFn:'news_increment_view'
+      table:'news', listPage:'news.html', viewPage:'news-view.html', writePage:'news-write.html',
+      writeRole:'member', incrementFn:'news_increment_view'
     });
   });
 </script>
