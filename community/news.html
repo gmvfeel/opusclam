@@ -124,7 +124,7 @@
   document.addEventListener('DOMContentLoaded', function(){
     OCBoard.list({
       table:'news', pageSize:20, viewPage:'news-view.html', writePage:'news-write.html',
-      searchCols:['title','body'],
+      searchCols:['title','body','keywords'],
       categories:[{value:'',label:'전체'},{value:'국내',label:'국내'},{value:'해외',label:'해외'}],
       articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at'
     });

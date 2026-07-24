@@ -67,7 +67,7 @@ window.OCBoard = (function () {
 
   /* 본문 미리보기: 줄바꿈·공백 정리 후 잘라내기 (CSS로 2줄 제한) */
   function previewText(s, n) {
-    var t = (s == null ? '' : String(s)).replace(/\s+/g, ' ').trim();
+    var t = (s == null ? '' : String(s)).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
     n = n || 120;
     return esc(t.length > n ? t.slice(0, n) + '\u2026' : t);
   }
@@ -277,7 +277,7 @@ window.OCBoard = (function () {
         var tag = o.category ? '<span class="board-tag">' + esc(o.category) + '</span>' : '';
         var thumb = o.thumb_url ? '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' : '';
         var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
-        var body = o.body ? '<div class="bv-body">' + nl2br(o.body) + '</div>' : '';
+        var body = o.body ? '<div class="bv-body">' + (window.DOMPurify ? window.DOMPurify.sanitize(o.body, { ADD_ATTR: ['target', 'style'] }) : nl2br(o.body)) + '</div>' : '';
         box.innerHTML =
           '<div class="bv-head">'
           + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'

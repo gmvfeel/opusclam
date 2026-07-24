@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>뉴스 · 공지 작성 · OPUSCLAM</title>
+<title>뉴스 작성 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -24,7 +24,7 @@
 <script src="/assets/header.js"></script>
 <script src="/assets/hero-scene.js" defer></script>
 
-<section class="pdb">
+<section class="pdb pdb-board">
   <div class="pdb-bg" aria-hidden="true">
     <div class="wave">
       <div class="scene scene-net on">
@@ -36,30 +36,14 @@
     </div>
   </div>
   <div class="pdb-inner">
-
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/news.html">뉴스 · 공지사항</a><span>/</span><span class="on">글쓰기</span>
+      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><a href="/community/news.html">뉴스</a><span>/</span><span class="on">글쓰기</span>
     </nav>
-
-    <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
-      <a href="#">핫토픽</a>
-      <a href="#">공연사진 / 영상</a>
-      <a href="#">입시</a>
-      <a href="#">지식나눔</a>
-      <a href="#">SELF PR</a>
-      <a href="#">이달의 음악학교</a>
-      <a href="/community/news.html" class="active">뉴스</a>
-      <a href="#">현대음악</a>
-      <a href="#">유틸리티 / 악보 / 자료</a>
-      <a href="#">태교음악</a>
-      <a href="#">연주회 티켓신청</a>
-    </nav>
-
     <header class="pdb-head">
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OC COMMUNITY</div>
-          <h1 class="pdb-title" id="bwHead">뉴스 · 공지 작성</h1>
+          <h1 class="pdb-title" id="bwHead">뉴스 작성</h1>
         </div>
       </div>
     </header>
@@ -70,22 +54,45 @@
   <div id="bwGate" class="bf-gate">확인 중…</div>
 
   <form class="board-form" id="bwForm" style="display:none" onsubmit="return false">
-    <div class="bf-inline">
-      <div class="bf-row" style="flex:0 0 160px">
-        <label>분류</label>
-        <select id="f-category"><option value="공지">공지</option><option value="뉴스" selected>뉴스</option></select>
-      </div>
-      <div class="bf-row" style="display:flex;align-items:flex-end">
-        <label class="bf-check"><input type="checkbox" id="f-pinned"> 상단 고정(공지)</label>
-      </div>
+    <div class="bf-formhead">뉴스 등록 <span class="bf-req">* 필수입력사항입니다.</span></div>
+
+    <div class="bf-row" style="max-width:220px">
+      <label>분류 *</label>
+      <select id="f-category"><option value="국내">국내</option><option value="해외">해외</option></select>
     </div>
-    <div class="bf-row"><label>제목</label><input type="text" id="f-title" placeholder="제목을 입력하세요"></div>
-    <div class="bf-row"><label>내용</label><textarea id="f-body" placeholder="내용을 입력하세요"></textarea></div>
-    <div class="bf-row"><label>썸네일 이미지 URL <span style="color:var(--text-3);font-weight:400">(선택)</span></label><input type="text" id="f-thumb" placeholder="https://..."></div>
-    <div class="bf-row"><label>외부 원문 링크 <span style="color:var(--text-3);font-weight:400">(선택)</span></label><input type="text" id="f-link" placeholder="https://..."></div>
+
+    <div class="bf-row"><label>제목 *</label><input type="text" id="f-title" placeholder="제목을 입력하세요"></div>
+
+    <div class="bf-row">
+      <label>내용 *</label>
+      <div class="bf-editor">
+        <div class="bf-etools" id="f-tools">
+          <button type="button" data-cmd="bold" title="굵게"><b>B</b></button>
+          <button type="button" data-cmd="italic" title="기울임"><i>I</i></button>
+          <button type="button" data-cmd="underline" title="밑줄"><u>U</u></button>
+          <button type="button" data-cmd="strikeThrough" title="취소선"><s>S</s></button>
+          <label class="bf-color" title="글자색">색<input type="color" id="f-color" value="#7c63b0"></label>
+          <span class="bf-sep"></span>
+          <button type="button" data-cmd="justifyLeft" title="왼쪽 정렬">좌</button>
+          <button type="button" data-cmd="justifyCenter" title="가운데 정렬">중</button>
+          <button type="button" data-cmd="insertUnorderedList" title="글머리 목록">• 목록</button>
+          <button type="button" data-cmd="insertOrderedList" title="번호 목록">1. 목록</button>
+          <span class="bf-sep"></span>
+          <button type="button" id="f-link" title="링크 넣기">링크</button>
+          <button type="button" id="f-image" title="이미지 넣기">이미지</button>
+        </div>
+        <div class="bf-earea" id="f-body" contenteditable="true" data-ph="내용을 입력하세요."></div>
+      </div>
+      <input type="file" id="f-imgfile" accept="image/*" multiple style="display:none">
+    </div>
+
+    <div class="bf-row"><label>검색어 <span style="color:var(--text-3);font-weight:400">(선택)</span></label><input type="text" id="f-keywords" placeholder="쉼표(,)로 구분"></div>
+
+    <label class="bf-consent"><input type="checkbox" id="f-agree"> 등록하신 콘텐츠가 성격에 맞지 않거나 비속어 등이 사용된 경우 예고 없이 삭제될 수 있음에 동의합니다.</label>
+
     <div class="bf-actions">
+      <button type="button" class="bf-submit" id="bwSubmit">작성완료</button>
       <a class="bf-cancel" href="news.html">취소</a>
-      <button type="button" class="bf-submit" id="bwSubmit">등록</button>
     </div>
     <div class="bf-msg" id="bwMsg"></div>
   </form>
@@ -94,6 +101,7 @@
 <div id="oc-footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <script src="/assets/auth.js"></script>
 <script>
 (function(){
@@ -101,36 +109,85 @@
   var SB_KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var sb=window.supabase.createClient(SB_URL, SB_KEY);
   var editId=new URLSearchParams(location.search).get('id');
+  var me=null;
   function $(id){ return document.getElementById(id); }
   function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function gate(msg){ var g=$('bwGate'); g.style.display=''; g.innerHTML=esc(msg)+'<br><br><a class="bf-cancel" href="news.html">목록으로</a>'; }
+  function clean(html){ try{ return window.DOMPurify ? window.DOMPurify.sanitize(html,{ADD_ATTR:['target','style']}) : html; }catch(e){ return html; } }
 
   document.addEventListener('DOMContentLoaded', function(){
     sb.auth.getSession().then(function(r){
       var user=r.data && r.data.session && r.data.session.user;
-      if(!user){ gate('로그인이 필요합니다. (관리자 전용)'); return; }
-      sb.from('members').select('is_admin').eq('id', user.id).single().then(function(mr){
-        if(mr.error || !mr.data || !mr.data.is_admin){ gate('관리자만 작성할 수 있습니다.'); return; }
+      if(!user){ gate('글을 작성하려면 로그인이 필요합니다.'); return; }
+      sb.from('members').select('*').eq('id', user.id).maybeSingle().then(function(mr){
+        var m=mr.data||{};
+        me={ id:user.id, name:(m.name||m.nickname||m.display_name||m.username||(user.email||'회원').split('@')[0]), is_admin:!!m.is_admin };
         initForm();
-      });
+      }).catch(function(){ me={ id:user.id, name:(user.email||'회원').split('@')[0], is_admin:false }; initForm(); });
     });
   });
+
+  /* ── 에디터 ── */
+  var savedRange=null;
+  function saveSel(){ var s=window.getSelection(); var ed=$('f-body'); if(s && s.rangeCount && ed.contains(s.anchorNode)) savedRange=s.getRangeAt(0); }
+  function restoreSel(){ var ed=$('f-body'); ed.focus(); if(savedRange){ var s=window.getSelection(); s.removeAllRanges(); s.addRange(savedRange); } }
+  function exec(cmd,val){ restoreSel(); document.execCommand(cmd,false,val||null); saveSel(); }
+
+  function initEditor(){
+    var ed=$('f-body');
+    ed.addEventListener('keyup', saveSel);
+    ed.addEventListener('mouseup', saveSel);
+    ed.addEventListener('blur', saveSel);
+    var tools=$('f-tools');
+    tools.addEventListener('mousedown', function(e){ if(e.target.closest('button,label')) e.preventDefault(); });
+    tools.addEventListener('click', function(e){
+      var b=e.target.closest('button'); if(!b) return;
+      var cmd=b.getAttribute('data-cmd'); if(cmd) exec(cmd);
+    });
+    $('f-color').addEventListener('input', function(){ exec('foreColor', this.value); });
+    $('f-link').addEventListener('click', function(){
+      var url=prompt('링크 주소를 입력하세요','https://'); if(!url) return;
+      exec('createLink', url);
+    });
+    $('f-image').addEventListener('click', function(){ $('f-imgfile').click(); });
+    $('f-imgfile').addEventListener('change', function(){ uploadImages(this.files); this.value=''; });
+  }
+
+  function uploadImages(files){
+    if(!files || !files.length) return;
+    $('bwMsg').textContent='이미지 업로드 중…';
+    var arr=[].slice.call(files);
+    (function next(i){
+      if(i>=arr.length){ $('bwMsg').textContent=''; return; }
+      var file=arr[i];
+      var ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+      var path=me.id+'/'+Date.now()+'_'+i+'.'+ext;
+      sb.storage.from('news').upload(path, file, { upsert:false }).then(function(res){
+        if(res.error){ $('bwMsg').textContent='이미지 업로드 실패: '+res.error.message; return; }
+        var url=sb.storage.from('news').getPublicUrl(path).data.publicUrl;
+        restoreSel();
+        document.execCommand('insertHTML', false, '<img src="'+url+'" alt=""><p><br></p>');
+        saveSel();
+        next(i+1);
+      });
+    })(0);
+  }
 
   function initForm(){
     $('bwGate').style.display='none';
     $('bwForm').style.display='';
+    initEditor();
     if(editId){
-      $('bwHead').textContent='뉴스 · 공지 수정';
-      $('bwSubmit').textContent='수정';
+      $('bwHead').textContent='뉴스 수정';
+      $('bwSubmit').textContent='수정완료';
       sb.from('news').select('*').eq('id', editId).single().then(function(r){
         if(r.error || !r.data){ $('bwMsg').textContent='글을 불러오지 못했습니다.'; return; }
         var o=r.data;
-        $('f-category').value=o.category||'뉴스';
-        $('f-pinned').checked=!!o.is_pinned;
+        $('f-category').value=o.category||'국내';
         $('f-title').value=o.title||'';
-        $('f-body').value=o.body||'';
-        $('f-thumb').value=o.thumb_url||'';
-        $('f-link').value=o.link_url||'';
+        $('f-body').innerHTML=clean(o.body||'');
+        $('f-keywords').value=o.keywords||'';
+        $('f-agree').checked=true;
       });
     }
     $('bwSubmit').addEventListener('click', submit);
@@ -138,27 +195,29 @@
 
   function submit(){
     var btn=$('bwSubmit');
-    var payload={
-      category: $('f-category').value,
-      title: $('f-title').value.trim(),
-      body: $('f-body').value,
-      thumb_url: $('f-thumb').value.trim() || null,
-      link_url: $('f-link').value.trim() || null,
-      is_pinned: $('f-pinned').checked
-    };
-    if(!payload.title){ $('bwMsg').textContent='제목을 입력하세요.'; return; }
+    var title=$('f-title').value.trim();
+    var bodyHtml=clean($('f-body').innerHTML.trim());
+    var isEmpty=!$('f-body').textContent.trim() && !/<img/i.test(bodyHtml);
+    if(!title){ $('bwMsg').textContent='제목을 입력해 주세요.'; $('f-title').focus(); return; }
+    if(isEmpty){ $('bwMsg').textContent='내용을 입력해 주세요.'; return; }
+    if(!$('f-agree').checked){ $('bwMsg').textContent='안내사항 동의가 필요합니다.'; return; }
+
+    var tmp=document.createElement('div'); tmp.innerHTML=bodyHtml;
+    var firstImg=tmp.querySelector('img');
+    var thumb=firstImg ? firstImg.getAttribute('src') : null;
+
+    var row={ category:$('f-category').value, title:title, body:bodyHtml, thumb_url:thumb, keywords:$('f-keywords').value.trim()||null };
     btn.disabled=true; $('bwMsg').textContent='저장 중…';
-    var p;
-    if(editId){
-      payload.updated_at=new Date().toISOString();
-      p=sb.from('news').update(payload).eq('id', editId).select('id').single();
-    } else {
-      p=sb.from('news').insert(payload).select('id').single();
-    }
-    p.then(function(r){
-      if(r.error){ $('bwMsg').textContent='저장 실패: '+r.error.message; btn.disabled=false; return; }
-      var id=(r.data && r.data.id) || editId;
-      location.href='news-view.html?id='+encodeURIComponent(id);
+
+    var op;
+    if(editId){ op=sb.from('news').update(row).eq('id', editId); }
+    else { row.author_id=me.id; row.author_name=me.name; op=sb.from('news').insert(row).select('id').single(); }
+
+    op.then(function(res){
+      btn.disabled=false;
+      if(res.error){ $('bwMsg').textContent='저장 실패: '+res.error.message; return; }
+      var goId=editId || (res.data && res.data.id);
+      location.href= goId ? ('news-view.html?id='+encodeURIComponent(goId)) : 'news.html';
     });
   }
 })();
