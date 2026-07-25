@@ -208,7 +208,7 @@ window.OCBoard = (function () {
         + '</a>';
     }
     function docRowHtml(rec) {
-      var logo = rec.logo_url ? '<img src="' + esc(rec.logo_url) + '" alt="" loading="lazy">' : (rec.logo_text ? '<span class="doc-logo-txt">' + esc(rec.logo_text) + '</span>' : '<span class="doc-logo-ph"></span>');
+      var logo = rec.logo_url ? '<img src="' + esc(rec.logo_url) + '" alt="" loading="lazy">' : (rec.thumb_url ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">' : (rec.logo_text ? '<span class="doc-logo-txt">' + esc(rec.logo_text) + '</span>' : '<span class="doc-logo-ph"></span>'));
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);

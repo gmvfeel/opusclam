@@ -372,3 +372,6 @@ html[data-theme="dark"] .oc-cell{background:rgba(255,255,255,.04)}
 .bv-docphoto{margin:20px 0 4px;padding:0}
 .bv-docphoto img{display:block;width:100%;max-height:380px;object-fit:cover;border-radius:12px;background:var(--paper-3)}
 .bv-docphoto figcaption{margin-top:7px;font-size:11.5px;line-height:1.6;color:var(--text-3)}
+
+/* 목록 로고칸: 학교 사진이 들어오면 꽉 차게 (로고는 contain 유지) */
+.doc-logo img[src*="wikimedia"],.doc-logo img[src*="supabase"],.doc-logo img[src*="picsum"]{object-fit:cover}
