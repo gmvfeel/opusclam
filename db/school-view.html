@@ -1329,13 +1329,12 @@ if('serviceWorker' in navigator){
        if(!base||base.length<2)return;
        var box=document.querySelectorAll('.pv-people')[0]; if(!box)return;
        var sec=box.closest('.pv-sec'); if(!sec)return;
-       fetch(URL+'/rest/v1/persons?select=id,name_ko,name_en,field,era&school=ilike.*'+encodeURIComponent(base)+'*&order=name_ko.asc&limit=12',{headers:H})
-        .then(function(r){return r.json();})
-        .then(function(rs){
-          if(!rs||!rs.length)return;
+       var full=(x.name_ko||'').trim();
+       function render(rs){
+          if(!rs||!rs.length)return false;
           box.innerHTML=rs.map(function(p){
             var n=(p.name_ko||p.name_en||'').trim(); if(!n)return '';
-            var meta=[p.era,p.field].filter(Boolean).join(' · ');
+            var meta=[p.era_name,p.field].filter(Boolean).join(' · ');
             return '<a class="pv-person" href="/db/person-view.html?id='+encodeURIComponent(p.id)+'">'
                  + '<span class="ava">'+esc(n[0])+'</span>'
                  + '<span><span class="pn">'+esc(n)+'</span><span class="pf">'+esc(meta)+'</span></span></a>';
@@ -1343,7 +1342,24 @@ if('serviceWorker' in navigator){
           var h=sec.querySelector('.pv-h');
           if(h)h.innerHTML='이 학교 출신 인물 <span class="pv-h-en">Alumni in OPUSCLAM</span>';
           sec.style.display='';
-        }).catch(function(){});
+          return true;
+       }
+       var q='select=id,name_ko,name_en,field,era_name&order=name_ko.asc&limit=12';
+       /* 1차: 학교명 완전일치 */
+       fetch(URL+'/rest/v1/persons?'+q+'&school=eq.'+encodeURIComponent(full),{headers:H})
+        .then(function(r){return r.json();})
+        .then(function(rs){
+          if(render(rs))return;
+          /* 2차: 학교명 포함 검색 */
+          return fetch(URL+'/rest/v1/persons?'+q+'&school=ilike.*'+encodeURIComponent(full)+'*',{headers:H})
+            .then(function(r){return r.json();}).then(function(rs2){
+              if(render(rs2))return;
+              /* 3차: 꼬리말 제거한 핵심 학교명으로 검색 */
+              if(!base||base.length<2)return;
+              return fetch(URL+'/rest/v1/persons?'+q+'&school=ilike.*'+encodeURIComponent(base)+'*',{headers:H})
+                .then(function(r){return r.json();}).then(render);
+            });
+        }).catch(function(e){console.warn('출신 인물 로드 실패:',e);});
      })();
           (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
        var _k=encodeURIComponent((x.name_ko||x.name_en||'').trim());
