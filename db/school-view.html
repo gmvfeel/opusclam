@@ -1330,13 +1330,20 @@ if('serviceWorker' in navigator){
        var box=document.querySelectorAll('.pv-people')[0]; if(!box)return;
        var sec=box.closest('.pv-sec'); if(!sec)return;
        var full=(x.name_ko||'').trim();
+       function initial(n){
+          n=(n||'').trim(); if(!n)return '?';
+          if(/[가-힣]/.test(n))return n[0];
+          var ps=n.replace(/[.,]/g,' ').split(/\s+/).filter(Boolean);
+          var last=ps.length?ps[ps.length-1]:n;
+          return (last[0]||'?').toUpperCase();
+       }
        function render(rs){
           if(!rs||!rs.length)return false;
           box.innerHTML=rs.map(function(p){
             var n=(p.name_ko||p.name_en||'').trim(); if(!n)return '';
             var meta=[p.era_name,p.field].filter(Boolean).join(' · ');
             return '<a class="pv-person" href="/db/person-view.html?id='+encodeURIComponent(p.id)+'">'
-                 + '<span class="ava">'+esc(n[0])+'</span>'
+                 + '<span class="ava">'+esc(initial(n))+'</span>'
                  + '<span><span class="pn">'+esc(n)+'</span><span class="pf">'+esc(meta)+'</span></span></a>';
           }).join('');
           var h=sec.querySelector('.pv-h');
