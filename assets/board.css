@@ -326,3 +326,8 @@ html[data-theme="dark"] .doc-row:hover{background:#000}
 .board-row-meta{display:flex;flex-direction:row;align-items:center}
 .board-row-meta>span+span::before{content:"·";margin:0 8px;color:var(--text-3);opacity:.6}
 @media(max-width:560px){.board-row-meta{flex-direction:column;align-items:flex-end}.board-row-meta>span+span::before{content:none}}
+
+/* 자료형 로고 자리 — 이니셜 뱃지(로고 없을 때) */
+.doc-logo-txt{font-family:var(--display);font-weight:800;font-size:11px;color:var(--violet-2);text-align:center;line-height:1.12;padding:2px;word-break:keep-all;letter-spacing:-.02em}
+.bv-doclogo-txt{display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:13px;color:var(--violet-2);text-align:center;line-height:1.15;word-break:keep-all}
+.doc-row:hover .doc-logo-txt{color:#fff}
