@@ -36,7 +36,7 @@
 .board-empty{padding:70px 10px;text-align:center;color:var(--text-3);font-size:15px}
 
 /* ── 뉴스형(article) 목록 ── */
-.board-bar{margin:0 calc(50% - 50vw) 22px;position:sticky;top:var(--feat-top,76px);z-index:20;background:var(--paper);padding:12px calc(50vw - 50%);box-shadow:0 6px 14px -12px rgba(30,20,60,.35)}
+.board-bar{margin:0 calc(50% - 50vw) 22px;position:sticky;top:var(--feat-top,76px);z-index:20;background:var(--paper);padding:12px calc(50vw - 50%);border-bottom:1px solid var(--line)}
 @media(max-width:640px){.board-bar{position:static;box-shadow:none;padding:0;margin:0 0 22px}}
 .board-sort{min-width:120px}
 .board-count{margin:0 0 16px 2px}
