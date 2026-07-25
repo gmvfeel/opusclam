@@ -309,5 +309,5 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 .doc-row{padding-right:24px}
 @media(max-width:640px){.board-row-right{margin-right:8px}.doc-row{padding-right:6px}}
 
-/* 목록 구분 배지: 제목 앞으로 (오른쪽 3줄 쌓임 제거) */
-.board-row-title .board-tag{margin-right:8px;vertical-align:middle;position:relative;top:-1px}
+/* 목록 구분 배지: 제목 왼쪽 독립 칸(정렬·잘림 방지) */
+.board-row-cat{flex:none;width:106px;padding-top:1px;display:flex;align-items:flex-start}
