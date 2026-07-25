@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>OPUSCLAM · 인물DB 정밀 점검</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 90px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+  .card h2 .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:#20223a;color:#fff;font-size:12px;align-items:center;justify-content:center}
+  .card p{margin:0 0 14px;color:#5c5e70;font-size:13px}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.danger{background:#dc2626}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input[type=number]{padding:9px 12px;border:1px solid #d8d8e2;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .bar{height:8px;background:#ececf3;border-radius:99px;overflow:hidden;margin:14px 0 8px;display:none}
+  .bar.on{display:block}
+  .bar i{display:block;height:100%;width:0;background:#dc2626;transition:width .25s}
+  .log{display:none;margin-top:10px;max-height:260px;overflow:auto;background:#12131c;color:#d7d9e8;border-radius:7px;padding:12px 14px;font:12px/1.7 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+  .log.on{display:block}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
+  .stat{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .stat div{background:#f2f2f7;border-radius:7px;padding:8px 12px;font-size:12px}
+  .stat b{font-size:15px;display:block}
+  .lst{margin-top:14px;max-height:520px;overflow:auto;border:1px solid #eeeef4;border-radius:8px;background:#fff;display:none}
+  .lst.on{display:block}
+  .it{display:grid;grid-template-columns:22px 66px 150px 96px 1fr;gap:10px;align-items:start;padding:9px 12px;border-bottom:1px solid #f4f4f8;font-size:12.5px;cursor:pointer}
+  .it:last-child{border-bottom:0}
+  .it:hover{background:#fafaff}
+  .bd{display:inline-block;border-radius:99px;padding:1px 8px;font-size:10.5px;font-weight:700}
+  .bd-jazz{background:#fdf0e6;color:#a5560f}
+  .bd-pop{background:#fdeaf3;color:#a3186c}
+  .bd-film{background:#eaf0fd;color:#1a4aa5}
+  .bd-thin{background:#f0f0f5;color:#6b6d80}
+  .nm{font-weight:600}
+  .en{color:#8a8c9e;font-size:11px;display:block}
+  .lk{color:#5c5e70}
+  .gz{color:#8a8c9e;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>인물DB 정밀 점검</h1>
+  <div class="sub">위키데이터에서 저명도 · 장르 · 직업을 가져와 저장하고, 클래식과 무관한 항목을 골라 정리합니다.</div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <h2><span class="n">1</span> 위키데이터 메타 수집</h2>
+    <p>인물마다 <b>문서가 존재하는 언어 수</b>(저명도 지표) · <b>음악 장르</b> · <b>직업</b>을 가져와 persons 에 저장합니다. 한 번 저장하면 이후로는 SQL만으로 판단할 수 있습니다. 약 70회 조회로 5분 정도 걸립니다.</p>
+    <div class="row">
+      <button id="btnMeta">메타 수집 시작</button>
+      <label style="font-size:13px;color:#5c5e70"><input type="checkbox" id="onlyNew" checked> 아직 조회하지 않은 인물만</label>
+    </div>
+    <div class="bar" id="barM"><i></i></div>
+    <div class="log" id="logM"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span> 정리 후보 검토</h2>
+    <p>수집된 장르 · 직업으로 <b>재즈 · 대중음악 · 영화음악</b> 인물과 <b>정보가 부실한 인물</b>을 찾습니다. <b>클래식 신호가 함께 있으면 후보에서 제외</b>합니다. 카발렙스키·외트뵈시 페테르처럼 영화음악도 쓴 정통 작곡가가 지워지지 않도록 하기 위함입니다.</p>
+    <div class="row">
+      <button id="btnScan">후보 찾기</button>
+      <select id="flt">
+        <option value="all">전체</option>
+        <option value="jazz">재즈</option>
+        <option value="pop">대중음악</option>
+        <option value="film">영화음악</option>
+        <option value="thin">정보 부실</option>
+      </select>
+      <span style="font-size:13px;color:#5c5e70">저명도 <input type="number" id="thin" value="2" min="0" max="20" style="width:64px"> 이하 + 소개문 없음 → 부실</span>
+    </div>
+    <div class="stat" id="statS"></div>
+    <div class="lst" id="lst"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="danger" id="btnDel">선택 항목 삭제</button>
+      <button class="ghost" id="btnAll">화면 전체 선택</button>
+      <button class="ghost" id="btnNone">전체 해제</button>
+    </div>
+    <div class="note">
+      삭제하면 그 인물의 <b>관계(entity_links)도 함께 정리</b>합니다. 되돌릴 수 없으니 목록을 꼭 확인하고 진행해 주세요. 저명도가 낮은 순으로 정렬되어 있어, 위쪽이 지워도 손실이 적은 항목입니다.
+    </div>
+    <div class="log" id="logS"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+  var CHUNK = 150, UP = 400;
+
+  /* 장르·직업 판정 (영문 값이라 안정적입니다) */
+  var JAZZ = /\bjazz\b|bebop|hard bop|swing music|\bblues\b|dixieland|free jazz|jazz fusion/i;
+  var POP  = /\bpop\b|popular music|\brock\b|hip ?hop|\brap\b|r&b|rhythm and blues|\bsoul\b|\bfunk\b|reggae|\bmetal\b|country music|\bfolk\b|new age|electronic dance|disco|techno|house music|singer-songwriter|trot/i;
+  var FILM = /film score|film music|soundtrack|television score|film composer|video game music|musical theat|broadway/i;
+  var CLS  = /classical|opera|art song|\blied\b|chamber music|orchestral|choral|baroque|romantic music|sacred music|church music|contemporary classical|art music|symphon|conductor|organist|violinist|cellist|violist|pianist|flautist|harpsichord|musicolog|composer|opera singer|soprano|mezzo|tenor|baritone|countertenor|concertmaster|music educator|music theorist/i;
+  /* 클래식 신호 중에서도 'composer' 'pianist' 처럼 대중음악인과 겹치는 값은 약하게 취급 */
+  var CLS_STRONG = /classical|opera|art song|\blied\b|chamber music|orchestral|choral|baroque|romantic|sacred music|church music|contemporary classical|art music|symphon|conductor|organist|harpsichord|musicolog|opera singer|soprano|mezzo|tenor|baritone|countertenor|concertmaster|music theorist/i;
+
+  function $(id){ return document.getElementById(id); }
+  function esc(t){ return (t==null?'':String(t)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+  function mkLog(boxId, barId){
+    var box=$(boxId), bar=barId?$(barId):null, fill=bar?bar.querySelector('i'):null;
+    return {
+      log:function(t){ box.classList.add('on'); box.textContent+=t+'\n'; box.scrollTop=box.scrollHeight; },
+      prog:function(p){ if(!bar) return; bar.classList.add('on'); fill.style.width=Math.max(0,Math.min(100,p))+'%'; }
+    };
+  }
+  function warn(t){ var w=$('warn'); w.classList.add('on'); w.textContent=t; }
+
+  async function sparql(q, L){
+    var url='https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q);
+    for(var t=1;t<=4;t++){
+      try{
+        var r=await fetch(url,{headers:{Accept:'application/sparql-results+json'}});
+        if(r.ok){ var j=await r.json(); return (j.results&&j.results.bindings)||[]; }
+        if(L) L.log('  · 응답 '+r.status+' 재시도 '+t+'/4');
+      }catch(e){ if(L) L.log('  · 통신 오류 재시도 '+t+'/4'); }
+      await sleep(1500*t);
+    }
+    if(L) L.log('  ✗ 이 묶음 건너뜀');
+    return [];
+  }
+
+  async function loadAll(table, cols, filter, L){
+    var out=[], from=0, size=1000;
+    while(true){
+      var q = sb.from(table).select(cols);
+      if (filter) q = filter(q);
+      var r = await q.range(from, from+size-1);
+      if(r.error) throw new Error(table+' 조회 실패: '+r.error.message);
+      var d=r.data||[];
+      out=out.concat(d);
+      if(L && from % 3000 === 0) L.log('  '+out.length+'명 로드…');
+      if(d.length<size) break;
+      from+=size;
+      if(from>80000) break;
+    }
+    return out;
+  }
+
+  /* ---------- 1. 메타 수집 ---------- */
+  async function runMeta(){
+    var L=mkLog('logM','barM');
+    $('btnMeta').disabled=true;
+    try{
+      var onlyNew=$('onlyNew').checked;
+      L.log('■ 인물 로드');
+      var rows=await loadAll('persons','id,name_ko,wikidata_id,wd_links',
+        function(q){ return onlyNew ? q.is('wd_links',null).not('wikidata_id','is',null)
+                                   : q.not('wikidata_id','is',null); }, L);
+      L.log('  대상 '+rows.length+'명');
+      if(!rows.length){ L.log('조회할 인물이 없습니다.'); $('btnMeta').disabled=false; return; }
+
+      var byQid={};
+      rows.forEach(function(p){ if(p.wikidata_id) byQid[p.wikidata_id]=p; });
+      var qids=Object.keys(byQid);
+
+      var patch=[], done=0;
+      for(var i=0;i<qids.length;i+=CHUNK){
+        var vs=qids.slice(i,i+CHUNK).map(function(x){ return 'wd:'+x; }).join(' ');
+        var q='SELECT ?item ?n '
+          +'(GROUP_CONCAT(DISTINCT ?gL; separator=", ") AS ?gen) '
+          +'(GROUP_CONCAT(DISTINCT ?oL; separator=", ") AS ?occ) WHERE { '
+          +'VALUES ?item { '+vs+' } '
+          +'OPTIONAL { ?item wikibase:sitelinks ?n } '
+          +'OPTIONAL { ?item wdt:P136 ?g0 . ?g0 rdfs:label ?gL FILTER(lang(?gL)="en") } '
+          +'OPTIONAL { ?item wdt:P106 ?o0 . ?o0 rdfs:label ?oL FILTER(lang(?oL)="en") } '
+          +'} GROUP BY ?item ?n';
+        var res=await sparql(q,L);
+        res.forEach(function(b){
+          var id=b.item.value.split('/').pop();
+          var p=byQid[id];
+          if(!p) return;
+          patch.push({
+            id: p.id,
+            name_ko: p.name_ko,
+            wd_links: b.n ? parseInt(b.n.value,10) : 0,
+            wd_genre: b.gen ? b.gen.value.slice(0,400) : null,
+            wd_occupation: b.occ ? b.occ.value.slice(0,400) : null,
+            wd_checked_at: new Date().toISOString()
+          });
+        });
+        done=Math.min(i+CHUNK,qids.length);
+        L.prog(Math.round(done/qids.length*70));
+        L.log('  조회 '+done+'/'+qids.length+' · 누적 '+patch.length);
+        await sleep(250);
+      }
+
+      L.log('■ 저장 ('+patch.length+'명)');
+      var ok=0, fell=false;
+      for(var k=0;k<patch.length;k+=UP){
+        var part=patch.slice(k,k+UP);
+        var r=await sb.from('persons').upsert(part,{onConflict:'id'});
+        if(r.error){
+          if(!fell){ L.log('  일괄 저장 실패 → 한 명씩 저장으로 전환합니다 ('+r.error.message+')'); fell=true; }
+          for(var m=0;m<part.length;m++){
+            var one=part[m];
+            var r2=await sb.from('persons').update({
+              wd_links:one.wd_links, wd_genre:one.wd_genre,
+              wd_occupation:one.wd_occupation, wd_checked_at:one.wd_checked_at
+            }).eq('id',one.id);
+            if(!r2.error) ok++;
+          }
+        } else ok+=part.length;
+        L.prog(70+Math.round((k+part.length)/patch.length*30));
+      }
+      L.prog(100);
+      L.log('✅ 완료 — '+ok+'명 저장. 이제 2번에서 후보를 찾을 수 있습니다.');
+    }catch(e){ L.log('✗ 중단: '+(e.message||e)); }
+    $('btnMeta').disabled=false;
+  }
+
+  /* ---------- 2. 후보 검토 ---------- */
+  var cands=[];
+  function kindOf(p){
+    var g=(p.wd_genre||'')+' '+(p.wd_occupation||'');
+    var hasCls = CLS_STRONG.test(g);
+    var desc = (p.description||'').trim();
+    if(JAZZ.test(g) && !hasCls) return 'jazz';
+    if(POP.test(g)  && !hasCls) return 'pop';
+    if(FILM.test(g) && !hasCls) return 'film';
+    var lim=parseInt($('thin').value,10)||2;
+    if((p.wd_links!=null && p.wd_links<=lim) && !desc) return 'thin';
+    return null;
+  }
+  var LABEL={jazz:'재즈',pop:'대중음악',film:'영화음악',thin:'정보부실'};
+
+  async function scan(){
+    var L=mkLog('logS');
+    $('btnScan').disabled=true;
+    try{
+      L.log('■ 메타가 저장된 인물 로드');
+      var rows=await loadAll('persons','id,name_ko,name_en,field,era_name,life,description,wd_links,wd_genre,wd_occupation',
+        function(q){ return q.not('wd_links','is',null); }, L);
+      L.log('  '+rows.length+'명 검사');
+      if(!rows.length){ L.log('먼저 1번 메타 수집을 실행해 주세요.'); $('btnScan').disabled=false; return; }
+
+      cands=[];
+      rows.forEach(function(p){
+        var k=kindOf(p);
+        if(k){ p._k=k; cands.push(p); }
+      });
+      cands.sort(function(a,b){ return (a.wd_links||0)-(b.wd_links||0); });
+      var cnt={jazz:0,pop:0,film:0,thin:0};
+      cands.forEach(function(p){ cnt[p._k]++; });
+      $('statS').innerHTML =
+        '<div>재즈<b>'+cnt.jazz+'</b></div>'
+        +'<div>대중음악<b>'+cnt.pop+'</b></div>'
+        +'<div>영화음악<b>'+cnt.film+'</b></div>'
+        +'<div>정보부실<b>'+cnt.thin+'</b></div>'
+        +'<div>합계<b>'+cands.length+'</b></div>';
+      L.log('  후보 '+cands.length+'명 (재즈 '+cnt.jazz+' · 대중 '+cnt.pop+' · 영화 '+cnt.film+' · 부실 '+cnt.thin+')');
+      render();
+    }catch(e){ L.log('✗ 중단: '+(e.message||e)); }
+    $('btnScan').disabled=false;
+  }
+
+  function render(){
+    var f=$('flt').value;
+    var view=cands.filter(function(p){ return f==='all'||p._k===f; });
+    var box=$('lst');
+    if(!view.length){ box.classList.remove('on'); box.innerHTML=''; return; }
+    box.classList.add('on');
+    box.innerHTML=view.slice(0,600).map(function(p){
+      var i=cands.indexOf(p);
+      var g=[p.wd_genre,p.wd_occupation].filter(Boolean).join(' / ');
+      return '<label class="it"><input type="checkbox" data-i="'+i+'">'
+        +'<span><span class="bd bd-'+p._k+'">'+LABEL[p._k]+'</span></span>'
+        +'<span class="nm">'+esc(p.name_ko||'?')+(p.name_en&&p.name_en!==p.name_ko?'<span class="en">'+esc(p.name_en)+'</span>':'')+'</span>'
+        +'<span class="lk">'+(p.wd_links==null?'-':p.wd_links+'개 언어')+'<br><span class="gz">'+esc(p.life||'')+'</span></span>'
+        +'<span class="gz">'+esc(g||'(장르·직업 정보 없음)')+'</span></label>';
+    }).join('')
+    + (view.length>600 ? '<div class="it" style="color:#8a8c9e">…이 화면에는 600명까지 표시합니다. 삭제 후 다시 찾으면 이어서 나옵니다.</div>' : '');
+  }
+
+  async function del(){
+    var picked=[];
+    document.querySelectorAll('#lst input[data-i]').forEach(function(b){
+      if(b.checked) picked.push(cands[+b.getAttribute('data-i')]);
+    });
+    if(!picked.length){ alert('선택된 항목이 없습니다.'); return; }
+    if(!confirm(picked.length+'명을 삭제합니다. 관계 정보도 함께 지워집니다. 되돌릴 수 없습니다. 진행할까요?')) return;
+    var L=mkLog('logS');
+    $('btnDel').disabled=true;
+    var ids=picked.map(function(p){ return p.id; });
+    L.log('■ 삭제 시작 ('+ids.length+'명)');
+    var okL=0, okP=0;
+    for(var i=0;i<ids.length;i+=200){
+      var part=ids.slice(i,i+200);
+      var d1=await sb.from('entity_links').delete().eq('from_type','person').in('from_id',part);
+      var d2=await sb.from('entity_links').delete().eq('to_type','person').in('to_id',part);
+      if(!d1.error&&!d2.error) okL++;
+      var d3=await sb.from('persons').delete().in('id',part);
+      if(d3.error) L.log('  ✗ '+d3.error.message);
+      else okP+=part.length;
+    }
+    L.log('✅ 인물 '+okP+'명 삭제 · 관계 정리 완료');
+    cands=cands.filter(function(p){ return ids.indexOf(p.id)<0; });
+    render();
+    $('btnDel').disabled=false;
+  }
+
+  $('btnMeta').addEventListener('click',runMeta);
+  $('btnScan').addEventListener('click',scan);
+  $('btnDel').addEventListener('click',del);
+  $('flt').addEventListener('change',render);
+  $('thin').addEventListener('change',function(){ if(cands.length) scan(); });
+  $('btnAll').addEventListener('click',function(){
+    document.querySelectorAll('#lst input[data-i]').forEach(function(b){ b.checked=true; });
+  });
+  $('btnNone').addEventListener('click',function(){
+    document.querySelectorAll('#lst input[data-i]').forEach(function(b){ b.checked=false; });
+  });
+
+  (async function init(){
+    var s=await sb.auth.getSession();
+    if(!s.data||!s.data.session){
+      warn('로그인 상태가 아닙니다. 같은 브라우저에서 관리자(wixon@naver.com)로 로그인한 뒤 새로고침해 주세요. 조회는 되지만 저장·삭제가 거부됩니다.');
+    }
+  })();
+})();
+</script>
+</body>
+</html>
