@@ -133,10 +133,20 @@
   // 수집 제외 키워드 (문서 제목 또는 소개문)
   var BAD = /아이돌|걸\s?그룹|보이\s?그룹|케이팝|K-?팝|트로트|힙합|래퍼|랩퍼|보이밴드|연습생|오디션 프로그램/;
 
-  // ── 소개문 2차 판정 ──
-  // 분류명만으로는 "작곡가 950명" 안의 클래식을 가려낼 수 없어, 위키 소개문을 읽어 판단합니다
-  var POP_SIG = /가요|아이돌|걸\s?그룹|보이\s?그룹|케이팝|K-?팝|트로트|힙합|래퍼|랩|알앤비|R&B|발라드|댄스 음악|록 밴드|밴드의|밴드 출신|드라마.{0,8}(OST|음악)|영화\s?음악|게임\s?음악|광고\s?음악|CCM|찬양|국악|판소리|사물놀이|뮤지컬|음악 프로듀서|프로듀서로|작사가|편곡가로|싱어송라이터|음원|앨범을 발매|데뷔 앨범|소속사|연예/;
-  var CLASSIC_SIG = /클래식|교향|관현악|실내악|오페라|성악|가곡|피아니스트|바이올리니스트|첼리스트|비올리스트|플루티스트|오르가니스트|지휘자|음악대학|음악 대학|음악원|예술종합학교|예술 종합학교|작곡과|기악과|성악과|현대음악|콩쿠르|콩쿠르에서|협주곡|소나타|교향곡|필하모닉|교향악단|독주회|리사이틀|음악학|예술고등학교|줄리아드|커티스|음악학교|국립오페라|실내악단|현악 사중주/;
+  // ── 2차 판정 ──
+  // 학력(음대 작곡과 등)은 대중음악인도 공유하므로 "약한 신호"로만 씁니다.
+  var POP_SIG = /가요|아이돌|걸\s?그룹|보이\s?그룹|케이팝|K-?팝|트로트|힙합|래퍼|랩|알앤비|R&B|발라드|댄스 음악|록 밴드|밴드의|밴드 출신|멤버로|의 멤버|드라마.{0,8}(OST|음악)|영화\s?음악|게임\s?음악|광고\s?음악|CM송|CCM|찬양|국악|판소리|사물놀이|뮤지컬|음악 프로듀서|프로듀서로|프로듀서이|작사가|편곡가로|싱어송라이터|가수|음원|앨범을 발매|정규 앨범|데뷔 앨범|싱글|소속사|연예|예능|재즈|세션/;
+  // 결정적 장르어 — 이 단어가 있으면 다른 신호와 무관하게 제외 (예: "재즈 피아니스트")
+  var HARD_POP = /재즈|트로트|힙합|케이팝|K-?팝|아이돌|랩\s?음악|래퍼|발라드 가수|국악|판소리|사물놀이|레게|블루스 가수|메탈|펑크|디스코|일렉트로닉 댄스/;
+
+  // 강한 신호 = 클래식 "활동" (학력 아님)
+  var CLASSIC_SIG = /클래식|교향곡|교향악|관현악|실내악|오페라|가곡|협주곡|소나타|칸타타|미사곡|현악 사중주|필하모닉|교향악단|독주회|리사이틀|콩쿠르|음악학|피아니스트|바이올리니스트|첼리스트|비올리스트|플루티스트|오르가니스트|지휘자|성악가|소프라노|메조소프라노|테너|바리톤|카운터테너|현대음악|국립오페라|합창단을 지휘|악장으로/;
+  // 약한 신호 = 학력·교직 (이것만 있으면 보류)
+  var WEAK_SIG = /음악대학|음악 대학|음악원|작곡과|기악과|성악과|피아노과|관현악과|예술종합학교|예술 종합학교|예술고등학교|줄리아드|커티스|음대 교수|음악학교/;
+
+  // 위키데이터 음악 장르(P136) — 텍스트보다 신뢰도가 높은 구조화 근거
+  var POP_GENRE     = /\bpop\b|popular music|k-?pop|rock|hip ?hop|\brap\b|r&b|rhythm and blues|soul|trot|ballad|electronic|dance|jazz|blues|reggae|funk|metal|\bfolk\b|country|musical theat|film score|video game|gospel|ccm|new age|crossover/i;
+  var CLASSIC_GENRE = /classical|opera|art song|\blied\b|chamber music|orchestral|choral|baroque|romantic music|sacred music|church music|contemporary classical|art music|symphon/i;
 
   var FIELD = [
     [/작곡/, '작곡'], [/지휘/, '지휘'],
@@ -353,53 +363,48 @@
         await sleep(150);
       }
 
-      // 걸러내기 (분류명 → 소개문 2차 판정)
+      // ── 1차: 소개문으로 분류 ──
       var loose = $('loose').checked;
-      var skipDup = 0, skipBad = 0, skipThin = 0, skipPop = 0, cand = [], grey = [];
+      var skipDup = 0, skipBad = 0, skipThin = 0;
+      var strong = [], grey = [], popped = [];
       docs.forEach(function(d){
         if (d.disamb) { skipBad++; return; }
-        var text = d.title + ' ' + d.extract;
-        if (BAD.test(text)) { skipBad++; return; }
+        if (BAD.test(d.title + ' ' + d.extract)) { skipBad++; return; }
         if (!d.extract && !d.qid) { skipThin++; return; }
         var nmk = stripParen(d.title);
         if ((d.qid && byQid[d.qid]) || byName[norm(nmk)]) { skipDup++; return; }
 
-        var pop = POP_SIG.test(d.extract), cls = CLASSIC_SIG.test(d.extract);
-        if (pop && !cls) { skipPop++; return; }               // 대중음악 신호만 → 제외
-        if (!pop && !cls){                                    // 신호 없음 → 판단 보류
-          grey.push(d);
-          if (!loose) return;
-        }
-        cand.push(d);
+        if (HARD_POP.test(d.extract)) { popped.push(d); return; }   // 결정적 장르어 → 바로 제외
+        var pop = POP_SIG.test(d.extract);
+        var cls = CLASSIC_SIG.test(d.extract);          // 활동 신호(강)
+        var weak = WEAK_SIG.test(d.extract);            // 학력 신호(약)
+        if (cls && !pop)      strong.push(d);           // 클래식 활동만 → 수집
+        else if (pop && !cls) popped.push(d);           // 대중음악만 → 제외 (장르로 재확인)
+        else if (cls && pop)  strong.push(d);           // 겸업 → 수집
+        else { d._weak = weak; grey.push(d); }          // 판단 보류
       });
       L.log('  이미 있음 ' + skipDup + ' · 제외 키워드 ' + skipBad + ' · 내용 부실 ' + skipThin);
-      L.log('  대중음악으로 판정해 제외 ' + skipPop + '명');
-      L.log('  클래식 신호가 없어 보류 ' + grey.length + '명' + (loose ? ' (포함 설정)' : ' (제외 — 아래 목록 확인)'));
-      if (grey.length && !loose){
-        L.log('  ┌ 보류된 인물 (앞 30명) — 클래식 인물이 섞여 있으면 "신호 없는 인물도 포함"으로 다시 실행하세요');
-        grey.slice(0, 30).forEach(function(g){
-          L.log('  │ ' + stripParen(g.title) + ' — ' + (g.extract || '').replace(/\s+/g,' ').slice(0, 60));
-        });
-        L.log('  └');
-      }
-      L.log('  ▶ 신규 후보 ' + cand.length + '명');
+      L.log('  1차 판정 — 클래식 ' + strong.length + ' / 대중음악 ' + popped.length + ' / 보류 ' + grey.length);
 
-      // 위키데이터로 생몰·악기·학교·영문명 보강
-      var qids = cand.map(function(c){ return c.qid; }).filter(Boolean);
+      // ── 2차: 위키데이터 장르(P136)로 재판정 + 생몰·악기·학교 보강 ──
+      var check = strong.concat(grey).concat(popped);
+      var qids = check.map(function(c){ return c.qid; }).filter(Boolean);
       var wd = {};
       if (qids.length){
-        L.log('■ 위키데이터에서 생몰 · 악기 · 출신학교 보강 (' + qids.length + '건)');
+        L.log('■ 위키데이터에서 장르 · 생몰 · 악기 · 출신학교 조회 (' + qids.length + '건)');
         for (var q = 0; q < qids.length; q += 150){
           var vs = qids.slice(q, q+150).map(function(x){ return 'wd:' + x; }).join(' ');
           var sq = 'SELECT ?item ?birth ?death ?en '
             + '(GROUP_CONCAT(DISTINCT ?insL; separator=" · ") AS ?ins) '
-            + '(GROUP_CONCAT(DISTINCT ?schL; separator=" · ") AS ?sch) WHERE { '
+            + '(GROUP_CONCAT(DISTINCT ?schL; separator=" · ") AS ?sch) '
+            + '(GROUP_CONCAT(DISTINCT ?genL; separator=", ") AS ?gen) WHERE { '
             + 'VALUES ?item { ' + vs + ' } '
             + 'OPTIONAL { ?item wdt:P569 ?birth } '
             + 'OPTIONAL { ?item wdt:P570 ?death } '
             + 'OPTIONAL { ?item rdfs:label ?en FILTER(lang(?en)="en") } '
             + 'OPTIONAL { ?item wdt:P1303 ?i0 . ?i0 rdfs:label ?insL FILTER(lang(?insL)="ko") } '
             + 'OPTIONAL { ?item wdt:P69 ?s0 . ?s0 rdfs:label ?schL FILTER(lang(?schL)="ko") } '
+            + 'OPTIONAL { ?item wdt:P136 ?g0 . ?g0 rdfs:label ?genL FILTER(lang(?genL)="en") } '
             + '} GROUP BY ?item ?birth ?death ?en';
           var rows = await sparql(sq, L);
           rows.forEach(function(b){
@@ -407,15 +412,54 @@
             function yr(v){ return v ? String(v.value).slice(0,4) : ''; }
             wd[id] = {
               life: (yr(b.birth) ? yr(b.birth) + '–' + yr(b.death) : ''),
-              en: b.en ? b.en.value : '',
+              en:  b.en  ? b.en.value  : '',
               ins: b.ins ? b.ins.value : '',
-              sch: b.sch ? b.sch.value : ''
+              sch: b.sch ? b.sch.value : '',
+              gen: b.gen ? b.gen.value : ''
             };
           });
           L.prog(60 + Math.round(Math.min(q + 150, qids.length) / qids.length * 25));
           await sleep(300);
         }
       }
+
+      function genreOf(d){ return (d.qid && wd[d.qid] && wd[d.qid].gen) || ''; }
+
+      var cand = [], byGenreOut = [], byGenreIn = [], greyOut = [];
+      strong.forEach(function(d){
+        var g = genreOf(d);
+        // 장르가 대중음악 뿐이면 소개문 판정을 뒤집습니다 (구조화 근거 우선)
+        if (g && POP_GENRE.test(g) && !CLASSIC_GENRE.test(g)) { byGenreOut.push(d); return; }
+        cand.push(d);
+      });
+      popped.forEach(function(d){
+        var g = genreOf(d);
+        if (g && CLASSIC_GENRE.test(g) && !POP_GENRE.test(g)) { byGenreIn.push(d); cand.push(d); }
+      });
+      grey.forEach(function(d){
+        var g = genreOf(d);
+        if (g && CLASSIC_GENRE.test(g) && !POP_GENRE.test(g)) { byGenreIn.push(d); cand.push(d); return; }
+        if (g && POP_GENRE.test(g)) { byGenreOut.push(d); return; }
+        if (loose) cand.push(d); else greyOut.push(d);
+      });
+
+      L.log('  2차 판정 — 장르로 제외 ' + byGenreOut.length + '명 · 장르로 추가 ' + byGenreIn.length + '명');
+      if (greyOut.length){
+        L.log('  ┌ 최종 보류 ' + greyOut.length + '명 (앞 40명) — 클래식 인물이 보이면 "신호 없는 인물도 포함"으로 다시 실행하세요');
+        greyOut.slice(0, 40).forEach(function(g2){
+          L.log('  │ ' + stripParen(g2.title) + (g2._weak ? ' [음대 출신]' : '')
+                + ' — ' + (g2.extract || '').replace(/\s+/g,' ').slice(0, 55));
+        });
+        L.log('  └');
+      }
+      if (byGenreOut.length){
+        L.log('  ┌ 장르가 대중음악이라 제외 (앞 20명)');
+        byGenreOut.slice(0, 20).forEach(function(g3){
+          L.log('  │ ' + stripParen(g3.title) + ' — ' + genreOf(g3).slice(0, 50));
+        });
+        L.log('  └');
+      }
+      L.log('  ▶ 신규 후보 ' + cand.length + '명');
 
       // 저장할 행 만들기
       var rows2 = cand.map(function(d){
