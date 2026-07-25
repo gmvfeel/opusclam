@@ -309,5 +309,8 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 .doc-row{padding-right:24px}
 @media(max-width:640px){.board-row-right{margin-right:8px}.doc-row{padding-right:6px}}
 
-/* 목록 구분 배지: 제목 왼쪽 독립 칸(정렬·잘림 방지) */
-.board-row-cat{flex:none;width:106px;padding-top:1px;display:flex;align-items:flex-start}
+/* 목록 우측: [구분배지] | [작성자·날짜] 가로 배치 */
+.board-row-right{flex-direction:row;align-items:center;gap:14px}
+.board-row-cat{flex:none}
+.board-row-cat .board-tag{font-size:12px}
+.board-row-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px}

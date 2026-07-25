@@ -202,10 +202,9 @@ window.OCBoard = (function () {
       return '<a class="board-row' + (cfg.rowThumb ? ' has-thumb' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
         + '<span class="board-row-no">' + (no > 0 && no < 10 ? '0' + no : no) + '</span>'
         + th
-        + '<span class="board-row-cat">' + tagHtml(rec) + '</span>'
         + '<span class="board-row-main"><span class="board-row-title">' + esc(rec.title || '') + ccHtml(rec) + newHtml(rec) + '</span>'
         + '<span class="board-prev">' + previewText(rec.body, 140) + '</span></span>'
-        + '<span class="board-row-right"><span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></span>'
+        + '<span class="board-row-right"><span class="board-row-cat">' + tagHtml(rec) + '</span><span class="board-row-meta"><span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></span></span>'
         + '</a>';
     }
     function docRowHtml(rec) {
