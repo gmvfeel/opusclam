@@ -313,4 +313,6 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 .board-row-right{flex-direction:row;align-items:center;gap:14px}
 .board-row-cat{flex:none}
 .board-row-cat .board-tag{font-size:12px}
-.board-row-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.board-row-meta{display:flex;flex-direction:row;align-items:center}
+.board-row-meta>span+span::before{content:"·";margin:0 8px;color:var(--text-3);opacity:.6}
+@media(max-width:560px){.board-row-meta{flex-direction:column;align-items:flex-end}.board-row-meta>span+span::before{content:none}}
