@@ -343,3 +343,10 @@ html[data-theme="dark"] .bv-body h4{border-top-color:rgba(255,255,255,.1)}
 .bv-notice{margin-top:1.5em;padding:14px 16px;border:1px solid rgba(220,38,38,.28);background:rgba(220,38,38,.05);border-radius:10px;font-size:.95em;line-height:1.7}
 .bv-notice strong{color:#dc2626}
 html[data-theme="dark"] .bv-notice{background:rgba(220,38,38,.12)}
+
+/* 정보보강 버튼 영역 (자료형 뷰) */
+.bv-enhance{margin-top:1.8em;padding:15px 18px;border:1px dashed rgba(124,99,176,.42);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:rgba(124,99,176,.05)}
+.bv-enhance-t{font-size:.94em;color:var(--text-2);line-height:1.6}
+.bv-enhance-btn{flex:none;display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:9px;background:var(--violet-2);color:#fff;font-weight:700;font-size:.95em;text-decoration:none;white-space:nowrap}
+.bv-enhance-btn:hover{filter:brightness(1.08)}
+html[data-theme="dark"] .bv-enhance{background:rgba(124,99,176,.12)}

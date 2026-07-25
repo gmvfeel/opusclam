@@ -110,7 +110,8 @@
   document.addEventListener('DOMContentLoaded', function(){
     OCBoard.view({
       table:'admission', listPage:'admission.html', viewPage:'admission-view.html', writePage:'admission-write.html',
-      writeRole:'member', incrementFn:'admission_increment_view', commentsTable:'admission_comments', docView:true
+      writeRole:'member', incrementFn:'admission_increment_view', commentsTable:'admission_comments', docView:true,
+      enhance:{ email:'cser@wixon.co.kr', text:'요강 내용에 보탤 정보나 바로잡을 점이 있으면 알려주세요. 회원의 정보보강으로 더 정확해집니다.' }
     });
   });
 </script>

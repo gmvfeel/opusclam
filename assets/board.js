@@ -342,6 +342,12 @@ window.OCBoard = (function () {
         var thumb = o.thumb_url ? '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' : '';
         var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
         var body = o.body ? '<div class="bv-body">' + (window.DOMPurify ? window.DOMPurify.sanitize(o.body, { ADD_ATTR: ['target', 'style'] }) : nl2br(o.body)) + '</div>' : '';
+        var enhance = '';
+        if (cfg.enhance) {
+          var _eh = cfg.enhance.email ? ('mailto:' + esc(cfg.enhance.email) + '?subject=' + encodeURIComponent('[정보보강] ' + (o.title || ''))) : (cfg.enhance.url || '#');
+          var _et = (cfg.enhance.url && !cfg.enhance.email) ? ' target="_blank" rel="noopener"' : '';
+          enhance = '<div class="bv-enhance"><span class="bv-enhance-t">' + esc(cfg.enhance.text || '이 정보에 보탤 내용이나 바로잡을 점이 있으면 알려주세요. 회원의 정보보강으로 더 정확해집니다.') + '</span><a class="bv-enhance-btn" href="' + _eh + '"' + _et + '>' + esc(cfg.enhance.label || '정보보강하기') + '</a></div>';
+        }
         if (cfg.docView) {
           box.innerHTML =
             '<div class="bv-dochead">'
@@ -355,6 +361,7 @@ window.OCBoard = (function () {
             + '</div></div>'
             + (o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span>' + esc(o.file_name || '첨부파일 보기') + '</span></a>' : '')
             + body
+            + enhance
             + '<div class="bv-foot"></div>';
         } else {
         box.innerHTML =
