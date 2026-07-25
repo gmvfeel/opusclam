@@ -344,9 +344,18 @@ window.OCBoard = (function () {
         var body = o.body ? '<div class="bv-body">' + (window.DOMPurify ? window.DOMPurify.sanitize(o.body, { ADD_ATTR: ['target', 'style'] }) : nl2br(o.body)) + '</div>' : '';
         var enhance = '';
         if (cfg.enhance) {
-          var _eh = cfg.enhance.email ? ('mailto:' + esc(cfg.enhance.email) + '?subject=' + encodeURIComponent('[정보보강] ' + (o.title || ''))) : (cfg.enhance.url || '#');
-          var _et = (cfg.enhance.url && !cfg.enhance.email) ? ' target="_blank" rel="noopener"' : '';
-          enhance = '<div class="bv-enhance"><span class="bv-enhance-t">' + esc(cfg.enhance.text || '이 정보에 보탤 내용이나 바로잡을 점이 있으면 알려주세요. 회원의 정보보강으로 더 정확해집니다.') + '</span><a class="bv-enhance-btn" href="' + _eh + '"' + _et + '>' + esc(cfg.enhance.label || '정보보강하기') + '</a></div>';
+          var _href = cfg.writePage ? (cfg.writePage + '?mode=enhance&db=' + encodeURIComponent(cfg.enhance.db || cfg.table) + '&id=' + encodeURIComponent(o.id)) : (cfg.enhance.url || '#');
+          var _mail = esc(cfg.enhance.email || 'contact@opusclam.com');
+          var _src = cfg.enhance.source || '본 오퍼스클램 데이터는 웹상에 공개된 내용을 취합·수집하여 등록되므로, 잘못된 정보를 포함할 수 있습니다. 잘못된 정보의 수정을 원하시거나 보강할 내용이 있는 경우, 아래 <b>메일문의하기</b> 또는 <b>정보보강</b>을 통해 알려주시면 신속히 반영하겠습니다.';
+          enhance = '<section class="pv-contrib">'
+            + '<a class="pv-enhance" href="' + _href + '">'
+            + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'
+            + '<span><b>' + esc(cfg.enhance.label || '정보보강하기') + '</b><small>' + esc(cfg.enhance.sub || '이 항목의 정보를 수정하거나 내용을 추가할 수 있습니다 · 자격 회원') + '</small></span>'
+            + '</a>'
+            + '<div class="pv-source"><p class="pv-source-t">' + _src + '</p>'
+            + '<a class="pv-mailbtn" href="mailto:' + _mail + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg> 메일문의하기</a>'
+            + '</div>'
+            + '</section>';
         }
         if (cfg.docView) {
           box.innerHTML =
