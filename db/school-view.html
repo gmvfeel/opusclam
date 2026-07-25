@@ -1323,6 +1323,28 @@ if('serviceWorker' in navigator){
      var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=(x.category?fact('구분',esc(x.category)):'')+(x.location?fact('소재지',esc(x.location)):'')+(x.founded?fact('설립',esc(x.founded)):'')+(x.estab_type?fact('설립구분',esc(x.estab_type)):'')+(x.departments?fact('대표 학과',esc(x.departments)):'')+(x.alumni?fact('저명 동문',esc(x.alumni)):'')+(x.features?fact('대표 특성',esc(x.features)):'');
      (function(){document.querySelectorAll('.pv-sec, .pv-block').forEach(function(sec){var h=sec.querySelector('.pv-h');if(h&&/(주요 전공|캠퍼스|갤러리|영상|학과 · 전공 안내|입시|모집|관련 학교)/.test(h.textContent))sec.style.display='none';});})();
      var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
+     /* 이 학교 출신 인물 (인물DB 연결) — 첫 번째 .pv-people = 저명 동문 */
+     (function(){
+       var base=(x.name_ko||'').replace(/\s*(음악대학|음악학부|음악학과|음악과|음악공연예술대학|음악테크놀로지대학|예술대학|대학원).*$/,'').trim();
+       if(!base||base.length<2)return;
+       var box=document.querySelectorAll('.pv-people')[0]; if(!box)return;
+       var sec=box.closest('.pv-sec'); if(!sec)return;
+       fetch(URL+'/rest/v1/persons?select=id,name_ko,name_en,field,era&school=ilike.*'+encodeURIComponent(base)+'*&order=name_ko.asc&limit=12',{headers:H})
+        .then(function(r){return r.json();})
+        .then(function(rs){
+          if(!rs||!rs.length)return;
+          box.innerHTML=rs.map(function(p){
+            var n=(p.name_ko||p.name_en||'').trim(); if(!n)return '';
+            var meta=[p.era,p.field].filter(Boolean).join(' · ');
+            return '<a class="pv-person" href="/db/person-view.html?id='+encodeURIComponent(p.id)+'">'
+                 + '<span class="ava">'+esc(n[0])+'</span>'
+                 + '<span><span class="pn">'+esc(n)+'</span><span class="pf">'+esc(meta)+'</span></span></a>';
+          }).join('');
+          var h=sec.querySelector('.pv-h');
+          if(h)h.innerHTML='이 학교 출신 인물 <span class="pv-h-en">Alumni in OPUSCLAM</span>';
+          sec.style.display='';
+        }).catch(function(){});
+     })();
           (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
        var _k=encodeURIComponent((x.name_ko||x.name_en||'').trim());
        var _e=encodeURIComponent((x.name_en||x.name_ko||'').trim());

@@ -1338,8 +1338,22 @@ if('serviceWorker' in navigator){
      var dl=document.querySelector('dl.pv-deflist'); if(dl){
        dl.innerHTML=fact('국적',esc(p.nationality||'')+(p.nat_code?' ('+esc(p.nat_code)+')':''))
          +fact('생몰',esc(p.life||''))+fact('사조',erav)
-         +fact('주요 악기',esc(p.instrument||''))+fact('출신학교',esc(p.school||''));
+         +fact('주요 악기',esc(p.instrument||''))+fact('출신학교','<span id="pv-school-cell">'+esc(p.school||'')+'</span>');
      }
+     /* 출신학교 → 학교DB 연결 (학교DB에 있는 경우만 링크) */
+     (function(){
+       var sc=(p.school||'').trim(); if(!sc)return;
+       var base=sc.split(/[,·\/]/)[0].replace(/\s*(음악대학|음악학부|음악학과|음악과|대학원).*$/,'').trim();
+       if(base.length<2)return;
+       fetch(URL+'/rest/v1/schools?select=id,name_ko&name_ko=ilike.*'+encodeURIComponent(base)+'*&limit=1',{headers:H})
+        .then(function(r){return r.json();})
+        .then(function(rs){
+          if(!rs||!rs.length)return;
+          var cell=document.getElementById('pv-school-cell'); if(!cell)return;
+          cell.innerHTML='<a class="pv-schoollink" href="/db/school-view.html?id='+encodeURIComponent(rs[0].id)+'" title="학교 정보 보기">'+esc(sc)
+            +' <span class="pv-schoolgo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h13M13 6l6 6-6 6"/></svg>학교 정보</span></a>';
+        }).catch(function(){});
+     })();
      // 아직 데이터 없는 섹션 숨김: 관련 인물
      var ppl=document.querySelector('.pv-people'); if(ppl){var sec=ppl.closest('.pv-sec'); if(sec) sec.style.display='none';}
           (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
