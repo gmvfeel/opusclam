@@ -170,7 +170,11 @@
   var WEAK_SIG = /음악대학|음악 대학|음악원|작곡과|기악과|성악과|피아노과|관현악과|예술종합학교|예술 종합학교|예술고등학교|줄리아드|커티스|음대 교수|음악학교/;
 
   // 인물 문서에 달린 위키백과 분류 — 소개문 문구보다 확실한 근거
-  var POPCAT = /뉴에이지|뉴 에이지|크로스오버|게임|일렉트로니카|디스크자키|DJ|댄스|발라드|록|랩|힙합|R&B|알앤비|블루스|레게|재즈|펑크|메탈|사이키델릭|일렉트로닉|전자 음악|대중음악|실용음악|가요|트로트|포크|컨트리|아이돌|걸\s?그룹|보이\s?그룹|밴드|가수|음악 그룹|듀오|보컬|래퍼|디제이|프로듀서|작사가|싱어송라이터|드럼|베이스 기타|기타 연주자|뮤지컬|영화 음악|CCM|국악|판소리|사물놀이|음악 감독|방송/;
+  // 장르가 확정된 분류 — 클래식 분류와 함께 있어도 제외 (겸업 불인정)
+  var HARDCAT = /국악|판소리|사물놀이|재즈|트로트|힙합|랩 음악|아이돌|걸\s?그룹|보이\s?그룹|케이팝|K-?팝|댄스 음악|발라드|록 음악|록 밴드|록 그룹|하드 록|펑크 록|블루스|레게|메탈|사이키델릭|일렉트로닉|일렉트로니카|전자 음악|뉴에이지|뉴 에이지|게임|디스크자키|기타 연주자|베이스 기타|드럼|대중음악|가요|음악 프로듀서|래퍼|보컬|밴드 출신|싱어송라이터|실용음악/;
+  // 클래식 인물도 함께 갖는 분류 — 클래식 분류가 있으면 겸업으로 인정
+  var SOFTCAT = /작사가|편곡가|음악 감독|뮤지컬|가수|음악 그룹|듀오|영화 음악|CCM|방송|크로스오버|포크|컨트리|R&B|알앤비|펑크/;
+  var POPCAT = new RegExp(HARDCAT.source + '|' + SOFTCAT.source);
   // 클래식 확정 분류 (일반 '작곡가'는 대중음악인도 공유하므로 제외)
   var CLSCAT = /클래식|현대음악|오페라|성악가|소프라노|메조|테너|바리톤|카운터테너|지휘자|음악학자|바이올린|비올라|첼로|콘트라베이스|하프 연주자|플루트|클라리넷|오보에|바순|호른|트럼펫|트롬본|오르간 연주자|타악기 연주자|실내악|음악 교육자/;
 
@@ -475,14 +479,16 @@
 
         // ② 문서에 달린 분류로 판단 — 한 분류가 양쪽에 걸리면 대중음악이 우선
         //    ("뉴에이지 피아노 연주자" 가 '피아노 연주자' 로 통과하던 문제)
-        var clsHit = null, popHit = null;
+        var clsHit = null, hardHit = null, softHit = null;
         (d.cats || []).forEach(function(c){
-          if (POPCAT.test(c)) { if (!popHit) popHit = c; return; }
+          if (HARDCAT.test(c)) { if (!hardHit) hardHit = c; return; }
+          if (SOFTCAT.test(c)) { if (!softHit) softHit = c; return; }
           if (CLSCAT.test(c) && !clsHit) clsHit = c;
         });
-        if (clsHit && !popHit) { d._why = '분류 ' + clsHit; strong.push(d); return; }
-        if (popHit && !clsHit) { d._why = '분류 ' + popHit; popped.push(d); return; }
-        if (popHit && clsHit)  { d._why = '분류 겸업 ' + clsHit + ' + ' + popHit; strong.push(d); return; }
+        // 장르 확정 분류는 클래식 분류가 있어도 제외 (재즈·국악·대중가요)
+        if (hardHit) { d._why = '분류 ' + hardHit + (clsHit ? ' (클래식 ' + clsHit + ' 있으나 장르 우선)' : ''); popped.push(d); return; }
+        if (clsHit)  { d._why = '분류 ' + clsHit + (softHit ? ' + 겸업 ' + softHit : ''); strong.push(d); return; }
+        if (softHit) { d._why = '분류 ' + softHit; popped.push(d); return; }
 
         // ③ 소개문 판단 (분류로 갈리지 않을 때만)
         var hp = d.extract.match(HARD_POP);
