@@ -36,7 +36,7 @@
 .board-empty{padding:70px 10px;text-align:center;color:var(--text-3);font-size:15px}
 
 /* ── 뉴스형(article) 목록 ── */
-.board-bar{margin:0 calc(50% - 50vw) 22px;position:sticky;top:var(--feat-top,76px);z-index:20;background:var(--paper);padding:12px calc(50vw - 50%);border-bottom:1px solid var(--line)}
+.board-bar{margin:0 calc(50% - 50vw) 22px;position:sticky;top:var(--feat-top,76px);z-index:20;background:var(--paper);padding:12px calc(50vw - 50%);border-bottom:1px solid rgba(30,20,60,.06)}
 @media(max-width:640px){.board-bar{position:static;box-shadow:none;padding:0;margin:0 0 22px}}
 .board-sort{min-width:120px}
 .board-count{margin:0 0 16px 2px}
@@ -253,7 +253,16 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 /* ===== 자료형 게시판 (입시요강 등) ===== */
 /* 목록 행 */
 .doc-row{display:flex;align-items:flex-start;gap:18px;padding:20px 6px;border-bottom:1px solid var(--line);transition:background .15s ease}
-.doc-row:hover{background:var(--paper-2)}
+.doc-row:hover{background:#322152}
+.doc-row:hover .doc-title,
+.doc-row:hover .doc-desc,
+.doc-row:hover .doc-home,
+.doc-row:hover .doc-home a,
+.doc-row:hover .doc-date,
+.doc-row:hover .doc-dl,
+.doc-row:hover .board-cc{color:#fff}
+.doc-row:hover .board-tag{color:#fff;border-color:rgba(255,255,255,.45);background:transparent}
+html[data-theme="dark"] .doc-row:hover{background:#000}
 .doc-logo{flex:none;width:56px;height:56px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--paper-2);border:1px solid var(--line)}
 .doc-logo img{width:100%;height:100%;object-fit:contain}
 .doc-logo-ph{width:26px;height:26px;border-radius:6px;background:var(--line-2)}
