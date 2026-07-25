@@ -169,6 +169,8 @@
   .pv-tolist:hover{background:var(--violet)}
   /* 왼쪽 고정 리스트 탭 */
   /* 뷰 하단: DB보강 + 출처 안내 */
+  .pv-admlink{display:inline-flex;align-items:center;gap:7px;margin:14px 0 0;padding:9px 16px;border:1px solid var(--violet-2);border-radius:9px;color:var(--violet-2);font-size:13px;font-weight:600;text-decoration:none;transition:background .15s,color .15s}
+  .pv-admlink:hover{background:var(--violet-2);color:#fff}
   .pv-contrib{margin-top:48px;padding-top:32px;border-top:1px solid var(--line)}
   .pv-enhance{display:flex;width:fit-content;max-width:100%;margin:0 auto;align-items:center;gap:13px;background:var(--orange);color:#fff;text-decoration:none;padding:16px 32px;border-radius:14px;box-shadow:0 10px 26px -8px rgba(236,122,28,.55);transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
   .pv-enhance:hover{background:#d86d12;transform:translateY(-2px);box-shadow:0 16px 34px -8px rgba(236,122,28,.65)}
@@ -1329,6 +1331,22 @@ if('serviceWorker' in navigator){
        for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
      }})();
 document.title=nm+' · 음악학교DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+     /* 연결된 입시요강 찾아 버튼 표시 */
+     (function(){
+       fetch(URL+'/rest/v1/admission?select=id,title,category&school_id=eq.'+encodeURIComponent(id)+'&order=created_at.desc&limit=1',{headers:H})
+        .then(function(r){return r.json();})
+        .then(function(rs){
+          if(!rs||!rs.length)return;
+          var g=rs[0];
+          var host=document.querySelector('.pv-lead')||document.querySelector('.pv-facts');
+          if(!host)return;
+          var a=document.createElement('a');
+          a.className='pv-admlink';
+          a.href='/community/admission-view.html?id='+encodeURIComponent(g.id);
+          a.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg><span>이 학교 입시요강 보기</span>';
+          host.parentNode.insertBefore(a, host.nextSibling);
+        }).catch(function(){});
+     })();
    }).catch(function(e){console.error('음악학교DB view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
 })();
 </script>

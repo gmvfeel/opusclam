@@ -375,3 +375,7 @@ html[data-theme="dark"] .oc-cell{background:rgba(255,255,255,.04)}
 
 /* 목록 로고칸: 학교 사진이 들어오면 꽉 차게 (로고는 contain 유지) */
 .doc-logo img[src*="wikimedia"],.doc-logo img[src*="supabase"],.doc-logo img[src*="picsum"]{object-fit:cover}
+
+/* 자료형 뷰: 연결된 학교DB 바로가기 */
+.bv-schoollink{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:7px 14px;border:1px solid var(--violet-2);border-radius:8px;color:var(--violet-2);font-size:12.5px;font-weight:600;text-decoration:none;transition:background .15s,color .15s}
+.bv-schoollink:hover{background:var(--violet-2);color:#fff}

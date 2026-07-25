@@ -366,6 +366,7 @@ window.OCBoard = (function () {
             + (o.category ? '<span class="board-tag" data-cat="' + esc(o.category) + '">' + esc(o.category) + '</span>' : '')
             + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'
             + (o.link_url ? '<div class="bv-dochome">관련홈페이지 <a href="' + esc(o.link_url) + '" target="_blank" rel="noopener">' + esc(o.link_url) + '</a></div>' : '')
+            + (o.school_id ? '<a class="bv-schoollink" href="/school-view.html?id=' + encodeURIComponent(o.school_id) + '"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-5h6v5"/></svg><span>이 학교 정보 보기</span></a>' : '')
             + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
             + '</div></div>'
             + (o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span>' + esc(o.file_name || '첨부파일 보기') + '</span></a>' : '')
