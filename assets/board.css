@@ -357,3 +357,13 @@ html[data-theme="dark"] .bv-notice{background:rgba(220,38,38,.12)}
 .pv-mailbtn{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);border-radius:9px;padding:10px 17px;font-size:13px;font-weight:600;text-decoration:none;transition:border-color .15s,color .15s}
 .pv-mailbtn:hover{border-color:var(--violet-2);color:var(--violet-2)}
 .pv-mailbtn svg{width:15px;height:15px}
+
+/* 요강 본문: 연락처 등 항목 카드 그리드(2열 남는 표 대체) */
+.oc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;margin:0 0 1em}
+.oc-cell{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:rgba(124,99,176,.04)}
+.oc-cell b{display:block;font-size:.93em;font-weight:700;color:var(--text-2);margin-bottom:3px}
+.oc-cell span{display:block;font-size:1.02em;font-weight:600;color:var(--text);letter-spacing:-.01em}
+html[data-theme="dark"] .oc-cell{background:rgba(255,255,255,.04)}
+/* 표는 촘촘하게 + 줄무늬 */
+.bv-body tbody tr:nth-child(even) td,.bv-body tr:nth-child(even) td{background:rgba(124,99,176,.035)}
+.bv-body th,.bv-body td{padding:7px 12px}
