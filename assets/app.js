@@ -130,7 +130,26 @@
     });
   }
 
-  function ocInit(){ injectFooter(); updateHeaderAuth(); }
+  /* ===== 페이지별 공용 엔진 자동 로드 =====
+     여기에 한 줄 추가하면 해당 조건의 모든 페이지에 엔진이 실려요.
+     페이지에 이미 같은 <script>가 있으면 중복 로드하지 않습니다. */
+  var OC_ENGINES = [
+    { when: function(file){ return /-view\.html$/.test(file); }, src: "/assets/links.js" }
+  ];
+  function loadEngines(){
+    var file = location.pathname.split("/").pop();
+    OC_ENGINES.forEach(function(e){
+      try{
+        if(!e.when(file)) return;
+        if(document.querySelector('script[src="'+e.src+'"]')) return;
+        var s=document.createElement("script");
+        s.src=e.src; s.defer=true;
+        document.head.appendChild(s);
+      }catch(err){}
+    });
+  }
+
+  function ocInit(){ injectFooter(); updateHeaderAuth(); loadEngines(); }
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", ocInit); }
   else { ocInit(); }
 })();

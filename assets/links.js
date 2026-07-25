@@ -10,6 +10,8 @@
 (function () {
   'use strict';
 
+  if (window.OCLinks) return;   // 중복 로드 방지
+
   var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var H   = { apikey: KEY, Authorization: 'Bearer ' + KEY };

@@ -203,6 +203,7 @@
         <div class="card clickable" id="cardManage"><h3>DB 관리 · 정제</h3><p>음악과 무관한 의심 인물(비음악 키워드·유명 비음악인)을 자동 표시하고, 확인 후 삭제합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card clickable" id="cardMembers"><span class="cbadge" id="badgeMembers"></span><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card clickable" id="cardReview"><span class="cbadge" id="badgeReview"></span><h3>제출 검수</h3><p>자격 회원이 등록·보강 제출한 내용을 확인하고, 승인 시 실제 DB에 반영합니다.</p><span class="go">검수하기 →</span></div>
+        <div class="card clickable" id="cardRel"><h3>관계 관리 · 네트워킹</h3><p>인물의 사사관계·소속·출신학교를 직접 추가·삭제합니다. 위키데이터에 없는 국내 인물 관계를 채웁니다.</p><span class="go">관리하기 →</span></div>
         <div class="card"><h3>DB 관리</h3><p>인물·단체·공연장 등 7개 데이터베이스의 항목을 직접 추가·수정합니다.</p><span class="soon">준비 중</span></div>
       </div>
     </div>
@@ -309,6 +310,49 @@
         <button class="rv-tab" data-s="">전체<span class="c" data-rcnt=""></span></button>
       </div>
       <div class="rv-list" id="rvList"><div class="rv-empty">불러오는 중…</div></div>
+    </div>
+  </div>
+
+  <!-- ===== 관계 관리 · 네트워킹 ===== -->
+  <div class="view" id="relate">
+    <div class="body">
+      <button class="back" id="relBack">← 대시보드</button>
+      <h1>관계 관리 · 네트워킹</h1>
+      <p class="hi">인물의 <b>사사관계 · 소속 · 출신학교</b>를 직접 추가하거나 삭제합니다. 위키데이터에 없는 국내 인물의 관계는 여기서 채웁니다. 저장하면 해당 인물의 뷰 페이지 <b>네트워크</b> 영역에 바로 나타납니다.</p>
+
+      <div class="rl-bar">
+        <input type="text" id="rlQ" placeholder="인물 이름 검색 (예: 정경화, 김선욱)">
+        <button class="rl-btn" id="rlQBtn">검색</button>
+        <span class="rl-hint" id="rlHint"></span>
+      </div>
+      <div class="rl-results" id="rlResults"></div>
+
+      <div class="rl-panel" id="rlPanel" hidden>
+        <div class="rl-head">
+          <div><b id="rlName"></b><span class="rl-meta" id="rlMeta"></span></div>
+          <a class="rl-open" id="rlView" target="_blank" rel="noopener">뷰 페이지 열기 →</a>
+        </div>
+
+        <div class="rl-add">
+          <div class="rl-addrow">
+            <select id="rlRel">
+              <option value="teacher">사사 · 스승 (이 인물이 배운 사람)</option>
+              <option value="student">제자 (이 인물이 가르친 사람)</option>
+              <option value="member_of">소속 단체</option>
+              <option value="fellow_of">관련 단체 · 학회</option>
+              <option value="alumnus_of">출신 학교</option>
+            </select>
+            <input type="text" id="rlTQ" placeholder="상대 이름 검색">
+            <button class="rl-btn" id="rlTBtn">찾기</button>
+          </div>
+          <div class="rl-targets" id="rlTargets"></div>
+        </div>
+
+        <div class="rl-listwrap">
+          <div class="rl-listhead">등록된 관계 <span id="rlCount"></span></div>
+          <div class="rl-list" id="rlList"><div class="loading">불러오는 중…</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -946,6 +990,220 @@
       if(b.id==='wikiEnrichBtn'){ b.addEventListener('click',wikiEnrich); return; }
       b.addEventListener('click',function(){ collect(b.getAttribute('data-mode'), b.getAttribute('data-occ'), b.getAttribute('data-field'), b.textContent.trim()); });
     });
+  </script>
+  <style>
+    /* ===== 관계 관리 ===== */
+    #relate .rl-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:18px 0 14px}
+    #relate .rl-bar input{flex:1;min-width:220px;padding:11px 14px;border:1px solid #d8d8e2;border-radius:9px;font-size:14px;font-family:inherit}
+    #relate .rl-btn{background:#20223a;color:#fff;border:0;border-radius:9px;padding:11px 18px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit}
+    #relate .rl-btn:disabled{opacity:.45;cursor:not-allowed}
+    #relate .rl-hint{font-size:12.5px;color:#8a8c9e}
+    #relate .rl-results{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+    #relate .rl-cand{background:#fff;border:1px solid #dcdce6;border-radius:9px;padding:9px 13px;font-size:13px;cursor:pointer;font-family:inherit;text-align:left}
+    #relate .rl-cand:hover{border-color:#7C63B0;color:#7C63B0}
+    #relate .rl-cand small{color:#8a8c9e;margin-left:6px;font-size:11.5px}
+    #relate .rl-panel{background:#fff;border:1px solid #e3e3ec;border-radius:12px;padding:20px 22px;margin-top:6px}
+    #relate .rl-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid #eeeef4}
+    #relate .rl-head b{font-size:17px}
+    #relate .rl-meta{color:#8a8c9e;font-size:12.5px;margin-left:9px}
+    #relate .rl-open{font-size:12.5px;color:#7C63B0;text-decoration:none;font-weight:600}
+    #relate .rl-add{padding:16px 0;border-bottom:1px solid #eeeef4}
+    #relate .rl-addrow{display:flex;gap:9px;flex-wrap:wrap}
+    #relate .rl-addrow select{padding:11px 12px;border:1px solid #d8d8e2;border-radius:9px;font-size:13.5px;font-family:inherit;background:#fff}
+    #relate .rl-addrow input{flex:1;min-width:180px;padding:11px 14px;border:1px solid #d8d8e2;border-radius:9px;font-size:14px;font-family:inherit}
+    #relate .rl-targets{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+    #relate .rl-new{background:#fff6ec;border-color:#f0cfa8;color:#9a6512}
+    #relate .rl-new:hover{border-color:#EC7A1C;color:#EC7A1C}
+    #relate .rl-listwrap{padding-top:16px}
+    #relate .rl-listhead{font-size:12.5px;font-weight:700;color:#5a5b74;margin-bottom:10px}
+    #relate .rl-listhead span{color:#8a8c9e;font-weight:500}
+    #relate .rl-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #f2f2f7;font-size:13.5px}
+    #relate .rl-row:first-child{border-top:0}
+    #relate .rl-tag{flex:0 0 auto;background:#f2f2f7;border-radius:99px;padding:3px 10px;font-size:11.5px;font-weight:600;color:#5a5b74}
+    #relate .rl-tgt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #relate .rl-src{flex:0 0 auto;font-size:11px;color:#a0a2b4}
+    #relate .rl-off{color:#a0a2b4;font-size:11.5px;margin-left:6px}
+    #relate .rl-x{flex:0 0 auto;background:none;border:1px solid #e4e4ec;color:#8a8c9e;border-radius:7px;padding:5px 10px;font-size:11.5px;cursor:pointer;font-family:inherit}
+    #relate .rl-x:hover{border-color:#dc2626;color:#dc2626}
+    #relate .rl-empty{color:#8a8c9e;font-size:13px;padding:14px 0}
+  </style>
+  <script>
+  /* ===== 관계 관리 · 네트워킹 (entity_links 직접 편집) ===== */
+  (function(){
+    'use strict';
+    if(!document.getElementById('relate')) return;
+
+    views.relate = document.getElementById('relate');
+    document.getElementById('cardRel').addEventListener('click', function(){ show('relate'); });
+    document.getElementById('relBack').addEventListener('click', function(){ show('dash'); });
+
+    var REL_LABEL = { teacher:'스승', student:'제자', member_of:'소속 단체', fellow_of:'관련 단체·학회', alumnus_of:'출신 학교' };
+    var REL_TABLE = { teacher:'persons', student:'persons', member_of:'orgs', fellow_of:'orgs', alumnus_of:'schools' };
+    var TYPE_OF   = { persons:'person', orgs:'org', schools:'school' };
+    var NAMEK     = ['name_ko','name','name_kr','title','org_name','school_name','name_en'];
+
+    var cur = null;          // 선택된 인물
+    var colCache = {};       // 테이블별 이름컬럼 캐시
+    var lastTargets = [];
+
+    function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function clean(q){ return String(q||'').replace(/[,()%*]/g,' ').trim(); }
+    function pickName(r){ for(var i=0;i<NAMEK.length;i++){ var v=r[NAMEK[i]]; if(v&&String(v).trim()) return String(v).trim(); } return '(이름 없음)'; }
+
+    // 테이블의 이름 컬럼을 실행 시점에 파악 (컬럼명을 추측하지 않습니다)
+    async function nameCols(table){
+      if(colCache[table]) return colCache[table];
+      var r = await sb.from(table).select('*').limit(1);
+      var cols = (!r.error && r.data && r.data[0]) ? Object.keys(r.data[0]) : [];
+      var found = NAMEK.filter(function(k){ return cols.indexOf(k)>=0; });
+      colCache[table] = found.length?found:['name_ko'];
+      return colCache[table];
+    }
+
+    async function search(table, q){
+      var cols = await nameCols(table);
+      var or = cols.map(function(c){ return c+'.ilike.%'+q+'%'; }).join(',');
+      var r = await sb.from(table).select('*').or(or).limit(20);
+      if(r.error) return [];
+      return r.data||[];
+    }
+
+    /* ── 1. 인물 검색 ── */
+    async function findPerson(){
+      var q = clean(document.getElementById('rlQ').value);
+      var hint = document.getElementById('rlHint');
+      var box  = document.getElementById('rlResults');
+      if(q.length<1){ hint.textContent='이름을 입력해 주세요.'; return; }
+      hint.textContent='검색 중…'; box.innerHTML='';
+      var rows = await search('persons', q);
+      hint.textContent = rows.length ? (rows.length+'명 찾음 — 인물을 선택하세요') : '결과가 없습니다.';
+      box.innerHTML = rows.map(function(p){
+        var sub=[p.field?String(p.field).split(',')[0]:'',p.era_name||'',p.life||''].filter(Boolean).join(' · ');
+        return '<button class="rl-cand" data-pid="'+p.id+'">'+esc(p.name_ko||p.name_en||'?')
+          +'<small>'+esc(sub)+'</small></button>';
+      }).join('');
+      box.querySelectorAll('[data-pid]').forEach(function(b){
+        b.addEventListener('click', function(){
+          var p = rows.filter(function(x){ return String(x.id)===b.getAttribute('data-pid'); })[0];
+          selectPerson(p);
+        });
+      });
+    }
+
+    function selectPerson(p){
+      cur = p;
+      document.getElementById('rlPanel').hidden = false;
+      document.getElementById('rlName').textContent = p.name_ko || p.name_en || '?';
+      document.getElementById('rlMeta').textContent =
+        [p.name_en||'', p.field?String(p.field).split(',')[0]:'', p.era_name||''].filter(Boolean).join(' · ');
+      document.getElementById('rlView').href = '/db/person-view.html?id='+p.id;
+      document.getElementById('rlTargets').innerHTML='';
+      document.getElementById('rlTQ').value='';
+      loadLinks();
+    }
+
+    /* ── 2. 현재 관계 목록 ── */
+    async function loadLinks(){
+      var box = document.getElementById('rlList');
+      box.innerHTML = '<div class="loading">불러오는 중…</div>';
+      var r = await sb.from('entity_links')
+        .select('id,rel,to_type,to_id,to_label,source')
+        .eq('from_type','person').eq('from_id',cur.id).limit(400);
+      if(r.error){ box.innerHTML='<div class="rl-empty">불러오지 못했습니다: '+esc(r.error.message)+'</div>'; return; }
+      var rows = r.data||[];
+      document.getElementById('rlCount').textContent = '('+rows.length+'건)';
+      if(!rows.length){ box.innerHTML='<div class="rl-empty">아직 등록된 관계가 없습니다. 위에서 추가해 주세요.</div>'; return; }
+
+      // 상대 이름 채우기
+      var need = { person:[], org:[], school:[] };
+      rows.forEach(function(x){ if(x.to_id && need[x.to_type]) need[x.to_type].push(x.to_id); });
+      var store = { person:{}, org:{}, school:{} };
+      var T = { person:'persons', org:'orgs', school:'schools' };
+      for(var k in need){
+        if(!need[k].length) continue;
+        var rr = await sb.from(T[k]).select('*').in('id', need[k]).limit(500);
+        (rr.data||[]).forEach(function(x){ store[k][x.id]=x; });
+      }
+      var ORDER = ['teacher','student','member_of','fellow_of','alumnus_of'];
+      rows.sort(function(a,b){ return ORDER.indexOf(a.rel)-ORDER.indexOf(b.rel); });
+
+      box.innerHTML = rows.map(function(x){
+        var nm, off='';
+        if(x.to_id && store[x.to_type] && store[x.to_type][x.to_id]){
+          var row = store[x.to_type][x.to_id];
+          nm = (x.to_type==='person') ? (row.name_ko||row.name_en||'?') : pickName(row);
+        } else if(x.to_id){ nm='(삭제된 항목 #'+x.to_id+')'; }
+        else { nm = x.to_label||'?'; off='<span class="rl-off">DB 미등록</span>'; }
+        return '<div class="rl-row"><span class="rl-tag">'+esc(REL_LABEL[x.rel]||x.rel)+'</span>'
+          +'<span class="rl-tgt">'+esc(nm)+off+'</span>'
+          +'<span class="rl-src">'+(x.source==='admin'?'직접입력':esc(x.source||''))+'</span>'
+          +'<button class="rl-x" data-del="'+x.id+'">삭제</button></div>';
+      }).join('');
+
+      box.querySelectorAll('[data-del]').forEach(function(b){
+        b.addEventListener('click', async function(){
+          if(!confirm('이 관계를 삭제할까요?')) return;
+          b.disabled = true;
+          var d = await sb.from('entity_links').delete().eq('id', b.getAttribute('data-del'));
+          if(d.error){ alert('삭제 실패: '+d.error.message); b.disabled=false; return; }
+          loadLinks();
+        });
+      });
+    }
+
+    /* ── 3. 관계 추가 ── */
+    async function findTarget(){
+      if(!cur) return;
+      var rel = document.getElementById('rlRel').value;
+      var q   = clean(document.getElementById('rlTQ').value);
+      var box = document.getElementById('rlTargets');
+      if(q.length<1){ box.innerHTML='<span class="rl-hint">상대 이름을 입력해 주세요.</span>'; return; }
+      box.innerHTML='<span class="rl-hint">찾는 중…</span>';
+      var table = REL_TABLE[rel];
+      lastTargets = await search(table, q);
+      var html = lastTargets.map(function(t){
+        var nm = (table==='persons') ? (t.name_ko||t.name_en||'?') : pickName(t);
+        return '<button class="rl-cand" data-tid="'+t.id+'">'+esc(nm)+'</button>';
+      }).join('');
+      // DB에 없으면 이름만 저장 (나중에 항목이 생기면 링크로 승격 가능)
+      html += '<button class="rl-cand rl-new" data-newname="'+esc(q)+'">＋ "'+esc(q)+'" 이름만 등록</button>';
+      box.innerHTML = (lastTargets.length?'':'<span class="rl-hint">DB에 없습니다. 이름만 등록할 수 있어요. </span>') + html;
+
+      box.querySelectorAll('[data-tid]').forEach(function(b){
+        b.addEventListener('click', function(){
+          var t = lastTargets.filter(function(x){ return String(x.id)===b.getAttribute('data-tid'); })[0];
+          addLink(rel, table, t.id, null);
+        });
+      });
+      var nb = box.querySelector('[data-newname]');
+      if(nb) nb.addEventListener('click', function(){ addLink(rel, table, null, nb.getAttribute('data-newname')); });
+    }
+
+    async function addLink(rel, table, toId, toLabel){
+      var payload = {
+        from_type:'person', from_id:cur.id, rel:rel,
+        to_type:TYPE_OF[table], to_id:toId, to_label:toId?null:toLabel,
+        source:'admin', confidence:100
+      };
+      var r = await sb.from('entity_links').insert(payload);
+      if(r.error){
+        if(/duplicate|unique/i.test(r.error.message)) alert('이미 등록된 관계입니다.');
+        else alert('저장 실패: '+r.error.message);
+        return;
+      }
+      document.getElementById('rlTargets').innerHTML='<span class="rl-hint">추가했습니다.</span>';
+      document.getElementById('rlTQ').value='';
+      loadLinks();
+    }
+
+    document.getElementById('rlQBtn').addEventListener('click', findPerson);
+    document.getElementById('rlQ').addEventListener('keydown', function(e){ if(e.key==='Enter') findPerson(); });
+    document.getElementById('rlTBtn').addEventListener('click', findTarget);
+    document.getElementById('rlTQ').addEventListener('keydown', function(e){ if(e.key==='Enter') findTarget(); });
+    document.getElementById('rlRel').addEventListener('change', function(){
+      document.getElementById('rlTargets').innerHTML='';
+    });
+  })();
   </script>
 </body>
 </html>
