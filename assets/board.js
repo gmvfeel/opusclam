@@ -210,7 +210,7 @@ window.OCBoard = (function () {
     function docRowHtml(rec) {
       var logo = rec.logo_url ? '<img src="' + esc(rec.logo_url) + '" alt="" loading="lazy">' : (rec.logo_text ? '<span class="doc-logo-txt">' + esc(rec.logo_text) + '</span>' : '<span class="doc-logo-ph"></span>');
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
-      var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" download>DOWNLOAD</a>' : '';
+      var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);
       var badges = (rec.region || rec.category)
         ? '<span class="doc-cat">'
@@ -353,7 +353,7 @@ window.OCBoard = (function () {
             + (o.link_url ? '<div class="bv-dochome">관련홈페이지 <a href="' + esc(o.link_url) + '" target="_blank" rel="noopener">' + esc(o.link_url) + '</a></div>' : '')
             + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
             + '</div></div>'
-            + (o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" download><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span>첨부문서 다운로드</span>' + (o.file_name ? '<em>' + esc(o.file_name) + '</em>' : '') + '</a>' : '')
+            + (o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span>' + esc(o.file_name || '첨부파일 보기') + '</span></a>' : '')
             + body
             + '<div class="bv-foot"></div>';
         } else {
