@@ -58,7 +58,10 @@
       + '.ocl-b{min-width:0}'
       + '.ocl-n{display:block;font-size:13.5px;font-weight:600;color:var(--text,#20223a);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
       + '.ocl-s{display:block;font-size:11.5px;color:var(--text-3,#8a8c9e);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
-      + '.ocl-more{margin-top:10px;font-size:12px;color:var(--text-3,#8a8c9e)}'
+      + '.ocl-cards[hidden]{display:none}'
+      + '.ocl-cards+.ocl-cards{margin-top:12px}'
+      + '.ocl-morebtn{margin-top:12px;background:transparent;border:1px solid var(--line,#e4e4ec);border-radius:9px;padding:9px 16px;font-size:12.5px;font-weight:600;font-family:inherit;color:var(--text-2,#3a3c52);cursor:pointer;transition:border-color .15s,color .15s}'
+      + '.ocl-morebtn:hover{border-color:var(--violet-2,#7c63b0);color:var(--violet-2,#7c63b0)}'
       + ':where(.ocl-sec .pv-h){font-size:19px;font-weight:700}';
     var st = document.createElement('style');
     st.id = 'ocl-css'; st.textContent = css;
@@ -78,12 +81,16 @@
 
   function group(g) {
     if (!g.items.length) return '';
-    var shown = g.items.slice(0, g.cap || CAP_GROUP);
-    var rest_ = g.items.length - shown.length;
+    var cap  = g.cap || CAP_GROUP;
+    var head = g.items.slice(0, cap);
+    var tail = g.items.slice(cap);
     return '<div class="ocl-g"><h3 class="ocl-t">' + esc(g.label)
       + '<em>' + g.items.length + '</em></h3>'
-      + '<div class="ocl-cards">' + shown.map(card).join('') + '</div>'
-      + (rest_ > 0 ? '<div class="ocl-more">외 ' + rest_ + '명 더 있습니다</div>' : '')
+      + '<div class="ocl-cards">' + head.map(card).join('') + '</div>'
+      + (tail.length
+          ? '<div class="ocl-cards ocl-rest" hidden>' + tail.map(card).join('') + '</div>'
+            + '<button type="button" class="ocl-morebtn">+ ' + tail.length + '개 더 보기</button>'
+          : '')
       + '</div>';
   }
 
@@ -129,6 +136,7 @@
       teacher:    { label: '사사 · 스승',    items: [] },
       student:    { label: '제자',           items: [] },
       member_of:  { label: '소속 단체',      items: [] },
+      fellow_of:  { label: '관련 단체 · 학회', items: [] },
       alumnus_of: { label: '출신 학교',      items: [] },
       alumni:     { label: '같은 학교 동문', items: [], cap: CAP_ALUMNI }
     };
@@ -198,7 +206,7 @@
           if (it) buckets.alumni.items.push(it);
         });
 
-        var order = ['teacher', 'student', 'member_of', 'alumnus_of', 'alumni'];
+        var order = ['teacher', 'student', 'member_of', 'fellow_of', 'alumnus_of', 'alumni'];
         var html = order.map(function (k) { return group(buckets[k]); }).join('');
         paint(mount, html, sc);
       });
@@ -231,6 +239,15 @@
     mount.innerHTML =
       '<div class="pv-sechead"><h2 class="pv-h">네트워크 <span class="pv-h-en">Network</span></h2>'
       + '<span class="pv-auto">자동 연결</span></div>' + html;
+
+    // 더 보기 → 숨겨둔 카드 펼치기
+    mount.querySelectorAll('.ocl-morebtn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var box = b.previousElementSibling;
+        if (box && box.classList.contains('ocl-rest')) box.hidden = false;
+        b.remove();
+      });
+    });
   }
 
   /* ---------- 시작 ---------- */
