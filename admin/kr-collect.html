@@ -35,6 +35,16 @@
   .log.on{display:block}
   .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
   .warn.on{display:block}
+  .review{margin-top:16px;border:1px solid #e3e3ec;border-radius:9px;padding:14px 16px;background:#fbfbfd}
+  .rvhead{font-size:13px;color:#5a5b74;margin-bottom:12px}
+  .rvlist{max-height:420px;overflow:auto;border:1px solid #eeeef4;border-radius:8px;background:#fff}
+  .rvitem{display:grid;grid-template-columns:22px 130px 150px 1fr;gap:10px;align-items:start;padding:9px 12px;border-bottom:1px solid #f4f4f8;font-size:12.5px;cursor:pointer}
+  .rvitem:last-child{border-bottom:0}
+  .rvitem:hover{background:#fafaff}
+  .rvn{font-weight:600;color:#20223a}
+  .rvw{color:#9a6512;font-size:11.5px}
+  .rvx{color:#5c5e70}
+  .rvc{color:#a0a2b4;font-size:11px;grid-column:2 / -1;margin-top:-4px}
   .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
 </style>
 </head>
@@ -71,6 +81,16 @@
     </div>
     <div class="bar" id="barR"><i></i></div>
     <div class="log" id="logR"></div>
+
+    <div class="review" id="pend" style="display:none">
+      <div class="rvhead">직접 검토 — 자동 판정으로 확신할 수 없는 <b id="pendN"></b>입니다. 클래식 인물을 골라 담아 주세요.</div>
+      <div class="rvlist" id="pendList"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="btnPendSave">선택한 인물 저장</button>
+        <button class="ghost" id="btnPendAll">전체 선택</button>
+        <button class="ghost" id="btnPendNone">전체 해제</button>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -122,6 +142,9 @@
     '오르간 연주자','하프시코드','쳄발로','타악기 연주자','현악기','관악기','실내악','반주자'
   ];
   // 음악과 아예 무관한 분류를 걸러내기 위한 최소 조건
+  // 인물을 데려온 "출처 분류"가 전문 분류인지 (일반 '작곡가'·'피아노 연주자' 는 아님)
+  var SRC_STRONG = /클래식|현대음악|오페라 작곡가|성악가|지휘자|음악학자|음악 교육자|바이올린 연주자|비올라|첼로|오르간 연주자|플루트|오보에|트럼펫|콘트라베이스|하프 연주자/;
+
   var MUSICISH = /음악|연주|작곡|지휘|성악|소프라노|메조|테너|바리톤|카운터테너|오페라|합창|악기|악단|피아노|바이올린|첼로|비올라|플루트|클라리넷|오보에|바순|호른|트럼펫|트롬본|하프|오르간|타악/;
 
   function classify(nm){
@@ -135,19 +158,21 @@
 
   // ── 2차 판정 ──
   // 학력(음대 작곡과 등)은 대중음악인도 공유하므로 "약한 신호"로만 씁니다.
-  var POP_SIG = /가요|아이돌|걸\s?그룹|보이\s?그룹|케이팝|K-?팝|트로트|힙합|래퍼|랩|알앤비|R&B|발라드|댄스 음악|록 밴드|밴드의|밴드 출신|멤버로|의 멤버|드라마.{0,8}(OST|음악)|영화\s?음악|게임\s?음악|광고\s?음악|CM송|CCM|찬양|국악|판소리|사물놀이|뮤지컬|음악 프로듀서|프로듀서로|프로듀서이|작사가|편곡가로|싱어송라이터|버클리 음악|실용음악과|가수|음원|앨범을 발매|정규 앨범|데뷔 앨범|싱글|소속사|연예|예능|재즈|세션/;
+  var POP_SIG = /가요|아이돌|걸\s?그룹|보이\s?그룹|케이팝|K-?팝|트로트|힙합|래퍼|랩|알앤비|R&B|발라드|댄스 음악|록 밴드|밴드의|밴드 출신|멤버로|의 멤버|드라마.{0,8}(OST|음악)|영화\s?음악|게임\s?음악|광고\s?음악|CM송|CCM|찬양|국악|판소리|사물놀이|뮤지컬|음악 프로듀서|프로듀서로|프로듀서이|작사가|편곡가로|싱어송라이터|버클리 음악|실용음악과|아이돌 가수|트로트 가수|발라드 가수|음원|앨범을 발매|정규 앨범|데뷔 앨범|싱글|소속사|연예|예능|재즈|세션/;
   // 결정적 장르어 — 이 단어가 있으면 다른 신호와 무관하게 제외 (예: "재즈 피아니스트")
   var HARD_POP = /게임 음악|리듬 게임|리듬게임|오투잼|디제이맥스|DJMAX|EZ2|펌프 잇 업|비마니|BEMANI|아케이드 게임|온라인 게임|뉴에이지|뉴 에이지|실용음악|재즈|트로트|힙합|케이팝|K-?팝|아이돌|랩\s?음악|래퍼|발라드 가수|국악|판소리|사물놀이|레게|블루스 가수|메탈|펑크|디스코|일렉트로닉 댄스/;
 
-  // 강한 신호 = 클래식 "활동" (학력 아님)
-  var CLASSIC_SIG = /교향곡|교향악|관현악|실내악|오페라|가곡|협주곡|소나타|칸타타|미사곡|현악 사중주|필하모닉|교향악단|독주회|리사이틀|콩쿠르|음악학자|음악학 박사|피아니스트|바이올리니스트|첼리스트|비올리스트|플루티스트|오르가니스트|지휘자|성악가|소프라노|메조소프라노|테너|바리톤|카운터테너|현대음악|국립오페라|합창단을 지휘|악장으로/;
+  // 강한 신호 = 클래식 "활동" — 대중음악 신호와 함께 있어도 겸업으로 인정
+  var CLASSIC_STRONG = /교향곡|교향악|관현악|실내악|협주곡|칸타타|미사곡|현악 사중주|필하모닉|교향악단|독주회|리사이틀|콩쿠르|음악학자|음악학 박사|현대음악|국립오페라|합창단을 지휘|악장으로|오페라를 작곡|가곡/;
+  // 역할 명사 = 약한 신호 — 대중음악인도 쓰는 표현이라 단독으로는 부족
+  var CLASSIC_ROLE = /바이올리니스트|첼리스트|비올리스트|플루티스트|오르가니스트|피아니스트|지휘자|성악가|소프라노|메조소프라노|테너|바리톤|카운터테너|오페라/;
   // 약한 신호 = 학력·교직 (이것만 있으면 보류)
   var WEAK_SIG = /음악대학|음악 대학|음악원|작곡과|기악과|성악과|피아노과|관현악과|예술종합학교|예술 종합학교|예술고등학교|줄리아드|커티스|음대 교수|음악학교/;
 
   // 인물 문서에 달린 위키백과 분류 — 소개문 문구보다 확실한 근거
-  var POPCAT = /댄스|발라드|록|랩|힙합|R&B|알앤비|블루스|레게|재즈|펑크|메탈|사이키델릭|일렉트로닉|전자 음악|대중음악|실용음악|가요|트로트|포크|컨트리|아이돌|걸\s?그룹|보이\s?그룹|밴드|가수|음악 그룹|듀오|보컬|래퍼|디제이|프로듀서|작사가|싱어송라이터|드럼|베이스 기타|기타 연주자|뮤지컬|영화 음악|CCM|국악|판소리|사물놀이|음악 감독|방송/;
+  var POPCAT = /뉴에이지|뉴 에이지|크로스오버|게임|일렉트로니카|디스크자키|DJ|댄스|발라드|록|랩|힙합|R&B|알앤비|블루스|레게|재즈|펑크|메탈|사이키델릭|일렉트로닉|전자 음악|대중음악|실용음악|가요|트로트|포크|컨트리|아이돌|걸\s?그룹|보이\s?그룹|밴드|가수|음악 그룹|듀오|보컬|래퍼|디제이|프로듀서|작사가|싱어송라이터|드럼|베이스 기타|기타 연주자|뮤지컬|영화 음악|CCM|국악|판소리|사물놀이|음악 감독|방송/;
   // 클래식 확정 분류 (일반 '작곡가'는 대중음악인도 공유하므로 제외)
-  var CLSCAT = /클래식|현대음악|오페라|성악가|소프라노|메조|테너|바리톤|카운터테너|지휘자|음악학자|피아노 연주자|피아니스트|바이올린|비올라|첼로|콘트라베이스|하프 연주자|플루트|클라리넷|오보에|바순|호른|트럼펫|트롬본|오르간 연주자|타악기 연주자|실내악|음악 교육자/;
+  var CLSCAT = /클래식|현대음악|오페라|성악가|소프라노|메조|테너|바리톤|카운터테너|지휘자|음악학자|바이올린|비올라|첼로|콘트라베이스|하프 연주자|플루트|클라리넷|오보에|바순|호른|트럼펫|트롬본|오르간 연주자|타악기 연주자|실내악|음악 교육자/;
 
   // 인물이 아닌 문서 (단체·협회·시설 등) — 인물DB에 들어가면 안 됩니다
   var NOTPERSON = /단체|사단법인|재단법인|협회|학회|재단|악단|합창단|오케스트라|앙상블|음악 그룹|기업|음반사|음악 축제|음악제|극장|공연장|음악 학교|음악 대학|목록$|음악상/;
@@ -166,6 +191,64 @@
   var INSTR = ['피아노','바이올린','첼로','비올라','플루트','클라리넷','오보에','바순','호른','트럼펫','트롬본','하프','오르간','타악기','콘트라베이스','기타','아코디언','색소폰'];
 
   function $(id){ return document.getElementById(id); }
+  function esc(t){ return (t==null?'':String(t)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  var lastWd = {}, lastFound = {};
+  function buildRow(d){
+    var w = (d.qid && lastWd[d.qid]) || {};
+    var meta = lastFound[d.title] || {};
+    return {
+      name_ko: stripParen(d.title),
+      name_en: w.en || null,
+      field: meta.field || null,
+      nationality: '대한민국',
+      nat_code: 'KOR',
+      life: w.life || null,
+      instrument: meta.instrument || (w.ins ? w.ins.split(' · ')[0] : null),
+      school: w.sch || null,
+      description: d.extract ? d.extract.slice(0, 400) : null,
+      link_wiki: 'https://ko.wikipedia.org/wiki/' + encodeURIComponent(d.title.replace(/ /g, '_')),
+      wikidata_id: d.qid
+    };
+  }
+
+  /* ---------- 보류 인물 직접 검토 ---------- */
+  var pending = [];
+  function renderPending(list){
+    pending = list || [];
+    var box = $('pend');
+    if (!pending.length){ box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    $('pendN').textContent = pending.length + '명';
+    $('pendList').innerHTML = pending.map(function(d, i){
+      return '<label class="rvitem"><input type="checkbox" data-pi="' + i + '">'
+        + '<span class="rvn">' + esc(stripParen(d.title)) + '</span>'
+        + '<span class="rvw">' + esc(d._why || '') + (d._weak ? ' · 음대' : '') + '</span>'
+        + '<span class="rvx">' + esc((d.extract || '').replace(/\s+/g, ' ').slice(0, 90)) + '</span>'
+        + '<span class="rvc">' + esc((d.cats || []).slice(0, 5).join(' · ')) + '</span></label>';
+    }).join('');
+  }
+  async function savePending(){
+    var picked = [];
+    document.querySelectorAll('#pendList input[data-pi]').forEach(function(b){
+      if (b.checked) picked.push(pending[+b.getAttribute('data-pi')]);
+    });
+    if (!picked.length){ alert('선택된 인물이 없습니다.'); return; }
+    if (!confirm(picked.length + '명을 인물DB에 저장할까요?')) return;
+    var L = mkLog('logR');
+    $('btnPendSave').disabled = true;
+    L.log('■ 검토 선택분 저장 (' + picked.length + '명)');
+    var rows = picked.map(buildRow), ok = 0;
+    for (var i = 0; i < rows.length; i += 100){
+      var part = rows.slice(i, i + 100);
+      var r = await sb.from('persons').insert(part);
+      if (r.error) L.log('  ✗ ' + r.error.message);
+      else ok += part.length;
+    }
+    L.log('✅ ' + ok + '명 저장 완료');
+    renderPending(pending.filter(function(d){ return picked.indexOf(d) < 0; }));
+    $('btnPendSave').disabled = false;
+  }
   function mkLog(boxId, barId){
     var box = $(boxId), bar = barId ? $(barId) : null;
     var fill = bar ? bar.querySelector('i') : null;
@@ -330,11 +413,13 @@
           if (cont) pr.cmcontinue = cont;
           var j = await api('ko.wikipedia.org', pr, L);
           if (!j) break;
+          var srcStrong = SRC_STRONG.test(nm);
           (j.query && j.query.categorymembers || []).forEach(function(m){
-            if (!found[m.title]) found[m.title] = { field: fld, instrument: ins };
+            if (!found[m.title]) found[m.title] = { field: fld, instrument: ins, strong: srcStrong, src: nm };
             else {
               if (!found[m.title].field && fld) found[m.title].field = fld;
               if (!found[m.title].instrument && ins) found[m.title].instrument = ins;
+              if (srcStrong) { found[m.title].strong = true; found[m.title].src = nm; }
             }
             got++;
           });
@@ -388,20 +473,38 @@
         var cs = (d.cats || []).join(' | ');
         if (NOTPERSON.test(cs) || NOTPERSON.test(d.title)) { skipBad++; return; }
 
-        // ② 문서에 달린 분류로 판단 (가장 확실한 근거)
-        var clsHit = (d.cats || []).filter(function(c){ return CLSCAT.test(c); })[0];
-        var popHit = (d.cats || []).filter(function(c){ return POPCAT.test(c); })[0];
+        // ② 문서에 달린 분류로 판단 — 한 분류가 양쪽에 걸리면 대중음악이 우선
+        //    ("뉴에이지 피아노 연주자" 가 '피아노 연주자' 로 통과하던 문제)
+        var clsHit = null, popHit = null;
+        (d.cats || []).forEach(function(c){
+          if (POPCAT.test(c)) { if (!popHit) popHit = c; return; }
+          if (CLSCAT.test(c) && !clsHit) clsHit = c;
+        });
         if (clsHit && !popHit) { d._why = '분류 ' + clsHit; strong.push(d); return; }
         if (popHit && !clsHit) { d._why = '분류 ' + popHit; popped.push(d); return; }
+        if (popHit && clsHit)  { d._why = '분류 겸업 ' + clsHit + ' + ' + popHit; strong.push(d); return; }
 
         // ③ 소개문 판단 (분류로 갈리지 않을 때만)
         var hp = d.extract.match(HARD_POP);
         if (hp) { d._why = '장르어 ' + hp[0]; popped.push(d); return; }
-        var mp = d.extract.match(POP_SIG), mc = d.extract.match(CLASSIC_SIG);
-        var weak = WEAK_SIG.test(d.extract);
-        if (mc)      { d._why = '소개문 ' + mc[0] + (mp ? ' (겸업 ' + mp[0] + ')' : ''); strong.push(d); }
-        else if (mp) { d._why = '소개문 ' + mp[0]; popped.push(d); }
-        else         { d._weak = weak; grey.push(d); }
+        var srcStrong = (found[d.title] || {}).strong;
+        var mp = d.extract.match(POP_SIG);
+        var ms = d.extract.match(CLASSIC_STRONG);
+        var mr = d.extract.match(CLASSIC_ROLE);
+        d._weak = WEAK_SIG.test(d.extract);
+        if (ms) {                                   // 강한 신호 → 겸업이라도 수집
+          d._why = '소개문 ' + ms[0] + (mp ? ' (겸업 ' + mp[0] + ')' : '');
+          strong.push(d);
+        } else if (mr && !mp && srcStrong) {         // 역할 명사 + 전문 분류 출처 → 수집
+          d._why = '소개문 ' + mr[0] + ' + 출처 ' + (found[d.title] || {}).src;
+          strong.push(d);
+        } else if (mp) {                             // 대중음악 신호만
+          d._why = '소개문 ' + mp[0];
+          popped.push(d);
+        } else {                                     // 근거 부족 → 검토 대상
+          d._why = mr ? ('역할어 ' + mr[0] + '만 확인') : '신호 없음';
+          grey.push(d);
+        }
       });
       L.log('  이미 있음 ' + skipDup + ' · 제외 키워드 ' + skipBad + ' · 내용 부실 ' + skipThin);
       L.log('  1차 판정 — 클래식 ' + strong.length + ' / 대중음악 ' + popped.length + ' / 보류 ' + grey.length);
@@ -482,24 +585,10 @@
       }
       L.log('  ▶ 신규 후보 ' + cand.length + '명');
 
-      // 저장할 행 만들기
-      var rows2 = cand.map(function(d){
-        var w = (d.qid && wd[d.qid]) || {};
-        var meta = found[d.title] || {};
-        return {
-          name_ko: stripParen(d.title),
-          name_en: w.en || null,
-          field: meta.field || null,
-          nationality: '대한민국',
-          nat_code: 'KOR',
-          life: w.life || null,
-          instrument: meta.instrument || (w.ins ? w.ins.split(' · ')[0] : null),
-          school: w.sch || null,
-          description: d.extract ? d.extract.slice(0, 400) : null,
-          link_wiki: 'https://ko.wikipedia.org/wiki/' + encodeURIComponent(d.title.replace(/ /g, '_')),
-          wikidata_id: d.qid
-        };
-      });
+      // 저장할 행 만들기 (검토 화면과 같은 함수를 씁니다)
+      lastWd = wd; lastFound = found;
+      var rows2 = cand.map(buildRow);
+      renderPending(greyOut);
 
       L.log('■ 결과 미리보기 (앞 60명) — 맨 끝이 "왜 수집됐는지"입니다');
       rows2.slice(0, 60).forEach(function(r, i){
@@ -597,6 +686,13 @@
   $('btnCat').addEventListener('click', findCats);
   $('btnRun').addEventListener('click', run);
   $('btnKo').addEventListener('click', hangulize);
+  $('btnPendSave').addEventListener('click', savePending);
+  $('btnPendAll').addEventListener('click', function(){
+    document.querySelectorAll('#pendList input[data-pi]').forEach(function(b){ b.checked = true; });
+  });
+  $('btnPendNone').addEventListener('click', function(){
+    document.querySelectorAll('#pendList input[data-pi]').forEach(function(b){ b.checked = false; });
+  });
   $('btnAll').addEventListener('click', function(){
     document.querySelectorAll('#cats input[data-ci]').forEach(function(b){ b.checked = true; });
   });
