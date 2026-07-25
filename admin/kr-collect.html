@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>OPUSCLAM · 국내 인물 수집</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 18px 90px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+  .card h2 .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:#20223a;color:#fff;font-size:12px;align-items:center;justify-content:center}
+  .card p{margin:0 0 14px;color:#5c5e70;font-size:13px}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  input[type=text]{padding:10px 13px;border:1px solid #d8d8e2;border-radius:8px;font-size:14px;font-family:inherit}
+  label.ck{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#5c5e70;margin-left:12px}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;margin-top:14px;max-height:340px;overflow:auto;border:1px solid #eeeef4;border-radius:8px;padding:12px}
+  .cats label{display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0}
+  .cats small{color:#9a9cae;font-size:11.5px}
+  .bar{height:8px;background:#ececf3;border-radius:99px;overflow:hidden;margin:14px 0 8px;display:none}
+  .bar.on{display:block}
+  .bar i{display:block;height:100%;width:0;background:#dc2626;transition:width .25s}
+  .log{display:none;margin-top:10px;max-height:300px;overflow:auto;background:#12131c;color:#d7d9e8;border-radius:7px;padding:12px 14px;font:12px/1.7 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+  .log.on{display:block}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>국내 인물 수집 · 한글 이름 보강</h1>
+  <div class="sub">한국어 위키백과에서 국내 클래식 음악가를 수집하고, 기존 인물의 영문 이름을 한국어 문서 제목으로 채웁니다. 관리자 로그인 상태에서만 저장됩니다.</div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <h2><span class="n">1</span> 분류 찾기</h2>
+    <p>한국어 위키백과에 <b>실제로 존재하는 분류명</b>을 가져옵니다. 제가 분류명을 추측하면 빗나가기 때문에, 먼저 실물을 확인합니다. 음악 관련 분류만 걸러서 소속 문서 수와 함께 보여드립니다.</p>
+    <div class="row">
+      <input type="text" id="prefix" value="대한민국의" size="18">
+      <button id="btnCat">분류 찾기</button>
+      <button class="ghost" id="btnAll">전체 선택</button>
+      <button class="ghost" id="btnNone">전체 해제</button>
+    </div>
+    <div class="cats" id="cats" style="display:none"></div>
+    <div class="log" id="logC"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span> 국내 인물 수집</h2>
+    <p>선택한 분류의 인물을 수집합니다. 이름 · 분야 · 악기 · 생몰 · 출신학교 · 소개 · 위키링크 · 위키데이터 ID를 채웁니다. 이미 있는 인물은 건너뜁니다.</p>
+    <div class="row">
+      <button id="btnRun">수집 시작</button>
+      <label class="ck"><input type="checkbox" id="dry" checked> <b>미리보기만</b> (저장하지 않고 목록만 확인)</label>
+    </div>
+    <div class="note">
+      <b>미리보기를 먼저 돌려보시길 권합니다.</b> 「대한민국의 작곡가」 분류에는 영화음악·대중음악 작곡가도 섞여 있습니다. 아이돌·트로트·힙합 관련 항목은 자동 제외하지만, 나머지는 목록을 보고 판단하시는 게 좋습니다.
+    </div>
+    <div class="bar" id="barR"><i></i></div>
+    <div class="log" id="logR"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span> 한글 이름 보강</h2>
+    <p>기존 인물 중 <b>한글 이름 칸에 영문이 들어간 6,688명</b>을 대상으로, 위키데이터에서 <b>한국어 위키백과 문서 제목</b>이나 <b>한국어 라벨</b>을 찾아 채웁니다. 실제 존재하는 한국어 표기만 사용하며, <b>음역으로 이름을 만들어내지 않습니다.</b> 한국어 표기가 없으면 영문을 그대로 둡니다.</p>
+    <div class="row">
+      <button id="btnKo">한글 이름 보강 시작</button>
+      <label class="ck"><input type="checkbox" id="dryKo" checked> <b>미리보기만</b></label>
+    </div>
+    <div class="bar" id="barK"><i></i></div>
+    <div class="log" id="logK"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+  // 음악 관련 분류만 통과
+  var MUSIC = /작곡|지휘|연주|성악|소프라노|메조|테너|바리톤|베이스|카운터테너|피아노|바이올린|첼로|비올라|플루트|클라리넷|오보에|바순|호른|트럼펫|트롬본|하프|오르간|타악|음악|합창|오페라|콘트라베이스|현악|관악/;
+  var NOTMUSIC = /가수|아이돌|밴드|힙합|트로트|래퍼|디스크자키|음반|음악 목록|음악상|영화음악상/;
+  // 수집 제외 키워드 (제목 또는 소개문에 있으면 제외)
+  var BAD = /아이돌|걸\s?그룹|보이\s?그룹|케이팝|K-?팝|트로트|힙합|래퍼|랩퍼|보이밴드|연습생|오디션 프로그램/;
+
+  var FIELD = [
+    [/작곡/, '작곡'], [/지휘/, '지휘'],
+    [/성악|소프라노|메조|테너|바리톤|베이스|카운터테너/, '성악'],
+    [/음악학|음악 이론|평론/, '음악학'],
+    [/교육/, '음악교육'],
+    [/연주|피아노|바이올린|첼로|비올라|플루트|클라리넷|오보에|바순|호른|트럼펫|트롬본|하프|오르간|타악|콘트라베이스/, '연주']
+  ];
+  var INSTR = ['피아노','바이올린','첼로','비올라','플루트','클라리넷','오보에','바순','호른','트럼펫','트롬본','하프','오르간','타악기','콘트라베이스','기타','아코디언','색소폰'];
+
+  function $(id){ return document.getElementById(id); }
+  function mkLog(boxId, barId){
+    var box = $(boxId), bar = barId ? $(barId) : null;
+    var fill = bar ? bar.querySelector('i') : null;
+    return {
+      log: function(t){ box.classList.add('on'); box.textContent += t + '\n'; box.scrollTop = box.scrollHeight; },
+      prog: function(p){ if(!bar) return; bar.classList.add('on'); fill.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+    };
+  }
+  function warn(t){ var w = $('warn'); w.classList.add('on'); w.textContent = t; }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function hasHangul(s){ return /[가-힣]/.test(s || ''); }
+  function stripParen(s){ return String(s || '').replace(/\s*\([^)]*\)\s*/g, ' ').trim(); }
+  function norm(s){ return String(s || '').replace(/\s+/g, '').toLowerCase(); }
+
+  /* ---------- 외부 API ---------- */
+  async function api(host, params, L){
+    params.format = 'json'; params.origin = '*';
+    var qs = Object.keys(params).map(function(k){
+      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }).join('&');
+    var url = 'https://' + host + '/w/api.php?' + qs;
+    for (var t = 1; t <= 4; t++){
+      try {
+        var r = await fetch(url);
+        if (r.ok) return await r.json();
+        if (L) L.log('  · 응답 ' + r.status + ' 재시도 ' + t + '/4');
+      } catch(e){ if (L) L.log('  · 통신 오류 재시도 ' + t + '/4'); }
+      await sleep(1200 * t);
+    }
+    return null;
+  }
+
+  async function sparql(q, L){
+    var url = 'https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(q);
+    for (var t = 1; t <= 4; t++){
+      try {
+        var r = await fetch(url, { headers: { Accept: 'application/sparql-results+json' } });
+        if (r.ok){ var j = await r.json(); return (j.results && j.results.bindings) || []; }
+      } catch(e){}
+      await sleep(1200 * t);
+    }
+    if (L) L.log('  ✗ 위키데이터 조회 실패 — 생몰·악기 없이 진행');
+    return [];
+  }
+
+  async function loadAll(table, cols){
+    var out = [], from = 0, size = 1000;
+    while (true){
+      var r = await sb.from(table).select(cols).range(from, from + size - 1);
+      if (r.error) throw new Error(table + ' 조회 실패: ' + r.error.message);
+      var d = r.data || [];
+      out = out.concat(d);
+      if (d.length < size) break;
+      from += size;
+      if (from > 80000) break;
+    }
+    return out;
+  }
+
+  /* ---------- 1. 분류 찾기 ---------- */
+  var cats = [];
+  async function findCats(){
+    var L = mkLog('logC');
+    $('btnCat').disabled = true;
+    try {
+      var prefix = $('prefix').value.trim();
+      L.log('■ "' + prefix + '" 으로 시작하는 분류를 찾습니다');
+      var all = [], cont = null;
+      for (var i = 0; i < 6; i++){
+        var p = { action:'query', list:'allpages', apnamespace:14, apprefix:prefix, aplimit:500 };
+        if (cont) p.apcontinue = cont;
+        var j = await api('ko.wikipedia.org', p, L);
+        if (!j) break;
+        (j.query && j.query.allpages || []).forEach(function(x){ all.push(x.title); });
+        cont = j['continue'] && j['continue'].apcontinue;
+        if (!cont) break;
+      }
+      L.log('  전체 분류 ' + all.length + '개 발견');
+
+      var picked = all.filter(function(t){
+        var nm = t.replace(/^분류:/, '');
+        return MUSIC.test(nm) && !NOTMUSIC.test(nm);
+      });
+      L.log('  음악 관련 ' + picked.length + '개로 걸렀습니다');
+      if (!picked.length){ L.log('  결과가 없습니다. 다른 접두어로 시도해 보세요.'); $('btnCat').disabled = false; return; }
+
+      // 각 분류의 문서 수 조회
+      var info = {};
+      for (var k = 0; k < picked.length; k += 50){
+        var j2 = await api('ko.wikipedia.org', {
+          action:'query', prop:'categoryinfo', titles: picked.slice(k, k+50).join('|')
+        }, L);
+        var pages = (j2 && j2.query && j2.query.pages) || {};
+        Object.keys(pages).forEach(function(id){
+          var pg = pages[id];
+          info[pg.title] = (pg.categoryinfo && pg.categoryinfo.pages) || 0;
+        });
+        await sleep(200);
+      }
+
+      cats = picked.map(function(t){ return { title: t, n: info[t] || 0 }; })
+                   .sort(function(a,b){ return b.n - a.n; });
+      var box = $('cats');
+      box.style.display = 'grid';
+      box.innerHTML = cats.map(function(c, i){
+        var nm = c.title.replace(/^분류:/, '');
+        return '<label><input type="checkbox" data-ci="' + i + '"' + (c.n > 0 ? ' checked' : '') + '>'
+             + nm + ' <small>' + c.n + '건</small></label>';
+      }).join('');
+      L.log('✅ 완료 — 아래에서 수집할 분류를 선택하세요 (문서 0건 분류는 해제해 두었습니다)');
+    } catch(e){ L.log('✗ 중단: ' + (e.message || e)); }
+    $('btnCat').disabled = false;
+  }
+
+  function selectedCats(){
+    var out = [];
+    document.querySelectorAll('#cats input[data-ci]').forEach(function(b){
+      if (b.checked) out.push(cats[+b.getAttribute('data-ci')]);
+    });
+    return out;
+  }
+
+  function guessField(catName){
+    for (var i = 0; i < FIELD.length; i++) if (FIELD[i][0].test(catName)) return FIELD[i][1];
+    return '';
+  }
+  function guessInstr(catName){
+    for (var i = 0; i < INSTR.length; i++) if (catName.indexOf(INSTR[i]) >= 0) return INSTR[i];
+    return '';
+  }
+
+  /* ---------- 2. 인물 수집 ---------- */
+  async function run(){
+    var L = mkLog('logR', 'barR');
+    var dry = $('dry').checked;
+    var sel = selectedCats();
+    if (!sel.length){ L.log('먼저 1번에서 분류를 찾아 선택해 주세요.'); return; }
+    $('btnRun').disabled = true;
+    try {
+      L.log('■ 기존 인물 로드 (중복 방지)');
+      var exist = await loadAll('persons', 'id,name_ko,name_en,wikidata_id');
+      var byQid = {}, byName = {};
+      exist.forEach(function(p){
+        if (p.wikidata_id) byQid[p.wikidata_id] = p;
+        if (p.name_ko) byName[norm(stripParen(p.name_ko))] = p;
+        if (p.name_en) byName[norm(p.name_en)] = p;
+      });
+      L.log('  기존 ' + exist.length + '명');
+
+      L.log('■ 분류별 인물 목록 수집 (' + sel.length + '개 분류)');
+      var found = {};   // title → {field, instrument}
+      for (var i = 0; i < sel.length; i++){
+        var nm = sel[i].title.replace(/^분류:/, '');
+        var fld = guessField(nm), ins = guessInstr(nm);
+        var cont = null, got = 0;
+        for (var p2 = 0; p2 < 4; p2++){
+          var pr = { action:'query', list:'categorymembers', cmtitle: sel[i].title,
+                     cmlimit:500, cmnamespace:0 };
+          if (cont) pr.cmcontinue = cont;
+          var j = await api('ko.wikipedia.org', pr, L);
+          if (!j) break;
+          (j.query && j.query.categorymembers || []).forEach(function(m){
+            if (!found[m.title]) found[m.title] = { field: fld, instrument: ins };
+            else {
+              if (!found[m.title].field && fld) found[m.title].field = fld;
+              if (!found[m.title].instrument && ins) found[m.title].instrument = ins;
+            }
+            got++;
+          });
+          cont = j['continue'] && j['continue'].cmcontinue;
+          if (!cont) break;
+        }
+        L.log('  ' + nm + ' — ' + got + '명');
+        L.prog(Math.round((i + 1) / sel.length * 30));
+        await sleep(200);
+      }
+      var titles = Object.keys(found);
+      L.log('  중복 제거 후 ' + titles.length + '명');
+
+      L.log('■ 문서 소개문 · 위키데이터 ID 조회');
+      var docs = [];
+      for (var t = 0; t < titles.length; t += 20){
+        var j3 = await api('ko.wikipedia.org', {
+          action:'query', prop:'extracts|pageprops', exintro:1, explaintext:1,
+          titles: titles.slice(t, t+20).join('|')
+        }, L);
+        var pages = (j3 && j3.query && j3.query.pages) || {};
+        Object.keys(pages).forEach(function(id){
+          var pg = pages[id];
+          if (!pg.title) return;
+          docs.push({
+            title: pg.title,
+            extract: (pg.extract || '').trim(),
+            qid: (pg.pageprops && pg.pageprops.wikibase_item) || null,
+            disamb: !!(pg.pageprops && pg.pageprops.disambiguation)
+          });
+        });
+        L.prog(30 + Math.round(Math.min(t + 20, titles.length) / titles.length * 30));
+        if (t % 200 === 0) L.log('  ' + Math.min(t + 20, titles.length) + '/' + titles.length);
+        await sleep(150);
+      }
+
+      // 걸러내기
+      var skipDup = 0, skipBad = 0, skipThin = 0, cand = [];
+      docs.forEach(function(d){
+        if (d.disamb) { skipBad++; return; }
+        var text = d.title + ' ' + d.extract;
+        if (BAD.test(text)) { skipBad++; return; }
+        if (!d.extract && !d.qid) { skipThin++; return; }
+        var nmk = stripParen(d.title);
+        if ((d.qid && byQid[d.qid]) || byName[norm(nmk)]) { skipDup++; return; }
+        cand.push(d);
+      });
+      L.log('  이미 있음 ' + skipDup + ' · 제외 키워드/동명이인 안내문서 ' + skipBad + ' · 내용 부실 ' + skipThin);
+      L.log('  ▶ 신규 후보 ' + cand.length + '명');
+
+      // 위키데이터로 생몰·악기·학교·영문명 보강
+      var qids = cand.map(function(c){ return c.qid; }).filter(Boolean);
+      var wd = {};
+      if (qids.length){
+        L.log('■ 위키데이터에서 생몰 · 악기 · 출신학교 보강 (' + qids.length + '건)');
+        for (var q = 0; q < qids.length; q += 150){
+          var vs = qids.slice(q, q+150).map(function(x){ return 'wd:' + x; }).join(' ');
+          var sq = 'SELECT ?item ?birth ?death ?en '
+            + '(GROUP_CONCAT(DISTINCT ?insL; separator=" · ") AS ?ins) '
+            + '(GROUP_CONCAT(DISTINCT ?schL; separator=" · ") AS ?sch) WHERE { '
+            + 'VALUES ?item { ' + vs + ' } '
+            + 'OPTIONAL { ?item wdt:P569 ?birth } '
+            + 'OPTIONAL { ?item wdt:P570 ?death } '
+            + 'OPTIONAL { ?item rdfs:label ?en FILTER(lang(?en)="en") } '
+            + 'OPTIONAL { ?item wdt:P1303 ?i0 . ?i0 rdfs:label ?insL FILTER(lang(?insL)="ko") } '
+            + 'OPTIONAL { ?item wdt:P69 ?s0 . ?s0 rdfs:label ?schL FILTER(lang(?schL)="ko") } '
+            + '} GROUP BY ?item ?birth ?death ?en';
+          var rows = await sparql(sq, L);
+          rows.forEach(function(b){
+            var id = b.item.value.split('/').pop();
+            function yr(v){ return v ? String(v.value).slice(0,4) : ''; }
+            wd[id] = {
+              life: (yr(b.birth) ? yr(b.birth) + '–' + yr(b.death) : ''),
+              en: b.en ? b.en.value : '',
+              ins: b.ins ? b.ins.value : '',
+              sch: b.sch ? b.sch.value : ''
+            };
+          });
+          L.prog(60 + Math.round(Math.min(q + 150, qids.length) / qids.length * 25));
+          await sleep(300);
+        }
+      }
+
+      // 저장할 행 만들기
+      var rows2 = cand.map(function(d){
+        var w = (d.qid && wd[d.qid]) || {};
+        var meta = found[d.title] || {};
+        return {
+          name_ko: stripParen(d.title),
+          name_en: w.en || null,
+          field: meta.field || null,
+          nationality: '대한민국',
+          nat_code: 'KOR',
+          life: w.life || null,
+          instrument: meta.instrument || (w.ins ? w.ins.split(' · ')[0] : null),
+          school: w.sch || null,
+          description: d.extract ? d.extract.slice(0, 400) : null,
+          link_wiki: 'https://ko.wikipedia.org/wiki/' + encodeURIComponent(d.title.replace(/ /g, '_')),
+          wikidata_id: d.qid
+        };
+      });
+
+      L.log('■ 결과 미리보기 (앞 40명)');
+      rows2.slice(0, 40).forEach(function(r){
+        L.log('  · ' + r.name_ko + ' | ' + (r.field || '분야?') + ' | ' + (r.life || '생몰?')
+              + ' | ' + (r.school || '학교?'));
+      });
+
+      if (dry){
+        L.prog(100);
+        L.log('✅ 미리보기 완료 — ' + rows2.length + '명이 수집 대상입니다. 저장하려면 "미리보기만" 체크를 해제하고 다시 실행하세요.');
+        $('btnRun').disabled = false;
+        return;
+      }
+
+      L.log('■ 저장');
+      var ok = 0;
+      for (var s = 0; s < rows2.length; s += 100){
+        var part = rows2.slice(s, s + 100);
+        var r2 = await sb.from('persons').insert(part);
+        if (r2.error) L.log('  ✗ ' + r2.error.message);
+        else ok += part.length;
+        L.prog(85 + Math.round((s + part.length) / rows2.length * 15));
+      }
+      L.log('✅ 완료 — ' + ok + '명 저장. 이어서 link-build.html 의 사사관계 도구를 다시 돌리면 국내 인물 관계도 붙습니다.');
+    } catch(e){ L.log('✗ 중단: ' + (e.message || e)); }
+    $('btnRun').disabled = false;
+  }
+
+  /* ---------- 3. 한글 이름 보강 ---------- */
+  async function hangulize(){
+    var L = mkLog('logK', 'barK');
+    var dry = $('dryKo').checked;
+    $('btnKo').disabled = true;
+    try {
+      L.log('■ 인물 로드');
+      var all = await loadAll('persons', 'id,name_ko,name_en,wikidata_id');
+      var targets = all.filter(function(p){
+        return p.wikidata_id && !hasHangul(p.name_ko);
+      });
+      L.log('  한글 이름이 없는 인물: ' + targets.length + '명');
+      if (!targets.length){ $('btnKo').disabled = false; return; }
+
+      L.log('■ 위키데이터에서 한국어 문서 제목 · 라벨 조회');
+      var fix = [];
+      for (var i = 0; i < targets.length; i += 50){
+        var part = targets.slice(i, i + 50);
+        var j = await api('www.wikidata.org', {
+          action:'wbgetentities',
+          ids: part.map(function(p){ return p.wikidata_id; }).join('|'),
+          props:'labels|sitelinks', languages:'ko', sitefilter:'kowiki'
+        }, L);
+        var ents = (j && j.entities) || {};
+        part.forEach(function(p){
+          var e = ents[p.wikidata_id];
+          if (!e) return;
+          var site = e.sitelinks && e.sitelinks.kowiki && e.sitelinks.kowiki.title;
+          var lab  = e.labels && e.labels.ko && e.labels.ko.value;
+          var nk = stripParen(site || lab || '');
+          if (nk && hasHangul(nk)) fix.push({ id: p.id, from: p.name_ko, to: nk, en: p.name_en });
+        });
+        L.prog(Math.round(Math.min(i + 50, targets.length) / targets.length * 70));
+        if (i % 500 === 0) L.log('  ' + Math.min(i + 50, targets.length) + '/' + targets.length + ' · 찾은 한글 이름 ' + fix.length);
+        await sleep(180);
+      }
+      L.log('  ▶ 한국어 표기를 찾은 인물: ' + fix.length + '명 / 나머지는 영문 유지');
+
+      L.log('■ 미리보기 (앞 40명)');
+      fix.slice(0, 40).forEach(function(f){ L.log('  · ' + f.from + '  →  ' + f.to); });
+
+      if (dry){
+        L.prog(100);
+        L.log('✅ 미리보기 완료 — 저장하려면 "미리보기만" 체크를 해제하고 다시 실행하세요.');
+        $('btnKo').disabled = false;
+        return;
+      }
+
+      L.log('■ 저장 (영문 이름은 name_en 으로 보존)');
+      var ok = 0;
+      for (var k = 0; k < fix.length; k++){
+        var f = fix[k];
+        var patch = { name_ko: f.to };
+        if (!f.en) patch.name_en = f.from;      // 영문명이 비어 있으면 기존 값을 옮겨 보존
+        var r = await sb.from('persons').update(patch).eq('id', f.id);
+        if (!r.error) ok++;
+        else if (k < 3) L.log('  ✗ ' + f.to + ': ' + r.error.message);
+        if (k % 50 === 0) L.prog(70 + Math.round(k / fix.length * 30));
+      }
+      L.prog(100);
+      L.log('✅ 완료 — ' + ok + '명의 한글 이름을 채웠습니다.');
+    } catch(e){ L.log('✗ 중단: ' + (e.message || e)); }
+    $('btnKo').disabled = false;
+  }
+
+  /* ---------- 시작 ---------- */
+  $('btnCat').addEventListener('click', findCats);
+  $('btnRun').addEventListener('click', run);
+  $('btnKo').addEventListener('click', hangulize);
+  $('btnAll').addEventListener('click', function(){
+    document.querySelectorAll('#cats input[data-ci]').forEach(function(b){ b.checked = true; });
+  });
+  $('btnNone').addEventListener('click', function(){
+    document.querySelectorAll('#cats input[data-ci]').forEach(function(b){ b.checked = false; });
+  });
+
+  (async function init(){
+    var s = await sb.auth.getSession();
+    if (!s.data || !s.data.session){
+      warn('로그인 상태가 아닙니다. 같은 브라우저에서 관리자(wixon@naver.com)로 로그인한 뒤 새로고침해 주세요. 미리보기는 되지만 저장이 거부됩니다.');
+    }
+  })();
+})();
+</script>
+</body>
+</html>
