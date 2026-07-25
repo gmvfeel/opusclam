@@ -1062,9 +1062,9 @@
 
     async function search(table, q){
       var cols = await nameCols(table);
-      var or = cols.map(function(c){ return c+'.ilike.%'+q+'%'; }).join(',');
+      var or = cols.map(function(c){ return c+'.ilike.*'+q+'*'; }).join(',');
       var r = await sb.from(table).select('*').or(or).limit(20);
-      if(r.error) return [];
+      if(r.error){ throw new Error(table+' 검색 실패: '+r.error.message); }
       return r.data||[];
     }
 
@@ -1075,8 +1075,10 @@
       var box  = document.getElementById('rlResults');
       if(q.length<1){ hint.textContent='이름을 입력해 주세요.'; return; }
       hint.textContent='검색 중…'; box.innerHTML='';
-      var rows = await search('persons', q);
-      hint.textContent = rows.length ? (rows.length+'명 찾음 — 인물을 선택하세요') : '결과가 없습니다.';
+      var rows;
+      try { rows = await search('persons', q); }
+      catch(err){ hint.textContent = '⚠ '+err.message; return; }
+      hint.textContent = rows.length ? (rows.length+'명 찾음 — 인물을 선택하세요') : '결과가 없습니다. (다른 표기로도 검색해 보세요)';
       box.innerHTML = rows.map(function(p){
         var sub=[p.field?String(p.field).split(',')[0]:'',p.era_name||'',p.life||''].filter(Boolean).join(' · ');
         return '<button class="rl-cand" data-pid="'+p.id+'">'+esc(p.name_ko||p.name_en||'?')
@@ -1160,7 +1162,8 @@
       if(q.length<1){ box.innerHTML='<span class="rl-hint">상대 이름을 입력해 주세요.</span>'; return; }
       box.innerHTML='<span class="rl-hint">찾는 중…</span>';
       var table = REL_TABLE[rel];
-      lastTargets = await search(table, q);
+      try { lastTargets = await search(table, q); }
+      catch(err){ box.innerHTML='<span class="rl-hint">⚠ '+err.message+'</span>'; return; }
       var html = lastTargets.map(function(t){
         var nm = (table==='persons') ? (t.name_ko||t.name_en||'?') : pickName(t);
         return '<button class="rl-cand" data-tid="'+t.id+'">'+esc(nm)+'</button>';
