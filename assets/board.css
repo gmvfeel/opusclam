@@ -367,3 +367,8 @@ html[data-theme="dark"] .oc-cell{background:rgba(255,255,255,.04)}
 /* 표는 촘촘하게 + 줄무늬 */
 .bv-body tbody tr:nth-child(even) td,.bv-body tr:nth-child(even) td{background:rgba(124,99,176,.035)}
 .bv-body th,.bv-body td{padding:7px 12px}
+
+/* 자료형 뷰: 학교 사진 */
+.bv-docphoto{margin:20px 0 4px;padding:0}
+.bv-docphoto img{display:block;width:100%;max-height:380px;object-fit:cover;border-radius:12px;background:var(--paper-3)}
+.bv-docphoto figcaption{margin-top:7px;font-size:11.5px;line-height:1.6;color:var(--text-3)}

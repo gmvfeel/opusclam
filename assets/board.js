@@ -369,6 +369,7 @@ window.OCBoard = (function () {
             + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
             + '</div></div>'
             + (o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span>' + esc(o.file_name || '첨부파일 보기') + '</span></a>' : '')
+            + (o.thumb_url ? '<figure class="bv-docphoto"><img src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' + (o.photo_credit ? '<figcaption>' + esc(o.photo_credit) + '</figcaption>' : '') + '</figure>' : '')
             + body
             + enhance
             + '<div class="bv-foot"></div>';
