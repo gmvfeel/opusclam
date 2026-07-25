@@ -213,15 +213,16 @@ window.OCBoard = (function () {
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" download>DOWNLOAD</a>' : '';
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);
       var badges = (rec.region || rec.category)
-        ? '<div class="doc-tags">'
+        ? '<span class="doc-cat">'
           + (rec.region ? '<span class="board-tag" data-cat="' + esc(rec.region) + '">' + esc(rec.region) + '</span>' : '')
           + (rec.category ? '<span class="board-tag" data-cat="' + esc(rec.category) + '">' + esc(rec.category) + '</span>' : '')
-          + '</div>'
+          + '</span>'
         : '';
       return '<div class="doc-row">'
         + '<a class="doc-logo" href="' + vp + '">' + logo + '</a>'
         + '<div class="doc-main"><a class="doc-title" href="' + vp + '">' + esc(rec.title || '') + ccHtml(rec) + '</a>'
-        + '<p class="doc-desc">' + previewText(rec.body, 120) + '</p>' + home + badges + '</div>'
+        + '<p class="doc-desc">' + previewText(rec.body, 120) + '</p>' + home + '</div>'
+        + badges
         + '<span class="doc-date">' + fmtDate(rec.created_at) + '</span>'
         + dl
         + '</div>';
