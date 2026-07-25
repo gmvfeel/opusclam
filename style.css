@@ -88,7 +88,7 @@
   nav.main>.nav-item>a.active::after,nav.main>.nav-item:hover>a::after{content:"";position:absolute;left:0;right:0;bottom:24px;height:2px;background:var(--orange)}
   /* horizontal submenu bar */
   .dropdown{position:absolute;top:100%;left:0;right:0;width:100%;
-    background:rgba(234,234,238,.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--line);border-bottom:1px solid #d6d6dc;box-shadow:0 16px 32px -18px rgba(30,20,60,.28);
+    background:rgba(246,246,249,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--line);border-bottom:1px solid #d6d6dc;box-shadow:0 16px 32px -18px rgba(30,20,60,.28);
     opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,visibility .22s ease;z-index:65}
   .nav-item:hover .dropdown{opacity:1;visibility:visible;pointer-events:auto}
   .dropdown-inner{max-width:var(--wrap);margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center}

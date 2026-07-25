@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>뉴스 · OPUSCLAM</title>
+<title>입시요강 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -38,17 +38,17 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><span class="on">뉴스</span>
+      <a href="/home.html">홈</a><span>/</span><a href="#">OC커뮤니티</a><span>/</span><span class="on">입시요강</span>
     </nav>
 
     <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
       <a href="/community/hottopic.html">핫토픽</a>
       <a href="/community/gallery.html">공연사진 / 영상</a>
-      <a href="/community/admission.html">입시</a>
+      <a href="/community/admission.html" class="active">입시</a>
       <a href="#">지식나눔</a>
       <a href="#">SELF PR</a>
       <a href="#">이달의 음악학교</a>
-      <a href="/community/news.html" class="active">뉴스</a>
+      <a href="/community/news.html">뉴스</a>
       <a href="#">현대음악</a>
       <a href="#">유틸리티 / 악보 / 자료</a>
       <a href="#">태교음악</a>
@@ -58,15 +58,17 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OC COMMUNITY</div>
-          <h1 class="pdb-title">뉴스</h1>
+          <h1 class="pdb-title">입시</h1>
         </div>
       </div>
-      <p class="pdb-lead">국내외 클래식 음악계 소식을 회원들과 함께 나누는 공간입니다.</p>
+      <p class="pdb-lead">음대·예고·대학원의 입시·실기 요강을 한곳에 모아둔 자료 게시판입니다.</p>
     </header>
   </div>
 </section>
 
 <main class="board">
+  <div class="ac-tabs"><a href="/community/admission.html" class="on">입시요강</a><a href="/community/admission-community.html">입시커뮤니티</a></div>
+
   <div class="board-bar pdb-toolbar">
     <div class="board-search pdb-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -74,18 +76,9 @@
       <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
     </div>
     <div class="pdb-selects">
-      <select class="board-catsel" aria-label="분류"></select>
-      <select class="board-sort" aria-label="정렬">
-        <option value="created_at">최신순</option>
-        <option value="view_count">인기순</option>
-        <option value="comment_count">댓글순</option>
-      </select>
-    </div>
-    <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
-      <span class="fs-label">글자크기</span>
-      <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
-      <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
-      <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+      <select class="board-regionsel" aria-label="국내/해외"></select>
+      <select class="board-catsel" aria-label="구분"></select>
+      <select class="board-yearsel" aria-label="년도"></select>
     </div>
   </div>
 
@@ -98,7 +91,6 @@
   </div>
 </main>
 
-<!-- ===== list bottom ad banners (인물DB와 동일) ===== -->
 <section class="bigban">
   <div class="wrap">
     <a class="ad-slot bigban-ad" href="#">
@@ -122,10 +114,11 @@
 <script>
   document.addEventListener('DOMContentLoaded', function(){
     OCBoard.list({
-      table:'news', pageSize:20, viewPage:'news-view.html', writePage:'news-write.html',
+      table:'admission', pageSize:20, viewPage:'admission-view.html', writePage:'admission-write.html',
       searchCols:['title','body','keywords'],
-      categories:[{value:'',label:'전체'},{value:'국내',label:'국내'},{value:'해외',label:'해외'}],
-      articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at'
+      categories:[{value:'',label:'구분선택'},{value:'대학',label:'대학'},{value:'예고',label:'예고'},{value:'대학원',label:'대학원'}],
+      regions:[{value:'',label:'국내/해외'},{value:'국내',label:'국내'},{value:'해외',label:'해외'}],
+      docStyle:true, yearFilter:true, writeRole:'member', pinnedFirst:false, defaultSort:'created_at'
     });
   });
 </script>

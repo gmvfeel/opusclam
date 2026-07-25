@@ -7,11 +7,41 @@
    ============================================================ */
 (function () {
   function draw() {
+    var NS = 'http://www.w3.org/2000/svg';
+    function el(t) { return document.createElementNS(NS, t); }
+
+    /* 커뮤니티(뉴스 등) 히어로: 동심원 링(scene-orbit) — 정적·우아 */
+    var gR = document.querySelector('.pdb-bg .scene-orbit g');
+    if (gR) {
+      gR.innerHTML = '';
+      var cols = 4, rows = 3, cellW = 1280 / cols, cellH = 460 / rows;
+      for (var gy = 0; gy < rows; gy++) {
+        for (var gx = 0; gx < cols; gx++) {
+          if (Math.random() < 0.15) continue;                 /* 가끔 빈 칸 → 자연스럽게 */
+          var cx = gx * cellW + cellW * (0.25 + Math.random() * 0.5);
+          var cy = gy * cellH + cellH * (0.25 + Math.random() * 0.5);
+          var base = 18 + Math.random() * 12;                 /* 무리 크기 18~30 */
+          var n = 4 + Math.floor(Math.random() * 3);          /* 링 4~6겹 */
+          for (var i = 0; i < n; i++) {
+            var cir = el('circle');
+            cir.setAttribute('cx', cx.toFixed(1)); cir.setAttribute('cy', cy.toFixed(1));
+            cir.setAttribute('r', (base * (i + 1)).toFixed(1));
+            cir.setAttribute('fill', 'none');
+            cir.setAttribute('stroke', 'url(#dg)');
+            cir.setAttribute('stroke-width', (1.6 - i * 0.08).toFixed(2));
+            cir.setAttribute('opacity', Math.max(0.15, 0.5 - i * 0.07).toFixed(2));
+            gR.appendChild(cir);
+          }
+        }
+      }
+      return;
+    }
+
+    /* DB 등 기본 히어로: 촘촘한 별자리(scene-net) */
     var g = document.querySelector('.pdb-bg .scene-net g');
     if (!g) return;
     g.innerHTML = '';
-    var W = 1280, H = 460, NN = 70, maxD = 132, NS = 'http://www.w3.org/2000/svg';
-    function el(t) { return document.createElementNS(NS, t); }
+    var W = 1280, H = 460, NN = 70, maxD = 132;
     var nodes = [];
     for (var i = 0; i < NN; i++) nodes.push({ x: Math.random() * W, y: Math.random() * H });
     for (var a = 0; a < nodes.length; a++) {
