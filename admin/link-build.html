@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>OPUSCLAM · 인물 네트워킹 구축</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 18px 80px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+  .card h2 .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:#20223a;color:#fff;font-size:12px;align-items:center;justify-content:center}
+  .card p{margin:0 0 14px;color:#5c5e70;font-size:13px}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .bar{height:8px;background:#ececf3;border-radius:99px;overflow:hidden;margin:14px 0 8px;display:none}
+  .bar.on{display:block}
+  .bar i{display:block;height:100%;width:0;background:#dc2626;transition:width .25s}
+  .log{display:none;margin-top:10px;max-height:240px;overflow:auto;background:#12131c;color:#d7d9e8;border-radius:7px;padding:12px 14px;font:12px/1.7 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+  .log.on{display:block}
+  .stat{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .stat div{background:#f2f2f7;border-radius:7px;padding:8px 12px;font-size:12px}
+  .stat b{font-size:15px;display:block}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>인물 네트워킹 구축</h1>
+  <div class="sub">위키데이터 ID를 기준으로 사사관계 · 소속 · 출신학교를 <b>entity_links</b> 표에 채웁니다. 관리자 로그인 상태에서만 동작합니다.</div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <h2>현재 연결 현황</h2>
+    <div class="stat" id="stat"><div>불러오는 중…</div></div>
+    <div style="margin-top:14px"><button class="ghost" id="btnStat">새로고침</button></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">1</span> 사사관계 (스승 · 제자)</h2>
+    <p>위키데이터의 <b>P1066(사사한 스승)</b> · <b>P802(제자)</b> 를 읽어 인물↔인물을 잇습니다. 이름 대조가 아니라 <b>ID 대조</b>라서 동명이인·철자 문제가 없습니다. 우리 DB에 없는 스승은 이름만 저장해 두고, 나중에 그 인물이 수집되면 자동으로 링크가 됩니다.</p>
+    <button id="btnT">사사관계 구축 시작</button>
+    <div class="bar" id="barT"><i></i></div>
+    <div class="log" id="logT"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span> 소속 단체 · 출신 학교</h2>
+    <p>위키데이터의 <b>P463(소속)</b> · <b>P69(수학한 학교)</b> 를 읽어 인물↔음악단체DB, 인물↔음악학교DB를 잇습니다. 우리 DB에 있는 단체·학교는 링크로, 없으면 이름만 표시됩니다. (현재 persons의 affiliation 컬럼은 0건이라 이 단계가 소속 데이터를 처음 만들어 줍니다.)</p>
+    <button id="btnA">소속 · 학교 구축 시작</button>
+    <div class="bar" id="barA"><i></i></div>
+    <div class="log" id="logA"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+  var NAME_KEYS = ['name_ko','name','name_kr','title','org_name','school_name','name_en'];
+  var CHUNK = 200;      // SPARQL 한 번에 조회할 인물 수
+  var INS   = 500;      // 한 번에 저장할 관계 수
+
+  /* ---------- 화면 도우미 ---------- */
+  function $(id){ return document.getElementById(id); }
+  function mkLog(boxId, barId){
+    var box = $(boxId), bar = $(barId), fill = bar.querySelector('i');
+    return {
+      log: function(t){ box.classList.add('on'); box.textContent += t + '\n'; box.scrollTop = box.scrollHeight; },
+      prog: function(p){ bar.classList.add('on'); fill.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+    };
+  }
+  function warn(t){ var w = $('warn'); w.classList.add('on'); w.textContent = t; }
+
+  function norm(s){
+    if (s === null || s === undefined) return '';
+    var t = String(s).normalize('NFKC').toLowerCase();
+    t = t.replace(/\s+/g, '');
+    try { t = t.replace(/[^\p{L}\p{N}]/gu, ''); }
+    catch(e){ t = t.replace(/[^0-9a-z가-힣ㄱ-ㅎㅏ-ㅣ]/g, ''); }
+    return t;
+  }
+  function qid(uri){ return String(uri || '').split('/').pop(); }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+  /* ---------- 위키데이터 ---------- */
+  async function sparql(q, L){
+    var url = 'https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(q);
+    for (var attempt = 1; attempt <= 4; attempt++){
+      try {
+        var res = await fetch(url, { headers: { Accept: 'application/sparql-results+json' } });
+        if (res.ok){
+          var j = await res.json();
+          return (j.results && j.results.bindings) ? j.results.bindings : [];
+        }
+        L.log('  · 응답 ' + res.status + ' — 재시도 ' + attempt + '/4');
+      } catch(e){
+        L.log('  · 통신 오류 — 재시도 ' + attempt + '/4');
+      }
+      await sleep(1500 * attempt);
+    }
+    L.log('  ✗ 이 묶음은 건너뜁니다');
+    return [];
+  }
+
+  // 위키데이터 ID 목록의 한국어/영어 이름 가져오기
+  async function fetchLabels(ids, L){
+    var out = {};
+    for (var i = 0; i < ids.length; i += CHUNK){
+      var vs = ids.slice(i, i + CHUNK).map(function(q){ return 'wd:' + q; }).join(' ');
+      var q = 'SELECT ?item ?ko ?en WHERE { VALUES ?item { ' + vs + ' } '
+            + 'OPTIONAL { ?item rdfs:label ?ko FILTER(lang(?ko)="ko") } '
+            + 'OPTIONAL { ?item rdfs:label ?en FILTER(lang(?en)="en") } }';
+      var rows = await sparql(q, L);
+      rows.forEach(function(b){
+        var k = qid(b.item.value);
+        out[k] = { ko: b.ko ? b.ko.value : '', en: b.en ? b.en.value : '' };
+      });
+      L.log('  이름 조회 ' + Math.min(i + CHUNK, ids.length) + '/' + ids.length);
+      await sleep(250);
+    }
+    return out;
+  }
+
+  /* ---------- Supabase ---------- */
+  async function loadAll(table, cols, L){
+    var out = [], from = 0, size = 1000;
+    while (true){
+      var r = await sb.from(table).select(cols).range(from, from + size - 1);
+      if (r.error) throw new Error(table + ' 조회 실패: ' + r.error.message);
+      var d = r.data || [];
+      out = out.concat(d);
+      if (d.length < size) break;
+      from += size;
+      if (from > 80000) break;
+    }
+    if (L) L.log('  ' + table + ' ' + out.length + '건 로드');
+    return out;
+  }
+
+  async function probeCols(table){
+    var r = await sb.from(table).select('*').limit(1);
+    if (r.error || !r.data || !r.data.length) return null;
+    return Object.keys(r.data[0]);
+  }
+
+  async function insertRows(rows, L){
+    var ok = 0;
+    for (var i = 0; i < rows.length; i += INS){
+      var part = rows.slice(i, i + INS);
+      var r = await sb.from('entity_links').insert(part);
+      if (r.error){
+        L.log('  ✗ 저장 오류: ' + r.error.message);
+      } else {
+        ok += part.length;
+      }
+      L.prog(Math.round((i + part.length) / rows.length * 100));
+    }
+    return ok;
+  }
+
+  /* ---------- 현황 ---------- */
+  async function refreshStat(){
+    var box = $('stat');
+    var rels = [['teacher','스승'],['student','제자'],['member_of','소속 단체'],['alumnus_of','출신 학교']];
+    box.innerHTML = '<div>불러오는 중…</div>';
+    var html = '';
+    for (var i = 0; i < rels.length; i++){
+      var r = await sb.from('entity_links').select('id', { count: 'exact', head: true }).eq('rel', rels[i][0]);
+      var n = r.error ? '?' : (r.count || 0);
+      var r2 = await sb.from('entity_links').select('id', { count: 'exact', head: true }).eq('rel', rels[i][0]).not('to_id', 'is', null);
+      var m = r2.error ? '?' : (r2.count || 0);
+      html += '<div>' + rels[i][1] + '<b>' + n + '</b>링크 연결 ' + m + '</div>';
+    }
+    box.innerHTML = html;
+  }
+
+  /* ---------- 1. 사사관계 ---------- */
+  async function buildTeacher(){
+    var L = mkLog('logT','barT');
+    $('btnT').disabled = true;
+    try {
+      L.log('■ 인물 로드');
+      var persons = await loadAll('persons', 'id,wikidata_id,name_ko,name_en', L);
+      var byQid = {};
+      persons.forEach(function(p){ if (p.wikidata_id) byQid[p.wikidata_id] = p; });
+      var ids = Object.keys(byQid);
+      L.log('  위키데이터 ID 보유: ' + ids.length + '명');
+
+      L.log('■ 위키데이터에서 사사관계 조회 (P1066 · P802)');
+      var pairs = {};   // "학생QID>스승QID" 중복 제거
+      for (var i = 0; i < ids.length; i += CHUNK){
+        var vs = ids.slice(i, i + CHUNK).map(function(q){ return 'wd:' + q; }).join(' ');
+        var q = 'SELECT ?s ?t WHERE { VALUES ?item { ' + vs + ' } '
+              + '{ ?item wdt:P1066 ?t . BIND(?item AS ?s) } UNION '
+              + '{ ?item wdt:P802 ?s . BIND(?item AS ?t) } }';
+        var rows = await sparql(q, L);
+        rows.forEach(function(b){
+          var s = qid(b.s.value), t = qid(b.t.value);
+          if (s && t && s !== t) pairs[s + '>' + t] = 1;
+        });
+        L.prog(Math.round(Math.min(i + CHUNK, ids.length) / ids.length * 70));
+        L.log('  조회 ' + Math.min(i + CHUNK, ids.length) + '/' + ids.length + ' · 누적 관계 ' + Object.keys(pairs).length);
+        await sleep(250);
+      }
+      var keys = Object.keys(pairs);
+      L.log('  발견된 사사관계: ' + keys.length + '건');
+      if (!keys.length){ L.log('종료 — 찾은 관계가 없습니다.'); $('btnT').disabled = false; return; }
+
+      // 우리 DB에 없는 상대의 이름 확보
+      var unknown = {};
+      keys.forEach(function(k){
+        var p = k.split('>');
+        if (!byQid[p[0]]) unknown[p[0]] = 1;
+        if (!byQid[p[1]]) unknown[p[1]] = 1;
+      });
+      var unknownIds = Object.keys(unknown);
+      var labels = {};
+      if (unknownIds.length){
+        L.log('■ DB에 없는 상대 ' + unknownIds.length + '명의 이름 조회');
+        labels = await fetchLabels(unknownIds, L);
+      }
+
+      // 관계 행 만들기
+      var rows2 = [], seen = {};
+      function push(fromP, rel, target, tqid){
+        var toId = target ? target.id : null;
+        var toLabel = target ? null
+          : ((labels[tqid] && (labels[tqid].ko || labels[tqid].en)) || null);
+        if (!toId && !toLabel) return;             // 이름도 모르면 저장 안 함
+        var uk = fromP.id + '|' + rel + '|' + (toId || '') + '|' + (toLabel || '');
+        if (seen[uk]) return;
+        seen[uk] = 1;
+        rows2.push({
+          from_type: 'person', from_id: fromP.id, rel: rel,
+          to_type: 'person', to_id: toId, to_label: toLabel, to_ref: tqid,
+          source: 'wikidata', confidence: toId ? 100 : 70
+        });
+      }
+      keys.forEach(function(k){
+        var p = k.split('>'), sQ = p[0], tQ = p[1];
+        var sP = byQid[sQ], tP = byQid[tQ];
+        if (sP) push(sP, 'teacher', tP, tQ);       // 학생 → 스승
+        if (tP) push(tP, 'student', sP, sQ);       // 스승 → 제자
+      });
+      L.log('  저장할 관계 행: ' + rows2.length + '건');
+
+      L.log('■ 기존 위키데이터 사사관계 삭제 후 재저장');
+      var del = await sb.from('entity_links').delete().eq('source','wikidata').in('rel',['teacher','student']);
+      if (del.error) L.log('  ✗ 삭제 실패: ' + del.error.message + ' (관리자 로그인을 확인해 주세요)');
+      var ok = await insertRows(rows2, L);
+      L.prog(100);
+      L.log('✅ 완료 — ' + ok + '건 저장');
+      await refreshStat();
+    } catch(e){
+      L.log('✗ 중단: ' + (e && e.message ? e.message : e));
+    }
+    $('btnT').disabled = false;
+  }
+
+  /* ---------- 2. 소속 · 출신학교 ---------- */
+  async function buildAffil(){
+    var L = mkLog('logA','barA');
+    $('btnA').disabled = true;
+    try {
+      L.log('■ 인물 로드');
+      var persons = await loadAll('persons', 'id,wikidata_id', L);
+      var byQid = {};
+      persons.forEach(function(p){ if (p.wikidata_id) byQid[p.wikidata_id] = p; });
+      var ids = Object.keys(byQid);
+
+      // 단체 · 학교 표 구조를 실행 시점에 파악 (컬럼명을 추측하지 않습니다)
+      L.log('■ 음악단체DB · 음악학교DB 구조 확인');
+      var idx = {};
+      var conf = [['org','orgs'],['school','schools']];
+      for (var c = 0; c < conf.length; c++){
+        var kind = conf[c][0], table = conf[c][1];
+        var cols = await probeCols(table);
+        if (!cols){ L.log('  ⚠ ' + table + ' 조회 불가 또는 비어 있음 — 이름만 저장합니다'); idx[kind] = null; continue; }
+        var nameCols = NAME_KEYS.filter(function(k){ return cols.indexOf(k) >= 0; });
+        var hasQ = cols.indexOf('wikidata_id') >= 0;
+        L.log('  ' + table + ': 이름컬럼 [' + nameCols.join(', ') + ']' + (hasQ ? ' · 위키데이터ID 있음' : ' · 위키데이터ID 없음'));
+        var sel = ['id'].concat(nameCols);
+        if (hasQ) sel.push('wikidata_id');
+        var rows = await loadAll(table, sel.join(','), L);
+        var byQ = {}, byName = {};
+        rows.forEach(function(r){
+          if (hasQ && r.wikidata_id) byQ[r.wikidata_id] = r;
+          nameCols.forEach(function(nc){
+            var n = norm(r[nc]);
+            if (n && !byName[n]) byName[n] = r;
+          });
+        });
+        idx[kind] = { byQ: byQ, byName: byName, hasQ: hasQ };
+      }
+
+      L.log('■ 위키데이터에서 소속 · 학교 조회 (P463 · P69)');
+      var found = {};   // "인물QID>대상QID>kind"
+      for (var i = 0; i < ids.length; i += CHUNK){
+        var vs = ids.slice(i, i + CHUNK).map(function(q){ return 'wd:' + q; }).join(' ');
+        var q = 'SELECT ?item ?val ?kind WHERE { VALUES ?item { ' + vs + ' } '
+              + '{ ?item wdt:P463 ?val . BIND("org" AS ?kind) } UNION '
+              + '{ ?item wdt:P69 ?val . BIND("school" AS ?kind) } }';
+        var rows2 = await sparql(q, L);
+        rows2.forEach(function(b){
+          var a = qid(b.item.value), v = qid(b.val.value), k = b.kind.value;
+          if (a && v) found[a + '>' + v + '>' + k] = 1;
+        });
+        L.prog(Math.round(Math.min(i + CHUNK, ids.length) / ids.length * 60));
+        L.log('  조회 ' + Math.min(i + CHUNK, ids.length) + '/' + ids.length + ' · 누적 ' + Object.keys(found).length);
+        await sleep(250);
+      }
+      var keys = Object.keys(found);
+      L.log('  발견: ' + keys.length + '건');
+      if (!keys.length){ L.log('종료 — 찾은 관계가 없습니다.'); $('btnA').disabled = false; return; }
+
+      // 대상 이름 확보 (링크가 안 되는 경우 표시용 + 이름 대조용)
+      var targets = {};
+      keys.forEach(function(k){ targets[k.split('>')[1]] = 1; });
+      var tIds = Object.keys(targets);
+      L.log('■ 대상 ' + tIds.length + '건의 이름 조회');
+      var labels = await fetchLabels(tIds, L);
+
+      var out = [], seen = {}, matched = { org: 0, school: 0 }, plain = { org: 0, school: 0 };
+      keys.forEach(function(k){
+        var p = k.split('>'), aQ = p[0], vQ = p[1], kind = p[2];
+        var person = byQid[aQ];
+        if (!person) return;
+        var lab = labels[vQ] || { ko: '', en: '' };
+        var name = lab.ko || lab.en || '';
+        var hit = null, x = idx[kind];
+        if (x){
+          if (x.hasQ && x.byQ[vQ]) hit = x.byQ[vQ];
+          if (!hit && name){
+            hit = x.byName[norm(lab.ko)] || x.byName[norm(lab.en)] || null;
+          }
+        }
+        if (!hit && !name) return;
+        var rel = (kind === 'org') ? 'member_of' : 'alumnus_of';
+        var toType = kind;
+        var toId = hit ? hit.id : null;
+        var uk = person.id + '|' + rel + '|' + (toId || '') + '|' + (toId ? '' : name);
+        if (seen[uk]) return;
+        seen[uk] = 1;
+        if (toId) matched[kind]++; else plain[kind]++;
+        out.push({
+          from_type: 'person', from_id: person.id, rel: rel,
+          to_type: toType, to_id: toId, to_label: toId ? null : name, to_ref: vQ,
+          source: 'wikidata', confidence: toId ? ((x && x.hasQ && x.byQ[vQ]) ? 100 : 70) : 50
+        });
+      });
+      L.log('  소속: 링크 ' + matched.org + ' / 이름만 ' + plain.org);
+      L.log('  학교: 링크 ' + matched.school + ' / 이름만 ' + plain.school);
+      L.log('  저장할 관계 행: ' + out.length + '건');
+
+      L.log('■ 기존 위키데이터 소속·학교 관계 삭제 후 재저장');
+      var del = await sb.from('entity_links').delete().eq('source','wikidata').in('rel',['member_of','alumnus_of']);
+      if (del.error) L.log('  ✗ 삭제 실패: ' + del.error.message + ' (관리자 로그인을 확인해 주세요)');
+      var ok = await insertRows(out, L);
+      L.prog(100);
+      L.log('✅ 완료 — ' + ok + '건 저장');
+      await refreshStat();
+    } catch(e){
+      L.log('✗ 중단: ' + (e && e.message ? e.message : e));
+    }
+    $('btnA').disabled = false;
+  }
+
+  /* ---------- 시작 ---------- */
+  $('btnStat').addEventListener('click', refreshStat);
+  $('btnT').addEventListener('click', buildTeacher);
+  $('btnA').addEventListener('click', buildAffil);
+
+  (async function init(){
+    var s = await sb.auth.getSession();
+    if (!s.data || !s.data.session){
+      warn('로그인 상태가 아닙니다. 같은 브라우저에서 관리자(wixon@naver.com)로 로그인한 뒤 이 페이지를 새로고침해 주세요. 조회는 되지만 저장이 거부됩니다.');
+    }
+    await refreshStat();
+  })();
+})();
+</script>
+</body>
+</html>
