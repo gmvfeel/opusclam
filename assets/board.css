@@ -308,3 +308,6 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 .board-row-right{margin-right:24px}
 .doc-row{padding-right:24px}
 @media(max-width:640px){.board-row-right{margin-right:8px}.doc-row{padding-right:6px}}
+
+/* 목록 구분 배지: 제목 앞으로 (오른쪽 3줄 쌓임 제거) */
+.board-row-title .board-tag{margin-right:8px;vertical-align:middle;position:relative;top:-1px}
