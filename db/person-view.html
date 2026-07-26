@@ -1316,6 +1316,20 @@ if('serviceWorker' in navigator){
      var p=a[0];
      var nm=(p.name_ko||'').trim();
      var por=document.querySelector('.pv-portrait span'); if(por) por.textContent=nm?nm[0]:'?';
+     /* 초상: DB에 저장된 이미지를 먼저 사용 (위키 실시간 이미지는 악보·무덤이 섞일 수 있음) */
+     (function(){
+       var iu=(p.image_url||'').trim(); if(!iu) return;
+       iu=iu.replace(/^http:\/\//,'https://');
+       if(iu.indexOf('Special:FilePath')>=0) iu+=(iu.indexOf('?')>=0?'&':'?')+'width=400';
+       var box=document.querySelector('.pv-portrait');
+       if(!box) return;
+       box.innerHTML=''; box.style.overflow='hidden';
+       var im=document.createElement('img');
+       im.src=iu; im.alt=nm; im.loading='lazy';
+       im.style.cssText='width:100%;height:100%;object-fit:cover';
+       im.onerror=function(){ box.innerHTML='<span>'+(nm?esc(nm[0]):'?')+'</span>'; };
+       box.appendChild(im);
+     })();
      var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(p.name_en&&p.name_en!==nm){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=p.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
      var tg=document.querySelector('.pv-tags'); if(tg){
        var html=(p.field||'').split(',').map(function(t){t=t.trim();return t?'<span class="tag">'+esc(t)+'</span>':'';}).join('');
@@ -1444,7 +1458,7 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
          /* 리드문(상단 큰 글씨)은 영문으로 바꾸지 않고 한국어 요약을 유지합니다 */
          var lead=document.querySelector('.pv-lead');
          if(lead && !isEn){ var f=(w.extract.split(/\n+/)[0]||w.extract); lead.textContent=(f.length>120?f.slice(0,120)+'\u2026':f); }
-         if(w.thumb){ var por=document.querySelector('.pv-portrait'); if(por){ por.innerHTML=''; por.style.overflow='hidden'; var im=document.createElement('img'); im.src=w.thumb; im.alt=nm; im.style.cssText='width:100%;height:100%;object-fit:cover'; por.appendChild(im);} }
+         if(w.thumb && !((REC.image_url||'').trim())){ var por=document.querySelector('.pv-portrait'); if(por){ por.innerHTML=''; por.style.overflow='hidden'; var im=document.createElement('img'); im.src=w.thumb; im.alt=nm; im.style.cssText='width:100%;height:100%;object-fit:cover'; por.appendChild(im);} }
          return true; }
        function gallery(lang,title){ if(!title)return;
          var ph=null;document.querySelectorAll('.pv-sec').forEach(function(s){var h=s.querySelector('.pv-h');if(h&&h.textContent.indexOf('사진')>=0)ph=s;});

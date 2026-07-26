@@ -33,7 +33,14 @@ window.OCList = (function () {
   function nd(v) { return (v == null || String(v).trim() === '') ? '<span class="nd">\u2014</span>' : esc(v); }
   function ava(name) { var s = (name || '').trim(); return s ? esc(s.charAt(0)) : '?'; }
   function wikiThumb(u, w) {
-    if (!u || u.indexOf('upload.wikimedia.org') < 0 || u.indexOf('/thumb/') >= 0) return u;
+    if (!u) return u;
+    u = String(u).replace(/^http:\/\//, 'https://');
+    // 위키데이터 P18 형식: commons.wikimedia.org/wiki/Special:FilePath/파일명
+    // ?width= 를 붙이면 위키미디어가 해당 폭의 썸네일로 넘겨줍니다
+    if (u.indexOf('Special:FilePath') >= 0) {
+      return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'width=' + (w || 200);
+    }
+    if (u.indexOf('upload.wikimedia.org') < 0 || u.indexOf('/thumb/') >= 0) return u;
     var i = u.indexOf('/wikipedia/'); if (i < 0) return u;
     var parts = u.slice(i + 11).split('/');
     if (parts.length < 4) return u;
