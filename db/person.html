@@ -229,6 +229,9 @@
           </optgroup>
         </select>
         <select aria-label="정렬">
+          <optgroup label="기본">
+            <option>정보 충실도순</option>
+          </optgroup>
           <optgroup label="등록순">
             <option>최신순</option>
             <option>오래된순</option>
@@ -1034,18 +1037,28 @@ if('serviceWorker' in navigator){
   }
   function buildOrder(sels){
     var sort=sels[2]?sels[2].value:'';
-    var ord='sort_no.desc';
-    if(sort.indexOf('오래된순')>=0)ord='sort_no.asc';
-    else if(sort.indexOf('가나다순')>=0)ord='name_ko.asc';
-    else if(sort.indexOf('가나다 역순')>=0)ord='name_ko.desc';
-    else if(sort.indexOf('A–Z')>=0)ord='name_en.asc';
-    else if(sort.indexOf('Z–A')>=0)ord='name_en.desc';
-    else if(sort.indexOf('분야순')>=0)ord='field.asc';
+    /* 기본은 정보 충실도순 — 사진·소개문·생몰 등이 채워진 항목이 앞에 옵니다 */
+    var ord='quality.desc,sort_no.desc';
+    if(sort.indexOf('충실도')>=0)          ord='quality.desc,sort_no.desc';
+    else if(sort.indexOf('최신순')>=0)      ord='sort_no.desc';
+    else if(sort.indexOf('오래된순')>=0)    ord='sort_no.asc';
+    else if(sort.indexOf('가나다 역순')>=0) ord='name_ko.desc';
+    else if(sort.indexOf('가나다순')>=0)    ord='name_ko.asc';
+    else if(sort.indexOf('A–Z')>=0)        ord='name_en.asc.nullslast';
+    else if(sort.indexOf('Z–A')>=0)        ord='name_en.desc.nullslast';
+    else if(sort.indexOf('출생 빠른순')>=0)  ord='life.asc.nullslast';
+    else if(sort.indexOf('출생 늦은순')>=0)  ord='life.desc.nullslast';
+    else if(sort.indexOf('사조')>=0)        ord='era_yr.asc.nullslast';
+    else if(sort.indexOf('국적순')>=0)      ord='nationality.asc.nullslast';
+    else if(sort.indexOf('분야순')>=0)      ord='field.asc.nullslast';
+    else if(sort.indexOf('소속순')>=0)      ord='affiliation.asc.nullslast';
+    else if(sort.indexOf('출신학교순')>=0)   ord='school.asc.nullslast';
+    else if(sort.indexOf('OC회원')>=0)      ord='is_oc.desc,quality.desc';
     return ord;
   }
   document.addEventListener('DOMContentLoaded',function(){
     OCList.init({
-      table:'persons', pageSize:30, orderDefault:'sort_no.desc',
+      table:'persons', pageSize:30, orderDefault:'quality.desc,sort_no.desc',
       searchCols:['name_ko','name_en','school'], entity:'persons',
       buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
     });
