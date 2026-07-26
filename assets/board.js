@@ -209,41 +209,64 @@ window.OCBoard = (function () {
     }
     /* 연결된 표(예: schools)에서 로고를 끌어오기 위한 캐시
        cfg.logoFrom = { table:'schools', key:'school_id', col:'logo_url' } */
-    var extLogo = {};
+    /* 연결된 표(예: schools)에서 로고·홈페이지를 끌어옵니다
+       cfg.logoFrom = { table:'schools', key:'school_id', col:'logo_url', homeCol:'link_home' }
+       홈페이지가 있으면 파비콘을 쓰는데, 학교 파비콘은 대개 로고 그 자체입니다 */
+    var extInfo = {};
+    function faviconOf(url) {
+      if (!url) return '';
+      var h = '';
+      try { h = new URL(url).hostname; }
+      catch (e) { h = (String(url).match(/^(?:https?:\/\/)?([^\/?#:]+)/) || [])[1] || ''; }
+      if (!h) return '';
+      return 'https://www.google.com/s2/favicons?sz=128&domain=' + encodeURIComponent(h);
+    }
     function fetchExtLogos(rows) {
       var lf = cfg.logoFrom;
       if (!lf || !rows || !rows.length) return Promise.resolve();
       var ids = [];
       rows.forEach(function (r) {
         var k = r[lf.key];
-        // 글에 사진·로고가 이미 있으면 조회하지 않습니다
         if (!k) return;
-        if (r.thumb_url || r.logo_url) return;
-        if (extLogo[k] !== undefined) return;
+        if (r.thumb_url || r.logo_url) return;      // 글에 이미 이미지가 있으면 조회 불필요
+        if (extInfo[k] !== undefined) return;
         if (ids.indexOf(k) < 0) ids.push(k);
       });
       if (!ids.length) return Promise.resolve();
-      return fetch(SB_URL + '/rest/v1/' + lf.table + '?select=id,' + lf.col
+      var cols = ['id', lf.col].concat(lf.homeCol ? [lf.homeCol] : []).join(',');
+      return fetch(SB_URL + '/rest/v1/' + lf.table + '?select=' + cols
                    + '&id=in.(' + ids.join(',') + ')&limit=200', { headers: HDR })
         .then(function (r) { return r.ok ? r.json() : []; })
         .then(function (list) {
-          ids.forEach(function (k) { extLogo[k] = ''; });           // 없으면 다시 묻지 않도록
-          (list || []).forEach(function (x) { if (x[lf.col]) extLogo[x.id] = x[lf.col]; });
+          ids.forEach(function (k) { extInfo[k] = { logo: '', fav: '' }; });
+          (list || []).forEach(function (x) {
+            extInfo[x.id] = {
+              logo: x[lf.col] || '',
+              fav: lf.homeCol ? faviconOf(x[lf.homeCol]) : ''
+            };
+          });
         })
-        .catch(function () { ids.forEach(function (k) { extLogo[k] = ''; }); });
+        .catch(function () { ids.forEach(function (k) { extInfo[k] = { logo: '', fav: '' }; }); });
     }
 
     function docRowHtml(rec) {
-      /* 표시 순서: 글의 사진 → 글의 로고 → 연결된 학교DB 로고 → 글자 → 빈 자리 */
+      /* 표시 순서
+         1) 글의 사진        2) 글의 로고
+         3) 홈페이지 파비콘  (학교 파비콘은 대개 로고 그 자체)
+         4) 연결 표의 이미지 5) 글자        6) 빈 자리
+         파비콘을 4)보다 앞에 둔 이유: schools.logo_url 에는 건물 사진이 섞여 있습니다 */
       var lf = cfg.logoFrom;
-      var fromDb = (lf && rec[lf.key]) ? (extLogo[rec[lf.key]] || '') : '';
+      var ei = (lf && rec[lf.key]) ? (extInfo[rec[lf.key]] || null) : null;
+      var LG = 'class="is-logo" loading="lazy" style="object-fit:contain;padding:8px"';
       var logo = rec.thumb_url
         ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">'
         : (rec.logo_url
-          ? '<img class="is-logo" src="' + esc(rec.logo_url) + '" alt="" loading="lazy" style="object-fit:contain;padding:8px">'
-          : (fromDb
-            ? '<img class="is-logo" src="' + esc(fromDb) + '" alt="" loading="lazy" style="object-fit:contain;padding:8px">'
-            : (rec.logo_text ? '<span class="doc-logo-txt">' + esc(rec.logo_text) + '</span>' : '<span class="doc-logo-ph"></span>')));
+          ? '<img ' + LG + ' src="' + esc(rec.logo_url) + '" alt="">'
+          : (ei && ei.fav
+            ? '<img ' + LG + ' src="' + esc(ei.fav) + '" alt="">'
+            : (ei && ei.logo
+              ? '<img ' + LG + ' src="' + esc(ei.logo) + '" alt="">'
+              : (rec.logo_text ? '<span class="doc-logo-txt">' + esc(rec.logo_text) + '</span>' : '<span class="doc-logo-ph"></span>'))));
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);
@@ -374,10 +397,16 @@ window.OCBoard = (function () {
       .then(function (rows) {
         var lf = cfg.logoFrom, o = rows && rows[0];
         if (!lf || !o || o.logo_url || !o[lf.key]) return rows;
-        return fetch(SB_URL + '/rest/v1/' + lf.table + '?select=' + lf.col
+        var cols = [lf.col].concat(lf.homeCol ? [lf.homeCol] : []).join(',');
+        return fetch(SB_URL + '/rest/v1/' + lf.table + '?select=' + cols
                      + '&id=eq.' + encodeURIComponent(o[lf.key]) + '&limit=1', { headers: HDR })
           .then(function (r) { return r.ok ? r.json() : []; })
-          .then(function (list) { if (list && list[0] && list[0][lf.col]) o._extLogo = list[0][lf.col]; return rows; })
+          .then(function (list) {
+            var x = list && list[0]; if (!x) return rows;
+            var fav = lf.homeCol ? faviconOf(x[lf.homeCol]) : '';
+            o._extLogo = fav || x[lf.col] || '';
+            return rows;
+          })
           .catch(function () { return rows; });
       })
       .then(function (rows) {
