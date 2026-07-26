@@ -68,7 +68,8 @@
   .hb-fignum b{font-size:25px;font-weight:900;letter-spacing:-.035em;line-height:1;
     color:var(--text);font-variant-numeric:tabular-nums}
   .hb-fignum i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3)}
-  .hb-fig.up .hb-fignum b{color:#1B9E92}
+  /* 숫자 색도 그래프와 같은 규칙 — 보라 기본, 강조 하나만 금색 */
+  .hb-fig.up .hb-fignum b{color:var(--violet-2,#7C63B0)}
   .hb-fig.gold .hb-fignum b{color:#A8862F}
 
   /* 구성 비율 */
@@ -127,6 +128,21 @@
   .fl-note{margin:4px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.6}
 
   .hb-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+  /* 분석 그래프 — 버튼으로 골라 펼친다 */
+  .hb-insec{margin-top:26px}
+  .hb-instabs{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+  .hb-inslabel{font-size:12.5px;font-weight:800;letter-spacing:-.02em;color:var(--text-2);
+    margin-right:4px}
+  .hb-instab{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 14px;
+    border:1px solid var(--line);border-radius:99px;background:var(--paper);
+    font-size:12.5px;font-weight:600;color:var(--text-2);cursor:pointer;
+    transition:border-color .15s,color .15s,background .15s}
+  .hb-instab::after{content:'+';font-size:13px;font-weight:800;color:var(--text-3)}
+  .hb-instab:hover{border-color:#c9bbe6;color:var(--violet-2)}
+  .hb-instab.on{background:#1b1c2b;border-color:#1b1c2b;color:#fff}
+  .hb-instab.on::after{content:'\2212';color:rgba(255,255,255,.7)}
+  .hb-inspanels{margin-top:14px}
 
   /* 섹션 제목 */
   .hb-sec{margin-top:52px}
@@ -341,34 +357,35 @@
       <div class="hb-compose" id="composeBox"></div>
     </section>
 
-    <!-- 데이터 분석 -->
-    <section class="hb-sec">
-      <div class="hb-head">
-        <span class="hb-title">데이터 분석<em>INSIGHT</em></span>
+    <!-- 데이터 분석 — 필요할 때 골라 펼친다 (기본은 닫힘) -->
+    <section class="hb-sec hb-insec">
+      <div class="hb-instabs" id="insTabs">
+        <span class="hb-inslabel">데이터 분석</span>
+        <button type="button" class="hb-instab" data-ins="era">시대별 분포</button>
+        <button type="button" class="hb-instab" data-ins="field">분야 구성</button>
+        <button type="button" class="hb-instab" data-ins="fill">정보 완성도</button>
+        <button type="button" class="hb-instab" data-ins="nation">국적 상위 10</button>
+        <button type="button" class="hb-instab" data-ins="links">네트워크 연결</button>
       </div>
 
-      <div class="hb-panel">
-        <div class="hb-ptitle"><b>시대별 인물 분포</b><span>서양음악사 기준</span></div>
-        <div id="eraBox"></div>
-      </div>
-
-      <div class="hb-two" style="margin-top:16px">
-        <div class="hb-panel">
+      <div class="hb-inspanels" id="insPanels" hidden>
+        <div class="hb-panel" data-panel="era" hidden>
+          <div class="hb-ptitle"><b>시대별 인물 분포</b><span>서양음악사 기준</span></div>
+          <div id="eraBox"></div>
+        </div>
+        <div class="hb-panel" data-panel="field" hidden>
           <div class="hb-ptitle"><b>분야 구성</b><span>인물DB</span></div>
           <div id="fieldBox"></div>
         </div>
-        <div class="hb-panel">
+        <div class="hb-panel" data-panel="fill" hidden>
           <div class="hb-ptitle"><b>정보 완성도</b><span>항목이 채워진 비율</span></div>
           <div id="fillBox"></div>
         </div>
-      </div>
-
-      <div class="hb-two" style="margin-top:16px">
-        <div class="hb-panel">
+        <div class="hb-panel" data-panel="nation" hidden>
           <div class="hb-ptitle"><b>국적 상위 10</b><span>인물DB</span></div>
           <div id="nationBox"></div>
         </div>
-        <div class="hb-panel">
+        <div class="hb-panel" data-panel="links" hidden>
           <div class="hb-ptitle"><b>네트워크 연결</b><span>사사 · 소속 · 학교</span>
             <u id="linkTotal">0</u></div>
           <div id="linksBox"></div>
@@ -490,11 +507,42 @@
       days:30
     });
 
-    /* 분석 그래프 — 요청 1회로 네 그래프를 모두 채운다 */
-    OCHub.insight({
-      era:'#eraBox', field:'#fieldBox', fill:'#fillBox',
-      nation:'#nationBox', links:'#linksBox', linksTotal:'#linkTotal'
-    });
+    /* 분석 그래프 — 버튼을 처음 누를 때 한 번만 자료를 받아온다.
+       기본은 닫혀 있어 '새로 등록된 Database' 가 아래로 밀리지 않는다. */
+    (function(){
+      var tabs = document.getElementById('insTabs');
+      var wrap = document.getElementById('insPanels');
+      if(!tabs || !wrap) return;
+      var loaded = false, open = null;
+      tabs.addEventListener('click', function(e){
+        var b = e.target.closest && e.target.closest('.hb-instab');
+        if(!b) return;
+        var k = b.getAttribute('data-ins');
+
+        if(!loaded){
+          OCHub.insight({
+            era:'#eraBox', field:'#fieldBox', fill:'#fillBox',
+            nation:'#nationBox', links:'#linksBox', linksTotal:'#linkTotal'
+          });
+          loaded = true;
+        }
+
+        if(open === k){                       /* 같은 버튼 → 닫기 */
+          open = null;
+          wrap.hidden = true;
+          tabs.querySelectorAll('.hb-instab').forEach(function(x){ x.classList.remove('on'); });
+          wrap.querySelectorAll('[data-panel]').forEach(function(p){ p.hidden = true; });
+          return;
+        }
+        open = k;
+        wrap.hidden = false;
+        tabs.querySelectorAll('.hb-instab').forEach(function(x){ x.classList.toggle('on', x === b); });
+        wrap.querySelectorAll('[data-panel]').forEach(function(p){
+          p.hidden = (p.getAttribute('data-panel') !== k);
+        });
+        window.dispatchEvent(new Event('resize'));   /* 숨겨진 상태로 그린 그래프 폭 보정 */
+      });
+    })();
   });
 </script>
 <script src="/assets/app.js" defer></script>

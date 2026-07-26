@@ -517,17 +517,13 @@ window.OCHub = (function () {
     return '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" role="img"'
       + ' aria-label="누적 등록 추이">'
       + '<defs>'
-      +   '<linearGradient id="cvLine" x1="0" y1="0" x2="1" y2="0">'
-      +     '<stop offset="0" stop-color="#4C8DF6"/>'
-      +     '<stop offset="52%" stop-color="#22B5A6"/>'
-      +     '<stop offset="100%" stop-color="#C9A94E"/></linearGradient>'
       +   '<linearGradient id="cvFill" x1="0" y1="0" x2="0" y2="1">'
-      +     '<stop offset="0" stop-color="#22B5A6" stop-opacity=".24"/>'
-      +     '<stop offset="1" stop-color="#22B5A6" stop-opacity="0"/></linearGradient>'
+      +     '<stop offset="0" stop-color="#7C63B0" stop-opacity=".22"/>'
+      +     '<stop offset="1" stop-color="#7C63B0" stop-opacity="0"/></linearGradient>'
       + '</defs>'
       + grid
       + '<path d="' + area + '" fill="url(#cvFill)"/>'
-      + '<path d="' + line + '" fill="none" stroke="url(#cvLine)" stroke-width="2.6"'
+      + '<path d="' + line + '" fill="none" stroke="#7C63B0" stroke-width="2.6"'
       +   ' stroke-linejoin="round" stroke-linecap="round"/>'
       + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="9" fill="#C9A94E" fill-opacity=".2"/>'
       + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="4.4" fill="#C9A94E"/>'
@@ -560,9 +556,16 @@ window.OCHub = (function () {
      ============================================================ */
   var REL_LABEL = { teacher:'사사 (스승)', student:'제자', alumnus_of:'출신 학교',
                     fellow_of:'학회 · 아카데미', member_of:'소속 단체' };
-  var ERA_COLOR = ['#4C6FD6','#4C8DF6','#22A6C4','#22B5A6','#4FB870','#B79A3E','#C9A94E'];
-  var FIELD_COLOR = { '작곡':'#6D5BA6', '성악':'#EC4899', '연주':'#3B82F6', '지휘':'#C9A94E',
-                      '음악학':'#10B981', '음악교육':'#64748B', '편곡':'#0EA5E9', '평론':'#DC2626' };
+  /* 분석 그래프는 한 색(보라)의 농담으로만 그린다.
+     색이 여러 개면 무슨 뜻인지 읽어야 해서 오히려 혼란스럽다.
+     가장 큰 값만 금색으로 강조해 시선을 모은다. */
+  var INK = '109,91,166';        // 보라
+  var GOLD = '#C9A94E';          // 강조
+  function shade(i, n, dark) {
+    var t = (n <= 1) ? 0 : i / (n - 1);
+    var a = dark ? (0.34 + t * 0.58) : (0.92 - t * 0.58);
+    return 'rgba(' + INK + ',' + a.toFixed(2) + ')';
+  }
 
   /* 세로 막대 — 시대별처럼 순서가 의미 있는 자료 */
   function vBarsSvg(data, W, H) {
@@ -578,7 +581,7 @@ window.OCHub = (function () {
     data.forEach(function (d, i) {
       var h = Math.max(ih * d.n / max, 2);
       var x = PL + i * (bw + gap), y = PT + ih - h;
-      var col = ERA_COLOR[i % ERA_COLOR.length];
+      var col = (d.n === max) ? GOLD : shade(i, data.length, true);
       out += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '"'
         + ' height="' + h.toFixed(1) + '" rx="' + Math.min(5, bw / 3).toFixed(1) + '" fill="' + col + '"/>'
         + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" font-size="11"'
@@ -633,7 +636,7 @@ window.OCHub = (function () {
     return '<div class="hbz">' + data.map(function (d, i) {
       var pct = d.n / max * 100;
       var label = opt.label ? (opt.label[d.k] || d.k) : d.k;
-      var col = opt.colorOf ? opt.colorOf(d.k, i) : '#4C8DF6';
+      var col = opt.colorOf ? opt.colorOf(d.k, i) : shade(i, data.length);
       return '<div class="hbz-row">'
         + '<span class="hbz-k">' + esc(label) + '</span>'
         + '<span class="hbz-bar"><i style="width:' + pct.toFixed(1) + '%;background:' + col + '"></i></span>'
@@ -646,11 +649,14 @@ window.OCHub = (function () {
   function fillHtml(f) {
     if (!f || !f.total) return '';
     var rows = [
-      { k: '생몰 연도', n: f.life,   c: '#4C8DF6' },
-      { k: '사진',      n: f.photo,  c: '#22B5A6' },
-      { k: '출신 학교', n: f.school, c: '#C9A94E' },
-      { k: '한국어 소개문', n: f.intro, c: '#EC4899' }
+      { k: '생몰 연도',     n: f.life },
+      { k: '사진',          n: f.photo },
+      { k: '출신 학교',     n: f.school },
+      { k: '한국어 소개문', n: f.intro }
     ];
+    /* 가장 부족한 항목을 금색으로 — 어디를 채워야 하는지 바로 보인다 */
+    var lowest = rows.reduce(function (a, b) { return b.n < a.n ? b : a; }, rows[0]);
+    rows.forEach(function (r, i) { r.c = (r === lowest) ? GOLD : shade(i, rows.length, true); });
     return '<div class="fl">' + rows.map(function (r) {
       var pct = r.n / f.total * 100;
       return '<div class="fl-row">'
@@ -687,29 +693,28 @@ window.OCHub = (function () {
         var fb = cfg.field ? document.querySelector(cfg.field) : null;
         if (fb) {
           var top = (d.field || []).filter(function (x) { return x.k.indexOf(',') < 0; }).slice(0, 6);
-          fb.innerHTML = donutHtml(top, function (k) { return FIELD_COLOR[k] || '#94A3B8'; }, '명');
+          var order = {}; top.forEach(function (x, i) { order[x.k] = i; });
+          fb.innerHTML = donutHtml(top, function (k) {
+            return order[k] === 0 ? GOLD : shade(order[k], top.length);
+          }, '명');
         }
 
         /* 국적 상위 10 — 가로 막대 (순위에 따라 색이 옅어진다) */
         var nb = cfg.nation ? document.querySelector(cfg.nation) : null;
         if (nb) {
+          var nn = (d.nation || []).length;
           nb.innerHTML = hBarsHtml(d.nation || [], {
-            colorOf: function (k, i) {
-              var t = i / Math.max((d.nation || []).length - 1, 1);
-              var a = (0.95 - t * 0.55).toFixed(2);
-              return 'rgba(76,141,246,' + a + ')';
-            }
+            colorOf: function (k, i) { return i === 0 ? GOLD : shade(i, nn); }
           });
         }
 
         /* 네트워크 연결 — 가로 막대 + 합계 */
         var lb = cfg.links ? document.querySelector(cfg.links) : null;
         if (lb) {
-          var LC = { alumnus_of:'#10B981', student:'#6D5BA6', teacher:'#7C63B0',
-                     fellow_of:'#64748B', member_of:'#C9A94E' };
+          var ln = (d.links || []).length;
           lb.innerHTML = hBarsHtml(d.links || [], {
             label: REL_LABEL,
-            colorOf: function (k) { return LC[k] || '#94A3B8'; }
+            colorOf: function (k, i) { return i === 0 ? GOLD : shade(i, ln); }
           });
           var lt = cfg.linksTotal ? document.querySelector(cfg.linksTotal) : null;
           if (lt) countUp(lt, d.links_total || 0);
