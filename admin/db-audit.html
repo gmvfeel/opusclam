@@ -107,6 +107,21 @@
     <div class="bar" id="barD"><i></i></div>
     <div class="log" id="logD"></div>
   </div>
+
+  <div class="card">
+    <h2><span class="n">4</span> 영문 원문 확보</h2>
+    <p>한국어 소개가 없는 인물의 <b>영문 위키백과 요약을 원문 그대로</b> 별도 컬럼(<code>description_en</code>)에 저장합니다. <b>번역하지 않습니다.</b> 뷰 페이지에서는 한국어 소개가 없을 때만 &quot;번역 전 · 영문 원문&quot;이라고 밝히고 보여줍니다.</p>
+    <div class="row">
+      <button id="btnEn">영문 원문 확보 시작</button>
+      <label style="font-size:13px;color:#5c5e70"><input type="checkbox" id="dryE" checked> <b>미리보기만</b></label>
+      <label style="font-size:13px;color:#5c5e70"><input type="checkbox" id="allE"> 이미 확보한 것도 다시 가져오기</label>
+    </div>
+    <div class="note">
+      한국어 소개를 <b>덮어쓰지 않습니다.</b> 별도 컬럼에만 저장하므로, 회원이 한국어 소개를 등록하면 영문은 자동으로 화면에서 내려갑니다. 대상이 6,000명 규모라 <b>15~25분</b> 걸립니다. 중간에 멈춰도 다시 실행하면 남은 인물만 이어서 처리합니다.
+    </div>
+    <div class="bar" id="barE"><i></i></div>
+    <div class="log" id="logE"></div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -350,14 +365,14 @@
     return false;
   }
 
-  async function mw(params, L){
+  async function mw(host, params, L){
     params.format='json'; params.origin='*';
     var qs=Object.keys(params).map(function(k){
       return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
     }).join('&');
     for(var t=1;t<=4;t++){
       try{
-        var r=await fetch('https://ko.wikipedia.org/w/api.php?'+qs);
+        var r=await fetch('https://'+host+'/w/api.php?'+qs);
         if(r.ok) return await r.json();
         if(L) L.log('  · 응답 '+r.status+' 재시도 '+t+'/4');
       }catch(e){ if(L) L.log('  · 통신 오류 재시도 '+t+'/4'); }
@@ -404,7 +419,7 @@
       have.forEach(function(qid){ byTitle[title[qid]]=byQid[qid]; });
       var names=Object.keys(byTitle), patch=[];
       for(var t2=0;t2<names.length;t2+=10){
-        var j=await mw({ action:'query', prop:'extracts', exintro:1, explaintext:1,
+        var j=await mw('ko.wikipedia.org', { action:'query', prop:'extracts', exintro:1, explaintext:1,
                          redirects:1, titles:names.slice(t2,t2+10).join('|') }, L);
         var pages=(j&&j.query&&j.query.pages)||{};
         Object.keys(pages).forEach(function(pid){
@@ -462,6 +477,101 @@
     $('btnDesc').disabled=false;
   }
 
+  /* ---------- 4. 영문 원문 확보 ---------- */
+  async function fillEn(){
+    var L=mkLog('logE','barE');
+    $('btnEn').disabled=true;
+    try{
+      var dry=$('dryE').checked, all=$('allE').checked;
+      L.log('■ 인물 로드');
+      var rows=await loadAll('persons','id,name_ko,description,description_en,wikidata_id',
+        function(q){ return q.eq('hidden',false).not('wikidata_id','is',null); }, L);
+      // 한국어 소개가 없는 인물만 (숨긴 인물은 애초에 제외)
+      var targets=rows.filter(function(p){
+        if(!badDesc(p.description)) return false;                 // 한국어 소개가 이미 있음
+        if(!all && p.description_en && p.description_en.trim()) return false;
+        return true;
+      });
+      L.log('  전체 '+rows.length+'명 중 대상 '+targets.length+'명');
+      if(!targets.length){ L.log('확보할 인물이 없습니다.'); $('btnEn').disabled=false; return; }
+
+      L.log('■ 영문 위키백과 문서 확인');
+      var byQid={}, title={};
+      targets.forEach(function(p){ if(p.wikidata_id) byQid[p.wikidata_id]=p; });
+      var qids=Object.keys(byQid);
+      for(var i=0;i<qids.length;i+=CHUNK){
+        var vs=qids.slice(i,i+CHUNK).map(function(x){ return 'wd:'+x; }).join(' ');
+        var q='SELECT ?item ?t WHERE { VALUES ?item { '+vs+' } '
+          +'?sl schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> ; schema:name ?t . }';
+        var res=await sparql(q,L);
+        res.forEach(function(b){ title[b.item.value.split('/').pop()]=b.t.value; });
+        L.prog(Math.round(Math.min(i+CHUNK,qids.length)/qids.length*35));
+        L.log('  확인 '+Math.min(i+CHUNK,qids.length)+'/'+qids.length+' · 영문 문서 '+Object.keys(title).length+'건');
+        await sleep(250);
+      }
+      var have=Object.keys(title);
+      L.log('  ▶ 영문 문서가 있는 인물 '+have.length+'명 / 나머지는 건너뜁니다');
+      if(!have.length){ $('btnEn').disabled=false; return; }
+
+      L.log('■ 영문 요약 추출');
+      var byTitle={};
+      have.forEach(function(qid){ byTitle[title[qid]]=byQid[qid]; });
+      var names=Object.keys(byTitle), patch=[];
+      for(var t2=0;t2<names.length;t2+=10){
+        var j=await mw('en.wikipedia.org', { action:'query', prop:'extracts', exintro:1,
+                        explaintext:1, redirects:1, titles:names.slice(t2,t2+10).join('|') }, L);
+        var pages=(j&&j.query&&j.query.pages)||{};
+        Object.keys(pages).forEach(function(pid){
+          var pg=pages[pid];
+          if(!pg.title || !pg.extract) return;
+          var p=byTitle[pg.title];
+          if(!p) return;
+          var txt=String(pg.extract).replace(/\s+/g,' ').trim();
+          if(txt.length<20) return;
+          patch.push({ id:p.id, name_ko:p.name_ko, description_en:txt.slice(0,700),
+                       description_en_at:new Date().toISOString() });
+        });
+        L.prog(35+Math.round(Math.min(t2+10,names.length)/names.length*45));
+        if(t2%400===0) L.log('  '+Math.min(t2+10,names.length)+'/'+names.length+' · 확보 '+patch.length);
+        await sleep(150);
+      }
+      L.log('  ▶ 확보한 영문 원문 '+patch.length+'건');
+
+      L.log('■ 미리보기 (앞 15건)');
+      patch.slice(0,15).forEach(function(x){
+        L.log('  · '+x.name_ko+' : '+x.description_en.slice(0,80));
+      });
+
+      if(dry){
+        L.prog(100);
+        L.log('✅ 미리보기 완료 — 저장하려면 "미리보기만" 체크를 해제하고 다시 실행하세요.');
+        $('btnEn').disabled=false; return;
+      }
+
+      L.log('■ 저장');
+      var ok=0, fell=false;
+      for(var k=0;k<patch.length;k+=UP){
+        var part=patch.slice(k,k+UP);
+        var r=await sb.from('persons').upsert(part,{onConflict:'id'});
+        if(r.error){
+          if(!fell){ L.log('  일괄 저장 실패 → 한 명씩 저장으로 전환 ('+r.error.message+')'); fell=true; }
+          for(var m=0;m<part.length;m++){
+            var r2=await sb.from('persons').update({
+              description_en:part[m].description_en,
+              description_en_at:part[m].description_en_at
+            }).eq('id',part[m].id);
+            if(!r2.error) ok++;
+          }
+        } else ok+=part.length;
+        L.prog(80+Math.round((k+part.length)/patch.length*20));
+      }
+      L.prog(100);
+      L.log('✅ 완료 — '+ok+'건 저장');
+    }catch(e){ L.log('✗ 중단: '+(e.message||e)); }
+    $('btnEn').disabled=false;
+  }
+
+  $('btnEn').addEventListener('click',fillEn);
   $('btnDesc').addEventListener('click',fillDesc);
   $('btnMeta').addEventListener('click',runMeta);
   $('btnScan').addEventListener('click',scan);

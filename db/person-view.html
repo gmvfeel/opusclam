@@ -170,6 +170,9 @@
   /* 왼쪽 고정 리스트 탭 */
   /* 뷰 하단: DB보강 + 출처 안내 */
   .pv-contrib{margin-top:48px;padding-top:32px;border-top:1px solid var(--line)}
+  .pv-entag{display:inline-block;margin:0 0 10px;padding:3px 10px;border:1px solid var(--line,#e4e4ec);border-radius:99px;font-size:11.5px;font-weight:700;letter-spacing:.03em;color:var(--text-3,#8a8c9e)}
+  .pv-en{color:var(--text-2,#3a3c52);font-size:14px;line-height:1.78}
+  .pv-invite{margin-top:14px;padding:11px 14px;background:var(--paper-2,#f5f5f8);border-radius:9px;font-size:12.5px;color:var(--text-3,#8a8c9e);line-height:1.7}
   .pv-enhance{display:flex;width:fit-content;max-width:100%;margin:0 auto;align-items:center;gap:13px;background:var(--orange);color:#fff;text-decoration:none;padding:16px 32px;border-radius:14px;box-shadow:0 10px 26px -8px rgba(236,122,28,.55);transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
   .pv-enhance:hover{background:#d86d12;transform:translateY(-2px);box-shadow:0 16px 34px -8px rgba(236,122,28,.65)}
   .pv-enhance svg{width:22px;height:22px;flex:0 0 auto}
@@ -1324,10 +1327,26 @@ if('serviceWorker' in navigator){
      var fc=document.querySelector('.pv-facts'); if(fc){
        fc.innerHTML=fact('국적',natv)+fact('생몰',esc(p.life||''))+fact('사조',erav)+fact('주요 악기',esc(p.instrument||''));
      }
-     var desc=(p.description&&p.description.trim())?p.description.trim():((p.era_name?p.era_name+' 시대의 ':'')+(p.field?p.field.split(',')[0].trim()+' ':'')+'음악가.');
-     var lead=document.querySelector('.pv-lead'); if(lead) lead.textContent=desc;
-     var bio=document.querySelector('.pv-prose'); if(bio){
-       bio.innerHTML='<p>'+esc(desc)+'</p>'+((p.description&&p.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
+     /* 소개문: 한국어 → 없으면 영문 원문(번역 전 표기) → 둘 다 없으면 참여 유도 */
+     var koD=(p.description&&p.description.trim())?p.description.trim():'';
+     if(koD && /^[|{]/.test(koD)) koD='';   /* 틀 코드가 들어온 경우는 소개문으로 보지 않음 */
+     var enD=(p.description_en&&p.description_en.trim())?p.description_en.trim():'';
+     var auto=(p.era_name?p.era_name+' 시대의 ':'')+(p.field?p.field.split(',')[0].trim()+' ':'')+'음악가.';
+     var lead=document.querySelector('.pv-lead'); if(lead) lead.textContent=koD||auto;
+     var bio=document.querySelector('.pv-prose');
+     if(bio){
+       var h='';
+       if(koD){
+         h='<p>'+esc(koD)+'</p>';
+       } else if(enD){
+         h='<p class="pv-entag">영문 원문 · 한국어 번역 전</p>'
+          +'<p class="pv-en" lang="en">'+esc(enD)+'</p>'
+          +'<p class="pv-invite">한국어 소개가 아직 없습니다. 아래 <b>DB보강하기</b>로 기여해 주세요.</p>';
+       } else {
+         h='<p>'+esc(auto)+'</p>'
+          +'<p class="pv-invite">아직 소개 정보가 없습니다. 아래 <b>DB보강하기</b>로 기여해 주세요.</p>';
+       }
+       bio.innerHTML=h;
      }
      var wl=document.querySelector('ul.pv-worklist');
      if(wl){
