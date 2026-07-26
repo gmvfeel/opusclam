@@ -8,6 +8,8 @@
 <style>
   *{box-sizing:border-box}
   body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
   .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 90px}
   h1{font-size:20px;margin:0 0 4px}
   .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
@@ -50,6 +52,7 @@
 </head>
 <body>
 <div class="wrap">
+  <a class="backlink" href="/admin.html">← 관리자로</a>
   <h1>인물DB 정밀 점검</h1>
   <div class="sub">위키데이터에서 저명도 · 장르 · 직업을 가져와 저장하고, 클래식과 무관한 항목을 골라 정리합니다.</div>
 
@@ -125,7 +128,7 @@
 
   <div class="card">
     <h2><span class="n">5</span> 썸네일 확보</h2>
-    <p>사진이 없는 인물의 <b>초상 이미지</b>를 <code>image_url</code> 에 채웁니다. 위키데이터의 <b>P18(이미지)</b> 속성만 사용합니다 — 이건 &quot;그 인물의 이미지&quot;라는 뜻이라 초상입니다. 위키백과 문서의 첫 이미지를 쓰면 <b>악보 표지·무덤·건물 사진</b>이 들어오므로 쓰지 않습니다. 초상이 없는 인물은 건너뜁니다.</p>
+    <p>사진이 없는 인물의 <b>초상 이미지</b>를 <code>image_url</code> 에 채웁니다. 먼저 위키데이터 <b>P18(이미지)</b>을 찾고, 없으면 위키백과 문서 대표 이미지를 쓰되 <b>파일명에 인물 이름이 있고 악보·무덤·건물 관련 단어가 없는 것만</b> 채택합니다. 국내 인물은 위키데이터에 P18이 거의 없어 두 번째 경로가 필요합니다.</p>
     <div class="row">
       <button id="btnImg">썸네일 확보 시작</button>
       <label style="font-size:13px;color:#5c5e70"><input type="checkbox" id="dryI" checked> <b>미리보기만</b></label>
@@ -589,7 +592,38 @@
     $('btnEn').disabled=false;
   }
 
-  /* ---------- 5. 초상 이미지 확보 (위키데이터 P18) ---------- */
+  /* ---------- 5. 초상 이미지 확보 ---------- */
+  /* 파일명에 붙으면 인물 사진이 아닌 신호 (악보·무덤·건물·서명 등) */
+  var NOTPORTRAIT = /tomba|tomb|grave|grab|friedhof|titel|autograph|manuscript|partita|alleluia|musiche|nuove|postcard|memorial|plaque|monument|statue|signature|score|sheet|frontispiece|libretto|programme|playbill|poster|cover|logo|building|church|kirche|cathedral|hall\b|museum|scene|birthplace|house|street|plate|stamp|coin|banknote|choir|chorus|ensemble|orchestra|quartet|악보|무덤|서명|표지|생가|기념/i;
+
+  /* 파일명에 인물 이름이 들어 있는지
+     · 악센트(Kodály)·하이픈(Do-kwon)·공백을 모두 제거해 대조합니다 */
+  function fold(t){
+    return String(t == null ? '' : t)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC')
+      .toLowerCase().replace(/[^a-z0-9가-힣]/g, '');
+  }
+  function nameInFile(fn, ko, en){
+    var f = fold(fn);
+    if (!f) return false;
+    if (ko){ var k = fold(ko); if (k.length >= 2 && f.indexOf(k) >= 0) return true; }
+    if (en){
+      var whole = fold(en);
+      if (whole.length >= 4 && f.indexOf(whole) >= 0) return true;   // 성명 붙여쓴 형태
+      var words = String(en).split(/[\s,]+/).filter(Boolean);
+      var parts = [];
+      words.forEach(function(w){
+        w.split('-').forEach(function(x){ var v = fold(x); if (v.length >= 4) parts.push(v); });
+        var whole2 = fold(w); if (whole2.length >= 4) parts.push(whole2);
+      });
+      /* 성(마지막 낱말)은 3자여도 허용 */
+      var last = fold(words[words.length - 1] || '');
+      if (last.length >= 3) parts.push(last);
+      for (var i = 0; i < parts.length; i++){ if (f.indexOf(parts[i]) >= 0) return true; }
+    }
+    return false;
+  }
+
   async function fillImg(){
     var L=mkLog('logI','barI');
     $('btnImg').disabled=true;
@@ -606,33 +640,96 @@
       L.log('  전체 '+rows.length+'명 중 사진 없는 인물 '+targets.length+'명');
       if(!targets.length){ L.log('채울 인물이 없습니다.'); $('btnImg').disabled=false; return; }
 
-      L.log('■ 위키데이터 P18(초상 이미지) 조회');
       var byQid={};
       targets.forEach(function(p){ if(p.wikidata_id) byQid[p.wikidata_id]=p; });
-      var qids=Object.keys(byQid), patch=[];
+      var qids=Object.keys(byQid);
+      var got={}, patch=[], rejected=[];
+
+      /* ── 1차: 위키데이터 P18 (가장 확실) ── */
+      L.log('■ 1차 · 위키데이터 P18 조회');
       for(var i=0;i<qids.length;i+=CHUNK){
         var vs=qids.slice(i,i+CHUNK).map(function(x){ return 'wd:'+x; }).join(' ');
         var q='SELECT ?item ?img WHERE { VALUES ?item { '+vs+' } ?item wdt:P18 ?img . }';
         var res=await sparql(q,L);
         res.forEach(function(b){
-          var id=b.item.value.split('/').pop();
-          var p=byQid[id];
-          if(!p || !b.img) return;
-          // 이미 담긴 인물은 건너뜁니다 (P18 이 여러 개인 경우 첫 번째만)
-          for(var z=0;z<patch.length;z++){ if(patch[z].id===p.id) return; }
-          patch.push({ id:p.id, name_ko:p.name_ko, image_url:b.img.value });
+          var id=b.item.value.split('/').pop(), p=byQid[id];
+          if(!p || !b.img || got[p.id]) return;
+          got[p.id]=1;
+          patch.push({ id:p.id, name_ko:p.name_ko, image_url:b.img.value, via:'P18' });
         });
-        L.prog(Math.round(Math.min(i+CHUNK,qids.length)/qids.length*80));
-        L.log('  조회 '+Math.min(i+CHUNK,qids.length)+'/'+qids.length+' · 초상 확보 '+patch.length);
+        L.prog(Math.round(Math.min(i+CHUNK,qids.length)/qids.length*30));
         await sleep(250);
       }
-      L.log('  ▶ 초상이 있는 인물 '+patch.length+'명 / 대상 '+targets.length+'명');
-      if(!patch.length){ L.log('초상 이미지가 있는 인물이 없습니다.'); $('btnImg').disabled=false; return; }
+      L.log('  P18 로 확보 '+patch.length+'건');
 
-      L.log('■ 미리보기 (앞 20건) — 파일명이 인물 이름과 맞는지 확인하세요');
-      patch.slice(0,20).forEach(function(x){
-        var fn=decodeURIComponent(x.image_url.split('/').pop());
-        L.log('  · '+x.name_ko+'  →  '+fn.slice(0,60));
+      /* ── 2차: 위키백과 대표 이미지 (P18 없는 인물만, 이름·제외어 검사) ── */
+      var rest=qids.filter(function(qid){ return !got[byQid[qid].id]; });
+      L.log('■ 2차 · 위키백과 대표 이미지 ('+rest.length+'명, 파일명 검사 적용)');
+      var koT={}, enT={};
+      for(var j=0;j<rest.length;j+=CHUNK){
+        var vs2=rest.slice(j,j+CHUNK).map(function(x){ return 'wd:'+x; }).join(' ');
+        var q2='SELECT ?item ?ko ?en WHERE { VALUES ?item { '+vs2+' } '
+          +'OPTIONAL { ?a schema:about ?item ; schema:isPartOf <https://ko.wikipedia.org/> ; schema:name ?ko } '
+          +'OPTIONAL { ?b schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> ; schema:name ?en } }';
+        var res2=await sparql(q2,L);
+        res2.forEach(function(b){
+          var id=b.item.value.split('/').pop();
+          if(b.ko) koT[id]=b.ko.value; else if(b.en) enT[id]=b.en.value;
+        });
+        L.prog(30+Math.round(Math.min(j+CHUNK,rest.length)/Math.max(1,rest.length)*15));
+        await sleep(250);
+      }
+      L.log('  문서 확인 — 한국어 '+Object.keys(koT).length+' · 영문 '+Object.keys(enT).length);
+
+      var step=0, tot=Object.keys(koT).length+Object.keys(enT).length;
+      async function grab(host, map){
+        var byTitle={};
+        Object.keys(map).forEach(function(qid){ byTitle[map[qid]]=byQid[qid]; });
+        var names=Object.keys(byTitle);
+        for(var t=0;t<names.length;t+=20){
+          var jj=await mw(host, { action:'query', prop:'pageimages',
+                                  piprop:'original|thumbnail', pithumbsize:520, pilimit:50,
+                                  redirects:1, titles:names.slice(t,t+20).join('|') }, L);
+          var pages=(jj&&jj.query&&jj.query.pages)||{};
+          Object.keys(pages).forEach(function(pid){
+            var pg=pages[pid];
+            if(!pg.title) return;
+            var p=byTitle[pg.title];
+            if(!p || got[p.id]) return;
+            var url=(pg.original&&pg.original.source) || (pg.thumbnail&&pg.thumbnail.source) || '';
+            if(!url) return;
+            var fn=decodeURIComponent(url.split('/').pop());
+            if(NOTPORTRAIT.test(fn)){ rejected.push({n:p.name_ko, f:fn, why:'제외어'}); return; }
+            if(!nameInFile(fn, p.name_ko, p.name_en)){ rejected.push({n:p.name_ko, f:fn, why:'이름없음'}); return; }
+            got[p.id]=1;
+            patch.push({ id:p.id, name_ko:p.name_ko, image_url:url, via:'위키문서' });
+          });
+          step+=Math.min(20, names.length-t);
+          L.prog(45+Math.round(step/Math.max(1,tot)*35));
+          if(t%200===0) L.log('  '+host+' '+Math.min(t+20,names.length)+'/'+names.length+' · 누적 '+patch.length);
+          await sleep(150);
+        }
+      }
+      await grab('ko.wikipedia.org', koT);
+      await grab('en.wikipedia.org', enT);
+
+      L.log('  ▶ 최종 확보 '+patch.length+'건 (P18 '
+            +patch.filter(function(x){return x.via==='P18';}).length+' · 위키문서 '
+            +patch.filter(function(x){return x.via==='위키문서';}).length+')');
+      L.log('  ▶ 걸러낸 이미지 '+rejected.length+'건 (인물 사진이 아닌 것)');
+
+      if(rejected.length){
+        L.log('  ┌ 걸러낸 예 (앞 12건)');
+        rejected.slice(0,12).forEach(function(r){
+          L.log('  │ '+r.n+' — '+r.f.slice(0,50)+'  ['+r.why+']');
+        });
+        L.log('  └');
+      }
+      if(!patch.length){ L.log('채울 사진이 없습니다.'); $('btnImg').disabled=false; return; }
+
+      L.log('■ 미리보기 (앞 25건) — 파일명이 인물 이름과 맞는지 확인하세요');
+      patch.slice(0,25).forEach(function(x){
+        L.log('  · '+x.name_ko+'  →  '+decodeURIComponent(x.image_url.split('/').pop()).slice(0,55)+'  ('+x.via+')');
       });
 
       if(dry){
@@ -644,7 +741,9 @@
       L.log('■ 저장');
       var ok=0, fell=false;
       for(var k=0;k<patch.length;k+=UP){
-        var part=patch.slice(k,k+UP);
+        var part=patch.slice(k,k+UP).map(function(x){
+          return { id:x.id, name_ko:x.name_ko, image_url:x.image_url };
+        });
         var r=await sb.from('persons').upsert(part,{onConflict:'id'});
         if(r.error){
           if(!fell){ L.log('  일괄 저장 실패 → 한 명씩 저장으로 전환 ('+r.error.message+')'); fell=true; }
