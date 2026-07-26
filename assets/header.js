@@ -157,6 +157,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
   var inp=document.getElementById('hsearchInput');
   var cls=document.getElementById('hsearchClose');
   var form=box?box.querySelector('.hsearch-form'):null;
+  /* 패널이 없으면 아무것도 하지 않는다 → 돋보기는 링크로서 /search.html 로 이동한다 */
   if(!btn||!box||!inp)return;
   function place(){
     var sh=document.getElementById('siteHeader');
