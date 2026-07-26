@@ -83,6 +83,13 @@ function looksArmed(row) {
   return ARMED_WORD.test(blob);
 }
 
+/* ── 위키데이터 P31(무엇의 사례인가) 로 정체를 확인합니다 ──
+   이름 추측이 아니라 기록된 분류를 읽는 방식입니다.
+   위키데이터의 하위 클래스 연결이 오염되어 군사·경찰 조직이 딸려 들어오는데,
+   P31 을 보면 정확히 가려낼 수 있습니다. */
+const P31_MIL = /military|paramilitar|armed (forces|group|organisation|organization)|militia|\barmy\b|\bnavy\b|air force|police|gendarmerie|law enforcement|intelligence agency|terrorist|insurgent|guerrilla|rebel|guard (unit|regiment)|regiment|battalion|brigade|division \(military\)|special forces|secret service|군사|경찰|무장|정보기관|준군사/i;
+const P31_EDU = /school|university|college|conservator|academy|educational|higher education|institute of (music|art|technology|higher)|gymnasium|lyc[eé]e|institution of higher|학교|대학|교육기관|음악원/i;
+
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const val = (b, k) => (b[k] && b[k].value) ? b[k].value : '';
 const qidOf = (u) => u ? u.split('/').pop() : '';
@@ -147,6 +154,25 @@ async function reverseAlumni(qids) {
   return out;
 }
 
+async function fetchP31(qids) {
+  // 항목별 P31 라벨을 모아옵니다 (한국어 우선, 없으면 영어)
+  const out = {}; const CH = 150;
+  for (let i = 0; i < qids.length; i += CH) {
+    const chunk = qids.slice(i, i + CH).map(q => 'wd:' + q).join(' ');
+    const q = 'SELECT ?item (GROUP_CONCAT(DISTINCT ?cL; separator=" · ") AS ?cls) WHERE {'
+      + ' VALUES ?item { ' + chunk + ' } ?item wdt:P31 ?c .'
+      + ' OPTIONAL { ?c rdfs:label ?cKo. FILTER(LANG(?cKo)="ko") }'
+      + ' OPTIONAL { ?c rdfs:label ?cEn. FILTER(LANG(?cEn)="en") }'
+      + ' BIND(COALESCE(?cKo,?cEn) AS ?cL) FILTER(BOUND(?cL))'
+      + ' } GROUP BY ?item';
+    let rows = [];
+    try { rows = await sparql(q); } catch (e) { console.log('    (P31 배치 오류, 계속):', e.message); }
+    rows.forEach(b => { const id = qidOf(val(b, 'item')); const c = val(b, 'cls'); if (c) out[id] = c; });
+    await sleep(1000);
+  }
+  return out;
+}
+
 function toRow(b, cat) {
   const nameKo = val(b, 'nameKo'), nameEn = val(b, 'nameEn');
   const name_ko = nameKo || nameEn;
@@ -190,6 +216,9 @@ function substanceCount(r) {
 }
 const bioOK = (r) => (r.description || '').trim().length >= 150;
 function keep(r) {
+  // 분류(P31)가 군사·경찰이면 제외 — 교육기관 분류가 함께 있으면 남깁니다
+  //   (군악학교는 P31 에 music school 이 함께 기록돼 있습니다)
+  if (r._p31 && P31_MIL.test(r._p31) && !P31_EDU.test(r._p31)) return false;
   // 군사·정치 조직만 제외합니다.
   //   "학교임을 증명하지 못하면 제외" 방식은 쓰지 않습니다.
   //   Juilliard School · Sibelius Academy · Peabody Institute · Mozarteum 처럼
@@ -269,13 +298,27 @@ async function main() {
   console.log('    → 소개 보강', bc, '곳 · 대표이미지 보강', ic, '곳');
 
   const all = [...collected.values()];
-  const armed = all.filter(r => looksArmed(r) && !isMusicSchool(r));
+
+  /* ── 위키데이터 P31 로 정체 확인 ──
+     이름 낱말만으로는 Al-Badar · Rusich 처럼 판별할 수 없는 항목이 있습니다.
+     기록된 분류를 읽어 군사·경찰 조직을 정확히 가려냅니다. */
+  console.log('■ 분류(P31) 확인');
+  const p31 = await fetchP31(all.map(r => r.wikidata_id).filter(Boolean));
+  console.log('  분류 확보', Object.keys(p31).length, '/', all.length, '건');
+  all.forEach(r => { r._p31 = p31[r.wikidata_id] || ''; });
+
+  const byP31Mil = all.filter(r => r._p31 && P31_MIL.test(r._p31) && !P31_EDU.test(r._p31));
+  const armed    = all.filter(r => looksArmed(r) && !isMusicSchool(r));
   const noSignal = all.filter(r => !looksArmed(r) && !isMusicSchool(r));
-  const kept = all.filter(keep);
+  const kept     = all.filter(keep);
+
   console.log('■ 걸러낸 내역');
-  console.log('  · 군사·정치 조직:', armed.length, '건');
+  console.log('  · 분류가 군사·경찰:', byP31Mil.length, '건  ← P31 기준 (가장 정확)');
+  if (byP31Mil.length) byP31Mil.slice(0, 5).forEach(r =>
+    console.log('    · ' + r.name_ko + '  [' + r._p31.slice(0, 50) + ']'));
+  console.log('  · 이름이 군사·정치 조직:', armed.length, '건  ← 이름 기준 (P31 없는 항목 대비)');
   if (armed.length) console.log('    예:', armed.slice(0, 5).map(r => r.name_ko).join(' / '));
-  console.log('  · 음악 낱말이 없지만 남긴 항목:', noSignal.length, '건 (고유명 음악원일 수 있어 제외하지 않습니다)');
+  console.log('  · 음악 낱말 없지만 남긴 항목:', noSignal.length, '건 (Juilliard·Mozarteum 처럼 고유명일 수 있어 남깁니다)');
   if (noSignal.length) console.log('    예:', noSignal.slice(0, 5).map(r => r.name_ko).join(' / '));
   console.log('■ 최종 통과:', kept.length, '곳 (전체', all.length, ')');
 
