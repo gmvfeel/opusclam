@@ -502,8 +502,6 @@ window.OCHub = (function () {
     var line = series.map(function (p, i) {
       return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.c).toFixed(1);
     }).join(' ');
-    var area = line + ' L' + x(series.length - 1).toFixed(1) + ' ' + (PT + ih)
-             + ' L' + PL + ' ' + (PT + ih) + ' Z';
 
     var grid = '';
     [0.5, 1].forEach(function (r) {
@@ -525,13 +523,7 @@ window.OCHub = (function () {
 
     var svg = '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '"'
       + ' role="img" aria-label="누적 등록 추이">'
-      + '<defs>'
-      +   '<linearGradient id="cvFill" x1="0" y1="0" x2="0" y2="1">'
-      +     '<stop offset="0" stop-color="currentColor" stop-opacity=".16"/>'
-      +     '<stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient>'
-      + '</defs>'
       + grid
-      + '<path d="' + area + '" fill="url(#cvFill)"/>'
       + '<path d="' + line + '" fill="none" stroke="currentColor" stroke-opacity=".72" stroke-width="2.4"'
       +   ' stroke-linejoin="round" stroke-linecap="round"/>'
       + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="9" fill="' + ACCENT + '" fill-opacity=".18"/>'

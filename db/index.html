@@ -42,7 +42,7 @@
 
   /* 영역 카드 — 클래스 이름은 hub.js 가 만드는 것과 같아야 한다 */
   .hb-cards{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:16px}
-  .hub-navcard{display:flex;flex-direction:column;gap:6px;padding:15px 14px 14px 17px;
+  .hub-navcard{display:flex;flex-direction:column;gap:6px;padding:15px 14px 14px;
     border:1px solid var(--line,#e4e4ec);border-radius:13px;background:var(--paper,#fff);
     text-decoration:none;transition:border-color .15s, transform .15s, box-shadow .15s}
   .hub-navcard:hover{border-color:var(--c,#c9bbe6);transform:translateY(-2px);
@@ -50,13 +50,10 @@
   .hub-navlabel{display:block;font-size:12.5px;font-weight:700;letter-spacing:-.02em;
     color:var(--text-2,#5c5e70);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .hub-navcount{display:flex;align-items:baseline;gap:2px}
-  /* 카드 숫자는 먹색 — 색으로 구분하는 곳은 아래 구성 스택바 하나로 모은다.
-     대신 카드 왼쪽에 그 영역 색을 얇은 띠로 남겨 구분은 유지한다 */
+  /* 카드는 색 없이 먹색으로만 — 색으로 구분하는 곳은 구성 스택바 하나로 모은다.
+     마우스를 올렸을 때만 그 영역 색이 살짝 드러난다 */
   .hub-navcount b{font-size:22px;font-weight:900;letter-spacing:-.035em;
     color:var(--text);font-variant-numeric:tabular-nums;line-height:1.05}
-  .hub-navcard{position:relative}
-  .hub-navcard::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:3px;
-    border-radius:0 3px 3px 0;background:var(--c,#7C63B0);opacity:.85}
   .hub-navcard:hover .hub-navcount b{color:var(--c,#7C63B0)}
   .hub-navcount i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3,#a8aabb)}
 
