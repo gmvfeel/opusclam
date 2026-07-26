@@ -92,6 +92,21 @@
     </div>
     <div class="log" id="logS"></div>
   </div>
+
+  <div class="card">
+    <h2><span class="n">3</span> 한국어 소개문 채우기</h2>
+    <p>한국어 위키백과에 <b>문서가 있는데도 소개문이 비어 있는 인물</b>을 찾아 채웁니다. 틀 코드(<code>| 이름 = ...</code>)가 잘못 들어간 소개문도 정상 문장으로 바꿉니다. 번역이 아니라 <b>한국어 위키백과의 실제 문장</b>을 가져오므로 지어내는 부분이 없습니다.</p>
+    <div class="row">
+      <button id="btnDesc">소개문 채우기 시작</button>
+      <label style="font-size:13px;color:#5c5e70"><input type="checkbox" id="dryD" checked> <b>미리보기만</b></label>
+      <label style="font-size:13px;color:#5c5e70"><input type="checkbox" id="allD"> 이미 있는 소개문도 다시 가져오기</label>
+    </div>
+    <div class="note">
+      한국어 문서가 없는 인물은 건너뜁니다. 영어 소개문을 그대로 넣으면 국내 이용자에게 도움이 되지 않고, 번역은 지어내는 위험이 있어 하지 않습니다. 그 인물들은 회원 집단보강 영역으로 남깁니다.
+    </div>
+    <div class="bar" id="barD"><i></i></div>
+    <div class="log" id="logD"></div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -318,6 +333,131 @@
     $('btnDel').disabled=false;
   }
 
+  /* ---------- 3. 한국어 소개문 채우기 ---------- */
+  // 틀 코드나 표 조각이 들어온 소개문은 잘못된 것으로 봅니다
+  function badDesc(t){
+    if(!t) return true;
+    var v=String(t).trim();
+    if(!v) return true;
+    if(/^[|{]/.test(v)) return true;
+    if(v.indexOf('{{')>=0 || v.indexOf('|이름')>=0 || v.indexOf('| 이름')>=0) return true;
+    if(v.length<15) return true;
+    return false;
+  }
+
+  async function mw(params, L){
+    params.format='json'; params.origin='*';
+    var qs=Object.keys(params).map(function(k){
+      return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
+    }).join('&');
+    for(var t=1;t<=4;t++){
+      try{
+        var r=await fetch('https://ko.wikipedia.org/w/api.php?'+qs);
+        if(r.ok) return await r.json();
+        if(L) L.log('  · 응답 '+r.status+' 재시도 '+t+'/4');
+      }catch(e){ if(L) L.log('  · 통신 오류 재시도 '+t+'/4'); }
+      await sleep(1200*t);
+    }
+    return null;
+  }
+
+  async function fillDesc(){
+    var L=mkLog('logD','barD');
+    $('btnDesc').disabled=true;
+    try{
+      var dry=$('dryD').checked, all=$('allD').checked;
+      L.log('■ 인물 로드');
+      var rows=await loadAll('persons','id,name_ko,description,link_wiki,wikidata_id',
+        function(q){ return q.not('wikidata_id','is',null); }, L);
+      var targets = all ? rows : rows.filter(function(p){ return badDesc(p.description); });
+      L.log('  전체 '+rows.length+'명 중 대상 '+targets.length+'명'
+            + (all ? ' (전체 다시 가져오기)' : ' (소개문이 없거나 틀 코드가 들어간 인물)'));
+      if(!targets.length){ L.log('채울 인물이 없습니다.'); $('btnDesc').disabled=false; return; }
+
+      // 한국어 위키백과 문서가 있는 인물만 골라냅니다
+      L.log('■ 한국어 위키백과 문서 확인');
+      var byQid={}, title={};
+      targets.forEach(function(p){ if(p.wikidata_id) byQid[p.wikidata_id]=p; });
+      var qids=Object.keys(byQid);
+      for(var i=0;i<qids.length;i+=CHUNK){
+        var vs=qids.slice(i,i+CHUNK).map(function(x){ return 'wd:'+x; }).join(' ');
+        var q='SELECT ?item ?t WHERE { VALUES ?item { '+vs+' } '
+          +'?sl schema:about ?item ; schema:isPartOf <https://ko.wikipedia.org/> ; schema:name ?t . }';
+        var res=await sparql(q,L);
+        res.forEach(function(b){ title[b.item.value.split('/').pop()]=b.t.value; });
+        L.prog(Math.round(Math.min(i+CHUNK,qids.length)/qids.length*40));
+        L.log('  확인 '+Math.min(i+CHUNK,qids.length)+'/'+qids.length+' · 한국어 문서 '+Object.keys(title).length+'건');
+        await sleep(250);
+      }
+      var have=Object.keys(title);
+      L.log('  ▶ 한국어 문서가 있는 인물 '+have.length+'명 / 나머지는 건너뜁니다');
+      if(!have.length){ $('btnDesc').disabled=false; return; }
+
+      // 소개문 가져오기
+      L.log('■ 소개문 추출');
+      var byTitle={};
+      have.forEach(function(qid){ byTitle[title[qid]]=byQid[qid]; });
+      var names=Object.keys(byTitle), patch=[];
+      for(var t2=0;t2<names.length;t2+=10){
+        var j=await mw({ action:'query', prop:'extracts', exintro:1, explaintext:1,
+                         redirects:1, titles:names.slice(t2,t2+10).join('|') }, L);
+        var pages=(j&&j.query&&j.query.pages)||{};
+        Object.keys(pages).forEach(function(pid){
+          var pg=pages[pid];
+          if(!pg.title || !pg.extract) return;
+          var p=byTitle[pg.title];
+          if(!p) return;
+          var txt=String(pg.extract).replace(/\s+/g,' ').trim();
+          if(txt.length<15) return;
+          patch.push({
+            id:p.id, name_ko:p.name_ko,
+            description: txt.slice(0,400),
+            link_wiki: p.link_wiki || ('https://ko.wikipedia.org/wiki/'+encodeURIComponent(pg.title.replace(/ /g,'_'))),
+            _from: (p.description||'').slice(0,30)
+          });
+        });
+        L.prog(40+Math.round(Math.min(t2+10,names.length)/names.length*40));
+        if(t2%200===0) L.log('  '+Math.min(t2+10,names.length)+'/'+names.length+' · 확보 '+patch.length);
+        await sleep(150);
+      }
+      L.log('  ▶ 채울 소개문 '+patch.length+'건');
+
+      L.log('■ 미리보기 (앞 20건)');
+      patch.slice(0,20).forEach(function(x){
+        L.log('  · '+x.name_ko+' : '+x.description.slice(0,70));
+      });
+
+      if(dry){
+        L.prog(100);
+        L.log('✅ 미리보기 완료 — 저장하려면 "미리보기만" 체크를 해제하고 다시 실행하세요.');
+        $('btnDesc').disabled=false; return;
+      }
+
+      L.log('■ 저장');
+      var ok=0, fell=false;
+      for(var k=0;k<patch.length;k+=UP){
+        var part=patch.slice(k,k+UP).map(function(x){
+          return { id:x.id, name_ko:x.name_ko, description:x.description, link_wiki:x.link_wiki };
+        });
+        var r=await sb.from('persons').upsert(part,{onConflict:'id'});
+        if(r.error){
+          if(!fell){ L.log('  일괄 저장 실패 → 한 명씩 저장으로 전환 ('+r.error.message+')'); fell=true; }
+          for(var m=0;m<part.length;m++){
+            var r2=await sb.from('persons').update({
+              description:part[m].description, link_wiki:part[m].link_wiki
+            }).eq('id',part[m].id);
+            if(!r2.error) ok++;
+          }
+        } else ok+=part.length;
+        L.prog(80+Math.round((k+part.length)/patch.length*20));
+      }
+      L.prog(100);
+      L.log('✅ 완료 — '+ok+'건 저장');
+    }catch(e){ L.log('✗ 중단: '+(e.message||e)); }
+    $('btnDesc').disabled=false;
+  }
+
+  $('btnDesc').addEventListener('click',fillDesc);
   $('btnMeta').addEventListener('click',runMeta);
   $('btnScan').addEventListener('click',scan);
   $('btnDel').addEventListener('click',del);
