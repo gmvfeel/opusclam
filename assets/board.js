@@ -207,8 +207,43 @@ window.OCBoard = (function () {
         + '<span class="board-row-right"><span class="board-row-cat">' + tagHtml(rec) + '</span><span class="board-row-meta"><span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></span></span>'
         + '</a>';
     }
+    /* 연결된 표(예: schools)에서 로고를 끌어오기 위한 캐시
+       cfg.logoFrom = { table:'schools', key:'school_id', col:'logo_url' } */
+    var extLogo = {};
+    function fetchExtLogos(rows) {
+      var lf = cfg.logoFrom;
+      if (!lf || !rows || !rows.length) return Promise.resolve();
+      var ids = [];
+      rows.forEach(function (r) {
+        var k = r[lf.key];
+        // 글에 사진·로고가 이미 있으면 조회하지 않습니다
+        if (!k) return;
+        if (r.thumb_url || r.logo_url) return;
+        if (extLogo[k] !== undefined) return;
+        if (ids.indexOf(k) < 0) ids.push(k);
+      });
+      if (!ids.length) return Promise.resolve();
+      return fetch(SB_URL + '/rest/v1/' + lf.table + '?select=id,' + lf.col
+                   + '&id=in.(' + ids.join(',') + ')&limit=200', { headers: HDR })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (list) {
+          ids.forEach(function (k) { extLogo[k] = ''; });           // 없으면 다시 묻지 않도록
+          (list || []).forEach(function (x) { if (x[lf.col]) extLogo[x.id] = x[lf.col]; });
+        })
+        .catch(function () { ids.forEach(function (k) { extLogo[k] = ''; }); });
+    }
+
     function docRowHtml(rec) {
-      var logo = rec.logo_url ? '<img src="' + esc(rec.logo_url) + '" alt="" loading="lazy">' : (rec.thumb_url ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">' : (rec.logo_text ? '<span class="doc-logo-txt">' + esc(rec.logo_text) + '</span>' : '<span class="doc-logo-ph"></span>'));
+      /* 표시 순서: 글의 사진 → 글의 로고 → 연결된 학교DB 로고 → 글자 → 빈 자리 */
+      var lf = cfg.logoFrom;
+      var fromDb = (lf && rec[lf.key]) ? (extLogo[rec[lf.key]] || '') : '';
+      var logo = rec.thumb_url
+        ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">'
+        : (rec.logo_url
+          ? '<img class="is-logo" src="' + esc(rec.logo_url) + '" alt="" loading="lazy" style="object-fit:contain;padding:8px">'
+          : (fromDb
+            ? '<img class="is-logo" src="' + esc(fromDb) + '" alt="" loading="lazy" style="object-fit:contain;padding:8px">'
+            : (rec.logo_text ? '<span class="doc-logo-txt">' + esc(rec.logo_text) + '</span>' : '<span class="doc-logo-ph"></span>')));
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);
@@ -280,8 +315,10 @@ window.OCBoard = (function () {
             if (listEl) listEl.innerHTML = '<div class="board-empty">아직 등록된 글이 없습니다.</div>';
             if (pager) pager.innerHTML = '';
           } else {
-            if (listEl) listEl.innerHTML = cfg.docStyle ? rows.map(docRowHtml).join('') : (cfg.articleStyle ? renderArticles(rows, (pg - 1) * PAGE) : rows.map(itemHtml).join(''));
-            renderPager();
+            return fetchExtLogos(rows).then(function () {
+              if (listEl) listEl.innerHTML = cfg.docStyle ? rows.map(docRowHtml).join('') : (cfg.articleStyle ? renderArticles(rows, (pg - 1) * PAGE) : rows.map(itemHtml).join(''));
+              renderPager();
+            });
           }
         })
         .catch(function (e) { console.error((cfg.table) + ' 목록 로드 실패:', e); if (listEl) listEl.innerHTML = '<div class="board-empty">목록을 불러오지 못했습니다.</div>'; });
@@ -333,6 +370,16 @@ window.OCBoard = (function () {
 
     fetch(SB_URL + '/rest/v1/' + cfg.table + '?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1', { headers: HDR })
       .then(function (r) { return r.json(); })
+      /* 글에 로고가 없으면 연결된 표(예: schools)에서 끌어옵니다 */
+      .then(function (rows) {
+        var lf = cfg.logoFrom, o = rows && rows[0];
+        if (!lf || !o || o.logo_url || !o[lf.key]) return rows;
+        return fetch(SB_URL + '/rest/v1/' + lf.table + '?select=' + lf.col
+                     + '&id=eq.' + encodeURIComponent(o[lf.key]) + '&limit=1', { headers: HDR })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (list) { if (list && list[0] && list[0][lf.col]) o._extLogo = list[0][lf.col]; return rows; })
+          .catch(function () { return rows; });
+      })
       .then(function (rows) {
         if (!rows || !rows.length) { box.innerHTML = '<div class="board-empty">글을 찾을 수 없습니다.</div>'; return; }
         var o = rows[0];
@@ -360,7 +407,11 @@ window.OCBoard = (function () {
         if (cfg.docView) {
           box.innerHTML =
             '<div class="bv-dochead">'
-            + (o.logo_url ? '<img class="bv-doclogo" src="' + esc(o.logo_url) + '" alt="">' : (o.logo_text ? '<span class="bv-doclogo bv-doclogo-txt">' + esc(o.logo_text) + '</span>' : ''))
+            + (o.logo_url
+                ? '<img class="bv-doclogo" src="' + esc(o.logo_url) + '" alt="">'
+                : (o._extLogo
+                  ? '<img class="bv-doclogo" src="' + esc(o._extLogo) + '" alt="">'
+                  : (o.logo_text ? '<span class="bv-doclogo bv-doclogo-txt">' + esc(o.logo_text) + '</span>' : '')))
             + '<div class="bv-dochead-t">'
             + (o.region ? '<span class="board-tag" data-cat="' + esc(o.region) + '">' + esc(o.region) + '</span> ' : '')
             + (o.category ? '<span class="board-tag" data-cat="' + esc(o.category) + '">' + esc(o.category) + '</span>' : '')
