@@ -809,8 +809,24 @@ window.OCHub = (function () {
   }
 
   function insight(cfg) {
+    /* 그리는 동안 빈 칸이 크게 남지 않도록 자리를 표시한다 */
+    var SLOTS = ['era','century','field','fill','teachers','alma','nation','links','seats'];
+    SLOTS.forEach(function (k) {
+      if (!cfg[k]) return;
+      var el = document.querySelector(cfg[k]);
+      if (el) el.innerHTML = '<div class="ins-load">'
+        + '<span class="hub-skel w5"></span><span class="hub-skel w7"></span></div>';
+    });
+
     fetch(SB_URL + '/rest/v1/rpc/db_insight', { headers: HDR })
-      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (r) {
+        if (!r.ok) {
+          return r.text().then(function (t) {
+            throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 160));
+          });
+        }
+        return r.json();
+      })
       .then(function (d) {
         if (!d) throw new Error('분석 자료를 받지 못했습니다');
 
@@ -925,10 +941,14 @@ window.OCHub = (function () {
         }
       })
       .catch(function (e) {
-        console.warn('[분석 그래프] 건너뜀:', e.message);
-        [cfg.era, cfg.field, cfg.nation, cfg.links, cfg.fill,
-         cfg.teachers, cfg.alma, cfg.century, cfg.seats].forEach(function (sel) {
-          if (!sel) return; var el = document.querySelector(sel); if (el) el.innerHTML = '';
+        console.warn('[분석 그래프] 실패:', e.message);
+        var msg = '<p class="ins-err">분석 자료를 불러오지 못했습니다.<br>'
+          + '<span>' + esc(e.message) + '</span></p>';
+        [cfg.era, cfg.century, cfg.field, cfg.fill, cfg.teachers,
+         cfg.alma, cfg.nation, cfg.links, cfg.seats].forEach(function (sel, i) {
+          if (!sel) return;
+          var el = document.querySelector(sel);
+          if (el) el.innerHTML = (i === 0) ? msg : '';
         });
       });
   }

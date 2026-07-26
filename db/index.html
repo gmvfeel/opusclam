@@ -154,6 +154,10 @@
   .st-leg{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-2)}
   .st-leg i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
   .st-note{margin:9px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.6}
+  /* 그리는 동안 · 실패했을 때 */
+  .ins-load{display:flex;flex-direction:column;gap:9px;padding:10px 0 4px}
+  .ins-err{margin:8px 0 2px;font-size:12.5px;color:var(--text-2);line-height:1.7}
+  .ins-err span{font-size:11px;color:var(--text-3);word-break:break-all}
 
   .hb-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
@@ -177,6 +181,8 @@
   .hb-insbtn.on .hb-insmark::before,.hb-insbtn.on .hb-insmark::after{background:#fff}
   .hb-insbtn.on .hb-insmark::after{transform:translate(-50%,-50%) rotate(90deg)}
   .hb-inspanels{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+  /* hidden 속성이 display 지정에 밀리지 않도록 (없으면 닫히지 않는다) */
+  .hb-inspanels[hidden]{display:none}
   @media (max-width:760px){
     .hb-insbtn{flex-wrap:wrap;gap:8px 12px;padding:15px 16px}
     .hb-insdesc{-webkit-line-clamp:3;order:3;flex-basis:100%}
@@ -596,7 +602,13 @@
       btn.addEventListener('click', function(){
         var willOpen = wrap.hidden;
 
+        /* 먼저 펼친다 — 숨긴 상태에서 그리면 폭을 0 으로 재게 된다 */
+        wrap.hidden = !willOpen;
+        btn.classList.toggle('on', willOpen);
+        btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+
         if(willOpen && !loaded){
+          loaded = true;
           OCHub.insight({
             era:'#eraBox', century:'#centuryBox',
             field:'#fieldBox', fill:'#fillBox',
@@ -604,15 +616,7 @@
             nation:'#nationBox', links:'#linksBox', linksTotal:'#linkTotal',
             seats:'#seatsBox'
           });
-          loaded = true;
         }
-
-        wrap.hidden = !willOpen;
-        btn.classList.toggle('on', willOpen);
-        btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-
-        /* 숨겨진 상태로 그린 그래프의 폭을 바로잡는다 */
-        if(willOpen) setTimeout(function(){ window.dispatchEvent(new Event('resize')); }, 30);
       });
     })();
 
