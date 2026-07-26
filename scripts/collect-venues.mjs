@@ -148,7 +148,18 @@ function richness(r) {
 
 const H = { apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY, 'Content-Type': 'application/json' };
 async function sbGet(p) { const r = await fetch(SUPABASE_URL + '/rest/v1/' + p, { headers: H }); if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text()); return r.json(); }
-async function sbInsert(rows) { if (!rows.length) return; const r = await fetch(SUPABASE_URL + '/rest/v1/venues', { method: 'POST', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(rows) }); if (!r.ok) throw new Error('INSERT ' + r.status + ' ' + await r.text()); }
+async function sbInsert(rows) {
+  if (!rows.length) return;
+  // 이미 있는 항목(wikidata_id 중복)은 건너뜁니다.
+  // 예전에는 중복 하나만 있어도 전체 저장이 실패했습니다.
+  const url = SUPABASE_URL + '/rest/v1/venues?on_conflict=wikidata_id';
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { ...H, Prefer: 'return=minimal,resolution=ignore-duplicates' },
+    body: JSON.stringify(rows)
+  });
+  if (!r.ok) throw new Error('INSERT ' + r.status + ' ' + await r.text());
+}
 async function sbUpdate(id, patch) { const r = await fetch(SUPABASE_URL + '/rest/v1/venues?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(patch) }); if (!r.ok) throw new Error('UPDATE ' + r.status + ' ' + await r.text()); }
 
 const FILL_COLS = ['name_en', 'type', 'location', 'opened', 'seats', 'operator', 'resident', 'logo_url', 'link_home', 'link_wiki', 'description'];
@@ -203,7 +214,8 @@ async function main() {
   const kept = [...collected.values()].filter(keep);
   console.log('■ 충실도 통과:', kept.length, '곳 (제외', collected.size - kept.length, ')');
 
-  const existing = await sbGet('venues?select=id,wikidata_id,name_ko,name_en,type,location,opened,seats,operator,resident,logo_url,link_home,link_wiki,description,sort_no');
+  // 1000행 제한을 넘겨 전부 읽습니다 (sbGet 은 한 번만 읽어 중복 저장 오류가 났습니다)
+  const existing = await sbGetAll('venues', 'id,wikidata_id,name_ko,name_en,type,location,opened,seats,operator,resident,logo_url,link_home,link_wiki,description,sort_no');
   const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
   for (const r of existing) { if (r.wikidata_id) byWid.set(r.wikidata_id, r); if (r.name_ko) nameSet.add(norm(r.name_ko)); if (typeof r.sort_no === 'number' && r.sort_no > maxSort) maxSort = r.sort_no; }
   console.log('■ 기존 venues:', existing.length, '행');

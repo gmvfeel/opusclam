@@ -137,7 +137,18 @@ async function sbGetAll(table, select) {
   }
   return out;
 }
-async function sbInsert(rows) { if (!rows.length) return; const r = await fetch(SUPABASE_URL + '/rest/v1/orgs', { method: 'POST', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(rows) }); if (!r.ok) throw new Error('INSERT ' + r.status + ' ' + await r.text()); }
+async function sbInsert(rows) {
+  if (!rows.length) return;
+  // 이미 있는 항목(wikidata_id 중복)은 건너뜁니다.
+  // 예전에는 중복 하나만 있어도 전체 저장이 실패했습니다.
+  const url = SUPABASE_URL + '/rest/v1/orgs?on_conflict=wikidata_id';
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { ...H, Prefer: 'return=minimal,resolution=ignore-duplicates' },
+    body: JSON.stringify(rows)
+  });
+  if (!r.ok) throw new Error('INSERT ' + r.status + ' ' + await r.text());
+}
 async function sbUpdate(id, patch) { const r = await fetch(SUPABASE_URL + '/rest/v1/orgs?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(patch) }); if (!r.ok) throw new Error('UPDATE ' + r.status + ' ' + await r.text()); }
 
 const FILL_COLS = ['name_en', 'type', 'location', 'founded', 'leader', 'home_venue', 'logo_url', 'link_home', 'link_wiki', 'description'];
