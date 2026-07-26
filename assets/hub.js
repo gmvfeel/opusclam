@@ -96,7 +96,9 @@ window.OCHub = (function () {
       href: (src.view ? src.view + '?id=' + encodeURIComponent(r.id) : src.list),
       name: r[src.name] || (src.name2 ? r[src.name2] : '') || '(이름 없음)',
       name2: (r[src.name] && src.name2 && r[src.name2] !== r[src.name]) ? r[src.name2] : '',
-      desc: src.desc ? txt(r[src.desc], 78) : '',
+      /* 넉넉히 담는다. 리스트에서는 CSS 가 폭에 맞춰 자르고(…),
+         카드에서는 두 줄까지 보여준다. 짧게 자르면 오른쪽이 비어 보인다. */
+      desc: src.desc ? txt(r[src.desc], 220) : '',
       meta: join((src.meta || []).map(function (c) { return r[c]; })),
       img: src.img ? thumb(r[src.img], 128) : '',
       date: ymd(r[dateCol])
