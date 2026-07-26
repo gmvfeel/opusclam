@@ -18,18 +18,20 @@
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/assets/base.css">
 <style>
-  /* ── DATABASE 메인 전용 ── */
-  .hb{max-width:1100px;margin:0 auto;padding:0 20px 90px}
+  /* ── DATABASE 메인 전용 ──
+     콘텐츠는 .pdb-inner 안에 있으므로 가로폭과 좌우 여백은
+     인물DB 등 서브페이지와 자동으로 같아진다. 별도 래퍼를 두지 않는다. */
 
-  /* 인트로 — 서비스 소개 + 전체 건수 */
-  .hb-intro{display:flex;align-items:center;gap:34px;margin:30px 0 6px;
+  /* 인트로 — 서비스 소개 + 전체 건수
+     위쪽 여백은 서브페이지의 검색·필터 줄(.pdb-toolbar)이 있던 자리와 맞춘다 */
+  .hb-intro{display:flex;align-items:center;gap:34px;margin:20px 0 0;
     padding:30px 34px;border:1px solid var(--line,#e4e4ec);border-radius:18px;
     background:var(--paper,#fff);box-shadow:0 10px 30px rgba(24,24,50,.05)}
   .hb-introtxt{flex:1;min-width:0}
   .hb-brand{font-size:12px;font-weight:800;letter-spacing:.18em;color:var(--violet-3,#9C7FD6)}
-  .hb-h1{margin:7px 0 4px;font-size:31px;font-weight:900;letter-spacing:-.03em;
-    line-height:1.15;color:var(--text-1,#1b1c2b)}
-  .hb-h1 b{background:linear-gradient(120deg,#7C63B0,#9C7FD6 50%,#C9A94E);
+  .hb-h1{margin:7px 0 5px;font-size:29px;font-weight:600;letter-spacing:-.025em;
+    line-height:1.2;color:var(--text-1,#1b1c2b)}
+  .hb-h1 b{font-weight:700;background:linear-gradient(120deg,#7C63B0,#9C7FD6 50%,#C9A94E);
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .hb-lead{margin:0;font-size:13.5px;color:var(--text-3,#8a8c9e);line-height:1.75}
   .hb-total{flex:0 0 auto;text-align:center;padding:0 6px}
@@ -133,6 +135,7 @@
     border:1px solid var(--line,#e4e4ec);border-radius:99px;background:var(--paper,#fff);
     font-size:13px;font-weight:700;color:var(--text-2,#5c5e70);text-decoration:none}
   .hub-more a:hover{border-color:#c9bbe6;color:#7C63B0}
+  .hb-sec:last-of-type{padding-bottom:70px}
 
   /* 로딩 */
   .hub-skel{display:block;height:12px;border-radius:5px;
@@ -197,19 +200,15 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OPUSCLAM DATABASE SERVICE</div>
-          <h1 class="pdb-title">Database</h1>
+          <h1 class="pdb-title">DATABASE</h1>
         </div>
       </div>
       <p class="pdb-lead">순수음악 인물 · 단체 · 공연장 · 학교 · 현대음악 · 기관 · 학술 자료를 한곳에 모았습니다.</p>
     </header>
-  </div>
-</section>
 
-<main class="hb">
-
-  <!-- 인트로 + 전체 건수 -->
-  <div class="hb-intro">
-    <div class="hb-introtxt">
+    <!-- 인트로 + 전체 건수 -->
+    <div class="hb-intro">
+      <div class="hb-introtxt">
       <div class="hb-brand">OPUSCLAM.COM</div>
       <h2 class="hb-h1">오퍼스클램 <b>데이터베이스</b></h2>
       <p class="hb-lead">
@@ -223,11 +222,11 @@
     </div>
   </div>
 
-  <!-- 영역 카드 -->
-  <div class="hb-cards"></div>
+    <!-- 영역 카드 -->
+    <div class="hb-cards"></div>
 
-  <!-- 새로 등록된 Database -->
-  <section class="hb-sec">
+    <!-- 새로 등록된 Database -->
+    <section class="hb-sec">
     <div class="hb-head">
       <span class="hb-title">새로 등록된 Database<em>NEW</em></span>
       <div class="hb-tools" id="latestView">
@@ -242,16 +241,17 @@
     <div class="hub-list" id="latestBox"></div>
   </section>
 
-  <!-- 새로 보강된 Database -->
-  <section class="hb-sec">
-    <div class="hb-head">
-      <span class="hb-title">새로 보강된 Database<em>UPDATED</em></span>
-    </div>
-    <div class="hub-grid" id="freshBox"></div>
-    <div class="hub-more"><a href="/search.html">통합검색으로 더 찾아보기 &rsaquo;</a></div>
-  </section>
+    <!-- 새로 보강된 Database -->
+    <section class="hb-sec">
+      <div class="hb-head">
+        <span class="hb-title">새로 보강된 Database<em>UPDATED</em></span>
+      </div>
+      <div class="hub-grid" id="freshBox"></div>
+      <div class="hub-more"><a href="/search.html">통합검색으로 더 찾아보기 &rsaquo;</a></div>
+    </section>
 
-</main>
+  </div>
+</section>
 
 <div id="oc-footer"></div>
 
