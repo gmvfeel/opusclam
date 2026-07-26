@@ -195,15 +195,27 @@ const H = { apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY, 'Conten
 async function sbGet(p) { const r = await fetch(SUPABASE_URL + '/rest/v1/' + p, { headers: H }); if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text()); return r.json(); }
 async function sbInsert(rows) {
   if (!rows.length) return;
-  // 이미 있는 항목(wikidata_id 중복)은 건너뜁니다.
-  // 예전에는 중복 하나만 있어도 전체 저장이 실패했습니다.
-  const url = SUPABASE_URL + '/rest/v1/modern_composers?on_conflict=wikidata_id';
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: { ...H, Prefer: 'return=minimal,resolution=ignore-duplicates' },
-    body: JSON.stringify(rows)
+  const post = (batch) => fetch(SUPABASE_URL + '/rest/v1/modern_composers', {
+    method: 'POST', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(batch)
   });
-  if (!r.ok) throw new Error('INSERT ' + r.status + ' ' + await r.text());
+  const r = await post(rows);
+  if (r.ok) return;
+  const txt = await r.text();
+  // 이미 있는 항목 때문이면 한 건씩 넣어 중복만 건너뜁니다.
+  // (on_conflict 방식은 이 환경에서 제약을 인식하지 못해 쓰지 않습니다)
+  if (r.status === 409 || txt.indexOf('23505') >= 0) {
+    let ok = 0, dup = 0;
+    for (const row of rows) {
+      const r2 = await post([row]);
+      if (r2.ok) { ok++; continue; }
+      const t2 = await r2.text();
+      if (r2.status === 409 || t2.indexOf('23505') >= 0) { dup++; continue; }
+      throw new Error('INSERT ' + r2.status + ' ' + t2);
+    }
+    console.log('    (이미 있는 항목 ' + dup + '건 건너뜀 · ' + ok + '건 저장)');
+    return;
+  }
+  throw new Error('INSERT ' + r.status + ' ' + txt);
 }
 async function sbUpdate(id, patch) { const r = await fetch(SUPABASE_URL + '/rest/v1/modern_composers?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: { ...H, Prefer: 'return=minimal' }, body: JSON.stringify(patch) }); if (!r.ok) throw new Error('UPDATE ' + r.status + ' ' + await r.text()); }
 
