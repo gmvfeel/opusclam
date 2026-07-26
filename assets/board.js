@@ -213,13 +213,41 @@ window.OCBoard = (function () {
        cfg.logoFrom = { table:'schools', key:'school_id', col:'logo_url', homeCol:'link_home' }
        홈페이지가 있으면 파비콘을 쓰는데, 학교 파비콘은 대개 로고 그 자체입니다 */
     var extInfo = {};
-    function faviconOf(url) {
-      if (!url) return '';
-      var h = '';
-      try { h = new URL(url).hostname; }
-      catch (e) { h = (String(url).match(/^(?:https?:\/\/)?([^\/?#:]+)/) || [])[1] || ''; }
-      if (!h) return '';
-      return 'https://www.google.com/s2/favicons?sz=128&domain=' + encodeURIComponent(h);
+    /* 학교 이름을 로고 자리에 들어갈 약칭으로 줄입니다
+       '서울대학교 음악대학' → '서울대'   '덕원예술고등학교' → '덕원예고'
+       파비콘은 쓰지 않습니다 — 파비콘이 없는 학교는 검색엔진이 기본 지구 아이콘을 주고
+       그것이 정상 응답이라 우리 쪽에서 걸러낼 방법이 없습니다 */
+    function shortName(nm) {
+      var t = String(nm || '').trim();
+      if (!t) return '';
+      // 학과·단위 이름 제거
+      t = t.replace(/\s*(음악대학|음악학부|음악학과|음악과|음악원|음악테크놀로지대학|음악공연예술대학|공연예술대학|예술종합대학|예술체육대학|예술대학|예술학부|예술학과|작곡과|기악과|성악과|관현악과|피아노과|국악과|실용음악과|대학원)\s*$/g, '').trim();
+      t = t.replace(/\s+/g, '');
+      // 흔한 학교 종류를 약칭으로
+      t = t.replace(/예술종합학교$/, '예종')
+           .replace(/예술고등학교$/, '예고')
+           .replace(/예술대학교$/, '예대')
+           .replace(/여자대학교$/, '여대')
+           .replace(/여자고등학교$/, '여고')
+           .replace(/대학교$/, '대')
+           .replace(/고등학교$/, '고')
+           .replace(/중학교$/, '중');
+      if (t.length > 5) t = t.slice(0, 5);
+      return t;
+    }
+    /* 이름마다 다른 배경색을 만들어 리스트에서 서로 구분되게 합니다 */
+    function tintOf(nm) {
+      var h = 0, str = String(nm || '');
+      for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+      return 'hsl(' + h + ',34%,93%)';
+    }
+    function textLogo(nm) {
+      var sn = shortName(nm);
+      if (!sn) return '<span class="doc-logo-ph"></span>';
+      return '<span class="doc-logo-txt" style="display:flex;align-items:center;justify-content:center;'
+        + 'width:100%;height:100%;background:' + tintOf(nm) + ';font-weight:700;letter-spacing:-.02em;'
+        + 'font-size:' + (sn.length >= 5 ? '13px' : sn.length === 4 ? '15px' : '17px') + ';'
+        + 'line-height:1.2;text-align:center;word-break:keep-all;padding:4px">' + esc(sn) + '</span>';
     }
     function fetchExtLogos(rows) {
       var lf = cfg.logoFrom;
@@ -233,40 +261,32 @@ window.OCBoard = (function () {
         if (ids.indexOf(k) < 0) ids.push(k);
       });
       if (!ids.length) return Promise.resolve();
-      var cols = ['id', lf.col].concat(lf.homeCol ? [lf.homeCol] : []).join(',');
+      var cols = ['id', lf.col].concat(lf.nameCol ? [lf.nameCol] : []).join(',');
       return fetch(SB_URL + '/rest/v1/' + lf.table + '?select=' + cols
                    + '&id=in.(' + ids.join(',') + ')&limit=200', { headers: HDR })
         .then(function (r) { return r.ok ? r.json() : []; })
         .then(function (list) {
-          ids.forEach(function (k) { extInfo[k] = { logo: '', fav: '' }; });
+          ids.forEach(function (k) { extInfo[k] = { logo: '', name: '' }; });
           (list || []).forEach(function (x) {
-            extInfo[x.id] = {
-              logo: x[lf.col] || '',
-              fav: lf.homeCol ? faviconOf(x[lf.homeCol]) : ''
-            };
+            extInfo[x.id] = { logo: x[lf.col] || '', name: lf.nameCol ? (x[lf.nameCol] || '') : '' };
           });
         })
-        .catch(function () { ids.forEach(function (k) { extInfo[k] = { logo: '', fav: '' }; }); });
+        .catch(function () { ids.forEach(function (k) { extInfo[k] = { logo: '', name: '' }; }); });
     }
 
     function docRowHtml(rec) {
       /* 표시 순서
-         1) 글의 사진        2) 글의 로고
-         3) 홈페이지 파비콘  (학교 파비콘은 대개 로고 그 자체)
-         4) 연결 표의 이미지 5) 글자        6) 빈 자리
-         파비콘을 4)보다 앞에 둔 이유: schools.logo_url 에는 건물 사진이 섞여 있습니다 */
+         1) 글의 사진   2) 글의 로고   3) 학교 이름 약칭(색상 배경)   4) 빈 자리
+         학교DB의 이미지는 쓰지 않습니다 — 건물 사진·깃발이 섞여 있습니다 */
       var lf = cfg.logoFrom;
       var ei = (lf && rec[lf.key]) ? (extInfo[rec[lf.key]] || null) : null;
+      var nameForLogo = (ei && ei.name) || rec.school_name || rec.logo_text || '';
       var LG = 'class="is-logo" loading="lazy" style="object-fit:contain;padding:8px"';
       var logo = rec.thumb_url
         ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">'
         : (rec.logo_url
           ? '<img ' + LG + ' src="' + esc(rec.logo_url) + '" alt="">'
-          : (ei && ei.fav
-            ? '<img ' + LG + ' src="' + esc(ei.fav) + '" alt="">'
-            : (ei && ei.logo
-              ? '<img ' + LG + ' src="' + esc(ei.logo) + '" alt="">'
-              : (rec.logo_text ? '<span class="doc-logo-txt">' + esc(rec.logo_text) + '</span>' : '<span class="doc-logo-ph"></span>'))));
+          : textLogo(nameForLogo));
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);
@@ -403,8 +423,7 @@ window.OCBoard = (function () {
           .then(function (r) { return r.ok ? r.json() : []; })
           .then(function (list) {
             var x = list && list[0]; if (!x) return rows;
-            var fav = lf.homeCol ? faviconOf(x[lf.homeCol]) : '';
-            o._extLogo = fav || x[lf.col] || '';
+            o._extName = lf.nameCol ? (x[lf.nameCol] || '') : '';
             return rows;
           })
           .catch(function () { return rows; });
@@ -438,9 +457,12 @@ window.OCBoard = (function () {
             '<div class="bv-dochead">'
             + (o.logo_url
                 ? '<img class="bv-doclogo" src="' + esc(o.logo_url) + '" alt="">'
-                : (o._extLogo
-                  ? '<img class="bv-doclogo" src="' + esc(o._extLogo) + '" alt="">'
-                  : (o.logo_text ? '<span class="bv-doclogo bv-doclogo-txt">' + esc(o.logo_text) + '</span>' : '')))
+                : (function(){
+                    var nm = o._extName || o.school_name || o.logo_text || '';
+                    var sn = shortName(nm);
+                    return sn ? '<span class="bv-doclogo bv-doclogo-txt" style="background:' + tintOf(nm)
+                      + ';font-weight:700">' + esc(sn) + '</span>' : '';
+                  })())
             + '<div class="bv-dochead-t">'
             + (o.region ? '<span class="board-tag" data-cat="' + esc(o.region) + '">' + esc(o.region) + '</span> ' : '')
             + (o.category ? '<span class="board-tag" data-cat="' + esc(o.category) + '">' + esc(o.category) + '</span>' : '')
