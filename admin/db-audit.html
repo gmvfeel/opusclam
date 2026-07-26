@@ -120,13 +120,14 @@
 
   var CHUNK = 150, UP = 400;
 
-  /* 장르·직업 판정 (영문 값이라 안정적입니다) */
-  var JAZZ = /\bjazz\b|bebop|hard bop|swing music|\bblues\b|dixieland|free jazz|jazz fusion/i;
-  var POP  = /\bpop\b|popular music|\brock\b|hip ?hop|\brap\b|r&b|rhythm and blues|\bsoul\b|\bfunk\b|reggae|\bmetal\b|country music|\bfolk\b|new age|electronic dance|disco|techno|house music|singer-songwriter|trot/i;
+  /* 장르·직업 판정 — 장르(P136)가 결정적 근거이고, 직업(P106)은 장르가 없을 때만 씁니다.
+     직업은 대중음악인과 클래식 음악가가 공유합니다.
+     예: 재즈 "tenor saxophonist" 의 tenor 가 성악 테너로 잡히던 문제 */
+  var JAZZ = /jazz|bebop|hard bop|swing music|\bblues\b|dixieland|ragtime|jazz fusion/i;
+  var POP  = /\bpop\b|popular music|\brock\b|hip ?hop|\brap\b|r&b|rhythm and blues|\bsoul\b|\bfunk\b|reggae|\bmetal\b|country music|\bfolk\b|new age|electronic dance|disco|techno|house music|singer-songwriter|trot|\bpunk\b/i;
   var FILM = /film score|film music|soundtrack|television score|film composer|video game music|musical theat|broadway/i;
-  var CLS  = /classical|opera|art song|\blied\b|chamber music|orchestral|choral|baroque|romantic music|sacred music|church music|contemporary classical|art music|symphon|conductor|organist|violinist|cellist|violist|pianist|flautist|harpsichord|musicolog|composer|opera singer|soprano|mezzo|tenor|baritone|countertenor|concertmaster|music educator|music theorist/i;
-  /* 클래식 신호 중에서도 'composer' 'pianist' 처럼 대중음악인과 겹치는 값은 약하게 취급 */
-  var CLS_STRONG = /classical|opera|art song|\blied\b|chamber music|orchestral|choral|baroque|romantic|sacred music|church music|contemporary classical|art music|symphon|conductor|organist|harpsichord|musicolog|opera singer|soprano|mezzo|tenor|baritone|countertenor|concertmaster|music theorist/i;
+  /* 클래식 장르 — 직업 명칭은 넣지 않습니다 */
+  var CLS_GENRE = /classical|opera|art song|\blied\b|chamber music|baroque|romantic music|sacred music|church music|contemporary classical|art music|symphon|choral|early music|serialism|minimalis|twelve-tone|renaissance music|medieval music|operetta/i;
 
   function $(id){ return document.getElementById(id); }
   function esc(t){ return (t==null?'':String(t)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -246,12 +247,16 @@
   /* ---------- 2. 후보 검토 ---------- */
   var cands=[];
   function kindOf(p){
-    var g=(p.wd_genre||'')+' '+(p.wd_occupation||'');
-    var hasCls = CLS_STRONG.test(g);
+    var g = (p.wd_genre||'').trim();
+    var o = (p.wd_occupation||'').trim();
+    var src = g ? g : o;                 // 장르가 없으면 직업으로 판단
+    var clsg = CLS_GENRE.test(g);        // 클래식 장르가 있으면 겸업으로 보고 지킵니다
     var desc = (p.description||'').trim();
-    if(JAZZ.test(g) && !hasCls) return 'jazz';
-    if(POP.test(g)  && !hasCls) return 'pop';
-    if(FILM.test(g) && !hasCls) return 'film';
+    if(!clsg){
+      if(JAZZ.test(src)) return 'jazz';
+      if(POP.test(src))  return 'pop';
+      if(FILM.test(src)) return 'film';
+    }
     var lim=parseInt($('thin').value,10)||2;
     if((p.wd_links!=null && p.wd_links<=lim) && !desc) return 'thin';
     return null;
