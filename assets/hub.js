@@ -524,15 +524,15 @@ window.OCHub = (function () {
     var svg = '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '"'
       + ' role="img" aria-label="누적 등록 추이">'
       + grid
-      + '<path d="' + line + '" fill="none" stroke="currentColor" stroke-opacity=".72" stroke-width="2.4"'
+      + '<path d="' + line + '" fill="none" stroke="' + C_MAIN + '" stroke-width="2.4"'
       +   ' stroke-linejoin="round" stroke-linecap="round"/>'
-      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="9" fill="' + ACCENT + '" fill-opacity=".18"/>'
-      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="4.4" fill="' + ACCENT + '"/>'
+      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="9" fill="' + C_HI + '" fill-opacity=".22"/>'
+      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="4.4" fill="' + C_HI + '"/>'
       + ticks
       /* 마우스를 따라다니는 안내선과 점 (처음엔 숨김) */
       + '<g class="cv-hover" opacity="0">'
       +   '<line class="cv-vline" x1="0" y1="' + PT + '" x2="0" y2="' + (PT + ih) + '"'
-      +     ' stroke="' + ACCENT + '" stroke-opacity=".45" stroke-width="1" stroke-dasharray="3 3"/>'
+      +     ' stroke="' + C_HI + '" stroke-opacity=".55" stroke-width="1" stroke-dasharray="3 3"/>'
       +   '<circle class="cv-dot" cx="0" cy="0" r="4.6" fill="' + ACCENT + '"/>'
       +   '<circle class="cv-dot2" cx="0" cy="0" r="9" fill="' + ACCENT + '" fill-opacity=".18"/>'
       + '</g>'
@@ -621,13 +621,33 @@ window.OCHub = (function () {
      ============================================================ */
   var REL_LABEL = { teacher:'사사 (스승)', student:'제자', alumnus_of:'출신 학교',
                     fellow_of:'학회 · 아카데미', member_of:'소속 단체' };
-  /* 색 규칙 — 먹색 농담을 기본으로, 요점 하나만 보라로 강조한다.
-     먹색은 currentColor 로 표현하므로 다크모드에서 알아서 반전된다.
-     · SVG      : fill="currentColor" + fill-opacity
-     · HTML 막대: background:currentColor + opacity
-     · 강조     : ACCENT (보라) */
-  var ACCENT = '#7C63B0';
-  function alpha(i, n, dark) {          // 0번이 진한(dark=true) 또는 옅은
+  /* ── 그래프 색 ──
+     검정 계열 농담은 한눈에 답답해 보이므로 밝은 색을 쓴다.
+     · 시간 순서(시대·좌석) : 차가운 색 → 따뜻한 색 으로 흐른다
+     · 분야                 : 분야마다 정해진 색 (도넛과 누적막대가 같은 색)
+     · 순위(국적·스승 등)   : 한 색의 농담, 1위만 진하게
+     색을 한 번에 바꾸려면 아래 값만 고치면 된다. */
+  /* ★ 색이 마음에 들지 않으면 이 아래 값만 바꾸면 모든 그래프에 반영됩니다 */
+  var C_MAIN = '#4F7BE8';                 // 순위 막대 · 성장 곡선 (파랑)
+  var C_HI   = '#F2A63B';                 // 1위 · 현재 지점 · 부족한 항목 (주황)
+  var SEQ = ['#8FA9D8','#5B9BD5','#3FB6C6','#37C4A0','#7CC94A','#E8B93C','#EE8A4C'];
+  var FIELD_C = { '작곡':'#5B7CE8', '성악':'#E8709A', '연주':'#3FB0D9',
+                  '지휘':'#E8A93C', '음악학':'#37BFA0', '음악교육':'#8FC94A',
+                  '편곡':'#7A6FD8', '평론':'#E8756B' };
+  /* 순서를 색으로 (구간 수에 맞춰 골라 쓴다) */
+  function seq(i, n) {
+    if (n <= 1) return SEQ[3];
+    var k = Math.round(i / (n - 1) * (SEQ.length - 1));
+    return SEQ[Math.max(0, Math.min(SEQ.length - 1, k))];
+  }
+  /* 순위 농담 — 1위가 진하고 아래로 갈수록 옅어진다 */
+  function rankColor(i, n) {
+    var t = (n <= 1) ? 0 : i / (n - 1);
+    var a = (0.92 - t * 0.55).toFixed(2);
+    return 'rgba(79,123,232,' + a + ')';
+  }
+  var ACCENT = C_HI;
+  function alpha(i, n, dark) {            // 예전 이름 유지 (누적막대에서 씀)
     var t = (n <= 1) ? 0 : i / (n - 1);
     return +(dark ? (0.88 - t * 0.58) : (0.30 + t * 0.58)).toFixed(2);
   }
@@ -646,11 +666,9 @@ window.OCHub = (function () {
     data.forEach(function (d, i) {
       var h = Math.max(ih * d.n / max, 2);
       var x = PL + i * (bw + gap), y = PT + ih - h;
-      var hot = (d.n === max);
-      var paint = hot ? ' fill="' + ACCENT + '"'
-                      : ' fill="currentColor" fill-opacity="' + alpha(i, data.length, false) + '"';
-      var lab = hot ? ' fill="' + ACCENT + '"'
-                    : ' fill="currentColor" fill-opacity=".55"';
+      var col = seq(i, data.length);
+      var paint = ' fill="' + col + '"';
+      var lab = ' fill="' + col + '" font-weight="800"';
       out += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '"'
         + ' height="' + h.toFixed(1) + '" rx="' + Math.min(5, bw / 3).toFixed(1) + '"' + paint + '/>'
         + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" font-size="11"'
@@ -758,10 +776,10 @@ window.OCHub = (function () {
         var hh = ih * v / g.total;
         var yy = PT + ih - acc - hh;
         acc += hh;
-        var op = alpha(ki, keys.length, true);
+        var col = FIELD_C[k] || '#9AA3B5';
         out += '<rect x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + bw.toFixed(1) + '"'
           + ' height="' + Math.max(hh, 0.6).toFixed(1) + '"'
-          + ' fill="currentColor" fill-opacity="' + op + '">'
+          + ' fill="' + col + '" stroke="var(--paper,#fff)" stroke-width=".8">'
           + '<title>' + esc(c + '세기 · ' + k + ' ' + v.toLocaleString() + '명 ('
           + (v / g.total * 100).toFixed(1) + '%)') + '</title></rect>';
       });
@@ -772,9 +790,9 @@ window.OCHub = (function () {
         + g.total.toLocaleString() + '</text>';
     });
 
-    var legs = keys.map(function (k, ki) {
-      return '<span class="st-leg"><i style="background:currentColor;opacity:'
-        + alpha(ki, keys.length, true) + '"></i>' + esc(k) + '</span>';
+    var legs = keys.map(function (k) {
+      return '<span class="st-leg"><i style="background:' + (FIELD_C[k] || '#9AA3B5') + '"></i>'
+        + esc(k) + '</span>';
     }).join('');
 
     return { svg: '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '"'
@@ -793,8 +811,14 @@ window.OCHub = (function () {
     ];
     /* 가장 부족한 항목을 금색으로 — 어디를 채워야 하는지 바로 보인다 */
     var lowest = rows.reduce(function (a, b) { return b.n < a.n ? b : a; }, rows[0]);
-    /* 가장 부족한 항목만 보라로, 나머지는 먹색 농담 */
-    rows.forEach(function (r, i) { r.c = (r === lowest) ? ACCENT : alpha(i, rows.length, true); });
+    /* 많이 채워진 항목은 초록 · 보통은 파랑 · 가장 부족한 항목은 주황으로 눈에 띄게 */
+    rows.forEach(function (r) {
+      var pr = r.n / f.total;
+      r.c = (r === lowest) ? C_HI
+          : pr > .85 ? '#37BFA0'
+          : pr > .6  ? '#4F7BE8'
+          :            '#8FA9D8';
+    });
     return '<div class="fl">' + rows.map(function (r) {
       var pct = r.n / f.total * 100;
       return '<div class="fl-row">'
@@ -849,9 +873,8 @@ window.OCHub = (function () {
         var fb = cfg.field ? document.querySelector(cfg.field) : null;
         if (fb) {
           var top = (d.field || []).filter(function (x) { return x.k.indexOf(',') < 0; }).slice(0, 6);
-          var order = {}; top.forEach(function (x, i) { order[x.k] = i; });
           fb.innerHTML = donutHtml(top, function (k) {
-            return order[k] === 0 ? ACCENT : alpha(order[k], top.length, true);
+            return FIELD_C[k] || '#9AA3B5';        // 세기별 누적막대와 같은 색
           }, '명');
         }
 
@@ -860,7 +883,7 @@ window.OCHub = (function () {
         if (nb) {
           var nn = (d.nation || []).length;
           nb.innerHTML = hBarsHtml(d.nation || [], {
-            colorOf: function (k, i) { return i === 0 ? ACCENT : alpha(i, nn, true); }
+            colorOf: function (k, i) { return i === 0 ? C_HI : rankColor(i, nn); }
           });
         }
 
@@ -870,7 +893,7 @@ window.OCHub = (function () {
           var ln = (d.links || []).length;
           lb.innerHTML = hBarsHtml(d.links || [], {
             label: REL_LABEL,
-            colorOf: function (k, i) { return i === 0 ? ACCENT : alpha(i, ln, true); }
+            colorOf: function (k, i) { return i === 0 ? C_HI : rankColor(i, ln); }
           });
           var lt = cfg.linksTotal ? document.querySelector(cfg.linksTotal) : null;
           if (lt) countUp(lt, d.links_total || 0);
@@ -886,7 +909,7 @@ window.OCHub = (function () {
           var tn = (d.teachers || []).length;
           tb.innerHTML = hBarsHtml(d.teachers || [], {
             kw: 132, unit: '명',
-            colorOf: function (k, i) { return i === 0 ? ACCENT : alpha(i, tn, true); },
+            colorOf: function (k, i) { return i === 0 ? C_HI : rankColor(i, tn); },
             hrefOf: function (x) { return x.id ? '/db/person-view.html?id=' + encodeURIComponent(x.id) : ''; }
           });
         }
@@ -897,7 +920,7 @@ window.OCHub = (function () {
           var an = (d.alma || []).length;
           ab.innerHTML = hBarsHtml(d.alma || [], {
             kw: 176, unit: '명',
-            colorOf: function (k, i) { return i === 0 ? ACCENT : alpha(i, an, true); },
+            colorOf: function (k, i) { return i === 0 ? C_HI : rankColor(i, an); },
             hrefOf: function (x) { return x.id ? '/db/school-view.html?id=' + encodeURIComponent(x.id) : ''; }
           });
         }
