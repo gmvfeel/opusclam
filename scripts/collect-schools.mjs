@@ -51,8 +51,24 @@ LIMIT 4000`;
 const SOLO_EDU = /[ck]on[sz]ervat|conservatoire|conservatori|odeio|odeon|ωδεί|accademia|musikschule|musikhochschule|musikgymnasium|music school|school\s+(of|for)\s+music|singschule|singakadem|muziekschool|zeneiskola|zeneművészeti|kunstschule|kunstakadem|művészetoktatási|음악학교|음악원|음악대학|음악학부|예술고등학교|예술학교|예술중학교|예술대학|예술종합학교|예술종합대학|예술학부|예술학과/i;
 const MUS_WORD = /music|m[uú]sic|musi[qk]|musica|музык|음악|音楽|tonkunst|philharmon|filarm[oó]n|sangeet|choir|choral|carillon|opera|ballet|muziek|muzy|\bzene|\barts?\b|kunst|művészet|beaux-arts|gesang|canto|\bsing\b|dans|dance|song|lied|hymn|gospel|예술|성악|기악|국악|무용|합창/i;
 const EDU_WORD = /ad[eé]m|school|schule|skola|skolan|skole|h[oö]gskol|institut|escola|escuela|scuola|[eé]cole|liceo|lyc[eé]e|gymnasium|college|universit|faculdade|facultad|faculty|учили|консерватор|школ|학교|대학|학부|학원|trust|settlement|centre|center|centro|iskola|intézmény/i;
-const ARMED_WORD = /\bbrigade|brigades|\bfront\b|\blegion\b|battalion|militia|militie|\barmy\b|armed (group|forces|police)|police (force|academy)|special police|liberation (front|army|movement)|resistance (movement|organisation|organization)|jihad|mujahid|fedayeen|guerrilla|paramilitar|weerstandsbeweging|commando|kommando|\bregiment\b|\brifles?\b|insurgent|defen[cs]e force|defen[cs]e corps|national guard|state guard|state navy|home guard|civil guard|protective forces|security (forces|services)|freikorps|schutzstaffel|\bss\b|gestapo|troikas|detachment|artillery|infantry|cavalry|death squad|self-defen[cs]e|volunteer (force|corps|defense)|dosaaf|counterterror|counter-terror|cadet corps|militant|maquis|intelligence (cent|agenc)|special weapons|tactics unit|\bpatriots\b|maritime research|대테러|여단|무장|민병|해방전선|반군|친위대|자유군단|의용군|국가방위대/i;
+const ARMED_WORD = /\bbrigade|brigades|\bfront\b|\blegion\b|battalion|militia|militie|\barmy\b|armed (group|forces|police)|police (force|academy)|special police|liberation (front|army|movement)|resistance (movement|organisation|organization)|jihad|mujahid|fedayeen|guerrilla|paramilitar|weerstandsbeweging|commando|kommando|\bregiment\b|\brifles?\b|insurgent|defen[cs]e force|defen[cs]e corps|national guard|state guard|state navy|home guard|civil guard|protective forces|security (forces|services)|freikorps|schutzstaffel|\bss\b|gestapo|troikas|detachment|artillery|infantry|cavalry|death squad|self-defen[cs]e|volunteer (force|corps|defense)|dosaaf|counterterror|counter-terror|cadet corps|militant|maquis|intelligence (cent|agenc)|special weapons|tactics unit|\bpatriots\b|maritime research|\bguards?\b|\bforces\b|mobilization|executive command|\bcorps\b|방위|수비대|위병|기계화부대|혁명군|근위|대테러|여단|무장|민병|해방전선|반군|친위대|자유군단|의용군|국가방위대/i;
 const KEEP_NAMES = new Set(['Fontainebleau Schools']);
+/* 이름만으로는 판별할 수 없는 군사·정치 조직.
+   화면에서 발견하면 이 목록에 이름을 추가하면 다음 수집부터 들어오지 않습니다. */
+const DENY_NAMES = new Set([
+  'Al-Badar', 'Rusich', 'Mahidi', 'Ahdath', 'Aks 13000',
+  '얼스터 방위협회', 'Ulster Defence Association',
+  '인민 기계화부대', 'Popular Mobilization Forces',
+  '용기의 부대', 'Al-Sanadid Forces',
+  'Lebanese Forces – Executive Command',
+  '이슬람 혁명 수비대', 'Islamic Revolutionary Guard Corps',
+  '세르비아 의용방위군', 'Serb Volunteer Guard',
+  '세르비아 방위군', 'Serbian Guard',
+  '홍위병', 'Red Guards', "People's Guard (Libya)",
+  'United Constitutional Patriots', 'Counterterrorist Intelligence Center',
+  'South African Institute for Maritime Research', '베이징 특경대',
+  'Mullah Dadullah Front', "Maquis de l'Ain et du Haut-Jura"
+]);
 
 function isMusicSchool(row) {
   const blob = [row.name_ko, row.name_en, row.description].filter(Boolean).join(' ');
@@ -62,6 +78,7 @@ function isMusicSchool(row) {
   return false;
 }
 function looksArmed(row) {
+  if (DENY_NAMES.has(row.name_ko) || (row.name_en && DENY_NAMES.has(row.name_en))) return true;
   const blob = [row.name_ko, row.name_en, row.description].filter(Boolean).join(' ');
   return ARMED_WORD.test(blob);
 }
@@ -173,11 +190,14 @@ function substanceCount(r) {
 }
 const bioOK = (r) => (r.description || '').trim().length >= 150;
 function keep(r) {
-  // ① 군사·정치 조직은 무조건 제외 (음악교육 신호가 있으면 예외)
+  // 군사·정치 조직만 제외합니다.
+  //   "학교임을 증명하지 못하면 제외" 방식은 쓰지 않습니다.
+  //   Juilliard School · Sibelius Academy · Peabody Institute · Mozarteum 처럼
+  //   고유명만으로 된 명문 음악원이 전부 걸리기 때문입니다.
+  //   음악교육 신호가 있으면 군사 낱말이 있어도 남깁니다
+  //   (United States Armed Forces School of Music 같은 군악학교).
   if (looksArmed(r) && !isMusicSchool(r)) return false;
-  // ② 음악교육 기관으로 확인되지 않으면 제외
-  if (!isMusicSchool(r)) return false;
-  // ③ 그다음 충실도 컷오프
+  // 그다음 충실도 컷오프
   return bioOK(r) || substanceCount(r) >= 2;
 }
 function richness(r) {
@@ -250,13 +270,13 @@ async function main() {
 
   const all = [...collected.values()];
   const armed = all.filter(r => looksArmed(r) && !isMusicSchool(r));
-  const notSchool = all.filter(r => !looksArmed(r) && !isMusicSchool(r));
+  const noSignal = all.filter(r => !looksArmed(r) && !isMusicSchool(r));
   const kept = all.filter(keep);
   console.log('■ 걸러낸 내역');
   console.log('  · 군사·정치 조직:', armed.length, '건');
   if (armed.length) console.log('    예:', armed.slice(0, 5).map(r => r.name_ko).join(' / '));
-  console.log('  · 음악교육 기관으로 확인 안 됨:', notSchool.length, '건');
-  if (notSchool.length) console.log('    예:', notSchool.slice(0, 5).map(r => r.name_ko).join(' / '));
+  console.log('  · 음악 낱말이 없지만 남긴 항목:', noSignal.length, '건 (고유명 음악원일 수 있어 제외하지 않습니다)');
+  if (noSignal.length) console.log('    예:', noSignal.slice(0, 5).map(r => r.name_ko).join(' / '));
   console.log('■ 최종 통과:', kept.length, '곳 (전체', all.length, ')');
 
   const existing = await sbGetAll('schools', 'id,wikidata_id,name_ko,name_en,category,location,founded,alumni,logo_url,link_home,link_wiki,description,sort_no');
