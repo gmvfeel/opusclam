@@ -162,11 +162,23 @@
     <div class="log" id="logP"></div>
     <div id="p31box" style="display:none;margin-top:14px">
       <div class="row" style="margin-bottom:10px">
+        <button id="btnP31Sql" style="background:#0f766e">삭제 SQL 만들기</button>
         <button id="btnP31Hide" style="background:#b91c1c">선택한 항목 숨기기</button>
         <button id="btnP31Del" style="background:#7f1d1d">완전 삭제</button>
         <button id="btnP31All" style="background:#6b7280">군사·경찰 전체 선택</button>
         <button id="btnP31None" style="background:#6b7280">선택 해제</button>
         <span id="p31count" style="font-size:13px;color:#5c5e70;align-self:center"></span>
+      </div>
+      <div id="p31sqlbox" style="display:none;margin:10px 0 14px">
+        <div style="font-size:12.5px;color:#5c5e70;margin-bottom:6px">
+          아래 내용을 <b>전체 선택 → 복사</b>해서 Supabase <b>SQL Editor</b> 에 붙여 Run 하세요.
+          SQL Editor 는 권한 제약을 받지 않아 확실히 처리됩니다.
+        </div>
+        <textarea id="p31sql" readonly style="width:100%;height:150px;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.5;border:1px solid #cbd5e1;border-radius:8px;padding:10px;background:#f8fafc"></textarea>
+        <div class="row" style="margin-top:6px">
+          <button id="btnP31Copy" style="background:#0f766e">클립보드에 복사</button>
+          <span id="p31copied" style="font-size:12.5px;color:#15803d;align-self:center"></span>
+        </div>
       </div>
       <div id="p31list" style="max-height:520px;overflow:auto;border:1px solid #e4e4ec;border-radius:8px;padding:8px;background:#fff"></div>
     </div>
@@ -944,6 +956,49 @@
     }
     $('btnP31Hide').disabled=false; $('btnP31Del').disabled=false;
   }
+
+  /* 선택 항목을 삭제하는 SQL 을 만들어 줍니다.
+     도구에서 직접 처리되지 않을 때(표 수정 권한이 없을 때) 이 경로를 쓰면 확실합니다. */
+  function makeP31Sql(){
+    var ids=pickedIds();
+    if(!ids.length){ alert('선택된 항목이 없습니다.'); return; }
+    var names=[].slice.call(document.querySelectorAll('.p31chk:checked')).map(function(c){
+      var lab=c.parentNode.querySelector('span'); return lab ? lab.textContent.split('\n')[0].trim() : '';
+    });
+    var lines=[];
+    lines.push('-- 학교DB 군사·경찰 조직 삭제 (' + ids.length + '건)');
+    lines.push('-- 분류 점검 도구가 만든 목록입니다. 아래를 그대로 Run 하세요.');
+    lines.push('');
+    names.slice(0, 40).forEach(function(n){ if(n) lines.push('--   ' + n.slice(0, 80)); });
+    if(names.length > 40) lines.push('--   … 외 ' + (names.length-40) + '건');
+    lines.push('');
+    lines.push('-- 1) 관계 정보 먼저 정리');
+    lines.push('delete from public.entity_links');
+    lines.push("where to_type = 'school' and to_id in (" + ids.join(', ') + ');');
+    lines.push('');
+    lines.push('-- 2) 삭제');
+    lines.push('delete from public.schools');
+    lines.push('where id in (' + ids.join(', ') + ');');
+    lines.push('');
+    lines.push('-- 3) 결과');
+    lines.push('select count(*) as 남은_학교 from public.schools;');
+    $('p31sql').value = lines.join('\n');
+    $('p31sqlbox').style.display='block';
+    $('p31copied').textContent='';
+    $('p31sql').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  $('btnP31Sql').addEventListener('click', makeP31Sql);
+  $('btnP31Copy').addEventListener('click', function(){
+    var t=$('p31sql');
+    t.select();
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(t.value);
+      } else { document.execCommand('copy'); }
+      $('p31copied').textContent='복사했습니다. SQL Editor 에 붙여 Run 하세요.';
+    }catch(e){ $('p31copied').textContent='복사 실패 — 직접 선택해 복사해 주세요.'; }
+  });
 
   $('btnP31').addEventListener('click',runP31);
   $('btnP31Hide').addEventListener('click',function(){ applyP31('hide'); });
