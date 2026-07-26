@@ -1473,8 +1473,31 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
            }).catch(function(){});
        }
        function run(lang,title){ return api(lang,title).then(function(w){ if(w&&apply(w)){ gallery(w.lang,w.title); return true; } return false; }); }
-       var ko=(REC.name_ko||'').trim(), en=(REC.name_en||'').trim();
-       run('ko', ko||en).then(function(ok){ if(ok)return; return run('en', en); });
+
+       /* 위키데이터 ID로 "정확한" 문서 제목을 먼저 받아옵니다.
+          이름으로 검색하면 동명이인 문서를 읽어옵니다.
+          (예: 한국어 위키백과의 '최나경' 은 플루티스트가 아니라 배우 문서) */
+       function wdTitles(qid){
+         var u='https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*'
+              +'&props=sitelinks&sitefilter=kowiki%7Cenwiki&ids='+encodeURIComponent(qid);
+         return fetch(u).then(function(r){ return r.ok?r.json():null; }).then(function(d){
+           try{
+             var e=d.entities[qid], sl=e.sitelinks||{};
+             return { ko:(sl.kowiki&&sl.kowiki.title)||'', en:(sl.enwiki&&sl.enwiki.title)||'' };
+           }catch(e){ return null; }
+         }).catch(function(){ return null; });
+       }
+
+       var qid=(REC.wikidata_id||'').trim();
+       if(qid){
+         wdTitles(qid).then(function(t){
+           if(!t) return;
+           if(t.ko) return run('ko', t.ko).then(function(ok){ if(ok) return; if(t.en) return run('en', t.en); });
+           if(t.en) return run('en', t.en);
+         });
+       }
+       /* 위키데이터 ID가 없으면 실시간 조회를 하지 않습니다 — 동명이인 위험이 커서
+          DB에 저장된 소개문(한국어 → 영문 원문)만 보여줍니다 */
      })();
    })
    .catch(function(e){console.error('person view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
