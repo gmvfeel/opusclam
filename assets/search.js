@@ -26,6 +26,14 @@ window.OCSearch = (function () {
   function clean(q) {
     return String(q || '').trim().replace(/[(),*]/g, ' ').replace(/\s+/g, ' ').trim();
   }
+  /* 검색어를 굵게 표시 — 이미 esc 를 거친 뒤 감싸므로 안전하다 */
+  function hl(s, q) {
+    var e = esc(s);
+    if (!q) return e;
+    var eq = esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    try { return e.replace(new RegExp(eq, 'gi'), function (m) { return '<mark>' + m + '</mark>'; }); }
+    catch (err) { return e; }
+  }
   function join(parts) {
     return parts.filter(function (x) { return x != null && String(x).trim() !== ''; }).join(' · ');
   }
@@ -169,21 +177,23 @@ window.OCSearch = (function () {
       });
   }
 
-  function itemHtml(sec, r) {
+  function itemHtml(sec, r, q) {
     var v = sec.line(r) || {};
     var href = (sec.view ? sec.view + '?id=' + encodeURIComponent(r.id)
                          : sec.list + '?focus=' + encodeURIComponent(r.id));
     var thumb = v.img
-      ? '<span class="osr-thumb"><img src="' + esc(thumbUrl(v.img, 96)) + '" alt="" loading="lazy"></span>'
-      : '';
+      ? '<span class="osr-thumb"><img src="' + esc(thumbUrl(v.img, 128)) + '" alt="" loading="lazy"></span>'
+      : '<span class="osr-thumb osr-thumb-ph">' + esc((v.t || '?').trim().charAt(0)) + '</span>';
     return '<a class="osr-item" href="' + esc(href) + '">'
       + thumb
       + '<span class="osr-body">'
-      +   '<span class="osr-t">' + esc(v.t || '(제목 없음)')
-      +     (v.en ? ' <em>' + esc(v.en) + '</em>' : '') + '</span>'
-      +   (v.s ? '<span class="osr-s">' + esc(v.s) + '</span>' : '')
-      +   (v.d ? '<span class="osr-d">' + esc(v.d) + '</span>' : '')
-      + '</span></a>';
+      +   '<span class="osr-t">' + hl(v.t || '(제목 없음)', q)
+      +     (v.en ? ' <em>' + hl(v.en, q) + '</em>' : '') + '</span>'
+      +   (v.s ? '<span class="osr-s">' + hl(v.s, q) + '</span>' : '')
+      +   (v.d ? '<span class="osr-d">' + hl(v.d, q) + '</span>' : '')
+      + '</span>'
+      + '<span class="osr-go" aria-hidden="true">→</span>'
+      + '</a>';
   }
 
   /* 위키미디어 원본 주소를 작은 이미지로 (db-list.js 와 같은 방식) */
@@ -206,13 +216,40 @@ window.OCSearch = (function () {
     var sec = res.sec;
     var more = res.total > res.rows.length
       ? '<a class="osr-more" href="' + esc(sec.list + '?q=' + encodeURIComponent(q)) + '">'
-        + '전체 ' + res.total.toLocaleString() + '건 보기 →</a>'
+        + '전체 ' + res.total.toLocaleString() + '건 <span>&rsaquo;</span></a>'
       : '';
-    return '<section class="osr-group">'
-      + '<h2 class="osr-h"><span>' + esc(sec.label) + '</span>'
+    return '<section class="osr-group" data-k="' + esc(sec.key) + '">'
+      + '<h2 class="osr-h"><span class="osr-label">' + esc(sec.label) + '</span>'
       +   '<b>' + res.total.toLocaleString() + '</b>' + more + '</h2>'
-      + '<div class="osr-items">' + res.rows.map(function (r) { return itemHtml(sec, r); }).join('') + '</div>'
-      + '</section>';
+      + '<div class="osr-items">'
+      +   res.rows.map(function (r) { return itemHtml(sec, r, q); }).join('')
+      + '</div></section>';
+  }
+
+  /* 영역 탭 — 결과가 여러 영역에 걸쳐 있을 때 골라 볼 수 있게 */
+  function tabsHtml(ok) {
+    if (ok.length < 2) return '';
+    var t = '<div class="osr-tabs"><button type="button" class="osr-tab on" data-k="">전체</button>';
+    ok.forEach(function (r) {
+      t += '<button type="button" class="osr-tab" data-k="' + esc(r.sec.key) + '">'
+        + esc(r.sec.label) + '<b>' + r.total.toLocaleString() + '</b></button>';
+    });
+    return t + '</div>';
+  }
+  function bindTabs() {
+    var box = document.querySelector('.osr-tabs');
+    if (!box) return;
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('.osr-tab');
+      if (!b) return;
+      var k = b.getAttribute('data-k') || '';
+      box.querySelectorAll('.osr-tab').forEach(function (x) { x.classList.toggle('on', x === b); });
+      document.querySelectorAll('.osr-group').forEach(function (g) {
+        g.style.display = (!k || g.getAttribute('data-k') === k) ? '' : 'none';
+      });
+      var top = document.querySelector('.osr-results');
+      if (top && window.scrollTo) window.scrollTo({ top: top.offsetTop - 80, behavior: 'smooth' });
+    });
   }
 
   function skeleton() {
@@ -253,7 +290,8 @@ window.OCSearch = (function () {
           + '<span>다른 낱말로 찾아보시거나, 이름의 일부만 넣어보세요.</span></p>';
         return;
       }
-      box.innerHTML = ok.map(function (r) { return groupHtml(r, q); }).join('');
+      box.innerHTML = tabsHtml(ok) + ok.map(function (r) { return groupHtml(r, q); }).join('');
+      bindTabs();
     });
   }
 
