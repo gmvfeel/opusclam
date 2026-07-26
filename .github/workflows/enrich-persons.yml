@@ -1,0 +1,27 @@
+name: Enrich persons (daily)
+
+on:
+  schedule:
+    - cron: '30 18 * * *'   # 매일 03:30 KST
+  workflow_dispatch:
+    inputs:
+      daily_limit:
+        description: '이번 실행에서 처리할 인물 수 (기본 1500)'
+        required: false
+        default: '1500'
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run persons enricher
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          DAILY_LIMIT: ${{ github.event.inputs.daily_limit || '1500' }}
+        run: node scripts/enrich-persons.mjs
