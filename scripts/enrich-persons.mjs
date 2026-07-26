@@ -14,6 +14,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) { console.error('환경변수 필요: SUPABASE_URL / SUPABASE_SERVICE_KEY'); process.exit(1); }
 
+const VERSION     = 'v1.2';   // 로그 첫 줄에 찍힙니다. 이 값이 안 보이면 이전 파일이 돌고 있는 것입니다
 const UA          = 'OpusclamBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
 const DAILY_LIMIT = parseInt(process.env.DAILY_LIMIT || '1500', 10);  // 하루 처리량 (무료 분 관리)
 const CH_SPARQL   = 150;   // 위키데이터 배치
@@ -207,7 +208,8 @@ async function reverseWorks(qids) {
 
 /* ---------- 본체 ---------- */
 async function main() {
-  console.log('■ 인물DB 보강 시작', new Date().toISOString(), '| 하루 한도', DAILY_LIMIT);
+  console.log('■ 인물DB 보강 시작 [' + VERSION + ']', new Date().toISOString(), '| 하루 한도', DAILY_LIMIT);
+  console.log('  · Node', process.version, '· 대상 URL', (SUPABASE_URL || '').replace(/https:\/\//, '').slice(0, 30));
 
   // 0) 컬럼 점검 — 없는 컬럼을 요청하면 400 이 나므로 미리 확인합니다
   const WANT = ['id','wikidata_id','name_ko','name_en','field','life','era_name','era_yr',
