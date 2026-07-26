@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATABASE · OPUSCLAM</title>
+<meta name="description" content="오퍼스클램 데이터베이스 — 인물 · 음악단체 · 공연장 · 음악학교 · 현대음악 · 관련기관재단 · 학술">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<style>
+  /* ── DATABASE 메인 전용 ── */
+  .hb{max-width:1100px;margin:0 auto;padding:0 20px 90px}
+
+  /* 인트로 — 서비스 소개 + 전체 건수 */
+  .hb-intro{display:flex;align-items:center;gap:34px;margin:30px 0 6px;
+    padding:30px 34px;border:1px solid var(--line,#e4e4ec);border-radius:18px;
+    background:var(--paper,#fff);box-shadow:0 10px 30px rgba(24,24,50,.05)}
+  .hb-introtxt{flex:1;min-width:0}
+  .hb-brand{font-size:12px;font-weight:800;letter-spacing:.18em;color:var(--violet-3,#9C7FD6)}
+  .hb-h1{margin:7px 0 4px;font-size:31px;font-weight:900;letter-spacing:-.03em;
+    line-height:1.15;color:var(--text-1,#1b1c2b)}
+  .hb-h1 b{background:linear-gradient(120deg,#7C63B0,#9C7FD6 50%,#C9A94E);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hb-lead{margin:0;font-size:13.5px;color:var(--text-3,#8a8c9e);line-height:1.75}
+  .hb-total{flex:0 0 auto;text-align:center;padding:0 6px}
+  .hb-totalcap{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--text-3,#8a8c9e)}
+  .hb-totalnum{display:block;margin-top:3px;font-size:42px;font-weight:900;letter-spacing:-.035em;
+    line-height:1;color:var(--text-1,#1b1c2b);font-variant-numeric:tabular-nums}
+  .hb-totalunit{font-size:15px;font-weight:700;color:var(--text-3,#8a8c9e);margin-left:3px}
+
+  /* 영역 카드 */
+  .hb-cards{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:16px}
+  .hb-navcard{display:flex;flex-direction:column;gap:5px;padding:15px 14px 13px;
+    border:1px solid var(--line,#e4e4ec);border-radius:13px;background:var(--paper,#fff);
+    text-decoration:none;transition:border-color .15s, transform .15s, box-shadow .15s}
+  .hb-navcard:hover{border-color:#c9bbe6;transform:translateY(-2px);box-shadow:0 10px 24px rgba(124,99,176,.12)}
+  .hb-navlabel{font-size:13px;font-weight:700;letter-spacing:-.02em;color:var(--text-1,#1b1c2b)}
+  .hb-navcount{font-size:21px;font-weight:900;letter-spacing:-.03em;color:#7C63B0;
+    font-variant-numeric:tabular-nums;line-height:1.1}
+  .hb-navgo{font-size:9.5px;font-weight:700;letter-spacing:.1em;color:var(--text-3,#a8aabb)}
+
+  /* 섹션 제목 */
+  .hb-sec{margin-top:52px}
+  .hb-head{display:flex;align-items:flex-end;gap:11px;margin:0 0 15px;padding-bottom:12px;
+    border-bottom:1.5px solid var(--line,#e4e4ec)}
+  .hb-title{position:relative;padding-left:12px;font-size:20px;font-weight:900;
+    letter-spacing:-.03em;color:var(--text-1,#1b1c2b)}
+  .hb-title::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:2px;
+    background:linear-gradient(180deg,#9C7FD6,#C9A94E)}
+  .hb-title em{font-style:normal;font-weight:700;font-size:12.5px;color:var(--text-3,#8a8c9e);
+    letter-spacing:.02em;margin-left:7px}
+  .hb-tools{margin-left:auto;display:flex;gap:5px}
+  .hb-vbtn{width:31px;height:31px;display:grid;place-items:center;cursor:pointer;
+    border:1px solid var(--line,#e4e4ec);border-radius:8px;background:var(--paper,#fff);
+    color:var(--text-3,#a8aabb)}
+  .hb-vbtn svg{width:15px;height:15px}
+  .hb-vbtn.on{background:#1b1c2b;border-color:#1b1c2b;color:#fff}
+
+  /* 리스트 행 */
+  .hub-row{display:flex;align-items:center;gap:13px;padding:12px 8px;
+    border-bottom:1px solid var(--line-2,#f1f1f5);text-decoration:none;color:inherit;
+    border-radius:10px;transition:background .13s}
+  .hub-row:hover{background:var(--paper-2,#f7f7fb)}
+  .hub-badge{flex:0 0 auto;min-width:74px;text-align:center;padding:3px 8px;border-radius:6px;
+    font-size:10.5px;font-weight:800;letter-spacing:-.01em}
+  .hub-persons{background:rgba(156,127,214,.14);color:#6d4fa8}
+  .hub-orgs{background:rgba(201,169,78,.16);color:#8a6f18}
+  .hub-venues{background:rgba(59,130,246,.13);color:#1d4ed8}
+  .hub-schools{background:rgba(16,185,129,.13);color:#047857}
+  .hub-modern{background:rgba(236,72,153,.12);color:#a81b63}
+  .hub-foundations{background:rgba(100,116,139,.14);color:#475569}
+  .hub-academic{background:rgba(220,38,38,.11);color:#b91c1c}
+  .hub-th{flex:0 0 auto;width:44px;height:44px;border-radius:8px;overflow:hidden;
+    background:var(--paper-2,#f2f2f7);display:block}
+  .hub-th img{width:100%;height:100%;object-fit:cover;display:block}
+  .hub-th-ph{display:grid;place-items:center;font-size:16px;font-weight:800;color:#b6b8c9}
+  .hub-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .hub-name{font-size:14.2px;font-weight:700;letter-spacing:-.01em;color:var(--text-1,#1b1c2b);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hub-name em{font-style:normal;font-weight:500;font-size:12px;color:var(--text-3,#a8aabb);margin-left:5px}
+  .hub-sub{font-size:12.3px;color:var(--text-3,#8a8c9e);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hub-date{flex:0 0 auto;font-size:12px;color:var(--text-3,#a8aabb);font-variant-numeric:tabular-nums}
+  .hub-view{flex:0 0 auto;font-size:11px;font-weight:800;letter-spacing:.04em;color:#7C63B0}
+  .hub-view b{font-weight:900}
+
+  /* 카드 그리드 */
+  .hub-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .hub-card{display:flex;flex-direction:column;border:1px solid var(--line,#e4e4ec);
+    border-radius:13px;overflow:hidden;background:var(--paper,#fff);text-decoration:none;
+    transition:border-color .15s, transform .15s, box-shadow .15s}
+  .hub-card:hover{border-color:#c9bbe6;transform:translateY(-2px);box-shadow:0 12px 26px rgba(124,99,176,.12)}
+  .hub-cardimg{display:block;aspect-ratio:4/3;background:var(--paper-2,#f2f2f7);overflow:hidden}
+  .hub-cardimg img{width:100%;height:100%;object-fit:cover;display:block}
+  .hub-cardimg-ph{display:grid;place-items:center;font-size:11px;font-weight:700;
+    letter-spacing:.08em;color:#c3c5d4}
+  .hub-cardbody{display:flex;flex-direction:column;gap:5px;padding:12px 13px 11px}
+  .hub-cardbody .hub-badge{align-self:flex-start;min-width:0}
+  .hub-cardbody .hub-name{white-space:normal;line-height:1.4}
+  .hub-cardbody .hub-sub{white-space:normal;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5}
+  .hub-cardfoot{display:flex;align-items:center;margin-top:3px;padding-top:8px;
+    border-top:1px solid var(--line-2,#f1f1f5);
+    font-size:11.5px;color:var(--text-3,#a8aabb);font-variant-numeric:tabular-nums}
+  .hub-cardfoot b{margin-left:auto;font-size:11px;font-weight:800;letter-spacing:.04em;color:#7C63B0}
+
+  /* 리스트 → 그리드 전환 */
+  .hub-list.as-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 22px}
+
+  .hub-empty,.hub-note{grid-column:1/-1;margin:18px 0 0;text-align:center;
+    font-size:12.5px;color:var(--text-3,#a8aabb)}
+  .hub-more{display:flex;justify-content:center;margin-top:22px}
+  .hub-more a{display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 26px;
+    border:1px solid var(--line,#e4e4ec);border-radius:99px;background:var(--paper,#fff);
+    font-size:13px;font-weight:700;color:var(--text-2,#5c5e70);text-decoration:none}
+  .hub-more a:hover{border-color:#c9bbe6;color:#7C63B0}
+
+  /* 로딩 */
+  .hub-skel{display:block;height:12px;border-radius:5px;
+    background:linear-gradient(90deg,var(--paper-2,#f1f1f5) 25%,var(--line-2,#e8e8ef) 37%,var(--paper-2,#f1f1f5) 63%);
+    background-size:400% 100%;animation:hbsk 1.3s ease infinite}
+  .hub-skel.w2{width:74px;height:19px;border-radius:6px}
+  .hub-skel.w4{width:46%}.hub-skel.w5{width:58%}.hub-skel.w7{width:80%}
+  .hub-skelrow,.hub-skelcard{pointer-events:none}
+  @keyframes hbsk{0%{background-position:100% 0}100%{background-position:0 0}}
+
+  @media (max-width:1040px){
+    .hb-cards{grid-template-columns:repeat(4,1fr)}
+    .hub-grid{grid-template-columns:repeat(3,1fr)}
+  }
+  @media (max-width:760px){
+    .hb-intro{flex-direction:column;align-items:flex-start;gap:18px;padding:24px 22px}
+    .hb-h1{font-size:25px}
+    .hb-total{align-self:stretch;text-align:left;padding:0}
+    .hb-totalnum{font-size:36px}
+    .hb-cards{grid-template-columns:repeat(2,1fr)}
+    .hub-grid{grid-template-columns:repeat(2,1fr)}
+    .hub-list.as-grid{grid-template-columns:1fr}
+    .hub-date,.hub-view{display:none}
+    .hb-title{font-size:17.5px}
+  }
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-net on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><span class="on">Database</span>
+    </nav>
+
+    <nav class="pdb-subnav" aria-label="DATABASE 하위 메뉴">
+      <a href="/db/index.html" class="active">전체</a>
+      <a href="/db/person.html">인물 DB</a>
+      <a href="/db/org.html">음악단체 DB</a>
+      <a href="/db/venue.html">공연장 DB</a>
+      <a href="/db/school.html">음악학교 DB</a>
+      <a href="/db/modern.html">현대음악 DB</a>
+      <a href="/db/foundation.html">관련기관·재단 DB</a>
+      <a href="/db/academic.html">학술 DB</a>
+    </nav>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM DATABASE SERVICE</div>
+          <h1 class="pdb-title">Database</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">순수음악 인물 · 단체 · 공연장 · 학교 · 현대음악 · 기관 · 학술 자료를 한곳에 모았습니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="hb">
+
+  <!-- 인트로 + 전체 건수 -->
+  <div class="hb-intro">
+    <div class="hb-introtxt">
+      <div class="hb-brand">OPUSCLAM.COM</div>
+      <h2 class="hb-h1">오퍼스클램 <b>데이터베이스</b></h2>
+      <p class="hb-lead">
+        공공데이터와 위키데이터를 매일 자동으로 모으고, 회원의 보강으로 채워 갑니다.<br>
+        인물 사이의 사사관계 · 소속 · 출신학교가 서로 연결되어 있습니다.
+      </p>
+    </div>
+    <div class="hb-total">
+      <div class="hb-totalcap">현재 등록된 전체 DB</div>
+      <span class="hb-totalnum">0</span><span class="hb-totalunit">건</span>
+    </div>
+  </div>
+
+  <!-- 영역 카드 -->
+  <div class="hb-cards"></div>
+
+  <!-- 새로 등록된 Database -->
+  <section class="hb-sec">
+    <div class="hb-head">
+      <span class="hb-title">새로 등록된 Database<em>NEW</em></span>
+      <div class="hb-tools" id="latestView">
+        <button type="button" class="hb-vbtn on" data-view="list" aria-label="목록으로 보기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <button type="button" class="hb-vbtn" data-view="grid" aria-label="두 줄로 보기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="hub-list" id="latestBox"></div>
+  </section>
+
+  <!-- 새로 보강된 Database -->
+  <section class="hb-sec">
+    <div class="hb-head">
+      <span class="hb-title">새로 보강된 Database<em>UPDATED</em></span>
+    </div>
+    <div class="hub-grid" id="freshBox"></div>
+    <div class="hub-more"><a href="/search.html">통합검색으로 더 찾아보기 &rsaquo;</a></div>
+  </section>
+
+</main>
+
+<div id="oc-footer"></div>
+
+<script>
+/* 히어로 배경: 라인 네트워크 (DB 페이지 공통 패턴) */
+(function(){
+  var g=document.querySelector('.pdb-bg .scene-net g');
+  if(!g)return;
+  g.innerHTML='';
+  var W=1280,H=460,NN=70,maxD=132,NS='http://www.w3.org/2000/svg';
+  function el(t){return document.createElementNS(NS,t);}
+  var nodes=[];
+  for(var i=0;i<NN;i++) nodes.push({x:Math.random()*W, y:Math.random()*H});
+  for(var a=0;a<nodes.length;a++){
+    for(var b=a+1;b<nodes.length;b++){
+      var dx=nodes[a].x-nodes[b].x, dy=nodes[a].y-nodes[b].y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<maxD){
+        var ln=el('line');
+        ln.setAttribute('x1',nodes[a].x.toFixed(1));ln.setAttribute('y1',nodes[a].y.toFixed(1));
+        ln.setAttribute('x2',nodes[b].x.toFixed(1));ln.setAttribute('y2',nodes[b].y.toFixed(1));
+        ln.style.animationDuration=(3.2+Math.random()*3.2).toFixed(2)+'s';
+        ln.style.animationDelay=(-Math.random()*4.5).toFixed(2)+'s';
+        g.appendChild(ln);
+      }
+    }
+  }
+  nodes.forEach(function(n){
+    var c=el('circle');
+    c.setAttribute('cx',n.x.toFixed(1));c.setAttribute('cy',n.y.toFixed(1));
+    c.setAttribute('r',(1.1+Math.random()*1.7).toFixed(1));
+    c.style.animationDuration=(3+Math.random()*3).toFixed(2)+'s';
+    c.style.animationDelay=(-Math.random()*4).toFixed(2)+'s';
+    g.appendChild(c);
+  });
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/hub.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    OCHub.init({
+      counter:'.hb-totalnum',
+      cards:'.hb-cards',
+      latest:'#latestBox',
+      fresh:'#freshBox',
+      n:12, freshN:8,
+      sources:[
+        { key:'persons', label:'인물DB', table:'persons',
+          list:'/db/person.html', view:'/db/person-view.html',
+          name:'name_ko', name2:'name_en', desc:'description', img:'image_url',
+          meta:['field','life'] },
+        { key:'orgs', label:'음악단체DB', table:'orgs',
+          list:'/db/org.html', view:'/db/org-view.html',
+          name:'name_ko', name2:'name_en', desc:'description', img:'logo_url',
+          meta:['type','location'] },
+        { key:'venues', label:'공연장DB', table:'venues',
+          list:'/db/venue.html', view:'/db/venue-view.html',
+          name:'name_ko', name2:'name_en', desc:'description', img:'logo_url',
+          meta:['type','location'] },
+        { key:'schools', label:'음악학교DB', table:'schools',
+          list:'/db/school.html', view:'/db/school-view.html',
+          name:'name_ko', name2:'name_en', desc:'description', img:'logo_url',
+          meta:['category','location'] },
+        { key:'modern', label:'현대음악DB', table:'modern_composers',
+          list:'/db/modern.html', view:'/db/modern-view.html',
+          name:'name_ko', name2:'name_en', desc:'description', img:'image_url',
+          meta:['school_style','nationality'] },
+        { key:'foundations', label:'기관재단DB', table:'foundations',
+          list:'/db/foundation.html', view:'/db/foundation-view.html',
+          name:'name_ko', name2:'name_en', desc:'description', img:'logo_url',
+          meta:['type','location'] },
+        { key:'academic', label:'학술DB', table:'academic',
+          list:'/db/academic.html', view:'/db/academic-view.html',
+          name:'name_ko', name2:'name_en', desc:'description',
+          meta:['type','author','pub_year'] }
+      ]
+    });
+    OCHub.bindViewToggle('#latestView', '#latestBox');
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
