@@ -410,7 +410,15 @@ window.OCBoard = (function () {
       setTimeout(applyTop, 1000);
     })();
 
-    loadPage(1);
+    /* 통합검색에서 ?q=검색어 로 넘어오면 검색창에 넣고 바로 찾는다 */
+    (function(){
+      var _q = new URLSearchParams(location.search).get('q') || '';
+      if (!_q) { loadPage(1); return; }
+      var _inp = document.querySelector('.board-search input');
+      if (_inp) _inp.value = _q;
+      q = _q.trim().replace(/[(),*]/g, ' ').replace(/\s+/g, ' ').trim();
+      loadPage(1);
+    })();
   }
 
   /* ============================ 상세 ============================ */

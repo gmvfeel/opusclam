@@ -170,9 +170,18 @@ window.OCList = (function () {
     window.addEventListener('resize', setStickyTop);
     window.addEventListener('resize', function () { if (total) renderPager(); });
 
-    /* 최초 로드: ?p 페이지부터 */
+    /* 최초 로드
+       통합검색에서 ?q=검색어 로 넘어오면 검색창에 넣고 바로 찾는다 */
     var _sp = parseInt(new URLSearchParams(location.search).get('p'), 10) || 1;
-    loadPage(_sp >= 1 ? _sp : 1);
+    var _q = new URLSearchParams(location.search).get('q') || '';
+    if (_q) {
+      var _inp = document.querySelector('.pdb-search input');
+      if (_inp) _inp.value = _q;
+      readSearch();
+      loadPage(1);
+    } else {
+      loadPage(_sp >= 1 ? _sp : 1);
+    }
   }
 
   return { init: init, esc: esc, ava: ava, nd: nd, wikiThumb: wikiThumb };
