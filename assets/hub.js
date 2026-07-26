@@ -710,6 +710,7 @@ window.OCHub = (function () {
     opt = opt || {};
     var max = 0; data.forEach(function (d) { if (d.n > max) max = d.n; });
     if (!max) max = 1;
+    var kw = opt.kw ? ' style="width:' + opt.kw + 'px"' : '';
     return '<div class="hbz">' + data.map(function (d, i) {
       var pct = d.n / max * 100;
       var label = opt.label ? (opt.label[d.k] || d.k) : d.k;
@@ -717,12 +718,68 @@ window.OCHub = (function () {
       var paint = (typeof c === 'number')
         ? 'background:currentColor;opacity:' + c
         : 'background:' + c;
-      return '<div class="hbz-row">'
-        + '<span class="hbz-k">' + esc(label) + '</span>'
+      var body = '<span class="hbz-k"' + kw + ' title="' + esc(label) + '">' + esc(label) + '</span>'
         + '<span class="hbz-bar"><i style="width:' + pct.toFixed(1) + '%;' + paint + '"></i></span>'
-        + '<span class="hbz-n">' + d.n.toLocaleString() + '</span>'
-        + '</div>';
+        + '<span class="hbz-n">' + d.n.toLocaleString() + (opt.unit || '') + '</span>';
+      /* 항목을 누르면 그 인물·학교 페이지로 갈 수 있게 */
+      var href = opt.hrefOf ? opt.hrefOf(d) : '';
+      return href
+        ? '<a class="hbz-row is-link" href="' + esc(href) + '">' + body + '</a>'
+        : '<div class="hbz-row">' + body + '</div>';
     }).join('') + '</div>';
+  }
+
+  /* 비율 누적 막대 — 구간마다 구성이 어떻게 바뀌는지 본다
+     절대값으로 그리면 19·20세기가 압도해 앞 세기가 보이지 않으므로 100% 로 정규화한다 */
+  function stackSvg(rows, keys, W, H) {
+    if (!rows || !rows.length) return null;
+    W = Math.max(W || 720, 320); H = H || 250;
+    var PL = 10, PR = 10, PT = 16, PB = 30;
+    var iw = W - PL - PR, ih = H - PT - PB;
+
+    /* 구간별로 모으기 */
+    var byC = {}, order = [];
+    rows.forEach(function (r) {
+      if (!byC[r.c]) { byC[r.c] = { c: r.c, total: 0, v: {} }; order.push(r.c); }
+      byC[r.c].v[r.f] = (byC[r.c].v[r.f] || 0) + r.n;
+      byC[r.c].total += r.n;
+    });
+    order.sort(function (a, b) { return a - b; });
+    var n = order.length;
+    var gap = Math.min(16, iw / n * 0.3);
+    var bw = (iw - gap * (n - 1)) / n;
+
+    var out = '', labels = '';
+    order.forEach(function (c, i) {
+      var g = byC[c], x = PL + i * (bw + gap), acc = 0;
+      keys.forEach(function (k, ki) {
+        var v = g.v[k] || 0;
+        if (!v) return;
+        var hh = ih * v / g.total;
+        var yy = PT + ih - acc - hh;
+        acc += hh;
+        var op = alpha(ki, keys.length, true);
+        out += '<rect x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + bw.toFixed(1) + '"'
+          + ' height="' + Math.max(hh, 0.6).toFixed(1) + '"'
+          + ' fill="currentColor" fill-opacity="' + op + '">'
+          + '<title>' + esc(c + '세기 · ' + k + ' ' + v.toLocaleString() + '명 ('
+          + (v / g.total * 100).toFixed(1) + '%)') + '</title></rect>';
+      });
+      labels += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 11) + '" font-size="10.5"'
+        + ' text-anchor="middle" fill="currentColor" fill-opacity=".5">' + c + 'C</text>'
+        + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (PT - 4) + '" font-size="10"'
+        + ' text-anchor="middle" fill="currentColor" fill-opacity=".38">'
+        + g.total.toLocaleString() + '</text>';
+    });
+
+    var legs = keys.map(function (k, ki) {
+      return '<span class="st-leg"><i style="background:currentColor;opacity:'
+        + alpha(ki, keys.length, true) + '"></i>' + esc(k) + '</span>';
+    }).join('');
+
+    return { svg: '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '"'
+      + ' role="img" aria-label="구간별 구성 변화">' + out + labels + '</svg>',
+      legend: '<div class="st-legs">' + legs + '</div>' };
   }
 
   /* 완성도 — 비율 진행바 */
@@ -806,10 +863,71 @@ window.OCHub = (function () {
         /* 정보 완성도 */
         var xb = cfg.fill ? document.querySelector(cfg.fill) : null;
         if (xb) xb.innerHTML = fillHtml(d.fill);
+
+        /* ① 제자가 많은 스승 — 이름을 누르면 그 인물 페이지로 */
+        var tb = cfg.teachers ? document.querySelector(cfg.teachers) : null;
+        if (tb) {
+          var tn = (d.teachers || []).length;
+          tb.innerHTML = hBarsHtml(d.teachers || [], {
+            kw: 132, unit: '명',
+            colorOf: function (k, i) { return i === 0 ? ACCENT : alpha(i, tn, true); },
+            hrefOf: function (x) { return x.id ? '/db/person-view.html?id=' + encodeURIComponent(x.id) : ''; }
+          });
+        }
+
+        /* ② 동문이 많은 학교 */
+        var ab = cfg.alma ? document.querySelector(cfg.alma) : null;
+        if (ab) {
+          var an = (d.alma || []).length;
+          ab.innerHTML = hBarsHtml(d.alma || [], {
+            kw: 176, unit: '명',
+            colorOf: function (k, i) { return i === 0 ? ACCENT : alpha(i, an, true); },
+            hrefOf: function (x) { return x.id ? '/db/school-view.html?id=' + encodeURIComponent(x.id) : ''; }
+          });
+        }
+
+        /* ③ 세기 × 분야 — 비율 누적 막대 */
+        var cb = cfg.century ? document.querySelector(cfg.century) : null;
+        if (cb && (d.century || []).length) {
+          var KEYS = ['작곡', '성악', '연주', '지휘', '음악학', '음악교육'];
+          var paintC = function () {
+            var cs = window.getComputedStyle(cb);
+            var pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+            var w = Math.max(Math.round(cb.clientWidth - pad), 320);
+            var r = stackSvg(d.century, KEYS, w, w < 560 ? 210 : 250);
+            cb.innerHTML = r ? (r.svg + r.legend) : '';
+          };
+          paintC();
+          var t2; window.addEventListener('resize', function () {
+            clearTimeout(t2); t2 = setTimeout(paintC, 160);
+          });
+        }
+
+        /* ④ 공연장 좌석 규모 — 좌석 정보가 있는 곳만 */
+        var sb2 = cfg.seats ? document.querySelector(cfg.seats) : null;
+        if (sb2) {
+          var all = d.seats || [];
+          var known = all.filter(function (x) { return x.k !== '미기재'; });
+          var unknown = all.filter(function (x) { return x.k === '미기재'; })[0];
+          var sum = known.reduce(function (a, b) { return a + b.n; }, 0);
+          var paintS = function () {
+            var cs = window.getComputedStyle(sb2);
+            var pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+            var w = Math.max(Math.round(sb2.clientWidth - pad), 320);
+            sb2.innerHTML = vBarsSvg(known, w, w < 560 ? 190 : 220)
+              + '<p class="st-note">좌석 정보가 있는 ' + sum.toLocaleString() + '곳 기준'
+              + (unknown ? ' · 미기재 ' + unknown.n.toLocaleString() + '곳은 제외' : '') + '</p>';
+          };
+          paintS();
+          var t3; window.addEventListener('resize', function () {
+            clearTimeout(t3); t3 = setTimeout(paintS, 160);
+          });
+        }
       })
       .catch(function (e) {
         console.warn('[분석 그래프] 건너뜀:', e.message);
-        [cfg.era, cfg.field, cfg.nation, cfg.links, cfg.fill].forEach(function (sel) {
+        [cfg.era, cfg.field, cfg.nation, cfg.links, cfg.fill,
+         cfg.teachers, cfg.alma, cfg.century, cfg.seats].forEach(function (sel) {
           if (!sel) return; var el = document.querySelector(sel); if (el) el.innerHTML = '';
         });
       });

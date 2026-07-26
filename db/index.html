@@ -142,6 +142,19 @@
   .fl-n em{font-style:normal;font-size:10.5px;font-weight:700;color:var(--text-3);margin-left:1px}
   .fl-note{margin:4px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.6}
 
+  /* 링크가 되는 가로 막대 행 */
+  .hbz-row.is-link{text-decoration:none;color:inherit;border-radius:7px;
+    padding:2px 4px;margin:0 -4px;transition:background-color .15s}
+  .hbz-row.is-link:hover{background:var(--paper-2)}
+  .hbz-row.is-link:hover .hbz-k{color:var(--violet-2,#7C63B0)}
+  .hbz-k{transition:color .15s}
+
+  /* 비율 누적 막대 범례 · 안내문 */
+  .st-legs{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:11px}
+  .st-leg{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-2)}
+  .st-leg i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+  .st-note{margin:9px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.6}
+
   .hb-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
   /* 분석 그래프 — 버튼으로 골라 펼친다 */
@@ -381,6 +394,10 @@
         <button type="button" class="hb-instab" data-ins="fill">정보 완성도</button>
         <button type="button" class="hb-instab" data-ins="nation">국적 상위 10</button>
         <button type="button" class="hb-instab" data-ins="links">네트워크 연결</button>
+        <button type="button" class="hb-instab" data-ins="teachers">제자가 많은 스승</button>
+        <button type="button" class="hb-instab" data-ins="alma">동문이 많은 학교</button>
+        <button type="button" class="hb-instab" data-ins="century">세기별 분야 변화</button>
+        <button type="button" class="hb-instab" data-ins="seats">공연장 좌석 규모</button>
       </div>
 
       <div class="hb-inspanels" id="insPanels" hidden>
@@ -404,6 +421,25 @@
           <div class="hb-ptitle"><b>네트워크 연결</b><span>사사 · 소속 · 학교</span>
             <u id="linkTotal">0</u></div>
           <div id="linksBox"></div>
+        </div>
+        <div class="hb-panel" data-panel="teachers" hidden>
+          <div class="hb-ptitle"><b>제자가 많은 스승</b><span>사사관계 기준 상위 10명</span></div>
+          <div id="teachersBox"></div>
+          <p class="st-note">이름을 누르면 그 인물의 계보를 볼 수 있습니다.</p>
+        </div>
+        <div class="hb-panel" data-panel="alma" hidden>
+          <div class="hb-ptitle"><b>동문이 많은 학교</b><span>출신학교 기준 상위 10곳</span></div>
+          <div id="almaBox"></div>
+          <p class="st-note">이름을 누르면 그 학교 정보로 이동합니다.</p>
+        </div>
+        <div class="hb-panel" data-panel="century" hidden>
+          <div class="hb-ptitle"><b>세기별 분야 변화</b><span>출생 세기 기준 · 비율</span></div>
+          <div id="centuryBox"></div>
+          <p class="st-note">막대 위 숫자는 그 세기의 인물 수입니다. 막대에 마우스를 올리면 분야별 값이 나옵니다.</p>
+        </div>
+        <div class="hb-panel" data-panel="seats" hidden>
+          <div class="hb-ptitle"><b>공연장 좌석 규모</b><span>공연장DB</span></div>
+          <div id="seatsBox"></div>
         </div>
       </div>
     </section>
@@ -554,7 +590,9 @@
         if(!loaded){
           OCHub.insight({
             era:'#eraBox', field:'#fieldBox', fill:'#fillBox',
-            nation:'#nationBox', links:'#linksBox', linksTotal:'#linkTotal'
+            nation:'#nationBox', links:'#linksBox', linksTotal:'#linkTotal',
+            teachers:'#teachersBox', alma:'#almaBox',
+            century:'#centuryBox', seats:'#seatsBox'
           });
           loaded = true;
         }
