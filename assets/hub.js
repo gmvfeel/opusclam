@@ -554,6 +554,179 @@ window.OCHub = (function () {
     return '<div class="bar-track">' + seg + '</div><div class="bar-legs">' + leg + '</div>';
   }
 
+  /* ============================================================
+     분석 그래프 — 세로막대 · 도넛 · 가로막대 · 완성도바
+     OCHub.insight({ era:'#el', field:'#el', nation:'#el', links:'#el', fill:'#el' })
+     ============================================================ */
+  var REL_LABEL = { teacher:'사사 (스승)', student:'제자', alumnus_of:'출신 학교',
+                    fellow_of:'학회 · 아카데미', member_of:'소속 단체' };
+  var ERA_COLOR = ['#4C6FD6','#4C8DF6','#22A6C4','#22B5A6','#4FB870','#B79A3E','#C9A94E'];
+  var FIELD_COLOR = { '작곡':'#6D5BA6', '성악':'#EC4899', '연주':'#3B82F6', '지휘':'#C9A94E',
+                      '음악학':'#10B981', '음악교육':'#64748B', '편곡':'#0EA5E9', '평론':'#DC2626' };
+
+  /* 세로 막대 — 시대별처럼 순서가 의미 있는 자료 */
+  function vBarsSvg(data, W, H) {
+    if (!data || !data.length) return '';
+    W = Math.max(W || 720, 320); H = H || 240;
+    var PL = 8, PR = 8, PT = 22, PB = 34;
+    var iw = W - PL - PR, ih = H - PT - PB;
+    var max = 0; data.forEach(function (d) { if (d.n > max) max = d.n; });
+    if (!max) max = 1;
+    var gap = Math.min(14, iw / data.length * 0.28);
+    var bw = (iw - gap * (data.length - 1)) / data.length;
+    var out = '';
+    data.forEach(function (d, i) {
+      var h = Math.max(ih * d.n / max, 2);
+      var x = PL + i * (bw + gap), y = PT + ih - h;
+      var col = ERA_COLOR[i % ERA_COLOR.length];
+      out += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '"'
+        + ' height="' + h.toFixed(1) + '" rx="' + Math.min(5, bw / 3).toFixed(1) + '" fill="' + col + '"/>'
+        + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" font-size="11"'
+        + ' font-weight="800" text-anchor="middle" fill="' + col + '">' + d.n.toLocaleString() + '</text>'
+        + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 11) + '" font-size="11"'
+        + ' text-anchor="middle" fill="currentColor" fill-opacity=".62">' + esc(d.k) + '</text>';
+    });
+    return '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="구간별 분포">'
+      + '<line x1="' + PL + '" y1="' + (PT + ih) + '" x2="' + (W - PR) + '" y2="' + (PT + ih) + '"'
+      + ' stroke="currentColor" stroke-opacity=".14"/>' + out + '</svg>';
+  }
+
+  /* 도넛 — 구성 비율 */
+  function donutHtml(data, colorOf, unit) {
+    if (!data || !data.length) return '';
+    var total = data.reduce(function (a, b) { return a + b.n; }, 0) || 1;
+    var R = 62, r = 40, cx = 74, cy = 74, acc = 0;
+    var segs = '';
+    data.forEach(function (d) {
+      var a0 = acc / total * Math.PI * 2 - Math.PI / 2;
+      acc += d.n;
+      var a1 = acc / total * Math.PI * 2 - Math.PI / 2;
+      var big = (a1 - a0) > Math.PI ? 1 : 0;
+      var p = function (ang, rad) {
+        return [(cx + Math.cos(ang) * rad).toFixed(2), (cy + Math.sin(ang) * rad).toFixed(2)].join(' ');
+      };
+      segs += '<path d="M' + p(a0, R) + ' A' + R + ' ' + R + ' 0 ' + big + ' 1 ' + p(a1, R)
+        + ' L' + p(a1, r) + ' A' + r + ' ' + r + ' 0 ' + big + ' 0 ' + p(a0, r) + ' Z"'
+        + ' fill="' + (colorOf(d.k) || '#999') + '"/>';
+    });
+    var legs = data.map(function (d) {
+      return '<span class="dn-leg"><i style="background:' + (colorOf(d.k) || '#999') + '"></i>'
+        + '<b>' + esc(d.k) + '</b><u>' + d.n.toLocaleString() + '</u>'
+        + '<s>' + (d.n / total * 100).toFixed(1) + '%</s></span>';
+    }).join('');
+    return '<div class="dn-wrap">'
+      + '<svg class="dn" viewBox="0 0 148 148" role="img" aria-label="구성 비율">' + segs
+      +   '<text x="74" y="70" text-anchor="middle" font-size="20" font-weight="900"'
+      +     ' fill="currentColor">' + total.toLocaleString() + '</text>'
+      +   '<text x="74" y="87" text-anchor="middle" font-size="10.5"'
+      +     ' fill="currentColor" fill-opacity=".5">' + esc(unit || '') + '</text>'
+      + '</svg>'
+      + '<div class="dn-legs">' + legs + '</div></div>';
+  }
+
+  /* 가로 막대 — 순위 자료 */
+  function hBarsHtml(data, opt) {
+    if (!data || !data.length) return '';
+    opt = opt || {};
+    var max = 0; data.forEach(function (d) { if (d.n > max) max = d.n; });
+    if (!max) max = 1;
+    return '<div class="hbz">' + data.map(function (d, i) {
+      var pct = d.n / max * 100;
+      var label = opt.label ? (opt.label[d.k] || d.k) : d.k;
+      var col = opt.colorOf ? opt.colorOf(d.k, i) : '#4C8DF6';
+      return '<div class="hbz-row">'
+        + '<span class="hbz-k">' + esc(label) + '</span>'
+        + '<span class="hbz-bar"><i style="width:' + pct.toFixed(1) + '%;background:' + col + '"></i></span>'
+        + '<span class="hbz-n">' + d.n.toLocaleString() + '</span>'
+        + '</div>';
+    }).join('') + '</div>';
+  }
+
+  /* 완성도 — 비율 진행바 */
+  function fillHtml(f) {
+    if (!f || !f.total) return '';
+    var rows = [
+      { k: '생몰 연도', n: f.life,   c: '#4C8DF6' },
+      { k: '사진',      n: f.photo,  c: '#22B5A6' },
+      { k: '출신 학교', n: f.school, c: '#C9A94E' },
+      { k: '한국어 소개문', n: f.intro, c: '#EC4899' }
+    ];
+    return '<div class="fl">' + rows.map(function (r) {
+      var pct = r.n / f.total * 100;
+      return '<div class="fl-row">'
+        + '<span class="fl-k">' + esc(r.k) + '</span>'
+        + '<span class="fl-bar"><i style="width:' + pct.toFixed(1) + '%;background:' + r.c + '"></i></span>'
+        + '<span class="fl-n">' + pct.toFixed(0) + '<em>%</em></span>'
+        + '</div>';
+    }).join('')
+    + '<p class="fl-note">인물 ' + f.total.toLocaleString() + '명 기준 · 자동수집과 회원 보강으로 채워집니다</p></div>';
+  }
+
+  function insight(cfg) {
+    fetch(SB_URL + '/rest/v1/rpc/db_insight', { headers: HDR })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) throw new Error('분석 자료를 받지 못했습니다');
+
+        /* 시대별 — 세로 막대 (폭에 맞춰 다시 그린다) */
+        var eb = cfg.era ? document.querySelector(cfg.era) : null;
+        if (eb && (d.era || []).length) {
+          var paintEra = function () {
+            var cs = window.getComputedStyle(eb);
+            var pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+            var w = Math.max(Math.round(eb.clientWidth - pad), 320);
+            eb.innerHTML = vBarsSvg(d.era, w, w < 560 ? 200 : 240);
+          };
+          paintEra();
+          var t1; window.addEventListener('resize', function () {
+            clearTimeout(t1); t1 = setTimeout(paintEra, 160);
+          });
+        }
+
+        /* 분야별 — 도넛 (상위 6개만, 잡항목 제외) */
+        var fb = cfg.field ? document.querySelector(cfg.field) : null;
+        if (fb) {
+          var top = (d.field || []).filter(function (x) { return x.k.indexOf(',') < 0; }).slice(0, 6);
+          fb.innerHTML = donutHtml(top, function (k) { return FIELD_COLOR[k] || '#94A3B8'; }, '명');
+        }
+
+        /* 국적 상위 10 — 가로 막대 (순위에 따라 색이 옅어진다) */
+        var nb = cfg.nation ? document.querySelector(cfg.nation) : null;
+        if (nb) {
+          nb.innerHTML = hBarsHtml(d.nation || [], {
+            colorOf: function (k, i) {
+              var t = i / Math.max((d.nation || []).length - 1, 1);
+              var a = (0.95 - t * 0.55).toFixed(2);
+              return 'rgba(76,141,246,' + a + ')';
+            }
+          });
+        }
+
+        /* 네트워크 연결 — 가로 막대 + 합계 */
+        var lb = cfg.links ? document.querySelector(cfg.links) : null;
+        if (lb) {
+          var LC = { alumnus_of:'#10B981', student:'#6D5BA6', teacher:'#7C63B0',
+                     fellow_of:'#64748B', member_of:'#C9A94E' };
+          lb.innerHTML = hBarsHtml(d.links || [], {
+            label: REL_LABEL,
+            colorOf: function (k) { return LC[k] || '#94A3B8'; }
+          });
+          var lt = cfg.linksTotal ? document.querySelector(cfg.linksTotal) : null;
+          if (lt) countUp(lt, d.links_total || 0);
+        }
+
+        /* 정보 완성도 */
+        var xb = cfg.fill ? document.querySelector(cfg.fill) : null;
+        if (xb) xb.innerHTML = fillHtml(d.fill);
+      })
+      .catch(function (e) {
+        console.warn('[분석 그래프] 건너뜀:', e.message);
+        [cfg.era, cfg.field, cfg.nation, cfg.links, cfg.fill].forEach(function (sel) {
+          if (!sel) return; var el = document.querySelector(sel); if (el) el.innerHTML = '';
+        });
+      });
+  }
+
   function stats(cfg) {
     var url = SB_URL + '/rest/v1/rpc/db_stats?p_days=' + (cfg.days || 30);
     fetch(url, { headers: HDR })
@@ -599,5 +772,5 @@ window.OCHub = (function () {
 
   return { init: init, bindViewToggle: bindViewToggle, esc: esc, thumb: thumb,
            board: board, boardTabs: boardTabs, one: one, bindCarousel: bindCarousel,
-           stats: stats };
+           stats: stats, insight: insight };
 })();

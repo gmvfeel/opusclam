@@ -83,6 +83,51 @@
   .bar-leg u{text-decoration:none;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
   .bar-leg s{text-decoration:none;font-size:11px;color:var(--text-3)}
 
+  /* 분석 그래프 공통 카드 */
+  .hb-panel{border:1px solid var(--line);border-radius:14px;background:var(--paper);
+    padding:16px 18px 12px;color:var(--text);overflow:hidden}
+  .hb-panel .cv{width:100%;display:block}
+  .hb-ptitle{display:flex;align-items:baseline;gap:8px;margin:0 0 12px}
+  .hb-ptitle b{font-size:14px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+  .hb-ptitle span{font-size:11.5px;color:var(--text-3)}
+  .hb-ptitle u{margin-left:auto;text-decoration:none;font-size:19px;font-weight:900;
+    letter-spacing:-.03em;color:var(--violet-2);font-variant-numeric:tabular-nums}
+  .hb-ptitle u i{font-style:normal;font-size:11px;font-weight:700;color:var(--text-3);margin-left:2px}
+
+  /* 도넛 */
+  .dn-wrap{display:flex;align-items:center;gap:20px}
+  .dn{flex:0 0 auto;width:148px;height:148px;color:var(--text)}
+  .dn-legs{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+  .dn-leg{display:flex;align-items:center;gap:7px;font-size:12.5px}
+  .dn-leg i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+  .dn-leg b{font-weight:700;color:var(--text-2);min-width:52px}
+  .dn-leg u{text-decoration:none;font-weight:800;color:var(--text);
+    font-variant-numeric:tabular-nums;margin-left:auto}
+  .dn-leg s{text-decoration:none;font-size:11px;color:var(--text-3);min-width:38px;text-align:right}
+
+  /* 가로 막대 */
+  .hbz{display:flex;flex-direction:column;gap:8px}
+  .hbz-row{display:flex;align-items:center;gap:10px;font-size:12.5px}
+  .hbz-k{flex:0 0 auto;width:88px;color:var(--text-2);font-weight:600;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hbz-bar{flex:1;min-width:0;height:9px;border-radius:99px;background:var(--paper-2);overflow:hidden}
+  .hbz-bar i{display:block;height:100%;border-radius:99px}
+  .hbz-n{flex:0 0 auto;width:56px;text-align:right;font-weight:800;color:var(--text);
+    font-variant-numeric:tabular-nums}
+
+  /* 완성도 */
+  .fl{display:flex;flex-direction:column;gap:11px}
+  .fl-row{display:flex;align-items:center;gap:11px;font-size:12.5px}
+  .fl-k{flex:0 0 auto;width:96px;color:var(--text-2);font-weight:600}
+  .fl-bar{flex:1;min-width:0;height:10px;border-radius:99px;background:var(--paper-2);overflow:hidden}
+  .fl-bar i{display:block;height:100%;border-radius:99px}
+  .fl-n{flex:0 0 auto;width:44px;text-align:right;font-weight:900;color:var(--text);
+    font-variant-numeric:tabular-nums}
+  .fl-n em{font-style:normal;font-size:10.5px;font-weight:700;color:var(--text-3);margin-left:1px}
+  .fl-note{margin:4px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.6}
+
+  .hb-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
   /* 섹션 제목 */
   .hb-sec{margin-top:52px}
   .hb-head{display:flex;align-items:flex-end;gap:11px;margin:0 0 15px;padding-bottom:12px;
@@ -296,6 +341,41 @@
       <div class="hb-compose" id="composeBox"></div>
     </section>
 
+    <!-- 데이터 분석 -->
+    <section class="hb-sec">
+      <div class="hb-head">
+        <span class="hb-title">데이터 분석<em>INSIGHT</em></span>
+      </div>
+
+      <div class="hb-panel">
+        <div class="hb-ptitle"><b>시대별 인물 분포</b><span>서양음악사 기준</span></div>
+        <div id="eraBox"></div>
+      </div>
+
+      <div class="hb-two" style="margin-top:16px">
+        <div class="hb-panel">
+          <div class="hb-ptitle"><b>분야 구성</b><span>인물DB</span></div>
+          <div id="fieldBox"></div>
+        </div>
+        <div class="hb-panel">
+          <div class="hb-ptitle"><b>정보 완성도</b><span>항목이 채워진 비율</span></div>
+          <div id="fillBox"></div>
+        </div>
+      </div>
+
+      <div class="hb-two" style="margin-top:16px">
+        <div class="hb-panel">
+          <div class="hb-ptitle"><b>국적 상위 10</b><span>인물DB</span></div>
+          <div id="nationBox"></div>
+        </div>
+        <div class="hb-panel">
+          <div class="hb-ptitle"><b>네트워크 연결</b><span>사사 · 소속 · 학교</span>
+            <u id="linkTotal">0</u></div>
+          <div id="linksBox"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- 새로 등록된 Database -->
     <section class="hb-sec">
     <div class="hb-head">
@@ -408,6 +488,12 @@
       curve:'#curveBox', bars:'#composeBox',
       week:'#figWeek', today:'#figToday', upd:'#figUpd',
       days:30
+    });
+
+    /* 분석 그래프 — 요청 1회로 네 그래프를 모두 채운다 */
+    OCHub.insight({
+      era:'#eraBox', field:'#fieldBox', fill:'#fillBox',
+      nation:'#nationBox', links:'#linksBox', linksTotal:'#linkTotal'
     });
   });
 </script>
