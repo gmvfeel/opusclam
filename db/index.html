@@ -42,7 +42,7 @@
 
   /* 영역 카드 — 클래스 이름은 hub.js 가 만드는 것과 같아야 한다 */
   .hb-cards{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:16px}
-  .hub-navcard{display:flex;flex-direction:column;gap:6px;padding:15px 14px 14px;
+  .hub-navcard{display:flex;flex-direction:column;gap:6px;padding:15px 14px 14px 17px;
     border:1px solid var(--line,#e4e4ec);border-radius:13px;background:var(--paper,#fff);
     text-decoration:none;transition:border-color .15s, transform .15s, box-shadow .15s}
   .hub-navcard:hover{border-color:var(--c,#c9bbe6);transform:translateY(-2px);
@@ -50,16 +50,33 @@
   .hub-navlabel{display:block;font-size:12.5px;font-weight:700;letter-spacing:-.02em;
     color:var(--text-2,#5c5e70);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .hub-navcount{display:flex;align-items:baseline;gap:2px}
+  /* 카드 숫자는 먹색 — 색으로 구분하는 곳은 아래 구성 스택바 하나로 모은다.
+     대신 카드 왼쪽에 그 영역 색을 얇은 띠로 남겨 구분은 유지한다 */
   .hub-navcount b{font-size:22px;font-weight:900;letter-spacing:-.035em;
-    color:var(--c,#7C63B0);font-variant-numeric:tabular-nums;line-height:1.05}
+    color:var(--text);font-variant-numeric:tabular-nums;line-height:1.05}
+  .hub-navcard{position:relative}
+  .hub-navcard::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:3px;
+    border-radius:0 3px 3px 0;background:var(--c,#7C63B0);opacity:.85}
+  .hub-navcard:hover .hub-navcount b{color:var(--c,#7C63B0)}
   .hub-navcount i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3,#a8aabb)}
 
   /* 성장 추이 */
   .hb-stat{display:grid;grid-template-columns:1fr 210px;gap:20px;align-items:stretch;margin-top:2px}
-  .hb-curve{border:1px solid var(--line);border-radius:14px;background:var(--paper);
+  .hb-curve{position:relative;border:1px solid var(--line);border-radius:14px;background:var(--paper);
     padding:10px 14px 4px;color:var(--text);overflow:hidden;
     display:flex;align-items:center;min-height:262px}
   .hb-curve .cv{width:100%;height:auto;display:block}
+  .hb-curve .cv-catch{cursor:crosshair}
+  /* 마우스를 올렸을 때 그 날짜의 값 */
+  .cv-tip{position:absolute;z-index:2;pointer-events:none;
+    min-width:106px;padding:8px 11px;border-radius:9px;
+    background:var(--text);color:var(--paper);
+    box-shadow:0 8px 22px rgba(20,20,45,.22);
+    font-size:11.5px;line-height:1.6;white-space:nowrap}
+  .cv-tip b{display:block;margin-bottom:3px;font-size:12px;font-weight:800;
+    letter-spacing:-.01em;opacity:.85}
+  .cv-tip span{display:flex;gap:10px;justify-content:space-between;opacity:.82}
+  .cv-tip u{text-decoration:none;font-weight:800;font-variant-numeric:tabular-nums;opacity:1}
   .hb-figs{display:flex;flex-direction:column;gap:10px}
   .hb-fig{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;
     padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:var(--paper)}
@@ -69,8 +86,9 @@
     color:var(--text);font-variant-numeric:tabular-nums}
   .hb-fignum i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3)}
   /* 숫자 색도 그래프와 같은 규칙 — 보라 기본, 강조 하나만 금색 */
+  /* 요약 숫자: 기본은 먹색, 이번 주 신규 하나만 보라로 강조 */
+  .hb-fig .hb-fignum b{color:var(--text)}
   .hb-fig.up .hb-fignum b{color:var(--violet-2,#7C63B0)}
-  .hb-fig.gold .hb-fignum b{color:#A8862F}
 
   /* 구성 비율 */
   .hb-compose{margin-top:20px;padding:17px 18px 15px;border:1px solid var(--line);

@@ -474,12 +474,23 @@ window.OCHub = (function () {
   var DB_COLOR = { persons:'#7C63B0', orgs:'#C9A94E', venues:'#3B82F6', schools:'#10B981',
                    modern:'#EC4899', foundations:'#64748B', academic:'#DC2626' };
 
-  /* 누적 성장 곡선 (면적 + 선 + 마지막 점) */
+  /* 누적 성장 곡선
+     · 컨테이너 실제 폭(W)을 받아 그린다 (고정 폭으로 그려 늘리면 눌린다)
+     · 자료가 없는 앞 구간은 잘라낸다 (빈 왼쪽이 길면 그래프가 초라해 보인다)
+     · 마우스를 올리면 그 날짜의 값을 보여주므로 좌표 정보도 함께 돌려준다 */
+  function trimSeries(series) {
+    if (!series || !series.length) return [];
+    var i = 0;
+    while (i < series.length && !(series[i].c > 0)) i++;      // 누적이 0인 앞 구간
+    if (i >= series.length) return series.slice();
+    if (i > 0) i--;                                          // 0에서 올라오는 모양을 위해 한 칸 남김
+    var out = series.slice(i);
+    return out.length >= 2 ? out : series.slice(-2);
+  }
+
   function curveSvg(series, W, H) {
-    if (!series || series.length < 2) return '';
-    /* 컨테이너 실제 폭에 맞춰 1:1 로 그린다.
-       preserveAspectRatio="none" 로 늘리면 가로만 퍼져 그래프가 눌려 보인다. */
-    W = W || 760; H = H || 240;
+    if (!series || series.length < 2) return null;
+    W = Math.max(W || 720, 320); H = H || 240;
     var PL = 10, PR = 10, PT = 18, PB = 28;
     var iw = W - PL - PR, ih = H - PT - PB;
     var max = 0;
@@ -488,47 +499,109 @@ window.OCHub = (function () {
     var x = function (i) { return PL + (iw * i / (series.length - 1)); };
     var y = function (v) { return PT + ih - (ih * v / max); };
 
-    var line = series.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.c).toFixed(1); }).join(' ');
-    var area = line + ' L' + x(series.length - 1).toFixed(1) + ' ' + (PT + ih) + ' L' + PL + ' ' + (PT + ih) + ' Z';
+    var line = series.map(function (p, i) {
+      return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.c).toFixed(1);
+    }).join(' ');
+    var area = line + ' L' + x(series.length - 1).toFixed(1) + ' ' + (PT + ih)
+             + ' L' + PL + ' ' + (PT + ih) + ' Z';
 
-    /* 가로 기준선 3개 */
     var grid = '';
     [0.5, 1].forEach(function (r) {
       var gy = y(max * r);
       grid += '<line x1="' + PL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - PR) + '" y2="' + gy.toFixed(1) + '"'
-        + ' stroke="currentColor" stroke-opacity=".12" stroke-dasharray="3 4"/>'
+        + ' stroke="currentColor" stroke-opacity=".13" stroke-dasharray="3 4"/>'
         + '<text x="' + (PL + 2) + '" y="' + (gy - 6).toFixed(1) + '" font-size="10.5" fill="currentColor"'
         + ' fill-opacity=".42">' + Math.round(max * r).toLocaleString() + '</text>';
     });
 
-    /* 날짜 눈금 — 처음·중간·끝 */
     var ticks = '';
     [0, Math.floor((series.length - 1) / 2), series.length - 1].forEach(function (i, k) {
-      var anchorAttr = k === 0 ? 'start' : (k === 2 ? 'end' : 'middle');
+      var ta = k === 0 ? 'start' : (k === 2 ? 'end' : 'middle');
       ticks += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 9) + '" font-size="10.5"'
-        + ' text-anchor="' + anchorAttr + '" fill="currentColor" fill-opacity=".45">'
-        + esc(series[i].d) + '</text>';
+        + ' text-anchor="' + ta + '" fill="currentColor" fill-opacity=".45">' + esc(series[i].d) + '</text>';
     });
 
     var lastX = x(series.length - 1), lastY = y(series[series.length - 1].c);
 
-    /* 색: 왼쪽 파랑 → 가운데 청록 → 오른쪽 금색.
-       보라 단색이면 사이트 전체가 한 색으로만 보이므로 흐름이 있는 색을 쓴다. */
-    return '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" role="img"'
-      + ' aria-label="누적 등록 추이">'
+    var svg = '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '"'
+      + ' role="img" aria-label="누적 등록 추이">'
       + '<defs>'
       +   '<linearGradient id="cvFill" x1="0" y1="0" x2="0" y2="1">'
-      +     '<stop offset="0" stop-color="#7C63B0" stop-opacity=".22"/>'
-      +     '<stop offset="1" stop-color="#7C63B0" stop-opacity="0"/></linearGradient>'
+      +     '<stop offset="0" stop-color="currentColor" stop-opacity=".16"/>'
+      +     '<stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient>'
       + '</defs>'
       + grid
       + '<path d="' + area + '" fill="url(#cvFill)"/>'
-      + '<path d="' + line + '" fill="none" stroke="#7C63B0" stroke-width="2.6"'
+      + '<path d="' + line + '" fill="none" stroke="currentColor" stroke-opacity=".72" stroke-width="2.4"'
       +   ' stroke-linejoin="round" stroke-linecap="round"/>'
-      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="9" fill="#C9A94E" fill-opacity=".2"/>'
-      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="4.4" fill="#C9A94E"/>'
+      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="9" fill="' + ACCENT + '" fill-opacity=".18"/>'
+      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="4.4" fill="' + ACCENT + '"/>'
       + ticks
+      /* 마우스를 따라다니는 안내선과 점 (처음엔 숨김) */
+      + '<g class="cv-hover" opacity="0">'
+      +   '<line class="cv-vline" x1="0" y1="' + PT + '" x2="0" y2="' + (PT + ih) + '"'
+      +     ' stroke="' + ACCENT + '" stroke-opacity=".45" stroke-width="1" stroke-dasharray="3 3"/>'
+      +   '<circle class="cv-dot" cx="0" cy="0" r="4.6" fill="' + ACCENT + '"/>'
+      +   '<circle class="cv-dot2" cx="0" cy="0" r="9" fill="' + ACCENT + '" fill-opacity=".18"/>'
+      + '</g>'
+      /* 마우스를 받는 투명 판 */
+      + '<rect class="cv-catch" x="' + PL + '" y="' + PT + '" width="' + iw + '" height="' + ih + '"'
+      +   ' fill="transparent"/>'
       + '</svg>';
+
+    return { svg: svg, geom: { PL: PL, PT: PT, iw: iw, ih: ih, max: max, n: series.length, W: W, H: H } };
+  }
+
+  /* 곡선에 날짜별 값 표시 붙이기 */
+  function bindCurveHover(box, series, g) {
+    var svg = box.querySelector('svg.cv');
+    var tip = box.querySelector('.cv-tip');
+    if (!svg || !tip) return;
+    var hov = svg.querySelector('.cv-hover');
+    var vl = svg.querySelector('.cv-vline');
+    var d1 = svg.querySelector('.cv-dot');
+    var d2 = svg.querySelector('.cv-dot2');
+    var catcher = svg.querySelector('.cv-catch');
+    if (!catcher) return;
+
+    var step = g.iw / Math.max(g.n - 1, 1);
+    function show(clientX) {
+      var r = svg.getBoundingClientRect();
+      var sx = (clientX - r.left) * (g.W / r.width);          // 화면 좌표 → 그림 좌표
+      var i = Math.round((sx - g.PL) / step);
+      i = Math.max(0, Math.min(g.n - 1, i));
+      var p = series[i];
+      var px = g.PL + step * i;
+      var py = g.PT + g.ih - (g.ih * p.c / g.max);
+      vl.setAttribute('x1', px.toFixed(1)); vl.setAttribute('x2', px.toFixed(1));
+      d1.setAttribute('cx', px.toFixed(1)); d1.setAttribute('cy', py.toFixed(1));
+      d2.setAttribute('cx', px.toFixed(1)); d2.setAttribute('cy', py.toFixed(1));
+      hov.setAttribute('opacity', '1');
+
+      tip.innerHTML = '<b>' + esc(p.d) + '</b>'
+        + '<span>누적 <u>' + (p.c || 0).toLocaleString() + '</u></span>'
+        + '<span>신규 <u>' + (p.n || 0).toLocaleString() + '</u></span>'
+        + (p.u ? '<span>보강 <u>' + p.u.toLocaleString() + '</u></span>' : '');
+      tip.hidden = false;
+      /* 화면 밖으로 나가지 않게 좌우 보정 */
+      var ratio = r.width / g.W;
+      var left = px * ratio;
+      var tw = tip.offsetWidth || 120;
+      if (left + tw + 14 > r.width) left = left - tw - 14; else left = left + 14;
+      tip.style.left = Math.max(4, left) + 'px';
+      tip.style.top = Math.max(4, py * ratio - 10) + 'px';
+    }
+    function hide() { hov.setAttribute('opacity', '0'); tip.hidden = true; }
+
+    catcher.addEventListener('mousemove', function (e) { show(e.clientX); });
+    catcher.addEventListener('mouseleave', hide);
+    catcher.addEventListener('touchstart', function (e) {
+      if (e.touches && e.touches[0]) show(e.touches[0].clientX);
+    }, { passive: true });
+    catcher.addEventListener('touchmove', function (e) {
+      if (e.touches && e.touches[0]) show(e.touches[0].clientX);
+    }, { passive: true });
+    catcher.addEventListener('touchend', hide);
   }
 
   /* 구성 비율 — 가로 스택 바 + 범례 */
@@ -556,15 +629,15 @@ window.OCHub = (function () {
      ============================================================ */
   var REL_LABEL = { teacher:'사사 (스승)', student:'제자', alumnus_of:'출신 학교',
                     fellow_of:'학회 · 아카데미', member_of:'소속 단체' };
-  /* 분석 그래프는 한 색(보라)의 농담으로만 그린다.
-     색이 여러 개면 무슨 뜻인지 읽어야 해서 오히려 혼란스럽다.
-     가장 큰 값만 금색으로 강조해 시선을 모은다. */
-  var INK = '109,91,166';        // 보라
-  var GOLD = '#C9A94E';          // 강조
-  function shade(i, n, dark) {
+  /* 색 규칙 — 먹색 농담을 기본으로, 요점 하나만 보라로 강조한다.
+     먹색은 currentColor 로 표현하므로 다크모드에서 알아서 반전된다.
+     · SVG      : fill="currentColor" + fill-opacity
+     · HTML 막대: background:currentColor + opacity
+     · 강조     : ACCENT (보라) */
+  var ACCENT = '#7C63B0';
+  function alpha(i, n, dark) {          // 0번이 진한(dark=true) 또는 옅은
     var t = (n <= 1) ? 0 : i / (n - 1);
-    var a = dark ? (0.34 + t * 0.58) : (0.92 - t * 0.58);
-    return 'rgba(' + INK + ',' + a.toFixed(2) + ')';
+    return +(dark ? (0.88 - t * 0.58) : (0.30 + t * 0.58)).toFixed(2);
   }
 
   /* 세로 막대 — 시대별처럼 순서가 의미 있는 자료 */
@@ -581,11 +654,15 @@ window.OCHub = (function () {
     data.forEach(function (d, i) {
       var h = Math.max(ih * d.n / max, 2);
       var x = PL + i * (bw + gap), y = PT + ih - h;
-      var col = (d.n === max) ? GOLD : shade(i, data.length, true);
+      var hot = (d.n === max);
+      var paint = hot ? ' fill="' + ACCENT + '"'
+                      : ' fill="currentColor" fill-opacity="' + alpha(i, data.length, false) + '"';
+      var lab = hot ? ' fill="' + ACCENT + '"'
+                    : ' fill="currentColor" fill-opacity=".55"';
       out += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '"'
-        + ' height="' + h.toFixed(1) + '" rx="' + Math.min(5, bw / 3).toFixed(1) + '" fill="' + col + '"/>'
+        + ' height="' + h.toFixed(1) + '" rx="' + Math.min(5, bw / 3).toFixed(1) + '"' + paint + '/>'
         + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" font-size="11"'
-        + ' font-weight="800" text-anchor="middle" fill="' + col + '">' + d.n.toLocaleString() + '</text>'
+        + ' font-weight="800" text-anchor="middle"' + lab + '>' + d.n.toLocaleString() + '</text>'
         + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 11) + '" font-size="11"'
         + ' text-anchor="middle" fill="currentColor" fill-opacity=".62">' + esc(d.k) + '</text>';
     });
@@ -600,7 +677,7 @@ window.OCHub = (function () {
     var total = data.reduce(function (a, b) { return a + b.n; }, 0) || 1;
     var R = 62, r = 40, cx = 74, cy = 74, acc = 0;
     var segs = '';
-    data.forEach(function (d) {
+    data.forEach(function (d, di) {
       var a0 = acc / total * Math.PI * 2 - Math.PI / 2;
       acc += d.n;
       var a1 = acc / total * Math.PI * 2 - Math.PI / 2;
@@ -608,12 +685,20 @@ window.OCHub = (function () {
       var p = function (ang, rad) {
         return [(cx + Math.cos(ang) * rad).toFixed(2), (cy + Math.sin(ang) * rad).toFixed(2)].join(' ');
       };
+      var c = colorOf(d.k, di);
+      var paint = (typeof c === 'number')
+        ? ' fill="currentColor" fill-opacity="' + c + '"'
+        : ' fill="' + c + '"';
       segs += '<path d="M' + p(a0, R) + ' A' + R + ' ' + R + ' 0 ' + big + ' 1 ' + p(a1, R)
         + ' L' + p(a1, r) + ' A' + r + ' ' + r + ' 0 ' + big + ' 0 ' + p(a0, r) + ' Z"'
-        + ' fill="' + (colorOf(d.k) || '#999') + '"/>';
+        + paint + '/>';
     });
-    var legs = data.map(function (d) {
-      return '<span class="dn-leg"><i style="background:' + (colorOf(d.k) || '#999') + '"></i>'
+    var legs = data.map(function (d, di) {
+      var c = colorOf(d.k, di);
+      var sw = (typeof c === 'number')
+        ? 'background:currentColor;opacity:' + c
+        : 'background:' + c;
+      return '<span class="dn-leg"><i style="' + sw + '"></i>'
         + '<b>' + esc(d.k) + '</b><u>' + d.n.toLocaleString() + '</u>'
         + '<s>' + (d.n / total * 100).toFixed(1) + '%</s></span>';
     }).join('');
@@ -636,10 +721,13 @@ window.OCHub = (function () {
     return '<div class="hbz">' + data.map(function (d, i) {
       var pct = d.n / max * 100;
       var label = opt.label ? (opt.label[d.k] || d.k) : d.k;
-      var col = opt.colorOf ? opt.colorOf(d.k, i) : shade(i, data.length);
+      var c = opt.colorOf ? opt.colorOf(d.k, i) : alpha(i, data.length, true);
+      var paint = (typeof c === 'number')
+        ? 'background:currentColor;opacity:' + c
+        : 'background:' + c;
       return '<div class="hbz-row">'
         + '<span class="hbz-k">' + esc(label) + '</span>'
-        + '<span class="hbz-bar"><i style="width:' + pct.toFixed(1) + '%;background:' + col + '"></i></span>'
+        + '<span class="hbz-bar"><i style="width:' + pct.toFixed(1) + '%;' + paint + '"></i></span>'
         + '<span class="hbz-n">' + d.n.toLocaleString() + '</span>'
         + '</div>';
     }).join('') + '</div>';
@@ -656,12 +744,15 @@ window.OCHub = (function () {
     ];
     /* 가장 부족한 항목을 금색으로 — 어디를 채워야 하는지 바로 보인다 */
     var lowest = rows.reduce(function (a, b) { return b.n < a.n ? b : a; }, rows[0]);
-    rows.forEach(function (r, i) { r.c = (r === lowest) ? GOLD : shade(i, rows.length, true); });
+    /* 가장 부족한 항목만 보라로, 나머지는 먹색 농담 */
+    rows.forEach(function (r, i) { r.c = (r === lowest) ? ACCENT : alpha(i, rows.length, true); });
     return '<div class="fl">' + rows.map(function (r) {
       var pct = r.n / f.total * 100;
       return '<div class="fl-row">'
         + '<span class="fl-k">' + esc(r.k) + '</span>'
-        + '<span class="fl-bar"><i style="width:' + pct.toFixed(1) + '%;background:' + r.c + '"></i></span>'
+        + '<span class="fl-bar"><i style="width:' + pct.toFixed(1) + '%;'
+        +   ((typeof r.c === 'number') ? 'background:currentColor;opacity:' + r.c : 'background:' + r.c)
+        +   '"></i></span>'
         + '<span class="fl-n">' + pct.toFixed(0) + '<em>%</em></span>'
         + '</div>';
     }).join('')
@@ -695,7 +786,7 @@ window.OCHub = (function () {
           var top = (d.field || []).filter(function (x) { return x.k.indexOf(',') < 0; }).slice(0, 6);
           var order = {}; top.forEach(function (x, i) { order[x.k] = i; });
           fb.innerHTML = donutHtml(top, function (k) {
-            return order[k] === 0 ? GOLD : shade(order[k], top.length);
+            return order[k] === 0 ? ACCENT : alpha(order[k], top.length, true);
           }, '명');
         }
 
@@ -704,7 +795,7 @@ window.OCHub = (function () {
         if (nb) {
           var nn = (d.nation || []).length;
           nb.innerHTML = hBarsHtml(d.nation || [], {
-            colorOf: function (k, i) { return i === 0 ? GOLD : shade(i, nn); }
+            colorOf: function (k, i) { return i === 0 ? ACCENT : alpha(i, nn, true); }
           });
         }
 
@@ -714,7 +805,7 @@ window.OCHub = (function () {
           var ln = (d.links || []).length;
           lb.innerHTML = hBarsHtml(d.links || [], {
             label: REL_LABEL,
-            colorOf: function (k, i) { return i === 0 ? GOLD : shade(i, ln); }
+            colorOf: function (k, i) { return i === 0 ? ACCENT : alpha(i, ln, true); }
           });
           var lt = cfg.linksTotal ? document.querySelector(cfg.linksTotal) : null;
           if (lt) countUp(lt, d.links_total || 0);
@@ -750,11 +841,15 @@ window.OCHub = (function () {
         put(cfg.today, d.today_new);
         var cv = cfg.curve ? document.querySelector(cfg.curve) : null;
         if (cv) {
+          var ser = trimSeries(d.series || []);      /* 자료가 없는 앞 구간 제거 */
           var draw = function () {
             var cs = window.getComputedStyle(cv);
             var pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
             var w = Math.max(Math.round(cv.clientWidth - pad), 360);
-            cv.innerHTML = curveSvg(d.series || [], w, cfg.height || 240);
+            var r = curveSvg(ser, w, cfg.height || 240);
+            if (!r) { cv.innerHTML = ''; return; }
+            cv.innerHTML = r.svg + '<div class="cv-tip" hidden></div>';
+            bindCurveHover(cv, ser, r.geom);
           };
           draw();
           var tm;
