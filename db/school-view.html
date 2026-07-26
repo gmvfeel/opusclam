@@ -1312,6 +1312,29 @@ if('serviceWorker' in navigator){
   fetch(URL+'/rest/v1/schools?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})
    .then(function(a){if(!a||!a.length)return;var x=a[0];var nm=(x.name_ko||'').trim();
      var por=document.querySelector('.pv-portrait span');if(por)por.textContent=(function(n){n=(x.name_ko||'').trim();return n?n[0]:'?';})();
+     /* 학교 로고 표시
+        · /assets/logos/ 로 시작하면 우리가 직접 넣은 로고 → 그대로 사용
+        · 위키에서 온 값은 파일명에 logo·emblem·seal 이 있을 때만 인정
+          (건물 사진·깃발이 섞여 있어 그대로 쓰면 초상 자리에 엉뚱한 이미지가 들어갑니다) */
+     (function(){
+       function usableLogo(u){
+         var v=String(u||'').trim(); if(!v) return '';
+         if(v.indexOf('/assets/logos/')===0) return v;
+         var fn=decodeURIComponent(v.split('/').pop()||'');
+         if(/logo|emblem|seal|crest|coat.?of.?arms|wappen|siegel|symbol/i.test(fn)
+            && !/building|street|palace|view|front|facade|campus|flag|students|scene/i.test(fn)) return v;
+         return '';
+       }
+       var lg=usableLogo(x.logo_url); if(!lg) return;
+       var box=document.querySelector('.pv-portrait'); if(!box) return;
+       var first=(x.name_ko||'').trim(); first=first?first[0]:'?';
+       box.innerHTML=''; box.style.overflow='hidden'; box.style.background='#fff';
+       var im=document.createElement('img');
+       im.src=lg; im.alt=(x.name_ko||''); im.loading='lazy';
+       im.style.cssText='width:100%;height:100%;object-fit:contain;padding:10px;box-sizing:border-box';
+       im.onerror=function(){ box.style.background=''; box.innerHTML='<span>'+first+'</span>'; };
+       box.appendChild(im);
+     })();
      var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(x.name_en){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=x.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
      var tg=document.querySelector('.pv-tags');if(tg){var html=x.category?'<span class="tag">'+esc(x.category)+'</span>':'';if(x.is_oc)html+='<span class="oc-badge">OC</span>';tg.innerHTML=html;}
      var fc=document.querySelector('.pv-facts');if(fc)fc.innerHTML=fact('구분',esc(x.category||''))+fact('소재지',esc(x.location||''))+fact('설립',esc(x.founded||''))+fact('설립구분',esc(x.estab_type||''));

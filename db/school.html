@@ -642,6 +642,19 @@ if('serviceWorker' in navigator){
   var IC={home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>',wiki:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>',video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>'};
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function ini(n){n=(n||'').trim();return n?esc(n[0]):'?';}
+  /* 로고로 쓸 수 있는 이미지인지 판정
+     · /assets/logos/ 로 시작하면 우리가 직접 넣은 로고 → 신뢰
+     · 위키에서 온 값은 파일명에 logo·emblem·seal 이 있을 때만 인정
+       (건물 사진·깃발·학생 그림이 섞여 있어 그대로 쓰면 안 됩니다) */
+  function usableLogo(u){
+    var v = String(u || '').trim();
+    if (!v) return '';
+    if (v.indexOf('/assets/logos/') === 0) return v;
+    var fn = decodeURIComponent(v.split('/').pop() || '');
+    if (/logo|emblem|seal|crest|coat.?of.?arms|wappen|siegel|symbol/i.test(fn)
+        && !/building|street|palace|view|front|facade|campus|flag|students|scene/i.test(fn)) return v;
+    return '';
+  }
   function nd(v){return (v!=null&&String(v).trim())?esc(v):'<span class="nd">\u2014</span>';}
   function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
   function wikiThumb(u,w){
@@ -658,7 +671,10 @@ if('serviceWorker' in navigator){
   function renderRow(o,no,ctx){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
     var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
-    var av=o.logo_url?'<img src="'+esc(wikiThumb(o.logo_url,128))+'" data-full="'+esc(o.logo_url)+'" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko);
+    var _lg=usableLogo(o.logo_url);
+    var av=_lg
+      ? '<img src="'+esc(wikiThumb(_lg,128))+'" data-full="'+esc(_lg)+'" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}else{this.style.display=\'none\'}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain;background:#fff;border-radius:50%;display:block;padding:3px;box-sizing:border-box">'
+      : ini(o.name_ko);
     var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
