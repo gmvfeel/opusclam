@@ -73,6 +73,43 @@ window.OCBoard = (function () {
     return esc(t.length > n ? t.slice(0, n) + '\u2026' : t);
   }
 
+  /* 학교 이름을 로고 자리에 들어갈 약칭으로 줄입니다
+     '서울대학교 음악대학' → '서울대'   '덕원예술고등학교' → '덕원예고'
+     파비콘은 쓰지 않습니다 — 파비콘이 없는 학교는 검색엔진이 기본 지구 아이콘을 주고
+     그것이 정상 응답이라 우리 쪽에서 걸러낼 방법이 없습니다 */
+  function shortName(nm) {
+    var t = String(nm || '').trim();
+    if (!t) return '';
+    // 학과·단위 이름 제거
+    t = t.replace(/\s*(음악대학|음악학부|음악학과|음악과|음악원|음악테크놀로지대학|음악공연예술대학|공연예술대학|예술종합대학|예술체육대학|예술대학|예술학부|예술학과|작곡과|기악과|성악과|관현악과|피아노과|국악과|실용음악과|대학원)\s*$/g, '').trim();
+    t = t.replace(/\s+/g, '');
+    // 흔한 학교 종류를 약칭으로
+    t = t.replace(/예술종합학교$/, '예종')
+         .replace(/예술고등학교$/, '예고')
+         .replace(/예술대학교$/, '예대')
+         .replace(/여자대학교$/, '여대')
+         .replace(/여자고등학교$/, '여고')
+         .replace(/대학교$/, '대')
+         .replace(/고등학교$/, '고')
+         .replace(/중학교$/, '중');
+    if (t.length > 5) t = t.slice(0, 5);
+    return t;
+  }
+  /* 이름마다 다른 배경색을 만들어 리스트에서 서로 구분되게 합니다 */
+  function tintOf(nm) {
+    var h = 0, str = String(nm || '');
+    for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+    return 'hsl(' + h + ',34%,93%)';
+  }
+  function textLogo(nm) {
+    var sn = shortName(nm);
+    if (!sn) return '<span class="doc-logo-ph"></span>';
+    return '<span class="doc-logo-txt" style="display:flex;align-items:center;justify-content:center;'
+      + 'width:100%;height:100%;background:' + tintOf(nm) + ';font-weight:700;letter-spacing:-.02em;'
+      + 'font-size:' + (sn.length >= 5 ? '13px' : sn.length === 4 ? '15px' : '17px') + ';'
+      + 'line-height:1.2;text-align:center;word-break:keep-all;padding:4px">' + esc(sn) + '</span>';
+  }
+
   /* ============================ 목록 ============================ */
   function list(cfg) {
     var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '', yr = '', region = '';
@@ -213,42 +250,6 @@ window.OCBoard = (function () {
        cfg.logoFrom = { table:'schools', key:'school_id', col:'logo_url', homeCol:'link_home' }
        홈페이지가 있으면 파비콘을 쓰는데, 학교 파비콘은 대개 로고 그 자체입니다 */
     var extInfo = {};
-    /* 학교 이름을 로고 자리에 들어갈 약칭으로 줄입니다
-       '서울대학교 음악대학' → '서울대'   '덕원예술고등학교' → '덕원예고'
-       파비콘은 쓰지 않습니다 — 파비콘이 없는 학교는 검색엔진이 기본 지구 아이콘을 주고
-       그것이 정상 응답이라 우리 쪽에서 걸러낼 방법이 없습니다 */
-    function shortName(nm) {
-      var t = String(nm || '').trim();
-      if (!t) return '';
-      // 학과·단위 이름 제거
-      t = t.replace(/\s*(음악대학|음악학부|음악학과|음악과|음악원|음악테크놀로지대학|음악공연예술대학|공연예술대학|예술종합대학|예술체육대학|예술대학|예술학부|예술학과|작곡과|기악과|성악과|관현악과|피아노과|국악과|실용음악과|대학원)\s*$/g, '').trim();
-      t = t.replace(/\s+/g, '');
-      // 흔한 학교 종류를 약칭으로
-      t = t.replace(/예술종합학교$/, '예종')
-           .replace(/예술고등학교$/, '예고')
-           .replace(/예술대학교$/, '예대')
-           .replace(/여자대학교$/, '여대')
-           .replace(/여자고등학교$/, '여고')
-           .replace(/대학교$/, '대')
-           .replace(/고등학교$/, '고')
-           .replace(/중학교$/, '중');
-      if (t.length > 5) t = t.slice(0, 5);
-      return t;
-    }
-    /* 이름마다 다른 배경색을 만들어 리스트에서 서로 구분되게 합니다 */
-    function tintOf(nm) {
-      var h = 0, str = String(nm || '');
-      for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
-      return 'hsl(' + h + ',34%,93%)';
-    }
-    function textLogo(nm) {
-      var sn = shortName(nm);
-      if (!sn) return '<span class="doc-logo-ph"></span>';
-      return '<span class="doc-logo-txt" style="display:flex;align-items:center;justify-content:center;'
-        + 'width:100%;height:100%;background:' + tintOf(nm) + ';font-weight:700;letter-spacing:-.02em;'
-        + 'font-size:' + (sn.length >= 5 ? '13px' : sn.length === 4 ? '15px' : '17px') + ';'
-        + 'line-height:1.2;text-align:center;word-break:keep-all;padding:4px">' + esc(sn) + '</span>';
-    }
     function fetchExtLogos(rows) {
       var lf = cfg.logoFrom;
       if (!lf || !rows || !rows.length) return Promise.resolve();
