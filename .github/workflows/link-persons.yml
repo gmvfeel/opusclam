@@ -1,0 +1,21 @@
+name: Link persons (weekly)
+
+on:
+  schedule:
+    - cron: '0 20 * * 6'   # 일요일 05:00 KST (기존 수집 작업과 겹치지 않는 시간)
+  workflow_dispatch: {}
+
+jobs:
+  link:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run persons linker
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node scripts/link-persons.mjs
