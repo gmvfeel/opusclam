@@ -23,21 +23,22 @@
   /* 히어로 안 검색창 */
   .osr-searchbar{max-width:660px;margin:22px auto 0;position:relative}
   .osr-form{display:flex;align-items:center;gap:0;
-    background:rgba(255,255,255,.97);border-radius:16px;
-    box-shadow:0 18px 44px rgba(10,13,36,.28), 0 2px 0 rgba(255,255,255,.35) inset;
-    padding:6px 6px 6px 18px;transition:box-shadow .18s, transform .18s}
-  .osr-form:focus-within{box-shadow:0 22px 54px rgba(10,13,36,.34), 0 0 0 2px rgba(156,127,214,.55);transform:translateY(-1px)}
-  .osr-form .ic{flex:0 0 auto;width:19px;height:19px;color:#8a8c9e;margin-right:11px}
-  .osr-form input{flex:1;min-width:0;height:50px;border:0;background:transparent;outline:none;
-    font-size:16.5px;font-weight:500;color:#1b1c2b;letter-spacing:-.01em}
-  .osr-form input::placeholder{color:#a8aabb;font-weight:400}
-  .osr-form button{flex:0 0 auto;height:44px;padding:0 22px;border:0;border-radius:11px;cursor:pointer;
+    background:var(--paper,#fff);border:1.5px solid var(--line,#e4e4ec);border-radius:15px;
+    box-shadow:0 10px 30px rgba(24,24,50,.07);
+    padding:6px 6px 6px 17px;transition:border-color .16s, box-shadow .16s}
+  .osr-form:focus-within{border-color:#9C7FD6;box-shadow:0 14px 36px rgba(124,99,176,.16)}
+  .osr-form .ic{flex:0 0 auto;width:19px;height:19px;color:var(--text-3,#8a8c9e);margin-right:11px}
+  .osr-form input{flex:1;min-width:0;height:48px;border:0;background:transparent;outline:none;
+    font-size:16.5px;font-weight:500;color:var(--text-1,#1b1c2b);letter-spacing:-.01em}
+  .osr-form input::placeholder{color:var(--text-3,#a8aabb);font-weight:400;opacity:.85}
+  .osr-form button{flex:0 0 auto;height:42px;padding:0 22px;border:0;border-radius:11px;cursor:pointer;
     font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#fff;
     background:linear-gradient(120deg,#7C63B0,#9C7FD6 55%,#C9A94E);
-    box-shadow:0 6px 16px rgba(124,99,176,.38)}
+    box-shadow:0 5px 14px rgba(124,99,176,.30)}
   .osr-form button:hover{filter:brightness(1.06)}
-  .osr-hint{margin:13px 0 0;text-align:center;font-size:12.5px;color:rgba(255,255,255,.62);letter-spacing:-.01em}
-  .osr-hint b{color:rgba(255,255,255,.9);font-weight:600}
+  .osr-hint{margin:13px 0 0;text-align:center;font-size:12.5px;
+    color:var(--text-3,#8a8c9e);letter-spacing:-.01em}
+  .osr-hint b{color:var(--text-2,#5c5e70);font-weight:600}
 
   /* 결과 영역 */
   .osr-results{max-width:1000px;margin:0 auto;padding:34px 20px 90px}
@@ -128,7 +129,7 @@
 <section class="pdb pdb-board">
   <div class="pdb-bg" aria-hidden="true">
     <div class="wave">
-      <div class="scene scene-orbit on">
+      <div class="scene scene-net on">
         <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
           <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
           <g fill="url(#dg)"></g>
@@ -175,6 +176,39 @@
 
 <div id="oc-footer"></div>
 
+<script>
+/* 히어로 배경: 라인 네트워크 (DB 페이지와 같은 패턴) */
+(function(){
+  var g=document.querySelector('.pdb-bg .scene-net g');
+  if(!g)return;
+  g.innerHTML='';
+  var W=1280,H=460,NN=70,maxD=132,NS='http://www.w3.org/2000/svg';
+  function el(t){return document.createElementNS(NS,t);}
+  var nodes=[];
+  for(var i=0;i<NN;i++) nodes.push({x:Math.random()*W, y:Math.random()*H});
+  for(var a=0;a<nodes.length;a++){
+    for(var b=a+1;b<nodes.length;b++){
+      var dx=nodes[a].x-nodes[b].x, dy=nodes[a].y-nodes[b].y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<maxD){
+        var ln=el('line');
+        ln.setAttribute('x1',nodes[a].x.toFixed(1));ln.setAttribute('y1',nodes[a].y.toFixed(1));
+        ln.setAttribute('x2',nodes[b].x.toFixed(1));ln.setAttribute('y2',nodes[b].y.toFixed(1));
+        ln.style.animationDuration=(3.2+Math.random()*3.2).toFixed(2)+'s';
+        ln.style.animationDelay=(-Math.random()*4.5).toFixed(2)+'s';
+        g.appendChild(ln);
+      }
+    }
+  }
+  nodes.forEach(function(n){
+    var c=el('circle');
+    c.setAttribute('cx',n.x.toFixed(1));c.setAttribute('cy',n.y.toFixed(1));
+    c.setAttribute('r',(1.1+Math.random()*1.7).toFixed(1));
+    c.style.animationDuration=(3+Math.random()*3).toFixed(2)+'s';
+    c.style.animationDelay=(-Math.random()*4).toFixed(2)+'s';
+    g.appendChild(c);
+  });
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
 <script src="/assets/search.js"></script>
