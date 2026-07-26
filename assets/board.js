@@ -281,12 +281,17 @@ window.OCBoard = (function () {
       var lf = cfg.logoFrom;
       var ei = (lf && rec[lf.key]) ? (extInfo[rec[lf.key]] || null) : null;
       var nameForLogo = (ei && ei.name) || rec.school_name || rec.logo_text || '';
+      /* 학교DB 로고는 우리가 직접 올린 것만 씁니다.
+         위키데이터에서 온 값에는 건물 사진·깃발이 섞여 있어 신뢰할 수 없습니다. */
+      var trusted = (ei && ei.logo && /^\/assets\/logos\//.test(ei.logo)) ? ei.logo : '';
       var LG = 'class="is-logo" loading="lazy" style="object-fit:contain;padding:8px"';
       var logo = rec.thumb_url
         ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">'
         : (rec.logo_url
           ? '<img ' + LG + ' src="' + esc(rec.logo_url) + '" alt="">'
-          : textLogo(nameForLogo));
+          : (trusted
+            ? '<img ' + LG + ' src="' + esc(trusted) + '" alt="">'
+            : textLogo(nameForLogo)));
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);
@@ -424,6 +429,7 @@ window.OCBoard = (function () {
           .then(function (list) {
             var x = list && list[0]; if (!x) return rows;
             o._extName = lf.nameCol ? (x[lf.nameCol] || '') : '';
+            o._extLogo = x[lf.col] || '';
             return rows;
           })
           .catch(function () { return rows; });
@@ -458,6 +464,8 @@ window.OCBoard = (function () {
             + (o.logo_url
                 ? '<img class="bv-doclogo" src="' + esc(o.logo_url) + '" alt="">'
                 : (function(){
+                    if (o._extLogo && /^\/assets\/logos\//.test(o._extLogo))
+                      return '<img class="bv-doclogo" src="' + esc(o._extLogo) + '" alt="">';
                     var nm = o._extName || o.school_name || o.logo_text || '';
                     var sn = shortName(nm);
                     return sn ? '<span class="bv-doclogo bv-doclogo-txt" style="background:' + tintOf(nm)
