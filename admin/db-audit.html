@@ -143,6 +143,33 @@
     <div class="bar" id="barI"><i></i></div>
     <div class="log" id="logI"></div>
   </div>
+
+  <div class="card">
+    <h2><span class="n">6</span> 학교DB 분류 점검</h2>
+    <p>위키데이터의 <b>P31(무엇의 사례인가)</b>을 읽어 각 항목의 정체를 확인합니다. 이름으로 짐작하지 않고 <b>기록된 분류를 직접 봅니다.</b> 음악학교DB에 군사조직·경찰조직이 섞여 들어온 문제를 근본적으로 가려냅니다.</p>
+    <div class="row">
+      <button id="btnP31">분류 조회 시작</button>
+      <label style="font-size:13px;color:#5c5e70">대상 <select id="scopeP">
+        <option value="show">표시 중인 항목만</option>
+        <option value="all">숨긴 것까지 전체</option>
+      </select></label>
+    </div>
+    <div class="note">
+      조회만 합니다. 결과 목록이 나온 뒤 <b>체크박스로 골라 숨기기</b>를 누르면 그때 반영됩니다.
+      군사·경찰로 분류된 항목이라도 <b>군악학교처럼 실제 음악교육 기관</b>이 있을 수 있으니 목록을 보고 판단하세요.
+    </div>
+    <div class="bar" id="barP"><i></i></div>
+    <div class="log" id="logP"></div>
+    <div id="p31box" style="display:none;margin-top:14px">
+      <div class="row" style="margin-bottom:10px">
+        <button id="btnP31Hide" style="background:#b91c1c">선택한 항목 숨기기</button>
+        <button id="btnP31All" style="background:#6b7280">군사·경찰 전체 선택</button>
+        <button id="btnP31None" style="background:#6b7280">선택 해제</button>
+        <span id="p31count" style="font-size:13px;color:#5c5e70;align-self:center"></span>
+      </div>
+      <div id="p31list" style="max-height:520px;overflow:auto;border:1px solid #e4e4ec;border-radius:8px;padding:8px;background:#fff"></div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -759,6 +786,149 @@
     }catch(e){ L.log('✗ 중단: '+(e.message||e)); }
     $('btnImg').disabled=false;
   }
+
+  /* ---------- 6. 학교DB 분류 점검 (위키데이터 P31) ---------- */
+  /* P31 라벨을 읽어 정체를 판정합니다. 이름 추측이 아니라 기록된 분류를 봅니다. */
+  var P31_MIL = /military|paramilitar|armed (forces|group|organisation|organization)|militia|\barmy\b|\bnavy\b|air force|police|gendarmerie|law enforcement|intelligence agency|terrorist|insurgent|guerrilla|rebel|guard (unit|regiment)|regiment|battalion|brigade|division \(military\)|special forces|secret service|군사|경찰|무장|정보기관|준군사/i;
+  var P31_EDU = /school|university|college|conservator|academy|educational|higher education|institute of (music|art|technology|higher)|gymnasium|lyc[eé]e|institution of higher|music organization|학교|대학|교육기관|음악원/i;
+  var P31_ORG = /orchestra|band\b|ensemble|choir|association|society|foundation|company|museum|festival|concert hall|악단|협회|재단|합주단/i;
+
+  var p31rows = [];
+
+  async function runP31(){
+    var L=mkLog('logP','barP');
+    $('btnP31').disabled=true;
+    $('p31box').style.display='none';
+    p31rows=[];
+    try{
+      var scope=$('scopeP').value;
+      L.log('■ 학교 로드' + (scope==='show' ? ' (표시 중인 항목만)' : ' (전체)'));
+      var rows=await loadAll('schools','id,name_ko,name_en,category,hidden,wikidata_id,description',
+        function(q){
+          q = q.not('wikidata_id','is',null);
+          if (scope==='show') q = q.eq('hidden', false);
+          return q;
+        }, L);
+      L.log('  위키데이터 ID 보유 ' + rows.length + '건');
+      if(!rows.length){ L.log('대상이 없습니다.'); $('btnP31').disabled=false; return; }
+
+      var byQid={};
+      rows.forEach(function(r){ if(r.wikidata_id) byQid[r.wikidata_id]=r; });
+      var qids=Object.keys(byQid);
+
+      L.log('■ 위키데이터 P31(분류) 조회');
+      var cls={};
+      for(var i=0;i<qids.length;i+=CHUNK){
+        var vs=qids.slice(i,i+CHUNK).map(function(x){ return 'wd:'+x; }).join(' ');
+        var q='SELECT ?item (GROUP_CONCAT(DISTINCT ?cL; separator=" · ") AS ?cls) WHERE { '
+          +'VALUES ?item { '+vs+' } ?item wdt:P31 ?c . '
+          +'OPTIONAL { ?c rdfs:label ?cKo FILTER(LANG(?cKo)="ko") } '
+          +'OPTIONAL { ?c rdfs:label ?cEn FILTER(LANG(?cEn)="en") } '
+          +'BIND(COALESCE(?cKo,?cEn) AS ?cL) FILTER(BOUND(?cL)) } GROUP BY ?item';
+        var res=await sparql(q,L);
+        res.forEach(function(b){
+          var id=b.item.value.split('/').pop();
+          if(b.cls) cls[id]=b.cls.value;
+        });
+        L.prog(Math.round(Math.min(i+CHUNK,qids.length)/qids.length*90));
+        L.log('  조회 '+Math.min(i+CHUNK,qids.length)+'/'+qids.length+' · 분류 확보 '+Object.keys(cls).length);
+        await sleep(250);
+      }
+
+      /* 판정 */
+      var stat={mil:0, edu:0, org:0, none:0, unknown:0};
+      qids.forEach(function(qid){
+        var r=byQid[qid], c=cls[qid]||'';
+        var verdict;
+        if(!c) { verdict='분류없음'; stat.none++; }
+        else if(P31_EDU.test(c)) { verdict='교육기관'; stat.edu++; }
+        else if(P31_MIL.test(c)) { verdict='군사·경찰'; stat.mil++; }
+        else if(P31_ORG.test(c)) { verdict='단체·시설'; stat.org++; }
+        else { verdict='기타'; stat.unknown++; }
+        p31rows.push({ id:r.id, name:r.name_ko, en:r.name_en||'', cat:r.category||'',
+                       hidden:r.hidden, qid:qid, cls:c, verdict:verdict });
+      });
+
+      L.prog(100);
+      L.log('■ 판정 결과');
+      L.log('  · 교육기관    ' + stat.edu + '건  ← 정상');
+      L.log('  · 군사·경찰   ' + stat.mil + '건  ← 숨김 후보');
+      L.log('  · 단체·시설   ' + stat.org + '건  ← 악단·협회 등 (학교는 아님)');
+      L.log('  · 기타       ' + stat.unknown + '건  ← 목록 확인 필요');
+      L.log('  · 분류없음    ' + stat.none + '건  ← 위키데이터에 P31 이 없음');
+
+      renderP31();
+      $('p31box').style.display='block';
+      L.log('✅ 조회 완료 — 아래 목록에서 골라 숨기세요');
+    }catch(e){ L.log('✗ 중단: '+(e.message||e)); }
+    $('btnP31').disabled=false;
+  }
+
+  function renderP31(){
+    var order={'군사·경찰':1,'기타':2,'단체·시설':3,'분류없음':4,'교육기관':5};
+    var sorted=p31rows.slice().sort(function(a,b){
+      var d=(order[a.verdict]||9)-(order[b.verdict]||9);
+      return d!==0?d:(a.name||'').localeCompare(b.name||'');
+    });
+    var color={'군사·경찰':'#b91c1c','기타':'#b45309','단체·시설':'#6d28d9','분류없음':'#6b7280','교육기관':'#15803d'};
+    var html=sorted.map(function(r){
+      return '<label style="display:flex;gap:8px;align-items:flex-start;padding:5px 4px;border-bottom:1px solid #f1f1f5;font-size:12.5px">'
+        + '<input type="checkbox" class="p31chk" data-id="'+r.id+'" data-v="'+r.verdict+'"'
+          + (r.hidden ? ' disabled' : '') + ' style="margin-top:3px">'
+        + '<span style="flex:1">'
+          + '<b style="color:'+(color[r.verdict]||'#333')+'">['+r.verdict+']</b> '
+          + esc(r.name) + (r.en && r.en!==r.name ? ' <span style="color:#8c8fa3">/ '+esc(r.en)+'</span>' : '')
+          + (r.hidden ? ' <span style="color:#9ca3af">(이미 숨김)</span>' : '')
+          + '<br><span style="color:#6b7280">구분 '+esc(r.cat||'-')+' · P31: '+esc(r.cls||'(없음)').slice(0,90)+'</span>'
+        + '</span></label>';
+    }).join('');
+    $('p31list').innerHTML=html;
+    updP31Count();
+    document.querySelectorAll('.p31chk').forEach(function(c){
+      c.addEventListener('change', updP31Count);
+    });
+  }
+  function updP31Count(){
+    var n=document.querySelectorAll('.p31chk:checked').length;
+    $('p31count').textContent = '선택 '+n+'건';
+  }
+
+  async function hideP31(){
+    var ids=[].slice.call(document.querySelectorAll('.p31chk:checked')).map(function(c){
+      return parseInt(c.getAttribute('data-id'),10);
+    });
+    if(!ids.length){ alert('선택된 항목이 없습니다.'); return; }
+    if(!confirm(ids.length+'건을 숨기시겠습니까?\n\n삭제가 아니라 숨김이므로 되돌릴 수 있습니다.')) return;
+    var L=mkLog('logP','barP');
+    $('btnP31Hide').disabled=true;
+    var ok=0;
+    for(var i=0;i<ids.length;i+=100){
+      var part=ids.slice(i,i+100);
+      var r=await sb.from('schools').update({ hidden:true, hidden_note:'학교 아님(분류 점검)' })
+                    .in('id', part);
+      if(!r.error) ok+=part.length;
+      else L.log('  저장 오류: '+r.error.message);
+      L.prog(Math.round((i+part.length)/ids.length*100));
+    }
+    L.log('✅ '+ok+'건 숨김 완료 — 화면을 새로고침하면 반영됩니다');
+    $('btnP31Hide').disabled=false;
+    // 목록에서 비활성화
+    document.querySelectorAll('.p31chk:checked').forEach(function(c){ c.checked=false; c.disabled=true; });
+    updP31Count();
+  }
+
+  $('btnP31').addEventListener('click',runP31);
+  $('btnP31Hide').addEventListener('click',hideP31);
+  $('btnP31All').addEventListener('click',function(){
+    document.querySelectorAll('.p31chk').forEach(function(c){
+      if(!c.disabled) c.checked = (c.getAttribute('data-v')==='군사·경찰');
+    });
+    updP31Count();
+  });
+  $('btnP31None').addEventListener('click',function(){
+    document.querySelectorAll('.p31chk').forEach(function(c){ c.checked=false; });
+    updP31Count();
+  });
 
   $('btnImg').addEventListener('click',fillImg);
   $('btnEn').addEventListener('click',fillEn);
