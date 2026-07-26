@@ -257,7 +257,8 @@ window.OCBoard = (function () {
       rows.forEach(function (r) {
         var k = r[lf.key];
         if (!k) return;
-        if (r.thumb_url || r.logo_url) return;      // 글에 이미 이미지가 있으면 조회 불필요
+        if (r.logo_url) return;                    // 글에 로고가 이미 있으면 조회 불필요
+                                                   // (사진만 있는 경우에는 로고를 우선하므로 조회합니다)
         if (extInfo[k] !== undefined) return;
         if (ids.indexOf(k) < 0) ids.push(k);
       });
@@ -285,13 +286,15 @@ window.OCBoard = (function () {
       /* 학교DB 로고는 우리가 직접 올린 것만 씁니다.
          위키데이터에서 온 값에는 건물 사진·깃발이 섞여 있어 신뢰할 수 없습니다. */
       var trusted = (ei && ei.logo && /^\/assets\/logos\//.test(ei.logo)) ? ei.logo : '';
+      /* 표시 순서 — 로고를 사진보다 앞에 둡니다
+         1) 글의 로고  2) 학교DB 로고  3) 글의 사진  4) 약칭 */
       var LG = 'class="is-logo" loading="lazy" style="object-fit:contain;padding:8px"';
-      var logo = rec.thumb_url
-        ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">'
-        : (rec.logo_url
-          ? '<img ' + LG + ' src="' + esc(rec.logo_url) + '" alt="">'
-          : (trusted
-            ? '<img ' + LG + ' src="' + esc(trusted) + '" alt="">'
+      var logo = rec.logo_url
+        ? '<img ' + LG + ' src="' + esc(rec.logo_url) + '" alt="">'
+        : (trusted
+          ? '<img ' + LG + ' src="' + esc(trusted) + '" alt="">'
+          : (rec.thumb_url
+            ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">'
             : textLogo(nameForLogo)));
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
