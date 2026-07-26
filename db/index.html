@@ -38,16 +38,18 @@
     line-height:1;color:var(--text-1,#1b1c2b);font-variant-numeric:tabular-nums}
   .hb-totalunit{font-size:15px;font-weight:700;color:var(--text-3,#8a8c9e);margin-left:3px}
 
-  /* 영역 카드 */
+  /* 영역 카드 — 클래스 이름은 hub.js 가 만드는 것과 같아야 한다 */
   .hb-cards{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:16px}
-  .hb-navcard{display:flex;flex-direction:column;gap:5px;padding:15px 14px 13px;
+  .hub-navcard{display:flex;flex-direction:column;gap:6px;padding:15px 14px 14px;
     border:1px solid var(--line,#e4e4ec);border-radius:13px;background:var(--paper,#fff);
     text-decoration:none;transition:border-color .15s, transform .15s, box-shadow .15s}
-  .hb-navcard:hover{border-color:#c9bbe6;transform:translateY(-2px);box-shadow:0 10px 24px rgba(124,99,176,.12)}
-  .hb-navlabel{font-size:13px;font-weight:700;letter-spacing:-.02em;color:var(--text-1,#1b1c2b)}
-  .hb-navcount{font-size:21px;font-weight:900;letter-spacing:-.03em;color:#7C63B0;
-    font-variant-numeric:tabular-nums;line-height:1.1}
-  .hb-navgo{font-size:9.5px;font-weight:700;letter-spacing:.1em;color:var(--text-3,#a8aabb)}
+  .hub-navcard:hover{border-color:#c9bbe6;transform:translateY(-2px);box-shadow:0 10px 24px rgba(124,99,176,.12)}
+  .hub-navlabel{display:block;font-size:12.5px;font-weight:700;letter-spacing:-.02em;
+    color:var(--text-2,#5c5e70);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hub-navcount{display:flex;align-items:baseline;gap:2px}
+  .hub-navcount b{font-size:22px;font-weight:900;letter-spacing:-.035em;color:#7C63B0;
+    font-variant-numeric:tabular-nums;line-height:1.05}
+  .hub-navcount i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3,#a8aabb)}
 
   /* 섹션 제목 */
   .hb-sec{margin-top:52px}
@@ -67,7 +69,7 @@
   .hb-vbtn.on{background:#1b1c2b;border-color:#1b1c2b;color:#fff}
 
   /* 리스트 행 */
-  .hub-row{display:flex;align-items:center;gap:13px;padding:12px 8px;
+  .hub-row{display:flex;align-items:center;gap:13px;padding:12px 8px;min-width:0;
     border-bottom:1px solid var(--line-2,#f1f1f5);text-decoration:none;color:inherit;
     border-radius:10px;transition:background .13s}
   .hub-row:hover{background:var(--paper-2,#f7f7fb)}
@@ -113,8 +115,16 @@
     font-size:11.5px;color:var(--text-3,#a8aabb);font-variant-numeric:tabular-nums}
   .hub-cardfoot b{margin-left:auto;font-size:11px;font-weight:800;letter-spacing:.04em;color:#7C63B0}
 
-  /* 리스트 → 그리드 전환 */
-  .hub-list.as-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 22px}
+  /* 리스트 → 두 줄 보기 전환
+     행이 가로로 긴 구조이므로 좁아지면 날짜·VIEW 를 숨기고 줄바꿈을 허용한다 */
+  .hub-list.as-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 24px}
+  .hub-list.as-grid .hub-row{min-width:0}
+  .hub-list.as-grid .hub-date,
+  .hub-list.as-grid .hub-view{display:none}
+  .hub-list.as-grid .hub-badge{min-width:0;padding:3px 7px;font-size:10px}
+  .hub-list.as-grid .hub-th{width:40px;height:40px}
+  .hub-list.as-grid .hub-name,
+  .hub-list.as-grid .hub-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   .hub-empty,.hub-note{grid-column:1/-1;margin:18px 0 0;text-align:center;
     font-size:12.5px;color:var(--text-3,#a8aabb)}

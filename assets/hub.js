@@ -148,8 +148,7 @@ window.OCHub = (function () {
     box.innerHTML = sources.map(function (s) {
       return '<a class="hub-navcard" href="' + esc(s.list) + '">'
         + '<span class="hub-navlabel">' + esc(s.label) + '</span>'
-        + '<span class="hub-navcount" data-k="' + esc(s.key) + '">—</span>'
-        + '<span class="hub-navgo">' + esc(s.list.indexOf('/db/') === 0 ? 'DATABASE' : 'COMMUNITY') + '</span>'
+        + '<span class="hub-navcount"><b data-k="' + esc(s.key) + '">—</b><i>건</i></span>'
         + '</a>';
     }).join('');
   }
