@@ -1427,9 +1427,23 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
          }).catch(function(){return null;}); }
        function paras(t){ var LIM=5000, out=[], n=0; var arr=t.split(/\n+/).map(function(s){return s.trim();}).filter(Boolean); for(var i=0;i<arr.length;i++){ if(n>0 && n+arr[i].length>LIM) break; out.push('<p>'+esc(arr[i])+'</p>'); n+=arr[i].length; } return out.join(''); }
        function apply(w){ if(!w||!w.extract) return false;
+         var isEn=(w.lang==='en');
          var bio=document.querySelector('.pv-prose');
-         if(bio) bio.innerHTML=paras(w.extract)+'<p style="margin-top:12px;font-size:.8em;color:var(--text-3)">출처: <a href="'+esc(w.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">위키백과</a> · CC BY-SA</p>';
-         var lead=document.querySelector('.pv-lead'); if(lead){ var f=(w.extract.split(/\n+/)[0]||w.extract); lead.textContent=(f.length>120?f.slice(0,120)+'\u2026':f); }
+         var src='<p style="margin-top:12px;font-size:.8em;color:var(--text-3)">출처: <a href="'+esc(w.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">위키백과</a> · CC BY-SA</p>';
+         if(bio){
+           if(isEn){
+             /* 한국어 문서가 없어 영문을 보여주는 경우 — 밝히고 기여를 요청합니다 */
+             bio.innerHTML='<p class="pv-entag">영문 원문 · 한국어 번역 전</p>'
+               +'<div class="pv-en">'+paras(w.extract)+'</div>'
+               +'<p class="pv-invite">한국어 소개가 아직 없습니다. 아래 <b>DB보강하기</b>로 기여해 주세요.</p>'
+               +src;
+           } else {
+             bio.innerHTML=paras(w.extract)+src;
+           }
+         }
+         /* 리드문(상단 큰 글씨)은 영문으로 바꾸지 않고 한국어 요약을 유지합니다 */
+         var lead=document.querySelector('.pv-lead');
+         if(lead && !isEn){ var f=(w.extract.split(/\n+/)[0]||w.extract); lead.textContent=(f.length>120?f.slice(0,120)+'\u2026':f); }
          if(w.thumb){ var por=document.querySelector('.pv-portrait'); if(por){ por.innerHTML=''; por.style.overflow='hidden'; var im=document.createElement('img'); im.src=w.thumb; im.alt=nm; im.style.cssText='width:100%;height:100%;object-fit:cover'; por.appendChild(im);} }
          return true; }
        function gallery(lang,title){ if(!title)return;

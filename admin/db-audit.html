@@ -122,6 +122,24 @@
     <div class="bar" id="barE"><i></i></div>
     <div class="log" id="logE"></div>
   </div>
+
+  <div class="card">
+    <h2><span class="n">5</span> 썸네일 확보</h2>
+    <p>사진이 없는 인물의 <b>위키백과 대표 이미지</b>를 <code>image_url</code> 에 채웁니다. 리스트에서 사진 칸이 비어 보이는 문제를 해결합니다. 한국어 문서를 먼저 찾고, 없으면 영문 문서에서 가져옵니다.</p>
+    <div class="row">
+      <button id="btnImg">썸네일 확보 시작</button>
+      <label style="font-size:13px;color:#5c5e70"><input type="checkbox" id="dryI" checked> <b>미리보기만</b></label>
+      <label style="font-size:13px;color:#5c5e70">국적 <select id="natI">
+        <option value="">전체</option>
+        <option value="KOR">국내 인물만</option>
+      </select></label>
+    </div>
+    <div class="note">
+      이미지는 위키미디어 공용(Commons)에 링크하는 방식이라 저장 공간을 쓰지 않고, 뷰 페이지에 이미 표시되는 <b>출처 표기</b>가 그대로 적용됩니다. 국내 인물은 사진이 없어 리스트 상위에 오르지 못하고 있으니, <b>국내 인물만</b>으로 먼저 돌려보시는 것을 권합니다.
+    </div>
+    <div class="bar" id="barI"><i></i></div>
+    <div class="log" id="logI"></div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -571,6 +589,108 @@
     $('btnEn').disabled=false;
   }
 
+  /* ---------- 5. 썸네일 확보 ---------- */
+  async function fillImg(){
+    var L=mkLog('logI','barI');
+    $('btnImg').disabled=true;
+    try{
+      var dry=$('dryI').checked, nat=$('natI').value;
+      L.log('■ 인물 로드' + (nat ? ' (국내 인물만)' : ''));
+      var rows=await loadAll('persons','id,name_ko,name_en,image_url,wikidata_id,nat_code',
+        function(q){
+          q = q.eq('hidden',false).not('wikidata_id','is',null);
+          if(nat) q = q.eq('nat_code',nat);
+          return q;
+        }, L);
+      var targets=rows.filter(function(p){ return !(p.image_url && p.image_url.trim()); });
+      L.log('  전체 '+rows.length+'명 중 사진 없는 인물 '+targets.length+'명');
+      if(!targets.length){ L.log('채울 인물이 없습니다.'); $('btnImg').disabled=false; return; }
+
+      L.log('■ 위키백과 문서 확인 (한국어 · 영문)');
+      var byQid={}, koT={}, enT={};
+      targets.forEach(function(p){ if(p.wikidata_id) byQid[p.wikidata_id]=p; });
+      var qids=Object.keys(byQid);
+      for(var i=0;i<qids.length;i+=CHUNK){
+        var vs=qids.slice(i,i+CHUNK).map(function(x){ return 'wd:'+x; }).join(' ');
+        var q='SELECT ?item ?ko ?en WHERE { VALUES ?item { '+vs+' } '
+          +'OPTIONAL { ?a schema:about ?item ; schema:isPartOf <https://ko.wikipedia.org/> ; schema:name ?ko } '
+          +'OPTIONAL { ?b schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> ; schema:name ?en } }';
+        var res=await sparql(q,L);
+        res.forEach(function(b){
+          var id=b.item.value.split('/').pop();
+          if(b.ko) koT[id]=b.ko.value;
+          else if(b.en) enT[id]=b.en.value;
+        });
+        L.prog(Math.round(Math.min(i+CHUNK,qids.length)/qids.length*35));
+        L.log('  확인 '+Math.min(i+CHUNK,qids.length)+'/'+qids.length
+              +' · 한국어 '+Object.keys(koT).length+' · 영문 '+Object.keys(enT).length);
+        await sleep(250);
+      }
+
+      // 위키별로 대표 이미지 조회
+      var patch=[], step=0, totalSteps=Object.keys(koT).length+Object.keys(enT).length;
+      async function grab(host, map){
+        var byTitle={};
+        Object.keys(map).forEach(function(qid){ byTitle[map[qid]]=byQid[qid]; });
+        var names=Object.keys(byTitle);
+        for(var t=0;t<names.length;t+=20){
+          var j=await mw(host, { action:'query', prop:'pageimages',
+                                 piprop:'original|thumbnail', pithumbsize:520, pilimit:50,
+                                 redirects:1, titles:names.slice(t,t+20).join('|') }, L);
+          var pages=(j&&j.query&&j.query.pages)||{};
+          Object.keys(pages).forEach(function(pid){
+            var pg=pages[pid];
+            if(!pg.title) return;
+            var p=byTitle[pg.title];
+            if(!p) return;
+            var url=(pg.original&&pg.original.source) || (pg.thumbnail&&pg.thumbnail.source) || '';
+            if(!url) return;
+            patch.push({ id:p.id, name_ko:p.name_ko, image_url:url });
+          });
+          step+=Math.min(20,names.length-t);
+          L.prog(35+Math.round(step/Math.max(1,totalSteps)*45));
+          if(t%200===0) L.log('  '+host+' '+Math.min(t+20,names.length)+'/'+names.length+' · 확보 '+patch.length);
+          await sleep(150);
+        }
+      }
+      L.log('■ 대표 이미지 조회 — 한국어 위키');
+      await grab('ko.wikipedia.org', koT);
+      L.log('■ 대표 이미지 조회 — 영문 위키');
+      await grab('en.wikipedia.org', enT);
+      L.log('  ▶ 확보한 사진 '+patch.length+'건 / 대상 '+targets.length+'명');
+
+      L.log('■ 미리보기 (앞 15건)');
+      patch.slice(0,15).forEach(function(x){
+        L.log('  · '+x.name_ko+' : '+x.image_url.split('/').pop().slice(0,60));
+      });
+
+      if(dry){
+        L.prog(100);
+        L.log('✅ 미리보기 완료 — 저장하려면 "미리보기만" 체크를 해제하고 다시 실행하세요.');
+        $('btnImg').disabled=false; return;
+      }
+
+      L.log('■ 저장');
+      var ok=0, fell=false;
+      for(var k=0;k<patch.length;k+=UP){
+        var part=patch.slice(k,k+UP);
+        var r=await sb.from('persons').upsert(part,{onConflict:'id'});
+        if(r.error){
+          if(!fell){ L.log('  일괄 저장 실패 → 한 명씩 저장으로 전환 ('+r.error.message+')'); fell=true; }
+          for(var m=0;m<part.length;m++){
+            var r2=await sb.from('persons').update({ image_url:part[m].image_url }).eq('id',part[m].id);
+            if(!r2.error) ok++;
+          }
+        } else ok+=part.length;
+        L.prog(80+Math.round((k+part.length)/patch.length*20));
+      }
+      L.prog(100);
+      L.log('✅ 완료 — '+ok+'건 저장. 충실도 점수(quality)를 다시 계산하려면 db-09 SQL 을 실행하세요.');
+    }catch(e){ L.log('✗ 중단: '+(e.message||e)); }
+    $('btnImg').disabled=false;
+  }
+
+  $('btnImg').addEventListener('click',fillImg);
   $('btnEn').addEventListener('click',fillEn);
   $('btnDesc').addEventListener('click',fillDesc);
   $('btnMeta').addEventListener('click',runMeta);
