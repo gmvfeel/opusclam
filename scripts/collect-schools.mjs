@@ -11,6 +11,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) { console.error('환경변수 필요: SUPABASE_URL / SUPABASE_SERVICE_KEY'); process.exit(1); }
 
+const VERSION = 'v2';   // 로그 첫 줄에 찍힙니다
 const UA = 'OpusclamBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
 const KR_QID = 'Q884';
 const CLASSES = [
@@ -24,6 +25,10 @@ SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inc
   ?item wdt:P31/wdt:P279* wd:${anchor} .
   OPTIONAL { ?item rdfs:label ?nameKo. FILTER(LANG(?nameKo)="ko") }
   OPTIONAL { ?item rdfs:label ?nameEn. FILTER(LANG(?nameEn)="en") }
+  # 위키데이터의 하위 클래스 연결이 오염되어 군사·정치 조직이 대량으로 딸려 들어옵니다.
+  # 이름 단계에서 먼저 걸러 조회량을 줄입니다. (최종 판정은 스크립트에서 한 번 더 합니다)
+  FILTER( !BOUND(?nameEn) || !REGEX(?nameEn,
+    "brigade|militia|militie|battalion|regiment|legion|guerrilla|paramilitar|freikorps|schutzstaffel|commando|kommando|insurgent|mujahid|fedayeen|jihad|national guard|state guard|state militia|home guard|civil guard|defence force|defense force|liberation (front|army)|armed (forces|group|police)|death squad|\\brifles\\b|artillery|cavalry|infantry", "i") )
   OPTIONAL { ?item wdt:P571 ?inception. }
   OPTIONAL { ?item wdt:P17 ?country.
     OPTIONAL { ?country rdfs:label ?countryKo. FILTER(LANG(?countryKo)="ko") }
@@ -38,6 +43,27 @@ SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inc
   OPTIONAL { ?enArticle schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
 }
 LIMIT 4000`;
+}
+
+/* ── 음악교육 기관인지 최종 판정 ──
+   위키데이터 클래스 계층이 오염되어 군사·정치 조직이 섞여 들어옵니다.
+   이름으로 한 번 더 걸러냅니다. (SQL 정리에서 실제 항목 40건으로 검증한 규칙) */
+const SOLO_EDU = /[ck]on[sz]ervat|conservatoire|conservatori|odeio|odeon|ωδεί|accademia|musikschule|musikhochschule|musikgymnasium|music school|school\s+(of|for)\s+music|singschule|singakadem|muziekschool|zeneiskola|zeneművészeti|kunstschule|kunstakadem|művészetoktatási|음악학교|음악원|음악대학|음악학부|예술고등학교|예술학교|예술중학교|예술대학/i;
+const MUS_WORD = /music|m[uú]sic|musi[qk]|musica|музык|음악|音楽|tonkunst|philharmon|filarm[oó]n|sangeet|choir|choral|carillon|opera|ballet|muziek|muzy|\bzene|\barts?\b|kunst|művészet|beaux-arts|gesang|canto|\bsing\b|dans|dance/i;
+const EDU_WORD = /ad[eé]m|school|schule|skola|skolan|skole|h[oö]gskol|institut|escola|escuela|scuola|[eé]cole|liceo|lyc[eé]e|gymnasium|college|universit|faculdade|facultad|faculty|учили|консерватор|школ|학교|대학|학부|학원|trust|settlement|centre|center|centro|iskola|intézmény/i;
+const ARMED_WORD = /\bbrigade|brigades|\bfront\b|\blegion\b|battalion|militia|militie|\barmy\b|armed (group|forces|police)|police (force|academy)|special police|liberation (front|army|movement)|resistance (movement|organisation|organization)|jihad|mujahid|fedayeen|guerrilla|paramilitar|weerstandsbeweging|commando|kommando|\bregiment\b|\brifles?\b|insurgent|defen[cs]e force|defen[cs]e corps|national guard|state guard|state navy|home guard|civil guard|protective forces|security (forces|services)|freikorps|schutzstaffel|\bss\b|gestapo|troikas|detachment|artillery|infantry|cavalry|death squad|self-defen[cs]e|volunteer (force|corps|defense)|dosaaf|counterterror|counter-terror|cadet corps|대테러|여단|무장|민병|해방전선|반군|친위대|자유군단|의용군|국가방위대/i;
+const KEEP_NAMES = new Set(['Fontainebleau Schools']);
+
+function isMusicSchool(row) {
+  const blob = [row.name_ko, row.name_en, row.description].filter(Boolean).join(' ');
+  if (KEEP_NAMES.has(row.name_ko)) return true;
+  if (SOLO_EDU.test(blob)) return true;
+  if (MUS_WORD.test(blob) && EDU_WORD.test(blob)) return true;
+  return false;
+}
+function looksArmed(row) {
+  const blob = [row.name_ko, row.name_en, row.description].filter(Boolean).join(' ');
+  return ARMED_WORD.test(blob);
 }
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -117,7 +143,9 @@ function toRow(b, cat) {
     name_ko, name_en: nameEn || '',
     category: cat, location, founded,
     alumni: '',
-    logo_url: val(b, 'image') || val(b, 'logo') || '',
+    // P154(로고)만 씁니다. P18(이미지)에는 건물 사진·깃발이 섞여 있어
+    // 로고 자리에 들어가면 안 됩니다.
+    logo_url: val(b, 'logo') || '',
     link_home: val(b, 'website') || '',
     link_wiki: val(b, 'koArticle') || val(b, 'enArticle') || '',
     link_video: 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name_ko),
@@ -144,7 +172,14 @@ function substanceCount(r) {
   return c;
 }
 const bioOK = (r) => (r.description || '').trim().length >= 150;
-function keep(r) { return bioOK(r) || substanceCount(r) >= 2; }
+function keep(r) {
+  // ① 군사·정치 조직은 무조건 제외 (음악교육 신호가 있으면 예외)
+  if (looksArmed(r) && !isMusicSchool(r)) return false;
+  // ② 음악교육 기관으로 확인되지 않으면 제외
+  if (!isMusicSchool(r)) return false;
+  // ③ 그다음 충실도 컷오프
+  return bioOK(r) || substanceCount(r) >= 2;
+}
 function richness(r) {
   let sc = 0;
   if ((r.description || '').trim().length >= 150) sc += 2;
@@ -184,7 +219,7 @@ async function rerank() {
 }
 
 async function main() {
-  console.log('■ 음악학교 수집 시작(v1·충실도 우선)', new Date().toISOString());
+  console.log('■ 음악학교 수집 시작 [' + VERSION + ']', new Date().toISOString());
   const collected = new Map();
   for (const c of CLASSES) {
     console.log('  · 위키데이터 조회:', c.cat);
@@ -213,8 +248,16 @@ async function main() {
   }
   console.log('    → 소개 보강', bc, '곳 · 대표이미지 보강', ic, '곳');
 
-  const kept = [...collected.values()].filter(keep);
-  console.log('■ 충실도 통과:', kept.length, '곳 (제외', collected.size - kept.length, ')');
+  const all = [...collected.values()];
+  const armed = all.filter(r => looksArmed(r) && !isMusicSchool(r));
+  const notSchool = all.filter(r => !looksArmed(r) && !isMusicSchool(r));
+  const kept = all.filter(keep);
+  console.log('■ 걸러낸 내역');
+  console.log('  · 군사·정치 조직:', armed.length, '건');
+  if (armed.length) console.log('    예:', armed.slice(0, 5).map(r => r.name_ko).join(' / '));
+  console.log('  · 음악교육 기관으로 확인 안 됨:', notSchool.length, '건');
+  if (notSchool.length) console.log('    예:', notSchool.slice(0, 5).map(r => r.name_ko).join(' / '));
+  console.log('■ 최종 통과:', kept.length, '곳 (전체', all.length, ')');
 
   const existing = await sbGetAll('schools', 'id,wikidata_id,name_ko,name_en,category,location,founded,alumni,logo_url,link_home,link_wiki,description,sort_no');
   const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
