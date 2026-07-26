@@ -45,19 +45,21 @@
   .hub-navcard{display:flex;flex-direction:column;gap:6px;padding:15px 14px 14px;
     border:1px solid var(--line,#e4e4ec);border-radius:13px;background:var(--paper,#fff);
     text-decoration:none;transition:border-color .15s, transform .15s, box-shadow .15s}
-  .hub-navcard:hover{border-color:#c9bbe6;transform:translateY(-2px);box-shadow:0 10px 24px rgba(124,99,176,.12)}
+  .hub-navcard:hover{border-color:var(--c,#c9bbe6);transform:translateY(-2px);
+    box-shadow:0 10px 24px rgba(24,24,50,.10)}
   .hub-navlabel{display:block;font-size:12.5px;font-weight:700;letter-spacing:-.02em;
     color:var(--text-2,#5c5e70);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .hub-navcount{display:flex;align-items:baseline;gap:2px}
-  .hub-navcount b{font-size:22px;font-weight:900;letter-spacing:-.035em;color:#7C63B0;
-    font-variant-numeric:tabular-nums;line-height:1.05}
+  .hub-navcount b{font-size:22px;font-weight:900;letter-spacing:-.035em;
+    color:var(--c,#7C63B0);font-variant-numeric:tabular-nums;line-height:1.05}
   .hub-navcount i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3,#a8aabb)}
 
   /* 성장 추이 */
   .hb-stat{display:grid;grid-template-columns:1fr 210px;gap:20px;align-items:stretch;margin-top:2px}
   .hb-curve{border:1px solid var(--line);border-radius:14px;background:var(--paper);
-    padding:14px 16px 6px;color:var(--text);overflow:hidden}
-  .hb-curve .cv{width:100%;height:190px;display:block}
+    padding:10px 14px 4px;color:var(--text);overflow:hidden;
+    display:flex;align-items:center;min-height:262px}
+  .hb-curve .cv{width:100%;height:auto;display:block}
   .hb-figs{display:flex;flex-direction:column;gap:10px}
   .hb-fig{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;
     padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:var(--paper)}
@@ -66,7 +68,8 @@
   .hb-fignum b{font-size:25px;font-weight:900;letter-spacing:-.035em;line-height:1;
     color:var(--text);font-variant-numeric:tabular-nums}
   .hb-fignum i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3)}
-  .hb-fig.up .hb-fignum b{color:var(--violet-2)}
+  .hb-fig.up .hb-fignum b{color:#1B9E92}
+  .hb-fig.gold .hb-fignum b{color:#A8862F}
 
   /* 구성 비율 */
   .hb-compose{margin-top:20px;padding:17px 18px 15px;border:1px solid var(--line);
@@ -284,7 +287,7 @@
             <span class="hb-figcap">오늘 신규</span>
             <span class="hb-fignum"><b id="figToday">—</b><i>건</i></span>
           </div>
-          <div class="hb-fig">
+          <div class="hb-fig gold">
             <span class="hb-figcap">이번 주 보강</span>
             <span class="hb-fignum"><b id="figUpd">—</b><i>건</i></span>
           </div>

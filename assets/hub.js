@@ -148,7 +148,9 @@ window.OCHub = (function () {
   /* ── 영역 카드 (7개 DB 등) ── */
   function drawCards(box, sources) {
     box.innerHTML = sources.map(function (s) {
-      return '<a class="hub-navcard" href="' + esc(s.list) + '">'
+      /* 카드마다 그 영역의 색을 쓴다 (구성 스택바·배지와 같은 색) */
+      var col = DB_COLOR[s.key] || '#7C63B0';
+      return '<a class="hub-navcard" href="' + esc(s.list) + '" style="--c:' + col + '">'
         + '<span class="hub-navlabel">' + esc(s.label) + '</span>'
         + '<span class="hub-navcount"><b data-k="' + esc(s.key) + '">—</b><i>건</i></span>'
         + '</a>';
@@ -473,9 +475,12 @@ window.OCHub = (function () {
                    modern:'#EC4899', foundations:'#64748B', academic:'#DC2626' };
 
   /* 누적 성장 곡선 (면적 + 선 + 마지막 점) */
-  function curveSvg(series) {
+  function curveSvg(series, W, H) {
     if (!series || series.length < 2) return '';
-    var W = 720, H = 190, PL = 8, PR = 8, PT = 14, PB = 26;
+    /* 컨테이너 실제 폭에 맞춰 1:1 로 그린다.
+       preserveAspectRatio="none" 로 늘리면 가로만 퍼져 그래프가 눌려 보인다. */
+    W = W || 760; H = H || 240;
+    var PL = 10, PR = 10, PT = 18, PB = 28;
     var iw = W - PL - PR, ih = H - PT - PB;
     var max = 0;
     series.forEach(function (p) { if (p.c > max) max = p.c; });
@@ -492,7 +497,7 @@ window.OCHub = (function () {
       var gy = y(max * r);
       grid += '<line x1="' + PL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - PR) + '" y2="' + gy.toFixed(1) + '"'
         + ' stroke="currentColor" stroke-opacity=".12" stroke-dasharray="3 4"/>'
-        + '<text x="' + (PL + 2) + '" y="' + (gy - 5).toFixed(1) + '" font-size="9.5" fill="currentColor"'
+        + '<text x="' + (PL + 2) + '" y="' + (gy - 6).toFixed(1) + '" font-size="10.5" fill="currentColor"'
         + ' fill-opacity=".42">' + Math.round(max * r).toLocaleString() + '</text>';
     });
 
@@ -500,24 +505,32 @@ window.OCHub = (function () {
     var ticks = '';
     [0, Math.floor((series.length - 1) / 2), series.length - 1].forEach(function (i, k) {
       var anchorAttr = k === 0 ? 'start' : (k === 2 ? 'end' : 'middle');
-      ticks += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 8) + '" font-size="9.5"'
+      ticks += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 9) + '" font-size="10.5"'
         + ' text-anchor="' + anchorAttr + '" fill="currentColor" fill-opacity=".45">'
         + esc(series[i].d) + '</text>';
     });
 
     var lastX = x(series.length - 1), lastY = y(series[series.length - 1].c);
 
-    return '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img"'
+    /* 색: 왼쪽 파랑 → 가운데 청록 → 오른쪽 금색.
+       보라 단색이면 사이트 전체가 한 색으로만 보이므로 흐름이 있는 색을 쓴다. */
+    return '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" role="img"'
       + ' aria-label="누적 등록 추이">'
-      + '<defs><linearGradient id="cvg" x1="0" y1="0" x2="0" y2="1">'
-      +   '<stop offset="0" stop-color="#9C7FD6" stop-opacity=".34"/>'
-      +   '<stop offset="1" stop-color="#9C7FD6" stop-opacity="0"/></linearGradient></defs>'
+      + '<defs>'
+      +   '<linearGradient id="cvLine" x1="0" y1="0" x2="1" y2="0">'
+      +     '<stop offset="0" stop-color="#4C8DF6"/>'
+      +     '<stop offset="52%" stop-color="#22B5A6"/>'
+      +     '<stop offset="100%" stop-color="#C9A94E"/></linearGradient>'
+      +   '<linearGradient id="cvFill" x1="0" y1="0" x2="0" y2="1">'
+      +     '<stop offset="0" stop-color="#22B5A6" stop-opacity=".24"/>'
+      +     '<stop offset="1" stop-color="#22B5A6" stop-opacity="0"/></linearGradient>'
+      + '</defs>'
       + grid
-      + '<path d="' + area + '" fill="url(#cvg)"/>'
-      + '<path d="' + line + '" fill="none" stroke="#7C63B0" stroke-width="2.2"'
+      + '<path d="' + area + '" fill="url(#cvFill)"/>'
+      + '<path d="' + line + '" fill="none" stroke="url(#cvLine)" stroke-width="2.6"'
       +   ' stroke-linejoin="round" stroke-linecap="round"/>'
-      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="4.2" fill="#7C63B0"/>'
-      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="8" fill="#7C63B0" fill-opacity=".18"/>'
+      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="9" fill="#C9A94E" fill-opacity=".2"/>'
+      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="4.4" fill="#C9A94E"/>'
       + ticks
       + '</svg>';
   }
@@ -558,7 +571,19 @@ window.OCHub = (function () {
         put(cfg.upd, d.week_upd);
         put(cfg.today, d.today_new);
         var cv = cfg.curve ? document.querySelector(cfg.curve) : null;
-        if (cv) cv.innerHTML = curveSvg(d.series || []);
+        if (cv) {
+          var draw = function () {
+            var cs = window.getComputedStyle(cv);
+            var pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+            var w = Math.max(Math.round(cv.clientWidth - pad), 360);
+            cv.innerHTML = curveSvg(d.series || [], w, cfg.height || 240);
+          };
+          draw();
+          var tm;
+          window.addEventListener('resize', function () {
+            clearTimeout(tm); tm = setTimeout(draw, 160);
+          });
+        }
         var bs = cfg.bars ? document.querySelector(cfg.bars) : null;
         if (bs) bs.innerHTML = barsHtml(d.totals || [], d.total || 0);
       })
