@@ -293,5 +293,175 @@ window.OCHub = (function () {
     });
   }
 
-  return { init: init, bindViewToggle: bindViewToggle, esc: esc, thumb: thumb };
+
+  /* ============================================================
+     게시판 조각 — 커뮤니티 메인처럼 "게시판을 여러 모양으로" 보여줄 때
+     OCHub.board({ el, table, kind, n, view, label, order, filter, skip })
+       kind : 'cards'   사진 카드 (Concert PR 처럼)
+              'rows'    한 줄 목록
+              'feature' 큰 피처 1건
+              'compact' 날짜 + 제목만 (좁은 칸용)
+     ============================================================ */
+  function bTxt(s, n) {
+    s = String(s == null ? '' : s).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return (n && s.length > n) ? s.slice(0, n) + '…' : s;
+  }
+  function bHref(cfg, r) {
+    return cfg.view ? cfg.view + '?id=' + encodeURIComponent(r.id) : (cfg.list || '#');
+  }
+  function askBoard(cfg) {
+    var cols = cfg.cols || 'id,category,title,body,thumb_url,author_name,created_at';
+    var url = SB_URL + '/rest/v1/' + cfg.table + '?select=' + cols
+            + (cfg.filter || '')
+            + '&order=' + (cfg.order || 'created_at.desc.nullslast')
+            + '&limit=' + ((cfg.n || 4) + (cfg.skip || 0));
+    return fetch(url, { headers: Object.assign({ Prefer: 'count=exact' }, HDR) })
+      .then(function (r) {
+        var total = 0, cr = r.headers.get('content-range');
+        if (cr) { var q = cr.split('/')[1]; if (q && q !== '*') total = parseInt(q, 10) || 0; }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json().then(function (rows) {
+          return { rows: (rows || []).slice(cfg.skip || 0), total: total };
+        });
+      })
+      .catch(function (e) {
+        console.warn('[게시판] ' + (cfg.label || cfg.table) + ' 건너뜀:', e.message);
+        return null;
+      });
+  }
+
+  function bCard(cfg, r) {
+    var img = r.thumb_url || r.logo_url || '';
+    return '<a class="bd-card" href="' + esc(bHref(cfg, r)) + '">'
+      + (img
+          ? '<span class="bd-cardimg"><img src="' + esc(thumb(img, 480)) + '" alt="" loading="lazy"></span>'
+          : '<span class="bd-cardimg bd-noimg"><i>' + esc((r.title || '?').trim().charAt(0)) + '</i></span>')
+      + '<span class="bd-cardbody">'
+      +   (r.category ? '<span class="bd-cat">' + esc(r.category) + '</span>' : '')
+      +   '<span class="bd-title">' + esc(bTxt(r.title, 46)) + '</span>'
+      +   '<span class="bd-desc">' + esc(bTxt(r.body, 74)) + '</span>'
+      + '</span></a>';
+  }
+  function bRow(cfg, r) {
+    var img = r.thumb_url || '';
+    return '<a class="bd-row" href="' + esc(bHref(cfg, r)) + '">'
+      + (img ? '<span class="bd-rowimg"><img src="' + esc(thumb(img, 240)) + '" alt="" loading="lazy"></span>' : '')
+      + '<span class="bd-rowbody">'
+      +   '<span class="bd-title">' + esc(bTxt(r.title, 60)) + '</span>'
+      +   '<span class="bd-desc">' + esc(bTxt(r.body, 130)) + '</span>'
+      +   '<span class="bd-meta">' + esc(join([r.category, r.author_name, ymd(r.created_at)])) + '</span>'
+      + '</span>'
+      + '<span class="bd-go">VIEW DETAIL <b>&rarr;</b></span>'
+      + '</a>';
+  }
+  function bFeature(cfg, r) {
+    var img = r.thumb_url || '';
+    return '<a class="bd-feat" href="' + esc(bHref(cfg, r)) + '">'
+      + (img ? '<span class="bd-featimg"><img src="' + esc(thumb(img, 640)) + '" alt="" loading="lazy"></span>' : '')
+      + '<span class="bd-featbody">'
+      +   '<span class="bd-featcat">' + esc(cfg.badge || r.category || 'HOT TOPIC') + '</span>'
+      +   '<span class="bd-feattitle">' + esc(bTxt(r.title, 70)) + '</span>'
+      +   '<span class="bd-featdesc">' + esc(bTxt(r.body, 210)) + '</span>'
+      +   '<span class="bd-meta">' + esc(join([r.author_name, ymd(r.created_at)])) + '</span>'
+      + '</span>'
+      + '<span class="bd-featgo">VIEW DETAIL <b>&rarr;</b></span>'
+      + '</a>';
+  }
+  function bCompact(cfg, r) {
+    return '<a class="bd-line" href="' + esc(bHref(cfg, r)) + '">'
+      + '<span class="bd-date">' + esc(ymd(r.created_at)) + '</span>'
+      + '<span class="bd-linetitle">' + esc(bTxt(r.title, 58)) + '</span>'
+      + (r.comment_count ? '<span class="bd-cc">[' + r.comment_count + ']</span>' : '')
+      + '</a>';
+  }
+  var RENDER = { cards: bCard, rows: bRow, feature: bFeature, compact: bCompact };
+
+  function board(cfg) {
+    var box = document.querySelector(cfg.el);
+    if (!box) return;
+    box.innerHTML = '<div class="bd-loading"><span class="hub-skel w5"></span><span class="hub-skel w7"></span></div>';
+    askBoard(cfg).then(function (res) {
+      if (!res || !res.rows.length) {
+        box.innerHTML = '<p class="bd-empty">' + esc(cfg.emptyText || '아직 등록된 글이 없습니다.') + '</p>';
+        return;
+      }
+      var fn = RENDER[cfg.kind] || bRow;
+      box.innerHTML = res.rows.map(function (r) { return fn(cfg, r); }).join('');
+      if (cfg.countEl) {
+        var c = document.querySelector(cfg.countEl);
+        if (c) c.textContent = res.total.toLocaleString();
+      }
+    });
+  }
+
+  /* 탭으로 여러 게시판을 번갈아 보여준다 */
+  function boardTabs(cfg) {
+    var tabsBox = document.querySelector(cfg.tabsEl);
+    var listBox = document.querySelector(cfg.listEl);
+    if (!tabsBox || !listBox) return;
+    var cache = {};
+    tabsBox.innerHTML = cfg.tabs.map(function (t, i) {
+      return '<button type="button" class="bd-tab' + (i === 0 ? ' on' : '') + '" data-i="' + i + '">'
+        + esc(t.label) + '</button>';
+    }).join('');
+    function show(i) {
+      var t = cfg.tabs[i];
+      tabsBox.querySelectorAll('.bd-tab').forEach(function (b, k) { b.classList.toggle('on', k === i); });
+      if (cache[i]) { listBox.innerHTML = cache[i]; return; }
+      listBox.innerHTML = '<div class="bd-loading"><span class="hub-skel w5"></span><span class="hub-skel w7"></span></div>';
+      askBoard({ table: t.table, view: t.view, list: t.list, label: t.label,
+                 n: cfg.n || 3, cols: t.cols, filter: t.filter, order: t.order })
+        .then(function (res) {
+          var fn = RENDER[cfg.kind || 'rows'];
+          var html = (!res || !res.rows.length)
+            ? '<p class="bd-empty">아직 등록된 글이 없습니다.</p>'
+            : res.rows.map(function (r) { return fn({ view: t.view, list: t.list }, r); }).join('');
+          cache[i] = html; listBox.innerHTML = html;
+        });
+    }
+    tabsBox.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('.bd-tab');
+      if (!b) return;
+      show(parseInt(b.getAttribute('data-i'), 10) || 0);
+    });
+    show(0);
+  }
+
+  /* 항목 하나를 골라 보여준다 (이달의 음악학교 등) */
+  function one(cfg) {
+    var box = document.querySelector(cfg.el);
+    if (!box) return;
+    var url = SB_URL + '/rest/v1/' + cfg.table + '?select=' + (cfg.cols || '*')
+            + (cfg.filter || '') + '&order=' + (cfg.order || 'sort_no.desc.nullslast') + '&limit=' + (cfg.pool || 12);
+    fetch(url, { headers: HDR })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        if (!rows || !rows.length) { box.innerHTML = '<p class="bd-empty">표시할 항목이 없습니다.</p>'; return; }
+        var r = rows[Math.floor(Math.random() * rows.length)];   // 후보 중 하나
+        box.innerHTML = cfg.render ? cfg.render(r, { esc: esc, thumb: thumb, txt: bTxt }) : '';
+      })
+      .catch(function (e) {
+        console.warn('[한 항목] ' + cfg.table + ' 건너뜀:', e.message);
+        box.innerHTML = '';
+      });
+  }
+
+  /* 가로로 넘기는 캐러셀 (Concert PR 처럼) */
+  function bindCarousel(wrapSel, trackSel) {
+    var wrap = document.querySelector(wrapSel), track = document.querySelector(trackSel);
+    if (!wrap || !track) return;
+    function step(dir) {
+      var card = track.querySelector(':scope > *');
+      var w = card ? card.getBoundingClientRect().width + 14 : 280;
+      track.scrollBy({ left: dir * w * 2, behavior: 'smooth' });
+    }
+    wrap.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-car]');
+      if (!b) return;
+      step(b.getAttribute('data-car') === 'next' ? 1 : -1);
+    });
+  }
+
+  return { init: init, bindViewToggle: bindViewToggle, esc: esc, thumb: thumb,
+           board: board, boardTabs: boardTabs, one: one, bindCarousel: bindCarousel };
 })();
