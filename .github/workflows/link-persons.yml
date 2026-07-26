@@ -1,9 +1,16 @@
 name: Link persons (weekly)
 
+# 매주 월요일 06:30 KST — 단체·학교 수집(월 03:00~04:00)과 인물 보강(05:30) 뒤에 돕니다.
+# 새로 수집된 단체·학교와 바로 연결되도록 순서를 맞춘 것입니다.
 on:
   schedule:
-    - cron: '0 20 * * 6'   # 일요일 05:00 KST (기존 수집 작업과 겹치지 않는 시간)
+    - cron: '30 21 * * 0'   # 월요일 06:30 KST
   workflow_dispatch: {}
+
+# 관계를 지우고 다시 넣는 작업이라 동시 실행을 막습니다
+concurrency:
+  group: link-persons
+  cancel-in-progress: false
 
 jobs:
   link:
