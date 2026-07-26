@@ -12,6 +12,7 @@
      orderDefault: 'sort_no.desc',            // 기본 정렬
      searchCols:   ['name_ko','name_en'],      // 검색어 ilike 대상 컬럼
      entity:       'persons',                  // 오류 로그 라벨(선택)
+     includeHidden: false,                     // true 면 숨김 항목도 표시 (기본 false)
      buildFilters: function(sels){ return ''; },     // 셀렉트 → 필터 파라미터 문자열(페이지별)
      buildOrder:   function(sels){ return 'sort_no.desc'; }, // 셀렉트 → 정렬 파라미터(페이지별)
      renderRow:    function(rec, no, ctx){ return '<tr>…</tr>'; } // 행 HTML(페이지별)
@@ -81,6 +82,9 @@ window.OCList = (function () {
         u += '&or=(' + cfg.searchCols.map(function (c) { return c + '.ilike.*' + t + '*'; }).join(',') + ')';
       }
       u += state.filters;
+      // 숨김 처리된 항목 제외 (관리자가 노이즈로 표시한 데이터)
+      // 특별히 포함해야 하는 페이지는 config 에 includeHidden:true 를 주면 됩니다
+      if (cfg.includeHidden !== true) u += '&hidden=is.false';
       if (state.order) u += '&order=' + state.order;
       u += '&limit=' + PAGE + '&offset=' + off;
       return u;

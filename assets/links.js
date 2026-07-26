@@ -108,7 +108,7 @@
         ? 'id,name_ko,name_en,field,era_name,life'
         : '*';
       jobs.push(
-        rest(TABLE[type] + '?select=' + sel + '&id=in.(' + ids.join(',') + ')&limit=500')
+        rest(TABLE[type] + '?select=' + sel + '&id=in.(' + ids.join(',') + ')&hidden=is.false&limit=500')
           .then(function (rows) {
             (rows || []).forEach(function (r) { store[type][r.id] = r; });
           })
@@ -188,7 +188,8 @@
         if (base.length >= 2) {
           alumniJob = rest('persons?select=id,name_ko,name_en,field,era_name,life,sort_no'
             + '&school=ilike.*' + encodeURIComponent(base) + '*'
-            + '&id=neq.' + id + '&order=sort_no.asc.nullslast&limit=' + (CAP_ALUMNI + 1));
+            + '&id=neq.' + id + '&hidden=is.false'
+            + '&order=sort_no.asc.nullslast&limit=' + (CAP_ALUMNI + 1));
         }
       }
 
