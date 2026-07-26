@@ -163,6 +163,7 @@
     <div id="p31box" style="display:none;margin-top:14px">
       <div class="row" style="margin-bottom:10px">
         <button id="btnP31Hide" style="background:#b91c1c">선택한 항목 숨기기</button>
+        <button id="btnP31Del" style="background:#7f1d1d">완전 삭제</button>
         <button id="btnP31All" style="background:#6b7280">군사·경찰 전체 선택</button>
         <button id="btnP31None" style="background:#6b7280">선택 해제</button>
         <span id="p31count" style="font-size:13px;color:#5c5e70;align-self:center"></span>
@@ -893,32 +894,60 @@
     $('p31count').textContent = '선택 '+n+'건';
   }
 
-  async function hideP31(){
-    var ids=[].slice.call(document.querySelectorAll('.p31chk:checked')).map(function(c){
+  function pickedIds(){
+    return [].slice.call(document.querySelectorAll('.p31chk:checked')).map(function(c){
       return parseInt(c.getAttribute('data-id'),10);
     });
+  }
+
+  /* 숨김 · 삭제 공통 처리
+     ★ 중요: .select('id') 를 붙여 "실제로 몇 행이 바뀌었는지" 확인합니다.
+        권한(RLS)이 없으면 오류 없이 0행만 처리되고 성공처럼 보이기 때문입니다. */
+  async function applyP31(mode){
+    var ids=pickedIds();
     if(!ids.length){ alert('선택된 항목이 없습니다.'); return; }
-    if(!confirm(ids.length+'건을 숨기시겠습니까?\n\n삭제가 아니라 숨김이므로 되돌릴 수 있습니다.')) return;
+    var msg = mode==='delete'
+      ? ids.length+'건을 완전히 삭제하시겠습니까?\n\n되돌릴 수 없습니다.'
+      : ids.length+'건을 숨기시겠습니까?\n\n삭제가 아니라 숨김이므로 되돌릴 수 있습니다.';
+    if(!confirm(msg)) return;
     var L=mkLog('logP','barP');
-    $('btnP31Hide').disabled=true;
-    var ok=0;
+    $('btnP31Hide').disabled=true; $('btnP31Del').disabled=true;
+    var done=0, failed=0, firstErr='';
     for(var i=0;i<ids.length;i+=100){
       var part=ids.slice(i,i+100);
-      var r=await sb.from('schools').update({ hidden:true, hidden_note:'학교 아님(분류 점검)' })
-                    .in('id', part);
-      if(!r.error) ok+=part.length;
-      else L.log('  저장 오류: '+r.error.message);
+      var r;
+      if(mode==='delete'){
+        // 관계 정보를 먼저 정리한 뒤 삭제합니다
+        await sb.from('entity_links').delete().eq('to_type','school').in('to_id', part);
+        r=await sb.from('schools').delete().in('id', part).select('id');
+      } else {
+        r=await sb.from('schools').update({ hidden:true, hidden_note:'학교 아님(분류 점검)' })
+                  .in('id', part).select('id');
+      }
+      if(r.error){ failed+=part.length; if(!firstErr) firstErr=r.error.message; }
+      else done += (r.data ? r.data.length : 0);
       L.prog(Math.round((i+part.length)/ids.length*100));
     }
-    L.log('✅ '+ok+'건 숨김 완료 — 화면을 새로고침하면 반영됩니다');
-    $('btnP31Hide').disabled=false;
-    // 목록에서 비활성화
-    document.querySelectorAll('.p31chk:checked').forEach(function(c){ c.checked=false; c.disabled=true; });
-    updP31Count();
+    L.log('■ ' + (mode==='delete' ? '삭제' : '숨김') + ' 결과');
+    L.log('  선택 '+ids.length+'건 · 실제 처리 '+done+'건'+(failed?' · 오류 '+failed+'건':''));
+    if(firstErr) L.log('  오류 내용: '+firstErr);
+    if(done===0){
+      L.log('⚠ 실제로 바뀐 항목이 없습니다. 표 수정 권한(RLS)이 없을 가능성이 높습니다.');
+      L.log('   SQL Editor 에서 다음을 실행해 정책을 확인하세요:');
+      L.log("   select tablename, policyname, cmd from pg_policies where tablename='schools';");
+    } else if(done < ids.length){
+      L.log('⚠ 일부만 처리됐습니다. 권한 조건에 걸린 항목이 있을 수 있습니다.');
+    } else {
+      L.log('✅ 완료 — 화면을 새로고침하면 반영됩니다');
+      document.querySelectorAll('.p31chk:checked').forEach(function(c){ c.checked=false; c.disabled=true; });
+      updP31Count();
+    }
+    $('btnP31Hide').disabled=false; $('btnP31Del').disabled=false;
   }
 
   $('btnP31').addEventListener('click',runP31);
-  $('btnP31Hide').addEventListener('click',hideP31);
+  $('btnP31Hide').addEventListener('click',function(){ applyP31('hide'); });
+  $('btnP31Del').addEventListener('click',function(){ applyP31('delete'); });
   $('btnP31All').addEventListener('click',function(){
     document.querySelectorAll('.p31chk').forEach(function(c){
       if(!c.disabled) c.checked = (c.getAttribute('data-v')==='군사·경찰');
