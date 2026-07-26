@@ -29,17 +29,43 @@ const cap3  = (t) => t ? String(t).split(/,\s*|\s·\s/).map(s => s.trim()).filte
 
 /* ---------- Supabase (REST) ---------- */
 const H = { apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY, 'Content-Type': 'application/json' };
-async function sbGetAll(table, select, filter) {
+async function sbGetAll(table, select, filter, maxRows) {
   const out = []; const STEP = 1000; let from = 0;
-  while (true) {
+  const cap = (maxRows === undefined || maxRows === null) ? 100000 : maxRows;
+  if (cap <= 0) return out;                 // 0 을 넘기면 전체 조회가 되지 않도록 방어
+  while (out.length < cap) {
+    const take = Math.min(STEP, cap - out.length);
     const url = SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + (filter || '');
-    const r = await fetch(url, { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
-    if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
+    const r = await fetch(url, { headers: { ...H, Range: from + '-' + (from + take - 1) } });
+    if (!r.ok) {
+      const body = await r.text();
+      console.error('  ✗ 조회 실패 ' + r.status);
+      console.error('    URL : ' + url);
+      console.error('    응답: ' + body.slice(0, 300));
+      throw new Error('GET ' + r.status);
+    }
     const batch = await r.json(); out.push(...batch);
-    if (batch.length < STEP) break; from += STEP;
-    if (from > 100000) break;
+    if (batch.length < take) break; from += take;
   }
   return out;
+}
+
+// 시작 전에 필요한 컬럼이 실제로 있는지 확인합니다
+async function checkColumns(need) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/persons?select=*&limit=1', { headers: H });
+  if (!r.ok) {
+    console.error('  ✗ persons 조회 실패 ' + r.status + ' ' + (await r.text()).slice(0, 300));
+    throw new Error('persons 접근 불가');
+  }
+  const rows = await r.json();
+  if (!rows.length) { console.log('  · persons 가 비어 있어 컬럼 점검을 건너뜁니다'); return need; }
+  const have = Object.keys(rows[0]);
+  const missing = need.filter(c => have.indexOf(c) < 0);
+  if (missing.length) {
+    console.log('  ⚠ 없는 컬럼:', missing.join(', '));
+    console.log('    → 해당 항목은 건너뜁니다. SQL 로 컬럼을 먼저 추가하세요.');
+  }
+  return need.filter(c => have.indexOf(c) >= 0);
 }
 async function sbUpdate(table, id, patch) {
   const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id),
@@ -183,23 +209,39 @@ async function reverseWorks(qids) {
 async function main() {
   console.log('■ 인물DB 보강 시작', new Date().toISOString(), '| 하루 한도', DAILY_LIMIT);
 
+  // 0) 컬럼 점검 — 없는 컬럼을 요청하면 400 이 나므로 미리 확인합니다
+  const WANT = ['id','wikidata_id','name_ko','name_en','field','life','era_name','era_yr',
+                'instrument','school','works','image_url','description','description_en',
+                'link_wiki','wd_links','wd_genre','wd_occupation','wd_checked_at','quality','hidden'];
+  const COLS_ARR = await checkColumns(WANT);
+  const COLS = COLS_ARR.join(',');
+  const has = (c) => COLS_ARR.indexOf(c) >= 0;
+  const HID = has('hidden') ? '&hidden=is.false' : '';
+
   // 1) 시대별 era_yr 표기를 DB에서 그대로 배워옵니다 (제가 새 표기를 만들지 않습니다)
-  const eraRows = await sbGetAll('persons', 'era_name,era_yr', '&era_name=not.is.null&era_yr=not.is.null&limit=3000');
   const eraYr = {};
-  eraRows.forEach(r => { if (r.era_name && r.era_yr && !eraYr[r.era_name]) eraYr[r.era_name] = r.era_yr; });
+  if (has('era_name') && has('era_yr')) {
+    const eraRows = await sbGetAll('persons', 'era_name,era_yr',
+      '&era_name=not.is.null&era_yr=not.is.null', 3000);
+    eraRows.forEach(r => { if (r.era_name && r.era_yr && !eraYr[r.era_name]) eraYr[r.era_name] = r.era_yr; });
+  }
   console.log('  · 시대 표기 학습:', Object.keys(eraYr).join(', ') || '(없음)');
 
   // 2) 처리 대상 — 미점검 우선, 그다음 오래된 순
-  const COLS = 'id,wikidata_id,name_ko,name_en,field,life,era_name,era_yr,instrument,school,works,'
-             + 'image_url,description,description_en,link_wiki,wd_links,wd_genre,wd_occupation,quality,hidden';
-  let targets = await sbGetAll('persons', COLS,
-    '&hidden=is.false&wikidata_id=not.is.null&wd_checked_at=is.null&limit=' + DAILY_LIMIT);
-  if (targets.length < DAILY_LIMIT) {
-    const more = await sbGetAll('persons', COLS,
-      '&hidden=is.false&wikidata_id=not.is.null&wd_checked_at=not.is.null'
-      + '&order=wd_checked_at.asc&limit=' + (DAILY_LIMIT - targets.length));
-    const seen = new Set(targets.map(t => t.id));
-    more.forEach(m => { if (!seen.has(m.id)) targets.push(m); });
+  let targets = [];
+  if (has('wd_checked_at')) {
+    targets = await sbGetAll('persons', COLS,
+      HID + '&wikidata_id=not.is.null&wd_checked_at=is.null', DAILY_LIMIT);
+    if (targets.length < DAILY_LIMIT) {
+      const more = await sbGetAll('persons', COLS,
+        HID + '&wikidata_id=not.is.null&wd_checked_at=not.is.null&order=wd_checked_at.asc',
+        DAILY_LIMIT - targets.length);
+      const seen = new Set(targets.map(t => t.id));
+      more.forEach(m => { if (!seen.has(m.id)) targets.push(m); });
+    }
+  } else {
+    // wd_checked_at 컬럼이 없으면 저명도 미조회 인물부터
+    targets = await sbGetAll('persons', COLS, HID + '&wikidata_id=not.is.null', DAILY_LIMIT);
   }
   console.log('■ 처리 대상:', targets.length, '명');
   if (!targets.length) { console.log('■ 대상이 없습니다. 종료'); return; }
@@ -276,7 +318,7 @@ async function main() {
     if (m.links !== undefined) { patch.wd_links = m.links; nMeta++; }
     if (m.genres) patch.wd_genre = m.genres.slice(0, 400);
     if (m.occs)   patch.wd_occupation = m.occs.slice(0, 400);
-    patch.wd_checked_at = now;
+    if (has('wd_checked_at')) patch.wd_checked_at = now;
 
     // 빈칸 보강
     if (isEmpty(cur.life) && m.birth)                patch.life = m.birth + '–' + (m.death || '');
@@ -289,7 +331,7 @@ async function main() {
     }
     if (isEmpty(cur.link_wiki) && (m.koA || m.enA))  patch.link_wiki = m.koA || m.enA;
     if (cur._ko) patch.description    = cur._ko;
-    if (cur._en) patch.description_en = cur._en;
+    if (cur._en && has('description_en')) patch.description_en = cur._en;
 
     // 파생값
     const occNow = patch.wd_occupation || cur.wd_occupation || '';
@@ -302,7 +344,7 @@ async function main() {
     // 충실도 — 갱신 후 값 기준으로 계산
     const after = { ...cur, ...patch };
     const qual = calcQuality(after);
-    if (qual !== cur.quality) { patch.quality = qual; nQual++; }
+    if (has('quality') && qual !== cur.quality) { patch.quality = qual; nQual++; }
 
     if (Object.keys(patch).length <= 2) { nSkip++; }   // wd_checked_at 만 바뀌는 경우
     try { await sbUpdate('persons', cur.id, patch); nFill++; }
