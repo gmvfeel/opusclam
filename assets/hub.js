@@ -462,6 +462,117 @@ window.OCHub = (function () {
     });
   }
 
+
+  /* ============================================================
+     성장 그래프 — 차트 라이브러리 없이 SVG 로 직접 그린다
+     OCHub.stats({ curve:'#el', bars:'#el', total:'#el', week:'#el', upd:'#el', days:30 })
+     ============================================================ */
+  var DB_LABEL = { persons:'인물', orgs:'음악단체', venues:'공연장', schools:'음악학교',
+                   modern:'현대음악', foundations:'기관재단', academic:'학술' };
+  var DB_COLOR = { persons:'#7C63B0', orgs:'#C9A94E', venues:'#3B82F6', schools:'#10B981',
+                   modern:'#EC4899', foundations:'#64748B', academic:'#DC2626' };
+
+  /* 누적 성장 곡선 (면적 + 선 + 마지막 점) */
+  function curveSvg(series) {
+    if (!series || series.length < 2) return '';
+    var W = 720, H = 190, PL = 8, PR = 8, PT = 14, PB = 26;
+    var iw = W - PL - PR, ih = H - PT - PB;
+    var max = 0;
+    series.forEach(function (p) { if (p.c > max) max = p.c; });
+    if (!max) max = 1;
+    var x = function (i) { return PL + (iw * i / (series.length - 1)); };
+    var y = function (v) { return PT + ih - (ih * v / max); };
+
+    var line = series.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.c).toFixed(1); }).join(' ');
+    var area = line + ' L' + x(series.length - 1).toFixed(1) + ' ' + (PT + ih) + ' L' + PL + ' ' + (PT + ih) + ' Z';
+
+    /* 가로 기준선 3개 */
+    var grid = '';
+    [0.5, 1].forEach(function (r) {
+      var gy = y(max * r);
+      grid += '<line x1="' + PL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - PR) + '" y2="' + gy.toFixed(1) + '"'
+        + ' stroke="currentColor" stroke-opacity=".12" stroke-dasharray="3 4"/>'
+        + '<text x="' + (PL + 2) + '" y="' + (gy - 5).toFixed(1) + '" font-size="9.5" fill="currentColor"'
+        + ' fill-opacity=".42">' + Math.round(max * r).toLocaleString() + '</text>';
+    });
+
+    /* 날짜 눈금 — 처음·중간·끝 */
+    var ticks = '';
+    [0, Math.floor((series.length - 1) / 2), series.length - 1].forEach(function (i, k) {
+      var anchorAttr = k === 0 ? 'start' : (k === 2 ? 'end' : 'middle');
+      ticks += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 8) + '" font-size="9.5"'
+        + ' text-anchor="' + anchorAttr + '" fill="currentColor" fill-opacity=".45">'
+        + esc(series[i].d) + '</text>';
+    });
+
+    var lastX = x(series.length - 1), lastY = y(series[series.length - 1].c);
+
+    return '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img"'
+      + ' aria-label="누적 등록 추이">'
+      + '<defs><linearGradient id="cvg" x1="0" y1="0" x2="0" y2="1">'
+      +   '<stop offset="0" stop-color="#9C7FD6" stop-opacity=".34"/>'
+      +   '<stop offset="1" stop-color="#9C7FD6" stop-opacity="0"/></linearGradient></defs>'
+      + grid
+      + '<path d="' + area + '" fill="url(#cvg)"/>'
+      + '<path d="' + line + '" fill="none" stroke="#7C63B0" stroke-width="2.2"'
+      +   ' stroke-linejoin="round" stroke-linecap="round"/>'
+      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="4.2" fill="#7C63B0"/>'
+      + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="8" fill="#7C63B0" fill-opacity=".18"/>'
+      + ticks
+      + '</svg>';
+  }
+
+  /* 구성 비율 — 가로 스택 바 + 범례 */
+  function barsHtml(totals, total) {
+    if (!totals || !totals.length) return '';
+    var seg = totals.map(function (t) {
+      var pct = total ? (t.n / total * 100) : 0;
+      return '<span class="bar-seg" style="width:' + pct.toFixed(2) + '%;background:'
+        + (DB_COLOR[t.t] || '#999') + '" title="' + esc(DB_LABEL[t.t] || t.t) + ' ' + t.n.toLocaleString() + '"></span>';
+    }).join('');
+    var leg = totals.map(function (t) {
+      var pct = total ? (t.n / total * 100) : 0;
+      return '<span class="bar-leg">'
+        + '<i style="background:' + (DB_COLOR[t.t] || '#999') + '"></i>'
+        + '<b>' + esc(DB_LABEL[t.t] || t.t) + '</b>'
+        + '<u>' + t.n.toLocaleString() + '</u>'
+        + '<s>' + pct.toFixed(1) + '%</s></span>';
+    }).join('');
+    return '<div class="bar-track">' + seg + '</div><div class="bar-legs">' + leg + '</div>';
+  }
+
+  function stats(cfg) {
+    var url = SB_URL + '/rest/v1/rpc/db_stats?p_days=' + (cfg.days || 30);
+    fetch(url, { headers: HDR })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) throw new Error('통계를 받지 못했습니다');
+        function put(sel, v, up) {
+          if (!sel) return;
+          var el = document.querySelector(sel);
+          if (!el) return;
+          if (up) countUp(el, v); else el.textContent = (v || 0).toLocaleString();
+        }
+        put(cfg.total, d.total, true);
+        put(cfg.week, d.week_new);
+        put(cfg.upd, d.week_upd);
+        put(cfg.today, d.today_new);
+        var cv = cfg.curve ? document.querySelector(cfg.curve) : null;
+        if (cv) cv.innerHTML = curveSvg(d.series || []);
+        var bs = cfg.bars ? document.querySelector(cfg.bars) : null;
+        if (bs) bs.innerHTML = barsHtml(d.totals || [], d.total || 0);
+      })
+      .catch(function (e) {
+        console.warn('[성장 그래프] 건너뜀:', e.message);
+        [cfg.curve, cfg.bars].forEach(function (sel) {
+          if (!sel) return;
+          var el = document.querySelector(sel);
+          if (el) el.innerHTML = '';
+        });
+      });
+  }
+
   return { init: init, bindViewToggle: bindViewToggle, esc: esc, thumb: thumb,
-           board: board, boardTabs: boardTabs, one: one, bindCarousel: bindCarousel };
+           board: board, boardTabs: boardTabs, one: one, bindCarousel: bindCarousel,
+           stats: stats };
 })();

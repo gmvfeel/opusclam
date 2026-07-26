@@ -53,6 +53,33 @@
     font-variant-numeric:tabular-nums;line-height:1.05}
   .hub-navcount i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3,#a8aabb)}
 
+  /* 성장 추이 */
+  .hb-stat{display:grid;grid-template-columns:1fr 210px;gap:20px;align-items:stretch;margin-top:2px}
+  .hb-curve{border:1px solid var(--line);border-radius:14px;background:var(--paper);
+    padding:14px 16px 6px;color:var(--text);overflow:hidden}
+  .hb-curve .cv{width:100%;height:190px;display:block}
+  .hb-figs{display:flex;flex-direction:column;gap:10px}
+  .hb-fig{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;
+    padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:var(--paper)}
+  .hb-figcap{font-size:11.5px;font-weight:700;letter-spacing:-.01em;color:var(--text-3)}
+  .hb-fignum{display:flex;align-items:baseline;gap:3px}
+  .hb-fignum b{font-size:25px;font-weight:900;letter-spacing:-.035em;line-height:1;
+    color:var(--text);font-variant-numeric:tabular-nums}
+  .hb-fignum i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3)}
+  .hb-fig.up .hb-fignum b{color:var(--violet-2)}
+
+  /* 구성 비율 */
+  .hb-compose{margin-top:20px;padding:17px 18px 15px;border:1px solid var(--line);
+    border-radius:14px;background:var(--paper)}
+  .bar-track{display:flex;height:14px;border-radius:99px;overflow:hidden;background:var(--paper-2)}
+  .bar-seg{display:block;height:100%}
+  .bar-legs{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:13px}
+  .bar-leg{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+  .bar-leg i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+  .bar-leg b{font-weight:700;color:var(--text-2)}
+  .bar-leg u{text-decoration:none;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+  .bar-leg s{text-decoration:none;font-size:11px;color:var(--text-3)}
+
   /* 섹션 제목 */
   .hb-sec{margin-top:52px}
   .hb-head{display:flex;align-items:flex-end;gap:11px;margin:0 0 15px;padding-bottom:12px;
@@ -241,6 +268,31 @@
     <!-- 영역 카드 -->
     <div class="hb-cards"></div>
 
+    <!-- 성장 추이 -->
+    <section class="hb-sec">
+      <div class="hb-head">
+        <span class="hb-title">데이터 성장 추이<em>LAST 30 DAYS</em></span>
+      </div>
+      <div class="hb-stat">
+        <div class="hb-curve" id="curveBox"></div>
+        <div class="hb-figs">
+          <div class="hb-fig up">
+            <span class="hb-figcap">이번 주 신규</span>
+            <span class="hb-fignum"><b id="figWeek">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig">
+            <span class="hb-figcap">오늘 신규</span>
+            <span class="hb-fignum"><b id="figToday">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig">
+            <span class="hb-figcap">이번 주 보강</span>
+            <span class="hb-fignum"><b id="figUpd">—</b><i>건</i></span>
+          </div>
+        </div>
+      </div>
+      <div class="hb-compose" id="composeBox"></div>
+    </section>
+
     <!-- 새로 등록된 Database -->
     <section class="hb-sec">
     <div class="hb-head">
@@ -347,6 +399,13 @@
       ]
     });
     OCHub.bindViewToggle('#latestView', '#latestBox');
+
+    /* 성장 추이 그래프 — 요청 1회로 곡선·구성비·숫자를 모두 채운다 */
+    OCHub.stats({
+      curve:'#curveBox', bars:'#composeBox',
+      week:'#figWeek', today:'#figToday', upd:'#figUpd',
+      days:30
+    });
   });
 </script>
 <script src="/assets/app.js" defer></script>
