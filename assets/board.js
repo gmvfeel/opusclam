@@ -186,6 +186,9 @@ window.OCBoard = (function () {
       if (cat) u += '&category=eq.' + encodeURIComponent(cat);
       if (yr) u += '&title=ilike.*' + encodeURIComponent(yr) + '*';
       if (region) u += '&region=eq.' + encodeURIComponent(region);
+      /* 페이지가 지정한 고정 조건 (예: 지식나눔의 갈래 → '&track=eq.음악지식')
+         쓰지 않는 게시판에는 영향이 없습니다 */
+      if (cfg.where) u += cfg.where;
       u += '&order=' + (cfg.pinnedFirst ? 'is_pinned.desc,' + sortCol + '.desc' : sortCol + '.desc');
       u += '&limit=' + PAGE + '&offset=' + off;
       return u;

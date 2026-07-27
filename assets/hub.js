@@ -448,6 +448,121 @@ window.OCHub = (function () {
       });
   }
 
+  /* ============================================================
+     지식나눔 상단 — 오늘 현황 · 분류 탭 · Best Q&A
+     OCQna.top({ track, today:'#el', cats:'#el', best:'#el', catSel:'.board-catsel' })
+     분류 탭을 누르면 board.js 의 분류 선택값을 바꿔 목록이 걸러진다
+     (공용 엔진을 건드리지 않는 방식)
+     ============================================================ */
+  function qnaTop(cfg) {
+    var url = SB_URL + '/rest/v1/rpc/qna_stats'
+            + (cfg.track ? '?p_track=' + encodeURIComponent(cfg.track) : '');
+    var todayEl = cfg.today ? document.querySelector(cfg.today) : null;
+    var catsEl  = cfg.cats  ? document.querySelector(cfg.cats)  : null;
+    var bestEl  = cfg.best  ? document.querySelector(cfg.best)  : null;
+
+    if (catsEl) catsEl.innerHTML = '<div class="qn-catskel"></div>';
+    if (bestEl) bestEl.innerHTML = '<div class="bd-loading">'
+      + '<span class="hub-skel w5"></span><span class="hub-skel w7"></span></div>';
+
+    fetch(url, { headers: HDR })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) throw new Error('현황을 받지 못했습니다');
+
+        /* 오늘의 새질문 · 답변 */
+        if (todayEl) {
+          todayEl.innerHTML =
+            '<span class="qn-today"><i>오늘의 새질문</i><b>' + (d.today_q || 0).toLocaleString() + '</b></span>'
+          + '<span class="qn-today"><i>오늘의 답변</i><b>' + (d.today_a || 0).toLocaleString() + '</b></span>';
+        }
+
+        /* 분류 탭 — 전체보기 + 분류별 건수 */
+        if (catsEl) {
+          var list = (d.cats || []).slice();
+          var html = '<button type="button" class="qn-cat on" data-cat="">'
+            + '전체보기 <b>' + (d.total || 0).toLocaleString() + '</b></button>';
+          /* 페이지가 정해준 순서를 따르고, 없는 분류는 0 으로 보여준다 */
+          var order = cfg.order || list.map(function (x) { return x.k; });
+          var byK = {}; list.forEach(function (x) { byK[x.k] = x.n; });
+          order.forEach(function (k) {
+            html += '<button type="button" class="qn-cat" data-cat="' + esc(k) + '">'
+              + esc(k) + ' <b>' + (byK[k] || 0).toLocaleString() + '</b></button>';
+          });
+          catsEl.innerHTML = html;
+
+          catsEl.addEventListener('click', function (e) {
+            var b = e.target.closest && e.target.closest('.qn-cat');
+            if (!b) return;
+            catsEl.querySelectorAll('.qn-cat').forEach(function (x) { x.classList.toggle('on', x === b); });
+            var sel = document.querySelector(cfg.catSel || '.board-catsel');
+            if (sel) {
+              sel.value = b.getAttribute('data-cat') || '';
+              sel.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          });
+        }
+
+        /* Best Q&A — 좋아요 많은 질문과 첫 답변 */
+        if (bestEl) {
+          var best = d.best || [];
+          if (!best.length) {
+            bestEl.innerHTML = '<p class="bd-empty">아직 답변이 달린 질문이 없습니다.</p>';
+            return;
+          }
+          var view = cfg.viewPage || 'qna-view.html';
+          bestEl.innerHTML = '<div class="qn-bestwrap">'
+            + '<div class="qn-besthead"><span class="qn-bestttl">Best Q&amp;A</span>'
+            +   '<span class="qn-bestnav">'
+            +     '<button type="button" class="qn-arw" data-best="prev" aria-label="이전">&#8249;</button>'
+            +     '<button type="button" class="qn-arw" data-best="next" aria-label="다음">&#8250;</button>'
+            +   '</span></div>'
+            + '<div class="qn-besttrack">'
+            +   best.map(function (b) {
+                  return '<article class="qn-best">'
+                    + '<a class="qn-q" href="' + esc(view + '?id=' + encodeURIComponent(b.id)) + '">'
+                    +   '<span class="qn-mark">Q</span>'
+                    +   '<span class="qn-qtitle">' + esc(bTxt(b.title, 80)) + '</span>'
+                    +   '<span class="qn-who">' + esc(mask(b.author)) + '</span>'
+                    + '</a>'
+                    + '<div class="qn-a">'
+                    +   '<span class="qn-mark qn-mark-a">A</span>'
+                    +   '<span class="qn-atext">' + esc(bTxt(b.answer, 300)) + '</span>'
+                    +   '<span class="qn-who">' + esc(mask(b.answer_by)) + '</span>'
+                    + '</div>'
+                    + '<div class="qn-bestfoot">'
+                    +   (b.category ? '<span class="qn-bcat">' + esc(b.category) + '</span>' : '')
+                    +   '<span class="qn-bnum">답변 ' + (b.answers || 0) + '</span>'
+                    +   '<span class="qn-bnum">공감 ' + (b.likes || 0) + '</span>'
+                    + '</div></article>';
+                }).join('')
+            + '</div></div>';
+
+          /* 좌우 넘기기 */
+          var track = bestEl.querySelector('.qn-besttrack');
+          bestEl.addEventListener('click', function (e) {
+            var b = e.target.closest && e.target.closest('[data-best]');
+            if (!b || !track) return;
+            var w = track.clientWidth || 600;
+            track.scrollBy({ left: (b.getAttribute('data-best') === 'next' ? 1 : -1) * w, behavior: 'smooth' });
+          });
+        }
+      })
+      .catch(function (e) {
+        console.warn('[지식나눔] 현황 건너뜀:', e.message);
+        if (catsEl) catsEl.innerHTML = '';
+        if (bestEl) bestEl.innerHTML = '';
+      });
+  }
+
+  /* 이름 일부 가리기 (eunju**** 처럼) */
+  function mask(nm) {
+    var v = String(nm == null ? '' : nm).trim();
+    if (!v) return '회원';
+    if (v.length <= 2) return v + '***';
+    return v.slice(0, Math.min(5, v.length - 1)) + '****';
+  }
+
   /* 가로로 넘기는 캐러셀 (Concert PR 처럼) */
   function bindCarousel(wrapSel, trackSel) {
     var wrap = document.querySelector(wrapSel), track = document.querySelector(trackSel);
@@ -1025,5 +1140,5 @@ window.OCHub = (function () {
 
   return { init: init, bindViewToggle: bindViewToggle, esc: esc, thumb: thumb,
            board: board, boardTabs: boardTabs, one: one, bindCarousel: bindCarousel,
-           stats: stats, insight: insight };
+           stats: stats, insight: insight, qnaTop: qnaTop };
 })();

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지식나눔 · OPUSCLAM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<style>
+  /* ── 지식나눔 전용 ── */
+
+  /* 갈래 전환 (음악지식 Q&A ↔ 전공별 정보나눔) */
+  .qn-tracks{display:flex;gap:8px;margin:44px 0 0}
+  .qn-track{display:inline-flex;align-items:center;gap:7px;height:42px;padding:0 20px;
+    border:1px solid var(--line);border-radius:99px;background:var(--paper);
+    font-size:14px;font-weight:700;letter-spacing:-.02em;color:var(--text-2);text-decoration:none;
+    transition:border-color .15s,color .15s,background .15s}
+  .qn-track:hover{border-color:#c9bbe6;color:var(--violet-2)}
+  .qn-track.on{background:var(--violet-2,#7C63B0);border-color:var(--violet-2,#7C63B0);color:#fff;
+    box-shadow:0 6px 16px rgba(124,99,176,.26)}
+
+  /* 오늘 현황 */
+  .qn-todays{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:20px}
+  .qn-today{display:inline-flex;align-items:baseline;gap:7px;font-size:12.5px;color:var(--text-3)}
+  .qn-today i{font-style:normal}
+  .qn-today b{font-size:16px;font-weight:900;letter-spacing:-.03em;
+    color:var(--violet-2,#7C63B0);font-variant-numeric:tabular-nums}
+
+  /* 분류 탭 */
+  .qn-cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+  .qn-cat{display:flex;align-items:center;justify-content:center;gap:6px;height:42px;padding:0 12px;
+    border:1px solid var(--line);border-radius:10px;background:var(--paper);cursor:pointer;
+    font-size:12.8px;font-weight:600;letter-spacing:-.02em;color:var(--text-2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    transition:border-color .15s,color .15s,background .15s}
+  .qn-cat b{font-size:11.5px;font-weight:700;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .qn-cat:hover{border-color:#c9bbe6;color:var(--violet-2)}
+  .qn-cat.on{background:#1b1c2b;border-color:#1b1c2b;color:#fff}
+  .qn-cat.on b{color:rgba(255,255,255,.72)}
+  .qn-catskel{height:96px;border-radius:10px;
+    background:linear-gradient(90deg,var(--paper-2) 25%,var(--line-2) 37%,var(--paper-2) 63%);
+    background-size:400% 100%;animation:qnsk 1.3s ease infinite}
+  @keyframes qnsk{0%{background-position:100% 0}100%{background-position:0 0}}
+
+  /* Best Q&A */
+  .qn-bestbox{margin-top:34px}
+  .qn-bestwrap{border:1px solid var(--line);border-radius:16px;background:var(--paper);
+    padding:22px 24px 24px}
+  .qn-besthead{display:flex;align-items:center;margin-bottom:16px}
+  .qn-bestttl{font-size:27px;font-weight:800;letter-spacing:-.03em;color:var(--text)}
+  .qn-bestnav{margin-left:auto;display:flex;gap:7px}
+  .qn-arw{width:34px;height:34px;display:grid;place-items:center;cursor:pointer;font-size:16px;
+    border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--text-3);
+    line-height:1}
+  .qn-arw:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  .qn-besttrack{display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;
+    scrollbar-width:none}
+  .qn-besttrack::-webkit-scrollbar{display:none}
+  .qn-best{flex:0 0 100%;scroll-snap-align:start;min-width:0}
+  .qn-q{display:flex;align-items:flex-start;gap:11px;text-decoration:none;color:inherit;
+    padding:0 0 15px}
+  .qn-mark{flex:0 0 auto;width:27px;height:27px;display:grid;place-items:center;border-radius:50%;
+    font-size:12.5px;font-weight:800;color:#fff;background:var(--violet-2,#7C63B0)}
+  .qn-mark-a{background:var(--text-3,#8a8c9e)}
+  .qn-qtitle{flex:1;min-width:0;font-size:17.5px;font-weight:700;letter-spacing:-.03em;
+    color:var(--text);line-height:1.45}
+  .qn-q:hover .qn-qtitle{color:var(--violet-2)}
+  .qn-who{flex:0 0 auto;font-size:12px;color:var(--text-3);padding-top:5px}
+  .qn-a{display:flex;align-items:flex-start;gap:11px;padding:16px 18px;border-radius:12px;
+    background:var(--paper-2)}
+  .qn-atext{flex:1;min-width:0;font-size:13.2px;color:var(--text-2);line-height:1.8;
+    display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+  .qn-bestfoot{display:flex;flex-wrap:wrap;gap:7px 12px;margin-top:13px;align-items:center}
+  .qn-bcat{font-size:11px;font-weight:800;color:var(--violet-2);
+    background:rgba(124,99,176,.12);border-radius:6px;padding:3px 9px}
+  .qn-bnum{font-size:11.5px;color:var(--text-3)}
+
+  /* 질문하기 */
+  .qn-askrow{display:flex;justify-content:center;margin-top:22px}
+  .qn-ask{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 34px;
+    border:0;border-radius:99px;cursor:pointer;text-decoration:none;
+    font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#fff;
+    background:var(--violet-2,#7C63B0);box-shadow:0 8px 20px rgba(124,99,176,.3)}
+  .qn-ask:hover{filter:brightness(1.07)}
+
+  /* board.js 가 쓰는 분류 선택은 화면에서 숨긴다 (위 분류 탭이 대신한다) */
+  .board-catsel{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  .bd-loading{display:flex;flex-direction:column;gap:9px;padding:14px 4px}
+  .bd-empty{padding:26px 0;text-align:center;font-size:13px;color:var(--text-3)}
+  .hub-skel{display:block;height:13px;border-radius:5px;
+    background:linear-gradient(90deg,var(--paper-2) 25%,var(--line-2) 37%,var(--paper-2) 63%);
+    background-size:400% 100%;animation:qnsk 1.3s ease infinite}
+  .hub-skel.w5{width:58%}.hub-skel.w7{width:82%}
+
+  @media (max-width:1040px){ .qn-cats{grid-template-columns:repeat(3,1fr)} }
+  @media (max-width:760px){
+    .qn-tracks{margin-top:34px}
+    .qn-track{height:38px;padding:0 15px;font-size:13px}
+    .qn-cats{grid-template-columns:repeat(2,1fr)}
+    .qn-bestwrap{padding:18px 16px 20px}
+    .qn-bestttl{font-size:22px}
+    .qn-qtitle{font-size:15.5px}
+    .qn-who{display:none}
+  }
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-orbit on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/community/index.html">OC커뮤니티</a><span>/</span><span class="on">지식나눔</span>
+    </nav>
+
+    <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
+      <a href="/community/hottopic.html">핫토픽</a>
+      <a href="/community/gallery.html">공연사진 / 영상</a>
+      <a href="/community/admission.html">입시</a>
+      <a href="/community/qna.html" class="active">지식나눔</a>
+      <a href="/community/news.html">뉴스</a>
+    </nav>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OC COMMUNITY</div>
+          <h1 class="pdb-title">지식나눔<span id="qnSub" style="font-size:.5em;font-weight:600;letter-spacing:-.01em;margin-left:10px;color:var(--text-3)"></span></h1>
+        </div>
+      </div>
+      <p class="pdb-lead" id="qnLead">궁금한 것을 묻고, 아는 것을 나누는 공간입니다.</p>
+    </header>
+
+    <!-- 갈래 전환 -->
+    <nav class="qn-tracks" aria-label="지식나눔 갈래">
+      <a class="qn-track" id="tkA" href="/community/qna.html">음악지식 Q&amp;A</a>
+      <a class="qn-track" id="tkB" href="/community/qna.html?track=전공별">전공별 정보나눔</a>
+    </nav>
+
+    <!-- 오늘 현황 -->
+    <div class="qn-todays" id="qnToday"></div>
+
+    <!-- 분류 탭 -->
+    <div class="qn-cats" id="qnCats"></div>
+
+    <!-- Best Q&A -->
+    <div class="qn-bestbox" id="qnBest"></div>
+
+    <!-- 질문하기 -->
+    <div class="qn-askrow">
+      <a class="qn-ask" id="qnAsk" href="/community/qna-write.html">질문하기</a>
+    </div>
+  </div>
+</section>
+
+<main class="board">
+  <div class="board-bar pdb-toolbar">
+    <div class="board-search pdb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" placeholder="질문·내용 검색" aria-label="검색">
+      <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
+    </div>
+    <div class="pdb-selects">
+      <select class="board-catsel" aria-label="분류"></select>
+      <select class="board-sort" aria-label="정렬">
+        <option value="created_at">최신순</option>
+        <option value="like_count">공감순</option>
+        <option value="comment_count">답변순</option>
+        <option value="view_count">조회순</option>
+      </select>
+    </div>
+    <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+      <span class="fs-label">글자크기</span>
+      <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+      <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+      <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+    </div>
+  </div>
+
+  <div class="board-count pdb-count">전체 <b>0</b>건</div>
+  <div class="board-list"></div>
+
+  <div class="board-foot">
+    <div class="board-pager"></div>
+    <div class="board-actions"></div>
+  </div>
+</main>
+
+<section class="bigban">
+  <div class="wrap">
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+  </div>
+</section>
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/board.js"></script>
+<script src="/assets/hub.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+
+    /* 갈래 — 주소의 ?track 으로 정한다 (기본은 음악지식) */
+    var TRACK = new URLSearchParams(location.search).get('track') === '전공별' ? '전공별' : '음악지식';
+
+    var CATS = {
+      '음악지식': ['음악학교','해외유학','현대음악','콩쿨','연주/공연/음반',
+                  '입시/진로관련','연주자/연주단체/작곡과','서양음악사','공연홀','대관관련'],
+      '전공별':   ['기악전공','성악전공','작곡전공','음악사/이론전공','교회음악전공','기타전공']
+    };
+    var LEAD = {
+      '음악지식': '음악학교 · 유학 · 콩쿨 · 공연에 대해 묻고 답하는 공간입니다.',
+      '전공별':   '전공별로 필요한 정보를 회원들과 나누는 공간입니다.'
+    };
+
+    /* 화면 문구와 탭 표시 */
+    document.getElementById('qnSub').textContent =
+      TRACK === '전공별' ? '[ 전공별 정보나눔 ]' : '[ 음악지식 Q&A ]';
+    document.getElementById('qnLead').textContent = LEAD[TRACK];
+    document.getElementById(TRACK === '전공별' ? 'tkB' : 'tkA').classList.add('on');
+    document.getElementById('qnAsk').href = '/community/qna-write.html?track=' + encodeURIComponent(TRACK);
+
+    /* 상단 — 오늘 현황 · 분류 탭 · Best Q&A */
+    OCHub.qnaTop({
+      track: TRACK,
+      today: '#qnToday', cats: '#qnCats', best: '#qnBest',
+      order: CATS[TRACK],
+      catSel: '.board-catsel',
+      viewPage: 'qna-view.html'
+    });
+
+    /* 목록 — 공용 게시판 엔진 */
+    OCBoard.list({
+      table:'qna', pageSize:20,
+      viewPage:'qna-view.html', writePage:'qna-write.html?track=' + encodeURIComponent(TRACK),
+      where:'&track=eq.' + encodeURIComponent(TRACK),
+      searchCols:['title','body','keywords'],
+      categories:[{value:'',label:'전체'}].concat(CATS[TRACK].map(function(c){ return {value:c,label:c}; })),
+      articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
+      reactions:true
+    });
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
