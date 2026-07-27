@@ -27,24 +27,25 @@
   .qn-today b{font-size:16px;font-weight:900;letter-spacing:-.03em;
     color:var(--violet-2,#7C63B0);font-variant-numeric:tabular-nums}
 
-  /* 분류 탭 */
-  .qn-cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
-  .qn-cat{display:flex;align-items:center;justify-content:center;gap:6px;height:42px;padding:0 12px;
-    border:1px solid var(--line);border-radius:10px;background:var(--paper);cursor:pointer;
-    font-size:12.8px;font-weight:600;letter-spacing:-.02em;color:var(--text-2);
+  /* 분류 탭 — 촘촘한 격자 (칸 사이는 선 하나만) */
+  .qn-cats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:22px;
+    background:var(--line);padding:1px;border-radius:8px;overflow:hidden}
+  .qn-cat{display:flex;align-items:center;justify-content:center;gap:5px;height:37px;padding:0 10px;
+    border:0;background:var(--paper);cursor:pointer;
+    font-size:12.5px;font-weight:600;letter-spacing:-.02em;color:var(--text-2);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    transition:border-color .15s,color .15s,background .15s}
-  .qn-cat b{font-size:11.5px;font-weight:700;color:var(--text-3);font-variant-numeric:tabular-nums}
-  .qn-cat:hover{border-color:#c9bbe6;color:var(--violet-2)}
-  .qn-cat.on{background:#1b1c2b;border-color:#1b1c2b;color:#fff}
-  .qn-cat.on b{color:rgba(255,255,255,.72)}
-  .qn-catskel{height:96px;border-radius:10px;
+    transition:color .13s,background .13s}
+  .qn-cat b{font-weight:500;font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .qn-cat:hover{background:var(--paper-2);color:var(--violet-2)}
+  .qn-cat.on{background:var(--violet-2,#7C63B0);color:#fff;font-weight:700}
+  .qn-cat.on b{color:rgba(255,255,255,.78)}
+  .qn-catskel{height:114px;border-radius:8px;
     background:linear-gradient(90deg,var(--paper-2) 25%,var(--line-2) 37%,var(--paper-2) 63%);
     background-size:400% 100%;animation:qnsk 1.3s ease infinite}
   @keyframes qnsk{0%{background-position:100% 0}100%{background-position:0 0}}
 
   /* Best Q&A */
-  .qn-bestbox{margin-top:34px}
+  .qn-bestbox{margin-top:30px}
   .qn-bestwrap{border:1px solid var(--line);border-radius:16px;background:var(--paper);
     padding:22px 24px 24px}
   .qn-besthead{display:flex;align-items:center;margin-bottom:16px}
@@ -133,7 +134,12 @@
       <a href="/community/gallery.html">공연사진 / 영상</a>
       <a href="/community/admission.html">입시</a>
       <a href="/community/qna.html" class="active">지식나눔</a>
+      <a href="#">SELF PR</a>
+      <a href="#">이달의 음악학교</a>
       <a href="/community/news.html">뉴스</a>
+      <a href="#">현대음악</a>
+      <a href="#">유틸리티 / 악보 / 자료</a>
+      <a href="#">태교음악</a>
     </nav>
 
     <header class="pdb-head">

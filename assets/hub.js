@@ -481,13 +481,13 @@ window.OCHub = (function () {
         if (catsEl) {
           var list = (d.cats || []).slice();
           var html = '<button type="button" class="qn-cat on" data-cat="">'
-            + '전체보기 <b>' + (d.total || 0).toLocaleString() + '</b></button>';
+            + '전체보기 <b>(' + (d.total || 0).toLocaleString() + ')</b></button>';
           /* 페이지가 정해준 순서를 따르고, 없는 분류는 0 으로 보여준다 */
           var order = cfg.order || list.map(function (x) { return x.k; });
           var byK = {}; list.forEach(function (x) { byK[x.k] = x.n; });
           order.forEach(function (k) {
             html += '<button type="button" class="qn-cat" data-cat="' + esc(k) + '">'
-              + esc(k) + ' <b>' + (byK[k] || 0).toLocaleString() + '</b></button>';
+              + esc(k) + ' <b>(' + (byK[k] || 0).toLocaleString() + ')</b></button>';
           });
           catsEl.innerHTML = html;
 
