@@ -20,18 +20,8 @@
 <style>
   /* ── 지식나눔 전용 ── */
 
-  /* 갈래 전환 (음악지식 Q&A ↔ 전공별 정보나눔) */
-  .qn-tracks{display:flex;gap:8px;margin:44px 0 0}
-  .qn-track{display:inline-flex;align-items:center;gap:7px;height:42px;padding:0 20px;
-    border:1px solid var(--line);border-radius:99px;background:var(--paper);
-    font-size:14px;font-weight:700;letter-spacing:-.02em;color:var(--text-2);text-decoration:none;
-    transition:border-color .15s,color .15s,background .15s}
-  .qn-track:hover{border-color:#c9bbe6;color:var(--violet-2)}
-  .qn-track.on{background:var(--violet-2,#7C63B0);border-color:var(--violet-2,#7C63B0);color:#fff;
-    box-shadow:0 6px 16px rgba(124,99,176,.26)}
-
   /* 오늘 현황 */
-  .qn-todays{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:20px}
+  .qn-todays{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:26px}
   .qn-today{display:inline-flex;align-items:baseline;gap:7px;font-size:12.5px;color:var(--text-3)}
   .qn-today i{font-style:normal}
   .qn-today b{font-size:16px;font-weight:900;letter-spacing:-.03em;
@@ -107,8 +97,6 @@
 
   @media (max-width:1040px){ .qn-cats{grid-template-columns:repeat(3,1fr)} }
   @media (max-width:760px){
-    .qn-tracks{margin-top:34px}
-    .qn-track{height:38px;padding:0 15px;font-size:13px}
     .qn-cats{grid-template-columns:repeat(2,1fr)}
     .qn-bestwrap{padding:18px 16px 20px}
     .qn-bestttl{font-size:22px}
@@ -158,11 +146,11 @@
       <p class="pdb-lead" id="qnLead">궁금한 것을 묻고, 아는 것을 나누는 공간입니다.</p>
     </header>
 
-    <!-- 갈래 전환 -->
-    <nav class="qn-tracks" aria-label="지식나눔 갈래">
-      <a class="qn-track" id="tkA" href="/community/qna.html">음악지식 Q&amp;A</a>
-      <a class="qn-track" id="tkB" href="/community/qna.html?track=전공별">전공별 정보나눔</a>
-    </nav>
+    <!-- 갈래 전환 — 입시 페이지와 같은 탭 (board.css 의 .ac-tabs) -->
+    <div class="ac-tabs">
+      <a id="tkA" href="/community/qna.html">음악지식 Q&amp;A</a>
+      <a id="tkB" href="/community/qna.html?track=전공별">전공별 정보나눔</a>
+    </div>
 
     <!-- 오늘 현황 -->
     <div class="qn-todays" id="qnToday"></div>
