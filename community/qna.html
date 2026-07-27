@@ -27,8 +27,11 @@
   .qn-today b{font-size:16px;font-weight:900;letter-spacing:-.03em;
     color:var(--violet-2,#7C63B0);font-variant-numeric:tabular-nums}
 
-  /* 분류 탭 — 촘촘한 격자 (칸 사이 선과 빈 칸은 --paper-3 로 옅게) */
+  /* 분류 탭 — 촘촘한 격자 (칸 사이 선과 빈 칸은 --paper-3 로 옅게)
+     max-width 는 칸 하나의 폭을 정한다. 줄이려면 이 숫자만 고치면 되고,
+     880px 아래로 내리면 '연주자/연주단체/작곡과' 가 잘리기 시작한다 */
   .qn-cats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:22px;
+    max-width:900px;
     background:var(--paper-3);padding:1px;border-radius:8px;overflow:hidden}
   .qn-cat{display:flex;align-items:center;justify-content:center;gap:5px;height:37px;padding:0 10px;
     border:0;background:var(--paper);cursor:pointer;
@@ -46,7 +49,7 @@
   html[data-theme="dark"] .qn-cat:hover{background:rgba(255,255,255,.05);color:#93a5de}
   html[data-theme="dark"] .qn-cat:hover b{color:#6f7ea8}
   html[data-theme="dark"] .qn-cat.on{background:#3c4a85}
-  .qn-catskel{height:114px;border-radius:8px;
+  .qn-catskel{height:114px;max-width:900px;border-radius:8px;
     background:linear-gradient(90deg,var(--paper-2) 25%,var(--line-2) 37%,var(--paper-2) 63%);
     background-size:400% 100%;animation:qnsk 1.3s ease infinite}
   @keyframes qnsk{0%{background-position:100% 0}100%{background-position:0 0}}
