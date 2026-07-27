@@ -199,6 +199,9 @@
       var row = { title: title, body: bodyHtml, thumb_url: thumb, keywords: $('f-keywords').value.trim() || null };
       if ($('f-category')) row.category = $('f-category').value;
       if ($('f-region')) row.region = $('f-region').value;
+      /* 페이지가 정한 고정 값 (예: 지식나눔의 갈래 track)
+         쓰지 않는 게시판에는 영향이 없습니다 */
+      if (cfg.fixed) Object.keys(cfg.fixed).forEach(function (k) { row[k] = cfg.fixed[k]; });
       if (cfg.docFields) {
         row.link_url = ($('f-home').value || '').trim() || null;
         if (logoUrl) row.logo_url = logoUrl;

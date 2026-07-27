@@ -625,10 +625,12 @@ window.OCBoard = (function () {
     var wrap = document.querySelector('.bv-comments');
     if (!wrap || !cfg.commentsTable) return;
     var PAGE_C = 5, off = 0, total = 0, loading = false;
+    /* 게시판에 따라 '댓글' 대신 '답변' 등으로 부를 수 있다 (기본은 댓글) */
+    var CL = cfg.commentLabel || '댓글';
     wrap.innerHTML =
-      '<h2 class="bvc-h">댓글 <b class="bvc-count">0</b></h2>'
-      + '<div class="bvc-form"><textarea class="bvc-input" rows="2" placeholder="댓글을 남기려면 로그인이 필요합니다." disabled></textarea>'
-      + '<button type="button" class="bvc-submit" disabled>댓글등록</button></div>'
+      '<h2 class="bvc-h">' + CL + ' <b class="bvc-count">0</b></h2>'
+      + '<div class="bvc-form"><textarea class="bvc-input" rows="2" placeholder="' + CL + '을 남기려면 로그인이 필요합니다." disabled></textarea>'
+      + '<button type="button" class="bvc-submit" disabled>' + CL + '등록</button></div>'
       + '<ul class="bvc-list"></ul>'
       + '<div class="bvc-more-wrap"><button type="button" class="bvc-more" style="display:none">더보기</button></div>';
     var listEl = wrap.querySelector('.bvc-list');
@@ -651,7 +653,7 @@ window.OCBoard = (function () {
         .then(function (rows) {
           loading = false;
           if (!Array.isArray(rows)) return;
-          if (off === 0 && !rows.length) listEl.innerHTML = '<li class="bvc-empty">첫 댓글을 남겨보세요.</li>';
+          if (off === 0 && !rows.length) listEl.innerHTML = '<li class="bvc-empty">첫 ' + CL + '을 남겨보세요.</li>';
           else listEl.insertAdjacentHTML('beforeend', rows.map(itemHtml).join(''));
           off += rows.length;
           if (countEl) countEl.textContent = total;

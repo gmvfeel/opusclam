@@ -42,7 +42,7 @@
   .cm-arw svg{width:15px;height:15px}
 
   /* 게시판 바로가기 */
-  .cm-quick{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .cm-quick{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
   .cm-qcard{display:flex;flex-direction:column;gap:5px;padding:15px 15px 14px;
     border:1px solid var(--line);border-radius:13px;background:var(--paper);text-decoration:none;
     transition:border-color .15s, transform .15s, box-shadow .15s}
@@ -201,6 +201,7 @@
       <a href="/community/hottopic.html">핫토픽</a>
       <a href="/community/gallery.html">공연사진 / 영상</a>
       <a href="/community/admission.html">입시</a>
+      <a href="/community/qna.html">지식나눔</a>
       <a href="/community/news.html">뉴스</a>
     </nav>
 
@@ -232,6 +233,10 @@
         <a class="cm-qcard" href="/community/admission-community.html">
           <span class="cm-qlabel">입시커뮤니티</span>
           <span class="cm-qcount"><b id="cAdc">—</b><i>건</i></span>
+        </a>
+        <a class="cm-qcard" href="/community/qna.html">
+          <span class="cm-qlabel">지식나눔</span>
+          <span class="cm-qcount"><b id="cQna">—</b><i>건</i></span>
         </a>
         <a class="cm-qcard" href="/community/news.html">
           <span class="cm-qlabel">뉴스 / 공지</span>
@@ -342,13 +347,16 @@
           cols:'id,category,title,body,thumb_url,school_name,created_at' },
         { label:'입시커뮤니티', table:'admission_community', view:'/community/admission-community-view.html',
           list:'/community/admission-community.html',
+          cols:'id,category,title,body,thumb_url,author_name,created_at' },
+        { label:'지식나눔', table:'qna', view:'/community/qna-view.html',
+          list:'/community/qna.html',
           cols:'id,category,title,body,thumb_url,author_name,created_at' }
       ]
     });
 
     /* 건수 — 탭에 들어간 게시판도 숫자를 채운다 */
-    ['#cAdm','#cAdc','#cNews'].forEach(function(sel,i){
-      var t=['admission','admission_community','news'][i];
+    ['#cAdm','#cAdc','#cQna','#cNews'].forEach(function(sel,i){
+      var t=['admission','admission_community','qna','news'][i];
       fetch('https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/'+t+'?select=id&limit=1',
         { headers:{ apikey:'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',
                     Authorization:'Bearer sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',
