@@ -146,6 +146,15 @@ window.OCSearch = (function () {
         return { t: r.title, s: join([r.category, r.author_name, ymd(r.created_at)]), d: cut(r.body, 70) };
       } },
 
+    { key: 'qna', label: '지식나눔', table: 'qna',
+      cols: ['title', 'body', 'keywords'],
+      sel: 'id,title,body,category,track,author_name,created_at',
+      list: '/community/qna.html', view: '/community/qna-view.html',
+      line: function (r) {
+        var tk = (r.track === '전공별') ? '전공별 정보나눔' : '음악지식 Q&A';
+        return { t: r.title, s: join([tk, r.category, r.author_name, ymd(r.created_at)]), d: cut(r.body, 70) };
+      } },
+
     { key: 'news', label: '뉴스 · 공지', table: 'news',
       cols: ['title', 'body'],
       sel: 'id,title,body,category,created_at',
