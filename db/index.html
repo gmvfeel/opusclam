@@ -162,13 +162,107 @@
   .hb-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
   /* 분석 그래프 영역 */
+  /* 데이터 분석 — 제목은 다른 섹션과 같은 형태, 아래에 설명과 행동 버튼 */
+  .hb-insec{margin-top:52px}
+  .hb-insbtn{display:flex;align-items:center;gap:20px;width:100%;text-align:left;cursor:pointer;
+    padding:16px 16px 16px 20px;border:1px solid var(--line);border-radius:14px;
+    background:var(--paper);transition:border-color .16s, box-shadow .16s}
+  .hb-insbtn:hover{border-color:#c9bbe6;box-shadow:0 8px 22px rgba(24,24,50,.07)}
+  .hb-insdesc{flex:1;min-width:0;font-size:13px;color:var(--text-2);line-height:1.75}
+  .hb-insdesc b{font-weight:800;color:var(--text)}
+
+  /* 누르면 펼쳐진다는 것을 알리는 부분 */
+  .hb-inscta{flex:0 0 auto;display:inline-flex;align-items:center;gap:9px;
+    height:40px;padding:0 8px 0 18px;border-radius:99px;
+    background:var(--violet-2,#7C63B0);color:#fff;
+    box-shadow:0 6px 16px rgba(124,99,176,.28);transition:filter .16s}
+  .hb-insbtn:hover .hb-inscta{filter:brightness(1.07)}
+  .hb-inscta i{font-style:normal;font-size:13px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+  .hb-insmark{position:relative;width:24px;height:24px;border-radius:50%;
+    background:rgba(255,255,255,.22);flex:0 0 auto}
+  .hb-insmark::before,.hb-insmark::after{content:'';position:absolute;left:50%;top:50%;
+    background:#fff;border-radius:1px;transition:transform .2s}
+  .hb-insmark::before{width:10px;height:1.6px;transform:translate(-50%,-50%)}
+  .hb-insmark::after{width:1.6px;height:10px;transform:translate(-50%,-50%)}
+  .hb-insbtn.on .hb-insmark::after{transform:translate(-50%,-50%) rotate(90deg)}
+
+  .hb-inspanels{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+  /* hidden 속성이 display 지정에 밀리지 않도록 (없으면 닫히지 않는다) */
+  .hb-inspanels[hidden]{display:none}
+  @media (max-width:760px){
+    .hb-insbtn{flex-direction:column;align-items:stretch;gap:14px;padding:16px}
+    .hb-inscta{align-self:flex-start}
+  }
+
+  /* 분석 그래프 공통 카드 */
+  .hb-panel{border:1px solid var(--line);border-radius:14px;background:var(--paper);
+    padding:16px 18px 12px;color:var(--text);overflow:hidden}
+  .hb-panel .cv{width:100%;display:block}
+  .hb-ptitle{display:flex;align-items:baseline;gap:8px;margin:0 0 12px}
+  .hb-ptitle b{font-size:14px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+  .hb-ptitle span{font-size:11.5px;color:var(--text-3)}
+  .hb-ptitle u{margin-left:auto;text-decoration:none;font-size:19px;font-weight:900;
+    letter-spacing:-.03em;color:var(--violet-2);font-variant-numeric:tabular-nums}
+  .hb-ptitle u i{font-style:normal;font-size:11px;font-weight:700;color:var(--text-3);margin-left:2px}
+
+  /* 도넛 */
+  .dn-wrap{display:flex;align-items:center;gap:20px}
+  .dn{flex:0 0 auto;width:148px;height:148px;color:var(--text)}
+  .dn-legs{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+  .dn-leg{display:flex;align-items:center;gap:7px;font-size:12.5px}
+  .dn-leg i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+  .dn-leg b{font-weight:700;color:var(--text-2);min-width:52px}
+  .dn-leg u{text-decoration:none;font-weight:800;color:var(--text);
+    font-variant-numeric:tabular-nums;margin-left:auto}
+  .dn-leg s{text-decoration:none;font-size:11px;color:var(--text-3);min-width:38px;text-align:right}
+
+  /* 가로 막대 */
+  .hbz{display:flex;flex-direction:column;gap:8px}
+  .hbz-row{display:flex;align-items:center;gap:10px;font-size:12.5px}
+  .hbz-k{flex:0 0 auto;width:88px;color:var(--text-2);font-weight:600;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hbz-bar{flex:1;min-width:0;height:9px;border-radius:99px;background:var(--paper-2);overflow:hidden}
+  .hbz-bar i{display:block;height:100%;border-radius:99px}
+  .hbz-n{flex:0 0 auto;width:56px;text-align:right;font-weight:800;color:var(--text);
+    font-variant-numeric:tabular-nums}
+
+  /* 완성도 */
+  .fl{display:flex;flex-direction:column;gap:11px}
+  .fl-row{display:flex;align-items:center;gap:11px;font-size:12.5px}
+  .fl-k{flex:0 0 auto;width:96px;color:var(--text-2);font-weight:600}
+  .fl-bar{flex:1;min-width:0;height:10px;border-radius:99px;background:var(--paper-2);overflow:hidden}
+  .fl-bar i{display:block;height:100%;border-radius:99px}
+  .fl-n{flex:0 0 auto;width:44px;text-align:right;font-weight:900;color:var(--text);
+    font-variant-numeric:tabular-nums}
+  .fl-n em{font-style:normal;font-size:10.5px;font-weight:700;color:var(--text-3);margin-left:1px}
+  .fl-note{margin:4px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.6}
+
+  /* 링크가 되는 가로 막대 행 */
+  .hbz-row.is-link{text-decoration:none;color:inherit;border-radius:7px;
+    padding:2px 4px;margin:0 -4px;transition:background-color .15s}
+  .hbz-row.is-link:hover{background:var(--paper-2)}
+  .hbz-row.is-link:hover .hbz-k{color:var(--violet-2,#7C63B0)}
+  .hbz-k{transition:color .15s}
+
+  /* 비율 누적 막대 범례 · 안내문 */
+  .st-legs{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:11px}
+  .st-leg{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-2)}
+  .st-leg i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+  .st-note{margin:9px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.6}
+  /* 그리는 동안 · 실패했을 때 */
+  .ins-load{display:flex;flex-direction:column;gap:9px;padding:10px 0 4px}
+  .ins-err{margin:8px 0 2px;font-size:12.5px;color:var(--text-2);line-height:1.7}
+  .ins-err span{font-size:11px;color:var(--text-3);word-break:break-all}
+
+  .hb-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+  /* 분석 그래프 영역 */
   /* 데이터 분석 — 버튼 하나로 전체를 펼친다 */
   .hb-insec{margin-top:26px}
   .hb-insbtn{display:flex;align-items:center;gap:16px;width:100%;text-align:left;cursor:pointer;
     padding:17px 20px;border:1px solid var(--line);border-radius:14px;background:var(--paper);
     transition:border-color .16s, box-shadow .16s}
   .hb-insbtn:hover{border-color:#c9bbe6;box-shadow:0 8px 22px rgba(24,24,50,.07)}
-  .hb-insttl{flex:0 0 auto;font-size:16px;font-weight:800;letter-spacing:-.03em;color:var(--text)}
   .hb-insdesc{flex:1;min-width:0;font-size:11.5px;color:var(--text-3);line-height:1.55;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .hb-insmark{flex:0 0 auto;position:relative;width:26px;height:26px;border-radius:50%;
@@ -404,10 +498,18 @@
 
     <!-- 데이터 분석 — 필요할 때 골라 펼친다 (기본은 닫힘) -->
     <section class="hb-sec hb-insec">
+      <div class="hb-head">
+        <span class="hb-title">데이터 분석<em>INSIGHT</em></span>
+      </div>
       <button type="button" class="hb-insbtn" id="insToggle" aria-expanded="false">
-        <span class="hb-insttl">데이터 분석</span>
-        <span class="hb-insdesc">시대별 분포 · 분야 구성 · 정보 완성도 · 국적 · 네트워크 · 제자가 많은 스승 · 동문이 많은 학교 · 세기별 분야 변화 · 공연장 좌석 규모</span>
-        <span class="hb-insmark" aria-hidden="true"></span>
+        <span class="hb-insdesc">
+          서양음악사의 흐름과 분야 구성, 사사 계보와 학교별 동문까지
+          <b>아홉 가지 그래프</b>로 살펴봅니다.
+        </span>
+        <span class="hb-inscta">
+          <i id="insCtaText">전체 그래프 보기</i>
+          <em class="hb-insmark" aria-hidden="true"></em>
+        </span>
       </button>
 
       <div class="hb-inspanels" id="insPanels" hidden>
@@ -606,6 +708,8 @@
         wrap.hidden = !willOpen;
         btn.classList.toggle('on', willOpen);
         btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        var cta = document.getElementById('insCtaText');
+        if(cta) cta.textContent = willOpen ? '그래프 접기' : '전체 그래프 보기';
 
         if(willOpen && !loaded){
           loaded = true;
