@@ -24,7 +24,7 @@
   .qn-todays{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:26px}
   .qn-today{display:inline-flex;align-items:baseline;gap:7px;font-size:12.5px;color:var(--text-3)}
   .qn-today i{font-style:normal}
-  .qn-today b{font-size:16px;font-weight:900;letter-spacing:-.03em;
+  .qn-today b{font-size:17px;font-weight:700;letter-spacing:-.03em;
     color:var(--violet-2,#7C63B0);font-variant-numeric:tabular-nums}
 
   /* 다크모드 — 네이비가 어두워 테두리가 묻히므로 밝은 쪽으로 */
@@ -38,7 +38,7 @@
   .qn-bestwrap{border:2px solid #41508e;border-top-width:5px;border-radius:16px;
     background:var(--paper);padding:30px 30px 34px}
   .qn-besthead{display:flex;align-items:center;margin-bottom:24px}
-  .qn-bestttl{font-size:27px;font-weight:800;letter-spacing:-.03em;color:var(--text)}
+  .qn-bestttl{font-size:34px;font-weight:300;letter-spacing:-.02em;color:var(--text)}
   .qn-bestnav{margin-left:auto;display:flex;gap:7px}
   .qn-arw{width:34px;height:34px;display:grid;place-items:center;cursor:pointer;font-size:16px;
     border:1px solid rgba(65,80,142,.24);border-radius:50%;background:var(--paper);color:var(--text-3);
@@ -50,29 +50,21 @@
   .qn-best{flex:0 0 100%;scroll-snap-align:start;min-width:0}
   .qn-q{display:flex;align-items:flex-start;gap:11px;text-decoration:none;color:inherit;
     padding:0 0 20px}
-  .qn-mark{flex:0 0 auto;width:27px;height:27px;display:grid;place-items:center;border-radius:50%;
-    font-size:12.5px;font-weight:800;color:#fff;background:var(--violet-2,#7C63B0)}
+  .qn-mark{flex:0 0 auto;width:29px;height:29px;display:grid;place-items:center;border-radius:50%;
+    font-size:13px;font-weight:700;color:#fff;background:var(--violet-2,#7C63B0)}
   .qn-mark-a{background:var(--text-3,#8a8c9e)}
-  .qn-qtitle{flex:1;min-width:0;font-size:17.5px;font-weight:700;letter-spacing:-.03em;
-    color:var(--text);line-height:1.45}
+  .qn-qtitle{flex:1;min-width:0;font-size:23px;font-weight:600;letter-spacing:-.03em;
+    color:var(--text);line-height:1.48}
   .qn-q:hover .qn-qtitle{color:var(--violet-2)}
   .qn-who{flex:0 0 auto;font-size:12px;color:var(--text-3);padding-top:5px}
   .qn-a{display:flex;align-items:flex-start;gap:11px;padding:21px 22px;border-radius:12px;
     background:var(--paper-2)}
-  .qn-atext{flex:1;min-width:0;font-size:13.2px;color:var(--text-2);line-height:1.8;
+  .qn-atext{flex:1;min-width:0;font-size:13.8px;color:var(--text-2);line-height:1.85;
     display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
   .qn-bestfoot{display:flex;flex-wrap:wrap;gap:7px 12px;margin-top:18px;align-items:center}
-  .qn-bcat{font-size:11px;font-weight:800;color:var(--violet-2);
+  .qn-bcat{font-size:11.5px;font-weight:700;color:var(--violet-2);
     background:rgba(124,99,176,.12);border-radius:6px;padding:3px 9px}
   .qn-bnum{font-size:11.5px;color:var(--text-3)}
-
-  /* 질문하기 */
-  .qn-askrow{display:flex;justify-content:center;margin-top:22px}
-  .qn-ask{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 34px;
-    border:0;border-radius:99px;cursor:pointer;text-decoration:none;
-    font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#fff;
-    background:var(--violet-2,#7C63B0);box-shadow:0 8px 20px rgba(124,99,176,.3)}
-  .qn-ask:hover{filter:brightness(1.07)}
 
   .bd-loading{display:flex;flex-direction:column;gap:9px;padding:14px 4px}
   .bd-empty{padding:26px 0;text-align:center;font-size:13px;color:var(--text-3)}
@@ -83,8 +75,8 @@
 
   @media (max-width:760px){
     .qn-bestwrap{padding:24px 18px 26px}
-    .qn-bestttl{font-size:22px}
-    .qn-qtitle{font-size:15.5px}
+    .qn-bestttl{font-size:27px}
+    .qn-qtitle{font-size:19.5px}
     .qn-who{display:none}
   }
 </style>
@@ -146,11 +138,6 @@
 
     <!-- Best Q&A -->
     <div class="qn-bestbox" id="qnBest"></div>
-
-    <!-- 질문하기 -->
-    <div class="qn-askrow">
-      <a class="qn-ask" id="qnAsk" href="/community/qna-write.html">질문하기</a>
-    </div>
   </div>
 </section>
 
@@ -229,7 +216,6 @@
       TRACK === '전공별' ? '[ 전공별 정보나눔 ]' : '[ 음악지식 Q&A ]';
     document.getElementById('qnLead').textContent = LEAD[TRACK];
     document.getElementById(TRACK === '전공별' ? 'tkB' : 'tkA').classList.add('on');
-    document.getElementById('qnAsk').href = '/community/qna-write.html?track=' + encodeURIComponent(TRACK);
 
     /* 상단 — 오늘 현황 · Best Q&A (분류는 아래 툴바의 드롭다운이 담당) */
     OCHub.qnaTop({
@@ -248,6 +234,7 @@
       searchCols:['title','body','keywords'],
       categories:[{value:'',label:'전체'}].concat(CATS[TRACK].map(function(c){ return {value:c,label:c}; })),
       articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
+      writeLabel:'질문하기',
       reactions:true
     });
   });

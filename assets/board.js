@@ -390,13 +390,15 @@ window.OCBoard = (function () {
     if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
     var sb = document.querySelector('.board-searchbtn'); if (sb) sb.addEventListener('click', doSearch);
 
-    /* '글쓰기' 버튼 — writeRole:'member'면 로그인 회원 누구나, 아니면 관리자만 */
+    /* '글쓰기' 버튼 — writeRole:'member'면 로그인 회원 누구나, 아니면 관리자만
+       writeLabel 을 주면 버튼 글자를 바꿀 수 있다 (없으면 '글쓰기') */
     if (cfg.writePage) {
       var gate = cfg.writeRole === 'member' ? checkMember : checkAdmin;
       gate().then(function (m) {
         if (!m) return;
         var bar = document.querySelector('.board-actions');
-        if (bar) bar.innerHTML = '<a class="board-write" href="' + cfg.writePage + '">\uae00\uc4f0\uae30</a>';
+        if (bar) bar.innerHTML = '<a class="board-write" href="' + cfg.writePage + '">'
+          + esc(cfg.writeLabel || '\uae00\uc4f0\uae30') + '</a>';
       });
     }
 
