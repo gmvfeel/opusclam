@@ -454,6 +454,27 @@ window.OCHub = (function () {
      분류 탭을 누르면 board.js 의 분류 선택값을 바꿔 목록이 걸러진다
      (공용 엔진을 건드리지 않는 방식)
      ============================================================ */
+  /* 분류 <select> 의 각 항목 뒤에 건수를 붙인다.
+     원래 이름은 data-oc-base 에 보관하므로 여러 번 불려도 중복되지 않는다.
+     항목이 아직 없으면(게시판 엔진이 늦게 만들면) 잠시 기다렸다 다시 시도한다 */
+  function paintCatCount(sel, d, tries) {
+    var cs = document.querySelector(sel);
+    if (!cs || !cs.options.length) {
+      if ((tries || 0) < 25) {
+        setTimeout(function () { paintCatCount(sel, d, (tries || 0) + 1); }, 60);
+      }
+      return;
+    }
+    var byK = {};
+    (d.cats || []).forEach(function (x) { byK[x.k] = x.n; });
+    Array.prototype.forEach.call(cs.options, function (o) {
+      var base = o.getAttribute('data-oc-base');
+      if (base == null) { base = o.textContent; o.setAttribute('data-oc-base', base); }
+      var n = o.value ? byK[o.value] : d.total;
+      o.textContent = base + (n == null ? '' : ' (' + n.toLocaleString() + ')');
+    });
+  }
+
   function qnaTop(cfg) {
     var url = SB_URL + '/rest/v1/rpc/qna_stats'
             + (cfg.track ? '?p_track=' + encodeURIComponent(cfg.track) : '');
@@ -502,6 +523,10 @@ window.OCHub = (function () {
             }
           });
         }
+
+        /* 분류 드롭다운에 건수 붙이기 (격자를 쓰지 않는 페이지용)
+           게시판 엔진이 option 을 만드는 시점과 순서가 어긋나도 되도록 잠시 기다린다 */
+        if (cfg.catCount) paintCatCount(cfg.catCount, d, 0);
 
         /* Best Q&A — 좋아요 많은 질문과 첫 답변 */
         if (bestEl) {
