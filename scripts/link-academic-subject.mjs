@@ -42,6 +42,7 @@ const H = {
 const MIN_SUR = 5;        // 성 최소 길이
 const CONF_EN = 70;       // 영문 성 매칭 신뢰도 (성만 맞춘 것이라 낮게)
 const CONF_KO = 85;       // 한글 전체 이름 매칭 신뢰도
+const CONF_REP = 60;      // 겹치는 성에서 대표를 고른 경우 (추정이 섞임)
 
 // 성이면서 일반 낱말인 것들. 이 목록이 부족하면 오탐이 쏟아집니다.
 // 첫 시험에서 실제로 이런 일이 있었습니다.
@@ -90,6 +91,9 @@ const STOP = new Set((
  + 'between within through during before after above under about again these those '
  + 'their there where which while would could should might still three other '
  + 'perfect harmony health nature light dark deep wide real true main '
+   // 유일한 성이지만 일반 낱말이거나 흔한 이름인 것들.
+   // 첫 시험에서 데니스 브레인(Brain) 33건 · Charles · Joseph · Roots 가 걸렸습니다.
+ + 'brain brains charles joseph roots root basic '
 ).split(/\s+/).filter(Boolean));
 
 // ── 유틸 ─────────────────────────────────────────────────────
@@ -135,12 +139,23 @@ async function sbInsert(rows) {
 async function main() {
   console.log('■ 학술 ↔ 인물 주제 연결', VERSION, DRY ? '(시험 실행 · 저장 안 함)' : '');
 
-  const persons = await sbGetAll('persons', 'id,name_ko,name_en');
+  const persons = await sbGetAll('persons', 'id,name_ko,name_en,description,description_en');
   console.log('■ 인물', persons.length, '명');
 
-  // 1) 성 사전 만들기 · 유일한 성만 남깁니다
-  const surCount = new Map();   // 성 -> 인물 수
-  const surFirst = new Map();   // 성 -> 첫 인물
+  // 1) 성 사전 만들기
+  //
+  //    성이 겹치면 원래는 모두 포기했습니다. 그런데 확인해 보니
+  //    클래식 거장들이 가족과 함께 등록돼 있어 전부 빠지고 있었습니다.
+  //      모차르트 5명 (볼프강 · 아버지 레오폴트 · 누나 · 아들 둘)
+  //      슈만 6명 · 슈베르트 4명 · 베토벤 2명 · 리스트 2명
+  //
+  //    그래서 소개문 길이로 대표를 고릅니다. 볼프강 모차르트는
+  //    아버지보다 소개문이 훨씬 깁니다. 다만 2위와 두 배 이상
+  //    차이가 나야 인정합니다. 비슷하면(로베르트 슈만과 클라라 슈만 같은
+  //    경우) 판단을 미루고 그 성은 쓰지 않습니다.
+  const descLen = (p) => Math.max(String(p.description || '').length,
+                                  String(p.description_en || '').length);
+  const bySur = new Map();   // 성 -> 인물 배열
   for (const p of persons) {
     const en = String(p.name_en || '').trim();
     if (!en) continue;
@@ -148,12 +163,24 @@ async function main() {
     const sur = parts[parts.length - 1].toLowerCase().replace(/[^a-z]/g, '');
     if (sur.length < MIN_SUR) continue;
     if (STOP.has(sur)) continue;
-    surCount.set(sur, (surCount.get(sur) || 0) + 1);
-    if (!surFirst.has(sur)) surFirst.set(sur, p);
+    if (!bySur.has(sur)) bySur.set(sur, []);
+    bySur.get(sur).push(p);
   }
-  const surMap = new Map();
-  for (const [sur, n] of surCount) if (n === 1) surMap.set(sur, surFirst.get(sur));
-  console.log('■ 쓸 수 있는 성', surMap.size, '개 (겹치거나 일반 낱말인 것은 제외)');
+  const surMap = new Map();     // 성 -> 인물
+  const surRep = new Map();     // 성 -> true (대표로 고른 것 · 신뢰도를 낮춥니다)
+  let repCount = 0;
+  for (const [sur, arr] of bySur) {
+    if (arr.length === 1) { surMap.set(sur, arr[0]); continue; }
+    const sorted = arr.slice().sort((a, b) => descLen(b) - descLen(a));
+    const first = descLen(sorted[0]), second = descLen(sorted[1]);
+    if (first >= 200 && first >= second * 2) {
+      surMap.set(sur, sorted[0]);
+      surRep.set(sur, true);
+      repCount++;
+    }
+  }
+  console.log('■ 쓸 수 있는 성', surMap.size, '개'
+    + ' (겹치는 성 가운데 대표를 고른 것 ' + repCount + '개)');
 
   // 2) 한글 이름 사전 · 두 자 이상이고 유일한 이름만
   const koCount = new Map(), koFirst = new Map();
@@ -252,7 +279,11 @@ async function main() {
       if (w.length < MIN_SUR) continue;
       if (raw[0] !== raw[0].toUpperCase()) continue;   // 소문자로 시작하면 이름이 아닙니다
       const p = surMap.get(w);
-      if (p && !found.has(p.id)) { found.set(p.id, 'en'); hitEn++; }
+      if (p && !found.has(p.id)) {
+        /* 겹치는 성에서 대표를 고른 경우는 확신이 덜하므로 따로 표시합니다 */
+        found.set(p.id, surRep.has(w) ? 'rep' : 'en');
+        hitEn++;
+      }
     }
     // 한글 · 이름이 제목에 그대로 나오는지 봅니다
     if (/[가-힣]/.test(title)) {
@@ -265,7 +296,10 @@ async function main() {
       pairs.push({ paperId: a.id, personId: pid, how });
     }
   }
-  console.log('■ 새로 이을 주제 연결', pairs.length, '건 (영문 성 ' + hitEn + ' · 한글 이름 ' + hitKo + ')');
+  const nRep = pairs.filter(x => x.how === 'rep').length;
+  console.log('■ 새로 이을 주제 연결', pairs.length, '건'
+    + ' (영문 성 ' + (pairs.length - nRep - pairs.filter(x => x.how === 'ko').length)
+    + ' · 대표 추정 ' + nRep + ' · 한글 이름 ' + pairs.filter(x => x.how === 'ko').length + ')');
   console.log('■ 새로 이을 저자 연결', auPairs.length, '건');
 
   if (!pairs.length && !auPairs.length) { console.log('■ 넣을 것이 없습니다. 종료.'); return; }
@@ -283,8 +317,9 @@ async function main() {
   // 6) 양방향 저장 (기존 teacher/student 쌍과 같은 방식)
   const rows = [];
   for (const p of pairs) {
-    const conf = p.how === 'ko' ? CONF_KO : CONF_EN;
-    const src = p.how === 'ko' ? 'title-match-ko' : 'title-match-en';
+    const conf = p.how === 'ko' ? CONF_KO : (p.how === 'rep' ? CONF_REP : CONF_EN);
+    const src = p.how === 'ko' ? 'title-match-ko'
+              : (p.how === 'rep' ? 'title-match-rep' : 'title-match-en');
     rows.push({ from_type: 'academic', from_id: p.paperId, rel: 'subject',
                 to_type: 'person', to_id: p.personId, source: src, confidence: conf });
     rows.push({ from_type: 'person', from_id: p.personId, rel: 'studied_by',
