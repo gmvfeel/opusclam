@@ -34,7 +34,7 @@ if (!SB_URL || !SB_KEY) {
    dislikes     dislike_count 컬럼이 있는가
    extraCols    글마다 추가로 넣는 컬럼 (예: qna 의 track, keywords)
    requireThumb thumb_url 이 없는 글은 올리지 않음 (사진 게시판)
-   onlyCategory 이 분류만 자동 등록 (예: news 는 '뉴스'만 — '공지'는 사람이 씀)
+   onlyCategory 이 분류만 자동 등록 (설계에 없는 분류가 들어가는 것을 막는 장치)
    perRun       한 회차에 올릴 새 글 수 [최소, 최대]
    weekly       true 면 대략 주 1~2회만 올림 (매 회차마다 확률로 건너뜀)
    ============================================================ */
@@ -65,7 +65,7 @@ const BOARDS = {
   news: {
     table: 'news', commentTable: 'news_comments', fk: 'news_id',
     body: 'text', authorName: false, likes: false, dislikes: false,
-    onlyCategory: ['뉴스'],
+    onlyCategory: ['국내', '해외'],
     perRun: [0, 1], weekly: true,
   },
 };
