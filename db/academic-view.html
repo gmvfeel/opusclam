@@ -1491,7 +1491,10 @@ if('serviceWorker' in navigator){
          .catch(function(){ sec.style.display = 'none'; });
        })();
      })();
-document.title=nm+' · 학술DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+/* 제목이 수백 자인 항목이 섞여 있어(학술지 음반 리뷰 모음 등)
+        브레드크럼과 문서 제목은 줄여서 씁니다. 본문 제목은 그대로 둡니다. */
+     var nmShort = nm.length > 60 ? nm.slice(0, 60) + '\u2026' : nm;
+     document.title=nmShort+' · 학술DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nmShort;
    }).catch(function(e){console.error('학술DB view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
 })();
 </script>

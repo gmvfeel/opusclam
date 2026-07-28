@@ -390,12 +390,46 @@ function isMusical(r) {
   return false;
 }
 
+// 학술지의 음반 리뷰 섹션이 한 항목으로 등록되는 경우가 있습니다.
+//   'GEORGE FRIDERIC HANDEL (1685-1759) CHANDOS ANTHEMS Emma Kirkby (soprano) ...
+//    Hyperion, CDA67737, 2009; one disc, 66 minutes - GEORGE FRIDERIC HANDEL ...'
+// 리뷰 여러 편이 이어 붙어 제목이 수백 자가 되고 화면이 무너집니다.
+// 논문이 아니므로 받지 않습니다.
+const DISC_REVIEW = /\b(one|two|three|four) discs?\b|\d+\s*minutes\b|\bcompact disc\b|\bCDA\d{4,}|\bONCD\d{3,}|\bCDS\d{4,}|\bVol\.\s*[IVX]+:|\bet al\.\s*-/i;
+
+// 제목 자리에 초록이 들어온 경우입니다. OpenAlex 자료에 섞여 있습니다.
+//   'This research explores the role of music in expressing the suffering of ...'
+//   'Vegetables are a ubiquitous part of everyday meals in Nigeria and have ...'
+// 초록이 제목이 되면 그 안의 music 이라는 낱말 때문에 음악 관문도 통과합니다.
+const ABSTRACT_AS_TITLE = /^(this (research|study|paper|article|chapter|thesis|dissertation)|the (aim|purpose|present study|objective) of|in this (paper|study|article)|abstract[:\s])/i;
+
+// 저자 목록이 제목에 붙은 경우입니다.
+//   'Ag Bendesh M., Acakpo A., Aguayo V., Baker S., Diène S. M., ...'
+// 이니셜과 쉼표가 되풀이되는 꼴로 알아냅니다.
+const AUTHOR_LIST = /([A-Z][a-zà-ÿ]+\s+[A-Z]\.,\s*){3,}|([A-Z]\.\s*[A-Z]\.,\s*){3,}/;
+
+// 전기 사전 항목입니다. 논문이 아닙니다.
+//   'Warr, Very Rev. Charles Laing, (20 May 1892-14 June 1969), Dean of the Chapel Royal'
+const BIO_ENTRY = /\(\d{1,2}\s+[A-Z][a-z]+\.?\s+\d{4}\s*[-–—]/;
+
+// 초록이 제목에 온 경우 · 문장이 여럿이면 제목이 아닙니다
+const MULTI_SENTENCE = (t) => t.length > 110 && (t.match(/\.\s+[A-Z]/g) || []).length >= 2;
+
+const MAX_TITLE = 180;   // 실제 논문 제목은 대개 150자 안입니다
+
 function keep(r) {
   if (!r) return false;
   if (!r.name_ko && !r.name_en) return false;
   if (!r.source_id) return false;
   const t = (r.name_ko || r.name_en);
   if (t.length < 8) return false;
+  // 제목이 지나치게 길면 리뷰 모음이거나 초록 · 저자목록이 뒤섞인 것입니다
+  if (t.length > MAX_TITLE) return false;
+  if (DISC_REVIEW.test(t)) return false;
+  if (ABSTRACT_AS_TITLE.test(t)) return false;
+  if (AUTHOR_LIST.test(t)) return false;
+  if (BIO_ENTRY.test(t)) return false;
+  if (MULTI_SENTENCE(t)) return false;
   if (!isMusical(r)) return false;
   return substanceCount(r) >= 3;      // 저자·연도·학술지·초록·DOI 중 3개 이상
 }
