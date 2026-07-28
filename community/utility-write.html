@@ -64,7 +64,15 @@
   OCBoardWrite.init({
     table:'utility', listPage:'utility.html', viewPage:'utility-view.html', bucket:'utility',
     formTitle:'유틸리티 / 악보 / 자료 등록',
-    categories:[{value:'유틸리티'},{value:'악보'},{value:'자료'}]
+    categories:[{value:'유틸리티'},{value:'악보'},{value:'자료'}],
+    docFields:{
+      logo:false,                                   /* 로고 칸은 쓰지 않습니다 */
+      homeLabel:'배포처 / 원본 링크',
+      homeHint:'(공식 홈페이지·공개 아카이브 주소 — 권장)',
+      homePlaceholder:'https://',
+      fileLabel:'첨부파일',
+      fileHint:'(권리 확인된 자료만, 선택)'
+    }
   });
 </script>
 <script src="/assets/app.js" defer></script>

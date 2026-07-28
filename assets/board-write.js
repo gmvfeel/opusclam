@@ -26,11 +26,28 @@
       var ropts = cfg.regions.map(function (r) { return '<option value="' + esc(r.value) + '">' + esc(r.label || r.value) + '</option>'; }).join('');
       regionRow = '<div class="bf-row" style="max-width:220px"><label>국내/해외 *</label><select id="f-region">' + ropts + '</select></div>';
     }
+    /* docFields
+         true            → 홈페이지 · 로고 · 첨부파일 세 칸 (입시요강 기본값)
+         { ... } 객체    → 칸마다 켜고 끄거나 라벨을 바꿀 수 있다
+           home:false / logo:false / file:false      해당 칸을 만들지 않는다
+           homeLabel · homeHint · homePlaceholder    링크 칸 문구
+           fileLabel · fileHint                      첨부 칸 문구
+       옵션을 주지 않으면 기존과 똑같이 동작하므로 다른 게시판에 영향이 없다 */
     var docRows = '';
     if (cfg.docFields) {
-      docRows = '<div class="bf-row"><label>홈페이지 <span style="color:var(--text-3);font-weight:400">(선택)</span></label><input type="text" id="f-home" placeholder="관련 홈페이지 주소"></div>'
-        + '<div class="bf-row"><label>로고등록 <span style="color:var(--text-3);font-weight:400">(학교/기관 로고, 선택)</span></label><div class="bf-file"><button type="button" class="bf-filebtn" id="f-logobtn">이미지 선택</button><span class="bf-filename" id="f-logoname">선택된 파일 없음</span></div><input type="file" id="f-logofile" accept="image/*" style="display:none"></div>'
-        + '<div class="bf-row"><label>첨부파일 <span style="color:var(--text-3);font-weight:400">(요강 문서 hwp·pdf·doc 등, 선택)</span></label><div class="bf-file"><button type="button" class="bf-filebtn" id="f-docbtn">파일 선택</button><span class="bf-filename" id="f-docname">선택된 파일 없음</span></div><input type="file" id="f-docfile" style="display:none"></div>';
+      var D = (typeof cfg.docFields === 'object' && cfg.docFields) ? cfg.docFields : {};
+      var HINT = function (t) { return '<span style="color:var(--text-3);font-weight:400">' + t + '</span>'; };
+      if (D.home !== false) {
+        docRows += '<div class="bf-row"><label>' + esc(D.homeLabel || '홈페이지') + ' ' + HINT(esc(D.homeHint || '(선택)')) + '</label>'
+          + '<input type="text" id="f-home" placeholder="' + esc(D.homePlaceholder || '관련 홈페이지 주소') + '"></div>';
+      }
+      if (D.logo !== false) {
+        docRows += '<div class="bf-row"><label>로고등록 ' + HINT('(학교/기관 로고, 선택)') + '</label><div class="bf-file"><button type="button" class="bf-filebtn" id="f-logobtn">이미지 선택</button><span class="bf-filename" id="f-logoname">선택된 파일 없음</span></div><input type="file" id="f-logofile" accept="image/*" style="display:none"></div>';
+      }
+      if (D.file !== false) {
+        docRows += '<div class="bf-row"><label>' + esc(D.fileLabel || '첨부파일') + ' ' + HINT(esc(D.fileHint || '(요강 문서 hwp·pdf·doc 등, 선택)')) + '</label>'
+          + '<div class="bf-file"><button type="button" class="bf-filebtn" id="f-docbtn">파일 선택</button><span class="bf-filename" id="f-docname">선택된 파일 없음</span></div><input type="file" id="f-docfile" style="display:none"></div>';
+      }
     }
     return ''
       + '<div id="bwGate" class="bf-gate">확인 중…</div>'
@@ -157,8 +174,8 @@
           $('f-agree').checked = true;
           if (cfg.docFields) {
             if ($('f-home')) $('f-home').value = o.link_url || '';
-            if (o.logo_url) { logoUrl = o.logo_url; $('f-logoname').textContent = '기존 로고 유지'; }
-            if (o.file_url) { fileUrl = o.file_url; fileName = o.file_name; $('f-docname').textContent = o.file_name || '기존 파일 유지'; }
+            if (o.logo_url && $('f-logoname')) { logoUrl = o.logo_url; $('f-logoname').textContent = '기존 로고 유지'; }
+            if (o.file_url && $('f-docname')) { fileUrl = o.file_url; fileName = o.file_name; $('f-docname').textContent = o.file_name || '기존 파일 유지'; }
           }
         });
       }
@@ -176,10 +193,15 @@
       });
     }
     function initDocFields() {
-      $('f-logobtn').addEventListener('click', function () { $('f-logofile').click(); });
-      $('f-logofile').addEventListener('change', function () { var f = this.files[0]; if (!f) return; uploadSingle(f, 'logo', function (url) { logoUrl = url; $('f-logoname').textContent = f.name; }); });
-      $('f-docbtn').addEventListener('click', function () { $('f-docfile').click(); });
-      $('f-docfile').addEventListener('change', function () { var f = this.files[0]; if (!f) return; uploadSingle(f, 'file', function (url) { fileUrl = url; fileName = f.name; $('f-docname').textContent = f.name; }); });
+      /* 칸을 끈 경우도 있으므로 요소가 있을 때만 연결한다 */
+      if ($('f-logobtn')) {
+        $('f-logobtn').addEventListener('click', function () { $('f-logofile').click(); });
+        $('f-logofile').addEventListener('change', function () { var f = this.files[0]; if (!f) return; uploadSingle(f, 'logo', function (url) { logoUrl = url; $('f-logoname').textContent = f.name; }); });
+      }
+      if ($('f-docbtn')) {
+        $('f-docbtn').addEventListener('click', function () { $('f-docfile').click(); });
+        $('f-docfile').addEventListener('change', function () { var f = this.files[0]; if (!f) return; uploadSingle(f, 'file', function (url) { fileUrl = url; fileName = f.name; $('f-docname').textContent = f.name; }); });
+      }
     }
 
     function submit() {
@@ -203,7 +225,7 @@
          쓰지 않는 게시판에는 영향이 없습니다 */
       if (cfg.fixed) Object.keys(cfg.fixed).forEach(function (k) { row[k] = cfg.fixed[k]; });
       if (cfg.docFields) {
-        row.link_url = ($('f-home').value || '').trim() || null;
+        if ($('f-home')) row.link_url = ($('f-home').value || '').trim() || null;
         if (logoUrl) row.logo_url = logoUrl;
         if (fileUrl) { row.file_url = fileUrl; row.file_name = fileName; }
       }

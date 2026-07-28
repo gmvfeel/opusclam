@@ -64,7 +64,15 @@
   OCBoardWrite.init({
     table:'modern_music', listPage:'modern.html', viewPage:'modern-view.html', bucket:'modern_music',
     formTitle:'현대음악 등록',
-    categories:[{value:'추천!현대음악'},{value:'현대음악 즐기기'}]
+    categories:[{value:'추천!현대음악'},{value:'현대음악 즐기기'}],
+    docFields:{
+      logo:false,                                   /* 로고 칸은 쓰지 않습니다 */
+      homeLabel:'관련 기사 / 원문 링크',
+      homeHint:'(출처가 있는 글이면 원문 주소를 넣어주세요)',
+      homePlaceholder:'https://',
+      fileLabel:'첨부파일',
+      fileHint:'(권리 확인된 자료만, 선택)'
+    }
   });
 </script>
 <script src="/assets/app.js" defer></script>

@@ -55,7 +55,12 @@ const MAX_TITLES  = 8000;
 // 그래서 범위는 넓히고 품질은 지킬 수 있습니다.
 const CAT_MUSIC = /음악|작곡|연주자|성악|지휘|합창|오페라|피아노|바이올린|비올라|첼로|콘트라베이스|플루트|클라리넷|오보에|바순|호른|트럼펫|트롬본|색소폰|하프|오르간|타악|국악|판소리|가야금|거문고|해금|대금|아쟁|소리꾼/;
 
-const SRC_STRONG = /클래식|현대음악|오페라 작곡가|성악가|지휘자|음악학자|음악 교육자|바이올린 연주자|비올라|첼로|오르간 연주자|플루트|오보에|트럼펫|콘트라베이스|하프 연주자/;
+// 대중음악 계열 분류는 그물에서 빼냅니다.
+// 이걸 두지 않으면 '음악 그룹(1199명)' 같은 큰 분류가 상한을 다 차지해서
+// 정작 필요한 '성악가(129명)' 분류가 밀려납니다.
+const CAT_DENY = /음악 그룹|밴드|아이돌|보이 그룹|걸 그룹|댄스|팝 음악|힙합|랩 |래퍼|록 음악|메탈|펑크|트로트|음악 프로듀서|싱어송라이터|음반 레이블|음악 축제|경연|서바이벌|아카펠라 그룹|음악 방송|주제가|사운드트랙/;
+
+const SRC_STRONG = /클래식|현대음악|오페라|성악가|지휘자|음악학자|음악 교육자|바이올린 연주자|비올라|첼로|오르간 연주자|플루트|오보에|트럼펫|콘트라베이스|하프 연주자/;
 
 const CLASSIC_STRONG = /교향곡|교향악|관현악|실내악|협주곡|칸타타|미사곡|현악 사중주|필하모닉|교향악단|독주회|리사이틀|콩쿠르|음악학자|음악학 박사|현대음악|국립오페라|합창단을 지휘|악장으로|오페라를 작곡|가곡|국악|판소리|명창|중요무형문화재|국립국악원/;
 
@@ -147,18 +152,28 @@ async function findCategories() {
       for (const x of (d.query && d.query.allcategories) || []) {
         const name = x['*'] || x.category || '';
         const n = x.pages || 0;
-        // 음악 관련 분류를 넓게 담습니다. 실제 판정은 인물 단위로 따로 합니다.
-        // 사람이 한 명도 없는 분류는 건너뜁니다.
-        if (name && n > 0 && CAT_MUSIC.test(name)) out.set(name, n);
+        if (!name || n <= 0) continue;
+        // 클래식 근거가 확실한 분류는 무조건 담습니다
+        if (SRC_STRONG.test(name)) { out.set(name, n); continue; }
+        // 대중음악 계열은 빼냅니다
+        if (CAT_DENY.test(name)) continue;
+        // 나머지 음악 관련 분류는 담되, 인물 판정은 따로 합니다
+        if (CAT_MUSIC.test(name)) out.set(name, n);
       }
       from = d['continue'] && d['continue'].accontinue;
       if (!from) break;
       await sleep(400);
     }
   }
-  // 인원이 많은 분류부터 다룹니다
+  // 클래식 근거가 확실한 분류를 먼저 담고, 그 안에서 인원이 많은 순으로 봅니다.
+  // 인원순으로만 자르면 큰 대중음악 분류가 상한을 차지합니다.
   return [...out.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => {
+      const sa = SRC_STRONG.test(a[0]) ? 1 : 0;
+      const sb = SRC_STRONG.test(b[0]) ? 1 : 0;
+      if (sa !== sb) return sb - sa;
+      return b[1] - a[1];
+    })
     .slice(0, MAX_CATS)
     .map(([name, n]) => ({ name, n }));
 }
@@ -218,8 +233,10 @@ async function wikidataOf(qids) {
     const q = 'SELECT ?item ?birth ?death ?en '
       + '(GROUP_CONCAT(DISTINCT ?insL; separator=" · ") AS ?ins) '
       + '(GROUP_CONCAT(DISTINCT ?schL; separator=" · ") AS ?sch) '
-      + '(GROUP_CONCAT(DISTINCT ?genL; separator=", ") AS ?gen) WHERE { '
+      + '(GROUP_CONCAT(DISTINCT ?genL; separator=", ") AS ?gen) '
+      + '(GROUP_CONCAT(DISTINCT ?t; separator=" ") AS ?types) WHERE { '
       + 'VALUES ?item { ' + vs + ' } '
+      + 'OPTIONAL { ?item wdt:P31 ?t } '
       + 'OPTIONAL { ?item wdt:P569 ?birth } '
       + 'OPTIONAL { ?item wdt:P570 ?death } '
       + 'OPTIONAL { ?item rdfs:label ?en FILTER(lang(?en)="en") } '
@@ -239,6 +256,7 @@ async function wikidataOf(qids) {
         ins: b.ins ? b.ins.value : '',
         sch: b.sch ? b.sch.value : '',
         gen: b.gen ? b.gen.value : '',
+        types: b.types ? b.types.value : '',
       };
     }
     await sleep(800);
@@ -247,17 +265,40 @@ async function wikidataOf(qids) {
 }
 
 // ── 판정 · 사람 검토를 대신하는 관문 ─────────────────────────
+// 단체 이름에 흔히 붙는 말입니다.
+// 위키데이터에 개체 유형이 없는 경우를 대비한 보조 장치입니다.
+const GROUP_NAME = /콰르텟|콰르뎃|앙상블|트리오|듀오|오케스트라|교향악단|필하모닉|합창단|중창단|사중주단|삼중주단|현악단|관악단|국악단|무용단|악단|밴드|프로젝트$|컴퍼니|재단|협회|학회/;
+
+// 위키데이터 개체 유형에 사람(Q5)이 있는지 봅니다.
+// true = 사람 · false = 사람 아님 · null = 판단할 자료가 없음
+function isHuman(types) {
+  if (!types) return null;
+  return String(types).split(/\s+/).some(u => u.endsWith('/Q5'));
+}
+
 function judge(cand) {
-  const gen = cand.wd.gen || '';
-  // ① 대중음악 장르는 받지 않습니다
-  if (GENRE.test(gen)) return { ok: false, why: '대중음악 장르' };
-  // ② 분류 이름이 클래식 계열이면 받습니다
+  const w = cand.wd || {};
+
+  // ① 사람이 아니면 받지 않습니다.
+  //    노부스 콰르텟 같은 연주단체는 인물DB 가 아니라 단체DB 로 가야 합니다.
+  const h = isHuman(w.types);
+  if (h === false) return { ok: false, why: '사람이 아님(단체 등)' };
+  if (GROUP_NAME.test(cand.title)) return { ok: false, why: '단체 이름' };
+  //    개체 유형을 못 받았으면 생몰로 판단합니다. 단체는 생몰이 없습니다.
+  if (h === null && isEmpty(w.life)) return { ok: false, why: '사람 여부 확인 불가' };
+
+  // ② 대중음악 장르는 받지 않습니다
+  if (GENRE.test(w.gen || '')) return { ok: false, why: '대중음악 장르' };
+
+  // ③ 분류 이름이 클래식 계열이면 받습니다
   const strongCat = SRC_STRONG.test(cand.cat);
-  // ③ 아니면 소개문에 클래식 지표가 있어야 합니다
+  // ④ 아니면 소개문에 클래식 지표가 있어야 합니다
   const strongText = CLASSIC_STRONG.test(cand.extract || '');
   if (!strongCat && !strongText) return { ok: false, why: '클래식 근거 없음' };
-  // ④ 소개문과 생몰이 모두 없으면 빈약하므로 받지 않습니다
-  if (isEmpty(cand.extract) && isEmpty(cand.wd.life)) return { ok: false, why: '내용 빈약' };
+
+  // ⑤ 소개문과 생몰이 모두 없으면 빈약하므로 받지 않습니다
+  if (isEmpty(cand.extract) && isEmpty(w.life)) return { ok: false, why: '내용 빈약' };
+
   return { ok: true, why: strongCat ? '분류 근거' : '소개문 근거' };
 }
 

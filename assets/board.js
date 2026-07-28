@@ -459,6 +459,11 @@ window.OCBoard = (function () {
         var tag = o.category ? '<span class="board-tag">' + esc(o.category) + '</span>' : '';
         var thumb = o.thumb_url ? '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' : '';
         var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
+        /* 첨부파일이 있으면 본문 위에 내려받기 줄을 둔다 (자료실 성격 게시판용).
+           file_url 컬럼이 없거나 비어 있는 게시판에는 아무 영향이 없다. */
+        var dl = o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener">'
+          + '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>'
+          + '<span>' + esc(o.file_name || '첨부파일 내려받기') + '</span></a>' : '';
         var body = o.body ? '<div class="bv-body">' + (window.DOMPurify ? window.DOMPurify.sanitize(o.body, { ADD_ATTR: ['target', 'style'] }) : nl2br(o.body)) + '</div>' : '';
         var enhance = '';
         if (cfg.enhance) {
@@ -508,7 +513,7 @@ window.OCBoard = (function () {
           + '<div class="bv-meta">' + tag + (srcAu ? '<span>' + srcAu + '</span>' : '')
           + '<span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
           + '</div>'
-          + thumb + body + link
+          + dl + thumb + body + link
           + (cfg.votesTable ? '<div class="bv-votes"></div>' : '')
           + '<div class="bv-rel"></div>'
           + '<div class="bv-foot"></div>';
