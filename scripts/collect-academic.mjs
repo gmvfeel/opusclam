@@ -35,6 +35,16 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const clean = (s) => isEmpty(s) ? null : String(s).replace(/\s+/g, ' ').trim();
 
+// OpenAlex 는 제목에 작은대문자 · 이탤릭 태그를 넣어 보냅니다.
+//   'TE DEUM <scp>hwv</scp>283' · '<i>ZADOK THE PRIEST</i>'
+// 그대로 두면 화면에 태그가 노출됩니다.
+const stripTags = (s) => isEmpty(s) ? null
+  : String(s).replace(/<[^>]*>/g, '')              // 태그는 지웁니다 (hwv283 이 hwv 283 이 되지 않게)
+             .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+             .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+             .replace(/\s+([,.;:)\]])/g, '$1')      // 문장부호 앞 공백 정리
+             .replace(/\s+/g, ' ').trim() || null;
+
 // GitHub Actions 는 여러 사용자가 IP 를 공유하므로 429(요청 과다)가 자주 납니다.
 // 우리 요청 빈도 탓이 아니라 남이 쓴 몫까지 합산되기 때문입니다.
 // 그래서 오래 기다렸다 다시 시도합니다. Retry-After 를 주면 그만큼 따릅니다.
@@ -78,7 +88,8 @@ function unabstract(inv) {
     if (!Array.isArray(idxs)) continue;
     for (const i of idxs) pos[i] = w;
   }
-  const s = pos.filter(Boolean).join(' ').replace(/\s+([,.;:)])/g, '$1').trim();
+  const s = pos.filter(Boolean).join(' ').replace(/<[^>]*>/g, ' ')
+                .replace(/\s+([,.;:)])/g, '$1').replace(/\s+/g, ' ').trim();
   return s.length < 40 ? null : s.slice(0, 2000);
 }
 
@@ -284,7 +295,7 @@ function toLang(code) { return LANG[String(code || '').toLowerCase()] || null; }
 
 // ── 한 건을 표 형식으로 ──────────────────────────────────────
 function toRow(w) {
-  const title = clean(w.display_name || w.title);
+  const title = stripTags(w.display_name || w.title);
   if (!title) return null;
 
   const ko = /[가-힣]/.test(title);
