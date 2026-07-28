@@ -43,23 +43,54 @@ const MIN_SUR = 5;        // 성 최소 길이
 const CONF_EN = 70;       // 영문 성 매칭 신뢰도 (성만 맞춘 것이라 낮게)
 const CONF_KO = 85;       // 한글 전체 이름 매칭 신뢰도
 
-// 성이면서 일반 낱말인 것들. 이 목록이 없으면 오탐이 쏟아집니다.
-// 음악 논문 제목에 자주 나오는 낱말을 특히 챙겼습니다.
-const STOP = new Set(('young church brown white green black price field water river stone '
- + 'world first other sound voice music study order place space times works style forms '
- + 'theory review culture history school method model system process effect change group '
- + 'level value range scale early later major minor sharp cross bell noble royal grand '
- + 'chief queen bishop baker miller taylor turner walker cooper carter foster porter mason '
- + 'gardner marshall german french british english italian russian polish czech japanese '
- + 'korean chinese american french modern classic romantic baroque medieval popular sacred '
- + 'social human public private national international regional local urban rural '
- + 'primary secondary higher lower middle central northern southern eastern western '
- + 'sonata opera choral vocal piano violin cello organ flute drums bands songs pieces '
- + 'analysis practice performance education research learning teaching student teacher '
- + 'gender women children youth adult elder people person body brain memory emotion '
- + 'identity meaning language speech reading writing listening singing playing making '
- + 'between within through during before after above under about again these those their '
- + 'there where which while would could should might still three above under').split(/\s+/));
+// 성이면서 일반 낱말인 것들. 이 목록이 부족하면 오탐이 쏟아집니다.
+// 첫 시험에서 실제로 이런 일이 있었습니다.
+//   알렉스 노스(North) 95건 ← 'in the north' · 'North America'
+//   Gregory Short 35건 ← 'short pieces'
+//   James Reese Europe 30건 ← 'in Europe'
+//   Simon House 22건 ← 'opera house'
+// 그래서 지명 · 음악용어 · 흔한 성을 모두 담았습니다.
+const STOP = new Set((
+   // 방위 · 지명
+   'north south east west northern southern eastern western europe european asia asian '
+ + 'africa african america american britain british england english france french '
+ + 'german germany italy italian spain spanish russia russian poland polish czech '
+ + 'japan japanese korea korean china chinese india indian canada latin western '
+   // 크기 · 정도 · 흔한 형용사
+ + 'short long little small large great greater lesser higher lower middle central '
+ + 'young early later modern late first second third last next past present future '
+ + 'major minor common public private simple complex direct clear plain single double '
+ + 'whole total final initial general special local rural urban '
+   // 색 · 자연
+ + 'brown white green black grey gray silver golden stone field water river brook '
+ + 'wood woods forest garden hill hills lake springs winters summers rivers banks '
+   // 장소 · 건물
+ + 'house home hall court church temple chapel palace castle tower bridge bridges '
+ + 'gates station market street village '
+   // 사람 · 직함
+ + 'musician musicians singer singers player players master masters teacher student '
+ + 'child children women people person doctor professor bishop baker miller taylor '
+ + 'turner walker cooper carter foster porter mason gardner marshall wright fisher '
+ + 'james thomas martin morris lewis harris jones davis clark ward cook price bell '
+ + 'king queen prince princess duke count baron lord lady noble royal '
+   // 음악 용어
+ + 'music musical sound sounds voice voices song songs piece pieces work works '
+ + 'style styles form forms scale scales chord notes beats tempo tones pitch '
+ + 'sonata sonatas opera operas choral vocal instrumental orchestral chamber '
+ + 'piano violin cello viola organ flute clarinet oboe trumpet drums bands '
+ + 'sharp flat treble bass tenor rhythm melody harmony '
+ + 'classic classical romantic baroque medieval renaissance popular sacred secular '
+   // 연구 용어
+ + 'study studies theory theories practice practices analysis performance education '
+ + 'research learning teaching reading writing listening singing playing making '
+ + 'method model system process effect change group level value range order place '
+ + 'space times culture history school review report survey approach context '
+ + 'meaning identity memory emotion gender social human national international '
+   // 기타 흔한 낱말
+ + 'between within through during before after above under about again these those '
+ + 'their there where which while would could should might still three other '
+ + 'perfect harmony health nature light dark deep wide real true main '
+).split(/\s+/).filter(Boolean));
 
 // ── 유틸 ─────────────────────────────────────────────────────
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -206,10 +237,20 @@ async function main() {
     if (!title) continue;
     const found = new Map();   // personId -> how
 
-    // 영문 · 제목을 낱말로 쪼개 성 사전과 맞춥니다
-    const words = title.toLowerCase().match(/[a-z]+/g) || [];
-    for (const w of words) {
+    // 영문 · 제목을 낱말로 쪼개 성 사전과 맞춥니다.
+    //
+    // 대소문자를 함께 봅니다. 사람 이름은 대문자로 시작하므로
+    // 'in the north of Italy' 처럼 소문자로 쓰인 것은 걸러집니다.
+    // (제목 첫 낱말은 늘 대문자라 이 조건으로 못 걸러내고,
+    //  대신 위쪽 배제 목록이 막습니다)
+    //
+    // 아포스트로피는 낱말에 넣지 않습니다. 넣으면 "Beethoven's" 가
+    // 'beethovens' 로 읽혀 사전과 맞지 않게 됩니다.
+    const toks = title.match(/[A-Za-z]+/g) || [];
+    for (const raw of toks) {
+      const w = raw.toLowerCase();
       if (w.length < MIN_SUR) continue;
+      if (raw[0] !== raw[0].toUpperCase()) continue;   // 소문자로 시작하면 이름이 아닙니다
       const p = surMap.get(w);
       if (p && !found.has(p.id)) { found.set(p.id, 'en'); hitEn++; }
     }
