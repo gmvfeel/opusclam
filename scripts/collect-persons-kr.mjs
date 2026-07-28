@@ -40,13 +40,24 @@ const H = {
 const PREFIXES = ['대한민국의', '한국의'];
 
 // 한 번 실행에서 다룰 상한 (무료 실행 시간을 지키기 위한 안전장치)
-const MAX_CATS    = 60;
-const MAX_TITLES  = 4000;
+const MAX_CATS    = 80;
+const MAX_TITLES  = 8000;
 
-// ── 판정 규칙 (admin/kr-collect.html 과 같은 기준) ───────────
+// ── 판정 규칙 ────────────────────────────────────────────────
+// 두 가지를 구분해서 씁니다.
+//
+//  CAT_MUSIC   · 분류를 '찾을' 때 쓰는 넓은 그물.
+//                이걸 좁게 잡으면 '대한민국의 작곡가' 같은 큰 분류를 놓칩니다.
+//  SRC_STRONG  · 인물을 '받을' 때 쓰는 강한 근거.
+//                넓은 그물로 들어온 분류는 이 조건에 안 맞으므로
+//                소개문에 클래식 지표가 있어야 통과합니다.
+//
+// 그래서 범위는 넓히고 품질은 지킬 수 있습니다.
+const CAT_MUSIC = /음악|작곡|연주자|성악|지휘|합창|오페라|피아노|바이올린|비올라|첼로|콘트라베이스|플루트|클라리넷|오보에|바순|호른|트럼펫|트롬본|색소폰|하프|오르간|타악|국악|판소리|가야금|거문고|해금|대금|아쟁|소리꾼/;
+
 const SRC_STRONG = /클래식|현대음악|오페라 작곡가|성악가|지휘자|음악학자|음악 교육자|바이올린 연주자|비올라|첼로|오르간 연주자|플루트|오보에|트럼펫|콘트라베이스|하프 연주자/;
 
-const CLASSIC_STRONG = /교향곡|교향악|관현악|실내악|협주곡|칸타타|미사곡|현악 사중주|필하모닉|교향악단|독주회|리사이틀|콩쿠르|음악학자|음악학 박사|현대음악|국립오페라|합창단을 지휘|악장으로|오페라를 작곡|가곡/;
+const CLASSIC_STRONG = /교향곡|교향악|관현악|실내악|협주곡|칸타타|미사곡|현악 사중주|필하모닉|교향악단|독주회|리사이틀|콩쿠르|음악학자|음악학 박사|현대음악|국립오페라|합창단을 지휘|악장으로|오페라를 작곡|가곡|국악|판소리|명창|중요무형문화재|국립국악원/;
 
 const GENRE = /\bpop\b|popular music|k-?pop|rock|hip ?hop|\brap\b|r&b|rhythm and blues|soul|trot|ballad|electronic|dance|jazz|blues|reggae|funk|metal|\bfolk\b|country|musical theat|film score|video game/i;
 
@@ -136,8 +147,9 @@ async function findCategories() {
       for (const x of (d.query && d.query.allcategories) || []) {
         const name = x['*'] || x.category || '';
         const n = x.pages || 0;
-        // 클래식 계열 분류만 취하고, 사람이 한 명도 없는 분류는 건너뜁니다
-        if (name && n > 0 && SRC_STRONG.test(name)) out.set(name, n);
+        // 음악 관련 분류를 넓게 담습니다. 실제 판정은 인물 단위로 따로 합니다.
+        // 사람이 한 명도 없는 분류는 건너뜁니다.
+        if (name && n > 0 && CAT_MUSIC.test(name)) out.set(name, n);
       }
       from = d['continue'] && d['continue'].accontinue;
       if (!from) break;
@@ -310,7 +322,7 @@ async function main() {
   console.log('■ 국내 인물 수집기', VERSION, DRY ? '(시험 실행 · 저장 안 함)' : '');
 
   const cats = await findCategories();
-  console.log('■ 클래식 계열 분류', cats.length, '개');
+  console.log('■ 음악 관련 분류', cats.length, '개');
   if (!cats.length) { console.log('■ 분류를 찾지 못했습니다. 종료.'); return; }
   console.log('  상위 5개:', cats.slice(0, 5).map(c => c.name + '(' + c.n + ')').join(' · '));
 
