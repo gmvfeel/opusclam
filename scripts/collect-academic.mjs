@@ -165,8 +165,13 @@ function buildQueries(subfieldIds) {
     ? ['music education', 'music therapy', 'musical acoustics',
        'Korean traditional music', 'church music', 'music technology',
        'orchestral conducting', 'music analysis', 'music psychology',
-       'music performance']
-    : ['music education', 'Korean traditional music'];
+       'music performance',
+       // 아래는 분류가 비는 영역을 메우려고 넣었습니다.
+       // 국악은 OpenAlex 수록이 얇아서 여러 낱말로 넓게 훑습니다.
+       'music composition', 'compositional technique', 'contemporary composition',
+       'Korean music', 'gugak', 'pansori', 'Korean composer',
+       'choral conducting', 'organ music', 'liturgical music']
+    : ['music education', 'Korean traditional music', 'music composition'];
   for (const t of titles) {
     qs.push({
       label: '제목: ' + t,
@@ -205,8 +210,18 @@ async function fetchQuery(q) {
 }
 
 // ── 분야 매핑 (기존 12개 분야에 맞춥니다) ────────────────────
-// ── 분야 매핑 ────────────────────────────────────────────────
-// 1단계 · OpenAlex 가 판정한 주제를 먼저 신뢰합니다.
+// ── 분야 매핑 · 세 단계 ──────────────────────────────────────
+// 0단계 · 다른 분야와 겹칠 일이 없는 특수 낱말을 먼저 봅니다.
+//   이 단계가 없으면 판소리 논문이 주제(Music History and Culture)에 걸려
+//   음악사로 확정되고 국악 분류가 텅 빕니다. 작곡·지휘·교회음악도 같습니다.
+const SPECIAL_RULES = [
+  [/(korean traditional|gugak|pansori|sanjo|nongak|gagok|jeongak|samulnori|sinawi|court music of korea)/i, '국악'],
+  [/\b(church music|sacred music|liturg|plainchant|gregorian|chorale|hymn|psalm setting|mass setting|motet)/i, '교회음악'],
+  [/\b(twelve-tone|serialism|serial technique|spectral music|electroacoustic|aleatoric|compositional process|compositional technique|compositional method)/i, '작곡'],
+  [/\b(conductor|conducting|kapellmeister|baton technique)/i, '지휘'],
+];
+
+// 1단계 · OpenAlex 가 판정한 주제를 신뢰합니다.
 //   전문 분류라 제목 낱말보다 훨씬 정확합니다.
 //   순서가 중요합니다. 'Theater, Performance, and Music History' 처럼
 //   두 분야가 겹친 이름은 앞쪽 규칙이 가져가야 합니다.
@@ -222,7 +237,7 @@ const TOPIC_MAP = [
   [/musicolog/i,                            '음악학'],
 ];
 
-// 2단계 · 주제로 안 걸릴 때만 제목과 키워드를 봅니다.
+// 2단계 · 주제로도 안 걸릴 때만 제목과 키워드를 봅니다.
 //
 // 주의 · 정규식을 고칠 때 두 가지를 지켜야 합니다.
 //  (1) 어간으로 잡으려면 뒤쪽에 \b 를 붙이지 않습니다.
@@ -231,29 +246,26 @@ const TOPIC_MAP = [
 //      emotion · affect · memory · listening 을 음악심리에 넣었더니
 //      음악사와 음악이론 논문까지 끌려왔습니다. 그래서 좁혔습니다.
 const FIELD_RULES = [
-  [/(korean traditional|gugak|pansori|sanjo|nongak|gagok|jeongak|samulnori)/i,          '국악'],
   [/\b(music therapy|therapeutic|rehabilitat|palliative|dementia care)/i,               '음악치료'],
   [/\b(music perception|music cognition|neuroscien|neural|\bbrain\b|\beeg\b|\bfmri\b|psycholog|listener|music listening|entrainment)/i, '음악심리'],
-  [/\b(church music|sacred music|liturg|hymn|plainchant|gregorian|organs?\b|chorale)/i, '교회음악'],
   [/\b(music education|music teacher|pedagog|curricul|classroom|music learning)/i,      '음악교육'],
   [/\b(acoustic|psychoacoust|reverberat|sound field|room response|instrument making|violin making)/i, '음향학'],
   [/\b(music information retrieval|signal processing|sound synthesis|midi|audio engineering|computational music)/i, '음악공학'],
   [/\b(music industry|streaming platform|copyright|music market|music consumption|record label)/i, '음악산업'],
-  [/\b(conductor|conducting|orchestral direction|kapellmeister)/i,                      '지휘'],
-  [/\b(composition|compositional|composer|twelve-tone|serialism|spectral music|electroacoustic|aleatoric)/i, '작곡'],
+  [/\b(composition|compositional|composer)/i,                                           '작곡'],
   [/\b(performance practice|interpretation|recital|virtuos|orchestra|ensemble|chamber music|historically informed|staging)/i, '연주·공연'],
   [/\b(harmon|counterpoint|schenker|set theory|music analysis|musical analysis|tonality|tonal|modal|musical form)/i, '음악이론'],
   [/\b(music history|baroque|renaissance|medieval|classical period|romantic|19th-century|18th-century|reception history|manuscript)/i, '음악사'],
 ];
 
 function toField(w) {
+  const title = w.display_name || w.title || '';
   const tp = (w.primary_topic && w.primary_topic.display_name) || '';
+  const kw = (w.keywords || []).map(k => k.display_name || '').join(' ');
+  const hay = [title, tp, kw].join(' ');
+
+  for (const [re, name] of SPECIAL_RULES) if (re.test(hay)) return name;
   for (const [re, name] of TOPIC_MAP) if (re.test(tp)) return name;
-  const hay = [
-    w.display_name || w.title || '',
-    tp,
-    (w.keywords || []).map(k => k.display_name || '').join(' '),
-  ].join(' ');
   for (const [re, name] of FIELD_RULES) if (re.test(hay)) return name;
   return '음악학';   // 기본값
 }
