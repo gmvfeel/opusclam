@@ -9,6 +9,8 @@
 import { HOTTOPIC } from './pool/hottopic.mjs';
 import { ADMISSION } from './pool/admission.mjs';
 import { QNA } from './pool/qna.mjs';
+import { HOTTOPIC2 } from './pool/hottopic-2.mjs';
+import { ADMISSION2 } from './pool/admission-2.mjs';
 // 2차 예정: import { GALLERY } from './pool/gallery.mjs';
 // 2차 예정: import { NEWS }    from './pool/news.mjs';
 
@@ -20,6 +22,9 @@ export const AUTHORS = [
   '두아이맘', '앙상블리더', '타건의맛', '목관사랑', '악보수집가', '로만티스트',
   '음악하는지민', '드레스코드', '앙코르요정', '기립박수', '입시맘', '입문가이드',
   '저녁여덟시', '시험날아침', '스물한살', '선곡고민', '남행열차', '청음노트',
+  '취소표사냥', '오페라입문', '중고악기', '연습일지', '마흔에성악', '손끝의떨림',
+  '갈림길에서', '지휘봉', '온라인레슨', '예고맘', '돌아온사람', '일반고에서',
+  '목소리찾기',
 ];
 
 export const POOL = {
@@ -28,6 +33,8 @@ export const POOL = {
     ...HOTTOPIC,
     ...ADMISSION,
     ...QNA,
+    ...HOTTOPIC2,
+    ...ADMISSION2,
     // ...GALLERY,
     // ...NEWS,
   ],
