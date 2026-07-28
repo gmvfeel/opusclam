@@ -109,6 +109,10 @@ const STOP = new Set((
  + 'junior senior third fourth fifth elder younger '
    // 그 밖에 걸린 것들 · Alan Civil 9건 ← 'civil war'
  + 'civil military naval royal imperial federal '
+   // 이름으로 흔한 것들. 성으로 잡히면 오탐이 됩니다.
+   //   david ← 'King David' · michael ← 이름으로 흔함
+   //   roman ← 'Roman Empire' · 화성 표기 'roman numeral'
+ + 'david michael roman romans peter simon philip daniel samuel gabriel '
 ).split(/\s+/).filter(Boolean));
 
 // ── 유틸 ─────────────────────────────────────────────────────
