@@ -321,11 +321,11 @@ function richness(r) {
 }
 
 // ── Supabase ────────────────────────────────────────────────
-async function sbGetAll(table, select) {
+async function sbGetAll(table, select, extra) {
   const out = []; const STEP = 1000; let from = 0;
   while (true) {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select,
-      { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
+    const url = SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + (extra || '');
+    const r = await fetch(url, { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
     const batch = await r.json();
     out.push(...batch);
@@ -414,20 +414,35 @@ async function main() {
   if (!rows.length) { console.log('■ 넣을 것이 없습니다. 종료.'); return; }
 
   // 기존과 대조
-  const have = await sbGetAll('academic', 'id,source,source_id,doi,' + FILL_COLS.join(','));
+  // 만 건 규모에서 초록까지 전부 내려받으면 수십 MB 가 되어 느려집니다.
+  // 그래서 중복 판정은 식별자만 받고, 빈칸 보강은 실제로 빈 행만 따로 받습니다.
+  const idx = await sbGetAll('academic', 'id,source,source_id,doi');
   const bySid = new Map(), byDoi = new Map();
-  for (const h of have) {
+  for (const h of idx) {
     if (h.source === 'openalex' && h.source_id) bySid.set(String(h.source_id), h);
     if (h.doi) byDoi.set(String(h.doi).toLowerCase(), h);
   }
-  console.log('■ 기존 학술 행:', have.length, '건');
+  console.log('■ 기존 학술 행:', idx.length, '건');
+
+  // 핵심 항목이 비어 있는 행만 상세히 가져옵니다.
+  const HOLE_COLS = ['author', 'pub_year', 'description'];
+  let holes = [];
+  try {
+    holes = await sbGetAll('academic', 'id,source,source_id,doi,' + FILL_COLS.join(','),
+      '&or=(' + HOLE_COLS.map(c => c + '.is.null').join(',') + ')');
+  } catch (e) {
+    console.log('  · 빈칸 조회 건너뜀 ·', String(e.message).slice(0, 80));
+  }
+  const holeById = new Map(holes.map(h => [h.id, h]));
 
   const fresh = [], patch = [];
   for (const r of rows) {
     const old = bySid.get(r.source_id) || (r.doi && byDoi.get(String(r.doi).toLowerCase()));
     if (!old) { fresh.push(r); continue; }
+    const detail = holeById.get(old.id);
+    if (!detail) continue;                 // 빈칸이 없는 행이므로 손대지 않습니다
     const p = {};
-    for (const c of FILL_COLS) if (isEmpty(old[c]) && !isEmpty(r[c])) p[c] = r[c];
+    for (const c of FILL_COLS) if (isEmpty(detail[c]) && !isEmpty(r[c])) p[c] = r[c];
     if (Object.keys(p).length) patch.push({ id: old.id, p });
   }
 
@@ -445,17 +460,36 @@ async function main() {
   for (const { id, p } of patch) { await sbUpdate(id, p); up++; }
   console.log('■ 빈칸 보강:', up, '건');
 
-  // 충실도 순으로 sort_no 재정렬 (빈약한 항목이 뒤로 갑니다)
-  const all = await sbGetAll('academic',
-    'id,sort_no,author,pub_year,publisher,description,doi,is_oa,cited_by');
-  all.sort((a, b) => richness(b) - richness(a));
-  let done = 0;
-  for (let i = 0; i < all.length; i++) {
-    const want = i + 1;
-    if (all[i].sort_no !== want) { await sbUpdate(all[i].id, { sort_no: want }); done++; }
+  // 충실도 순으로 sort_no 재정렬
+  // 건수가 만 단위이므로 한 건씩 고치면 시간이 초과됩니다.
+  // 데이터베이스가 한 번에 처리하도록 함수(academic_rerank)를 호출합니다.
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/academic_rerank', {
+      method: 'POST', headers: H, body: '{}',
+    });
+    if (r.ok) {
+      const n = await r.json();
+      console.log('■ 재정렬 완료 · sort_no 갱신', n, '행');
+    } else {
+      const t = await r.text();
+      console.log('■ 재정렬 건너뜀 · academic_rerank 함수가 없거나 권한이 없습니다.');
+      console.log('  ac-04-rerank.sql 을 실행하시면 다음부터 정렬됩니다. ·', t.slice(0, 120));
+    }
+  } catch (e) {
+    console.log('■ 재정렬 건너뜀 ·', String(e.message).slice(0, 120));
   }
-  console.log('■ 재정렬:', all.length, '행 · sort_no 갱신', done);
-  console.log('■ 완료 · 학술 총', all.length, '건');
+
+  const total = await sbCount('academic');
+  console.log('■ 완료 · 학술 총', total, '건');
+}
+
+// 건수만 헤아립니다 (전체를 내려받지 않습니다)
+async function sbCount(table) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=id&limit=1',
+    { headers: { ...H, Prefer: 'count=exact', Range: '0-0' } });
+  const cr = r.headers.get('content-range') || '';
+  const n = cr.split('/')[1];
+  return n && n !== '*' ? Number(n) : '(알 수 없음)';
 }
 
 main().catch(e => { console.error('■ 실패:', e); process.exit(1); });
