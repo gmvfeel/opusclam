@@ -154,18 +154,24 @@ function buildQueries(subfieldIds) {
     });
   }
 
-  // 세부분야로 안 잡히는 주변 영역은 검색어로 보완합니다.
-  const topics = FULL
+  // 세부분야로 안 잡히는 주변 영역은 제목 검색으로 보완합니다.
+  //
+  // 주의 · search= 를 쓰면 안 됩니다.
+  // OpenAlex 의 search 는 제목뿐 아니라 초록과 본문까지 뒤집니다.
+  // 그래서 본문에 music 이 한 번 스친 암 유전체 논문 같은 것이 대량 섞였습니다.
+  // 피인용 순으로 정렬하면 그런 유명 논문이 최상단을 차지합니다.
+  // title.search 로 제목만 보고, 정렬도 최신순으로 둡니다.
+  const titles = FULL
     ? ['music education', 'music therapy', 'musical acoustics',
        'Korean traditional music', 'church music', 'music technology',
-       'conducting orchestra', 'music analysis theory']
+       'orchestral conducting', 'music analysis', 'music psychology',
+       'music performance']
     : ['music education', 'Korean traditional music'];
-  for (const t of topics) {
+  for (const t of titles) {
     qs.push({
-      label: '검색: ' + t,
-      search: t,
-      filter: 'has_abstract:true,type:article',
-      sort: 'cited_by_count:desc',
+      label: '제목: ' + t,
+      filter: 'title.search:' + t + ',has_abstract:true',
+      sort: 'publication_year:desc',
     });
   }
   return qs;
@@ -303,12 +309,47 @@ function substanceCount(r) {
   if (r.doi) n++;
   return n;
 }
+// 음악 문헌인지 판정합니다.
+// 주제 이름에 music 이 들어가거나, 제목에 음악 관련 낱말이 있거나,
+// 한글 제목이면(국내 논문) 받습니다. 그 밖은 받지 않습니다.
+// 이 관문이 없으면 초록·본문에 낱말이 스친 무관한 논문이 섞입니다.
+// 음악에서만 쓰이는 낱말로 짭니다.
+// harmony · rhythm · pitch · vocal · instrument 처럼 다른 분야에서도 흔한 말은
+// 일부러 넣지 않았습니다 (수학의 harmonic analysis, 의학의 heart rhythm 등이 걸립니다).
+//
+// 짧은 낱말은 반드시 \b 로 감싸야 합니다. 그러지 않으면
+//   aria  → v(aria)bility · M(aria)
+//   viola → (viola)tion
+//   harp  → s(harp)
+//   cello → Mar(cello)
+// 처럼 다른 단어 속 철자에 걸립니다.
+const MUSICAL_TITLE = new RegExp([
+  'music|musical|musicolog|ethnomusic',
+  'opera|operetta|symphon|philharmon|orchestr|concerto|sonata|cantata|oratorio|requiem|motet|madrigal|fugue',
+  '\\baria\\b|\\blieder\\b',
+  'quartet|quintet|sextet|octet|chamber music',
+  'violin|\\bviola\\b|\\bcello\\b|contrabass|piano|pianist|harpsichord|flute|clarinet|oboe|bassoon|trumpet|trombone|saxophone|guitar|\\bharp\\b|percussion',
+  'composer|composition|counterpoint|tonality|timbre|plainchant|gregorian|hymn|chorale',
+  'choir|choral|chorus|singer|singing|soprano|mezzo|\\btenor\\b|baritone|melod',
+  'conductor|conducting|recital|repertoire|conservatoir|conservatory',
+  'jazz|gugak|pansori|sanjo',
+].join('|'), 'i');
+
+function isMusical(r) {
+  if (/music/i.test(r.topic_raw || '')) return true;
+  const t = (r.name_en || r.name_ko || '');
+  if (MUSICAL_TITLE.test(t)) return true;
+  if (/[가-힣]/.test(t)) return true;      // 한글 제목 = 국내 논문이므로 남깁니다
+  return false;
+}
+
 function keep(r) {
   if (!r) return false;
   if (!r.name_ko && !r.name_en) return false;
   if (!r.source_id) return false;
   const t = (r.name_ko || r.name_en);
   if (t.length < 8) return false;
+  if (!isMusical(r)) return false;
   return substanceCount(r) >= 3;      // 저자·연도·학술지·초록·DOI 중 3개 이상
 }
 function richness(r) {
