@@ -1399,6 +1399,126 @@ if('serviceWorker' in navigator){
        var _u=[_wiki,_aud,_vid,_sco];
        for(var _i=0;_i<4;_i++){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}
      }})();
+
+     /* ── 관계 데이터를 화면에 붙입니다 ──────────────────────
+        entity_links 에 스승 · 제자 관계가 21,845건 있는데
+        여태 화면에서 쓰이지 않아 '관련 인물' 이 시안 상태였습니다.
+        오늘 만든 논문 연결(subject · author)도 함께 씁니다.
+
+        관계 종류
+          teacher    이 인물의 스승
+          student    이 인물의 제자
+          studied_by 이 인물을 다룬 논문
+          wrote      이 인물이 쓴 논문
+     */
+     (function(){
+       function korTitle(h){
+         var t = (h.textContent || '').replace(/\s+/g, ' ').trim();
+         var en = h.querySelector('.pv-h-en');
+         if (en) t = t.replace((en.textContent || '').trim(), '').trim();
+         return t;
+       }
+       var SEC = {};
+       Array.prototype.forEach.call(document.querySelectorAll('.pv-sec'), function (sec) {
+         var h = sec.querySelector('.pv-h'); if (!h) return;
+         var t = korTitle(h);
+         if (t && !SEC[t]) SEC[t] = sec;
+       });
+       var relSec = SEC['관련 인물'];
+       if (!relSec) return;
+       var box = relSec.querySelector('.pv-people');
+       if (!box) return;
+       box.innerHTML = '<span style="font-size:13px;color:var(--text-3)">불러오는 중…</span>';
+
+       var q = URL + '/rest/v1/entity_links'
+             + '?select=rel,to_type,to_id,to_label,confidence'
+             + '&from_type=eq.person&from_id=eq.' + encodeURIComponent(id)
+             + '&rel=in.(teacher,student,studied_by,wrote)&limit=200';
+
+       fetch(q, { headers: H }).then(function (r) { return r.json(); })
+        .then(function (rows) {
+          if (!Array.isArray(rows) || !rows.length) { relSec.style.display = 'none'; return; }
+
+          var pIds = [], aIds = [];
+          rows.forEach(function (l) {
+            if (!l.to_id) return;
+            if (l.to_type === 'person') pIds.push(l.to_id);
+            else if (l.to_type === 'academic') aIds.push(l.to_id);
+          });
+          function uniq(a){ var s={},o=[]; a.forEach(function(x){ if(!s[x]){s[x]=1;o.push(x);} }); return o; }
+          pIds = uniq(pIds).slice(0, 60);
+          aIds = uniq(aIds).slice(0, 40);
+
+          var jobs = [];
+          jobs.push(pIds.length
+            ? fetch(URL + '/rest/v1/persons?select=id,name_ko,name_en,field,era_name'
+                    + '&id=in.(' + pIds.join(',') + ')', { headers: H }).then(function(r){return r.json();})
+            : Promise.resolve([]));
+          jobs.push(aIds.length
+            ? fetch(URL + '/rest/v1/academic?select=id,name_ko,name_en,ava,field,pub_year'
+                    + '&id=in.(' + aIds.join(',') + ')', { headers: H }).then(function(r){return r.json();})
+            : Promise.resolve([]));
+
+          Promise.all(jobs).then(function (res) {
+            var pMap = {}, aMap = {};
+            (res[0] || []).forEach(function (x) { pMap[x.id] = x; });
+            (res[1] || []).forEach(function (x) { aMap[x.id] = x; });
+
+            var GROUP = [
+              { rel: 'teacher',    title: '스승',            en: 'Teachers' },
+              { rel: 'student',    title: '제자',            en: 'Students' },
+              { rel: 'wrote',      title: '집필한 문헌',      en: 'Publications' },
+              { rel: 'studied_by', title: '이 인물을 다룬 문헌', en: 'Studies on' }
+            ];
+
+            function card(href, ava, name, meta){
+              return '<a class="pv-person" href="' + href + '">'
+                + '<span class="ava">' + esc(ava) + '</span>'
+                + '<span><span class="pn">' + esc(name) + '</span>'
+                + '<span class="pf">' + esc(meta) + '</span></span></a>';
+            }
+
+            var html = '', total = 0;
+            GROUP.forEach(function (g) {
+              var mine = rows.filter(function (l) { return l.rel === g.rel; });
+              if (!mine.length) return;
+              var cards = [];
+              mine.forEach(function (l) {
+                if (l.to_type === 'person') {
+                  var p = pMap[l.to_id];
+                  var nm = p ? (p.name_ko || p.name_en) : (l.to_label || '');
+                  if (!nm) return;
+                  var meta = p ? [p.era_name, p.field].filter(Boolean).join(' · ') : '';
+                  cards.push(card(p ? 'person-view.html?id=' + encodeURIComponent(p.id) : '#',
+                                  nm.charAt(0), nm, meta));
+                } else if (l.to_type === 'academic') {
+                  var a = aMap[l.to_id]; if (!a) return;
+                  var t2 = (a.name_ko || a.name_en || '').trim(); if (!t2) return;
+                  if (t2.length > 42) t2 = t2.slice(0, 42) + '\u2026';
+                  cards.push(card('academic-view.html?id=' + encodeURIComponent(a.id),
+                                  a.ava || '논', t2,
+                                  [a.field, a.pub_year].filter(Boolean).join(' · ')));
+                }
+              });
+              if (!cards.length) return;
+              total += cards.length;
+              html += '<div style="width:100%;margin:2px 0 -2px">'
+                + '<span style="font-size:12.5px;font-weight:600;color:var(--text-2)">'
+                + g.title + '</span>'
+                + '<span style="font-size:11px;color:var(--text-3);margin-left:6px">'
+                + g.en + ' · ' + cards.length + '</span></div>'
+                + cards.join('');
+            });
+
+            if (!total) { relSec.style.display = 'none'; return; }
+            box.innerHTML = html;
+            /* 제목을 실제 내용에 맞게 바꿉니다 */
+            var h2 = relSec.querySelector('.pv-h');
+            if (h2) h2.innerHTML = '관계 <span class="pv-h-en">Connections</span>';
+          });
+        })
+        .catch(function(){ relSec.style.display = 'none'; });
+     })();
 document.title=nm+' · 인물DB · OPUSCLAM.COM';
      var cr=document.querySelector('.pdb-crumb .on'); if(cr) cr.textContent=nm;
      // ===== 하단 콘텐츠 섹션 채우기 (사진=위키미디어 실제 / 영상·음원·악보=검색 연결) =====

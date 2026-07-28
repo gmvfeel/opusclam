@@ -1393,28 +1393,96 @@ if('serviceWorker' in navigator){
          });
        })();
 
-       /* 관련 문헌 · 같은 분야의 다른 논문을 불러옵니다 */
+       /* 관련 문헌 · 이 논문이 다룬 인물과 같은 분야의 다른 논문을 함께 보여줍니다.
+          주제 인물은 entity_links 의 subject · author 관계에서 가져옵니다. */
        (function(){
          var sec = SEC['관련 문헌']; if (!sec) return;
          var box = sec.querySelector('.pv-people');
-         if (!box || !x.field) { sec.style.display = 'none'; return; }
-         var q = URL + '/rest/v1/academic?select=id,name_ko,name_en,ava,field,type'
-               + '&field=eq.' + encodeURIComponent(x.field)
-               + '&id=neq.' + encodeURIComponent(id)
-               + '&hidden=is.false&order=sort_no.desc&limit=6';
-         fetch(q, { headers: H }).then(function (r) { return r.json(); })
-          .then(function (list) {
-            if (!Array.isArray(list) || !list.length) { sec.style.display = 'none'; return; }
-            box.innerHTML = list.map(function (o) {
-              var t3 = (o.name_ko || o.name_en || '').trim(); if (!t3) return '';
-              var meta = [o.field, o.type].filter(Boolean).join(' · ');
-              return '<a class="pv-person" href="academic-view.html?id=' + encodeURIComponent(o.id) + '">'
-                + '<span class="ava">' + esc(o.ava || t3.charAt(0)) + '</span>'
-                + '<span><span class="pn">' + esc(t3.length > 46 ? t3.slice(0, 46) + '\u2026' : t3) + '</span>'
-                + '<span class="pf">' + esc(meta) + '</span></span></a>';
-            }).join('');
-          })
-          .catch(function(){ sec.style.display = 'none'; });
+         if (!box) { sec.style.display = 'none'; return; }
+
+         /* ① 이 논문이 다룬 인물 · 저자 */
+         var qp = URL + '/rest/v1/entity_links?select=rel,to_id,confidence'
+                + '&from_type=eq.academic&from_id=eq.' + encodeURIComponent(id)
+                + '&to_type=eq.person&rel=in.(subject,author)&limit=30';
+         /* ② 같은 분야의 다른 논문 */
+         var qa = x.field
+                ? URL + '/rest/v1/academic?select=id,name_ko,name_en,ava,field,type'
+                  + '&field=eq.' + encodeURIComponent(x.field)
+                  + '&id=neq.' + encodeURIComponent(id)
+                  + '&hidden=is.false&order=sort_no.desc&limit=6'
+                : null;
+
+         var jobs = [fetch(qp, { headers: H }).then(function (r) { return r.json(); })];
+         jobs.push(qa ? fetch(qa, { headers: H }).then(function (r) { return r.json(); })
+                      : Promise.resolve([]));
+
+         Promise.all(jobs).then(function (res) {
+           var links = Array.isArray(res[0]) ? res[0] : [];
+           var papers = Array.isArray(res[1]) ? res[1] : [];
+           var ids = [];
+           links.forEach(function (l) { if (l.to_id && ids.indexOf(l.to_id) < 0) ids.push(l.to_id); });
+
+           var pq = ids.length
+             ? fetch(URL + '/rest/v1/persons?select=id,name_ko,name_en,field,era_name'
+                     + '&id=in.(' + ids.slice(0, 30).join(',') + ')', { headers: H })
+               .then(function (r) { return r.json(); })
+             : Promise.resolve([]);
+
+           pq.then(function (plist) {
+             var pMap = {};
+             (plist || []).forEach(function (p) { pMap[p.id] = p; });
+
+             function card(href, ava, name, meta){
+               return '<a class="pv-person" href="' + href + '">'
+                 + '<span class="ava">' + esc(ava) + '</span>'
+                 + '<span><span class="pn">' + esc(name) + '</span>'
+                 + '<span class="pf">' + esc(meta) + '</span></span></a>';
+             }
+             function head(t, en, n){
+               return '<div style="width:100%;margin:2px 0 -2px">'
+                 + '<span style="font-size:12.5px;font-weight:600;color:var(--text-2)">' + t + '</span>'
+                 + '<span style="font-size:11px;color:var(--text-3);margin-left:6px">'
+                 + en + ' · ' + n + '</span></div>';
+             }
+
+             var html = '', total = 0;
+
+             /* 다룬 인물 · 저자를 앞에 둡니다 */
+             [['subject', '다룬 인물', 'Subjects'], ['author', '저자', 'Authors']].forEach(function (g) {
+               var cards = [];
+               links.filter(function (l) { return l.rel === g[0]; }).forEach(function (l) {
+                 var p = pMap[l.to_id]; if (!p) return;
+                 var nm = (p.name_ko || p.name_en || '').trim(); if (!nm) return;
+                 cards.push(card('person-view.html?id=' + encodeURIComponent(p.id),
+                                 nm.charAt(0), nm,
+                                 [p.era_name, p.field].filter(Boolean).join(' · ')));
+               });
+               if (!cards.length) return;
+               total += cards.length;
+               html += head(g[1], g[2], cards.length) + cards.join('');
+             });
+
+             /* 같은 분야 논문 */
+             if (papers.length) {
+               var pc = papers.map(function (o) {
+                 var t3 = (o.name_ko || o.name_en || '').trim(); if (!t3) return '';
+                 if (t3.length > 42) t3 = t3.slice(0, 42) + '\u2026';
+                 return card('academic-view.html?id=' + encodeURIComponent(o.id),
+                             o.ava || '논', t3, [o.field, o.type].filter(Boolean).join(' · '));
+               }).filter(Boolean);
+               if (pc.length) {
+                 total += pc.length;
+                 html += head('같은 분야 문헌', 'Same field', pc.length) + pc.join('');
+               }
+             }
+
+             if (!total) { sec.style.display = 'none'; return; }
+             box.innerHTML = html;
+             var h2 = sec.querySelector('.pv-h');
+             if (h2) h2.innerHTML = '관계 <span class="pv-h-en">Connections</span>';
+           });
+         })
+         .catch(function(){ sec.style.display = 'none'; });
        })();
      })();
 document.title=nm+' · 학술DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
