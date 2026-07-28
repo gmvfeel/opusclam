@@ -87,6 +87,10 @@
   .pdb-table th.c-school, .pdb-table td.c-school,
   .pdb-table th.c-link, .pdb-table td.c-link{text-align:center}
   .pdb-table .c-field .tag{margin:0 1px}/* 호버(퍼플) 시 추가 요소도 흰색 *//* 행 호버 색 전환을 부드럽게 *//* OC 회원 배지 (별표 대체) *//* ALLIANCE WXN: 빅배너 바로 위, 어두운 텍스트 *//* 헤더 배경: 메인 4번째 패턴(scene-net 별자리) *//* 다크모드 행 호버: 순수 블랙 */
+  /* 국내 자료 갱신 시점 표시 (기존 안내 문구와 같은 크기 · 색) */
+  .pdb-updated{font-size:12px;color:var(--text-3)}
+  .pdb-updated b{font-weight:600;color:var(--text-2)}
+  @media(max-width:768px){ .pdb-updated{font-size:11px} }
   @media(max-width:768px){.util{display:none}}</style>
 </head>
 <body>
@@ -200,6 +204,9 @@
     <div class="pdb-meta">
       <div class="pdb-count">전체 <b>160</b>개</div>
       <div class="pdb-meta-right">
+        <!-- 국내 기관 자료를 분기마다 보강할 때 아래 날짜를 고쳐 주세요.
+             해외 자료(음반사 · 콩쿠르)는 매월 자동으로 갱신됩니다. -->
+        <div class="pdb-updated">국내 자료 갱신 · <b>2026년 7월</b></div>
         <div class="pdb-legend"><span class="oc-badge">OC</span> 오퍼스클램 등록 기관</div>
         <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
           <span class="fs-label">글자크기</span>
