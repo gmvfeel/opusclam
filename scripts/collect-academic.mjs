@@ -205,34 +205,53 @@ async function fetchQuery(q) {
 }
 
 // ── 분야 매핑 (기존 12개 분야에 맞춥니다) ────────────────────
-// 규칙은 위에서부터 차례로 검사하고 처음 맞는 것을 씁니다.
-// 그래서 특수한 분야를 앞에, 넓은 분야를 뒤에 두어야 합니다.
+// ── 분야 매핑 ────────────────────────────────────────────────
+// 1단계 · OpenAlex 가 판정한 주제를 먼저 신뢰합니다.
+//   전문 분류라 제목 낱말보다 훨씬 정확합니다.
+//   순서가 중요합니다. 'Theater, Performance, and Music History' 처럼
+//   두 분야가 겹친 이름은 앞쪽 규칙이 가져가야 합니다.
+const TOPIC_MAP = [
+  [/music education/i,                      '음악교육'],
+  [/music therapy|therapy and health/i,     '음악치료'],
+  [/perception|neuroscien|cognitio/i,       '음악심리'],
+  [/theater|theatre|performance/i,          '연주·공연'],
+  [/music history|history and culture/i,    '음악사'],
+  [/musical analysis|music analysis/i,      '음악이론'],
+  [/audio processing|music technology|sound studies|information retrieval/i, '음악공학'],
+  [/acoustic|hearing|noise/i,               '음향학'],
+  [/musicolog/i,                            '음악학'],
+];
+
+// 2단계 · 주제로 안 걸릴 때만 제목과 키워드를 봅니다.
 //
 // 주의 · 정규식을 고칠 때 두 가지를 지켜야 합니다.
 //  (1) 어간으로 잡으려면 뒤쪽에 \b 를 붙이지 않습니다.
-//      \bacoustic\b 는 'acoustics' 를 놓칩니다. \bacoustic 이라야 잡힙니다.
-//  (2) 반대로 흔한 낱말은 완전 단어로 묶어야 합니다.
-//      \borgan 으로 두면 'organization' 이 교회음악으로 잡힙니다.
-//      \bconduct 로 두면 'the study was conducted' 가 지휘로 잡힙니다.
+//      \bacoustic\b 는 'acoustics' 를 놓칩니다.
+//  (2) 반대로 흔한 낱말은 완전 단어로 묶거나 아예 넣지 않습니다.
+//      emotion · affect · memory · listening 을 음악심리에 넣었더니
+//      음악사와 음악이론 논문까지 끌려왔습니다. 그래서 좁혔습니다.
 const FIELD_RULES = [
   [/(korean traditional|gugak|pansori|sanjo|nongak|gagok|jeongak|samulnori)/i,          '국악'],
-  [/\b(music therapy|therapeutic|rehabilitat|clinical|patient|dementia|depression|intervention|wellbeing|palliative)/i, '음악치료'],
-  [/\b(perception|cognitio|cognitive|neuroscien|neural|brain|eeg|fmri|emotion|affect|psycholog|listener|listening|memory|entrainment)/i, '음악심리'],
+  [/\b(music therapy|therapeutic|rehabilitat|palliative|dementia care)/i,               '음악치료'],
+  [/\b(music perception|music cognition|neuroscien|neural|\bbrain\b|\beeg\b|\bfmri\b|psycholog|listener|music listening|entrainment)/i, '음악심리'],
   [/\b(church music|sacred music|liturg|hymn|plainchant|gregorian|organs?\b|chorale)/i, '교회음악'],
-  [/\b(music education|music teacher|pedagog|curricul|classroom|music learning|student)/i, '음악교육'],
+  [/\b(music education|music teacher|pedagog|curricul|classroom|music learning)/i,      '음악교육'],
   [/\b(acoustic|psychoacoust|reverberat|sound field|room response|instrument making|violin making)/i, '음향학'],
-  [/\b(music information retrieval|signal processing|sound synthesis|midi|audio engineering|machine learning|computational music|deep learning|algorithm)/i, '음악공학'],
+  [/\b(music information retrieval|signal processing|sound synthesis|midi|audio engineering|computational music)/i, '음악공학'],
   [/\b(music industry|streaming platform|copyright|music market|music consumption|record label)/i, '음악산업'],
   [/\b(conductor|conducting|orchestral direction|kapellmeister)/i,                      '지휘'],
   [/\b(composition|compositional|composer|twelve-tone|serialism|spectral music|electroacoustic|aleatoric)/i, '작곡'],
-  [/\b(performance practice|interpretation|recital|virtuos|orchestra|ensemble|chamber music|historically informed|theater|theatre|staging)/i, '연주·공연'],
+  [/\b(performance practice|interpretation|recital|virtuos|orchestra|ensemble|chamber music|historically informed|staging)/i, '연주·공연'],
   [/\b(harmon|counterpoint|schenker|set theory|music analysis|musical analysis|tonality|tonal|modal|musical form)/i, '음악이론'],
-  [/\b(music history|baroque|renaissance|medieval|classical period|romantic|19th-century|18th-century|reception history|manuscript|culture)/i, '음악사'],
+  [/\b(music history|baroque|renaissance|medieval|classical period|romantic|19th-century|18th-century|reception history|manuscript)/i, '음악사'],
 ];
+
 function toField(w) {
+  const tp = (w.primary_topic && w.primary_topic.display_name) || '';
+  for (const [re, name] of TOPIC_MAP) if (re.test(tp)) return name;
   const hay = [
     w.display_name || w.title || '',
-    (w.primary_topic && w.primary_topic.display_name) || '',
+    tp,
     (w.keywords || []).map(k => k.display_name || '').join(' '),
   ].join(' ');
   for (const [re, name] of FIELD_RULES) if (re.test(hay)) return name;
