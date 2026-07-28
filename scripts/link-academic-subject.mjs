@@ -105,6 +105,10 @@ const STOP = new Set((
    // 의학 · 실험 용어. 음악치료 논문에 'clinical trial' 이 계속 나옵니다
  + 'trial trials clinical patient patients therapy therapies control controls '
  + 'sample samples subject subjects placebo random cohort '
+   // 이름 뒤에 붙는 말 · 성으로 잡히면 오탐이 됩니다
+ + 'junior senior third fourth fifth elder younger '
+   // 그 밖에 걸린 것들 · Alan Civil 9건 ← 'civil war'
+ + 'civil military naval royal imperial federal '
 ).split(/\s+/).filter(Boolean));
 
 // ── 유틸 ─────────────────────────────────────────────────────
@@ -153,19 +157,38 @@ async function main() {
   const persons = await sbGetAll('persons', 'id,name_ko,name_en,description,description_en');
   console.log('■ 인물', persons.length, '명');
 
+  // 인물별 관계 수를 셉니다. 대표를 고를 때 쓰는 가장 좋은 단서입니다.
+  // 볼프강 모차르트는 스승 · 제자 관계가 많고 아버지 레오폴트는 적습니다.
+  const relCount = new Map();
+  try {
+    const all = await sbGetAll('entity_links', 'from_type,from_id,to_type,to_id');
+    for (const l of all) {
+      if (l.from_type === 'person' && l.from_id) relCount.set(l.from_id, (relCount.get(l.from_id) || 0) + 1);
+      if (l.to_type === 'person' && l.to_id) relCount.set(l.to_id, (relCount.get(l.to_id) || 0) + 1);
+    }
+    console.log('■ 관계가 있는 인물', relCount.size, '명');
+  } catch (e) {
+    console.log('■ 관계 수를 못 받았습니다 · 소개문 길이로만 판단합니다');
+  }
+
   // 1) 성 사전 만들기
   //
   //    성이 겹치면 원래는 모두 포기했습니다. 그런데 확인해 보니
   //    클래식 거장들이 가족과 함께 등록돼 있어 전부 빠지고 있었습니다.
   //      모차르트 5명 (볼프강 · 아버지 레오폴트 · 누나 · 아들 둘)
-  //      슈만 6명 · 슈베르트 4명 · 베토벤 2명 · 리스트 2명
+  //      슈만 6명 · 바그너 8명 · 슈베르트 4명 · 베토벤 2명
   //
-  //    그래서 소개문 길이로 대표를 고릅니다. 볼프강 모차르트는
-  //    아버지보다 소개문이 훨씬 깁니다. 다만 2위와 두 배 이상
-  //    차이가 나야 인정합니다. 비슷하면(로베르트 슈만과 클라라 슈만 같은
-  //    경우) 판단을 미루고 그 성은 쓰지 않습니다.
+  //    소개문 길이로만 견주면 아버지도 위키백과 항목이 있어 비슷하게 깁니다.
+  //    그래서 세 가지를 차례로 봅니다.
+  //      ① 한글 이름이 있는 인물만 후보로 둡니다 (유명한 사람만 한국어 항목이 있습니다)
+  //      ② 그중 관계 수가 가장 많은 인물
+  //      ③ 관계 수가 비슷하면 소개문이 긴 인물
+  //    1위와 2위가 엇비슷하면 판단을 미루고 그 성은 쓰지 않습니다.
   const descLen = (p) => Math.max(String(p.description || '').length,
                                   String(p.description_en || '').length);
+  const hasKo = (p) => /[가-힣]/.test(String(p.name_ko || ''));
+  const score = (p) => (relCount.get(p.id) || 0) * 100 + Math.min(descLen(p), 3000) / 10;
+
   const bySur = new Map();   // 성 -> 인물 배열
   for (const p of persons) {
     const en = String(p.name_en || '').trim();
@@ -182,12 +205,17 @@ async function main() {
   let repCount = 0;
   for (const [sur, arr] of bySur) {
     if (arr.length === 1) { surMap.set(sur, arr[0]); continue; }
-    const sorted = arr.slice().sort((a, b) => descLen(b) - descLen(a));
-    const first = descLen(sorted[0]), second = descLen(sorted[1]);
-    if (first >= 200 && first >= second * 2) {
-      surMap.set(sur, sorted[0]);
-      surRep.set(sur, true);
-      repCount++;
+    // ① 한글 이름이 있는 인물이 한 명뿐이면 그 사람으로 봅니다
+    const kos = arr.filter(hasKo);
+    let cand = kos.length ? kos : arr;
+    if (cand.length === 1) {
+      surMap.set(sur, cand[0]); surRep.set(sur, true); repCount++; continue;
+    }
+    // ② 점수로 견줍니다 (관계 수를 크게, 소개문 길이를 작게 봅니다)
+    const sorted = cand.slice().sort((a, b) => score(b) - score(a));
+    const s1 = score(sorted[0]), s2 = score(sorted[1]);
+    if (s1 >= 30 && s1 >= s2 * 1.6) {
+      surMap.set(sur, sorted[0]); surRep.set(sur, true); repCount++;
     }
   }
   console.log('■ 쓸 수 있는 성', surMap.size, '개'
@@ -207,7 +235,7 @@ async function main() {
     } else {
       const arr = bySur.get(c) || [];
       const why = arr.length === 0 ? '인물DB에 없음'
-                : arr.length > 1 ? '동명 ' + arr.length + '명 · 소개문 차이가 작아 대표를 못 고름'
+                : arr.length > 1 ? '동명 ' + arr.length + '명 · 점수 차이가 작아 대표를 못 고름'
                 : '배제 목록에 걸림';
       console.log('   ' + c.padEnd(13) + '— ' + why);
     }
