@@ -31,6 +31,9 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 const VERSION = 'v1';
 const DRY  = process.env.ORPHAN_DRY === '1';
 const ONLY = (process.env.ORPHAN_ONLY || '').trim();
+// 인물이 이만큼 이상 붙은 곳만 담습니다.
+// 1명만 연결된 학교 수백 곳을 담으면 DB 가 이름만 있는 항목으로 뒤덮입니다.
+const MIN_PERSONS = Number(process.env.ORPHAN_MIN || 2);
 const UA   = 'OpusclamBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
 const SPARQL = 'https://query.wikidata.org/sparql';
 
@@ -46,9 +49,13 @@ const SCHOOL_CAT = [
   [/conservator|conservatoire|conservatorio|musikhochschule|hochschule für musik|음악원|academy of music|academia de música|음악아카데미/i, '음악원'],
   [/college of music|school of music|음악대학|faculty of music|음대/i,                      '음악대학'],
   [/university of the arts|arts university|예술대학|academy of (fine )?arts|예술종합/i,       '예술대학'],
-  [/gymnasium|\bschule\b|고등학교|high school|lycée|secondary school|thomasschule/i,          '예술고등학교'],
+  // 예술고는 '예술' 이 들어간 곳만 봅니다.
+  // 독일 Gymnasium 은 인문계 고등학교이고 Schule 는 그냥 학교입니다.
+  // 이걸 예술고로 담았더니 394곳이 잘못 분류됐습니다.
+  [/예술고|arts (high )?school|music gymnasium|musikgymnasium|conservatory school/i,        '예술고등학교'],
   [/graduate school|대학원/i,                                                               '대학원'],
   [/universit|대학교|université|universität|università|universidad/i,                        '종합대학'],
+  [/gymnasium|\bschule\b|고등학교|high school|lycée|secondary school|grammar school/i,       '기타'],
 ];
 
 // 음악과 관련된 학술원만 담습니다
@@ -199,8 +206,16 @@ function toRow(b, kind, fallbackName) {
     for (const [re, name] of SCHOOL_CAT) if (re.test(hay)) { cat = name; break; }
     return Object.assign(base, { category: cat });
   }
-  // 학술원 · 기관·재단DB 로 갑니다
-  return Object.assign(base, { type: '협회', estab_type: '학술단체', field: '음악 · 예술' });
+  // 학술원 · 기관·재단DB 로 갑니다.
+  // '제2빈악파' · '프랑스 6인조' 처럼 유파 · 작곡가 모임은 기관이 아니므로
+  // 갈래를 '기타' 로 두어 협회와 섞이지 않게 합니다.
+  const isSchool = /\bschool\b|악파|\bles six\b|6인조|group of|circle of|\bgroup\b/i.test(hay)
+                && !/school of music|music school|conservator/i.test(hay);
+  return Object.assign(base, {
+    type: isSchool ? '기타' : '협회',
+    estab_type: isSchool ? '유파 · 모임' : '학술단체',
+    field: '음악 · 예술',
+  });
 }
 
 function musicalOrg(row, types) {
@@ -229,13 +244,27 @@ async function run(kind) {
   }
   console.log('  · 이름만 있는 관계 ' + links.length + '건 · 서로 다른 대상 ' + byQid.size + '곳');
 
+  // 인물 수 분포를 보여줍니다. 기준을 정하는 데 쓰십니다.
+  const dist = { '1명': 0, '2명': 0, '3-4명': 0, '5-9명': 0, '10명 이상': 0 };
+  for (const v of byQid.values()) {
+    if (v.n === 1) dist['1명']++;
+    else if (v.n === 2) dist['2명']++;
+    else if (v.n <= 4) dist['3-4명']++;
+    else if (v.n <= 9) dist['5-9명']++;
+    else dist['10명 이상']++;
+  }
+  console.log('  · 인물 수 분포: ' + Object.keys(dist).map(k => k + ' ' + dist[k] + '곳').join(' · '));
+  console.log('  · 기준 ' + MIN_PERSONS + '명 이상만 담습니다 (ORPHAN_MIN 으로 조절)');
+
   // 이미 DB 에 있는 것은 조회만 해서 이어줍니다
   const have = await sbGetAll(table, 'id,wikidata_id', '&wikidata_id=not.is.null');
   const haveMap = new Map();
   for (const h of have) if (h.wikidata_id) haveMap.set(String(h.wikidata_id), h.id);
   console.log('  · 이미 DB 에 있는 것 ' + haveMap.size + '곳');
 
-  const need = [...byQid.keys()].filter(q => !haveMap.has(q));
+  const need = [...byQid.keys()]
+    .filter(q => !haveMap.has(q))
+    .filter(q => byQid.get(q).n >= MIN_PERSONS);
   console.log('  · 새로 받아올 것 ' + need.length + '곳');
 
   const ents = need.length ? await fetchEntities(need) : {};

@@ -13,6 +13,10 @@ on:
         description: '한쪽만 처리 (school 또는 fellow · 비우면 둘 다)'
         type: string
         default: ''
+      min:
+        description: '인물이 이만큼 이상 붙은 곳만 담습니다 (기본 2)'
+        type: string
+        default: '2'
 
 jobs:
   resolve:
@@ -29,4 +33,5 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           ORPHAN_DRY: ${{ inputs.dry && '1' || '' }}
           ORPHAN_ONLY: ${{ inputs.only }}
+          ORPHAN_MIN: ${{ inputs.min }}
         run: node scripts/link-resolve-orphans.mjs
