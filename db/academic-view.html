@@ -1477,6 +1477,9 @@ if('serviceWorker' in navigator){
              }
 
              if (!total) { sec.style.display = 'none'; return; }
+             /* 이 페이지에는 .pv-people 이 든 영역을 숨기는 코드가 위쪽에 있습니다.
+                채운 뒤에는 다시 보이게 해야 합니다. */
+             sec.style.display = '';
              box.innerHTML = html;
              var h2 = sec.querySelector('.pv-h');
              if (h2) h2.innerHTML = '관계 <span class="pv-h-en">Connections</span>';

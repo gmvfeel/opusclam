@@ -16,8 +16,9 @@
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var H   = { apikey: KEY, Authorization: 'Bearer ' + KEY };
 
-  var TABLE = { person: 'persons', org: 'orgs', school: 'schools' };
-  var VIEW  = { person: '/db/person-view.html', org: '/db/org-view.html', school: '/db/school-view.html' };
+  var TABLE = { person: 'persons', org: 'orgs', school: 'schools', academic: 'academic' };
+  var VIEW  = { person: '/db/person-view.html', org: '/db/org-view.html',
+                school: '/db/school-view.html', academic: '/db/academic-view.html' };
   var NAMEK = ['name_ko', 'name', 'name_kr', 'title', 'org_name', 'school_name', 'name_en'];
 
   var CAP_ALUMNI = 12;   // 동문 표시 최대
@@ -100,12 +101,14 @@
   // ids 를 종류별로 모아 한 번에 조회
   function resolve(needs) {
     var jobs = [];
-    var store = { person: {}, org: {}, school: {} };
+    var store = { person: {}, org: {}, school: {}, academic: {} };
     Object.keys(needs).forEach(function (type) {
       var ids = Object.keys(needs[type]);
       if (!ids.length || !TABLE[type]) return;
       var sel = (type === 'person')
         ? 'id,name_ko,name_en,field,era_name,life'
+        : (type === 'academic')
+        ? 'id,name_ko,name_en,ava,field,pub_year,type'
         : '*';
       jobs.push(
         rest(TABLE[type] + '?select=' + sel + '&id=in.(' + ids.join(',') + ')&hidden=is.false&limit=500')
@@ -127,6 +130,15 @@
       else if (row.life) sub.push(String(row.life).trim());
       return { name: nm || '(이름 없음)', sub: sub.filter(Boolean).join(' · '), href: VIEW.person + '?id=' + encodeURIComponent(row.id) };
     }
+    if (type === 'academic') {
+      /* 논문은 제목이 길어 줄여서 보여주고, 부제에는 분야와 발행연도를 씁니다.
+         영문 논문은 name_ko 가 비어 있어 name_en 이 제목이 됩니다. */
+      var t = (row.name_ko || row.name_en || '').trim();
+      if (t.length > 44) t = t.slice(0, 44) + '\u2026';
+      var asub = [row.field, row.pub_year].filter(Boolean).join(' · ');
+      return { name: t || '(제목 없음)', sub: asub,
+               href: VIEW.academic + '?id=' + encodeURIComponent(row.id) };
+    }
     var n = pickName(row);
     var s2 = (row.region || row.area || row.category || row.name_en || '');
     return { name: n || '(이름 없음)', sub: String(s2 || '').trim(), href: (VIEW[type] || '#') + '?id=' + encodeURIComponent(row.id) };
@@ -140,7 +152,10 @@
       member_of:  { label: '소속 단체',      items: [] },
       fellow_of:  { label: '관련 단체 · 학회', items: [] },
       alumnus_of: { label: '출신 학교',      items: [] },
-      alumni:     { label: '같은 학교 동문', items: [], cap: CAP_ALUMNI }
+      alumni:     { label: '같은 학교 동문', items: [], cap: CAP_ALUMNI },
+      /* 학술DB 연결 · 논문 제목과 저자를 인물DB 와 맞춰 만든 관계입니다 */
+      studied_by: { label: '이 인물을 다룬 문헌', items: [] },
+      wrote:      { label: '집필한 문헌',        items: [] }
     };
 
     var fwd = rest('entity_links?select=rel,to_type,to_id,to_label&from_type=eq.person&from_id=eq.' + id + '&limit=400');
@@ -151,7 +166,7 @@
       var rows = res[0] || [], back = res[1] || [], meRow = (res[2] || [])[0] || {};
 
       // 필요한 id 모으기
-      var needs = { person: {}, org: {}, school: {} };
+      var needs = { person: {}, org: {}, school: {}, academic: {} };
       var plain = [];   // DB 미등록(이름만)
       var seen  = {};
 
@@ -223,7 +238,7 @@
     return rest('entity_links?select=from_id&to_type=eq.' + type + '&to_id=eq.' + id
                 + '&rel=eq.' + rel + '&limit=200')
       .then(function (rows) {
-        var needs = { person: {}, org: {}, school: {} }, order = [];
+        var needs = { person: {}, org: {}, school: {}, academic: {} }, order = [];
         (rows || []).forEach(function (r) {
           if (!r.from_id || needs.person[r.from_id]) return;
           needs.person[r.from_id] = 1; order.push(r.from_id);
