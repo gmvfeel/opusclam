@@ -119,12 +119,27 @@ async function verifyClasses() {
 }
 
 // ── 수집 ─────────────────────────────────────────────────────
-function buildQuery(clsQid) {
+// 한 번의 요청에 모든 항목을 달라고 하면 위키데이터가 500 오류를 냅니다.
+// 음반사는 수만 개라서 OPTIONAL 을 여럿 붙인 쿼리를 견디지 못합니다.
+// 그래서 두 단계로 나눕니다.
+//   1단계 · 목록만 가볍게 받습니다
+//   2단계 · 150개씩 묶어 상세를 받습니다 (VALUES 로 범위가 좁아 빠릅니다)
+
+function listQuery(clsQid) {
+  return `
+SELECT ?item WHERE {
+  ?item wdt:P31 wd:${clsQid} .
+}
+LIMIT 4000`;
+}
+
+function detailQuery(qids) {
+  const vs = qids.map(q => 'wd:' + q).join(' ');
   return `
 SELECT ?item ?nameKo ?nameEn ?inception ?countryKo ?countryEn ?cityKo ?cityEn
        ?website ?image ?descKo ?descEn
        (GROUP_CONCAT(DISTINCT ?genL; separator=", ") AS ?gen) WHERE {
-  ?item wdt:P31 wd:${clsQid} .
+  VALUES ?item { ${vs} }
   OPTIONAL { ?item rdfs:label ?nameKo. FILTER(LANG(?nameKo)="ko") }
   OPTIONAL { ?item rdfs:label ?nameEn. FILTER(LANG(?nameEn)="en") }
   OPTIONAL { ?item wdt:P571 ?inception. }
@@ -141,8 +156,35 @@ SELECT ?item ?nameKo ?nameEn ?inception ?countryKo ?countryEn ?cityKo ?cityEn
   OPTIONAL { ?item schema:description ?descEn. FILTER(LANG(?descEn)="en") }
 }
 GROUP BY ?item ?nameKo ?nameEn ?inception ?countryKo ?countryEn ?cityKo ?cityEn
-         ?website ?image ?descKo ?descEn
-LIMIT 3000`;
+         ?website ?image ?descKo ?descEn`;
+}
+
+// 한 분류를 다 훑습니다. 실패한 묶음은 건너뛰고 나머지를 계속합니다.
+async function collectClass(cls) {
+  let qids = [];
+  try {
+    const rows = await sparql(listQuery(cls.qid));
+    qids = rows.map(b => qidOf(val(b, 'item'))).filter(Boolean);
+  } catch (e) {
+    console.log('  · ' + cls.type + ' 목록 조회 실패 ·', String(e.message).slice(0, 70));
+    return [];
+  }
+  console.log('  · ' + cls.type + ' · 목록 ' + qids.length + '건 · 상세 조회 시작');
+
+  const out = [];
+  let failed = 0;
+  for (let i = 0; i < qids.length; i += 150) {
+    const batch = qids.slice(i, i + 150);
+    try {
+      const rows = await sparql(detailQuery(batch));
+      out.push(...rows);
+    } catch (e) {
+      failed += batch.length;
+    }
+    await sleep(700);
+  }
+  if (failed) console.log('    (상세를 못 받은 항목 ' + failed + '건 · 다음 실행에서 다시 시도합니다)');
+  return out;
 }
 
 function toRow(b, type) {
@@ -280,12 +322,8 @@ async function main() {
   const reasons = {};
 
   for (const cls of CLASSES) {
-    let rows = [];
-    try { rows = await sparql(buildQuery(cls.qid)); }
-    catch (e) {
-      console.log('  · ' + cls.type + ' 조회 실패 · 건너뜀 ·', String(e.message).slice(0, 80));
-      continue;
-    }
+    const rows = await collectClass(cls);
+    if (!rows.length) { await sleep(2000); continue; }
     let kept = 0;
     for (const b of rows) {
       const row = toRow(b, cls.type);
@@ -296,7 +334,7 @@ async function main() {
       if (!v.ok) continue;
       if (!bag.has(row.wikidata_id)) { bag.set(row.wikidata_id, row); kept++; }
     }
-    console.log('  · ' + cls.type + ' · 받음 ' + rows.length + ' · 채택 ' + kept);
+    console.log('  · ' + cls.type + ' · 상세 ' + rows.length + '건 · 채택 ' + kept);
     await sleep(2000);
   }
 

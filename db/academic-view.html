@@ -1281,9 +1281,12 @@ if('serviceWorker' in navigator){
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fact(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
   fetch(URL+'/rest/v1/academic?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})
-   .then(function(a){if(!a||!a.length)return;var x=a[0];var nm=(x.name_ko||'').trim();
+   .then(function(a){if(!a||!a.length)return;var x=a[0];var nm=(x.name_ko||x.name_en||'').trim();
+     /* 수집된 논문은 대부분 영문이라 name_ko 가 비어 있습니다.
+        한글명만 쓰면 제목 자리가 빈 채로 나옵니다. */
+     var hasKo=!!(x.name_ko&&String(x.name_ko).trim());
      var por=document.querySelector('.pv-portrait span');if(por)por.textContent=esc(x.ava||'?');
-     var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(x.name_en){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=x.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
+     var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(hasKo&&x.name_en&&x.name_en!==x.name_ko){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=x.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
      var tg=document.querySelector('.pv-tags');if(tg){var html=x.type?'<span class="tag">'+esc(x.type)+'</span>':'';if(x.is_oc)html+='<span class="oc-badge">OC</span>';tg.innerHTML=html;}
      var fc=document.querySelector('.pv-facts');if(fc)fc.innerHTML=fact('유형',esc(x.type||''))+fact('저자',esc(x.author||''))+fact('발행',esc(x.pub_year||''))+fact('발행처',esc(x.publisher||''));
      var lead0=(esc(x.type||'')+' · '+esc(x.field||'')).replace(/(^| · )+/g,function(m,p,o){return o===0?'':' · ';}).replace(/^ · | · $/g,'');
@@ -1299,6 +1302,121 @@ if('serviceWorker' in navigator){
        var _u=[((x.link_full&&x.link_full!=='#')?x.link_full:'https://scholar.google.com/scholar?q='+_k),((x.link_cite&&x.link_cite!=='#')?x.link_cite:'https://scholar.google.com/scholar?q='+_k),'https://www.google.com/search?q='+encodeURIComponent((x.publisher||x.name_ko||'').trim()),'https://scholar.google.com/scholar?q='+_k];
        for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
      }})();
+
+     /* ── 시안으로 박혀 있던 아래 영역들을 실제 값으로 채웁니다 ── */
+     (function(){
+       function korTitle(h){
+         var t = (h.textContent || '').replace(/\s+/g, ' ').trim();
+         var en = h.querySelector('.pv-h-en');
+         if (en) t = t.replace((en.textContent || '').trim(), '').trim();
+         return t;
+       }
+       var SEC = {};
+       Array.prototype.forEach.call(document.querySelectorAll('.pv-sec'), function (sec) {
+         var h = sec.querySelector('.pv-h'); if (!h) return;
+         var t = korTitle(h);
+         if (t && !SEC[t]) SEC[t] = sec;
+       });
+       function hide(t){ if (SEC[t]) SEC[t].style.display = 'none'; }
+
+       /* 서지 정보에 권 · 호 · 페이지 · DOI · 피인용 · 원문공개를 더합니다.
+          수집할 때 넣어 둔 값인데 화면에 쓰이지 않고 있었습니다. */
+       var dl2 = document.querySelector('dl.pv-deflist');
+       if (dl2) {
+         var add = '';
+         if (x.volume)   add += fact('권', esc(x.volume));
+         if (x.issue)    add += fact('호', esc(x.issue));
+         if (x.pages)    add += fact('페이지', esc(x.pages));
+         if (x.doi)      add += fact('DOI', '<a href="https://doi.org/' + esc(x.doi)
+                                  + '" target="_blank" rel="noopener">' + esc(x.doi) + '</a>');
+         if (x.cited_by) add += fact('피인용', esc(Number(x.cited_by).toLocaleString()) + '회');
+         add += fact('원문공개', x.is_oa ? '공개' : '비공개');
+         if (x.affil)    add += fact('저자 소속', esc(x.affil));
+         dl2.innerHTML += add;
+       }
+
+       /* 목차는 수집원이 제공하지 않는 정보입니다 */
+       hide('목차 · 구성');
+
+       /* 인용 정보 · 세 형식을 실제 값으로 만들어 보여주고 누르면 복사됩니다 */
+       (function(){
+         var sec = SEC['인용 정보']; if (!sec) return;
+         var box = sec.querySelector('.pv-list'); if (!box) return;
+         var t2  = (x.name_en || x.name_ko || '').trim();
+         var au  = (x.author || '').trim();
+         var yr  = (x.pub_year || '').trim();
+         var jr  = (x.publisher || '').trim();
+         var vo  = (x.volume || '').trim();
+         var is2 = (x.issue || '').trim();
+         var pg  = (x.pages || '').trim();
+         var doi = (x.doi || '').trim();
+         if (!t2 || !au) { sec.style.display = 'none'; return; }
+
+         var apa = au + (yr ? ' (' + yr + ').' : '.') + ' ' + t2 + '.'
+                 + (jr ? ' ' + jr : '') + (vo ? ', ' + vo : '') + (is2 ? '(' + is2 + ')' : '')
+                 + (pg ? ', ' + pg : '') + '.' + (doi ? ' https://doi.org/' + doi : '');
+         var mla = au + '. \u201c' + t2 + '.\u201d' + (jr ? ' ' + jr : '')
+                 + (vo ? ', vol. ' + vo : '') + (is2 ? ', no. ' + is2 : '')
+                 + (yr ? ', ' + yr : '') + (pg ? ', pp. ' + pg : '') + '.';
+         var chi = au + '. \u201c' + t2 + '.\u201d' + (jr ? ' ' + jr : '')
+                 + (vo ? ' ' + vo : '') + (is2 ? ', no. ' + is2 : '')
+                 + (yr ? ' (' + yr + ')' : '') + (pg ? ': ' + pg : '') + '.';
+
+         var rows = [['APA', apa], ['MLA', mla], ['Chicago', chi]];
+         if (x.cited_by) rows.push(['피인용', Number(x.cited_by).toLocaleString() + '회']);
+
+         box.innerHTML = rows.map(function (r, i) {
+           var copyable = i < 3;
+           return '<div class="pv-lirow" data-cite="' + (copyable ? esc(r[1]) : '') + '"'
+             + ' style="' + (copyable ? 'cursor:pointer' : 'cursor:default') + '">'
+             + '<span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">'
+             + '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/></svg></span>'
+             + '<span class="pv-li-main"><b>' + esc(r[0]) + '</b>'
+             + '<span style="word-break:break-word">' + esc(r[1]) + '</span></span>'
+             + (copyable ? '<span class="pv-li-act">복사 →</span>' : '') + '</div>';
+         }).join('');
+
+         box.addEventListener('click', function (e) {
+           var row = e.target.closest && e.target.closest('[data-cite]');
+           if (!row) return;
+           var txt = row.getAttribute('data-cite'); if (!txt) return;
+           var act = row.querySelector('.pv-li-act');
+           function done(){ if (act) { act.textContent = '복사됨'; setTimeout(function(){ act.textContent = '복사 →'; }, 1400); } }
+           if (navigator.clipboard && navigator.clipboard.writeText) {
+             navigator.clipboard.writeText(txt).then(done).catch(function(){});
+           } else {
+             var ta = document.createElement('textarea');
+             ta.value = txt; document.body.appendChild(ta); ta.select();
+             try { document.execCommand('copy'); done(); } catch (err) {}
+             document.body.removeChild(ta);
+           }
+         });
+       })();
+
+       /* 관련 문헌 · 같은 분야의 다른 논문을 불러옵니다 */
+       (function(){
+         var sec = SEC['관련 문헌']; if (!sec) return;
+         var box = sec.querySelector('.pv-people');
+         if (!box || !x.field) { sec.style.display = 'none'; return; }
+         var q = URL + '/rest/v1/academic?select=id,name_ko,name_en,ava,field,type'
+               + '&field=eq.' + encodeURIComponent(x.field)
+               + '&id=neq.' + encodeURIComponent(id)
+               + '&hidden=is.false&order=sort_no.desc&limit=6';
+         fetch(q, { headers: H }).then(function (r) { return r.json(); })
+          .then(function (list) {
+            if (!Array.isArray(list) || !list.length) { sec.style.display = 'none'; return; }
+            box.innerHTML = list.map(function (o) {
+              var t3 = (o.name_ko || o.name_en || '').trim(); if (!t3) return '';
+              var meta = [o.field, o.type].filter(Boolean).join(' · ');
+              return '<a class="pv-person" href="academic-view.html?id=' + encodeURIComponent(o.id) + '">'
+                + '<span class="ava">' + esc(o.ava || t3.charAt(0)) + '</span>'
+                + '<span><span class="pn">' + esc(t3.length > 46 ? t3.slice(0, 46) + '\u2026' : t3) + '</span>'
+                + '<span class="pf">' + esc(meta) + '</span></span></a>';
+            }).join('');
+          })
+          .catch(function(){ sec.style.display = 'none'; });
+       })();
+     })();
 document.title=nm+' · 학술DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
    }).catch(function(e){console.error('학술DB view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
 })();
