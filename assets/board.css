@@ -236,6 +236,8 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 /* 목록 행 썸네일 (cfg.rowThumb) */
 .board-row-thumb{flex:none;width:96px;height:64px;border-radius:8px;overflow:hidden;background:var(--paper-3)}
 .board-row-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+/* 이미지가 없는 글은 회색 빈 박스가 보이지 않게 (자리는 유지해 목록 정렬을 지킨다) */
+.board-row-thumb:empty{background:transparent}
 
 /* 분류 배지 색상 (공연사진/영상 등) */
 .board-tag[data-cat="국내공연"]{color:#dc2626;border-color:rgba(220,38,38,.4)}
