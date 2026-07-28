@@ -94,6 +94,17 @@ const STOP = new Set((
    // 유일한 성이지만 일반 낱말이거나 흔한 이름인 것들.
    // 첫 시험에서 데니스 브레인(Brain) 33건 · Charles · Joseph · Roots 가 걸렸습니다.
  + 'brain brains charles joseph roots root basic '
+   // 지명 · 도시. 논문 제목에 매우 흔합니다
+ + 'paris london vienna berlin rome milan venice naples madrid moscow prague '
+ + 'budapest warsaw leipzig dresden munich hamburg cologne frankfurt zurich '
+ + 'geneva brussels amsterdam copenhagen stockholm helsinki dublin edinburgh '
+ + 'boston chicago philadelphia baltimore seattle sydney melbourne brisbane '
+ + 'toronto montreal vancouver tokyo osaka kyoto beijing shanghai seoul '
+   // 왕조 · 시대. 'Tudor music' 처럼 쓰입니다
+ + 'tudor stuart victorian georgian edwardian medici bourbon habsburg '
+   // 의학 · 실험 용어. 음악치료 논문에 'clinical trial' 이 계속 나옵니다
+ + 'trial trials clinical patient patients therapy therapies control controls '
+ + 'sample samples subject subjects placebo random cohort '
 ).split(/\s+/).filter(Boolean));
 
 // ── 유틸 ─────────────────────────────────────────────────────
@@ -181,6 +192,26 @@ async function main() {
   }
   console.log('■ 쓸 수 있는 성', surMap.size, '개'
     + ' (겹치는 성 가운데 대표를 고른 것 ' + repCount + '개)');
+
+  // 주요 작곡가가 사전에 들어갔는지 확인합니다.
+  // 빠져 있으면 왜 빠졌는지(가족이 여럿이라 대표를 못 고름 등) 바로 알 수 있습니다.
+  const CHECK = ['beethoven', 'mozart', 'schubert', 'schumann', 'chopin', 'liszt',
+                 'wagner', 'brahms', 'debussy', 'mahler', 'bruckner', 'sibelius',
+                 'ravel', 'stravinsky', 'prokofiev', 'shostakovich'];
+  console.log('■ 주요 작곡가 사전 등재');
+  for (const c of CHECK) {
+    const p = surMap.get(c);
+    if (p) {
+      console.log('   ' + c.padEnd(13) + (p.name_ko || p.name_en)
+        + (surRep.has(c) ? '  (대표 추정)' : ''));
+    } else {
+      const arr = bySur.get(c) || [];
+      const why = arr.length === 0 ? '인물DB에 없음'
+                : arr.length > 1 ? '동명 ' + arr.length + '명 · 소개문 차이가 작아 대표를 못 고름'
+                : '배제 목록에 걸림';
+      console.log('   ' + c.padEnd(13) + '— ' + why);
+    }
+  }
 
   // 2) 한글 이름 사전 · 두 자 이상이고 유일한 이름만
   const koCount = new Map(), koFirst = new Map();
