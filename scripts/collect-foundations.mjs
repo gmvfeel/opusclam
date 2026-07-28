@@ -45,13 +45,18 @@ const CLASSES = [
 
 // ── 판정 규칙 ────────────────────────────────────────────────
 // 클래식 근거. 이름 · 소개 · 장르 어디에든 있으면 받습니다.
-const CLASSIC_OK = /classical|baroque|opera|orchestral|chamber music|early music|symphon|art music|contemporary classical|클래식|고전음악/i;
+const CLASSIC_OK = /classical|baroque|renaissance music|opera|operatic|orchestral|chamber music|early music|symphon|art music|contemporary classical|avant-?garde|new music|choral|lied|recital|conservator|philharmon|클래식|고전음악|현대음악/i;
+
+// 위키데이터 설명에 classical 이 없어도 실제로는 클래식 전문인 곳이 많습니다.
+// 그래서 널리 알려진 이름을 따로 둡니다.
+// (Decca · Hyperion · Chandos 같은 곳이 '클래식 근거 없음' 으로 걸러지고 있었습니다)
+const KNOWN_CLASSIC = /deutsche grammophon|decca|philips classics|sony classical|columbia masterworks|rca red seal|erato|teldec|telarc|hyperion|chandos|\bbis\b|naxos|harmonia mundi|alpha classics|\bcpo\b|supraphon|hungaroton|melodiya|ondine|\bbb\b ?ryton|nimbus records|delos|dorian|channel classics|pentatone|linn records|onyx classics|signum classics|glossa|ricercar|accent records|astrée|\becm\b|winter & winter|hat hut|kairos|wergo|mode records|neos|col legno|aeon|zig-?zag territoires|arcana|opus 111|virgin classics|emi classics|warner classics|universal edition|schott|breitkopf|bärenreiter|henle|peters edition|boosey|ricordi|durand|salabert/i;
 
 // 대중음악 표시. 클래식 근거보다 우선해서 걸러냅니다.
-const POP_DENY = /\bpop\b|\brock\b|hip ?hop|\brap\b|r&b|soul|电子|electronic dance|\bedm\b|metal|punk|reggae|country music|k-?pop|j-?pop|idol|techno|house music|trance|funk|disco|gospel|christian rock|heavy metal|indie rock|grunge|emo\b|눈물|트로트/i;
+const POP_DENY = /\bpop\b|\brock\b|hip ?hop|\brap\b|r&b|soul music|electronic dance|\bedm\b|heavy metal|death metal|punk|reggae|country music|k-?pop|j-?pop|idol|techno|house music|trance|\bfunk\b|disco|gospel|christian rock|indie rock|grunge|emo\b|트로트|dubstep|drum and bass/i;
 
 // 이름에 브랜드 성격이 강한 대형 대중음악 그룹은 이름만으로도 걸러냅니다.
-const LABEL_DENY = /universal music group|warner music group|sony music entertainment|hybe|smtown|jyp|yg entertainment|kakao entertainment|def jam|interscope|atlantic records|columbia records\b/i;
+const LABEL_DENY = /universal music group|warner music group|sony music entertainment|hybe|smtown|jyp|yg entertainment|kakao entertainment|def jam|interscope|atlantic records|columbia records\b|capitol records|island records|virgin records\b|epic records|republic records|motown/i;
 
 // ── 공통 유틸 ────────────────────────────────────────────────
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -147,7 +152,12 @@ function toRow(b, type) {
   if (!title) return null;
 
   const country = clean(val(b, 'countryKo')) || clean(val(b, 'countryEn'));
-  const city = clean(val(b, 'cityKo')) || clean(val(b, 'cityEn'));
+  let city = clean(val(b, 'cityKo')) || clean(val(b, 'cityEn'));
+  // 위키데이터에 본부 위치가 자기 자신으로 등록된 경우가 있습니다.
+  // 그러면 도시 자리에 기관 이름이 들어가므로 버립니다.
+  // (예 · '그리스 · Greek National Opera')
+  if (city && title && (city === title || city === nameEn || city === nameKo
+      || city.length > 28 || city.indexOf(title) >= 0)) city = null;
   const location = [country, city].filter(Boolean).join(' · ');
   const founded = (val(b, 'inception').match(/(\d{4})/) || [])[1] || null;
   const desc = clean(val(b, 'descKo')) || clean(val(b, 'descEn'));
@@ -179,14 +189,18 @@ function judge(r) {
   // ① 대형 대중음악 그룹은 이름만으로 걸러냅니다
   if (LABEL_DENY.test(hay)) return { ok: false, why: '대중음악 대형사' };
 
-  // ② 대중음악 장르 표시가 있으면 받지 않습니다
-  if (POP_DENY.test(hay)) return { ok: false, why: '대중음악' };
+  // ② 널리 알려진 클래식 레이블·출판사는 설명이 부실해도 받습니다.
+  //    위키데이터 설명에 classical 이라는 낱말이 없는 곳이 많습니다.
+  const known = KNOWN_CLASSIC.test([r.name_ko, r.name_en].filter(Boolean).join(' '));
 
-  // ③ 클래식 근거가 있어야 받습니다.
+  // ③ 대중음악 장르 표시가 있으면 받지 않습니다 (알려진 곳은 예외)
+  if (!known && POP_DENY.test(hay)) return { ok: false, why: '대중음악' };
+
+  // ④ 클래식 근거가 있어야 받습니다.
   //    음반사와 경연은 수가 매우 많아서, 근거 없이 받으면 대중음악이 쏟아집니다.
-  if (!CLASSIC_OK.test(hay)) return { ok: false, why: '클래식 근거 없음' };
+  if (!known && !CLASSIC_OK.test(hay)) return { ok: false, why: '클래식 근거 없음' };
 
-  // ④ 이름 말고 채워진 항목이 둘 이상 있어야 받습니다
+  // ⑤ 이름 말고 채워진 항목이 둘 이상 있어야 받습니다
   let n = 0;
   if (r.location) n++;
   if (r.founded) n++;
@@ -194,7 +208,18 @@ function judge(r) {
   if (r.business) n++;
   if (n < 2) return { ok: false, why: '내용 빈약' };
 
-  return { ok: true, why: '클래식 근거' };
+  return { ok: true, why: known ? '알려진 클래식 레이블' : '클래식 근거' };
+}
+
+// 위키데이터 분류가 음반사인데 실제로는 극장·단체인 경우가 있습니다.
+// 소개문을 보고 유형을 바로잡습니다.
+function fixType(r) {
+  const hay = [r.name_ko, r.name_en, r.business].filter(Boolean).join(' ');
+  if (/opera (house|company)|국립오페라|오페라 극장|theatre|theater/i.test(hay)) return '기타';
+  if (/publish|edition|출판|악보/i.test(hay)) return '기타';
+  if (/foundation|재단/i.test(hay)) return '재단';
+  if (/orchestra|philharmonic|교향악단/i.test(hay)) return '기타';
+  return r.type;
 }
 
 // ── Supabase ────────────────────────────────────────────────
@@ -265,6 +290,7 @@ async function main() {
     for (const b of rows) {
       const row = toRow(b, cls.type);
       if (!row || !row.wikidata_id) continue;
+      row.type = fixType(row);          // 극장 · 출판사 · 단체가 음반사로 들어오는 것을 바로잡습니다
       const v = judge(row);
       reasons[v.why] = (reasons[v.why] || 0) + 1;
       if (!v.ok) continue;
