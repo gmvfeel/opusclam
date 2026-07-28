@@ -28,7 +28,7 @@ if (!SB_URL || !SB_KEY) {
    commentTable 댓글 테이블
    fk           댓글이 글을 가리키는 컬럼 (현재 전부 news_id)
    body         'html'  → 본문이 <p> 태그 형식
-                'text'  → 본문이 평문 + 줄바꿈 형식
+                (지금은 모든 게시판이 html 입니다 — 보기 화면이 HTML 로 렌더링)
    authorName   글 테이블에 author_name 컬럼이 있는가
    likes        like_count 컬럼이 있는가
    dislikes     dislike_count 컬럼이 있는가
@@ -51,7 +51,7 @@ const BOARDS = {
   },
   qna: {
     table: 'qna', commentTable: 'qna_comments', fk: 'news_id',
-    body: 'text', authorName: true, likes: true, dislikes: true,
+    body: 'html', authorName: true, likes: true, dislikes: true,
     extraCols: ['track', 'keywords'],
     perRun: [0, 1],
     // comment_count 는 trg_qna_cmt 트리거가 자동으로 셉니다 → 직접 넣지 않음
@@ -64,7 +64,7 @@ const BOARDS = {
   },
   news: {
     table: 'news', commentTable: 'news_comments', fk: 'news_id',
-    body: 'text', authorName: false, likes: false, dislikes: false,
+    body: 'html', authorName: false, likes: false, dislikes: false,
     onlyCategory: ['국내', '해외'],
     perRun: [0, 1], weekly: true,
   },
