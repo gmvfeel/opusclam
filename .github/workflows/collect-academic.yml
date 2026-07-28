@@ -1,0 +1,27 @@
+name: Collect academic (weekly)
+
+on:
+  schedule:
+    - cron: '0 19 * * 2'   # 수요일 04:00 KST (다른 수집기와 겹치지 않는 날)
+  workflow_dispatch:
+    inputs:
+      full:
+        description: '전체 구간 수집 (처음 한 번은 켜세요. 이후에는 끈 채로 두면 최근분만 갱신합니다)'
+        type: boolean
+        default: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40        # 무료 실행 시간을 지키기 위한 안전장치
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run academic collector
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ACADEMIC_FULL: ${{ inputs.full && '1' || '' }}
+        run: node scripts/collect-academic.mjs
