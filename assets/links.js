@@ -224,7 +224,10 @@
           if (it) buckets.alumni.items.push(it);
         });
 
-        var order = ['teacher', 'student', 'member_of', 'fellow_of', 'alumnus_of', 'alumni'];
+        /* 그리는 순서 · 이 배열에 없는 관계는 담겨도 화면에 나오지 않습니다.
+           관계를 새로 넣을 때 buckets 와 여기를 함께 고쳐야 합니다. */
+        var order = ['teacher', 'student', 'member_of', 'fellow_of', 'alumnus_of',
+                     'wrote', 'studied_by', 'alumni'];
         var html = order.map(function (k) { return group(buckets[k]); }).join('');
         paint(mount, html, sc);
       });
