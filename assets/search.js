@@ -58,12 +58,17 @@ window.OCSearch = (function () {
      line    : 한 줄로 어떻게 보여줄지 */
   var SECTIONS = [
     { key: 'persons', label: '인물', table: 'persons',
-      cols: ['name_ko', 'name_en', 'school'], hidden: true,
-      sel: 'id,name_ko,name_en,field,life,school,image_url',
+      /* 소개문도 검색합니다. 한국어 위키백과에 항목이 없는 인물은
+         영문 소개문(description_en)만 있으므로 둘 다 봅니다 */
+      cols: ['name_ko', 'name_en', 'school', 'description', 'description_en'], hidden: true,
+      sel: 'id,name_ko,name_en,field,life,school,image_url,description,description_en',
       list: '/db/person.html', view: '/db/person-view.html',
       line: function (r) {
+        var d = (r.description || r.description_en || '').trim();
+        if (/^[|{]/.test(d)) d = '';   /* 위키 틀 코드가 들어온 경우는 쓰지 않습니다 */
         return { t: r.name_ko || r.name_en, en: (r.name_ko && r.name_en) ? r.name_en : '',
-                 s: join([r.field, r.life, r.school]), img: r.image_url };
+                 s: join([r.field, r.life, r.school]), img: r.image_url,
+                 d: d ? cut(d, 70) : '' };
       } },
 
     { key: 'orgs', label: '음악단체', table: 'orgs',
@@ -103,16 +108,27 @@ window.OCSearch = (function () {
       } },
 
     { key: 'foundations', label: '기관 · 재단', table: 'foundations',
-      cols: ['name_ko', 'name_en'], hidden: true,
-      sel: 'id,name_ko,name_en',
+      cols: ['name_ko', 'name_en', 'location', 'business', 'field', 'subsidiary'], hidden: true,
+      sel: 'id,name_ko,name_en,type,location,founded,business,logo_url',
       list: '/db/foundation.html', view: '/db/foundation-view.html',
-      line: function (r) { return { t: r.name_ko || r.name_en, en: (r.name_ko && r.name_en) ? r.name_en : '', s: '' }; } },
+      line: function (r) {
+        var d = (r.business || '').trim();
+        return { t: r.name_ko || r.name_en, en: (r.name_ko && r.name_en) ? r.name_en : '',
+                 s: join([r.type, r.location, r.founded]), img: r.logo_url,
+                 d: d ? cut(d, 70) : '' };
+      } },
 
     { key: 'academic', label: '학술', table: 'academic',
-      cols: ['name_ko', 'name_en'], hidden: true,
-      sel: 'id,name_ko,name_en',
+      /* 초록까지 검색합니다. 논문은 제목만으로 찾기 어렵습니다 */
+      cols: ['name_ko', 'name_en', 'author', 'keywords', 'publisher', 'description'], hidden: true,
+      sel: 'id,name_ko,name_en,author,pub_year,publisher,field,type,description',
       list: '/db/academic.html', view: '/db/academic-view.html',
-      line: function (r) { return { t: r.name_ko || r.name_en, en: (r.name_ko && r.name_en) ? r.name_en : '', s: '' }; } },
+      line: function (r) {
+        var d = (r.description || '').trim();
+        return { t: r.name_ko || r.name_en, en: (r.name_ko && r.name_en) ? r.name_en : '',
+                 s: join([r.type, r.author, r.pub_year, r.publisher, r.field]),
+                 d: d ? cut(d, 70) : '' };
+      } },
 
     { key: 'hottopic', label: '핫토픽', table: 'hottopic',
       cols: ['title', 'body'],

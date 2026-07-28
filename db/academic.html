@@ -687,7 +687,7 @@ if('serviceWorker' in navigator){
     OCList.init({
       table:'academic', pageSize:30, orderDefault:'sort_no.desc',
       /* 수집된 논문은 대부분 영문이므로 name_en 이 반드시 있어야 검색이 됩니다 */
-      searchCols:['name_ko','name_en','author','keywords','field','publisher','affil'],
+      searchCols:['name_ko','name_en','author','keywords','field','publisher','affil','description'],
       entity:'academic',
       buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
     });

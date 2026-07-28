@@ -1059,7 +1059,7 @@ if('serviceWorker' in navigator){
   document.addEventListener('DOMContentLoaded',function(){
     OCList.init({
       table:'persons', pageSize:30, orderDefault:'quality.desc,sort_no.desc',
-      searchCols:['name_ko','name_en','school'], entity:'persons',
+      searchCols:['name_ko','name_en','school','description','description_en'], entity:'persons',
       buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
     });
   });
