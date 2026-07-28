@@ -1,0 +1,32 @@
+name: Resolve orphan links (monthly)
+
+on:
+  schedule:
+    - cron: '0 20 3 * *'   # 매월 4일 05:00 KST
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: '시험 실행 (저장하지 않고 결과만 확인합니다. 처음엔 켜보세요)'
+        type: boolean
+        default: false
+      only:
+        description: '한쪽만 처리 (school 또는 fellow · 비우면 둘 다)'
+        type: string
+        default: ''
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Resolve orphan links
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ORPHAN_DRY: ${{ inputs.dry && '1' || '' }}
+          ORPHAN_ONLY: ${{ inputs.only }}
+        run: node scripts/link-resolve-orphans.mjs
