@@ -134,7 +134,7 @@
     <div class="pdb-toolbar">
       <div class="pdb-search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input type="text" placeholder="이름 · 출신학교 · 키워드로 검색">
+        <input type="text" placeholder="제목 · 저자 · 학술지 · 키워드로 검색">
       
         <button class="pdb-searchbtn" type="button" aria-label="검색">검색</button>
       </div>
@@ -144,7 +144,10 @@
           <option>국문</option>
           <option>영문</option>
           <option>독문</option>
-          <option>기타</option>
+          <option>불문</option>
+          <option>이문</option>
+          <option>일문</option>
+          <option>중문</option>
         </select>
         <select aria-label="유형">
           <option>전체 유형</option>
@@ -155,6 +158,21 @@
           <option>평론</option>
           <option>자료</option>
           <option>기타</option>
+        </select>
+        <select aria-label="분야">
+          <option>전체 분야</option>
+          <option>음악학</option>
+          <option>음악사</option>
+          <option>음악이론</option>
+          <option>작곡</option>
+          <option>연주·공연</option>
+          <option>지휘</option>
+          <option>음악교육</option>
+          <option>교회음악</option>
+          <option>국악</option>
+          <option>음향학</option>
+          <option>음악공학</option>
+          <option>음악산업</option>
         </select>
         <select aria-label="정렬">
           <optgroup label="등록순">
@@ -169,7 +187,6 @@
           </optgroup>
           <optgroup label="기타">
             <option>인용순</option>
-            <option>조회수순</option>
           </optgroup>
         </select>
       </div>
@@ -626,12 +643,16 @@ if('serviceWorker' in navigator){
   function lk(h,t,svg){var r=h&&h!=='#';return '<a href="'+(r?esc(h):'#')+'" class="lk" title="'+t+'"'+(r?' target="_blank" rel="noopener"':'')+'>'+svg+'</a>';}
   function renderRow(o,no,ctx){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
-    var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
-    var av=(o.ava&&String(o.ava).trim())?esc(o.ava):ini(o.name_ko);
+    /* 수집된 논문은 대부분 영문이라 name_ko 가 비어 있습니다.
+       그때는 영문 제목을 주 제목으로 올려야 제목 칸이 비지 않습니다. */
+    var hasKo=!!(o.name_ko&&String(o.name_ko).trim());
+    var main=hasKo?o.name_ko:(o.name_en||'');
+    var en=(hasKo&&o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
+    var av=(o.ava&&String(o.ava).trim())?esc(o.ava):ini(main);
     var links='<span class="c-link">'+lk(o.link_full,'전문',IC.full)+lk(o.link_cite,'인용',IC.cite)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
-      +'<td class="c-name"><a href="academic-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
+      +'<td class="c-name"><a href="academic-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(main)+oc+en+'</a></td>'
       +'<td class="c-field">'+(o.type?'<span class="tag">'+esc(o.type)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
       +'<td class="c-nation">'+nd(o.author)+'</td>'
       +'<td class="c-life">'+nd(o.pub_year)+'</td>'
@@ -642,24 +663,30 @@ if('serviceWorker' in navigator){
       +'<td class="c-link">'+links+'</td></tr>';
   }
   function buildFilters(sels){
+    /* 셀렉트 순서 · 0 언어 · 1 유형 · 2 분야 · 3 정렬 */
     var extra='';
     var lang=sels[0]?sels[0].value:''; if(lang && lang.indexOf('전체')<0 && lang!=='언어') extra+='&language=eq.'+encodeURIComponent(lang);
     var ty=sels[1]?sels[1].value:''; if(ty && ty.indexOf('전체')<0) extra+='&type=eq.'+encodeURIComponent(ty);
+    var fd=sels[2]?sels[2].value:''; if(fd && fd.indexOf('전체')<0) extra+='&field=eq.'+encodeURIComponent(fd);
     return extra;
   }
   function buildOrder(sels){
-    var sort=sels[2]?sels[2].value:'', ord='sort_no.desc';
+    var sort=sels[3]?sels[3].value:'', ord='sort_no.desc';
     if(sort.indexOf('오래된')>=0)ord='sort_no.asc';
     else if(sort.indexOf('역순')>=0)ord='name_ko.desc';
-    else if(sort.indexOf('가나다')>=0)ord='name_ko.asc';
+    else if(sort.indexOf('가나다')>=0||sort.indexOf('제목')>=0)ord='name_ko.asc';
     else if(sort.indexOf('발행')>=0)ord='pub_year.desc';
+    else if(sort.indexOf('유형')>=0)ord='type.asc';
     else if(sort.indexOf('분야')>=0)ord='field.asc';
+    else if(sort.indexOf('인용')>=0)ord='cited_by.desc';
     return ord;
   }
   document.addEventListener('DOMContentLoaded',function(){
     OCList.init({
       table:'academic', pageSize:30, orderDefault:'sort_no.desc',
-      searchCols:['name_ko','author','keywords','field','publisher'], entity:'academic',
+      /* 수집된 논문은 대부분 영문이므로 name_en 이 반드시 있어야 검색이 됩니다 */
+      searchCols:['name_ko','name_en','author','keywords','field','publisher','affil'],
+      entity:'academic',
       buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
     });
   });
