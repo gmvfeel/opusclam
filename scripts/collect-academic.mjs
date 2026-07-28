@@ -35,18 +35,37 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const clean = (s) => isEmpty(s) ? null : String(s).replace(/\s+/g, ' ').trim();
 
-async function getJSON(url, tries = 4) {
-  for (let i = 1; i <= tries; i++) {
+// GitHub Actions 는 여러 사용자가 IP 를 공유하므로 429(요청 과다)가 자주 납니다.
+// 우리 요청 빈도 탓이 아니라 남이 쓴 몫까지 합산되기 때문입니다.
+// 그래서 오래 기다렸다 다시 시도합니다. Retry-After 를 주면 그만큼 따릅니다.
+const BACKOFF = [5000, 15000, 30000, 60000, 90000, 120000];
+
+async function getJSON(url, tries = 6) {
+  let last = null;
+  for (let i = 0; i < tries; i++) {
     try {
       const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' } });
-      if (r.status === 429 || r.status >= 500) throw new Error('HTTP ' + r.status);
+      if (r.status === 429 || r.status >= 500) {
+        const ra = Number(r.headers.get('retry-after'));
+        const wait = (ra > 0 ? ra * 1000 : 0) || BACKOFF[i] || 120000;
+        last = new Error('HTTP ' + r.status);
+        if (i < tries - 1) {
+          console.log('    (' + r.status + ' · ' + Math.round(wait / 1000) + '초 기다린 뒤 다시 시도 '
+                      + (i + 2) + '/' + tries + ')');
+          await sleep(wait);
+          continue;
+        }
+        throw last;
+      }
       if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + (await r.text()).slice(0, 200));
       return await r.json();
     } catch (e) {
-      if (i === tries) throw e;
-      await sleep(1200 * i);
+      last = e;
+      if (i === tries - 1) throw last;
+      if (!/HTTP (429|5\d\d)/.test(String(e.message))) await sleep(BACKOFF[i] || 60000);
     }
   }
+  throw last;
 }
 
 // ── OpenAlex 초록 복원 ───────────────────────────────────────
@@ -66,12 +85,24 @@ function unabstract(inv) {
 // ── 음악 세부분야 자동 탐색 ──────────────────────────────────
 // subfield 번호를 코드에 박아두면 분류 체계가 바뀔 때 조용히 실패합니다.
 // 그래서 실행할 때마다 이름으로 찾아내고 로그에 남깁니다.
+// 탐색 자체가 막히면(429 등) 아래 대비값으로 진행하고 그 사실을 로그에 남깁니다.
+const FALLBACK_SUBFIELD = { id: '1210', name: 'Music(대비값 · 미확인)' };
+
 async function findMusicSubfields() {
   const found = new Map();   // id -> name
   const probes = ['music', 'musicology', 'ethnomusicology'];
+  let okAny = false;
+
   for (const q of probes) {
-    const d = await getJSON(OA + '/topics?filter=display_name.search:' + encodeURIComponent(q)
-                            + '&per-page=200&mailto=' + MAIL);
+    let d = null;
+    try {
+      d = await getJSON(OA + '/topics?filter=display_name.search:' + encodeURIComponent(q)
+                        + '&per-page=200&mailto=' + MAIL);
+      okAny = true;
+    } catch (e) {
+      console.log('  · 분야 탐색 실패(' + q + ') ·', String(e.message).slice(0, 60));
+      continue;
+    }
     for (const t of (d.results || [])) {
       const sf = t.subfield;
       if (!sf || !sf.id) continue;
@@ -80,9 +111,18 @@ async function findMusicSubfields() {
       // 'Visual Arts and Performing Arts' 처럼 음악 외 예술이 섞인 것은 제외합니다.
       if (/^music$/i.test(nm)) found.set(String(sf.id), nm);
     }
-    await sleep(400);
+    await sleep(1500);
   }
-  return [...found.entries()].map(([id, name]) => ({ id: id.split('/').pop(), name }));
+
+  if (found.size) {
+    return [...found.entries()].map(([id, name]) => ({ id: id.split('/').pop(), name }));
+  }
+  // 이름으로 못 찾은 경우
+  console.log('  · 세부분야를 확인하지 못했습니다'
+              + (okAny ? ' (응답은 왔으나 Music 이 없었습니다)' : ' (요청이 막혔습니다)')
+              + ' · 대비값 ' + FALLBACK_SUBFIELD.id + ' 으로 진행합니다.');
+  console.log('    수집 후 topic_raw 컬럼을 보시면 분류가 맞는지 확인할 수 있습니다.');
+  return [FALLBACK_SUBFIELD];
 }
 
 // ── 수집 쿼리 목록 ───────────────────────────────────────────
@@ -153,7 +193,7 @@ async function fetchQuery(q) {
     out.push(...rows);
     cursor = d.meta && d.meta.next_cursor;
     if (!cursor || rows.length === 0) break;
-    await sleep(350);
+    await sleep(900);   // 요청 과다(429) 를 피하려고 넉넉히 둡니다
   }
   return out.slice(0, CAP_PER_QUERY);
 }
@@ -336,11 +376,16 @@ const FILL_COLS = ['name_en', 'author', 'pub_year', 'publisher', 'language', 'ke
 async function main() {
   console.log('■ 학술 수집기', VERSION, FULL ? '(전체 구간)' : '(최근분 갱신)');
 
-  const subs = await findMusicSubfields();
+  let subs = [];
+  try {
+    subs = await findMusicSubfields();
+  } catch (e) {
+    console.log('■ 분야 탐색 단계에서 막혔습니다 ·', String(e.message).slice(0, 80));
+    console.log('  대비값 ' + FALLBACK_SUBFIELD.id + ' 으로 진행합니다.');
+    subs = [FALLBACK_SUBFIELD];
+  }
   if (subs.length) {
-    console.log('■ 음악 세부분야 확인:', subs.map(s => s.name + '(' + s.id + ')').join(', '));
-  } else {
-    console.log('■ 주의: 음악 세부분야를 찾지 못했습니다. 검색어 수집만 진행합니다.');
+    console.log('■ 음악 세부분야:', subs.map(s => s.name + '(' + s.id + ')').join(', '));
   }
 
   const queries = buildQueries(subs.map(s => s.id));
@@ -361,7 +406,7 @@ async function main() {
       if (!bag.has(row.source_id)) { bag.set(row.source_id, row); kept++; }
     }
     console.log('  · ' + q.label + ' · 받음 ' + works.length + ' · 채택 ' + kept);
-    await sleep(500);
+    await sleep(2000);  // 쿼리 사이는 더 넉넉히
   }
 
   const rows = [...bag.values()];
