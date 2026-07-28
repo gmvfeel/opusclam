@@ -1,0 +1,27 @@
+name: Collect persons KR (weekly)
+
+on:
+  schedule:
+    - cron: '0 19 * * 3'   # 목요일 04:00 KST (다른 수집기와 겹치지 않는 날)
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: '시험 실행 (저장하지 않고 판정 결과만 확인합니다. 처음엔 켜보세요)'
+        type: boolean
+        default: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run KR persons collector
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PERSONS_DRY: ${{ inputs.dry && '1' || '' }}
+        run: node scripts/collect-persons-kr.mjs
