@@ -11,6 +11,7 @@ import { ADMISSION } from './pool/admission.mjs';
 import { QNA } from './pool/qna.mjs';
 import { HOTTOPIC2 } from './pool/hottopic-2.mjs';
 import { ADMISSION2 } from './pool/admission-2.mjs';
+import { QNA2 } from './pool/qna-2.mjs';
 // 2차 예정: import { GALLERY } from './pool/gallery.mjs';
 // 2차 예정: import { NEWS }    from './pool/news.mjs';
 
@@ -35,6 +36,7 @@ export const POOL = {
     ...QNA,
     ...HOTTOPIC2,
     ...ADMISSION2,
+    ...QNA2,
     // ...GALLERY,
     // ...NEWS,
   ],
