@@ -464,6 +464,17 @@ window.OCBoard = (function () {
         var dl = o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener">'
           + '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>'
           + '<span>' + esc(o.file_name || '첨부파일 내려받기') + '</span></a>' : '';
+        /* extraLinks 로 정의한 링크들 — 값이 있는 것만 버튼으로 보여준다 */
+        var xlinks = '';
+        if (cfg.extraLinks && cfg.extraLinks.length) {
+          var xl = cfg.extraLinks.filter(function (x) { return o[x.col]; });
+          if (xl.length) {
+            xlinks = '<div class="bv-xlinks">' + xl.map(function (x) {
+              return '<a class="bv-xlink" href="' + esc(o[x.col]) + '" target="_blank" rel="noopener">'
+                + esc(x.label || x.col) + ' \u2197</a>';
+            }).join('') + '</div>';
+          }
+        }
         var body = o.body ? '<div class="bv-body">' + (window.DOMPurify ? window.DOMPurify.sanitize(o.body, { ADD_ATTR: ['target', 'style'] }) : nl2br(o.body)) + '</div>' : '';
         var enhance = '';
         if (cfg.enhance) {
@@ -513,7 +524,7 @@ window.OCBoard = (function () {
           + '<div class="bv-meta">' + tag + (srcAu ? '<span>' + srcAu + '</span>' : '')
           + '<span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
           + '</div>'
-          + dl + thumb + body + link
+          + dl + thumb + body + xlinks + link
           + (cfg.votesTable ? '<div class="bv-votes"></div>' : '')
           + '<div class="bv-rel"></div>'
           + '<div class="bv-foot"></div>';

@@ -109,6 +109,12 @@ html[data-theme="dark"] .board-row:hover{background:#000}
 .bv-body img{max-width:100%;height:auto;border-radius:10px;margin:8px 0}
 .bv-link{display:inline-block;margin-top:26px;font-family:var(--display);font-size:14px;font-weight:700;color:#fff;background:var(--violet-2);border-radius:999px;padding:10px 22px;text-decoration:none;transition:background .15s ease}
 .bv-link:hover{background:var(--ink)}
+/* 음원·악보·영상처럼 여러 개의 관련 링크 */
+.bv-xlinks{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px}
+.bv-xlink{display:inline-flex;align-items:center;font-family:var(--display);font-size:13px;font-weight:700;
+  color:var(--violet-2);border:1px solid rgba(124,99,176,.5);border-radius:999px;padding:9px 18px;
+  text-decoration:none;transition:background .15s ease,color .15s ease}
+.bv-xlink:hover{background:var(--violet-2);color:#fff}
 .bv-rel{display:none}
 .bv-rel.is-on{display:flex;gap:14px;align-items:flex-start;margin-top:34px;padding-top:22px;border-top:1px solid var(--line);font-size:15px}
 .bv-foot{display:flex;align-items:center;gap:8px;margin-top:40px;padding-top:22px;border-top:1px solid var(--line)}

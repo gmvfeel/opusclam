@@ -110,7 +110,12 @@
   document.addEventListener('DOMContentLoaded', function(){
     OCBoard.view({
       table:'modern_music', listPage:'modern.html', viewPage:'modern-view.html', writePage:'modern-write.html',
-      writeRole:'member', incrementFn:'modern_music_increment_view', commentsTable:'modern_music_comments', votesTable:'modern_music_votes'
+      writeRole:'member', incrementFn:'modern_music_increment_view', commentsTable:'modern_music_comments', votesTable:'modern_music_votes',
+      extraLinks:[
+        { col:'audio_url', label:'음원' },
+        { col:'score_url', label:'악보' },
+        { col:'video_url', label:'관련동영상' }
+      ]
     });
   });
 </script>

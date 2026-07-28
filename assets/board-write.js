@@ -44,6 +44,23 @@
       if (D.logo !== false) {
         docRows += '<div class="bf-row"><label>로고등록 ' + HINT('(학교/기관 로고, 선택)') + '</label><div class="bf-file"><button type="button" class="bf-filebtn" id="f-logobtn">이미지 선택</button><span class="bf-filename" id="f-logoname">선택된 파일 없음</span></div><input type="file" id="f-logofile" accept="image/*" style="display:none"></div>';
       }
+      /* extra — 링크 칸을 원하는 개수만큼 추가한다
+           extra:[ { col:'audio_url', label:'음원', hint:'(링크, 선택)', placeholder:'https://' }, ... ]
+         col 은 표의 컬럼 이름이며, 그 컬럼에 입력값이 그대로 저장된다 */
+      if (Array.isArray(D.extra)) {
+        D.extra.forEach(function (x) {
+          if (!x || !x.col) return;
+          docRows += '<div class="bf-row"><label>' + esc(x.label || x.col) + ' ' + HINT(esc(x.hint || '(선택)')) + '</label>'
+            + '<input type="text" id="f-x-' + esc(x.col) + '" placeholder="' + esc(x.placeholder || 'https://') + '"></div>';
+        });
+      }
+      /* extraLinks: 링크 칸을 필요한 만큼 추가한다
+           [{ col:'audio_url', label:'음원', hint:'(듣기 주소, 선택)', placeholder:'https://' }, ...]
+         col 은 저장할 컬럼 이름이다. 입력칸 id 는 f-x-<col> 로 만든다. */
+      (D.extraLinks || []).forEach(function (x) {
+        docRows += '<div class="bf-row"><label>' + esc(x.label || x.col) + ' ' + HINT(esc(x.hint || '(선택)')) + '</label>'
+          + '<input type="text" id="f-x-' + esc(x.col) + '" placeholder="' + esc(x.placeholder || 'https://') + '"></div>';
+      });
       if (D.file !== false) {
         docRows += '<div class="bf-row"><label>' + esc(D.fileLabel || '첨부파일') + ' ' + HINT(esc(D.fileHint || '(요강 문서 hwp·pdf·doc 등, 선택)')) + '</label>'
           + '<div class="bf-file"><button type="button" class="bf-filebtn" id="f-docbtn">파일 선택</button><span class="bf-filename" id="f-docname">선택된 파일 없음</span></div><input type="file" id="f-docfile" style="display:none"></div>';
@@ -174,6 +191,17 @@
           $('f-agree').checked = true;
           if (cfg.docFields) {
             if ($('f-home')) $('f-home').value = o.link_url || '';
+            if (typeof cfg.docFields === 'object' && Array.isArray(cfg.docFields.extra)) {
+              cfg.docFields.extra.forEach(function (x) {
+                var el = x && x.col ? $('f-x-' + x.col) : null;
+                if (el) el.value = o[x.col] || '';
+              });
+            }
+            var _DL = (typeof cfg.docFields === 'object' && cfg.docFields) ? cfg.docFields : {};
+            (_DL.extraLinks || []).forEach(function (x) {
+              var el = $('f-x-' + x.col);
+              if (el) el.value = o[x.col] || '';
+            });
             if (o.logo_url && $('f-logoname')) { logoUrl = o.logo_url; $('f-logoname').textContent = '기존 로고 유지'; }
             if (o.file_url && $('f-docname')) { fileUrl = o.file_url; fileName = o.file_name; $('f-docname').textContent = o.file_name || '기존 파일 유지'; }
           }
@@ -226,6 +254,17 @@
       if (cfg.fixed) Object.keys(cfg.fixed).forEach(function (k) { row[k] = cfg.fixed[k]; });
       if (cfg.docFields) {
         if ($('f-home')) row.link_url = ($('f-home').value || '').trim() || null;
+        var _D = (typeof cfg.docFields === 'object' && cfg.docFields) ? cfg.docFields : {};
+        (_D.extraLinks || []).forEach(function (x) {
+          var el = $('f-x-' + x.col);
+          if (el) row[x.col] = (el.value || '').trim() || null;
+        });
+        if (typeof cfg.docFields === 'object' && Array.isArray(cfg.docFields.extra)) {
+          cfg.docFields.extra.forEach(function (x) {
+            var el = x && x.col ? $('f-x-' + x.col) : null;
+            if (el) row[x.col] = (el.value || '').trim() || null;
+          });
+        }
         if (logoUrl) row.logo_url = logoUrl;
         if (fileUrl) { row.file_url = fileUrl; row.file_name = fileName; }
       }
