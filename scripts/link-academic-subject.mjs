@@ -136,20 +136,72 @@ async function main() {
   for (const [ko, n] of koCount) if (n === 1) koMap.set(ko, koFirst.get(ko));
   console.log('■ 쓸 수 있는 한글 이름', koMap.size, '개');
 
-  const papers = await sbGetAll('academic', 'id,name_ko,name_en');
+  const papers = await sbGetAll('academic', 'id,name_ko,name_en,author');
   console.log('■ 논문', papers.length, '건 · 제목 대조 시작');
 
   // 3) 이미 있는 연결 (다시 넣지 않기 위해)
+  //    SQL 로 넣을 때는 행마다 중복을 뒤지느라 시간이 초과됐습니다.
+  //    여기서는 한 번에 받아 메모리에서 확인하므로 빠릅니다.
   const have = new Set();
-  const links = await sbGetAll('entity_links', 'from_type,from_id,rel,to_type,to_id',
-    "&from_type=eq.academic&rel=eq.subject");
-  for (const l of links) have.add(l.from_id + ':' + l.to_id);
-  console.log('■ 이미 있는 주제 연결', have.size, '건');
+  const links = await sbGetAll('entity_links', 'from_id,rel,to_id',
+    "&from_type=eq.academic&rel=in.(subject,author)");
+  for (const l of links) have.add(l.rel + ':' + l.from_id + ':' + l.to_id);
+  console.log('■ 이미 있는 학술 연결', have.size, '건');
 
-  // 4) 제목에서 인물 찾기
+  // 3-2) 저자 이름 사전 · 논문의 author 칸과 인물DB 를 맞춥니다.
+  //      제목에 나오는 성과 달리, 저자는 이름 전체가 적혀 있어
+  //      완전히 같은 이름만 이으면 됩니다.
+  //
+  //      두 가지를 챙깁니다.
+  //        · 한글 이름은 공백이 없으므로 낱말 수를 따지지 않습니다
+  //        · 낱말을 가나다순으로 정렬해 견줍니다.
+  //          인물DB 는 'Minsu Kim' · 논문은 'Kim Minsu' 로 적히는 일이 흔합니다.
+  const nameKey = (s) => {
+    const t = String(s || '').trim();
+    if (!t) return '';
+    if (/[가-힣]/.test(t)) return t.replace(/[^가-힣]/g, '');
+    return t.toLowerCase().replace(/[^a-z\s]/g, ' ')
+            .split(/\s+/).filter(Boolean).sort().join('');
+  };
+  const usableName = (s) => {
+    const t = String(s || '').trim();
+    if (/[가-힣]/.test(t)) return t.replace(/[^가-힣]/g, '').length >= 2;
+    return t.split(/\s+/).filter(Boolean).length >= 2;
+  };
+
+  const fullCount = new Map(), fullFirst = new Map();
+  for (const p of persons) {
+    for (const nm of [p.name_en, p.name_ko]) {
+      if (!usableName(nm)) continue;
+      const k = nameKey(nm);
+      // 최소 길이는 글자 종류에 따라 다릅니다.
+      // 4자로 두면 '정경화' 같은 세 자 이름이 빠집니다.
+      const minLen = /[가-힣]/.test(k) ? 2 : 4;
+      if (k.length < minLen) continue;
+      fullCount.set(k, (fullCount.get(k) || 0) + 1);
+      if (!fullFirst.has(k)) fullFirst.set(k, p);
+    }
+  }
+  const fullMap = new Map();
+  for (const [k, n] of fullCount) if (n === 1) fullMap.set(k, fullFirst.get(k));
+
+  // 4) 제목에서 인물 찾기 · 저자 칸에서도 인물 찾기
   const pairs = [];        // { paperId, personId, how }
+  const auPairs = [];      // { paperId, personId }
   let hitEn = 0, hitKo = 0;
   for (const a of papers) {
+    // 저자 연결
+    for (const raw of String(a.author || '').split(',')) {
+      const nm = raw.trim();
+      if (!usableName(nm)) continue;
+      const p = fullMap.get(nameKey(nm));
+      if (!p) continue;
+      if (have.has('author:' + a.id + ':' + p.id)) continue;
+      if (!auPairs.some(x => x.paperId === a.id && x.personId === p.id)) {
+        auPairs.push({ paperId: a.id, personId: p.id });
+      }
+    }
+
     const title = String(a.name_en || a.name_ko || '');
     if (!title) continue;
     const found = new Map();   // personId -> how
@@ -168,13 +220,14 @@ async function main() {
       }
     }
     for (const [pid, how] of found) {
-      if (have.has(a.id + ':' + pid)) continue;
+      if (have.has('subject:' + a.id + ':' + pid)) continue;
       pairs.push({ paperId: a.id, personId: pid, how });
     }
   }
-  console.log('■ 새로 이을 연결', pairs.length, '건 (영문 성 ' + hitEn + ' · 한글 이름 ' + hitKo + ')');
+  console.log('■ 새로 이을 주제 연결', pairs.length, '건 (영문 성 ' + hitEn + ' · 한글 이름 ' + hitKo + ')');
+  console.log('■ 새로 이을 저자 연결', auPairs.length, '건');
 
-  if (!pairs.length) { console.log('■ 넣을 것이 없습니다. 종료.'); return; }
+  if (!pairs.length && !auPairs.length) { console.log('■ 넣을 것이 없습니다. 종료.'); return; }
 
   // 5) 미리보기
   const byPerson = new Map();
@@ -195,6 +248,13 @@ async function main() {
                 to_type: 'person', to_id: p.personId, source: src, confidence: conf });
     rows.push({ from_type: 'person', from_id: p.personId, rel: 'studied_by',
                 to_type: 'academic', to_id: p.paperId, source: src, confidence: conf });
+  }
+  // 저자 연결 · 이름 전체가 맞은 것이라 신뢰도를 조금 높게 둡니다
+  for (const p of auPairs) {
+    rows.push({ from_type: 'academic', from_id: p.paperId, rel: 'author',
+                to_type: 'person', to_id: p.personId, source: 'name-match', confidence: 80 });
+    rows.push({ from_type: 'person', from_id: p.personId, rel: 'wrote',
+                to_type: 'academic', to_id: p.paperId, source: 'name-match', confidence: 80 });
   }
   let ins = 0;
   for (let i = 0; i < rows.length; i += 500) {
