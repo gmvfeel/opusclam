@@ -16,9 +16,11 @@
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var H   = { apikey: KEY, Authorization: 'Bearer ' + KEY };
 
-  var TABLE = { person: 'persons', org: 'orgs', school: 'schools', academic: 'academic' };
+  var TABLE = { person: 'persons', org: 'orgs', school: 'schools',
+                academic: 'academic', foundation: 'foundations' };
   var VIEW  = { person: '/db/person-view.html', org: '/db/org-view.html',
-                school: '/db/school-view.html', academic: '/db/academic-view.html' };
+                school: '/db/school-view.html', academic: '/db/academic-view.html',
+                foundation: '/db/foundation-view.html' };
   var NAMEK = ['name_ko', 'name', 'name_kr', 'title', 'org_name', 'school_name', 'name_en'];
 
   var CAP_ALUMNI = 12;   // 동문 표시 최대
@@ -236,8 +238,13 @@
 
   /* ---------- 단체 · 학교 뷰 (역방향: 소속·출신 인물) ---------- */
   function forEntity(type, id, mount) {
-    var rel   = (type === 'org') ? 'member_of' : 'alumnus_of';
-    var label = (type === 'org') ? '이 단체 소속 인물' : '이 학교 출신 인물';
+    /* 기관·재단 뷰는 학술원 회원(fellow_of)을 보여줍니다.
+       학술원은 orgs 가 아니라 foundations 표에 담기 때문에
+       to_type 도 'foundation' 으로 저장합니다. */
+    var rel   = (type === 'org') ? 'member_of'
+              : (type === 'foundation') ? 'fellow_of' : 'alumnus_of';
+    var label = (type === 'org') ? '이 단체 소속 인물'
+              : (type === 'foundation') ? '이 기관 소속 · 회원 인물' : '이 학교 출신 인물';
     return rest('entity_links?select=from_id&to_type=eq.' + type + '&to_id=eq.' + id
                 + '&rel=eq.' + rel + '&limit=200')
       .then(function (rows) {

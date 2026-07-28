@@ -1338,11 +1338,15 @@ if('serviceWorker' in navigator){
          return t;
        }
        var SEC = {};
-       Array.prototype.forEach.call(document.querySelectorAll('.pv-sec'), function (sec) {
-         var h = sec.querySelector('.pv-h'); if (!h) return;
-         var t = korTitle(h);
-         if (t && !SEC[t]) SEC[t] = sec;
-       });
+       /* 이 페이지는 두 가지 상자를 씁니다.
+          한 줄 전체를 쓰는 .pv-sec 과 좌우 2열로 놓이는 .pv-block 입니다.
+          .pv-sec 만 찾았더니 '주요 사업'(pv-block)을 못 보고 시안이 남았습니다. */
+       Array.prototype.forEach.call(
+         document.querySelectorAll('.pv-sec, .pv-block'), function (sec) {
+           var h = sec.querySelector('.pv-h'); if (!h) return;
+           var t = korTitle(h);
+           if (t && !SEC[t]) SEC[t] = sec;
+         });
        function hide(t){ if (SEC[t]) SEC[t].style.display = 'none'; }
 
        /* 한 칸에 여러 값이 '·' 로 이어져 있습니다. 나눠서 목록으로 만듭니다 */
@@ -1365,9 +1369,8 @@ if('serviceWorker' in navigator){
        var IC_HOME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>';
        var IC_DOT  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>';
 
-       fillList('산하 · 운영 시설', x.subsidiary, IC_HOME);
-       fillList('주요 사업 · 프로그램', x.business, IC_DOT);
-
+       /* 숨길 것을 먼저 처리합니다.
+          뒤쪽에서 문제가 생겨도 시안이 화면에 남지 않게 하기 위함입니다. */
        /* '주요 사업' 은 '주요 사업 · 프로그램' 과 겹치고,
           쓰려던 keywords 컬럼이 이 표에 없어 늘 시안으로 남았습니다 */
        hide('주요 사업');
@@ -1376,14 +1379,21 @@ if('serviceWorker' in navigator){
        /* 영상은 주소가 있을 때만 남깁니다 */
        if (!x.link_video) hide('영상');
 
+       fillList('산하 · 운영 시설', x.subsidiary, IC_HOME);
+       fillList('주요 사업 · 프로그램', x.business, IC_DOT);
+
        /* 관련 기관 · 같은 유형의 다른 기관을 불러옵니다 */
        (function(){
          var sec = SEC['관련 기관']; if (!sec) return;
          var box = sec.querySelector('.pv-people');
          if (!box || !x.type) { sec.style.display = 'none'; return; }
+         /* 같은 유형만 보면 소련 작곡가동맹에 한국 협회가 붙습니다.
+            그래서 국내끼리 · 국외끼리 묶습니다. */
+         var isKR = /대한민국|한국|Korea/i.test(String(x.location || ''));
          var q = URL + '/rest/v1/foundations?select=id,name_ko,name_en,type,location'
                + '&type=eq.' + encodeURIComponent(x.type)
                + '&id=neq.' + encodeURIComponent(id)
+               + (isKR ? '&location=ilike.*대한민국*' : '&location=not.ilike.*대한민국*')
                + '&hidden=is.false&order=sort_no.desc&limit=6';
          fetch(q, { headers: H }).then(function (r) { return r.json(); })
           .then(function (list) {
@@ -1408,6 +1418,7 @@ document.title=nm+' · 관련기관·재단DB · OPUSCLAM.COM';var cr=document.q
 })();
 </script>
 <script src="/assets/pv.js" defer></script>
+<script src="/assets/links.js" defer></script>
 <script src="/assets/app.js" defer></script>
 </body>
 </html>

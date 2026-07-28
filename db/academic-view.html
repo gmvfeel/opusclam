@@ -1312,11 +1312,15 @@ if('serviceWorker' in navigator){
          return t;
        }
        var SEC = {};
-       Array.prototype.forEach.call(document.querySelectorAll('.pv-sec'), function (sec) {
-         var h = sec.querySelector('.pv-h'); if (!h) return;
-         var t = korTitle(h);
-         if (t && !SEC[t]) SEC[t] = sec;
-       });
+       /* 이 페이지는 두 가지 상자를 씁니다.
+          한 줄 전체를 쓰는 .pv-sec 과 좌우 2열로 놓이는 .pv-block 입니다.
+          .pv-sec 만 찾으면 '서지 정보'(pv-block)를 놓칩니다. */
+       Array.prototype.forEach.call(
+         document.querySelectorAll('.pv-sec, .pv-block'), function (sec) {
+           var h = sec.querySelector('.pv-h'); if (!h) return;
+           var t = korTitle(h);
+           if (t && !SEC[t]) SEC[t] = sec;
+         });
        function hide(t){ if (SEC[t]) SEC[t].style.display = 'none'; }
 
        /* 서지 정보에 권 · 호 · 페이지 · DOI · 피인용 · 원문공개를 더합니다.

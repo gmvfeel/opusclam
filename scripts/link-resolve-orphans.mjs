@@ -228,7 +228,9 @@ function musicalOrg(row, types) {
 async function run(kind) {
   const rel   = kind === 'school' ? 'alumnus_of' : 'fellow_of';
   const table = kind === 'school' ? 'schools' : 'foundations';
-  const toType = kind === 'school' ? 'school' : 'org';
+  // 학술원은 foundations 표에 담으므로 to_type 도 'foundation' 이어야 합니다.
+  // 'org' 로 두면 엔진이 단체DB(orgs)를 뒤져 엉뚱한 곳을 가리킵니다.
+  const toType = kind === 'school' ? 'school' : 'foundation';
   console.log('■ ' + (kind === 'school' ? '학교' : '학술원') + ' 처리 · 관계 ' + rel);
 
   const links = await sbGetAll('entity_links', 'id,to_ref,to_label',
