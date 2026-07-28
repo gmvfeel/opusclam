@@ -287,6 +287,15 @@ function isHuman(types) {
   return String(types).split(/\s+/).some(u => u.endsWith('/Q5'));
 }
 
+// 소개문에 나타나는 대중음악 표시입니다.
+// 위키데이터 장르가 비어 있으면 장르 관문이 작동하지 않아
+// '헤비메탈 드러머' 같은 인물이 그대로 통과합니다.
+const POP_TEXT = /메탈|드러머|베이시스트|기타리스트|키보디스트|디제이|아이돌|보이그룹|걸그룹|보이 그룹|걸 그룹|트로트|힙합|래퍼|케이팝|k-?pop|가요계|댄스 음악|록 음악|밴드의 (보컬|멤버)|싱어송라이터|음악 프로듀서|연예인/i;
+
+// 소개문에 음악 이야기가 있는지 봅니다.
+// 분류가 잘못 붙은 경우(방송인이 성악가 분류에 들어가 있는 등)를 막습니다.
+const MUSIC_TEXT = /음악|연주|작곡|지휘|성악|노래|소프라노|테너|바리톤|베이스|메조|피아니스트|바이올리니스트|첼리스트|오케스트라|교향|협주|독주|리사이틀|콩쿠르|오페라|합창|앙상블|실내악|악단|악장|성부|가곡/;
+
 function judge(cand) {
   const w = cand.wd || {};
 
@@ -303,16 +312,21 @@ function judge(cand) {
     return { ok: false, why: '국악 계열' };
   }
 
-  // ③ 대중음악 장르는 받지 않습니다
+  // ③ 대중음악은 받지 않습니다. 장르 정보와 소개문 양쪽을 봅니다.
   if (GENRE.test(w.gen || '')) return { ok: false, why: '대중음악 장르' };
+  if (POP_TEXT.test(cand.extract || '')) return { ok: false, why: '대중음악 소개문' };
 
-  // ④ 분류 이름이 클래식 계열이면 받습니다
+  // ④ 소개문에 음악 이야기가 없으면 받지 않습니다.
+  //    분류가 잘못 붙은 인물(방송인 · 배우 등)이 이 관문에서 걸립니다.
+  if (!MUSIC_TEXT.test(cand.extract || '')) return { ok: false, why: '소개문에 음악 없음' };
+
+  // ⑤ 분류 이름이 클래식 계열이면 받습니다
   const strongCat = SRC_STRONG.test(cand.cat);
-  // ⑤ 아니면 소개문에 클래식 지표가 있어야 합니다
+  // ⑥ 아니면 소개문에 클래식 지표가 있어야 합니다
   const strongText = CLASSIC_STRONG.test(cand.extract || '');
   if (!strongCat && !strongText) return { ok: false, why: '클래식 근거 없음' };
 
-  // ⑥ 소개문과 생몰이 모두 없으면 빈약하므로 받지 않습니다
+  // ⑦ 소개문과 생몰이 모두 없으면 빈약하므로 받지 않습니다
   if (isEmpty(cand.extract) && isEmpty(w.life)) return { ok: false, why: '내용 빈약' };
 
   return { ok: true, why: strongCat ? '분류 근거' : '소개문 근거' };
