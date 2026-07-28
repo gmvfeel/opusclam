@@ -314,6 +314,15 @@ html[data-theme="dark"] .doc-row:hover{background:#000}
 /* 자료형 목록 우측 배지(국내/해외 + 구분) — 날짜 앞 */
 .doc-cat{flex:none;align-self:center;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .board-tag[data-cat="국내"]{color:#dc2626;border-color:rgba(220,38,38,.4)}
+
+/* 유틸리티 / 악보 / 자료 — 자료실 분류 배지 */
+.board-tag[data-cat="유틸리티"]{color:#dc2626;border-color:rgba(220,38,38,.4)}
+.board-tag[data-cat="악보"]{color:var(--violet-2);border-color:rgba(124,99,176,.5)}
+.board-tag[data-cat="자료"]{color:#0f9b8e;border-color:rgba(15,155,142,.45)}
+
+/* 현대음악 분류 배지 */
+.board-tag[data-cat="추천!현대음악"]{color:#dc2626;border-color:rgba(220,38,38,.4)}
+.board-tag[data-cat="현대음악 즐기기"]{color:var(--violet-2);border-color:rgba(124,99,176,.5)}
 .board-tag[data-cat="해외"]{color:var(--violet-2);border-color:rgba(124,99,176,.5)}
 
 /* 목록 우측 메타(작성자·날짜·분류)를 오른쪽 끝에서 안쪽으로 */

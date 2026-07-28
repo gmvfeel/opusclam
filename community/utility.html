@@ -17,6 +17,18 @@
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/assets/base.css">
 <link rel="stylesheet" href="/assets/board.css">
+<style>
+  /* 유틸리티/악보/자료 — 자료실 목록 스타일 (이 페이지 전용) */
+  .board-row .board-prev{display:none}          /* 본문 미리보기 숨김 → 한 줄 목록 */
+  .board-row{padding-top:14px;padding-bottom:14px}
+  .board-row-title{font-size:16px}
+  /* 자료 이용 안내 */
+  .ut-notice{max-width:1180px;margin:0 auto 18px;padding:14px 18px;border:1px solid var(--line);
+    border-radius:10px;background:var(--paper-2);font-size:13px;line-height:1.75;color:var(--text-2)}
+  .ut-notice b{color:var(--text)}
+  .ut-notice ul{margin:6px 0 0;padding-left:18px}
+  .ut-notice li{margin:2px 0}
+</style>
 </head>
 <body data-header="overlay">
 <div id="oc-header"></div>
@@ -61,12 +73,21 @@
           <h1 class="pdb-title">유틸리티 / 악보 / 자료</h1>
         </div>
       </div>
-      <p class="pdb-lead">연습과 작업에 도움이 되는 프로그램·악보·자료 정보를 나누는 공간입니다.</p>
+      <p class="pdb-lead">연습과 작업에 필요한 프로그램·악보·자료를 어디서 어떻게 구할 수 있는지 모아두는 자료실입니다.</p>
     </header>
   </div>
 </section>
 
 <main class="board">
+  <div class="ut-notice">
+    <b>자료 이용 안내</b>
+    <ul>
+      <li>이곳은 파일을 배포하는 곳이 아니라 <b>공식 배포처와 공개 아카이브를 안내</b>하는 자료실입니다.</li>
+      <li>악보는 원곡의 저작권 보호 기간이 지났더라도 <b>편집한 판본은 권리가 따로 있습니다.</b></li>
+      <li>공개되어 있는 음원·영상이라도 <b>내려받아 다시 올리는 것은 허용되지 않는 경우가 많습니다.</b> 링크로 나눠주세요.</li>
+      <li>권리 관계가 확인되지 않은 파일이 등록되면 안내 없이 삭제될 수 있습니다.</li>
+    </ul>
+  </div>
   <div class="board-bar pdb-toolbar">
     <div class="board-search pdb-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
