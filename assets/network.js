@@ -38,26 +38,32 @@
 
   // 종류별 빛깔 · 목록 화면의 강조색(레드)을 인물에 씁니다.
   // ── 빛깔 ────────────────────────────────────────────────
-  //  오퍼스클램이 실제로 쓰는 색에서 가져왔습니다.
-  //    --violet-2  #7C63B0   페이지 번호 · 강조에 쓰는 주력색
-  //    --violet-3  #9C7FD6   보조 강조
-  //    --gold      #C9A94E   금색 강조
-  //    --orange    #EC7A1C   주황 강조
-  //    레드        #dc2626   테두리 · 박스섀도
-  //  앞서 쓴 적색 · 청록은 사이트 어디에도 없는 색이어서 겉돌았습니다.
-  //  보라를 주인공(인물)에 두고 금 · 주황을 곁에 놓아 사이트와 결을 맞췄습니다.
-  //  문헌만 회색빛으로 물립니다 — 인물이 중심이고 문헌은 곁가지입니다.
+  //  파트너가 고른 네 가지를 기준으로 짰습니다.
+  //    #d93a4c 인물 · #0f9b8e 학교 · #3b6fc4 단체 · #8b95a8 문헌
+  //  기관 · 공연장은 고른 네 가지와 부딪히지 않는 자리에서 골랐습니다.
+  //  문헌만 회색빛으로 물러섭니다 — 인물이 중심이고 문헌은 곁가지입니다.
   var COLOR = {
-    person:     '#7C63B0',   // --violet-2 그대로
-    school:     '#BE9C3F',   // --gold 을 조금 눌러 흰 배경에서 또렷하게
-    org:        '#EC7A1C',   // --orange 그대로
-    foundation: '#9C7FD6',   // --violet-3 그대로
-    academic:   '#9AA1B4',   // 물러서는 회색빛
-    venue:      '#4E8FA8',
-    modern:     '#B0559A'
+    person:     '#d93a4c',
+    school:     '#0f9b8e',
+    org:        '#3b6fc4',
+    academic:   '#8b95a8',
+    foundation: '#c08a3e',   // 황토 · 네 가지와 겹치지 않게
+    venue:      '#2f8ca8',   // 학교와 단체 사이
+    modern:     '#a5568f'
   };
-  // 가운데 점을 감싸는 링 · 사이트 강조색을 씁니다
-  var ACCENT = '#dc2626';
+
+  // 가운데 점을 감싸는 링.
+  //   인물 빛깔과 비슷한 빨강을 쓰면 링이 묻혀 보이지 않습니다.
+  //   어느 빛깔 위에서도 또렷한 짙은 회청색으로 둡니다.
+  var ACCENT = '#475569';
+
+  // 줄 빛깔 · 점 빛깔과 결을 맞춘 중립 회색입니다.
+  var EDGE = {
+    base:  '#d7dbe1',
+    teach: '#bfc6cf',   // 사제 관계 · 또렷하게
+    paper: '#e3e6eb',   // 문헌 · 점선으로 옅게
+    hot:   '#d93a4c'    // 손을 올렸을 때
+  };
 
   var KIND_KO = {
     person: '인물', org: '단체', school: '학교',
@@ -698,10 +704,10 @@
       +   'box-shadow:0 1px 3px rgba(15,23,42,.05)}'
       + '.ocn-svg{display:block;width:100%;height:auto;touch-action:none}'
       // 줄 · 사제는 또렷하게, 문헌은 점선으로 물러나게
-      + '.ocn-edge{fill:none;stroke-linecap:round;stroke:#d8d5e2;stroke-width:1.1;transition:stroke .12s,stroke-width .12s}'
-      + '.ocn-edge.is-teach{stroke:#bdb4d2;stroke-width:1.5}'
-      + '.ocn-edge.is-paper{stroke:#e0e2e8;stroke-dasharray:3 3}'
-      + '.ocn-edge.is-hot{stroke:#7C63B0;stroke-width:2;opacity:.85}'
+      + '.ocn-edge{fill:none;stroke-linecap:round;stroke:var(--ocn-edge,#d8d5e2);stroke-width:1.1;transition:stroke .12s,stroke-width .12s}'
+      + '.ocn-edge.is-teach{stroke:var(--ocn-teach,#bdb4d2);stroke-width:1.5}'
+      + '.ocn-edge.is-paper{stroke:var(--ocn-paper,#e0e2e8);stroke-dasharray:3 3}'
+      + '.ocn-edge.is-hot{stroke:var(--ocn-hot,#7C63B0);stroke-width:2;opacity:.85}'
       + '.ocn-node{cursor:pointer}'
       + '.ocn-node .ocn-mark{stroke:#fff;stroke-width:1.8;transition:opacity .15s}'
       + '.ocn-node:hover .ocn-mark{opacity:.82}'
@@ -791,13 +797,22 @@
           bar.className = 'ocn-bar';
           var kinds = {};
           G.nodes.forEach(function (n) { kinds[n.type] = 1; });
+          G.kinds = kinds;
           bar.innerHTML = '<span class="ocn-legend">' + legendHTML(Object.keys(kinds)) + '</span>'
-                        + '<span class="ocn-count"></span><span class="ocn-status"></span>';
+                        + '<span class="ocn-count"></span><span class="ocn-status"></span>'
+                        ;
           wrap.appendChild(bar);
 
           mount.appendChild(wrap);
+          G.wrap    = wrap;
           G.counter = bar.querySelector('.ocn-count');
           G.status  = bar.querySelector('.ocn-status');
+          G.legend  = bar.querySelector('.ocn-legend');
+          // 줄 빛깔은 CSS 변수로 넘깁니다
+          wrap.style.setProperty('--ocn-edge',  EDGE.base);
+          wrap.style.setProperty('--ocn-teach', EDGE.teach);
+          wrap.style.setProperty('--ocn-paper', EDGE.paper);
+          wrap.style.setProperty('--ocn-hot',   EDGE.hot);
 
           paintAll();
           kick();
