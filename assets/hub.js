@@ -1158,12 +1158,26 @@ window.OCHub = (function () {
        ③ 그래도 안 되면 까닭과 '다시 불러오기' 단추를 보여 준다
      집계 함수가 무거워 시간이 걸리는 것이라면 다시 시도만으로 대개 살아납니다. */
 
-  function statsSkeleton(el) {
-    if (!el) return;
-    el.innerHTML = '<div class="hb-load" aria-live="polite">'
-      + '<div class="hb-load-bar"></div><div class="hb-load-bar"></div>'
-      + '<div class="hb-load-bar"></div><div class="hb-load-bar"></div>'
-      + '<span class="hb-load-txt">데이터를 세는 중…</span></div>';
+  /* 불러오는 동안 세 자리를 함께 채웁니다.
+       곡선 · 구성비 막대 · 요약 숫자
+     한 곳만 표시하면 나머지가 비어 있어 무엇을 기다리는지 알기 어렵습니다. */
+  function statsSkeleton(cv, bs, nums) {
+    if (cv) {
+      cv.innerHTML = '<div class="hb-load" aria-live="polite">'
+        + '<div class="hb-load-bar"></div><div class="hb-load-bar"></div>'
+        + '<div class="hb-load-bar"></div><div class="hb-load-bar"></div>'
+        + '<div class="hb-load-bar"></div><div class="hb-load-bar"></div>'
+        + '<span class="hb-load-txt">최근 30일 기록을 세는 중…</span></div>';
+    }
+    if (bs) {
+      bs.innerHTML = '<div class="hb-load-bars" aria-hidden="true">'
+        + '<i></i><i></i><i></i></div>';
+    }
+    (nums || []).forEach(function (sel) {
+      if (!sel) return;
+      var el = document.querySelector(sel);
+      if (el) el.innerHTML = '<span class="hb-num-load"></span>';
+    });
   }
 
   function statsFail(el, onRetry) {
@@ -1180,7 +1194,10 @@ window.OCHub = (function () {
     var st = document.createElement('style');
     st.id = 'hb-stats-css';
     st.textContent = ''
-      + '.hb-load{display:flex;align-items:flex-end;gap:10px;height:200px;padding:20px 6px;position:relative}'
+      // 부모(.hb-curve)가 display:flex 이므로 폭을 주지 않으면 찌그러집니다.
+      //   2026-07-29 · 로딩 표시를 넣었는데 눈에 띄지 않던 까닭이 이것이었습니다.
+      + '.hb-load{flex:1 1 100%;width:100%;box-sizing:border-box;'
+      +   'display:flex;align-items:flex-end;gap:10px;height:212px;padding:22px 6px 26px;position:relative}'
       + '.hb-load-bar{flex:1;border-radius:6px 6px 0 0;'
       +   'background:linear-gradient(180deg,rgba(124,99,176,.16),rgba(124,99,176,.05));'
       +   'animation:hbpulse 1.25s ease-in-out infinite}'
@@ -1190,9 +1207,20 @@ window.OCHub = (function () {
       + '.hb-load-bar:nth-child(4){height:78%;animation-delay:.42s}'
       + '@keyframes hbpulse{0%,100%{opacity:.45}50%{opacity:1}}'
       + '.hb-load-txt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);'
-      +   'font-size:12.5px;color:#9aa0aa}'
-      + '.hb-fail{display:flex;flex-direction:column;align-items:center;justify-content:center;'
-      +   'gap:12px;height:200px;text-align:center}'
+      +   'font-size:12.5px;color:#9aa0aa;white-space:nowrap}'
+      // 구성비 막대 자리
+      + '.hb-load-bars{display:flex;flex-direction:column;gap:10px;padding:4px 0}'
+      + '.hb-load-bars i{display:block;height:14px;border-radius:7px;'
+      +   'background:linear-gradient(90deg,rgba(59,111,196,.14),rgba(59,111,196,.06));'
+      +   'animation:hbpulse 1.25s ease-in-out infinite}'
+      + '.hb-load-bars i:nth-child(2){width:72%;animation-delay:.12s}'
+      + '.hb-load-bars i:nth-child(3){width:48%;animation-delay:.24s}'
+      // 숫자 자리 · 옅은 막대가 깜빡입니다
+      + '.hb-num-load{display:inline-block;width:2.6em;height:.72em;border-radius:4px;vertical-align:-.06em;'
+      +   'background:rgba(59,111,196,.16);animation:hbpulse 1.25s ease-in-out infinite}'
+      + '.hb-fail{flex:1 1 100%;width:100%;box-sizing:border-box;'
+      +   'display:flex;flex-direction:column;align-items:center;justify-content:center;'
+      +   'gap:12px;min-height:212px;text-align:center}'
       + '.hb-fail-txt{margin:0;font-size:13px;color:#8a9099}'
       + '.hb-fail-btn{appearance:none;border:1px solid #d9dce2;background:#fff;color:#4b5563;'
       +   'font:600 12.5px/1 inherit;padding:9px 16px;border-radius:8px;cursor:pointer}'
@@ -1207,8 +1235,7 @@ window.OCHub = (function () {
     var tries = 0;
 
     function run() {
-      statsSkeleton(cv);
-      if (bs) bs.innerHTML = '';
+      statsSkeleton(cv, bs, [cfg.week, cfg.today, cfg.upd]);
 
       var url = SB_URL + '/rest/v1/rpc/db_stats?p_days=' + (cfg.days || 30);
       fetch(url, { headers: HDR })
@@ -1227,6 +1254,7 @@ window.OCHub = (function () {
             var el = document.querySelector(sel);
             if (!el) return;
             if (v == null) { el.textContent = '—'; return; }   /* 값이 없으면 대시를 남깁니다 */
+            /* textContent 를 넣으면 로딩 막대(span)는 지워집니다 */
             if (up) countUp(el, Number(v) || 0);
             else el.textContent = (Number(v) || 0).toLocaleString();
           }
