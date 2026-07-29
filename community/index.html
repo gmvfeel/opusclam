@@ -247,6 +247,22 @@
           <span class="cm-qlabel">뉴스 / 공지</span>
           <span class="cm-qcount"><b id="cNews">—</b><i>건</i></span>
         </a>
+        <a class="cm-qcard" href="/community/modern.html">
+          <span class="cm-qlabel">현대음악</span>
+          <span class="cm-qcount"><b id="cMod">—</b><i>건</i></span>
+        </a>
+        <a class="cm-qcard" href="/community/prenatal.html">
+          <span class="cm-qlabel">태교음악</span>
+          <span class="cm-qcount"><b id="cPre">—</b><i>건</i></span>
+        </a>
+        <a class="cm-qcard" href="/community/utility.html">
+          <span class="cm-qlabel">유틸리티 / 악보 / 자료</span>
+          <span class="cm-qcount"><b id="cUtl">—</b><i>건</i></span>
+        </a>
+        <a class="cm-qcard" href="/community/school-month.html">
+          <span class="cm-qlabel">이달의 음악학교</span>
+          <span class="cm-qcount"><b id="cSch">—</b><i>호</i></span>
+        </a>
       </div>
     </div>
 
@@ -283,6 +299,26 @@
       </div>
       <div class="bd-tabs" id="tabBtns"></div>
       <div id="tabList"></div>
+    </section>
+
+    <!-- 현대음악 — 갈래(추천·즐기기)로 나눠 보여 줍니다 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">현대음악<em>CONTEMPORARY</em></span>
+        <a class="cm-more" href="/community/modern.html">VIEW MORE <span>+</span></a>
+      </div>
+      <div class="bd-tabs" id="modTabs"></div>
+      <div id="modList"></div>
+    </section>
+
+    <!-- 태교음악 — 갈래(추천·즐기기)로 나눠 보여 줍니다 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">태교음악<em>PRENATAL MUSIC</em></span>
+        <a class="cm-more" href="/community/prenatal.html">VIEW MORE <span>+</span></a>
+      </div>
+      <div class="bd-tabs" id="preTabs"></div>
+      <div id="preList"></div>
     </section>
 
     <!-- 이달의 음악학교 -->
@@ -362,12 +398,6 @@
           list:'/community/qna.html?track=' + encodeURIComponent('전공별'),
           filter:'&track=eq.' + encodeURIComponent('전공별'),
           cols:'id,category,title,body,thumb_url,author_name,created_at' },
-        { label:'현대음악', table:'modern_music', view:'/community/modern-view.html',
-          list:'/community/modern.html',
-          cols:'id,category,title,body,thumb_url,author_name,created_at' },
-        { label:'태교음악', table:'prenatal_music', view:'/community/prenatal-view.html',
-          list:'/community/prenatal.html',
-          cols:'id,category,title,body,thumb_url,author_name,created_at' },
         { label:'유틸리티 / 악보 / 자료', table:'utility', view:'/community/utility-view.html',
           list:'/community/utility.html',
           cols:'id,category,title,body,thumb_url,author_name,created_at' }
@@ -375,8 +405,9 @@
     });
 
     /* 건수 — 탭에 들어간 게시판도 숫자를 채운다 */
-    ['#cAdm','#cAdc','#cQna','#cNews'].forEach(function(sel,i){
-      var t=['admission','admission_community','qna','news'][i];
+    ['#cAdm','#cAdc','#cQna','#cNews','#cMod','#cPre','#cUtl','#cSch'].forEach(function(sel,i){
+      var t=['admission','admission_community','qna','news',
+             'modern_music','prenatal_music','utility','monthly_school'][i];
       fetch('https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/'+t+'?select=id&limit=1',
         { headers:{ apikey:'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',
                     Authorization:'Bearer sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',
@@ -386,6 +417,36 @@
           var n=parseInt((cr.split('/')[1]||'0'),10)||0;
           var el=document.querySelector(sel); if(el) el.textContent=n.toLocaleString();
         }).catch(function(){});
+    });
+
+    /* 현대음악 — 갈래별로 탭을 나눕니다 */
+    OCHub.boardTabs({
+      tabsEl:'#modTabs', listEl:'#modList', kind:'rows', n:3,
+      tabs:[
+        { label:'추천! 현대음악', table:'modern_music', view:'/community/modern-view.html',
+          list:'/community/modern.html',
+          filter:'&category=eq.' + encodeURIComponent('추천!현대음악'),
+          cols:'id,category,title,body,thumb_url,author_name,created_at' },
+        { label:'현대음악 즐기기', table:'modern_music', view:'/community/modern-view.html',
+          list:'/community/modern.html',
+          filter:'&category=eq.' + encodeURIComponent('현대음악 즐기기'),
+          cols:'id,category,title,body,thumb_url,author_name,created_at' }
+      ]
+    });
+
+    /* 태교음악 — 갈래별로 탭을 나눕니다 */
+    OCHub.boardTabs({
+      tabsEl:'#preTabs', listEl:'#preList', kind:'rows', n:3,
+      tabs:[
+        { label:'추천! 태교음악', table:'prenatal_music', view:'/community/prenatal-view.html',
+          list:'/community/prenatal.html',
+          filter:'&category=eq.' + encodeURIComponent('추천!태교음악'),
+          cols:'id,category,title,body,thumb_url,author_name,created_at' },
+        { label:'태교음악 즐기기', table:'prenatal_music', view:'/community/prenatal-view.html',
+          list:'/community/prenatal.html',
+          filter:'&category=eq.' + encodeURIComponent('태교음악 즐기기'),
+          cols:'id,category,title,body,thumb_url,author_name,created_at' }
+      ]
     });
 
     /* 이달의 음악학교 — 「이달의 음악학교」 코너에서 뽑은 학교를 그대로 보여 줍니다.
