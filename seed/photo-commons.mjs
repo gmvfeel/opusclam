@@ -157,6 +157,50 @@ SELECT ?item ?cat WHERE {
 }
 
 /* ============================================================
+   파일 이름으로 잡음을 걸러내기
+
+   커먼즈 카테고리에는 그 대상뿐 아니라 주변 건물·거리·행사 사진과
+   지도·포스터·현판이 함께 들어 있는 경우가 많습니다.
+   첫 시험에서 실제로 이런 것들이 섞여 들어왔습니다.
+     · 도네츠크 필하모니 카테고리 → 레닌 광장, 보로실로프 지구 사진
+     · 가스타이크 카테고리 → 독일박물관 항공사진
+     · 월트 디즈니 콘서트홀 카테고리 → 4V4A2878 copy 2.jpg (카메라 기본 이름)
+   그래서 두 단계로 걸러냅니다.
+   ============================================================ */
+
+/* 1단계 — 명백한 잡음. 대상이 무엇이든 제외합니다. */
+const NOISE = [
+  /* 카메라가 붙인 기본 이름 — 무엇을 찍었는지 알 수 없습니다 */
+  /^(dsc|dscn|img|imgp|pict|photo|foto|p\d{7}|\d+v\d+a\d+|_mg|cimg|sam_|hpim)[\s_-]?\d/i,
+  /^\d{2,4}[\s_-]?\d{4,}\.(jpe?g|png)$/i,
+  /copy\s*\d*\.(jpe?g|png)$/i,
+  /* 다른 시설 */
+  /(museum|church|kirche|cathedral|dom\b|münster|munster|rathaus|town.hall|hotel|bahnhof|station|bridge|brücke|tower|turm|castle|schloss|palace|palais|university.library)/i,
+  /* 장소 일반 — 그 건물이 아니라 동네 사진입니다 */
+  /(square|plaza|platz|street|stra[sß]?e|district|avenue|boulevard|panorama.of|skyline|aerial.view.of.the.city|район|улица|площадь)/i,
+  /* 자료·문서 */
+  /(logo|coat.of.arms|flag|map\b|plan\b|diagram|blueprint|poster|ticket|programme|program\b|plaque|sign\b|seal\b|icon|leaflet|brochure|score\b|sheet.music)/i,
+  /* 사람 얼굴 위주로 보이는 것 — 공연장 소개에 쓰기 어렵습니다 */
+  /(portrait|selfie|tourists)/i,
+];
+
+function isNoise(file) {
+  return NOISE.some((re) => re.test(file));
+}
+
+/* 2단계 — 대상 이름과 맞는지 확인합니다.
+   이름의 주요 낱말이 하나라도 파일 이름에 들어 있으면 받아들입니다.
+   카테고리로 찾은 경우에는 이미 그 대상의 카테고리이므로 이 정도로 충분합니다.
+   이름의 모든 낱말이 일반 명사여서 판정할 수 없으면(예: Academy of Music)
+   카테고리를 신뢰하고 1단계만 적용합니다. */
+function matchesName(file, item) {
+  const keys = keyWords(item);
+  if (!keys.length) return true;          /* 판정 불가 → 카테고리를 신뢰 */
+  const low = file.toLowerCase();
+  return keys.some((w) => low.includes(w.toLowerCase()));
+}
+
+/* ============================================================
    3) 커먼즈 카테고리의 파일 목록
    ============================================================ */
 async function categoryFiles(cat, max) {
@@ -169,8 +213,8 @@ async function categoryFiles(cat, max) {
   const arr = (j && j.query && j.query.categorymembers) || [];
   return arr
     .map((x) => String(x.title).replace(/^File:/, ''))
-    .filter((f) => /\.(jpe?g|png)$/i.test(f))          /* 사진만 — svg·pdf·ogg 제외 */
-    .filter((f) => !/(logo|coat.of.arms|flag|map|plan|diagram|seal|icon)/i.test(f));
+    .filter((f) => /\.(jpe?g|png)$/i.test(f))   /* 사진만 — svg·pdf·ogg 제외 */
+    .filter((f) => !isNoise(f));                /* 주변 건물·거리·자료 제외 */
 }
 
 /* ============================================================
@@ -213,7 +257,7 @@ async function searchFiles(item, max) {
   return arr
     .map((x) => String(x.title).replace(/^File:/, ''))
     .filter((f) => /\.(jpe?g|png)$/i.test(f))
-    .filter((f) => !/(logo|coat.of.arms|flag|map|plan|diagram|seal|icon)/i.test(f))
+    .filter((f) => !isNoise(f))
     .filter((f) => {
       const low = f.toLowerCase();
       const hit = keys.filter((w) => low.includes(w.toLowerCase())).length;
@@ -305,6 +349,8 @@ async function saveRows(rows) {
 
       if (cat) {
         files = await categoryFiles(cat, MAXP);
+        /* 카테고리 안에도 다른 대상 사진이 섞여 있으므로 이름을 한 번 더 확인한다 */
+        files = files.filter((f) => matchesName(f, t));
         if (files.length) via = '카테고리';
       }
       if (!files.length) {
