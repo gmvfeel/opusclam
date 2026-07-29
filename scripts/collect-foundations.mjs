@@ -16,6 +16,11 @@
 //            FOUNDATIONS_DRY=1 이면 저장하지 않고 판정 결과만 보여줍니다
 // ============================================================
 
+// 바깥 자료원 호출은 공용 모듈이 담당합니다 · scripts/lib/http.mjs
+//   429 대기 상한 90초 · 실행 예산 25분 · 막히면 모은 것까지 저장하고 정상 종료합니다.
+//   이 정책을 고치려면 http.mjs 한 곳만 고치면 모든 수집기에 반영됩니다.
+import { makeGetJSON, isStop, sleep } from './lib/http.mjs';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -23,7 +28,7 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
   process.exit(1);
 }
 
-const VERSION = 'v1';
+const VERSION = 'v1.1';   // 공용 http 모듈 적용판 (로그에서 새 코드인지 구분하는 표시)
 const DRY     = process.env.FOUNDATIONS_DRY === '1';
 const UA      = 'OpusclamBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
 const SPARQL  = 'https://query.wikidata.org/sparql';
@@ -59,39 +64,16 @@ const POP_DENY = /\bpop\b|\brock\b|hip ?hop|\brap\b|r&b|soul music|electronic da
 const LABEL_DENY = /universal music group|warner music group|sony music entertainment|hybe|smtown|jyp|yg entertainment|kakao entertainment|def jam|interscope|atlantic records|columbia records\b|capitol records|island records|virgin records\b|epic records|republic records|motown/i;
 
 // ── 공통 유틸 ────────────────────────────────────────────────
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const clean = (s) => isEmpty(s) ? null : String(s).replace(/\s+/g, ' ').trim();
 const val = (b, k) => (b[k] && b[k].value) ? String(b[k].value) : '';
 const qidOf = (uri) => String(uri || '').split('/').pop();
 
-const BACKOFF = [5000, 15000, 30000, 60000, 90000];
-
-async function getJSON(url, tries = 5) {
-  let last = null;
-  for (let i = 0; i < tries; i++) {
-    try {
-      const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/sparql-results+json' } });
-      if (r.status === 429 || r.status >= 500) {
-        const ra = Number(r.headers.get('retry-after'));
-        const wait = (ra > 0 ? ra * 1000 : 0) || BACKOFF[i] || 90000;
-        last = new Error('HTTP ' + r.status);
-        if (i < tries - 1) {
-          console.log('    (' + r.status + ' · ' + Math.round(wait / 1000) + '초 대기 후 재시도)');
-          await sleep(wait); continue;
-        }
-        throw last;
-      }
-      if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + (await r.text()).slice(0, 160));
-      return await r.json();
-    } catch (e) {
-      last = e;
-      if (i === tries - 1) throw last;
-      if (!/HTTP (429|5\d\d)/.test(String(e.message))) await sleep(BACKOFF[i] || 30000);
-    }
-  }
-  throw last;
-}
+const getJSON = makeGetJSON({
+  ua: UA,
+  accept: 'application/sparql-results+json',
+  tries: 5,
+});
 
 async function sparql(query) {
   const d = await getJSON(SPARQL + '?format=json&query=' + encodeURIComponent(query));
@@ -180,6 +162,7 @@ async function collectClass(cls) {
       out.push(...rows);
     } catch (e) {
       failed += batch.length;
+      if (isStop(e)) break;                  // 자료원이 막혔으면 남은 묶음을 헛돌지 않습니다
     }
     await sleep(700);
   }
@@ -389,4 +372,14 @@ async function main() {
   console.log('■ 완료 · 기관·재단 총', (cr.split('/')[1] || '?'), '곳');
 }
 
-main().catch(e => { console.error('■ 실패:', e); process.exit(1); });
+main().catch(e => {
+  // 자료원이 막혀 멈춘 것은 실패가 아닙니다.
+  // 모은 것은 이미 저장됐고 못 채운 몫은 다음 예약 실행이 받아옵니다.
+  if (isStop(e)) {
+    console.log('■ 여기까지 · ' + e.message);
+    console.log('■ 다음 예약 실행에서 이어서 받아옵니다.');
+    return;
+  }
+  console.error('■ 실패:', e);
+  process.exit(1);
+});

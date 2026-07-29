@@ -17,6 +17,11 @@
 //            PERSONS_DRY=1 이면 저장하지 않고 판정 결과만 로그로 남깁니다
 // ============================================================
 
+// 바깥 자료원 호출은 공용 모듈이 담당합니다 · scripts/lib/http.mjs
+//   429 대기 상한 90초 · 실행 예산 25분 · 막히면 모은 것까지 저장하고 정상 종료합니다.
+//   이 정책을 고치려면 http.mjs 한 곳만 고치면 모든 수집기에 반영됩니다.
+import { makeGetJSON, isStop, sleep } from './lib/http.mjs';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -24,7 +29,7 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
   process.exit(1);
 }
 
-const VERSION = 'v1';
+const VERSION = 'v1.1';   // 공용 http 모듈 적용판 (로그에서 새 코드인지 구분하는 표시)
 const DRY     = process.env.PERSONS_DRY === '1';
 const UA      = 'OpusclamBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
 const WIKI    = 'https://ko.wikipedia.org/w/api.php';
@@ -91,40 +96,17 @@ function guessInstr(cat) {
 const NOT_PERSON = /^(.*\s)?(목록|일람|개요|역사|음악|틀|위키)$|목록$|^분류|^위키프로젝트/;
 
 // ── 공통 유틸 ────────────────────────────────────────────────
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
 const clean = (s) => isEmpty(s) ? null : String(s).replace(/\s+/g, ' ').trim();
 const stripParen = (s) => String(s || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
 const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
 
 // 요청 과다(429)와 일시 오류에 참을성 있게 대응합니다
-const BACKOFF = [4000, 12000, 30000, 60000, 90000];
-
-async function getJSON(url, tries = 5) {
-  let last = null;
-  for (let i = 0; i < tries; i++) {
-    try {
-      const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' } });
-      if (r.status === 429 || r.status >= 500) {
-        const ra = Number(r.headers.get('retry-after'));
-        const wait = (ra > 0 ? ra * 1000 : 0) || BACKOFF[i] || 90000;
-        last = new Error('HTTP ' + r.status);
-        if (i < tries - 1) {
-          console.log('    (' + r.status + ' · ' + Math.round(wait / 1000) + '초 대기 후 재시도)');
-          await sleep(wait); continue;
-        }
-        throw last;
-      }
-      if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + (await r.text()).slice(0, 160));
-      return await r.json();
-    } catch (e) {
-      last = e;
-      if (i === tries - 1) throw last;
-      if (!/HTTP (429|5\d\d)/.test(String(e.message))) await sleep(BACKOFF[i] || 30000);
-    }
-  }
-  throw last;
-}
+const getJSON = makeGetJSON({
+  ua: UA,
+  accept: 'application/json',
+  tries: 5,
+});
 
 function wikiUrl(params) {
   const p = new URLSearchParams(Object.assign({ format: 'json', origin: '*' }, params));
@@ -213,7 +195,7 @@ async function extractsOf(titles) {
         exintro: 1, explaintext: 1, redirects: 1,
         titles: batch.join('|'),
       }));
-    } catch (e) { await sleep(1200); continue; }
+    } catch (e) { if (isStop(e)) break; await sleep(1200); continue; }
     for (const pid of Object.keys((d.query && d.query.pages) || {})) {
       const pg = d.query.pages[pid];
       if (!pg || pg.missing !== undefined) continue;
@@ -248,7 +230,7 @@ async function wikidataOf(qids) {
       + '} GROUP BY ?item ?birth ?death ?en';
     let rows = [];
     try { rows = await sparql(q); }
-    catch (e) { console.log('  · 위키데이터 조회 실패 · 건너뜀'); await sleep(2000); continue; }
+    catch (e) { if (isStop(e)) break; console.log('  · 위키데이터 조회 실패 · 건너뜀'); await sleep(2000); continue; }
     for (const b of rows) {
       const id = b.item.value.split('/').pop();
       const yr = (v) => v ? String(v.value).slice(0, 4) : '';
@@ -401,7 +383,7 @@ async function main() {
   const found = new Map();   // title -> { cat, field, instr }
   for (const c of cats) {
     let titles = [];
-    try { titles = await membersOf(c.name); } catch (e) { continue; }
+    try { titles = await membersOf(c.name); } catch (e) { if (isStop(e)) break; continue; }
     const fld = guessField(c.name), ins = guessInstr(c.name);
     for (const t of titles) {
       if (!found.has(t)) found.set(t, { cat: c.name, field: fld, instr: ins });
@@ -470,4 +452,14 @@ async function main() {
   console.log('■ 완료 · 인물 총', (cr.split('/')[1] || '?'), '명');
 }
 
-main().catch(e => { console.error('■ 실패:', e); process.exit(1); });
+main().catch(e => {
+  // 자료원이 막혀 멈춘 것은 실패가 아닙니다.
+  // 모은 것은 이미 저장됐고 못 채운 몫은 다음 예약 실행이 받아옵니다.
+  if (isStop(e)) {
+    console.log('■ 여기까지 · ' + e.message);
+    console.log('■ 다음 예약 실행에서 이어서 받아옵니다.');
+    return;
+  }
+  console.error('■ 실패:', e);
+  process.exit(1);
+});

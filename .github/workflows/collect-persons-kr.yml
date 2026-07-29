@@ -2,7 +2,8 @@ name: Collect persons KR (weekly)
 
 on:
   schedule:
-    - cron: '0 19 * * 3'   # 목요일 04:00 KST (다른 수집기와 겹치지 않는 날)
+    # 목 · 금 · 토 05:00 KST · 사흘 연속 예약 (학술 수집과 시각을 달리 둡니다)
+    - cron: '0 20 * * 3,4,5'
   workflow_dispatch:
     inputs:
       dry:

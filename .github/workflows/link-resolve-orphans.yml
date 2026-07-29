@@ -2,7 +2,8 @@ name: Resolve orphan links (monthly)
 
 on:
   schedule:
-    - cron: '0 20 3 * *'   # 매월 4일 05:00 KST
+    # 매월 4 · 5 · 6일 05:00 KST · 사흘 연속 예약
+    - cron: '0 20 3,4,5 * *'
   workflow_dispatch:
     inputs:
       dry:

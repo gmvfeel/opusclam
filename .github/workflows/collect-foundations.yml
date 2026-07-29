@@ -2,7 +2,8 @@ name: Collect foundations (monthly)
 
 on:
   schedule:
-    - cron: '0 19 1 * *'   # 매월 2일 04:00 KST
+    # 매월 2 · 3 · 4일 04:00 KST · 사흘 연속 예약
+    - cron: '0 19 1,2,3 * *'
   workflow_dispatch:
     inputs:
       dry:

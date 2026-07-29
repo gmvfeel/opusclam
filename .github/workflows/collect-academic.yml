@@ -2,7 +2,11 @@ name: Collect academic (weekly)
 
 on:
   schedule:
-    - cron: '0 19 * * 2'   # 수요일 04:00 KST (다른 수집기와 겹치지 않는 날)
+    # 수 · 목 · 금 04:00 KST · 사흘 연속 예약
+    #   자료원(OpenAlex)이 GitHub 공용 IP 를 막는 일이 있어 하루치 예약으로는 놓칩니다.
+    #   막힌 날은 몇 초 만에 정상 종료되므로 사흘 예약이 부담되지 않습니다.
+    #   이미 받은 논문은 중복으로 걸러지므로 여러 번 돌아도 안전합니다.
+    - cron: '0 19 * * 2,3,4'
   workflow_dispatch:
     inputs:
       full:
