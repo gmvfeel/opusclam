@@ -20,7 +20,7 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
   process.exit(1);
 }
 
-const VERSION = 'v1.1';   // 공용 http 모듈 적용판 (로그에서 새 코드인지 구분하는 표시)
+const VERSION = 'v1.2';   // 국내 자료 확충판 (로그에서 새 코드인지 구분하는 표시)
 const MAIL    = 'cser@wixon.co.kr';          // OpenAlex polite pool
 const UA      = 'OpusclamBot/1.0 (https://opusclam.com; ' + MAIL + ')';
 const OA      = 'https://api.openalex.org';
@@ -34,6 +34,12 @@ const H = {
 
 // 한 쿼리에서 가져올 상한 (무료 실행 시간을 지키기 위한 안전장치)
 const CAP_PER_QUERY = FULL ? 900 : 300;
+
+// 국내 관련 쿼리는 상한을 따로 크게 둡니다.
+//   해외 논문은 이미 만 건이 넘게 쌓였지만 국내 자료는 귀합니다.
+//   2026-07-29 실행에서 '한국 소속 저자' 가 상한 300 에 걸려 잘렸습니다.
+//   같은 실행 시간을 국내에 몰아주는 것이 DB 가치를 더 키웁니다.
+const CAP_KR = FULL ? 1500 : 900;
 
 // ── 공통 유틸 ────────────────────────────────────────────────
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
@@ -133,7 +139,10 @@ function buildQueries(subfieldIds) {
               + ',from_publication_date:' + a + '-01-01'
               + ',to_publication_date:' + b + '-12-31'
               + ',has_abstract:true',
-        sort: 'cited_by_count:desc',
+        // 전체 구간 수집은 시기마다 중요한 논문을 골라야 하므로 피인용 순이 맞습니다.
+        // 그러나 주간 갱신에 피인용 순을 쓰면 순위가 굳어 있어 늘 같은 300건만 받습니다.
+        // 갓 나온 논문은 피인용이 0 이라 상한 밖에 머물러 영원히 들어오지 못합니다.
+        sort: FULL ? 'cited_by_count:desc' : 'publication_date:desc',
       });
     }
     // 한국 소속 저자의 음악 연구는 시기 제한 없이 모읍니다 (국내 자료가 귀합니다)
@@ -141,7 +150,8 @@ function buildQueries(subfieldIds) {
       label: '한국 소속 저자',
       filter: 'primary_topic.subfield.id:' + sf
             + ',authorships.institutions.country_code:kr',
-      sort: 'publication_year:desc',
+      sort: 'publication_date:desc',      // 연 단위로는 같은 해 안에서 순서가 뒤섞입니다
+      cap: CAP_KR,
     });
   }
 
@@ -152,22 +162,44 @@ function buildQueries(subfieldIds) {
   // 그래서 본문에 music 이 한 번 스친 암 유전체 논문 같은 것이 대량 섞였습니다.
   // 피인용 순으로 정렬하면 그런 유명 논문이 최상단을 차지합니다.
   // title.search 로 제목만 보고, 정렬도 최신순으로 둡니다.
+  // ── 국내 관련 제목 · 전체 수집과 주간 갱신에서 똑같이 훑습니다 ──
+  //
+  //  왜 따로 두는가
+  //    주간 갱신에 국내 낱말이 하나뿐이어서 국내 자료가 새로 쌓이지 않았습니다.
+  //    국내 학술 자료는 다른 곳이 갖추지 못한 영역이므로 매번 훑을 값이 있습니다.
+  //
+  //  초록 조건(has_abstract)을 걸지 않는 까닭
+  //    국내 논문은 OpenAlex 에 초록이 실리지 않은 것이 많습니다.
+  //    조건을 걸면 국악 논문이 대량으로 빠집니다.
+  //    대신 keep() 이 저자 · 연도 · 학술지 · 초록 · DOI 가운데 3개 이상을 요구하므로
+  //    서지 정보가 빈약한 항목은 초록이 없어도 그 관문에서 걸러집니다.
+  const TITLES_KR = [
+    'Korean traditional music', 'Korean music', 'Korean composer',
+    'gugak', 'pansori', 'gayageum', 'samulnori',
+  ];
+  for (const t of TITLES_KR) {
+    qs.push({
+      label: '국내 제목: ' + t,
+      filter: 'title.search:' + t,
+      sort: 'publication_date:desc',
+      cap: CAP_KR,
+    });
+  }
+
+  // ── 일반 · 해외 주제 제목 ──
   const titles = FULL
     ? ['music education', 'music therapy', 'musical acoustics',
-       'Korean traditional music', 'church music', 'music technology',
+       'church music', 'music technology',
        'orchestral conducting', 'music analysis', 'music psychology',
        'music performance',
-       // 아래는 분류가 비는 영역을 메우려고 넣었습니다.
-       // 국악은 OpenAlex 수록이 얇아서 여러 낱말로 넓게 훑습니다.
        'music composition', 'compositional technique', 'contemporary composition',
-       'Korean music', 'gugak', 'pansori', 'Korean composer',
        'choral conducting', 'organ music', 'liturgical music']
-    : ['music education', 'Korean traditional music', 'music composition'];
+    : ['music education', 'music composition'];
   for (const t of titles) {
     qs.push({
       label: '제목: ' + t,
       filter: 'title.search:' + t + ',has_abstract:true',
-      sort: 'publication_year:desc',
+      sort: 'publication_date:desc',
     });
   }
   return qs;
@@ -182,8 +214,9 @@ const SELECT = [
 
 async function fetchQuery(q) {
   const out = [];
+  const cap = q.cap || CAP_PER_QUERY;   // 국내 쿼리는 상한을 크게 씁니다
   let cursor = '*';
-  while (out.length < CAP_PER_QUERY) {
+  while (out.length < cap) {
     let url = OA + '/works?per-page=200&cursor=' + encodeURIComponent(cursor)
             + '&select=' + SELECT + '&mailto=' + MAIL;
     if (q.filter) url += '&filter=' + encodeURIComponent(q.filter);
@@ -197,7 +230,7 @@ async function fetchQuery(q) {
     if (!cursor || rows.length === 0) break;
     await sleep(900);   // 요청 과다(429) 를 피하려고 넉넉히 둡니다
   }
-  return out.slice(0, CAP_PER_QUERY);
+  return out.slice(0, cap);
 }
 
 // ── 분야 매핑 (기존 12개 분야에 맞춥니다) ────────────────────
@@ -352,14 +385,22 @@ function substanceCount(r) {
 // 처럼 다른 단어 속 철자에 걸립니다.
 const MUSICAL_TITLE = new RegExp([
   'music|musical|musicolog|ethnomusic',
-  'opera|operetta|symphon|philharmon|orchestr|concerto|sonata|cantata|oratorio|requiem|motet|madrigal|fugue',
+  'opera|operetta|symphon|philharmon|\\borchestral?s?\\b|concerto|sonata|cantata|oratorio|requiem|motet|madrigal|fugue',
   '\\baria\\b|\\blieder\\b',
   'quartet|quintet|sextet|octet|chamber music',
   'violin|\\bviola\\b|\\bcello\\b|contrabass|piano|pianist|harpsichord|flute|clarinet|oboe|bassoon|trumpet|trombone|saxophone|guitar|\\bharp\\b|percussion',
   'composer|composition|counterpoint|tonality|timbre|plainchant|gregorian|hymn|chorale',
   'choir|choral|chorus|singer|singing|soprano|mezzo|\\btenor\\b|baritone|melod',
-  'conductor|conducting|recital|repertoire|conservatoir|conservatory',
-  'jazz|gugak|pansori|sanjo',
+  // 단어 경계를 두지 않으면 semiconductor · superconductor 가 '지휘자' 로 통과합니다.
+  // (2026-07-29 시험에서 '동아시아 반도체 공급망' 논문이 음악으로 판정됐습니다)
+  '\\bconductors?\\b|\\bconducting\\b|recital|repertoire|conservatoir|conservatory',
+  'jazz',
+  // 국악 · 로마자 표기가 여러 갈래여서 흔한 변형을 함께 넣습니다.
+  //   판정에 걸리지 않으면 국악 논문이 통째로 버려집니다.
+  //   낱말이 특수해서 다른 분야와 겹칠 일은 거의 없습니다.
+  'gugak|kugak|pansori|p.ansori|\\bsanjo\\b',
+  'gayageum|kayagum|kayag\u016dm|geomungo|komungo|k\u014fmun|haegeum|haegum|daegeum|taegum|taeg\u016dm|ajaeng|taepyeongso|janggu|changgo|kkwaenggwari',
+  'samulnori|nongak|pungmul|jeongak|chongak|hyangak|dangak|tangak|jongmyo|chongmyo|sinawi|shinawi|minyo|\\bgagok\\b|arirang|sujecheon|yeongsanhoesang',
 ].join('|'), 'i');
 
 function isMusical(r) {
