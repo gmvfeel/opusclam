@@ -711,7 +711,9 @@ if('serviceWorker' in navigator){
     OCList.init({
       table:'schools', pageSize:30, orderDefault:'sort_no.desc',
       searchCols:['name_ko','name_en','location','departments','alumni'], entity:'schools',
-      buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
+      buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow,
+      /* 이미지 칸이 빈 항목은 모아둔 사진으로 채운다 (기존 값이 있으면 그대로) */
+      photoFill:{ type:'school', col:'logo_url' }
     });
   });
 })();

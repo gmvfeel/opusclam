@@ -24,15 +24,23 @@
      SUPABASE_SERVICE_ROLE_KEY
    ============================================================ */
 
+import { makeGetJSON, isStop, sleep } from '../scripts/lib/http.mjs';
+
 const SB_URL = process.env.SUPABASE_URL;
-const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+/* 열쇠 이름은 두 가지를 모두 받아들입니다.
+   워크플로와 스크립트를 각각 고쳐도 어느 시점에도 멈추지 않게 하기 위해서입니다. */
+const SB_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!SB_URL || !SB_KEY) {
-  console.error('환경변수 SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 가 필요합니다.');
+  console.error('환경변수 SUPABASE_URL 과 SUPABASE_SERVICE_KEY 가 필요합니다.');
   process.exit(1);
 }
 
 /* 위키미디어는 요청에 연락처가 담긴 User-Agent 를 요구합니다 */
 const UA = 'OpusclamPhotoBot/1.0 (https://opusclam.com; contact@opusclam.com)';
+
+/* 자료원별 조회 함수 — 재시도·대기·중단 판단은 공용 모듈이 맡습니다 */
+const sparqlGet  = makeGetJSON({ ua: UA, accept: 'application/sparql-results+json' });
+const commonsGet = makeGetJSON({ ua: UA, accept: 'application/json' });
 
 /* ── 수집 대상 정의 ──
    table  : Supabase 표 이름
@@ -43,6 +51,9 @@ const TARGETS = {
   school: { table: 'schools', type: 'school', nameCol: 'name_ko' },
   venue:  { table: 'venues',  type: 'venue',  nameCol: 'name_ko' },
   org:    { table: 'orgs',    type: 'org',    nameCol: 'name_ko' },
+  /* 현대음악DB — 관계 표에서 쓰는 이름은 modern, 실제 표는 modern_composers 입니다.
+     인물DB와 겹치는 작곡가가 있을 수 있어 중복 점검 후에 돌리는 것이 좋습니다. */
+  modern: { table: 'modern_composers', type: 'modern', nameCol: 'name_ko' },
 };
 
 /* ── 실행 인자 ── */
@@ -61,8 +72,6 @@ if (!T) {
   console.error(`--type 은 ${Object.keys(TARGETS).join(' / ')} 중 하나여야 합니다.`);
   process.exit(1);
 }
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function sb(path, opts = {}) {
   const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
@@ -132,31 +141,17 @@ SELECT ?item ?image ?logo WHERE {
 }`;
   const url = 'https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(query);
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const res = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/sparql-results+json' } });
-      if (res.status === 429 || res.status >= 500) {
-        console.log(`  SPARQL ${res.status} — ${attempt * 5}초 후 재시도`);
-        await sleep(attempt * 5000);
-        continue;
-      }
-      if (!res.ok) throw new Error(`SPARQL ${res.status}`);
-      const j = await res.json();
-      const map = new Map();
-      for (const b of j.results.bindings) {
-        const qid = String(b.item.value).split('/').pop();
-        const cur = map.get(qid) || { image: null, logo: null };
-        if (b.image && !cur.image) cur.image = decodeURIComponent(String(b.image.value).split('/').pop());
-        if (b.logo  && !cur.logo)  cur.logo  = decodeURIComponent(String(b.logo.value).split('/').pop());
-        map.set(qid, cur);
-      }
-      return map;
-    } catch (e) {
-      if (attempt === 3) { console.log('  SPARQL 실패:', e.message); return new Map(); }
-      await sleep(attempt * 5000);
-    }
+  const j = await sparqlGet(url);
+  const map = new Map();
+  if (!j || !j.results) return map;
+  for (const b of j.results.bindings) {
+    const qid = String(b.item.value).split('/').pop();
+    const cur = map.get(qid) || { image: null, logo: null };
+    if (b.image && !cur.image) cur.image = decodeURIComponent(String(b.image.value).split('/').pop());
+    if (b.logo  && !cur.logo)  cur.logo  = decodeURIComponent(String(b.logo.value).split('/').pop());
+    map.set(qid, cur);
   }
-  return new Map();
+  return map;
 }
 
 /* ============================================================
@@ -169,36 +164,25 @@ async function commonsInfo(fileNames) {
     + '&iiprop=url|extmetadata&iiurlwidth=1200'
     + '&titles=' + encodeURIComponent(titles);
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const res = await fetch(url, { headers: { 'User-Agent': UA } });
-      if (res.status === 429 || res.status >= 500) { await sleep(attempt * 3000); continue; }
-      if (!res.ok) throw new Error(`commons ${res.status}`);
-      const j = await res.json();
-      const pages = (j.query && j.query.pages) || {};
-      const out = new Map();
-      for (const k of Object.keys(pages)) {
-        const p = pages[k];
-        if (!p.imageinfo || !p.imageinfo[0]) continue;
-        const ii = p.imageinfo[0];
-        const meta = ii.extmetadata || {};
-        const strip = (v) => String(v || '').replace(/<[^>]+>/g, '').trim();
-        out.set(String(p.title).replace(/^File:/, ''), {
-          src: ii.url,
-          thumb: ii.thumburl || ii.url,
-          page: ii.descriptionurl || '',
-          license: strip(meta.LicenseShortName && meta.LicenseShortName.value),
-          author: strip(meta.Artist && meta.Artist.value).slice(0, 200),
-          caption: strip(meta.ImageDescription && meta.ImageDescription.value).slice(0, 400),
-        });
-      }
-      return out;
-    } catch (e) {
-      if (attempt === 3) { console.log('  커먼즈 조회 실패:', e.message); return new Map(); }
-      await sleep(attempt * 3000);
-    }
+  const j = await commonsGet(url);
+  const out = new Map();
+  const pages = (j && j.query && j.query.pages) || {};
+  for (const k of Object.keys(pages)) {
+    const p = pages[k];
+    if (!p.imageinfo || !p.imageinfo[0]) continue;
+    const ii = p.imageinfo[0];
+    const meta = ii.extmetadata || {};
+    const strip = (v) => String(v || '').replace(/<[^>]+>/g, '').trim();
+    out.set(String(p.title).replace(/^File:/, ''), {
+      src: ii.url,
+      thumb: ii.thumburl || ii.url,
+      page: ii.descriptionurl || '',
+      license: strip(meta.LicenseShortName && meta.LicenseShortName.value),
+      author: strip(meta.Artist && meta.Artist.value).slice(0, 200),
+      caption: strip(meta.ImageDescription && meta.ImageDescription.value).slice(0, 400),
+    });
   }
-  return new Map();
+  return out;
 }
 
 /* ============================================================
@@ -239,7 +223,13 @@ const chunk = (arr, n) => {
     const g = groups[gi];
     console.log(`[${gi + 1}/${groups.length}] 위키데이터 조회 ${g.length}건`);
 
-    const map = await sparqlImages(g.map((x) => x.qid));
+    let map;
+    try {
+      map = await sparqlImages(g.map((x) => x.qid));
+    } catch (e) {
+      if (isStop(e)) { console.log('  ■ 자료원이 응답하지 않아 여기서 멈춥니다'); break; }
+      throw e;
+    }
 
     /* 파일명 모으기 */
     const need = new Set();
@@ -254,9 +244,15 @@ const chunk = (arr, n) => {
 
     /* 커먼즈 정보 (50개씩) */
     const info = new Map();
+    let stopped = false;
     for (const part of chunk([...need], 50)) {
-      const m = await commonsInfo(part);
-      m.forEach((v, k) => info.set(k, v));
+      try {
+        const m = await commonsInfo(part);
+        m.forEach((v, k) => info.set(k, v));
+      } catch (e) {
+        if (isStop(e)) { console.log('  ■ 커먼즈가 응답하지 않아 여기까지만 처리합니다'); stopped = true; break; }
+        throw e;
+      }
       await sleep(400);
     }
 
@@ -294,6 +290,8 @@ const chunk = (arr, n) => {
     saved += await saveRows(rows);
     console.log(`  저장 ${rows.length}건 (누적 ${saved})\n`);
 
+    if (stopped) break;   /* 모은 것은 이미 저장되었고, 나머지는 다음 예약이 받아온다 */
+
     /* 위키미디어에 부담을 주지 않도록 잠시 쉰다 */
     await sleep(1200);
   }
@@ -301,4 +299,10 @@ const chunk = (arr, n) => {
   console.log('=== 완료 ===');
   console.log(`사진 ${foundImg}건 · 로고 ${foundLogo}건 · 저장 ${saved}건`);
   console.log(`이미지가 없는 항목: ${noImage}건`);
-})().catch((e) => { console.error('오류:', e); process.exit(1); });
+})().catch((e) => {
+  /* 자료원이 막혀 멈춘 것은 실패가 아닙니다.
+     모은 것은 이미 저장되었고 못 채운 몫은 다음 예약이 받아옵니다. */
+  if (isStop(e)) { console.log('■ 여기까지 · ' + e.message); return; }
+  console.error('■ 실패:', e);
+  process.exit(1);
+});

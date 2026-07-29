@@ -117,6 +117,41 @@ window.OCList = (function () {
       pager.innerHTML = html;
     }
 
+    /* ============================================================
+       모아둔 사진으로 빈 이미지 칸 채우기
+        · entity_photo_main 뷰에서 항목별 대표 사진 한 장을 받아온다
+        · 기존 값이 있는 항목은 건드리지 않는다
+        · 조회에 실패해도 목록은 정상적으로 그려진다
+       ============================================================ */
+    function fillPhotos(rows, opt) {
+      var col = opt.col || 'image_url';
+      var need = rows.filter(function (r) {
+        return r && r.id && !String(r[col] || '').trim();
+      }).map(function (r) { return r.id; });
+      if (!need.length) return Promise.resolve();
+
+      var url = SB_URL + '/rest/v1/entity_photo_main'
+        + '?select=entity_id,src,thumb'
+        + '&entity_type=eq.' + encodeURIComponent(opt.type)
+        + '&entity_id=in.(' + need.join(',') + ')'
+        + '&limit=' + need.length;
+
+      return fetch(url, { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (list) {
+          if (!Array.isArray(list) || !list.length) return;
+          var by = {};
+          list.forEach(function (x) { by[x.entity_id] = x.thumb || x.src; });
+          rows.forEach(function (r) {
+            if (!r || !r.id) return;
+            if (String(r[col] || '').trim()) return;
+            var u = by[r.id];
+            if (u) { r[col] = wikiThumb(u, 160); r._photoFromStore = true; }
+          });
+        })
+        .catch(function () { /* 실패해도 목록은 그린다 */ });
+    }
+
     function loadPage(pg) {
       var off = (pg - 1) * PAGE;
       if (tbody) tbody.innerHTML = skeletonRows(10);
@@ -134,8 +169,18 @@ window.OCList = (function () {
             if (tbody) tbody.innerHTML = '<tr><td colspan="' + ncol + '" class="pdb-empty">요청하신 검색 결과가 없습니다.</td></tr>';
             if (pager) pager.innerHTML = '';
           } else {
-            if (tbody) tbody.innerHTML = rows.map(function (rw, ix) { return cfg.renderRow(rw, off + ix + 1, ctx); }).join('');
-            renderPager();
+            /* 이미지 칸이 빈 항목은 모아둔 사진(entity_photos)으로 채운 뒤 그린다.
+               cfg.photoFill = { type:'person', col:'image_url' } 형태로 지정하면 동작한다.
+               기존 값이 있으면 건드리지 않으므로, 정제된 데이터가 항상 우선된다. */
+            var drawRows = function () {
+              if (tbody) tbody.innerHTML = rows.map(function (rw, ix) { return cfg.renderRow(rw, off + ix + 1, ctx); }).join('');
+              renderPager();
+            };
+            if (cfg.photoFill && cfg.photoFill.type) {
+              fillPhotos(rows, cfg.photoFill).then(drawRows, drawRows);
+            } else {
+              drawRows();
+            }
             if (focusId && tbody) { var _fr = tbody.querySelector('tr[data-id="' + focusId + '"]'); if (_fr) { _fr.classList.add('row-focus'); try { _fr.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} } focusId = null; }
           }
         })
