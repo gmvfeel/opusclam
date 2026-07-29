@@ -365,6 +365,11 @@
   }
   function kick() {
     relayout();
+    spin();
+  }
+  // 자리를 다시 나누지 않고 움직임만 이어서 돌립니다.
+  //   끌고 있는 동안 자리를 다시 나누면 손 밑에서 그림이 흔들립니다.
+  function spin() {
     G.frames = 0;
     if (!G.running) { G.running = true; requestAnimationFrame(tick); }
   }
@@ -598,6 +603,20 @@
     if (n.label) n.label.classList.toggle('is-show', on);
   }
 
+  // 끌 때 이어진 점을 함께 밀어 줍니다.
+  //   목표 자리로 당기는 힘이 남아 있으므로 고무줄처럼 딸려오다,
+  //   손을 놓으면 제자리로 돌아갑니다.
+  //   자리는 단계별로 고르게 나눠 두었으니 겹칠 걱정 없이 이 느낌만 얻습니다.
+  function tugNeighbors(n, ddx, ddy) {
+    for (var i = 0; i < G.edges.length; i++) {
+      var e = G.edges[i];
+      var m = (e.a === n) ? e.b : (e.b === n) ? e.a : null;
+      if (!m) continue;
+      m.x += ddx * 0.55;
+      m.y += ddy * 0.55;
+    }
+  }
+
   function bindNode(n, g) {
     g.addEventListener('mouseenter', function () { spotlight(n, true); });
     g.addEventListener('mouseleave', function () { spotlight(n, false); });
@@ -608,13 +627,17 @@
       var p = svgPoint(evt);
       G.drag = { node: n, dx: p.x - n.x, dy: p.y - n.y, moved: 0 };
       g.setPointerCapture && g.setPointerCapture(evt.pointerId);
-      kick();
+      spin();                                  // 자리를 다시 나누지 않습니다
     });
     g.addEventListener('pointermove', function (evt) {
       if (!G.drag || G.drag.node !== n) return;
       var p = svgPoint(evt);
-      G.drag.moved += Math.abs(p.x - G.drag.dx - n.x) + Math.abs(p.y - G.drag.dy - n.y);
-      n.x = p.x - G.drag.dx; n.y = p.y - G.drag.dy;
+      var nx = p.x - G.drag.dx, ny = p.y - G.drag.dy;
+      var ddx = nx - n.x, ddy = ny - n.y;
+      G.drag.moved += Math.abs(ddx) + Math.abs(ddy);
+      n.x = nx; n.y = ny;
+      tugNeighbors(n, ddx, ddy);               // 이어진 점이 딸려옵니다
+      spin();                                  // 딸려온 점들이 부드럽게 자리를 찾게
       paintPositions();
     });
     g.addEventListener('pointerup', function () {
