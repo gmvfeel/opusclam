@@ -741,15 +741,24 @@ window.OCHub = (function () {
   }
 
   /* 구성 비율 — 가로 스택 바 + 범례 */
+  /* 구성비 막대.
+     값이 비어 있는 항목이 하나라도 섞이면 t.n.toLocaleString() 이 터졌고,
+     그 오류가 위에서 잡혀 곡선까지 함께 사라졌습니다. (2026-07-29)
+     그래서 숫자를 반드시 수로 바꿔 쓰고, 이름이 없는 항목은 건너뜁니다. */
   function barsHtml(totals, total) {
     if (!totals || !totals.length) return '';
-    var seg = totals.map(function (t) {
-      var pct = total ? (t.n / total * 100) : 0;
+    var list = totals.filter(function (t) { return t && t.t != null; }).map(function (t) {
+      return { t: t.t, n: Number(t.n) || 0 };
+    });
+    if (!list.length) return '';
+    var sum = Number(total) || list.reduce(function (a, t) { return a + t.n; }, 0);
+    var seg = list.map(function (t) {
+      var pct = sum ? (t.n / sum * 100) : 0;
       return '<span class="bar-seg" style="width:' + pct.toFixed(2) + '%;background:'
         + (DB_COLOR[t.t] || '#999') + '" title="' + esc(DB_LABEL[t.t] || t.t) + ' ' + t.n.toLocaleString() + '"></span>';
     }).join('');
-    var leg = totals.map(function (t) {
-      var pct = total ? (t.n / total * 100) : 0;
+    var leg = list.map(function (t) {
+      var pct = sum ? (t.n / sum * 100) : 0;
       return '<span class="bar-leg">'
         + '<i style="background:' + (DB_COLOR[t.t] || '#999') + '"></i>'
         + '<b>' + esc(DB_LABEL[t.t] || t.t) + '</b>'
@@ -1120,51 +1129,152 @@ window.OCHub = (function () {
       });
   }
 
+  /* ── 성장 추이 ─────────────────────────────────────────────
+     db_stats 를 한 번 불러 곡선 · 구성비 · 숫자를 모두 채웁니다.
+
+     2026-07-29 · 그래프가 빈 채로 남는 일이 잦다는 보고를 받고 고쳤습니다.
+       전에는 요청이 실패하면 console.warn 만 남기고 그대로 비웠습니다.
+       보는 사람은 아직 불러오는 중인지 실패한 것인지 알 수 없고,
+       새로 고치는 것 말고는 방법이 없었습니다.
+     고친 것 세 가지
+       ① 불러오는 동안 자리를 잡아 둔다 (뼈대 표시)
+       ② 실패하면 두 번까지 다시 시도한다 (0.8초 · 2.4초 뒤)
+       ③ 그래도 안 되면 까닭과 '다시 불러오기' 단추를 보여 준다
+     집계 함수가 무거워 시간이 걸리는 것이라면 다시 시도만으로 대개 살아납니다. */
+
+  function statsSkeleton(el) {
+    if (!el) return;
+    el.innerHTML = '<div class="hb-load" aria-live="polite">'
+      + '<div class="hb-load-bar"></div><div class="hb-load-bar"></div>'
+      + '<div class="hb-load-bar"></div><div class="hb-load-bar"></div>'
+      + '<span class="hb-load-txt">데이터를 세는 중…</span></div>';
+  }
+
+  function statsFail(el, onRetry) {
+    if (!el) return;
+    el.innerHTML = '<div class="hb-fail">'
+      + '<p class="hb-fail-txt">성장 추이를 불러오지 못했습니다.</p>'
+      + '<button type="button" class="hb-fail-btn">다시 불러오기</button></div>';
+    var b = el.querySelector('.hb-fail-btn');
+    if (b && onRetry) b.addEventListener('click', onRetry);
+  }
+
+  function statsCss() {
+    if (document.getElementById('hb-stats-css')) return;
+    var st = document.createElement('style');
+    st.id = 'hb-stats-css';
+    st.textContent = ''
+      + '.hb-load{display:flex;align-items:flex-end;gap:10px;height:200px;padding:20px 6px;position:relative}'
+      + '.hb-load-bar{flex:1;border-radius:6px 6px 0 0;'
+      +   'background:linear-gradient(180deg,rgba(124,99,176,.16),rgba(124,99,176,.05));'
+      +   'animation:hbpulse 1.25s ease-in-out infinite}'
+      + '.hb-load-bar:nth-child(1){height:42%;animation-delay:0s}'
+      + '.hb-load-bar:nth-child(2){height:64%;animation-delay:.14s}'
+      + '.hb-load-bar:nth-child(3){height:52%;animation-delay:.28s}'
+      + '.hb-load-bar:nth-child(4){height:78%;animation-delay:.42s}'
+      + '@keyframes hbpulse{0%,100%{opacity:.45}50%{opacity:1}}'
+      + '.hb-load-txt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);'
+      +   'font-size:12.5px;color:#9aa0aa}'
+      + '.hb-fail{display:flex;flex-direction:column;align-items:center;justify-content:center;'
+      +   'gap:12px;height:200px;text-align:center}'
+      + '.hb-fail-txt{margin:0;font-size:13px;color:#8a9099}'
+      + '.hb-fail-btn{appearance:none;border:1px solid #d9dce2;background:#fff;color:#4b5563;'
+      +   'font:600 12.5px/1 inherit;padding:9px 16px;border-radius:8px;cursor:pointer}'
+      + '.hb-fail-btn:hover{border-color:#9ca3af;color:#111827}';
+    document.head.appendChild(st);
+  }
+
   function stats(cfg) {
-    var url = SB_URL + '/rest/v1/rpc/db_stats?p_days=' + (cfg.days || 30);
-    fetch(url, { headers: HDR })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (!d) throw new Error('통계를 받지 못했습니다');
-        function put(sel, v, up) {
-          if (!sel) return;
-          var el = document.querySelector(sel);
-          if (!el) return;
-          if (up) countUp(el, v); else el.textContent = (v || 0).toLocaleString();
-        }
-        put(cfg.total, d.total, true);
-        put(cfg.week, d.week_new);
-        put(cfg.upd, d.week_upd);
-        put(cfg.today, d.today_new);
-        var cv = cfg.curve ? document.querySelector(cfg.curve) : null;
-        if (cv) {
-          var ser = trimSeries(d.series || []);      /* 자료가 없는 앞 구간 제거 */
-          var draw = function () {
-            var cs = window.getComputedStyle(cv);
-            var pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
-            var w = Math.max(Math.round(cv.clientWidth - pad), 360);
-            var r = curveSvg(ser, w, cfg.height || 240);
-            if (!r) { cv.innerHTML = ''; return; }
-            cv.innerHTML = r.svg + '<div class="cv-tip" hidden></div>';
-            bindCurveHover(cv, ser, r.geom);
-          };
-          draw();
-          var tm;
-          window.addEventListener('resize', function () {
-            clearTimeout(tm); tm = setTimeout(draw, 160);
+    statsCss();
+    var cv = cfg.curve ? document.querySelector(cfg.curve) : null;
+    var bs = cfg.bars  ? document.querySelector(cfg.bars)  : null;
+    var tries = 0;
+
+    function run() {
+      statsSkeleton(cv);
+      if (bs) bs.innerHTML = '';
+
+      var url = SB_URL + '/rest/v1/rpc/db_stats?p_days=' + (cfg.days || 30);
+      fetch(url, { headers: HDR })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function (d) {
+          if (!d) throw new Error('빈 응답');
+
+          /* 셋을 따로 감쌉니다.
+             한 덩어리로 두면 구성비 하나가 터져도 곡선까지 사라집니다.
+             실제로 그것이 그래프가 빈 채로 남던 까닭이었습니다. */
+          function put(sel, v, up) {
+            if (!sel) return;
+            var el = document.querySelector(sel);
+            if (!el) return;
+            if (v == null) { el.textContent = '—'; return; }   /* 값이 없으면 대시를 남깁니다 */
+            if (up) countUp(el, Number(v) || 0);
+            else el.textContent = (Number(v) || 0).toLocaleString();
+          }
+          try {
+            put(cfg.total, d.total, true);
+            put(cfg.week,  d.week_new);
+            put(cfg.upd,   d.week_upd);
+            put(cfg.today, d.today_new);
+          } catch (e1) { console.warn('[성장 그래프] 숫자 표시 건너뜀:', e1.message); }
+
+          if (cv) try {
+            var ser = trimSeries(d.series || []);      /* 자료가 없는 앞 구간 제거 */
+            var draw = function () {
+              var cs = window.getComputedStyle(cv);
+              var pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+              var w = Math.max(Math.round(cv.clientWidth - pad), 360);
+              var r = curveSvg(ser, w, cfg.height || 240);
+              if (!r) {
+                /* 그릴 자료가 모자란 경우 · 빈 화면으로 두지 않고 까닭을 적습니다 */
+                cv.innerHTML = '<div class="hb-fail"><p class="hb-fail-txt">'
+                  + '아직 그릴 만큼 기록이 쌓이지 않았습니다.</p></div>';
+                return;
+              }
+              cv.innerHTML = r.svg + '<div class="cv-tip" hidden></div>';
+              bindCurveHover(cv, ser, r.geom);
+            };
+            draw();
+            if (!cv._hbResize) {
+              cv._hbResize = true;
+              var tm;
+              window.addEventListener('resize', function () {
+                clearTimeout(tm); tm = setTimeout(draw, 160);
+              });
+            }
+          } catch (e2) {
+            console.warn('[성장 그래프] 곡선 건너뜀:', e2.message);
+            statsFail(cv, function () { tries = 0; run(); });
+          }
+          if (bs) try {
+            bs.innerHTML = barsHtml(d.totals || [], d.total || 0);
+          } catch (e3) {
+            console.warn('[성장 그래프] 구성비 건너뜀:', e3.message);
+            bs.innerHTML = '';
+          }
+        })
+        .catch(function (e) {
+          tries++;
+          console.warn('[성장 그래프] ' + tries + '차 실패:', e.message);
+          if (tries < 3) {
+            /* 집계가 무거워 시간이 걸린 것일 수 있으니 조금 기다렸다 다시 부릅니다 */
+            setTimeout(run, tries === 1 ? 800 : 2400);
+            return;
+          }
+          statsFail(cv, function () { tries = 0; run(); });
+          if (bs) bs.innerHTML = '';
+          [cfg.week, cfg.today, cfg.upd].forEach(function (sel) {
+            if (!sel) return;
+            var el = document.querySelector(sel);
+            if (el) el.textContent = '—';
           });
-        }
-        var bs = cfg.bars ? document.querySelector(cfg.bars) : null;
-        if (bs) bs.innerHTML = barsHtml(d.totals || [], d.total || 0);
-      })
-      .catch(function (e) {
-        console.warn('[성장 그래프] 건너뜀:', e.message);
-        [cfg.curve, cfg.bars].forEach(function (sel) {
-          if (!sel) return;
-          var el = document.querySelector(sel);
-          if (el) el.innerHTML = '';
         });
-      });
+    }
+
+    run();
   }
 
   return { init: init, bindViewToggle: bindViewToggle, esc: esc, thumb: thumb,
