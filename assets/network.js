@@ -40,14 +40,17 @@
   // 채도를 낮춘 팔레트입니다.
   //   원색을 나란히 두면 서로 부딪혀 눈이 피로하고, 클래식 포털의 절제된 느낌과 어긋납니다.
   //   문헌은 일부러 회색빛으로 두어 뒤로 물립니다 — 인물이 주인공이고 문헌은 곁가지입니다.
+  // 처음엔 원색이라 부딪혔고, 한 번 낮췄더니 탁했습니다. 그 사이를 잡았습니다.
+  //   맑기는 살리고 채도만 조금 눌러, 흰 배경에서 선명하되 눈이 편한 자리입니다.
+  //   문헌만 회색빛으로 남깁니다 — 인물이 주인공이고 문헌은 곁가지입니다.
   var COLOR = {
-    person:     '#b0424f',   // 톤을 낮춘 적색 · 사이트 강조색(#dc2626)과 이어집니다
-    org:        '#3f5e91',   // 차분한 남색
-    school:     '#2f6f68',   // 짙은 청록
-    academic:   '#6f7b8c',   // 슬레이트 · 물러서는 색
-    foundation: '#96703f',   // 톤을 낮춘 황토
-    venue:      '#46707f',
-    modern:     '#7c5878'
+    person:     '#d93a4c',   // 사이트 강조색(#dc2626)과 같은 계열
+    org:        '#3b6fc4',   // 맑은 남색
+    school:     '#0f9b8e',   // 맑은 청록
+    academic:   '#8b95a8',   // 슬레이트 · 물러서는 색
+    foundation: '#c08a3e',   // 황토
+    venue:      '#2f8ca8',
+    modern:     '#a5568f'
   };
   var KIND_KO = {
     person: '인물', org: '단체', school: '학교',
@@ -118,6 +121,7 @@
     running: false,
     frames: 0,
     trimmed: 0,        // 종류별 상한에 걸려 그리지 못한 수 · 아래 띠에 알립니다
+    maxDepth: 1,       // 가장 깊은 단계 · 단계 사이 간격을 정하는 데 씁니다
 
     W: 900,          // 점 30개가 겹치지 않게 넓혔습니다
     H: 520,
@@ -126,18 +130,39 @@
 
   function keyOf(type, id) { return type + ':' + id; }
 
-  function addNode(type, id, name, center) {
+  // ── 왼쪽에서 오른쪽으로 뻗는 자리 ────────────────────────
+  //  가운데 점을 왼쪽에 두고, 한 단계 멀어질수록 오른쪽으로 옮깁니다.
+  //  누를 때마다 오른쪽으로 이어져 관계가 어느 쪽으로 뻗는지 눈에 보입니다.
+  //  점을 화면 가운데에 모으면 오른쪽이 텅 비어 자리가 낭비됩니다.
+  //  (2026-07-29 라흐마니노프 화면에서 오른쪽 절반이 비어 있었습니다)
+  function levelX(d, y) {
+    var left = 88;
+    var gap  = Math.max(150, Math.min(240, (G.W - left - 130) / Math.max(1, G.maxDepth)));
+    if (!d) return left;
+    var base = left + d * gap;
+    // 세로로 멀어질수록 살짝 왼쪽으로 당겨 부채꼴이 되게 합니다.
+    //   단계마다 수직선으로 딱 맞추면 도표처럼 딱딱해 보입니다.
+    //   가운데에서 퍼져 나가는 결이 생기도록 조금 휘게 했습니다.
+    var dy = ((y == null ? G.H / 2 : y) - G.H / 2) / (G.H / 2);   // -1 ~ 1
+    return base - Math.min(0.4, dy * dy * 0.4) * gap;
+  }
+  function noteDepth(d) {
+    if (d > G.maxDepth) G.maxDepth = d;
+  }
+
+  function addNode(type, id, name, center, depth) {
     var k = keyOf(type, id);
     if (G.index[k]) return G.index[k];
     if (G.nodes.length >= MAX_NODES) return null;
     // 가운데에서 조금 흩어진 자리에서 시작합니다. 한 점에서 겹쳐 시작하면
     // 반발력이 한 방향으로 튀어 배치가 흔들립니다.
-    var ang = Math.random() * Math.PI * 2;
-    var rad = center ? 0 : 60 + Math.random() * 90;
+    var d = center ? 0 : (depth || 1);
+    // 자기 단계 자리 근처에서 시작합니다. 한 점에서 겹쳐 시작하면 배치가 흔들립니다.
     var n = {
       key: k, type: type, id: String(id), name: name || '(이름 없음)',
-      x: G.W / 2 + Math.cos(ang) * rad,
-      y: G.H / 2 + Math.sin(ang) * rad,
+      depth: d,
+      x: levelX(d) + (Math.random() - 0.5) * 30,
+      y: G.H / 2 + (Math.random() - 0.5) * G.H * 0.7,
       vx: 0, vy: 0, deg: 0,
       center: !!center,
       // loaded 는 '이웃을 받아왔는가' 입니다. 가운데 점도 처음에는 받아와야 합니다.
@@ -211,8 +236,8 @@
                '&hidden=is.false&limit=' + ids.length)
             .then(function (rows) {
               (rows || []).forEach(function (row) {
-                var n = addNode(type, row.id, pickName(row), false);
-                if (n) addEdge(node, n, want[type][row.id]);
+                var n = addNode(type, row.id, pickName(row), false, node.depth + 1);
+                if (n) { noteDepth(n.depth); addEdge(node, n, want[type][row.id]); }
               });
             })
         );
@@ -228,52 +253,61 @@
        ③ 중심 · 가운데로 살짝 당깁니다 (밖으로 흩어지지 않게)
      속도에 감쇠를 주어 흔들림이 가라앉습니다.
   */
+  // ── 자리잡기 ────────────────────────────────────────────
+  //  가로(x) 는 단계에 따라 정해집니다 — 왼쪽에서 오른쪽으로 뻗는 꼴을 만듭니다.
+  //  세로(y) 만 힘으로 자유롭게 풀어, 같은 단계 안에서 서로 밀어내며 부채꼴로 퍼집니다.
+  //  가로까지 힘에 맡기면 점이 뒤엉켜 어느 쪽이 앞인지 알 수 없게 됩니다.
   function step() {
-    var i, j, a, b, dx, dy, d2, d, f;
+    var i, j, a, b, dy, dx, d, f, ady;
     var N = G.nodes.length;
-    var REPULSE = 3400;      // 더 밀어냅니다 · 이름표가 겹치지 않게
-    var SPRING  = 0.011;
-    var REST    = 108;
-    var CENTER  = 0.0014;
-    var DAMP    = 0.86;
+    var REPULSE_Y = 2100;    // 세로로 밀어내는 힘 · 이름표가 겹치지 않게
+    var SPRING_Y  = 0.020;   // 이어진 점끼리 세로로 맞추는 힘
+    var PULL_X    = 0.075;   // 자기 단계 자리로 끌어당기는 힘
+    var MID_Y     = 0.0022;  // 위아래로 흩어지지 않게 하는 힘
+    var DAMP      = 0.84;
 
+    // 세로 반발 · 가까운 짝만 봅니다
     for (i = 0; i < N; i++) {
       a = G.nodes[i];
       for (j = i + 1; j < N; j++) {
         b = G.nodes[j];
-        dx = a.x - b.x; dy = a.y - b.y;
-        d2 = dx * dx + dy * dy;
-        if (d2 < 1) { d2 = 1; dx = (Math.random() - 0.5); dy = (Math.random() - 0.5); }
-        if (d2 > 90000) continue;               // 멀면 무시 · 계산을 아낍니다
-        d = Math.sqrt(d2);
-        f = REPULSE / d2;
-        a.vx += (dx / d) * f; a.vy += (dy / d) * f;
-        b.vx -= (dx / d) * f; b.vy -= (dy / d) * f;
+        dx = a.x - b.x;
+        if (dx > 200 || dx < -200) continue;    // 가로로 멀면 겹칠 일이 없습니다
+        dy = a.y - b.y;
+        ady = Math.abs(dy);
+        if (ady > 260) continue;
+        if (ady < 1) { dy = (Math.random() - 0.5) || 0.5; ady = Math.abs(dy); }
+        // 가로로 가까울수록 세로로 더 밀어냅니다
+        f = (REPULSE_Y / (ady * ady + 90)) * (1 - Math.abs(dx) / 240);
+        if (f < 0) f = 0;
+        a.vy += (dy / ady) * f;
+        b.vy -= (dy / ady) * f;
       }
     }
 
+    // 이어진 점끼리 세로로 가까이
     for (i = 0; i < G.edges.length; i++) {
       a = G.edges[i].a; b = G.edges[i].b;
-      dx = b.x - a.x; dy = b.y - a.y;
-      d = Math.sqrt(dx * dx + dy * dy) || 1;
-      f = (d - REST) * SPRING;
-      a.vx += (dx / d) * f; a.vy += (dy / d) * f;
-      b.vx -= (dx / d) * f; b.vy -= (dy / d) * f;
+      dy = b.y - a.y;
+      f = dy * SPRING_Y;
+      a.vy += f; b.vy -= f;
     }
 
     for (i = 0; i < N; i++) {
       a = G.nodes[i];
-      a.vx += (G.W / 2 - a.x) * CENTER;
-      a.vy += (G.H / 2 - a.y) * CENTER;
-      if (a.fixed || (G.drag && G.drag.node === a)) { a.vx = 0; a.vy = 0; continue; }
+      if (G.drag && G.drag.node === a) { a.vx = 0; a.vy = 0; continue; }
+      // 가로는 단계 자리로
+      a.vx += (levelX(a.depth, a.y) - a.x) * PULL_X;
+      // 세로는 가운데로 살짝
+      a.vy += (G.H / 2 - a.y) * MID_Y;
+      if (a.fixed) { a.vy *= 0.5; }             // 가운데 점은 세로로만 살짝 움직입니다
       a.vx *= DAMP; a.vy *= DAMP;
       a.x += a.vx; a.y += a.vy;
-      // 테두리 안에 머물게 합니다
-      var m = 26;
-      if (a.x < m) { a.x = m; a.vx = 0; }
-      if (a.x > G.W - m) { a.x = G.W - m; a.vx = 0; }
+      var m = 30;
       if (a.y < m) { a.y = m; a.vy = 0; }
       if (a.y > G.H - m) { a.y = G.H - m; a.vy = 0; }
+      if (a.x < 24) { a.x = 24; a.vx = 0; }
+      if (a.x > G.W - 24) { a.x = G.W - 24; a.vx = 0; }
     }
   }
 
@@ -296,6 +330,55 @@
   function radius(n) {
     if (n.center) return 22;
     return Math.min(17, 10 + Math.min(6, n.deg));
+  }
+
+  // 종류마다 모양을 달리합니다.
+  //   빛깔만으로 가르면 비슷한 색이 섞일 때 헷갈리고, 모두 동그라미면 단조롭습니다.
+  //   모양이 다르면 빛깔을 못 가려도 종류를 알 수 있습니다.
+  //     인물 · 동그라미      사람은 동그라미가 자연스럽습니다
+  //     학교 · 둥근 네모      건물을 떠올리게 합니다
+  //     단체 · 육각형        여럿이 모인 꼴
+  //     기관 · 육각형(다른 빛깔)
+  //     문헌 · 마름모        종이를 세운 꼴
+  function shapeNode(ns, n) {
+    var r = radius(n);
+    var t = n.type;
+
+    if (t === 'school') {
+      var rect = document.createElementNS(ns, 'rect');
+      var a = r * 1.72;
+      rect.setAttribute('x', -a / 2); rect.setAttribute('y', -a / 2);
+      rect.setAttribute('width', a);  rect.setAttribute('height', a);
+      rect.setAttribute('rx', a * 0.26);
+      return rect;
+    }
+    if (t === 'org' || t === 'foundation') {
+      var hex = document.createElementNS(ns, 'polygon');
+      var pts = [];
+      for (var i = 0; i < 6; i++) {
+        var ang = Math.PI / 180 * (60 * i - 90);
+        pts.push((Math.cos(ang) * r * 1.12).toFixed(1) + ',' + (Math.sin(ang) * r * 1.12).toFixed(1));
+      }
+      hex.setAttribute('points', pts.join(' '));
+      return hex;
+    }
+    if (t === 'academic') {
+      var dia = document.createElementNS(ns, 'polygon');
+      var w = r * 1.02, h = r * 1.34;
+      dia.setAttribute('points', '0,' + (-h) + ' ' + w + ',0 0,' + h + ' ' + (-w) + ',0');
+      return dia;
+    }
+    var c = document.createElementNS(ns, 'circle');
+    c.setAttribute('r', r);
+    return c;
+  }
+
+  // 범례에 쓰는 작은 모양 (HTML)
+  function legendMark(t) {
+    if (t === 'school')                     return 'border-radius:3px';
+    if (t === 'org' || t === 'foundation')  return 'clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)';
+    if (t === 'academic')                   return 'clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)';
+    return 'border-radius:50%';
   }
 
   function buildSVG() {
@@ -345,21 +428,21 @@
       if (n.center) {
         var ring = document.createElementNS(ns, 'circle');
         ring.setAttribute('class', 'ocn-ring');
-        ring.setAttribute('r', radius(n) + 6);
+        ring.setAttribute('r', radius(n) + 7);
         ring.setAttribute('fill', 'none');
         ring.setAttribute('stroke', COLOR[n.type] || '#64748b');
         g.appendChild(ring);
       }
 
-      var c = document.createElementNS(ns, 'circle');
-      c.setAttribute('r', radius(n));
+      var c = shapeNode(ns, n);
+      c.setAttribute('class', 'ocn-mark');
       c.setAttribute('fill', COLOR[n.type] || '#64748b');
       c.setAttribute('filter', 'url(#ocn-shadow)');
       g.appendChild(c);
 
       var t = document.createElementNS(ns, 'text');
       t.setAttribute('class', 'ocn-label');
-      t.setAttribute('y', radius(n) + 13);
+      t.setAttribute('y', radius(n) + 15);   // 모양마다 높이가 달라 여유를 둡니다
       // 문헌 제목은 길어서 잘라 놓으면 뜻을 알 수 없습니다.
       //   'On Reading Ad…' 는 정보가 아니라 소음입니다.
       //   그래서 문헌은 이름표를 감추고, 점에 손을 올릴 때만 보이게 합니다.
@@ -530,12 +613,12 @@
       + '.ocn-edge.is-paper{stroke:#dde1e7;stroke-dasharray:3 3}'
       + '.ocn-edge.is-hot{stroke:#8b95a3;stroke-width:2}'
       + '.ocn-node{cursor:pointer}'
-      + '.ocn-node circle{stroke:#fff;stroke-width:1.8;transition:opacity .15s}'
-      + '.ocn-node:hover circle{opacity:.82}'
+      + '.ocn-node .ocn-mark{stroke:#fff;stroke-width:1.8;transition:opacity .15s}'
+      + '.ocn-node:hover .ocn-mark{opacity:.82}'
       + '.ocn-ring{stroke-width:1.4;opacity:.28}'
       + '.ocn-node:focus{outline:none}'
-      + '.ocn-node:focus circle{stroke:#334155;stroke-width:2.4}'
-      + '.ocn-node.is-center circle{stroke-width:2.4}'
+      + '.ocn-node:focus .ocn-mark{stroke:#334155;stroke-width:2.4}'
+      + '.ocn-node.is-center .ocn-mark{stroke-width:2.4}'
       // 이름표 · 흰 테두리를 둘러 줄 위에서도 읽히게 합니다
       + '.ocn-label{font-size:10.5px;font-weight:500;fill:#3f4653;text-anchor:middle;'
       +   'paint-order:stroke;stroke:#f8f9fb;stroke-width:3.2px;stroke-linejoin:round;'
@@ -549,9 +632,30 @@
       +   'font-size:11.5px;color:#8a9099}'
       + '.ocn-legend{display:flex;align-items:center;gap:11px;flex-wrap:wrap}'
       + '.ocn-lg{display:inline-flex;align-items:center;gap:5px;color:#6b7280}'
-      + '.ocn-dot{width:8px;height:8px;border-radius:50%;display:inline-block}'
+      + '.ocn-dot{width:9px;height:9px;display:inline-block}'
+      // ── 모달 ──
+      + 'html.ocn-lock{overflow:hidden}'
+      + '.ocn-ov{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;'
+      +   'justify-content:center;padding:24px;background:rgba(15,23,42,.42);'
+      +   'backdrop-filter:blur(2px);animation:ocn-fade .16s ease-out}'
+      + '@keyframes ocn-fade{from{opacity:0}to{opacity:1}}'
+      + '.ocn-modal{width:min(1320px,96vw);max-height:92vh;display:flex;flex-direction:column;'
+      +   'background:#fff;border-radius:16px;overflow:hidden;'
+      +   'box-shadow:0 24px 60px rgba(15,23,42,.28)}'
+      + '.ocn-mhead{display:flex;align-items:center;gap:12px;padding:14px 18px;'
+      +   'border-bottom:1px solid #eef0f3;flex-wrap:wrap}'
+      + '.ocn-mtitle{font-size:15px;color:#1f2937;letter-spacing:-.01em}'
+      + '.ocn-msub{flex:1;min-width:120px;font-size:12px;color:#8a9099}'
+      + '.ocn-close{appearance:none;border:1px solid #e5e7eb;background:#fff;color:#6b7280;'
+      +   'width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:13px;line-height:1}'
+      + '.ocn-close:hover{background:#f3f4f6;color:#111827}'
+      + '.ocn-mbody{flex:1;min-height:0;overflow:auto;padding:8px 12px 12px}'
+      + '.ocn-mbody .ocn-wrap{margin-top:4px;border:0;box-shadow:none;border-radius:10px}'
+      + '.ocn-loading{padding:64px 0;text-align:center;color:#8a9099;font-size:13px}'
       + '@media (max-width:640px){.ocn-label{font-size:11.5px;stroke-width:3.6px}'
-      +   '.ocn-bar{font-size:11px;gap:10px}}';
+      +   '.ocn-bar{font-size:11px;gap:10px}'
+      +   '.ocn-ov{padding:10px}.ocn-modal{width:100%;max-height:96vh}'
+      +   '.ocn-msub{display:none}}';
     var st = document.createElement('style');
     st.id = 'ocn-css';
     st.textContent = css;
@@ -562,17 +666,21 @@
 
   function legendHTML(types) {
     return types.map(function (t) {
-      return '<span class="ocn-lg"><i class="ocn-dot" style="background:' + COLOR[t] + '"></i>'
-           + esc(KIND_KO[t] || t) + '</span>';
+      return '<span class="ocn-lg"><i class="ocn-dot" style="background:' + COLOR[t] + ';'
+           + legendMark(t) + '"></i>' + esc(KIND_KO[t] || t) + '</span>';
     }).join('');
   }
 
-  function open(type, id, mount) {
+  function open(type, id, mount, opt) {
     if (!TABLE[type]) return Promise.resolve(false);
     injectCSS();
 
-    G.nodes = []; G.edges = []; G.index = {}; G.frames = 0; G.trimmed = 0;
+    opt = opt || {};
+    G.nodes = []; G.edges = []; G.index = {}; G.frames = 0; G.trimmed = 0; G.maxDepth = 1;
     G.mount = mount;
+    // 모달은 화면을 넓게 쓰므로 그림판도 크게 잡습니다.
+    G.W = opt.wide ? 1280 : 900;
+    G.H = opt.wide ? 700  : 520;
 
     // 가운데 인물 · 이름을 먼저 받아옵니다
     var sel = (type === 'academic') ? 'id,name_ko,name_en,pub_year' : 'id,name_ko,name_en';
@@ -607,6 +715,57 @@
       });
   }
 
+  /* ---------- 모달 ----------
+     좁은 자리에 그리면 점 서른 개가 뭉칩니다.
+     넓은 창을 띄워 보여 주고, 닫으면 페이지는 그대로 남습니다.
+  */
+
+  function openModal(type, id, title) {
+    injectCSS();
+
+    var ov = document.createElement('div');
+    ov.className = 'ocn-ov';
+    ov.innerHTML =
+      '<div class="ocn-modal" role="dialog" aria-modal="true" aria-label="관계 지도">' +
+        '<div class="ocn-mhead">' +
+          '<b class="ocn-mtitle">관계 지도</b>' +
+          '<span class="ocn-msub"></span>' +
+          '<button type="button" class="ocn-close" aria-label="닫기">✕</button>' +
+        '</div>' +
+        '<div class="ocn-mbody"><div class="ocn-loading">불러오는 중…</div></div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    document.documentElement.classList.add('ocn-lock');
+
+    var body = ov.querySelector('.ocn-mbody');
+    var sub  = ov.querySelector('.ocn-msub');
+    sub.textContent = (title ? title + ' · ' : '')
+      + '점을 누르면 오른쪽으로 이어서 펼쳐집니다 · 끌어서 옮길 수 있습니다';
+
+    function close() {
+      G.running = false;
+      document.documentElement.classList.remove('ocn-lock');
+      document.removeEventListener('keydown', onKey);
+      ov.remove();
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+
+    ov.querySelector('.ocn-close').addEventListener('click', close);
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    document.addEventListener('keydown', onKey);
+    ov.querySelector('.ocn-close').focus();
+
+    return open(type, id, body, { wide: true }).then(function (ok) {
+      var l = body.querySelector('.ocn-loading');
+      if (l) l.remove();
+      if (!ok) body.innerHTML = '<div class="ocn-loading">이을 관계가 없습니다.</div>';
+      return ok;
+    }).catch(function () {
+      var l = body.querySelector('.ocn-loading');
+      if (l) l.textContent = '불러오지 못했습니다.';
+    });
+  }
+
   /* ---------- 자동 삽입 ---------- */
 
   function boot() {
@@ -629,8 +788,8 @@
     sec.innerHTML =
       '<h2 class="pv-h2">관계 지도</h2>' +
       '<div class="ocn-head">' +
-        '<button type="button" class="ocn-toggle">관계망 펼쳐보기</button>' +
-        '<span class="ocn-note">점을 누르면 그 항목의 관계가 이어서 펼쳐집니다. 끌어서 옮길 수 있습니다.</span>' +
+        '<button type="button" class="ocn-toggle">관계망 크게 보기</button>' +
+        '<span class="ocn-note">사사관계 · 출신 학교 · 소속 단체 · 관련 문헌을 한 그림으로 봅니다.</span>' +
       '</div>';
 
     // 관계 목록 다음, 제보 · 출처 안내 앞에 둡니다.
@@ -638,31 +797,18 @@
     if (contrib) art.insertBefore(sec, contrib);
     else art.appendChild(sec);
 
+    // 페이지에 붙는 것은 안내와 단추뿐입니다. 그림은 모달에서 그립니다.
     var btn = sec.querySelector('.ocn-toggle');
-    var opened = false;
+    var title = (document.querySelector('.pv-title, .pv h1, h1') || {}).textContent || '';
+    title = String(title).trim().split('\n')[0].slice(0, 40);
+
     btn.addEventListener('click', function () {
-      if (opened) {                       // 접기
-        var w = sec.querySelector('.ocn-wrap');
-        if (w) w.remove();
-        G.running = false;
-        opened = false;
-        btn.textContent = '관계망 펼쳐보기';
-        return;
-      }
       btn.disabled = true;
+      var old = btn.textContent;
       btn.textContent = '불러오는 중…';
-      open(type, id, sec).then(function (ok) {
+      openModal(type, id, title).then(function () {
         btn.disabled = false;
-        if (!ok) {
-          btn.textContent = '이을 관계가 없습니다';
-          btn.disabled = true;
-          return;
-        }
-        opened = true;
-        btn.textContent = '접기';
-      }).catch(function () {
-        btn.disabled = false;
-        btn.textContent = '다시 시도';
+        btn.textContent = old;
       });
     });
   }
@@ -670,5 +816,5 @@
   if (document.readyState !== 'loading') boot();
   else document.addEventListener('DOMContentLoaded', boot);
 
-  window.OCNetwork = { boot: boot, open: open };
+  window.OCNetwork = { boot: boot, open: open, openModal: openModal };
 })();
