@@ -1294,6 +1294,7 @@ if('serviceWorker' in navigator){
   upd();
 })();
 </script>
+<script src="/assets/photos.js"></script>
 <script>
 /* 인물 뷰: ?id 로 Supabase에서 해당 인물 로드 (id 없으면 기존 샘플 유지) */
 (function(){
@@ -1429,6 +1430,11 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
        })();
        var _ph=_sec('사진'); if(_ph) _ph.style.display='none';
      })();
+     /* 모아둔 사진(entity_photos)을 먼저 넣습니다.
+        위키백과에 물어보지 않아 훨씬 빠릅니다.
+        저장된 사진이 없으면 아래 위키 조회가 채웁니다. */
+     if(window.OCPhotos) OCPhotos.mount({ type:'person', id:p.id, existing:p.image_url, name:nm });
+
      // 위키백과에서 생애·이력(도입부 전체) + 사진(갤러리) 실시간 로드
      (function(){
        var REC=p;
@@ -1459,11 +1465,14 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
          /* 리드문(상단 큰 글씨)은 영문으로 바꾸지 않고 한국어 요약을 유지합니다 */
          var lead=document.querySelector('.pv-lead');
          if(lead && !isEn){ var f=(w.extract.split(/\n+/)[0]||w.extract); lead.textContent=(f.length>120?f.slice(0,120)+'\u2026':f); }
-         if(w.thumb && !((REC.image_url||'').trim())){ var por=document.querySelector('.pv-portrait'); if(por){ por.innerHTML=''; por.style.overflow='hidden'; var im=document.createElement('img'); im.src=w.thumb; im.alt=nm; im.style.cssText='width:100%;height:100%;object-fit:cover'; por.appendChild(im);} }
+         /* 모아둔 사진이 이미 들어가 있으면 위키 사진으로 바꾸지 않습니다 */
+         if(w.thumb && !((REC.image_url||'').trim()) && !document.querySelector('.pv-portrait img')){ var por=document.querySelector('.pv-portrait'); if(por){ por.innerHTML=''; por.style.overflow='hidden'; var im=document.createElement('img'); im.src=w.thumb; im.alt=nm; im.style.cssText='width:100%;height:100%;object-fit:cover'; por.appendChild(im);} }
          return true; }
        function gallery(lang,title){ if(!title)return;
          var ph=null;document.querySelectorAll('.pv-sec').forEach(function(s){var h=s.querySelector('.pv-h');if(h&&h.textContent.indexOf('사진')>=0)ph=s;});
          if(!ph)return; var tr=ph.querySelector('.pv-track'); if(!tr)return;
+         /* 모아둔 사진으로 이미 채워져 있으면 위키에 물어보지 않습니다 */
+         if(tr.querySelector('img'))return;
          fetch('https://'+lang+'.wikipedia.org/api/rest_v1/page/media-list/'+encodeURIComponent(title))
            .then(function(r){return r.ok?r.json():null;}).then(function(m){
              if(!m||!m.items)return;

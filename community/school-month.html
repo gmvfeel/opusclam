@@ -86,6 +86,12 @@
   @keyframes smp{0%,100%{opacity:.55}50%{opacity:.9}}
 
   .sm-src{font-size:12.5px;color:var(--text-3);margin-top:14px}
+  /* 모아둔 사진 여러 장 */
+  .sm-photos a{display:block;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  .sm-photos a img{width:100%;height:150px;object-fit:cover;display:block;transition:transform .25s ease}
+  .sm-photos a:hover img{transform:scale(1.04)}
+  .sm-photocap{grid-column:1/-1;font-size:12.5px;color:var(--text-3);margin:2px 0 0;line-height:1.6}
+  .sm-photocap a{display:inline;border:0;border-radius:0;overflow:visible;color:var(--violet-2);text-decoration:none}
   /* 출신 음악인 — 인물DB에 있는 사람은 눌러서 이동 */
   .sm-tag-link{border-color:rgba(124,99,176,.5);padding:0}
   .sm-tag-link a{display:inline-flex;align-items:center;gap:5px;color:var(--violet-2);
@@ -270,6 +276,46 @@
     }, 0);
 
     return html;
+  }
+
+  /* ============================================================
+     모아둔 사진 먼저 쓰기
+
+     학교 사진을 entity_photos 표에 미리 모아두었습니다.
+     그것을 쓰면 바깥에 물어보지 않아 훨씬 빠릅니다.
+     저장된 것이 없을 때만 위키백과에 실시간으로 물어봅니다.
+     ============================================================ */
+  function loadStoredPhotos(school) {
+    var box = document.getElementById('smPhotos');
+    if (!box || !school || !school.id) return;
+
+    api('entity_photos?select=src,thumb,file_name,page_url,license,kind' +
+        '&entity_type=eq.school&entity_id=eq.' + encodeURIComponent(school.id) +
+        '&hidden=eq.false&order=is_primary.desc,sort_no.asc,id.asc&limit=8')
+      .then(function (rows) {
+        /* 로고는 사진 자리에 쓰지 않습니다 — 위에 이미 로고가 있습니다 */
+        var photos = (rows || []).filter(function (r) { return r.kind !== 'logo'; });
+        if (!photos.length) { loadWikiPhoto(school); return; }
+
+        var lic = [];
+        photos.forEach(function (r) {
+          if (r.license && lic.indexOf(r.license) < 0) lic.push(r.license);
+        });
+
+        box.innerHTML = photos.map(function (r) {
+          var u = String(r.thumb || r.src || '').replace(/^http:\/\//, 'https://');
+          var href = r.page_url || 'https://commons.wikimedia.org/';
+          return '<a href="' + esc(href) + '" target="_blank" rel="noopener"' +
+                 ' title="' + esc(r.file_name || '') + '" style="display:block">' +
+                 '<img src="' + esc(u) + '" alt="" loading="lazy"></a>';
+        }).join('') +
+        '<p class="sm-photocap">사진 출처 · ' +
+          '<a href="https://commons.wikimedia.org/" target="_blank" rel="noopener">위키미디어 커먼즈</a>' +
+          (lic.length ? ' · ' + esc(lic.slice(0, 3).join(', ')) : '') +
+          ' — 각 사진을 누르면 원본 페이지에서 저작자와 이용 조건을 보실 수 있습니다.</p>';
+        box.style.display = '';
+      })
+      .catch(function () { loadWikiPhoto(school); });
   }
 
   /* ============================================================
@@ -492,7 +538,8 @@
       }
     } else {
       photos = '<div class="sm-photos" id="smPhotos" style="display:none"></div>';
-      setTimeout(function () { loadWikiPhoto(school); }, 0);
+      /* 모아둔 사진(entity_photos)을 먼저 찾고, 없으면 위키백과에 물어봅니다 */
+      setTimeout(function () { loadStoredPhotos(school); }, 0);
     }
 
     /* ── 학교 소개 고르기 ──
