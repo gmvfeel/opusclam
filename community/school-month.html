@@ -170,10 +170,31 @@
       </div>
       <p class="pdb-lead">매달 한 곳의 음악학교를 소개합니다. 학교 정보와 입학 안내를 한곳에서 보실 수 있습니다.</p>
     </header>
+
+    <!-- 다른 뷰 화면과 같은 굵은 구분선 -->
+    <div class="pv-topline"></div>
   </div>
 </section>
 
-<main class="sm-wrap">
+<!-- 저장·공유 단추.
+     즐겨찾기와 킵은 글 하나를 계정에 담는 기능이라 이 화면에는 넣지 않았습니다.
+     이 화면은 글이 아니라 매달 바뀌는 특집이기 때문입니다. -->
+<div class="sm-wrap">
+  <div class="pv-utility">
+    <div class="pv-tools">
+      <button type="button" class="pv-tool" data-save aria-haspopup="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>저장</button>
+      <button type="button" class="pv-tool" data-share><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.1 10.9l7.8-4.7M8.1 13.1l7.8 4.7"/></svg>공유</button>
+    </div>
+    <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+      <span class="pdb-fs-label">글자크기</span>
+      <button type="button" class="pdb-fs-btn" data-fs="dec">가<sub>&minus;</sub></button>
+      <button type="button" class="pdb-fs-btn" data-fs="reset">가</button>
+      <button type="button" class="pdb-fs-btn" data-fs="inc">가<sup>+</sup></button>
+    </div>
+  </div>
+</div>
+
+<main class="sm-wrap"><article class="pv">
   <div id="smMain"><div class="sm-skel"></div></div>
 
   <!-- 정보보강 · 메일문의 (다른 뷰 페이지와 같은 형태) -->
@@ -183,6 +204,8 @@
   <div id="smComments"></div>
 
   <div id="smPast"></div>
+
+  </article>
 
   <div class="sm-note">
     이 코너는 <strong>음악학교DB</strong>와 <strong>입시요강</strong>에 정리된 내용을 바탕으로 매달 자동으로 구성됩니다.
@@ -194,6 +217,11 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- 밝기 전환(다크모드)과 로그인 상태를 auth.js 가 맡습니다.
+     이 줄이 없어서 오른쪽 위 달 모양 단추가 눌리지 않았습니다. -->
+<script src="/assets/auth.js"></script>
+<!-- 저장(PDF·이미지)·공유·글자크기 조절은 pv.js 가 맡습니다 -->
+<script src="/assets/pv.js" defer></script>
 <script>
 (function () {
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
