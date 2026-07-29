@@ -1584,11 +1584,39 @@ if('serviceWorker' in navigator){
   }
 
   // Self PR 연주자 목록
+  /* 인물DB에서 무작위로 뽑아온다 (화면을 열 때마다 다른 사람)
+     · artists 표에 직접 등록한 것이 있으면 그것을 먼저 씁니다
+     · 비어 있으면 인물DB에서 사진 있는 인물을 무작위로 가져옵니다
+     · 나중에 연주자 회원이 생기면 그 회원을 우선하도록 바꾸면 됩니다 */
+  async function feedRandomArtists(){
+    try{
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/random_self_pr', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, H),
+        body: JSON.stringify({ p_n: 2 }),
+      });
+      if(!res.ok) return null;
+      const rows = await res.json();
+      if(!Array.isArray(rows) || !rows.length) return null;
+      return rows.map(function(r){
+        return {
+          name: r.r_name || '',
+          role: r.r_role || '',
+          bio: r.r_bio || '',
+          image_url: r.r_photo || '',
+          link: '/db/person-view.html?id=' + encodeURIComponent(r.r_id),
+        };
+      });
+    }catch(e){ return null; }
+  }
+
   async function loadArtists(){
     const box = document.getElementById('artists-list');
     if(!box) return;
     try{
-      const rows = await sbGet('artists?select=name,role,bio,image_url,link&order=sort_order.asc');
+      let rows = await sbGet('artists?select=name,role,bio,image_url,link&order=sort_order.asc');
+      /* 전용 표가 비어 있으면 인물DB에서 무작위로 */
+      if(!Array.isArray(rows) || !rows.length) rows = await feedRandomArtists();
       if(!Array.isArray(rows) || !rows.length) return;
       box.innerHTML = '';
       rows.forEach(function(r, i){
