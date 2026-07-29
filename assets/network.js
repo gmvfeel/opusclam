@@ -142,6 +142,7 @@
     frames: 0,
     trimmed: 0,        // 종류별 상한에 걸려 그리지 못한 수 · 아래 띠에 알립니다
     maxDepth: 1,       // 가장 깊은 단계 · 단계 사이 간격을 정하는 데 씁니다
+    centerY: 0,        // 가운데 점 높이 · 부챗살이 휘는 기준
 
     W: 900,
     H: 520,
@@ -167,7 +168,10 @@
     // 세로로 멀어질수록 살짝 왼쪽으로 당겨 부채꼴이 되게 합니다.
     //   단계마다 수직선으로 딱 맞추면 도표처럼 딱딱해 보입니다.
     //   가운데에서 퍼져 나가는 결이 생기도록 조금 휘게 했습니다.
-    var dy = ((y == null ? G.H / 2 : y) - G.H / 2) / (G.H / 2);   // -1 ~ 1
+    // 가운데 점이 위로 올라갔으므로 그 높이를 기준으로 휩니다.
+    //   화면 가운데를 기준으로 두면 아래쪽 점만 잔뜩 휘어 한쪽으로 쏠립니다.
+    var cy = G.centerY || (G.H / 2);
+    var dy = ((y == null ? cy : y) - cy) / Math.max(160, G.H - cy);
     return base - Math.min(0.4, dy * dy * 0.4) * gap;
   }
   function noteDepth(d) {
@@ -290,7 +294,11 @@
   //    부모의 높이 순서대로 줄을 세워 줄이 꼬이지 않습니다.
   //  움직임은 목표 자리로 부드럽게 다가가게 해서 딱딱해 보이지 않습니다.
 
-  var GAP_Y = BOX_H + 16;   // 네모 높이 + 위아래 틈
+  var GAP_Y     = BOX_H + 16;   // 네모 높이 + 위아래 틈 (자리를 잡을 때 쓰는 최소값)
+  var GAP_Y_MAX = BOX_H + 26;   // 이보다 벌어지지는 않게 합니다
+  //  전에는 화면 높이를 점 수로 나눠 자리를 정했습니다.
+  //  그래서 점이 적을수록 오히려 더 벌어졌습니다 — 모달 높이 660 을 여섯으로 나누면 110 입니다.
+  //  (2026-07-29 바흐 화면 · 이웃 여섯 개가 100px 넘게 떨어져 있었습니다)
 
   function parentY(n) {
     // 자기보다 앞 단계에 있는 이웃(부모)의 높이
@@ -315,7 +323,8 @@
     Object.keys(byDepth).forEach(function (d) {
       if (byDepth[d].length > most) most = byDepth[d].length;
     });
-    var needH = Math.max(G.baseH, most * GAP_Y + 70);
+    // 필요한 만큼만 씁니다. 점이 적으면 그림판도 낮아져 아래가 텅 비지 않습니다.
+    var needH = Math.max(340, most * GAP_Y_MAX + 80);
     // 단계가 깊어지면 가로로도 늘립니다. 모달 안에서 굴려 볼 수 있습니다.
     var needW = Math.max(G.baseW, 118 + (G.maxDepth + 1) * (BOX_MAX + 42) + 60);
     if (needH !== G.H || needW !== G.W) {
@@ -336,21 +345,28 @@
         return a.name < b.name ? -1 : 1;
       });
 
-      var top = BOX_H_C / 2 + 12, bottom = G.H - BOX_H_C / 2 - 12;
+      var top = BOX_H_C / 2 + 14, bottom = G.H - BOX_H_C / 2 - 14;
       var span = bottom - top;
       var k = free.length;
+      // 위에서부터 차례로 쌓습니다. 화면을 억지로 채우지 않습니다.
+      //   가운데 점을 세로 가운데 두면 이웃이 위아래로 흩어져
+      //   어느 쪽이 앞인지 알기 어려웠습니다.
+      //   왼쪽 위에서 시작해 오른쪽 아래로 뻗는 결이 훨씬 읽기 쉽습니다.
+      var gap = Math.min(GAP_Y_MAX, Math.max(GAP_Y, k > 1 ? span / k : GAP_Y));
       for (var j = 0; j < k; j++) {
         var node = free[j];
-        node.ty = (k === 1) ? G.H / 2 : top + span * (j + 0.5) / k;
+        node.ty = top + gap * (j + 0.5);
+        if (node.ty > bottom) node.ty = bottom;      // 넘치면 테두리 안으로
         node.tx = levelX(node.depth, node.ty);
       }
     });
 
-    // 가운데 점은 늘 왼쪽 가운데
+    // 가운데 점은 왼쪽 위 · 자기 단계에 혼자이므로 맨 윗자리를 받습니다
     for (i = 0; i < G.nodes.length; i++) {
       if (G.nodes[i].center) {
+        G.nodes[i].ty = BOX_H_C / 2 + 14 + GAP_Y_MAX * 0.5;
         G.nodes[i].tx = levelX(0);
-        G.nodes[i].ty = G.H / 2;
+        G.centerY = G.nodes[i].ty;                   // 부챗살이 휘는 기준
       }
     }
   }
