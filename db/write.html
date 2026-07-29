@@ -1234,7 +1234,7 @@ if('serviceWorker' in navigator){
 /* DB 등록·보강 폼: DB별 동적 입력칸 */
 (function(){
   var F={
-   person:{label:'인물DB',f:[
+   person:{label:'인물DB',t:'persons',f:[
     {l:'이름 (국문)',t:'text',k:'name_ko',h:'half'},{l:'이름 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'분야 (태그)',t:'tags',k:'field',h:'full'},
     {l:'국적',t:'text',k:'nationality',h:'half'},{l:'생몰',t:'text',k:'life',h:'half'},
@@ -1255,13 +1255,14 @@ if('serviceWorker' in navigator){
     {l:'소재지',t:'text',h:'half'},{l:'개관',t:'text',h:'half'},{l:'좌석수',t:'text',h:'half'},
     {l:'운영주체',t:'text',h:'half'},{l:'상주단체',t:'text',h:'half'},
     {l:'대표 프로그램',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
-   school:{label:'음악학교DB',f:[
-    {l:'학교명 (국문)',t:'text',h:'half'},{l:'학교명 (영문)',t:'text',h:'half'},
-    {l:'구분',t:'select',o:['예술중학교','예술고등학교','음악대학','예술대학','대학원','음악원','음악학교','기타'],h:'half'},
-    {l:'소재지',t:'text',h:'half'},{l:'설립',t:'text',h:'half'},
-    {l:'설립구분',t:'select',o:['국립','공립','사립'],h:'half'},
-    {l:'대표 학과',t:'text',h:'full'},{l:'저명 동문',t:'text',h:'full'},
-    {l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+   school:{label:'음악학교DB',t:'schools',f:[
+    {l:'학교명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'학교명 (영문)',t:'text',k:'name_en',h:'half'},
+    {l:'구분',t:'select',k:'category',o:['예술중학교','예술고등학교','음악대학','예술대학','대학원','음악원','음악학교','기타'],h:'half'},
+    {l:'소재지',t:'text',k:'location',h:'half'},{l:'설립',t:'text',k:'founded',h:'half'},
+    {l:'설립구분',t:'select',k:'estab_type',o:['국립','공립','사립'],h:'half'},
+    {l:'대표 학과',t:'text',k:'departments',h:'full'},{l:'저명 동문',t:'text',k:'alumni',h:'full'},
+    {l:'로고',t:'image',k:'logo_url',h:'half'},{l:'홈페이지',t:'url',k:'link_home',h:'half'},
+    {l:'소개',t:'textarea',k:'description',h:'full'}]},
    modern:{label:'현대음악DB',f:[
     {l:'작곡가명 (국문)',t:'text',h:'half'},{l:'작곡가명 (영문)',t:'text',h:'half'},
     {l:'사조·유파',t:'select',o:['표현주의·12음','총렬주의','미니멀리즘','전자음악','우연성·실험','스펙트럴','음향주의','신고전주의','동서 융합','다원주의·포스트모던','기타'],h:'half'},
@@ -1288,7 +1289,12 @@ if('serviceWorker' in navigator){
     var v=esc(rec&&f.k?(rec[f.k]==null?'':rec[f.k]):(f.v||'')), ph=esc(f.ph||'');
     var inner;
     if(f.t==='textarea') inner='<textarea class="wr-in" rows="3" placeholder="'+ph+'">'+v+'</textarea>';
-    else if(f.t==='select') inner='<select class="wr-in">'+f.o.map(function(o){return '<option>'+esc(o)+'</option>';}).join('')+'</select>';
+    else if(f.t==='select'){
+      var cur=rec&&f.k?String(rec[f.k]==null?'':rec[f.k]):'';
+      inner='<select class="wr-in">'+f.o.map(function(o){
+        return '<option'+(o===cur?' selected':'')+'>'+esc(o)+'</option>';
+      }).join('')+'</select>';
+    }
     else if(f.t==='image') inner='<div class="wr-upload">클릭 또는 드래그하여 이미지 업로드</div>';
     else if(f.t==='tags') inner='<input class="wr-in" value="'+v+'" placeholder="쉼표로 구분 (예: 작곡, 오르간)">';
     else inner='<input type="'+(f.t==='url'?'url':'text')+'" class="wr-in" value="'+v+'" placeholder="'+ph+'">';
@@ -1323,8 +1329,12 @@ if('serviceWorker' in navigator){
   document.querySelectorAll('.wr-db').forEach(function(x){x.classList.toggle('active', x.getAttribute('data-db')===_db);});
   document.querySelectorAll('.wr-mtab').forEach(function(x){x.classList.toggle('active', x.getAttribute('data-mode')===(_mode==='enhance'?'enhance':'new'));});
   document.getElementById('wrModeDesc').textContent=desc[_mode==='enhance'?'enhance':'new'];
-  if(_mode==='enhance' && _id && _db==='person'){
-    fetch(_U+'/rest/v1/persons?select=*&id=eq.'+encodeURIComponent(_id),{headers:{apikey:_K,Authorization:'Bearer '+_K}})
+  /* 보강 모드에서 기존 데이터를 불러온다.
+     예전에는 인물DB만 지원했으나, 각 DB 정의의 t(테이블명)를 이용해 모두 처리한다.
+     테이블명이 정의되지 않은 DB는 빈 폼으로 열린다. */
+  var _tbl = (F[_db] && F[_db].t) || '';
+  if(_mode==='enhance' && _id && _tbl){
+    fetch(_U+'/rest/v1/'+_tbl+'?select=*&id=eq.'+encodeURIComponent(_id),{headers:{apikey:_K,Authorization:'Bearer '+_K}})
       .then(function(r){return r.json();}).then(function(a){ render(_db,(a&&a[0])||null); })
       .catch(function(){ render(_db,null); });
   } else { render(_db, null); }
