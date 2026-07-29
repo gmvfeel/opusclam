@@ -1,0 +1,55 @@
+name: 이미지 수집 (위키데이터)
+
+# ── 언제 실행되나 ──
+#  1) 수동 실행 — Actions 탭에서 「Run workflow」 를 누르고 대상·건수를 지정합니다
+#  2) 주 1회 자동 — 새로 들어온 항목의 이미지를 조금씩 채웁니다
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: '수집 대상 (person / school / venue / org)'
+        required: true
+        default: 'person'
+      limit:
+        description: '한 번에 처리할 건수 (전체를 원하면 9999)'
+        required: true
+        default: '300'
+  schedule:
+    # 매주 월요일 새벽 5시(KST) = 일요일 20:00 UTC
+    - cron: '0 20 * * 0'
+
+concurrency:
+  group: photo-collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 이미지 수집 실행
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # 수동 실행이면 입력값을, 자동 실행이면 기본값을 씁니다
+          TYPE="${{ github.event.inputs.type }}"
+          LIMIT="${{ github.event.inputs.limit }}"
+
+          if [ -z "$TYPE" ]; then
+            # 주 1회 자동 실행 — 인물과 학교를 조금씩
+            echo "── 자동 실행 : 인물 200건 ──"
+            node seed/photo-collect.mjs --type=person --limit=200
+            echo ""
+            echo "── 자동 실행 : 학교 100건 ──"
+            node seed/photo-collect.mjs --type=school --limit=100
+          else
+            echo "── 수동 실행 : $TYPE $LIMIT 건 ──"
+            node seed/photo-collect.mjs --type="$TYPE" --limit="$LIMIT"
+          fi
