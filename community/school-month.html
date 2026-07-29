@@ -216,10 +216,35 @@
       return;
     }
 
-    /* ── 상단 카드 ── */
-    var logo = has(school.logo_url)
-      ? '<img src="' + esc(school.logo_url) + '" alt="" loading="lazy">'
-      : '<span class="sm-initial">' + esc(String(school.name_ko || school.name_en || '?').trim().charAt(0)) + '</span>';
+    /* ── 학교 이름 정하기 ──
+       학교DB의 한글 이름이 비어 있거나 영문만 있는 경우가 있어,
+       그때는 입시요강 카드 제목에서 한글 이름을 뽑아 쓴다.
+       예) [독일] 쾰른 음대 HfMT — 입학 절차와 확인 사항  →  쾰른 음대 HfMT */
+    function pickName() {
+      var ko = String(school.name_ko || '').trim();
+      if (/[가-힣]/.test(ko)) return ko;
+      if (adm && adm.title) {
+        var t = String(adm.title)
+          .replace(/^\s*\[[^\]]*\]\s*/, '')      /* 앞의 [나라] 제거 */
+          .replace(/\s*[—-]\s*입학[\s\S]*$/, '')   /* 뒤의 「— 입학 절차와…」 제거 */
+          .trim();
+        if (/[가-힣]/.test(t)) return t;
+      }
+      return ko || String(school.name_en || '').trim();
+    }
+    var displayName = pickName();
+
+    /* ── 로고 정하기 ──
+       학교DB의 로고는 우리가 직접 올린 것만 믿는다.
+       위키데이터에서 온 이미지에는 건물 사진·깃발이 섞여 있어 로고로 쓸 수 없다.
+       그다음으로 입시요강 카드의 로고(공식 홈페이지 파비콘)를 쓴다. */
+    var logoSrc = '';
+    if (has(school.logo_url) && /^\/assets\/logos\//.test(school.logo_url)) logoSrc = school.logo_url;
+    else if (adm && has(adm.logo_url) && !/^data:/.test(adm.logo_url))        logoSrc = adm.logo_url;
+
+    var logo = logoSrc
+      ? '<img src="' + esc(logoSrc) + '" alt="" loading="lazy">'
+      : '<span class="sm-initial">' + esc(String(displayName || '?').trim().charAt(0)) + '</span>';
 
     var meta = '';
     if (has(school.location))   meta += '<dt>위치</dt><dd>' + esc(school.location) + '</dd>';
@@ -231,14 +256,14 @@
       return '<option value="' + esc(m.ym) + '"' + (m.ym === row.ym ? ' selected' : '') + '>' + esc(ymLabel(m.ym)) + '</option>';
     }).join('');
 
-    var nameEn = has(school.name_en) && school.name_en !== school.name_ko
+    var nameEn = has(school.name_en) && school.name_en !== displayName
       ? '<p class="sm-name-en">' + esc(school.name_en) + '</p>' : '';
 
     var head =
       '<div class="sm-head">' +
         '<div class="sm-logo">' + logo + '</div>' +
         '<div class="sm-hinfo">' +
-          '<h2 class="sm-name">' + esc(school.name_ko || school.name_en) + '</h2>' +
+          '<h2 class="sm-name">' + esc(displayName) + '</h2>' +
           nameEn +
           (meta ? '<dl class="sm-meta">' + meta + '</dl>' : '') +
         '</div>' +
@@ -329,7 +354,7 @@
           : Promise.resolve([]);
 
         var pAdm = row.admission_id
-          ? api('admission?select=id,title&id=eq.' + encodeURIComponent(row.admission_id))
+          ? api('admission?select=id,title,logo_url&id=eq.' + encodeURIComponent(row.admission_id))
           : Promise.resolve([]);
 
         Promise.all([pSchools, pAdm]).then(function (res) {
@@ -337,8 +362,10 @@
           var byId = {};
           schools.forEach(function (s) { byId[s.id] = s; });
           list.forEach(function (m) {
-            var s = byId[m.school_id];
-            m._name = s ? (s.name_ko || s.name_en || '') : '';
+            var sc = byId[m.school_id];
+            if (!sc) { m._name = ''; return; }
+            var ko = String(sc.name_ko || '').trim();
+            m._name = /[가-힣]/.test(ko) ? ko : (ko || String(sc.name_en || '').trim());
           });
           render(row, byId[row.school_id] || null, adms[0] || null, list);
           renderPast(list, row.ym);
