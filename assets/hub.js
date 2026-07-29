@@ -125,7 +125,11 @@ window.OCHub = (function () {
     return '<a class="hub-card" href="' + esc(it.href) + '">'
       + (it.img
           ? '<span class="hub-cardimg"><img src="' + esc(it.img) + '" alt="" loading="lazy"></span>'
-          : '<span class="hub-cardimg hub-cardimg-ph">NO IMAGE</span>')
+          /* 사진이 없을 때 — 어두운 바탕에 오퍼스클램 로고를 옅게 얹습니다.
+             예전에는 「NO IMAGE」 라는 글자를 보여 주었습니다. */
+          : '<span class="hub-cardimg hub-cardimg-ph">'
+            + '<img src="/assets/logo.png" alt="OPUSCLAM" loading="lazy">'
+            + '</span>')
       + '<span class="hub-cardbody">'
       +   '<span class="hub-badge hub-' + esc(it.key) + '">' + esc(it.label) + '</span>'
       +   '<span class="hub-name">' + esc(it.name) + '</span>'
