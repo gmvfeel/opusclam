@@ -758,7 +758,7 @@
     <!-- column 1 -->
     <div class="col-1">
       <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Notice</span><span class="ko">공지사항</span></div><a class="more en" href="/community/news.html">VIEW MORE +</a></div>
+        <div class="sec-head"><div class="t"><span class="en-s">News</span><span class="ko">뉴스</span></div><a class="more en" href="/community/news.html">VIEW MORE +</a></div>
         <article class="lead" id="card-notice-lead">
           <div class="thumb ph"></div>
           <h4>[15명 한정 도슨트전시+공연초청] 2015 HPF 스페이스프로젝트</h4>
@@ -861,14 +861,14 @@
         <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
       </div>
 
-      <div class="ticket">
+      <a class="ticket" href="/community/prenatal.html" id="card-prenatal" style="text-decoration:none">
         <div>
-          <div class="en-s">FREE TICKETS</div>
-          <h4>연주회·콘서트 티켓 무료신청</h4>
-          <p>오퍼스클램 회원만 신청 가능합니다.</p>
+          <div class="en-s">PRENATAL MUSIC</div>
+          <h4>태교음악</h4>
+          <p>임신 기간에 함께 들을 음악을 고르고 경험을 나누는 공간입니다.</p>
         </div>
         <div class="tk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M9 6v12" stroke-dasharray="2 2"/></svg></div>
-      </div>
+      </a>
 
       <div class="sec-head"><div class="t"><span class="en-s">Funding</span><span class="ko">지원금 / 정책자금정보</span></div><a class="more en" href="#">VIEW MORE +</a></div>
       <ul class="fund" id="funding-list">
@@ -880,8 +880,8 @@
         <li><a href="#">문화예술교육형 사회적기업 육성 지원사업</a><span class="dt">~22.03.31</span></li>
       </ul>
 
-      <div class="sec-head" style="margin-top:24px"><div class="t"><span class="en-s">Self Picture</span></div></div>
-      <div class="selfpic" id="card-self-picture">
+      <div class="sec-head" style="margin-top:24px"><div class="t"><span class="en-s">Database</span><span class="ko">데이터베이스</span></div><a class="more en" href="/db/index.html">VIEW MORE +</a></div>
+      <div class="selfpic" id="card-db-pick">
         <div class="thumb ph"></div>
         <div>
           <h4>한국 최고의 실내악 콘서트</h4>
@@ -1502,6 +1502,47 @@ if('serviceWorker' in navigator){
     }catch(e){ return null; }
   }
 
+  function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  /* DATABASE 자리 — 일곱 갈래 중 하나를 무작위로 골라 최근 항목을 보여준다 */
+  async function loadDbPick(){
+    const card = document.getElementById('card-db-pick');
+    if(!card) return;
+    try{
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/random_db_pick', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, H),
+        body: JSON.stringify({}),
+      });
+      if(!res.ok) return;
+      const rows = await res.json();
+      if(!Array.isArray(rows) || !rows.length) return;
+      const r = rows[0];
+
+      /* 갈래 이름을 작게 얹는다 */
+      const h = card.querySelector('h4');
+      if(h) h.innerHTML = '<span style="display:block;font-family:var(--serif);font-size:11px;'
+        + 'letter-spacing:.1em;color:var(--violet-2);text-transform:uppercase;margin-bottom:4px">'
+        + esc(r.r_label || '') + '</span>' + esc(r.r_name || '');
+
+      const p = card.querySelector('p');
+      if(p) p.textContent = toSummary(r.r_desc, 110) || (r.r_sub || '');
+
+      const vm = card.querySelector('a.vm');
+      if(vm && r.r_link) vm.href = r.r_link;
+      setCardLink(card, r.r_link);
+
+      const th = card.querySelector('.thumb');
+      if(th && r.r_photo){
+        th.classList.remove('ph');
+        th.style.backgroundImage = 'url("' + r.r_photo + '")';
+        th.style.backgroundSize = 'cover';
+        th.style.backgroundPosition = 'center';
+      }
+    }catch(e){ /* 실패하면 원래 모습 그대로 */ }
+  }
+
   /* 현대음악DB — 최근 등록된 작곡가를 가져온다 (커뮤니티 게시판이 아니라 DB 쪽) */
   async function feedModernDb(){
     try{
@@ -1695,50 +1736,79 @@ if('serviceWorker' in navigator){
   }
 
   // 상단 뉴스 티커
-  /* 지식나눔 최신 글 한 건 — 티커 오른쪽 자리에 쓴다 */
-  async function feedQnaTicker(){
+  /* 티커에 쓸 글을 게시판에서 가져온다 (여러 건 — 차례로 돌아갑니다) */
+  async function feedTickerItems(table, label, viewPage, n){
     try{
-      const rows = await sbGet('qna?select=id,title,created_at&order=created_at.desc&limit=1');
-      if(!Array.isArray(rows) || !rows.length) return null;
-      const r = rows[0];
-      return {
-        label: '지식나눔',
-        headline: r.title || '',
-        posted_on: String(r.created_at || '').slice(0, 10),
-        link: '/community/qna-view.html?id=' + encodeURIComponent(r.id),
-      };
-    }catch(e){ return null; }
+      const rows = await sbGet(table + '?select=id,title,created_at&order=created_at.desc&limit=' + (n || 5));
+      if(!Array.isArray(rows) || !rows.length) return [];
+      return rows.map(function(r){
+        return {
+          label: label,
+          headline: r.title || '',
+          posted_on: String(r.created_at || '').slice(0, 10),
+          link: viewPage + '?id=' + encodeURIComponent(r.id),
+        };
+      });
+    }catch(e){ return []; }
   }
 
   async function loadTicker(){
     const box = document.getElementById('ticker-list');
     if(!box) return;
     try{
-      let rows = await sbGet('ticker?select=label,headline,posted_on,link&order=sort_order.asc');
-      if(!Array.isArray(rows)) rows = [];
+      /* 뉴스와 지식나눔에서 각각 다섯 건씩 받아 한 칸에 번갈아 넣는다.
+         한 칸에 여러 건이 들어가면 아래 rollTicker 가 차례로 바꿔 줍니다. */
+      const news = await feedTickerItems('news', 'NEWS', '/community/news-view.html', 5);
+      const qna  = await feedTickerItems('qna',  '지식나눔', '/community/qna-view.html', 5);
 
-      /* 「지식나눔」 자리는 게시판 최신 글로 채운다.
-         ticker 표에 그 라벨이 없으면 뒤에 하나 붙인다. */
-      const qna = await feedQnaTicker();
-      if(qna){
-        let done = false;
-        rows = rows.map(function(r){
-          if(!done && String(r.label || '').indexOf('지식나눔') >= 0){ done = true; return qna; }
-          return r;
-        });
-        if(!done) rows.push(qna);
+      let rows = [];
+      if(news.length || qna.length){
+        /* 왼쪽 칸에는 뉴스, 오른쪽 칸에는 지식나눔 */
+        rows = [
+          { slot: 0, items: news.length ? news : qna },
+          { slot: 1, items: qna.length ? qna : news },
+        ].filter(function(g){ return g.items.length; });
+      }else{
+        /* 게시판에서 못 가져오면 ticker 표를 쓴다 */
+        const t = await sbGet('ticker?select=label,headline,posted_on,link&order=sort_order.asc');
+        if(!Array.isArray(t) || !t.length) return;
+        rows = t.map(function(r){ return { slot: 0, items: [r] }; });
       }
 
       if(!rows.length) return;
       box.innerHTML = '';
-      rows.forEach(function(r){
+      /* 칸을 만들고, 칸마다 여러 건을 차례로 바꿔 준다 */
+      rows.forEach(function(g, gi){
         const tk = document.createElement('div'); tk.className = 'tk';
-        const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = r.label || '';
-        const txt = document.createElement('span'); txt.className = 'txt'; txt.textContent = r.headline || '';
-        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = String(r.posted_on || '').slice(0, 10);
-        const a = document.createElement('a'); a.className = 'more en'; a.href = (r.link && r.link !== '#') ? r.link : '#'; a.innerHTML = 'VIEW DETAIL &rarr;';
+        const lbl = document.createElement('span'); lbl.className = 'lbl';
+        const txt = document.createElement('span'); txt.className = 'txt';
+        const dt  = document.createElement('span'); dt.className  = 'dt';
+        const a   = document.createElement('a');   a.className    = 'more en';
+        a.innerHTML = 'VIEW DETAIL &rarr;';
         tk.appendChild(lbl); tk.appendChild(txt); tk.appendChild(dt); tk.appendChild(a);
         box.appendChild(tk);
+
+        let ix = 0;
+        function draw(){
+          const r = g.items[ix % g.items.length];
+          lbl.textContent = r.label || '';
+          txt.textContent = r.headline || '';
+          dt.textContent  = String(r.posted_on || '').slice(0, 10);
+          a.href = (r.link && r.link !== '#') ? r.link : '#';
+        }
+        draw();
+
+        if(g.items.length > 1){
+          /* 두 칸이 같은 순간에 바뀌지 않도록 시작 시각을 조금 어긋나게 한다 */
+          setTimeout(function(){
+            setInterval(function(){
+              ix += 1;
+              txt.style.transition = 'opacity .3s ease';
+              txt.style.opacity = '0';
+              setTimeout(function(){ draw(); txt.style.opacity = '1'; }, 300);
+            }, 5000);
+          }, gi * 2500);
+        }
       });
     }catch(e){ console.error('ticker 로드 실패:', e); }
   }
@@ -1746,7 +1816,7 @@ if('serviceWorker' in navigator){
   function init(){
     loadHeroSlides();
     loadTicker();
-    loadFeature('card-self-picture', 'self_picture');
+    loadDbPick();                      /* DATABASE 자리 — 일곱 갈래 무작위 */
     loadDateList('notice-list', 'notices');
     loadDateList('concours-list', 'concours');
     loadFunding();
