@@ -335,9 +335,10 @@
      ============================================================ */
   function renderContrib(school, name) {
     var el = document.getElementById('smContrib');
+    /* 음악학교DB 보강 폼으로 보낸다 (신규 등록/보강 공용 페이지) */
     var href = school && school.id
-      ? '/db/school.html?enhance=' + encodeURIComponent(school.id)
-      : '/db/school.html';
+      ? '/db/write.html?db=school&mode=enhance&id=' + encodeURIComponent(school.id)
+      : '/db/write.html?db=school&mode=enhance';
     el.innerHTML =
       '<section class="pv-contrib">' +
         '<a class="pv-enhance" href="' + href + '">' +
@@ -473,7 +474,7 @@
     var mEl = document.getElementById('smComments');  if (mEl) mEl.innerHTML = '';
 
     /* 선정 기록 전체를 최신순으로 (드롭다운·지난 호에 사용) */
-    api('monthly_school?select=ym,school_id,admission_id,photo_urls&order=ym.desc&limit=60')
+    api('monthly_school?select=id,ym,school_id,admission_id,photo_urls&order=ym.desc&limit=60')
       .then(function (list) {
         if (!list.length) { render(null, null, null, []); return; }
 
