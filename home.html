@@ -50,6 +50,14 @@
   .disp{font-family:var(--display)}
 
   /* ---------- placeholders ---------- */
+  /* 악보·자료 목록 — 여섯 줄이 되면서 세로로 길어져서 줄 간격을 좁혔습니다.
+     style.css 는 건드리지 않고 이 페이지에서만 적용합니다. */
+  #scores-list li{padding:7px 0;gap:8px}
+  #scores-list li .icon{width:24px;height:24px;border-radius:5px}
+  #scores-list li .icon svg{width:13px;height:13px}
+  #scores-list .dl-no{flex:0 0 auto;width:20px;font-family:var(--display);font-size:11px;
+    font-weight:700;color:var(--text-3);letter-spacing:.02em;text-align:right}
+
   /* 입시요강 「해외」 버튼과 「입시커뮤니티」 버튼
      style.css 를 건드리지 않고 이 페이지에서만 씁니다
 
@@ -1461,8 +1469,14 @@ if('serviceWorker' in navigator){
       if(!Array.isArray(rows) || !rows.length) rows = await feedScores();
       if(!Array.isArray(rows) || !rows.length) return;
       list.innerHTML = '';
-      rows.forEach(function(r){
+      rows.forEach(function(r, i){
         const li = document.createElement('li');
+
+        /* 줄 번호 */
+        const no = document.createElement('span');
+        no.className = 'dl-no';
+        no.textContent = ('0' + (i + 1)).slice(-2);
+
         /* 내려받을 파일이 붙어 있는 글에만 아이콘을 보여준다.
            전용 표(scores)에서 온 항목은 예전처럼 모두 보여줍니다. */
         const showIcon = (r.has_file === undefined) ? true : !!r.has_file;
@@ -1474,8 +1488,9 @@ if('serviceWorker' in navigator){
           /* 아이콘이 없어도 줄이 밀리지 않게 자리만 비워 둔다 */
           icon.style.visibility = 'hidden';
         }
+
         const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
-        li.appendChild(icon); li.appendChild(a);
+        li.appendChild(no); li.appendChild(icon); li.appendChild(a);
         list.appendChild(li);
       });
     }catch(e){ console.error('scores 로드 실패:', e); }
