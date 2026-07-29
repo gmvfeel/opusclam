@@ -81,6 +81,13 @@
 
   // 한 노드에서 같은 종류로 뻗는 가지 수 상한.
   //   모차르트는 논문이 64편 붙습니다. 다 그리면 화면이 뭉개집니다.
+  // 네모 크기 · 아래 GAP_Y 가 이 값을 쓰므로 반드시 먼저 정해져 있어야 합니다.
+  //   (2026-07-29 · 이 순서를 어겨 좌표가 NaN 이 되어 모든 네모가 한 점에 겹쳤습니다)
+  var BOX_H   = 30;      // 네모 높이
+  var BOX_H_C = 36;      // 가운데 것은 조금 크게
+  var BOX_MAX = 178;     // 이보다 길면 이름을 자릅니다
+  var BOX_PAD = 13;
+
   var CAP_PER_KIND = 6;
   var MAX_NODES    = 90;      // 전체 상한 · 넘으면 더 펼치지 않습니다
 
@@ -139,6 +146,7 @@
     W: 900,
     H: 520,
     baseH: 520,      // 처음 높이 · 점이 많으면 여기서 늘어납니다
+    baseW: 900,      // 처음 폭 · 단계가 깊어지면 늘어납니다
     drag: null
   };
 
@@ -150,8 +158,10 @@
   //  점을 화면 가운데에 모으면 오른쪽이 텅 비어 자리가 낭비됩니다.
   //  (2026-07-29 라흐마니노프 화면에서 오른쪽 절반이 비어 있었습니다)
   function levelX(d, y) {
-    var left = 88;
-    var gap  = Math.max(150, Math.min(240, (G.W - left - 130) / Math.max(1, G.maxDepth)));
+    // 네모가 가로로 길어졌으므로 단계 사이를 더 벌립니다.
+    //   네모 최대 폭 + 줄이 보일 틈 이 최소값입니다.
+    var left = 118;
+    var gap  = Math.max(BOX_MAX + 42, Math.min(285, (G.W - left - 150) / Math.max(1, G.maxDepth)));
     if (!d) return left;
     var base = left + d * gap;
     // 세로로 멀어질수록 살짝 왼쪽으로 당겨 부채꼴이 되게 합니다.
@@ -280,7 +290,7 @@
   //    부모의 높이 순서대로 줄을 세워 줄이 꼬이지 않습니다.
   //  움직임은 목표 자리로 부드럽게 다가가게 해서 딱딱해 보이지 않습니다.
 
-  var GAP_Y = 48;      // 점 하나가 이름표까지 쓰는 최소 높이
+  var GAP_Y = BOX_H + 16;   // 네모 높이 + 위아래 틈
 
   function parentY(n) {
     // 자기보다 앞 단계에 있는 이웃(부모)의 높이
@@ -306,8 +316,11 @@
       if (byDepth[d].length > most) most = byDepth[d].length;
     });
     var needH = Math.max(G.baseH, most * GAP_Y + 70);
-    if (needH !== G.H) {
+    // 단계가 깊어지면 가로로도 늘립니다. 모달 안에서 굴려 볼 수 있습니다.
+    var needW = Math.max(G.baseW, 118 + (G.maxDepth + 1) * (BOX_MAX + 42) + 60);
+    if (needH !== G.H || needW !== G.W) {
       G.H = needH;
+      G.W = needW;
       if (G.svg) G.svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.H);
     }
 
@@ -323,7 +336,7 @@
         return a.name < b.name ? -1 : 1;
       });
 
-      var top = 38, bottom = G.H - 38;
+      var top = BOX_H_C / 2 + 12, bottom = G.H - BOX_H_C / 2 - 12;
       var span = bottom - top;
       var k = free.length;
       for (var j = 0; j < k; j++) {
@@ -364,7 +377,6 @@
     // 목표 자리에 닿으면 곧바로 멈춥니다. 헛돌면 배터리만 먹습니다.
     if ((!moving && !G.drag) || G.frames > 260) {
       G.running = false;
-      tidyLabels();
       return;
     }
     requestAnimationFrame(tick);
@@ -382,59 +394,49 @@
 
   /* ---------- 그리기 ---------- */
 
-  function radius(n) {
-    if (n.center) return 22;
-    return Math.min(17, 10 + Math.min(6, n.deg));
+  // ── 크기 ────────────────────────────────────────────────
+  //  동그라미 대신 가로로 긴 둥근 네모를 씁니다.
+  //  이름을 네모 안에 담으므로 이름표가 따로 떠다니지 않습니다.
+  //    · 이름표끼리 겹치는 일이 원리적으로 없어집니다
+  //      (전에는 이름표가 점 밖에 떠 있어 겹치는 것을 골라 감춰야 했습니다)
+  //    · 왼쪽에서 오른쪽으로 흐르는 결과도 잘 맞습니다
+  //  글자 폭은 재 볼 수 없으므로 한글 · 영문 · 숫자를 나눠 어림합니다.
+  function textWidth(t, size) {
+    var w = 0;
+    for (var i = 0; i < t.length; i++) {
+      var c = t.charCodeAt(i);
+      if (c > 0x1100 && c < 0xD7FF) w += size;          // 한글
+      else if (c > 0x3000 && c < 0x9FFF) w += size;      // 한자 · 전각
+      else if (c === 32) w += size * 0.28;
+      else if (c >= 65 && c <= 90) w += size * 0.66;     // 영문 대문자
+      else w += size * 0.53;
+    }
+    return w;
   }
 
-  // 종류마다 모양을 달리합니다.
-  //   빛깔만으로 가르면 비슷한 색이 섞일 때 헷갈리고, 모두 동그라미면 단조롭습니다.
-  //   모양이 다르면 빛깔을 못 가려도 종류를 알 수 있습니다.
-  //     인물 · 동그라미      사람은 동그라미가 자연스럽습니다
-  //     학교 · 둥근 네모      건물을 떠올리게 합니다
-  //     단체 · 육각형        여럿이 모인 꼴
-  //     기관 · 육각형(다른 빛깔)
-  //     문헌 · 마름모        종이를 세운 꼴
-  function shapeNode(ns, n) {
-    var r = radius(n);
-    var t = n.type;
-
-    if (t === 'school') {
-      var rect = document.createElementNS(ns, 'rect');
-      var a = r * 1.72;
-      rect.setAttribute('x', -a / 2); rect.setAttribute('y', -a / 2);
-      rect.setAttribute('width', a);  rect.setAttribute('height', a);
-      rect.setAttribute('rx', a * 0.26);
-      return rect;
-    }
-    if (t === 'org' || t === 'foundation') {
-      var hex = document.createElementNS(ns, 'polygon');
-      var pts = [];
-      for (var i = 0; i < 6; i++) {
-        var ang = Math.PI / 180 * (60 * i - 90);
-        pts.push((Math.cos(ang) * r * 1.12).toFixed(1) + ',' + (Math.sin(ang) * r * 1.12).toFixed(1));
-      }
-      hex.setAttribute('points', pts.join(' '));
-      return hex;
-    }
-    if (t === 'academic') {
-      var dia = document.createElementNS(ns, 'polygon');
-      var w = r * 1.02, h = r * 1.34;
-      dia.setAttribute('points', '0,' + (-h) + ' ' + w + ',0 0,' + h + ' ' + (-w) + ',0');
-      return dia;
-    }
-    var c = document.createElementNS(ns, 'circle');
-    c.setAttribute('r', r);
-    return c;
+  function fitText(t, size, max) {
+    if (textWidth(t, size) <= max) return t;
+    var out = t;
+    while (out.length > 2 && textWidth(out + '…', size) > max) out = out.slice(0, -1);
+    return out + '…';
   }
 
-  // 범례에 쓰는 작은 모양 (HTML)
-  function legendMark(t) {
-    if (t === 'school')                     return 'border-radius:3px';
-    if (t === 'org' || t === 'foundation')  return 'clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)';
-    if (t === 'academic')                   return 'clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)';
-    return 'border-radius:50%';
+  // 자리 계산과 그리기가 같은 값을 쓰도록 한 곳에서 정합니다.
+  function boxOf(n) {
+    if (n._box) return n._box;
+    var h  = n.center ? BOX_H_C : BOX_H;
+    var fs = n.center ? 13 : 12;
+    var label = fitText(n.name, fs, BOX_MAX - BOX_PAD * 2);
+    var w = Math.max(56, Math.min(BOX_MAX, textWidth(label, fs) + BOX_PAD * 2));
+    n._box = { w: w, h: h, fs: fs, label: label };
+    return n._box;
   }
+
+  // 자리잡기에서 쓰는 반쪽 높이
+  function radius(n) { return boxOf(n).h / 2; }
+
+  // 범례에 쓰는 작은 표시 · 화면의 네모와 같은 꼴
+  function legendMark() { return 'border-radius:3px;width:11px;height:8px'; }
 
   function buildSVG() {
     var ns = 'http://www.w3.org/2000/svg';
@@ -477,42 +479,42 @@
     });
 
     G.nodes.forEach(function (n) {
+      var box = boxOf(n);
       var g = document.createElementNS(ns, 'g');
       g.setAttribute('class', 'ocn-node' + (n.center ? ' is-center' : ''));
       g.setAttribute('tabindex', '0');
       g.setAttribute('role', 'button');
 
-      // 가운데 점에는 옅은 링을 둘러 한눈에 알아보게 합니다.
+      // 가운데 것에는 옅은 테두리를 한 겹 더 둘러 표시합니다.
       if (n.center) {
-        var ring = document.createElementNS(ns, 'circle');
+        var ring = document.createElementNS(ns, 'rect');
         ring.setAttribute('class', 'ocn-ring');
-        ring.setAttribute('r', radius(n) + 7);
+        ring.setAttribute('x', -box.w / 2 - 4); ring.setAttribute('y', -box.h / 2 - 4);
+        ring.setAttribute('width', box.w + 8);  ring.setAttribute('height', box.h + 8);
+        ring.setAttribute('rx', (box.h + 8) / 2.6);
         ring.setAttribute('fill', 'none');
-        ring.setAttribute('stroke', ACCENT);   // 사이트 강조색으로 가운데를 표시합니다
+        ring.setAttribute('stroke', ACCENT);
         g.appendChild(ring);
       }
 
-      var c = shapeNode(ns, n);
-      c.setAttribute('class', 'ocn-mark');
-      c.setAttribute('fill', COLOR[n.type] || '#64748b');
-      c.setAttribute('filter', 'url(#ocn-shadow)');
-      g.appendChild(c);
+      var r = document.createElementNS(ns, 'rect');
+      r.setAttribute('class', 'ocn-mark');
+      r.setAttribute('x', -box.w / 2); r.setAttribute('y', -box.h / 2);
+      r.setAttribute('width', box.w);  r.setAttribute('height', box.h);
+      r.setAttribute('rx', box.h / 2.6);
+      r.setAttribute('fill', COLOR[n.type] || '#8b95a8');
+      r.setAttribute('filter', 'url(#ocn-shadow)');
+      g.appendChild(r);
 
       var t = document.createElementNS(ns, 'text');
       t.setAttribute('class', 'ocn-label');
-      t.setAttribute('y', radius(n) + 15);   // 모양마다 높이가 달라 여유를 둡니다
-      // 문헌 제목은 길어서 잘라 놓으면 뜻을 알 수 없습니다.
-      //   'On Reading Ad…' 는 정보가 아니라 소음입니다.
-      //   그래서 문헌은 이름표를 감추고, 점에 손을 올릴 때만 보이게 합니다.
-      if (n.type === 'academic' && !n.center) {
-        t.setAttribute('class', 'ocn-label is-quiet');
-        t.textContent = n.name.length > 26 ? n.name.slice(0, 25) + '…' : n.name;
-      } else {
-        t.textContent = n.name.length > 15 ? n.name.slice(0, 14) + '…' : n.name;
-      }
+      t.setAttribute('y', box.fs * 0.36);          // 네모 안에서 위아래 가운데
+      t.setAttribute('font-size', box.fs);
+      t.textContent = box.label;
       n.label = t;
       g.appendChild(t);
 
+      // 잘린 이름은 손을 올리면 전체가 보입니다.
       var ttl = document.createElementNS(ns, 'title');
       ttl.textContent = n.name + ' · ' + (KIND_KO[n.type] || n.type)
                       + (n.loaded ? '' : ' · 눌러서 펼치기');
@@ -527,32 +529,7 @@
     updateCounter();
   }
 
-  // 이름표가 겹치면 뒤에 오는 것을 감춥니다.
-  //   2026-07-29 화면 확인 · 'Ferdinand Ries' 와 'ndrea Luche' 가 붙어 읽을 수 없었습니다.
-  //   중요한 것부터 자리를 잡게 하려고 가운데 점 → 이어진 줄이 많은 점 순서로 봅니다.
-  //   배치가 가라앉은 뒤 한 번만 계산합니다. 매 프레임 하면 무겁습니다.
-  function tidyLabels() {
-    var boxes = [];
-    var order = G.nodes.slice().sort(function (a, b) {
-      if (a.center !== b.center) return a.center ? -1 : 1;
-      return b.deg - a.deg;
-    });
-    order.forEach(function (n) {
-      if (!n.label) return;
-      var quiet = n.type === 'academic' && !n.center;
-      if (quiet) { n.label.classList.add('is-quiet'); return; }   // 문헌은 처음부터 감춤
-      var w = n.label.textContent.length * 6.2 + 6;
-      var h = 13;
-      var x = n.x - w / 2;
-      var y = n.y + radius(n) + 3;
-      var hit = boxes.some(function (b) {
-        return !(x + w < b.x || b.x + b.w < x || y + h < b.y || b.y + b.h < y);
-      });
-      if (hit) n.label.classList.add('is-quiet');
-      else { n.label.classList.remove('is-quiet'); boxes.push({ x: x, y: y, w: w, h: h }); }
-    });
-  }
-
+  // 이름이 네모 안에 들어갔으므로 이름표 겹침을 따로 셀 일이 없습니다.
   function paintPositions() {
     var i, e, n;
     for (i = 0; i < G.edges.length; i++) {
@@ -604,9 +581,8 @@
       if (e.a !== n && e.b !== n) continue;
       if (e.el) e.el.classList.toggle('is-hot', on);
       var other = (e.a === n) ? e.b : e.a;
-      if (other.label) other.label.classList.toggle('is-show', on);
+      if (other.el) other.el.classList.toggle('is-near', on);
     }
-    if (n.label) n.label.classList.toggle('is-show', on);
   }
 
   // 끌 때 이어진 점을 함께 밀어 줍니다.
@@ -653,7 +629,6 @@
       if (moved < 4) { activate(n); return; }  // 끌지 않았으면 누른 것으로 봅니다
       // 손으로 옮긴 자리를 목표로 삼습니다. 그러지 않으면 놓는 순간 제자리로 돌아갑니다.
       n.pinned = true; n.tx = n.x; n.ty = n.y;
-      tidyLabels();
     });
     g.addEventListener('keydown', function (evt) {
       if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); activate(n); }
@@ -707,20 +682,17 @@
       + '.ocn-edge.is-paper{stroke:var(--ocn-paper,#e0e2e8);stroke-dasharray:3 3}'
       + '.ocn-edge.is-hot{stroke:var(--ocn-hot,#7C63B0);stroke-width:2;opacity:.85}'
       + '.ocn-node{cursor:pointer}'
-      + '.ocn-node .ocn-mark{stroke:#fff;stroke-width:1.8;transition:opacity .15s}'
+      + '.ocn-node .ocn-mark{stroke:#fff;stroke-width:1.4;transition:opacity .15s,stroke-width .12s}'
       + '.ocn-node:hover .ocn-mark{opacity:.82}'
-      + '.ocn-ring{stroke-width:1.5;opacity:.42}'
+      + '.ocn-ring{stroke-width:1.4;opacity:.5}'
       + '.ocn-node:focus{outline:none}'
-      + '.ocn-node:focus .ocn-mark{stroke:#334155;stroke-width:2.4}'
-      + '.ocn-node.is-center .ocn-mark{stroke-width:2.4}'
-      // 이름표 · 흰 테두리를 둘러 줄 위에서도 읽히게 합니다
-      + '.ocn-label{font-size:10.5px;font-weight:500;fill:#3f4653;text-anchor:middle;'
-      +   'paint-order:stroke;stroke:#f8f9fb;stroke-width:3.2px;stroke-linejoin:round;'
-      +   'pointer-events:none;user-select:none;opacity:1;transition:opacity .12s}'
-      // 감출 것 · 겹치는 이름표와 문헌 제목
-      + '.ocn-label.is-quiet{opacity:0}'
-      + '.ocn-label.is-show{opacity:1}'
-      + '.ocn-node:hover .ocn-label{opacity:1}'
+      + '.ocn-node:focus .ocn-mark{stroke:#334155;stroke-width:2.2}'
+      + '.ocn-node.is-center .ocn-mark{stroke-width:1.8}'
+      // 이름은 네모 안에 흰 글자로 놓습니다. 밖에 떠 있지 않으니 테두리가 필요 없습니다.
+      + '.ocn-label{font-weight:600;fill:#fff;text-anchor:middle;letter-spacing:-.01em;'
+      +   'pointer-events:none;user-select:none}'
+      // 손을 올린 것과 이어진 네모는 흰 테두리로 살짝 도드라지게
+      + '.ocn-node.is-near .ocn-mark{stroke-width:2.6}'
       + '.ocn-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;'
       +   'padding:9px 14px;border-top:1px solid #eef0f3;background:rgba(255,255,255,.72);'
       +   'font-size:11.5px;color:#8a9099}'
@@ -776,6 +748,7 @@
     G.W = opt.wide ? 1280 : 900;
     G.H = opt.wide ? 660  : 520;
     G.baseH = G.H;
+    G.baseW = G.W;
 
     // 가운데 인물 · 이름을 먼저 받아옵니다
     var sel = (type === 'academic') ? 'id,name_ko,name_en,pub_year' : 'id,name_ko,name_en';
