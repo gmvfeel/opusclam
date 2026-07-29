@@ -78,16 +78,21 @@
   @media(max-width:420px){ .exam-comm em{display:none} }
 
   .card-link{position:absolute;inset:0;z-index:6;border-radius:inherit;text-indent:-9999px;overflow:hidden}
-  .ph{background:
-      linear-gradient(135deg,rgba(90,74,122,.14),rgba(124,99,176,.06)),
-      repeating-linear-gradient(45deg,#e9e6f1 0 12px,#e2def0 12px 24px);
+  /* 사진이 없는 자리 — 어두운 바탕에 오퍼스클램 로고를 옅게 얹습니다.
+     예전에는 사선 무늬에 「IMAGE」 라는 글자를 보여 주었습니다.
+
+     로고를 배경 그림으로 넣습니다. 원본이 남색·자주색이라 어두운 바탕에서
+     잘 보이지 않으므로, 흰색으로 바꾼 것을 덧그림(::after)으로 얹었습니다. */
+  .ph{background:linear-gradient(135deg,#262038 0%,#332b4d 100%);
       position:relative;overflow:hidden}
-  .ph::after{content:"IMAGE";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-      font-family:var(--serif);font-size:13px;letter-spacing:.35em;color:rgba(90,74,122,.45)}
-  .ph.dark{background:
-      linear-gradient(135deg,rgba(20,24,60,.9),rgba(74,47,110,.8)),
-      repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 12px,rgba(255,255,255,0) 12px 24px)}
-  .ph.dark::after{color:rgba(255,255,255,.35)}
+  .ph::after{content:"";position:absolute;inset:0;
+      background-image:url("/assets/logo.png");
+      background-repeat:no-repeat;background-position:center;
+      background-size:min(62%,180px) auto;
+      opacity:.4;filter:brightness(0) invert(1)}
+  /* 어두운 화면에서도 같은 모습입니다 */
+  .ph.dark{background:linear-gradient(135deg,#1e1930 0%,#2b2442 100%)}
+  .ph.dark::after{opacity:.34}
 
   /* ---------- utility top bar ---------- */
   .util{background:#0a0d24;color:#a9abc7;font-size:9px;letter-spacing:.01em;border-bottom:1px solid rgba(255,255,255,.05)}
