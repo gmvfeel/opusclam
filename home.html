@@ -50,14 +50,23 @@
   .disp{font-family:var(--display)}
 
   /* ---------- placeholders ---------- */
-  /* 입시요강 지역 버튼 아래 「입시커뮤니티」 버튼
-     style.css 를 건드리지 않고 이 페이지에서만 씁니다 */
+  /* 입시요강 「해외」 버튼과 「입시커뮤니티」 버튼
+     style.css 를 건드리지 않고 이 페이지에서만 씁니다
+
+     해외 버튼은 인라인 스타일을 쓰지 않습니다.
+     인라인으로 글자색을 정하면 마우스를 올렸을 때도 그 색이 유지되어
+     보라 배경에 보라 글자가 되어 글자가 보이지 않습니다.
+     클래스로 지정하면 :hover 규칙이 정상으로 이깁니다. */
+  .grid-region a.rg-abroad{border-color:rgba(124,99,176,.55);color:var(--violet-2);font-weight:700}
+
+  /* 로고에 쓰인 색을 그대로 옮겼습니다 — 남색에서 자주로 흐릅니다 */
   .exam-comm{display:flex;align-items:center;justify-content:space-between;gap:10px;
-    margin-top:8px;padding:12px 14px;border-radius:6px;text-decoration:none;
-    background:var(--violet-2);color:#fff;transition:.15s}
-  .exam-comm:hover{filter:brightness(1.08)}
-  .exam-comm span{font-size:13px;font-weight:700}
-  .exam-comm em{font-style:normal;font-size:11.5px;opacity:.85;white-space:nowrap}
+    margin-top:8px;padding:13px 15px;border-radius:6px;text-decoration:none;
+    background:linear-gradient(100deg,#3a4a8f 0%,#5b4f9c 45%,#a45cac 100%);
+    color:#fff;transition:.18s;box-shadow:0 2px 10px rgba(58,74,143,.28)}
+  .exam-comm:hover{filter:brightness(1.1);box-shadow:0 4px 16px rgba(58,74,143,.36)}
+  .exam-comm span{font-size:13.5px;font-weight:800;letter-spacing:-.01em}
+  .exam-comm em{font-style:normal;font-size:11.5px;opacity:.92;white-space:nowrap}
   @media(max-width:420px){ .exam-comm em{display:none} }
 
   .card-link{position:absolute;inset:0;z-index:6;border-radius:inherit;text-indent:-9999px;overflow:hidden}
@@ -972,7 +981,7 @@
         <a href="/community/admission.html?q=전남">전남</a>
         <a href="/community/admission.html?q=광주">광주</a>
         <a href="/community/admission.html?q=전북">전북</a>
-        <a href="/community/admission.html?region=해외" style="border-color:rgba(124,99,176,.55);color:var(--violet-2);font-weight:700">해외</a>
+        <a class="rg-abroad" href="/community/admission.html?region=해외">해외</a>
       </div>
       <a class="exam-comm" href="/community/admission-community.html"><span>입시커뮤니티</span><em>입시·진로 이야기를 나누는 자리 &rarr;</em></a>
     </div>
@@ -1427,13 +1436,19 @@ if('serviceWorker' in navigator){
 
   // 악보·자료 — 아이콘 + 제목
   const DL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>';
-  /* 악보·자료 — 전용 표가 비어 있으면 유틸리티 게시판에서 가져온다 */
+  /* 악보·자료 — 전용 표가 비어 있으면 유틸리티 게시판에서 가져온다
+     내려받을 파일이 붙어 있는지(file_url)도 함께 확인합니다 */
   async function feedScores(){
     try{
-      const rows = await sbGet('utility?select=id,title&order=is_pinned.desc,created_at.desc&limit=5');
+      const rows = await sbGet('utility?select=id,title,file_url'
+        + '&order=is_pinned.desc,created_at.desc&limit=6');
       if(!Array.isArray(rows) || !rows.length) return null;
       return rows.map(function(r){
-        return { title: r.title || '', link: '/community/utility-view.html?id=' + encodeURIComponent(r.id) };
+        return {
+          title: r.title || '',
+          link: '/community/utility-view.html?id=' + encodeURIComponent(r.id),
+          has_file: !!String(r.file_url || '').trim(),
+        };
       });
     }catch(e){ return null; }
   }
@@ -1448,7 +1463,17 @@ if('serviceWorker' in navigator){
       list.innerHTML = '';
       rows.forEach(function(r){
         const li = document.createElement('li');
-        const icon = document.createElement('span'); icon.className = 'icon'; icon.innerHTML = DL_ICON;
+        /* 내려받을 파일이 붙어 있는 글에만 아이콘을 보여준다.
+           전용 표(scores)에서 온 항목은 예전처럼 모두 보여줍니다. */
+        const showIcon = (r.has_file === undefined) ? true : !!r.has_file;
+        const icon = document.createElement('span');
+        icon.className = 'icon';
+        if(showIcon){
+          icon.innerHTML = DL_ICON;
+        }else{
+          /* 아이콘이 없어도 줄이 밀리지 않게 자리만 비워 둔다 */
+          icon.style.visibility = 'hidden';
+        }
         const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
         li.appendChild(icon); li.appendChild(a);
         list.appendChild(li);
