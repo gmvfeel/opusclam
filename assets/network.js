@@ -690,14 +690,12 @@
   function injectCSS() {
     if (document.getElementById('ocn-css')) return;
     var css = ''
-      + '.ocn-sec{margin-top:18px}'
-      + '.ocn-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}'
-      + '.ocn-toggle{appearance:none;border:1px solid #dc2626;background:#fff;color:#dc2626;'
-      +   'font:600 13px/1 inherit;padding:9px 15px;border-radius:999px;cursor:pointer;'
-      +   'transition:background .15s,color .15s}'
-      + '.ocn-toggle:hover{background:#dc2626;color:#fff}'
-      + '.ocn-toggle[disabled]{opacity:.5;cursor:default}'
-      + '.ocn-note{font-size:12px;color:#8a9099}'
+      // 단추 꾸밈은 사이트의 .pv-tool 을 그대로 쓰므로 여기서 정하지 않습니다.
+      //   제목(.pv-h) 아래 간격은 다른 섹션 머리(.pv-sechead)와 같은 18px 로 맞춥니다.
+      + '.ocn-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}'
+      + '.ocn-toggle svg{flex:none}'
+      + '.ocn-toggle[disabled]{opacity:.55;cursor:default}'
+      + '.ocn-note{font-size:12.5px;color:var(--text-3,#8a9099);line-height:1.5}'
       // 배경에 아주 옅은 결을 줍니다. 순백은 평면으로 보입니다.
       + '.ocn-wrap{margin-top:12px;border:1px solid #e8eaee;border-radius:14px;overflow:hidden;'
       +   'background:radial-gradient(120% 90% at 50% 0%,#fdfdfe 0%,#f6f7f9 100%);'
@@ -891,10 +889,22 @@
 
     var sec = document.createElement('section');
     sec.className = 'pv-sec ocn-sec';
+    // 제목과 단추는 사이트에 이미 있는 것을 그대로 씁니다.
+    //   .pv-h    · 왼쪽에 보라 세로선이 붙는 섹션 제목 (다른 섹션과 같은 꼴)
+    //   .pv-tool · 즐겨찾기 · 킵 · 공유에 쓰는 표준 단추
+    //   여기서 따로 꾸미면 옆 섹션과 어긋나고, 사이트 단추 모양이 바뀔 때 혼자 남습니다.
     sec.innerHTML =
-      '<h2 class="pv-h2">관계 지도</h2>' +
+      '<h2 class="pv-h">관계 지도 <span class="pv-h-en">Network</span></h2>' +
       '<div class="ocn-head">' +
-        '<button type="button" class="ocn-toggle">관계망 크게 보기</button>' +
+        '<button type="button" class="pv-tool ocn-toggle">' +
+          '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+            '<circle cx="3.2" cy="8" r="2.1" fill="currentColor"/>' +
+            '<circle cx="12.8" cy="3.6" r="1.7" fill="currentColor"/>' +
+            '<circle cx="12.8" cy="12.4" r="1.7" fill="currentColor"/>' +
+            '<path d="M4.9 7.1 11.2 4.2M4.9 8.9 11.2 11.8" stroke="currentColor" stroke-width="1.1"/>' +
+          '</svg>' +
+          '관계망 크게 보기' +
+        '</button>' +
         '<span class="ocn-note">사사관계 · 출신 학교 · 소속 단체 · 관련 문헌을 한 그림으로 봅니다.</span>' +
       '</div>';
 
