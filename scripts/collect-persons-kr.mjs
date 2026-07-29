@@ -347,6 +347,26 @@ async function sbGetAll(table, select) {
   return out;
 }
 
+// ── 차단 목록 ────────────────────────────────────────────────
+//  어드민의 '삭제 + 차단' 은 blocklist 표에 위키데이터 번호를 남깁니다.
+//  그런데 이 자동 수집기는 그 목록을 읽지 않았습니다.
+//  어드민 화면의 수동 수집(admin.html)에는 있던 처리가
+//  스크립트로 옮길 때 빠진 것입니다.
+//  그래서 지운 인물이 다음 수집에서 그대로 되돌아왔습니다.
+//    2026-07-29 확인 · 수집기 일곱 개가 모두 같은 상태였습니다.
+async function loadBlocked() {
+  try {
+    const rows = await sbGetAll('blocklist', 'wikidata_id');
+    const set = new Set();
+    for (const r of rows || []) if (r && r.wikidata_id) set.add(String(r.wikidata_id).trim());
+    if (set.size) console.log('■ 차단 목록', set.size, '건 읽음');
+    return set;
+  } catch (e) {
+    console.log('■ 차단 목록을 읽지 못했습니다 · 걸러내지 않고 이어갑니다 ·', String(e.message).slice(0, 60));
+    return new Set();
+  }
+}
+
 async function sbInsert(rows) {
   if (!rows.length) return { ok: 0, dup: 0 };
   const post = (b) => fetch(SUPABASE_URL + '/rest/v1/persons', {
@@ -403,14 +423,20 @@ async function main() {
     if (p.name_en) haveName.add(norm(p.name_en));
   }
   console.log('■ 기존 인물', exist.length, '명');
+  const blocked = await loadBlocked();
 
   // 이미 있는 이름은 미리 걸러 요청 수를 줄입니다
   const titles = [...found.keys()].filter(t => !haveName.has(norm(stripParen(t))));
   console.log('■ 새 이름', titles.length, '건 · 소개문 조회 시작');
 
   const ex = await extractsOf(titles);
-  const qids = [...new Set(Object.values(ex).map(v => v.qid).filter(Boolean))]
+  const qidsAll = [...new Set(Object.values(ex).map(v => v.qid).filter(Boolean))]
     .filter(q => !haveQid.has(q));
+  // 차단한 인물은 위키데이터를 물어보지도 않습니다. 요청까지 아낍니다.
+  const qids = qidsAll.filter(q => !blocked.has(String(q)));
+  if (qidsAll.length !== qids.length) {
+    console.log('■ 차단 목록 제외', qidsAll.length - qids.length, '명');
+  }
   console.log('■ 위키데이터 조회', qids.length, '건');
 
   const wd = await wikidataOf(qids);

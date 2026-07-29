@@ -252,6 +252,28 @@ async function sbGetAll(table, select) {
   }
   return out;
 }
+
+// ── 차단 목록 ────────────────────────────────────────────────
+//  어드민의 '삭제 + 차단' 은 blocklist 표에 위키데이터 번호를 남깁니다.
+//  그런데 이 자동 수집기들은 그 목록을 읽지 않았습니다.
+//  어드민 화면의 수동 수집(admin.html)에는 있던 처리가
+//  스크립트로 옮길 때 빠진 것입니다.
+//  그래서 지운 항목이 다음 수집에서 그대로 되돌아왔습니다.
+//    2026-07-29 확인 · 현대음악DB 에 홍상수 · 길옥윤 · 이루마 등 19명이 거듭 들어왔습니다.
+//  이 함수를 저장 전에 한 번 불러 걸러냅니다.
+async function loadBlocked() {
+  try {
+    const rows = await sbGetAll('blocklist', 'wikidata_id');
+    const set = new Set();
+    for (const r of rows || []) if (r && r.wikidata_id) set.add(String(r.wikidata_id).trim());
+    if (set.size) console.log('■ 차단 목록', set.size, '건 읽음');
+    return set;
+  } catch (e) {
+    // 표가 없어도 수집은 이어갑니다. 다만 걸러지지 않는다는 것을 로그에 남깁니다.
+    console.log('■ 차단 목록을 읽지 못했습니다 · 걸러내지 않고 이어갑니다 ·', String(e.message).slice(0, 60));
+    return new Set();
+  }
+}
 async function sbInsert(rows) {
   if (!rows.length) return;
   const post = (batch) => fetch(SUPABASE_URL + '/rest/v1/schools', {
@@ -346,12 +368,17 @@ async function main() {
   console.log('■ 최종 통과:', kept.length, '곳 (전체', all.length, ')');
 
   const existing = await sbGetAll('schools', 'id,wikidata_id,name_ko,name_en,category,location,founded,alumni,logo_url,link_home,link_wiki,description,sort_no');
+  const blocked = await loadBlocked();
   const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
   for (const r of existing) { if (r.wikidata_id) byWid.set(r.wikidata_id, r); if (r.name_ko) nameSet.add(norm(r.name_ko)); if (typeof r.sort_no === 'number' && r.sort_no > maxSort) maxSort = r.sort_no; }
   console.log('■ 기존 schools:', existing.length, '행');
 
   const toIns = []; let updated = 0, skipped = 0, dupName = 0;
+  let blockedOut = 0;
   for (const row of kept) {
+    // 어드민에서 '삭제 + 차단' 한 항목은 다시 담지 않습니다.
+    //   이 검사가 없어 지운 것이 매주 되돌아왔습니다.
+    if (row.wikidata_id && blocked.has(String(row.wikidata_id))) { blockedOut++; continue; }
     const cur = byWid.get(row.wikidata_id);
     if (cur) { const patch = {}; for (const k of FILL_COLS) if (isEmpty(cur[k]) && !isEmpty(row[k])) patch[k] = row[k]; if (Object.keys(patch).length) { await sbUpdate(cur.id, patch); updated++; } else skipped++; continue; }
     if (nameSet.has(norm(row.name_ko))) { dupName++; continue; }
@@ -359,7 +386,8 @@ async function main() {
     toIns.push(Object.assign(strip(row), { sort_no: ++maxSort }));
   }
   for (let i = 0; i < toIns.length; i += 100) await sbInsert(toIns.slice(i, i + 100));
-  console.log('■ 신규추가:', toIns.length, '· 빈칸보강:', updated, '· 변경없음:', skipped, '· 이름중복스킵:', dupName);
+  console.log('■ 신규추가:', toIns.length, '· 빈칸보강:', updated, '· 변경없음:', skipped,
+              '· 이름중복스킵:', dupName, '· 차단목록제외:', blockedOut);
 
   await rerank();
   console.log('■ 완료');

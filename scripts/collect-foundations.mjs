@@ -262,6 +262,23 @@ async function sbGetAll(table, select, extra) {
   return out;
 }
 
+// ── 차단 목록 ────────────────────────────────────────────────
+//  어드민의 '삭제 + 차단' 은 blocklist 표에 위키데이터 번호를 남깁니다.
+//  그 목록을 읽지 않으면 지운 항목이 다음 수집에 그대로 되돌아옵니다.
+//    2026-07-29 확인 · 수집기 일곱 개가 모두 그 상태였습니다.
+async function loadBlocked() {
+  try {
+    const rows = await sbGetAll('blocklist', 'wikidata_id');
+    const set = new Set();
+    for (const r of rows || []) if (r && r.wikidata_id) set.add(String(r.wikidata_id).trim());
+    if (set.size) console.log('■ 차단 목록', set.size, '건 읽음');
+    return set;
+  } catch (e) {
+    console.log('■ 차단 목록을 읽지 못했습니다 · 걸러내지 않고 이어갑니다 ·', String(e.message).slice(0, 60));
+    return new Set();
+  }
+}
+
 async function sbInsert(rows) {
   if (!rows.length) return { ok: 0, dup: 0 };
   const post = (b) => fetch(SUPABASE_URL + '/rest/v1/foundations', {
@@ -334,10 +351,14 @@ async function main() {
   const byQid = new Map();
   for (const h of have) if (h.wikidata_id) byQid.set(String(h.wikidata_id), h);
   const manual = await sbGetAll('foundations', 'id', '&wikidata_id=is.null');
+  const blocked = await loadBlocked();
   console.log('■ 기존 · 수집분', have.length, '건 · 사람이 넣은 것', manual.length, '건(건드리지 않습니다)');
 
   const fresh = [], patch = [];
+  let blockedOut = 0;
   for (const r of rows) {
+    // 어드민에서 '삭제 + 차단' 한 항목은 다시 담지 않습니다.
+    if (r.wikidata_id && blocked.has(String(r.wikidata_id))) { blockedOut++; continue; }
     const old = byQid.get(r.wikidata_id);
     if (!old) { fresh.push(r); continue; }
     const p = {};
@@ -361,6 +382,7 @@ async function main() {
     ins += r.ok; dup += r.dup;
   }
   console.log('■ 신규 저장', ins, '건' + (dup ? ' · 이미 있어 건너뜀 ' + dup + '건' : ''));
+  if (blockedOut) console.log('■ 차단 목록 제외', blockedOut, '건');
 
   let up = 0;
   for (const { id, p } of patch) { await sbUpdate(id, p); up++; }
