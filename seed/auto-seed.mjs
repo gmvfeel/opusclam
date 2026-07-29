@@ -8,16 +8,20 @@
 
    환경변수(GitHub Secrets):
      SUPABASE_URL
-     SUPABASE_SERVICE_ROLE_KEY   (sb_secret_... 또는 service_role 키)
+     SUPABASE_SERVICE_KEY        (sb_secret_... 또는 service_role 키)
+                                 옛 이름 SUPABASE_SERVICE_ROLE_KEY 도 받아들입니다
    ============================================================ */
 
 import { POOL } from './content-pool.mjs';
 
 const SB_URL = process.env.SUPABASE_URL;
-const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+/* 열쇠 이름은 두 가지를 모두 받아들입니다.
+   워크플로와 스크립트를 각각 고쳐도 어느 시점에도 멈추지 않게 하기 위해서입니다. */
+const SB_KEY = process.env.SUPABASE_SERVICE_KEY
+            || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SB_URL || !SB_KEY) {
-  console.error('환경변수 SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 가 없습니다.');
+  console.error('환경변수 SUPABASE_URL 과 SUPABASE_SERVICE_KEY 가 없습니다.');
   process.exit(1);
 }
 
