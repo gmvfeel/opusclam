@@ -153,7 +153,7 @@ window.OCHub = (function () {
   function drawCards(box, sources) {
     box.innerHTML = sources.map(function (s) {
       /* 카드마다 그 영역의 색을 쓴다 (구성 스택바·배지와 같은 색) */
-      var col = DB_COLOR[s.key] || '#7C63B0';
+      var col = DB_COLOR[s.key] || '#8b95a8';
       return '<a class="hub-navcard" href="' + esc(s.list) + '" style="--c:' + col + '">'
         + '<span class="hub-navlabel">' + esc(s.label) + '</span>'
         + '<span class="hub-navcount"><b data-k="' + esc(s.key) + '">—</b><i>건</i></span>'
@@ -615,8 +615,11 @@ window.OCHub = (function () {
      ============================================================ */
   var DB_LABEL = { persons:'인물', orgs:'음악단체', venues:'공연장', schools:'음악학교',
                    modern:'현대음악', foundations:'기관재단', academic:'학술' };
-  var DB_COLOR = { persons:'#7C63B0', orgs:'#C9A94E', venues:'#3B82F6', schools:'#10B981',
-                   modern:'#EC4899', foundations:'#64748B', academic:'#DC2626' };
+  /* DB 종류별 빛깔 · 위 팔레트와 같은 결로 맞췄습니다.
+     구성비 막대와 성장 곡선에서 함께 쓰입니다. */
+  var DB_COLOR = { persons:'#3b6fc4', academic:'#8b95a8', schools:'#0f9b8e',
+                   orgs:'#c08a3e',   venues:'#5a7fa8',  foundations:'#7c63b0',
+                   modern:'#d93a4c' };
 
   /* 누적 성장 곡선
      · 컨테이너 실제 폭(W)을 받아 그린다 (고정 폭으로 그려 늘리면 눌린다)
@@ -755,12 +758,12 @@ window.OCHub = (function () {
     var seg = list.map(function (t) {
       var pct = sum ? (t.n / sum * 100) : 0;
       return '<span class="bar-seg" style="width:' + pct.toFixed(2) + '%;background:'
-        + (DB_COLOR[t.t] || '#999') + '" title="' + esc(DB_LABEL[t.t] || t.t) + ' ' + t.n.toLocaleString() + '"></span>';
+        + (DB_COLOR[t.t] || '#8b95a8') + '" title="' + esc(DB_LABEL[t.t] || t.t) + ' ' + t.n.toLocaleString() + '"></span>';
     }).join('');
     var leg = list.map(function (t) {
       var pct = sum ? (t.n / sum * 100) : 0;
       return '<span class="bar-leg">'
-        + '<i style="background:' + (DB_COLOR[t.t] || '#999') + '"></i>'
+        + '<i style="background:' + (DB_COLOR[t.t] || '#8b95a8') + '"></i>'
         + '<b>' + esc(DB_LABEL[t.t] || t.t) + '</b>'
         + '<u>' + t.n.toLocaleString() + '</u>'
         + '<s>' + pct.toFixed(1) + '%</s></span>';
@@ -781,12 +784,26 @@ window.OCHub = (function () {
      · 순위(국적·스승 등)   : 한 색의 농담, 1위만 진하게
      색을 한 번에 바꾸려면 아래 값만 고치면 된다. */
   /* ★ 색이 마음에 들지 않으면 이 아래 값만 바꾸면 모든 그래프에 반영됩니다 */
-  var C_MAIN = '#4F7BE8';                 // 순위 막대 · 성장 곡선 (파랑)
-  var C_HI   = '#F2A63B';                 // 1위 · 현재 지점 · 부족한 항목 (주황)
-  var SEQ = ['#8FA9D8','#5B9BD5','#3FB6C6','#37C4A0','#7CC94A','#E8B93C','#EE8A4C'];
-  var FIELD_C = { '작곡':'#5B7CE8', '성악':'#E8709A', '연주':'#3FB0D9',
-                  '지휘':'#E8A93C', '음악학':'#37BFA0', '음악교육':'#8FC94A',
-                  '편곡':'#7A6FD8', '평론':'#E8756B' };
+  /* ── 빛깔 ──────────────────────────────────────────────
+     전에는 무지개처럼 일곱 색을 늘어놓아 가볍게 보였습니다.
+     관계 지도에서 고른 네 색을 기준으로 다시 짰습니다.
+       #3b6fc4 남색 · #d93a4c 적색 · #0f9b8e 청록 · #8b95a8 슬레이트
+     사이트 전체가 한 결로 보이게 하려는 것입니다.
+
+     시대 막대는 범주가 아니라 시간의 흐름입니다.
+     그래서 색을 바꾸지 않고 한 계열에서 옅은 데서 진한 데로 갑니다.
+     중세가 가장 옅고 현대가 가장 진해, 흐름이 눈에 그대로 들어옵니다. */
+  var C_MAIN = '#3b6fc4';                 // 순위 막대 · 성장 곡선
+  var C_HI   = '#c08a3e';                 // 1위 · 현재 지점 · 부족한 항목 (황토)
+
+  /* 시대 · 세기 등 순서가 있는 구간 · 남색 한 계열의 명도 차이 */
+  var SEQ = ['#c3cfe2','#a6b7d5','#8a9fc7','#6d86b7','#5370a6','#3f5a91','#2e4677'];
+
+  /* 분야 · 범주이므로 색으로 가릅니다. 채도를 눌러 서로 부딪히지 않게 했습니다.
+     가장 많은 '작곡' 에 기본 남색을 주고 나머지를 곁에 둡니다. */
+  var FIELD_C = { '작곡':'#3b6fc4', '성악':'#d93a4c', '연주':'#0f9b8e',
+                  '지휘':'#c08a3e', '음악학':'#8b95a8', '음악교육':'#7c63b0',
+                  '편곡':'#5a7fa8', '평론':'#a8656f' };
   /* 순서를 색으로 (구간 수에 맞춰 골라 쓴다) */
   function seq(i, n) {
     if (n <= 1) return SEQ[3];
@@ -929,7 +946,7 @@ window.OCHub = (function () {
         var hh = ih * v / g.total;
         var yy = PT + ih - acc - hh;
         acc += hh;
-        var col = FIELD_C[k] || '#9AA3B5';
+        var col = FIELD_C[k] || '#8b95a8';
         out += '<rect x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + bw.toFixed(1) + '"'
           + ' height="' + Math.max(hh, 0.6).toFixed(1) + '"'
           + ' fill="' + col + '" stroke="var(--paper,#fff)" stroke-width=".8">'
@@ -944,7 +961,7 @@ window.OCHub = (function () {
     });
 
     var legs = keys.map(function (k) {
-      return '<span class="st-leg"><i style="background:' + (FIELD_C[k] || '#9AA3B5') + '"></i>'
+      return '<span class="st-leg"><i style="background:' + (FIELD_C[k] || '#8b95a8') + '"></i>'
         + esc(k) + '</span>';
     }).join('');
 
@@ -962,15 +979,14 @@ window.OCHub = (function () {
       { k: '출신 학교',     n: f.school },
       { k: '한국어 소개문', n: f.intro }
     ];
-    /* 가장 부족한 항목을 금색으로 — 어디를 채워야 하는지 바로 보인다 */
+    /* 가장 부족한 항목만 황토로 짚어 줍니다.
+       전에는 85% 넘으면 초록 · 60% 넘으면 파랑 · 그 아래는 연파랑으로 나눴는데,
+       색이 넷이나 되어 무엇이 중요한지 흐려졌습니다.
+       막대 길이가 이미 비율을 말해 주므로 색까지 나눌 까닭이 없습니다.
+       하나만 다르게 두면 '어디를 채워야 하는지' 가 한눈에 들어옵니다. */
     var lowest = rows.reduce(function (a, b) { return b.n < a.n ? b : a; }, rows[0]);
-    /* 많이 채워진 항목은 초록 · 보통은 파랑 · 가장 부족한 항목은 주황으로 눈에 띄게 */
     rows.forEach(function (r) {
-      var pr = r.n / f.total;
-      r.c = (r === lowest) ? C_HI
-          : pr > .85 ? '#37BFA0'
-          : pr > .6  ? '#4F7BE8'
-          :            '#8FA9D8';
+      r.c = (r === lowest) ? C_HI : C_MAIN;
     });
     return '<div class="fl">' + rows.map(function (r) {
       var pct = r.n / f.total * 100;
@@ -1027,7 +1043,7 @@ window.OCHub = (function () {
         if (fb) {
           var top = (d.field || []).filter(function (x) { return x.k.indexOf(',') < 0; }).slice(0, 6);
           fb.innerHTML = donutHtml(top, function (k) {
-            return FIELD_C[k] || '#9AA3B5';        // 세기별 누적막대와 같은 색
+            return FIELD_C[k] || '#8b95a8';        // 세기별 누적막대와 같은 색
           }, '명');
         }
 
