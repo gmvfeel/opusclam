@@ -8,6 +8,27 @@
 //              ACADEMIC_FULL=1 이면 전체 구간, 없으면 최근분만 갱신
 // ============================================================
 
+// ── 같은 논문을 알아보는 열쇠 ────────────────────────────────
+//  2026-07-29 확인 · 중복 2,021건 가운데 90% 가 DOI 를 갖고 있었습니다.
+//  학술지 판과 저장소 판이 각각 다른 DOI 를 받은 경우여서
+//  식별자 · DOI 대조로는 원리적으로 걸러낼 수 없습니다.
+//
+//  그렇다고 제목만 대조하면 안 됩니다.
+//  'The psychology of music' 은 1882년 거니 · 1936년 시쇼어 · 2024년 링크 등
+//  서로 다른 고전 9종의 제목입니다. 하나로 뭉치면 8종이 사라집니다.
+//  그래서 제목 · 발행연도 · 첫 저자를 함께 봅니다.
+function dedupKey(r) {
+  const t = String(r.name_ko || r.name_en || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')   // 발음기호 정리 · Yücemöz → Yucemoz
+    .toLowerCase().replace(/[^0-9a-z가-힣]/g, '');
+  if (t.length < 11) return null;                       // 짧은 제목은 우연히 겹칩니다
+  const y  = String(r.pub_year || '').trim();
+  const a0 = String(r.author || '').split(',')[0]       // 첫 저자만 · 저자 순서가 바뀌어도 같게
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^0-9a-z가-힣]/g, '').slice(0, 14);
+  return t + '|' + y + '|' + a0;
+}
+
 // 바깥 자료원 호출은 공용 모듈이 담당합니다 · scripts/lib/http.mjs
 //   429 대기 상한 90초 · 실행 예산 25분 · 막히면 모은 것까지 저장하고 정상 종료합니다.
 //   이 정책을 고치려면 http.mjs 한 곳만 고치면 모든 수집기에 반영됩니다.
@@ -20,7 +41,7 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
   process.exit(1);
 }
 
-const VERSION = 'v1.2';   // 국내 자료 확충판 (로그에서 새 코드인지 구분하는 표시)
+const VERSION = 'v1.3';   // 중복 차단 · 무심사 저장소 배제판 (로그에서 새 코드인지 구분하는 표시)
 const MAIL    = 'cser@wixon.co.kr';          // OpenAlex polite pool
 const UA      = 'OpusclamBot/1.0 (https://opusclam.com; ' + MAIL + ')';
 const OA      = 'https://api.openalex.org';
@@ -238,11 +259,25 @@ async function fetchQuery(q) {
 // 0단계 · 다른 분야와 겹칠 일이 없는 특수 낱말을 먼저 봅니다.
 //   이 단계가 없으면 판소리 논문이 주제(Music History and Culture)에 걸려
 //   음악사로 확정되고 국악 분류가 텅 빕니다. 작곡·지휘·교회음악도 같습니다.
+// 국악 낱말은 두 곳에서 씁니다 · 음악 관련성 판정(isMusical)과 분야 판정(toField).
+//   따로 적어 두면 한쪽만 고쳐 국악 논문이 엉뚱한 분야로 가는 일이 생깁니다.
+//   2026-07-29 에 실제로 그랬습니다 — 가야금 논문이 음악심리 · 음악치료로 흩어져 있었습니다.
+const KR_TRAD = [
+  'gugak|kugak|pansori|p.ansori|\\bsanjo\\b',
+  'gayageum|kayagum|kayag\u016dm|geomungo|komungo|k\u014fmun|haegeum|haegum|daegeum|taegum|taeg\u016dm|ajaeng|taepyeongso|janggu|changgo|kkwaenggwari',
+  'samulnori|nongak|pungmul|jeongak|chongak|hyangak|dangak|tangak|jongmyo|chongmyo|sinawi|shinawi|minyo|\\bgagok\\b|arirang|sujecheon|yeongsanhoesang',
+  'korean traditional music|traditional korean music|court music of korea',
+].join('|');
+
 const SPECIAL_RULES = [
-  [/(korean traditional|gugak|pansori|sanjo|nongak|gagok|jeongak|samulnori|sinawi|court music of korea)/i, '국악'],
+  [new RegExp(KR_TRAD, 'i'), '국악'],   // 음악 판정과 같은 낱말군을 씁니다
   [/\b(church music|sacred music|liturg|plainchant|gregorian|chorale|hymn|psalm setting|mass setting|motet)/i, '교회음악'],
   [/\b(twelve-tone|serialism|serial technique|spectral music|electroacoustic|aleatoric|compositional process|compositional technique|compositional method)/i, '작곡'],
-  [/\b(conductor|conducting|kapellmeister|baton technique)/i, '지휘'],
+  // 작곡가 자체를 다루는 논문 · 스치듯 언급한 논문은 걸리지 않게 좁혔습니다
+  [/\b((wo)?m[ae]n composers?|female composers?|composers? (born|of the|in the)|composers? and (contemporary|modern|new) music)/i, '작곡'],
+  // 뒤쪽 경계가 없으면 semiconducting 이 걸립니다.
+  // 'conducting polymer · film · oxide' 는 재료공학 낱말이므로 함께 제외합니다.
+  [/(\bconductors?\b|\bconducting\b(?!\s+(polymer|material|film|oxide|layer|state|channel))|kapellmeister|baton technique)/i, '지휘'],
 ];
 
 // 1단계 · OpenAlex 가 판정한 주제를 신뢰합니다.
@@ -296,12 +331,20 @@ function toField(w) {
 
 // ── 유형·배지·언어 매핑 ─────────────────────────────────────
 function toType(w) {
-  const t = String(w.type || '').toLowerCase();
+  const t     = String(w.type || '').toLowerCase();
+  const title = String(w.display_name || w.title || '');
+  // 서평 · 자료 검토는 학술논문과 성격이 다릅니다.
+  //   음악학에서 악보 · 음원 자료 검토는 값있는 문헌이라 지우지 않고 유형만 가릅니다.
+  //   화면(db/academic.html)에 '평론' 선택 항목이 이미 있어 그대로 걸립니다.
+  //   'A Critical Review of ...' 처럼 낱말이 끼어든 것은 논문이므로 걸리지 않게 좁혔습니다.
+  if (t === 'review' || t === 'book-review'
+      || /^(a |an |the )?(book |brief )?review(s)? (of|essay)\b/i.test(title)
+      || /^review[:\-]/i.test(title)) return '평론';
   if (t === 'dissertation' || t === 'thesis') return '학위논문';
   if (t === 'book' || t === 'monograph' || t === 'book-chapter') return '연구서';
   return '학술논문';
 }
-const AVA = { '학술논문': '논', '학위논문': '학', '연구서': '서', '저널 · 학술지': '저' };
+const AVA = { '학술논문': '논', '학위논문': '학', '연구서': '서', '저널 · 학술지': '저', '평론': '평' };
 
 const LANG = { ko: '국문', en: '영문', de: '독문', fr: '불문', it: '이문', ja: '일문', zh: '중문', es: '서문', ru: '노문' };
 function toLang(code) { return LANG[String(code || '').toLowerCase()] || null; }
@@ -389,7 +432,12 @@ const MUSICAL_TITLE = new RegExp([
   '\\baria\\b|\\blieder\\b',
   'quartet|quintet|sextet|octet|chamber music',
   'violin|\\bviola\\b|\\bcello\\b|contrabass|piano|pianist|harpsichord|flute|clarinet|oboe|bassoon|trumpet|trombone|saxophone|guitar|\\bharp\\b|percussion',
-  'composer|composition|counterpoint|tonality|timbre|plainchant|gregorian|hymn|chorale',
+  // 'composition' 을 단독으로 두면 안 됩니다.
+  //   2026-07-29 확인 · '산호 광물 조성 분석' · '아프리카 육식동물 장내세균 조성'
+  //   논문이 음악으로 통과해 들어와 있었습니다. 음악 문맥으로 좁힙니다.
+  'composer|counterpoint|tonality|timbre|plainchant|gregorian|hymn|chorale',
+  'music composition|compositional (technique|process|method|practice|style|approach)',
+  'composition for (orchestra|piano|violin|cello|viola|flute|clarinet|choir|chorus|ensemble|string|wind|percussion|voice)',
   'choir|choral|chorus|singer|singing|soprano|mezzo|\\btenor\\b|baritone|melod',
   // 단어 경계를 두지 않으면 semiconductor · superconductor 가 '지휘자' 로 통과합니다.
   // (2026-07-29 시험에서 '동아시아 반도체 공급망' 논문이 음악으로 판정됐습니다)
@@ -398,9 +446,7 @@ const MUSICAL_TITLE = new RegExp([
   // 국악 · 로마자 표기가 여러 갈래여서 흔한 변형을 함께 넣습니다.
   //   판정에 걸리지 않으면 국악 논문이 통째로 버려집니다.
   //   낱말이 특수해서 다른 분야와 겹칠 일은 거의 없습니다.
-  'gugak|kugak|pansori|p.ansori|\\bsanjo\\b',
-  'gayageum|kayagum|kayag\u016dm|geomungo|komungo|k\u014fmun|haegeum|haegum|daegeum|taegum|taeg\u016dm|ajaeng|taepyeongso|janggu|changgo|kkwaenggwari',
-  'samulnori|nongak|pungmul|jeongak|chongak|hyangak|dangak|tangak|jongmyo|chongmyo|sinawi|shinawi|minyo|\\bgagok\\b|arirang|sujecheon|yeongsanhoesang',
+  KR_TRAD,
 ].join('|'), 'i');
 
 function isMusical(r) {
@@ -436,6 +482,35 @@ const BIO_ENTRY = /\(\d{1,2}\s+[A-Z][a-z]+\.?\s+\d{4}\s*[-–—]/;
 // 초록이 제목에 온 경우 · 문장이 여럿이면 제목이 아닙니다
 const MULTI_SENTENCE = (t) => t.length > 110 && (t.match(/\.\s+[A-Z]/g) || []).length >= 2;
 
+// ── 무심사 저장소 ──────────────────────────────────────────
+//  Zenodo · Figshare 는 누구나 파일을 올릴 수 있고 학술 심사가 없습니다.
+//  2026-07-29 확인 · 같은 저자가 판본을 12번 올린 것, 중국어 zip 파일,
+//  산호 광물 분석, 장내세균 논문이 모두 이 두 곳에서 들어왔습니다.
+//  중복 1,094건의 대부분도 여기서 나왔습니다.
+//  arXiv 는 남깁니다 — 음악정보검색 분야는 정식 연구가 먼저 공개되는 곳입니다.
+const BAD_REPO = /\b(zenodo|figshare|researchgate|academia\.edu|slideshare)\b/i;
+
+// ── 논문이 아닌 항목 ───────────────────────────────────────
+//  '서평(Review of ...)' 은 여기 넣지 않습니다.
+//  음악학에서 악보 · 음원 자료 검토는 값있는 문헌이므로 유형만 '평론' 으로 갈라 남깁니다.
+const NOT_PAPER = new RegExp([
+  '\\.(zip|rar|7z|tar|gz|csv|xlsx?|docx?|pptx?|txt)\\s*$',      // 올려둔 파일
+  '\\.\\s*selections?\\s*$',                                     // 악보 서지 · 'Organ music. Selections'
+  '^(raw )?data (for|of)\\b|^dataset for\\b',                    // 원자료
+  '^supplement(ary|al) (data|material|information|file)|^supporting information',
+  'library (research )?guide|research guide|libguide|subject and course guides',
+  '^(annotated )?(select )?bibliograph',
+  '^call for papers|^conference report|^in memoriam\\b',
+  // 아래는 '그 낱말만' 제목인 경우입니다. 'Introduction to Music Theory' 는 걸리지 않습니다.
+  '^(introduction|conclusions?|preface|foreword|epilogue|prologue|contents|index|errata|erratum'
+    + '|corrigendum|notes|news|reviews|abstracts?|programme?|editorial|obituary|announcements?'
+    + '|acknowledge?ments?|appendix|glossary|masthead|front matter|back matter|issue information)'
+    + '[\\s.:;,\\-]*$',
+].join('|'), 'i');
+
+// 저자 자리에 사람 이름이 아닌 값이 들어온 경우
+const BAD_AUTHOR = /^(anonymous|anon\.?|:unav|unknown|not available|n\.?\s?a\.?)$/i;
+
 const MAX_TITLE = 180;   // 실제 논문 제목은 대개 150자 안입니다
 
 function keep(r) {
@@ -451,6 +526,9 @@ function keep(r) {
   if (AUTHOR_LIST.test(t)) return false;
   if (BIO_ENTRY.test(t)) return false;
   if (MULTI_SENTENCE(t)) return false;
+  if (NOT_PAPER.test(t)) return false;                              // 파일 · 목차 · 도서관 안내
+  if (r.publisher && BAD_REPO.test(r.publisher)) return false;      // 무심사 저장소
+  if (r.author && BAD_AUTHOR.test(String(r.author).trim())) return false;
   if (!isMusical(r)) return false;
   return substanceCount(r) >= 3;      // 저자·연도·학술지·초록·DOI 중 3개 이상
 }
@@ -533,6 +611,8 @@ async function main() {
 
   const queries = buildQueries(subs.map(s => s.id));
   const bag = new Map();      // source_id -> row
+  const seen = new Set();     // 같은 논문이 다른 식별자로 두 번 오는 것을 막습니다
+  let dupSkip = 0;
 
   for (const q of queries) {
     let works = [];
@@ -547,26 +627,37 @@ async function main() {
     for (const w of works) {
       const row = toRow(w);
       if (!keep(row)) continue;
-      if (!bag.has(row.source_id)) { bag.set(row.source_id, row); kept++; }
+      const dk = dedupKey(row);
+      if (dk && seen.has(dk)) { dupSkip++; continue; }   // 이미 담은 논문
+      if (!bag.has(row.source_id)) {
+        bag.set(row.source_id, row);
+        if (dk) seen.add(dk);
+        kept++;
+      }
     }
     console.log('  · ' + q.label + ' · 받음 ' + works.length + ' · 채택 ' + kept);
     await sleep(2000);  // 쿼리 사이는 더 넉넉히
   }
 
   const rows = [...bag.values()];
-  console.log('■ 수집 후보:', rows.length, '건');
+  console.log('■ 수집 후보:', rows.length, '건'
+    + (dupSkip ? ' · 같은 논문이라 건너뜀 ' + dupSkip + '건' : ''));
   if (!rows.length) { console.log('■ 넣을 것이 없습니다. 종료.'); return; }
 
   // 기존과 대조
   // 만 건 규모에서 초록까지 전부 내려받으면 수십 MB 가 되어 느려집니다.
   // 그래서 중복 판정은 식별자만 받고, 빈칸 보강은 실제로 빈 행만 따로 받습니다.
-  const idx = await sbGetAll('academic', 'id,source,source_id,doi');
-  const bySid = new Map(), byDoi = new Map();
+  // 제목 열쇠를 만들려면 제목 · 연도 · 저자가 필요합니다.
+  // 초록까지 받으면 수십 MB 가 되므로 판정에 쓰는 것만 받습니다.
+  const idx = await sbGetAll('academic', 'id,source,source_id,doi,name_ko,name_en,pub_year,author');
+  const bySid = new Map(), byDoi = new Map(), byKey = new Map();
   for (const h of idx) {
     if (h.source === 'openalex' && h.source_id) bySid.set(String(h.source_id), h);
     if (h.doi) byDoi.set(String(h.doi).toLowerCase(), h);
+    const k = dedupKey(h);
+    if (k && !byKey.has(k)) byKey.set(k, h);
   }
-  console.log('■ 기존 학술 행:', idx.length, '건');
+  console.log('■ 기존 학술 행:', idx.length, '건 · 제목 열쇠', byKey.size, '개');
 
   // 핵심 항목이 비어 있는 행만 상세히 가져옵니다.
   const HOLE_COLS = ['author', 'pub_year', 'description'];
@@ -580,8 +671,13 @@ async function main() {
   const holeById = new Map(holes.map(h => [h.id, h]));
 
   const fresh = [], patch = [];
+  let byKeyHit = 0;
   for (const r of rows) {
-    const old = bySid.get(r.source_id) || (r.doi && byDoi.get(String(r.doi).toLowerCase()));
+    const dk = dedupKey(r);
+    const old = bySid.get(r.source_id)
+             || (r.doi && byDoi.get(String(r.doi).toLowerCase()))
+             || (dk && byKey.get(dk));
+    if (old && !bySid.has(r.source_id) && !(r.doi && byDoi.has(String(r.doi).toLowerCase()))) byKeyHit++;
     if (!old) { fresh.push(r); continue; }
     const detail = holeById.get(old.id);
     if (!detail) continue;                 // 빈칸이 없는 행이므로 손대지 않습니다
@@ -598,7 +694,8 @@ async function main() {
     const r = await sbInsert(fresh.slice(i, i + 200));
     ins += r.ok; dup += r.dup;
   }
-  console.log('■ 신규 저장:', ins, '건' + (dup ? ' · 이미 있어 건너뜀 ' + dup + '건' : ''));
+  console.log('■ 신규 저장:', ins, '건' + (dup ? ' · 이미 있어 건너뜀 ' + dup + '건' : '')
+    + (byKeyHit ? ' · 제목 대조로 걸러낸 중복 ' + byKeyHit + '건' : ''));
 
   let up = 0;
   for (const { id, p } of patch) { await sbUpdate(id, p); up++; }
