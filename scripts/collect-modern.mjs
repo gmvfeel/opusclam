@@ -167,8 +167,50 @@ function substanceCount(r) {
 }
 function bioOK(r) { return (r.description || '').trim().length >= 150; }
 
+// ── 이 표에 넣지 않을 사람 ─────────────────────────────────
+//  연주자 · 지휘자 · 대중음악 · 영화음악 등, 현대음악 작곡가가 아닌 분들입니다.
+//
+//  차단 목록(blocklist)에 넣지 않는 까닭
+//    그 목록은 위키데이터 번호 하나로 모든 수집기에 함께 적용됩니다.
+//    손열음 · 정명훈 · 조성진은 인물DB 에 반드시 있어야 하는 분들이므로,
+//    전역으로 차단하면 인물 수집(목 · 금 · 토)에서도 막히고
+//    지워졌을 때 되살릴 수 없습니다.
+//    그래서 이 표 전용 목록을 여기 둡니다.
+//
+//  이름을 더 막아야 하면 아래에 한 줄씩 보태면 됩니다.
+//  한글 · 영문 어느 쪽으로 들어와도 걸리게 두 벌을 함께 적습니다.
+const EXCLUDE = new Set([
+  /* 연주자 · 지휘자 (2026-07-29) */
+  '손열음', 'yeoleumson',
+  '정명훈', 'myungwhunchung',
+  '원일', 'ilwon',
+  '조성진', 'seongjincho',
+  '심은지', 'simeunjee',
+  /* 영화 · 영상 */
+  '홍상수', '이동준', '모그',
+  /* 대중음악 · 게임 · 방송 */
+  '길옥윤', '김형석', '이현승', '최승현', '김호철',
+  'esti', '이루마', '송병준', '킵루츠',
+  /* 그 밖에 확인된 클래식 무관 */
+  '김장우', '문성남', '심현정', '한원탁', '박영근', '임용훈',
+]);
+
+// 이름을 견주기 좋게 다듬습니다.
+//   '조성진 (피아니스트)' 처럼 붙는 괄호와 공백 · 기호 · 대소문자를 지웁니다.
+function nameKey(v) {
+  return String(v || '')
+    .replace(/\s*\([^)]*\)\s*$/, '')
+    .toLowerCase()
+    .replace(/[^0-9a-z가-힣]/g, '');
+}
+
+function excluded(r) {
+  return EXCLUDE.has(nameKey(r.name_ko)) || EXCLUDE.has(nameKey(r.name_en));
+}
+
 // 컷오프 B(중간): 실질 정보가 있어야 포함
 function keep(r) {
+  if (excluded(r)) return false;                      // 이 표에 넣지 않기로 한 사람
   const { hasClassical, hasPop } = classify(r);
   if (hasPop && !hasClassical) return false;        // 명백히 클래식 무관 배제
   if (bioOK(r)) return true;                          // 실제 소개(전기) 있으면 충실
