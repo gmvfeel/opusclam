@@ -148,6 +148,13 @@
 
 <main class="sm-wrap">
   <div id="smMain"><div class="sm-skel"></div></div>
+
+  <!-- 정보보강 · 메일문의 (다른 뷰 페이지와 같은 형태) -->
+  <div id="smContrib"></div>
+
+  <!-- 회원 댓글 -->
+  <div id="smComments"></div>
+
   <div id="smPast"></div>
 
   <div class="sm-note">
@@ -318,6 +325,132 @@
 
     var sel = document.getElementById('smYm');
     if (sel) sel.addEventListener('change', function () { load(sel.value); });
+
+    renderContrib(school, displayName);
+    initComments(row);
+  }
+
+  /* ============================================================
+     정보보강 · 메일문의 — 다른 뷰 페이지와 같은 클래스를 써서 모양을 맞춘다
+     ============================================================ */
+  function renderContrib(school, name) {
+    var el = document.getElementById('smContrib');
+    var href = school && school.id
+      ? '/db/school.html?enhance=' + encodeURIComponent(school.id)
+      : '/db/school.html';
+    el.innerHTML =
+      '<section class="pv-contrib">' +
+        '<a class="pv-enhance" href="' + href + '">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>' +
+          '<span><b>정보보강하기</b><small>' + esc(name || '이 학교') +
+            '의 소개·전공·출신 음악인 등을 보강할 수 있습니다 · 자격 회원</small></span>' +
+        '</a>' +
+        '<div class="pv-source">' +
+          '<p class="pv-source-t">이 코너의 학교 정보는 <b>음악학교DB</b>와 <b>입시요강</b>에 정리된 내용을 바탕으로 구성됩니다. ' +
+          '공개된 자료를 취합해 정리하므로 빠진 내용이나 잘못된 정보가 있을 수 있습니다. ' +
+          '수정이 필요한 부분이나 보강할 내용이 있으면 아래 <b>메일문의하기</b> 또는 <b>정보보강</b>으로 알려주시면 확인해 반영하겠습니다. ' +
+          '모집 요건·학비처럼 해마다 달라지는 정보는 반드시 해당 학교 공식 페이지에서 확인하시기 바랍니다.</p>' +
+          '<a class="pv-mailbtn" href="mailto:contact@opusclam.com?subject=' +
+            encodeURIComponent('[이달의 음악학교] ' + (name || '') + ' 정보 관련') + '">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg> 메일문의하기</a>' +
+        '</div>' +
+      '</section>';
+  }
+
+  /* ============================================================
+     회원 댓글 — 다른 게시판 댓글과 같은 클래스·동작
+     ============================================================ */
+  var sbClient = null;
+  function client() {
+    if (!sbClient && window.supabase) sbClient = window.supabase.createClient(SB_URL, SB_KEY);
+    return sbClient;
+  }
+
+  function fmtDT(v) {
+    if (!v) return '';
+    var d = new Date(v);
+    if (isNaN(d)) return '';
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) +
+      ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function initComments(row) {
+    var el = document.getElementById('smComments');
+    if (!row || !row.id) { el.innerHTML = ''; return; }
+
+    el.innerHTML =
+      '<section class="bv-comments">' +
+        '<h2 class="bvc-h">댓글 <b class="bvc-count">0</b></h2>' +
+        '<div class="bvc-form">' +
+          '<textarea class="bvc-input" rows="2" placeholder="댓글을 남기려면 로그인이 필요합니다." disabled></textarea>' +
+          '<button type="button" class="bvc-submit" disabled>댓글등록</button>' +
+        '</div>' +
+        '<ul class="bvc-list"></ul>' +
+      '</section>';
+
+    var listEl  = el.querySelector('.bvc-list');
+    var input   = el.querySelector('.bvc-input');
+    var submit  = el.querySelector('.bvc-submit');
+    var countEl = el.querySelector('.bvc-count');
+
+    function itemHtml(c) {
+      return '<li class="bvc-item">' +
+        '<div class="bvc-top"><span class="bvc-name">' + esc(c.author_name || '회원') + '</span>' +
+        '<span class="bvc-date">' + fmtDT(c.created_at) + '</span></div>' +
+        '<div class="bvc-body">' + nl2br(c.body || '') + '</div></li>';
+    }
+
+    function draw() {
+      api('monthly_school_comments?select=id,body,author_name,created_at&news_id=eq.' +
+          encodeURIComponent(row.id) + '&order=created_at.asc&limit=100')
+        .then(function (rows) {
+          countEl.textContent = rows.length;
+          listEl.innerHTML = rows.length
+            ? rows.map(itemHtml).join('')
+            : '<li class="bvc-empty">첫 댓글을 남겨보세요.</li>';
+        })
+        .catch(function () { listEl.innerHTML = '<li class="bvc-empty">댓글을 불러오지 못했습니다.</li>'; });
+    }
+    draw();
+
+    /* 로그인 상태면 입력을 열어준다 */
+    var c = client();
+    if (!c) return;
+    c.auth.getUser().then(function (res) {
+      var user = res && res.data && res.data.user;
+      if (!user) {
+        input.placeholder = '댓글을 남기려면 로그인이 필요합니다.';
+        return;
+      }
+      input.disabled = false;
+      submit.disabled = false;
+      input.placeholder = '이 학교에 대해 알고 있는 내용이나 의견을 남겨주세요.';
+
+      /* 표시 이름 — 회원 정보에서 가져오고, 없으면 이메일 앞부분 */
+      var nick = '';
+      c.from('members').select('nickname,name').eq('id', user.id).maybeSingle()
+        .then(function (r) {
+          var d = r && r.data;
+          nick = (d && (d.nickname || d.name)) || String(user.email || '회원').split('@')[0];
+        })
+        .catch(function () { nick = String(user.email || '회원').split('@')[0]; });
+
+      submit.addEventListener('click', function () {
+        var v = (input.value || '').trim();
+        if (!v) { input.focus(); return; }
+        submit.disabled = true;
+        c.from('monthly_school_comments').insert({
+          news_id: row.id, body: v, author_id: user.id,
+          author_name: nick || String(user.email || '회원').split('@')[0]
+        }).then(function (r) {
+          submit.disabled = false;
+          if (r.error) { alert('등록에 실패했습니다. 잠시 후 다시 시도해 주세요.'); return; }
+          input.value = '';
+          draw();
+        });
+      });
+    }).catch(function () { /* 비로그인 상태 — 입력은 잠긴 채로 둔다 */ });
   }
 
   function renderPast(list, curYm) {
@@ -336,6 +469,8 @@
   function load(ym) {
     mainEl.innerHTML = '<div class="sm-skel"></div>';
     pastEl.innerHTML = '';
+    var cEl = document.getElementById('smContrib');   if (cEl) cEl.innerHTML = '';
+    var mEl = document.getElementById('smComments');  if (mEl) mEl.innerHTML = '';
 
     /* 선정 기록 전체를 최신순으로 (드롭다운·지난 호에 사용) */
     api('monthly_school?select=ym,school_id,admission_id,photo_urls&order=ym.desc&limit=60')
