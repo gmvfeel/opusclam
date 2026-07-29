@@ -123,8 +123,9 @@
     trimmed: 0,        // 종류별 상한에 걸려 그리지 못한 수 · 아래 띠에 알립니다
     maxDepth: 1,       // 가장 깊은 단계 · 단계 사이 간격을 정하는 데 씁니다
 
-    W: 900,          // 점 30개가 겹치지 않게 넓혔습니다
+    W: 900,
     H: 520,
+    baseH: 520,      // 처음 높이 · 점이 많으면 여기서 늘어납니다
     drag: null
   };
 
@@ -164,6 +165,7 @@
       x: levelX(d) + (Math.random() - 0.5) * 30,
       y: G.H / 2 + (Math.random() - 0.5) * G.H * 0.7,
       vx: 0, vy: 0, deg: 0,
+      tx: null, ty: null, pinned: false,
       center: !!center,
       // loaded 는 '이웃을 받아왔는가' 입니다. 가운데 점도 처음에는 받아와야 합니다.
       //   여기서 center 를 loaded 로 삼으면 첫 조회를 건너뛰어 아무것도 안 그려집니다.
@@ -254,74 +256,109 @@
      속도에 감쇠를 주어 흔들림이 가라앉습니다.
   */
   // ── 자리잡기 ────────────────────────────────────────────
-  //  가로(x) 는 단계에 따라 정해집니다 — 왼쪽에서 오른쪽으로 뻗는 꼴을 만듭니다.
-  //  세로(y) 만 힘으로 자유롭게 풀어, 같은 단계 안에서 서로 밀어내며 부채꼴로 퍼집니다.
-  //  가로까지 힘에 맡기면 점이 뒤엉켜 어느 쪽이 앞인지 알 수 없게 됩니다.
-  function step() {
-    var i, j, a, b, dy, dx, d, f, ady;
-    var N = G.nodes.length;
-    var REPULSE_Y = 2100;    // 세로로 밀어내는 힘 · 이름표가 겹치지 않게
-    var SPRING_Y  = 0.020;   // 이어진 점끼리 세로로 맞추는 힘
-    var PULL_X    = 0.075;   // 자기 단계 자리로 끌어당기는 힘
-    var MID_Y     = 0.0022;  // 위아래로 흩어지지 않게 하는 힘
-    var DAMP      = 0.84;
+  //  힘으로 세로 자리를 정하다가 실패했습니다.
+  //    이어진 점끼리 당기는 힘이 밀어내는 힘을 이겨,
+  //    모든 점이 가운데 점 높이로 모여 이름표가 서로 얹혔습니다.
+  //    (2026-07-29 라흐마니노프 화면 · 점 아홉 개가 한 덩어리로 뭉쳤습니다)
+  //
+  //  그래서 세로 자리를 나눠 주는 방식으로 바꿨습니다.
+  //    한 단계에 점이 k 개면 높이를 k 칸으로 나눠 한 칸씩 줍니다.
+  //    겹침이 아예 생길 수 없고, 간격도 고르게 나옵니다.
+  //    부모의 높이 순서대로 줄을 세워 줄이 꼬이지 않습니다.
+  //  움직임은 목표 자리로 부드럽게 다가가게 해서 딱딱해 보이지 않습니다.
 
-    // 세로 반발 · 가까운 짝만 봅니다
-    for (i = 0; i < N; i++) {
-      a = G.nodes[i];
-      for (j = i + 1; j < N; j++) {
-        b = G.nodes[j];
-        dx = a.x - b.x;
-        if (dx > 200 || dx < -200) continue;    // 가로로 멀면 겹칠 일이 없습니다
-        dy = a.y - b.y;
-        ady = Math.abs(dy);
-        if (ady > 260) continue;
-        if (ady < 1) { dy = (Math.random() - 0.5) || 0.5; ady = Math.abs(dy); }
-        // 가로로 가까울수록 세로로 더 밀어냅니다
-        f = (REPULSE_Y / (ady * ady + 90)) * (1 - Math.abs(dx) / 240);
-        if (f < 0) f = 0;
-        a.vy += (dy / ady) * f;
-        b.vy -= (dy / ady) * f;
+  var GAP_Y = 48;      // 점 하나가 이름표까지 쓰는 최소 높이
+
+  function parentY(n) {
+    // 자기보다 앞 단계에 있는 이웃(부모)의 높이
+    for (var i = 0; i < G.edges.length; i++) {
+      var e = G.edges[i];
+      if (e.a === n && e.b.depth < n.depth) return e.b.y;
+      if (e.b === n && e.a.depth < n.depth) return e.a.y;
+    }
+    return G.H / 2;
+  }
+
+  function relayout() {
+    var byDepth = {};
+    var i, n;
+    for (i = 0; i < G.nodes.length; i++) {
+      n = G.nodes[i];
+      (byDepth[n.depth] = byDepth[n.depth] || []).push(n);
+    }
+
+    // 한 단계에 점이 많으면 그림판을 세로로 늘립니다. 모달 안에서 굴려 볼 수 있습니다.
+    var most = 1;
+    Object.keys(byDepth).forEach(function (d) {
+      if (byDepth[d].length > most) most = byDepth[d].length;
+    });
+    var needH = Math.max(G.baseH, most * GAP_Y + 70);
+    if (needH !== G.H) {
+      G.H = needH;
+      if (G.svg) G.svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.H);
+    }
+
+    Object.keys(byDepth).forEach(function (d) {
+      var arr = byDepth[d];
+      // 손으로 옮겨 둔 점은 건드리지 않습니다
+      var free = arr.filter(function (x) { return !x.pinned; });
+      if (!free.length) return;
+
+      free.sort(function (a, b) {
+        var pa = parentY(a), pb = parentY(b);
+        if (pa !== pb) return pa - pb;
+        return a.name < b.name ? -1 : 1;
+      });
+
+      var top = 38, bottom = G.H - 38;
+      var span = bottom - top;
+      var k = free.length;
+      for (var j = 0; j < k; j++) {
+        var node = free[j];
+        node.ty = (k === 1) ? G.H / 2 : top + span * (j + 0.5) / k;
+        node.tx = levelX(node.depth, node.ty);
+      }
+    });
+
+    // 가운데 점은 늘 왼쪽 가운데
+    for (i = 0; i < G.nodes.length; i++) {
+      if (G.nodes[i].center) {
+        G.nodes[i].tx = levelX(0);
+        G.nodes[i].ty = G.H / 2;
       }
     }
+  }
 
-    // 이어진 점끼리 세로로 가까이
-    for (i = 0; i < G.edges.length; i++) {
-      a = G.edges[i].a; b = G.edges[i].b;
-      dy = b.y - a.y;
-      f = dy * SPRING_Y;
-      a.vy += f; b.vy -= f;
+  function step() {
+    var moving = false;
+    for (var i = 0; i < G.nodes.length; i++) {
+      var n = G.nodes[i];
+      if (G.drag && G.drag.node === n) continue;
+      if (n.tx == null) { n.tx = n.x; n.ty = n.y; }
+      var dx = n.tx - n.x, dy = n.ty - n.y;
+      if (Math.abs(dx) > 0.4 || Math.abs(dy) > 0.4) moving = true;
+      n.x += dx * 0.14;
+      n.y += dy * 0.14;
     }
-
-    for (i = 0; i < N; i++) {
-      a = G.nodes[i];
-      if (G.drag && G.drag.node === a) { a.vx = 0; a.vy = 0; continue; }
-      // 가로는 단계 자리로
-      a.vx += (levelX(a.depth, a.y) - a.x) * PULL_X;
-      // 세로는 가운데로 살짝
-      a.vy += (G.H / 2 - a.y) * MID_Y;
-      if (a.fixed) { a.vy *= 0.5; }             // 가운데 점은 세로로만 살짝 움직입니다
-      a.vx *= DAMP; a.vy *= DAMP;
-      a.x += a.vx; a.y += a.vy;
-      var m = 30;
-      if (a.y < m) { a.y = m; a.vy = 0; }
-      if (a.y > G.H - m) { a.y = G.H - m; a.vy = 0; }
-      if (a.x < 24) { a.x = 24; a.vx = 0; }
-      if (a.x > G.W - 24) { a.x = G.W - 24; a.vx = 0; }
-    }
+    return moving;
   }
 
   function tick() {
     if (!G.running) return;
-    step();
+    var moving = step();
     paintPositions();
     G.frames++;
-    // 400 프레임이면 충분히 가라앉습니다. 계속 돌리면 배터리만 먹습니다.
-    if (G.frames > 400 && !G.drag) { G.running = false; tidyLabels(); return; }
+    // 목표 자리에 닿으면 곧바로 멈춥니다. 헛돌면 배터리만 먹습니다.
+    if ((!moving && !G.drag) || G.frames > 260) {
+      G.running = false;
+      tidyLabels();
+      return;
+    }
     requestAnimationFrame(tick);
   }
-  function kick(frames) {
-    G.frames = Math.max(0, 400 - (frames || 400));
+  function kick() {
+    relayout();
+    G.frames = 0;
     if (!G.running) { G.running = true; requestAnimationFrame(tick); }
   }
 
@@ -543,7 +580,7 @@
       var p = svgPoint(evt);
       G.drag = { node: n, dx: p.x - n.x, dy: p.y - n.y, moved: 0 };
       g.setPointerCapture && g.setPointerCapture(evt.pointerId);
-      kick(120);
+      kick();
     });
     g.addEventListener('pointermove', function (evt) {
       if (!G.drag || G.drag.node !== n) return;
@@ -556,8 +593,10 @@
       if (!G.drag || G.drag.node !== n) return;
       var moved = G.drag.moved;
       G.drag = null;
-      if (moved < 4) activate(n);              // 끌지 않았으면 누른 것으로 봅니다
-      kick(160);
+      if (moved < 4) { activate(n); return; }  // 끌지 않았으면 누른 것으로 봅니다
+      // 손으로 옮긴 자리를 목표로 삼습니다. 그러지 않으면 놓는 순간 제자리로 돌아갑니다.
+      n.pinned = true; n.tx = n.x; n.ty = n.y;
+      tidyLabels();
     });
     g.addEventListener('keydown', function (evt) {
       if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); activate(n); }
@@ -569,7 +608,7 @@
     if (!n.loaded) {
       setStatus('불러오는 중…');
       loadNeighbors(n).then(function () {
-        paintAll(); kick(300); setStatus('');
+        paintAll(); kick(); setStatus('');
       }).catch(function () { setStatus('불러오지 못했습니다'); });
       return;
     }
@@ -680,7 +719,8 @@
     G.mount = mount;
     // 모달은 화면을 넓게 쓰므로 그림판도 크게 잡습니다.
     G.W = opt.wide ? 1280 : 900;
-    G.H = opt.wide ? 700  : 520;
+    G.H = opt.wide ? 660  : 520;
+    G.baseH = G.H;
 
     // 가운데 인물 · 이름을 먼저 받아옵니다
     var sel = (type === 'academic') ? 'id,name_ko,name_en,pub_year' : 'id,name_ko,name_en';
@@ -709,7 +749,7 @@
           G.status  = bar.querySelector('.ocn-status');
 
           paintAll();
-          kick(400);
+          kick();
           return true;
         });
       });
