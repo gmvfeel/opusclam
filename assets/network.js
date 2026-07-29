@@ -37,21 +37,28 @@
   /* ---------- 설정 ---------- */
 
   // 종류별 빛깔 · 목록 화면의 강조색(레드)을 인물에 씁니다.
-  // 채도를 낮춘 팔레트입니다.
-  //   원색을 나란히 두면 서로 부딪혀 눈이 피로하고, 클래식 포털의 절제된 느낌과 어긋납니다.
-  //   문헌은 일부러 회색빛으로 두어 뒤로 물립니다 — 인물이 주인공이고 문헌은 곁가지입니다.
-  // 처음엔 원색이라 부딪혔고, 한 번 낮췄더니 탁했습니다. 그 사이를 잡았습니다.
-  //   맑기는 살리고 채도만 조금 눌러, 흰 배경에서 선명하되 눈이 편한 자리입니다.
-  //   문헌만 회색빛으로 남깁니다 — 인물이 주인공이고 문헌은 곁가지입니다.
+  // ── 빛깔 ────────────────────────────────────────────────
+  //  오퍼스클램이 실제로 쓰는 색에서 가져왔습니다.
+  //    --violet-2  #7C63B0   페이지 번호 · 강조에 쓰는 주력색
+  //    --violet-3  #9C7FD6   보조 강조
+  //    --gold      #C9A94E   금색 강조
+  //    --orange    #EC7A1C   주황 강조
+  //    레드        #dc2626   테두리 · 박스섀도
+  //  앞서 쓴 적색 · 청록은 사이트 어디에도 없는 색이어서 겉돌았습니다.
+  //  보라를 주인공(인물)에 두고 금 · 주황을 곁에 놓아 사이트와 결을 맞췄습니다.
+  //  문헌만 회색빛으로 물립니다 — 인물이 중심이고 문헌은 곁가지입니다.
   var COLOR = {
-    person:     '#d93a4c',   // 사이트 강조색(#dc2626)과 같은 계열
-    org:        '#3b6fc4',   // 맑은 남색
-    school:     '#0f9b8e',   // 맑은 청록
-    academic:   '#8b95a8',   // 슬레이트 · 물러서는 색
-    foundation: '#c08a3e',   // 황토
-    venue:      '#2f8ca8',
-    modern:     '#a5568f'
+    person:     '#7C63B0',   // --violet-2 그대로
+    school:     '#BE9C3F',   // --gold 을 조금 눌러 흰 배경에서 또렷하게
+    org:        '#EC7A1C',   // --orange 그대로
+    foundation: '#9C7FD6',   // --violet-3 그대로
+    academic:   '#9AA1B4',   // 물러서는 회색빛
+    venue:      '#4E8FA8',
+    modern:     '#B0559A'
   };
+  // 가운데 점을 감싸는 링 · 사이트 강조색을 씁니다
+  var ACCENT = '#dc2626';
+
   var KIND_KO = {
     person: '인물', org: '단체', school: '학교',
     academic: '문헌', foundation: '기관 · 재단',
@@ -445,7 +452,10 @@
     G.gN.textContent = '';
 
     G.edges.forEach(function (e) {
-      var ln = document.createElementNS(ns, 'line');
+      // 직선으로 이으면 부챗살처럼 뻣뻣합니다.
+      //   왼쪽에서 오른쪽으로 흐르는 결에 맞춰 곡선으로 휘게 합니다.
+      //   시작과 끝에서 가로로 빠져나가는 곡선이라 단계 사이 흐름이 눈에 잡힙니다.
+      var ln = document.createElementNS(ns, 'path');
       // 사제 관계는 실선으로 또렷하게, 문헌은 점선으로 옅게 둡니다.
       //   모두 같은 줄로 그리면 무엇이 중요한 관계인지 알 수 없습니다.
       var kind = /^(teacher|student)$/.test(e.rel) ? ' is-teach'
@@ -467,7 +477,7 @@
         ring.setAttribute('class', 'ocn-ring');
         ring.setAttribute('r', radius(n) + 7);
         ring.setAttribute('fill', 'none');
-        ring.setAttribute('stroke', COLOR[n.type] || '#64748b');
+        ring.setAttribute('stroke', ACCENT);   // 사이트 강조색으로 가운데를 표시합니다
         g.appendChild(ring);
       }
 
@@ -537,8 +547,26 @@
     for (i = 0; i < G.edges.length; i++) {
       e = G.edges[i];
       if (!e.el) continue;
-      e.el.setAttribute('x1', e.a.x); e.el.setAttribute('y1', e.a.y);
-      e.el.setAttribute('x2', e.b.x); e.el.setAttribute('y2', e.b.y);
+      // 왼쪽 점에서 오른쪽 점으로 흐르는 곡선입니다.
+      //   가운데를 두 번 꺾어(큐빅) 양끝이 가로로 빠져나가게 합니다.
+      //   같은 단계끼리 이어질 때는 가로 차이가 없어 거의 직선으로 보입니다.
+      var a = (e.a.x <= e.b.x) ? e.a : e.b;
+      var b = (e.a.x <= e.b.x) ? e.b : e.a;
+      var mx = (a.x + b.x) / 2;
+      if (Math.abs(b.x - a.x) < 24) {
+        // 가로로 거의 같은 자리면 옆으로 살짝 부풀려 겹치지 않게 합니다
+        var bulge = Math.min(46, Math.abs(b.y - a.y) * 0.34) + 14;
+        e.el.setAttribute('d',
+          'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) +
+          'Q' + (a.x + bulge).toFixed(1) + ',' + ((a.y + b.y) / 2).toFixed(1) +
+          ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1));
+      } else {
+        e.el.setAttribute('d',
+          'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) +
+          'C' + mx.toFixed(1) + ',' + a.y.toFixed(1) +
+          ' ' + mx.toFixed(1) + ',' + b.y.toFixed(1) +
+          ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1));
+      }
     }
     for (i = 0; i < G.nodes.length; i++) {
       n = G.nodes[i];
@@ -647,14 +675,14 @@
       +   'box-shadow:0 1px 3px rgba(15,23,42,.05)}'
       + '.ocn-svg{display:block;width:100%;height:auto;touch-action:none}'
       // 줄 · 사제는 또렷하게, 문헌은 점선으로 물러나게
-      + '.ocn-edge{stroke:#d3d8df;stroke-width:1.1;transition:stroke .12s,stroke-width .12s}'
-      + '.ocn-edge.is-teach{stroke:#b9c0ca;stroke-width:1.5}'
-      + '.ocn-edge.is-paper{stroke:#dde1e7;stroke-dasharray:3 3}'
-      + '.ocn-edge.is-hot{stroke:#8b95a3;stroke-width:2}'
+      + '.ocn-edge{fill:none;stroke-linecap:round;stroke:#d8d5e2;stroke-width:1.1;transition:stroke .12s,stroke-width .12s}'
+      + '.ocn-edge.is-teach{stroke:#bdb4d2;stroke-width:1.5}'
+      + '.ocn-edge.is-paper{stroke:#e0e2e8;stroke-dasharray:3 3}'
+      + '.ocn-edge.is-hot{stroke:#7C63B0;stroke-width:2;opacity:.85}'
       + '.ocn-node{cursor:pointer}'
       + '.ocn-node .ocn-mark{stroke:#fff;stroke-width:1.8;transition:opacity .15s}'
       + '.ocn-node:hover .ocn-mark{opacity:.82}'
-      + '.ocn-ring{stroke-width:1.4;opacity:.28}'
+      + '.ocn-ring{stroke-width:1.5;opacity:.42}'
       + '.ocn-node:focus{outline:none}'
       + '.ocn-node:focus .ocn-mark{stroke:#334155;stroke-width:2.4}'
       + '.ocn-node.is-center .ocn-mark{stroke-width:2.4}'
