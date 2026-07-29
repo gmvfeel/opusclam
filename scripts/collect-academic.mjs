@@ -495,6 +495,7 @@ const BAD_REPO = /\b(zenodo|figshare|researchgate|academia\.edu|slideshare)\b/i;
 //  음악학에서 악보 · 음원 자료 검토는 값있는 문헌이므로 유형만 '평론' 으로 갈라 남깁니다.
 const NOT_PAPER = new RegExp([
   '\\.(zip|rar|7z|tar|gz|csv|xlsx?|docx?|pptx?|txt)\\s*$',      // 올려둔 파일
+  ',\\s*page \\d+\\s*$',                                      // 책을 낱쪽으로 올린 것 · 'Story of Korean music, Page 2'
   '\\.\\s*selections?\\s*$',                                     // 악보 서지 · 'Organ music. Selections'
   '^(raw )?data (for|of)\\b|^dataset for\\b',                    // 원자료
   '^supplement(ary|al) (data|material|information|file)|^supporting information',
