@@ -717,13 +717,13 @@
       <span class="qi-ko">공연정보</span>
       <span class="qi-desc">국내외 클래식 공연<br>일정과 정보를 제공</span>
     </a>
-    <a class="qa" href="#">
+    <a class="qa" href="/community/admission-community.html">
       <span class="qi"><i class="qi-ic m4"></i></span>
       <span class="qi-en">Entrance Examination</span>
       <span class="qi-ko">입시커뮤니티</span>
       <span class="qi-desc">예중·예고·음대 입시<br>정보와 소통 공간</span>
     </a>
-    <a class="qa" href="#">
+    <a class="qa" href="/db/org.html">
       <span class="qi"><i class="qi-ic m5"></i></span>
       <span class="qi-en">Production Agency</span>
       <span class="qi-ko">공연단체/기획사</span>
@@ -1660,18 +1660,47 @@ if('serviceWorker' in navigator){
   }
 
   // 상단 뉴스 티커
+  /* 지식나눔 최신 글 한 건 — 티커 오른쪽 자리에 쓴다 */
+  async function feedQnaTicker(){
+    try{
+      const rows = await sbGet('qna?select=id,title,created_at&order=created_at.desc&limit=1');
+      if(!Array.isArray(rows) || !rows.length) return null;
+      const r = rows[0];
+      return {
+        label: '지식나눔',
+        headline: r.title || '',
+        posted_on: String(r.created_at || '').slice(0, 10),
+        link: '/community/qna-view.html?id=' + encodeURIComponent(r.id),
+      };
+    }catch(e){ return null; }
+  }
+
   async function loadTicker(){
     const box = document.getElementById('ticker-list');
     if(!box) return;
     try{
-      const rows = await sbGet('ticker?select=label,headline,posted_on,link&order=sort_order.asc');
-      if(!Array.isArray(rows) || !rows.length) return;
+      let rows = await sbGet('ticker?select=label,headline,posted_on,link&order=sort_order.asc');
+      if(!Array.isArray(rows)) rows = [];
+
+      /* 「지식나눔」 자리는 게시판 최신 글로 채운다.
+         ticker 표에 그 라벨이 없으면 뒤에 하나 붙인다. */
+      const qna = await feedQnaTicker();
+      if(qna){
+        let done = false;
+        rows = rows.map(function(r){
+          if(!done && String(r.label || '').indexOf('지식나눔') >= 0){ done = true; return qna; }
+          return r;
+        });
+        if(!done) rows.push(qna);
+      }
+
+      if(!rows.length) return;
       box.innerHTML = '';
       rows.forEach(function(r){
         const tk = document.createElement('div'); tk.className = 'tk';
         const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = r.label || '';
         const txt = document.createElement('span'); txt.className = 'txt'; txt.textContent = r.headline || '';
-        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.posted_on || '';
+        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = String(r.posted_on || '').slice(0, 10);
         const a = document.createElement('a'); a.className = 'more en'; a.href = (r.link && r.link !== '#') ? r.link : '#'; a.innerHTML = 'VIEW DETAIL &rarr;';
         tk.appendChild(lbl); tk.appendChild(txt); tk.appendChild(dt); tk.appendChild(a);
         box.appendChild(tk);
