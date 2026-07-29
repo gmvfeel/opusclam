@@ -86,6 +86,18 @@
   @keyframes smp{0%,100%{opacity:.55}50%{opacity:.9}}
 
   .sm-src{font-size:12.5px;color:var(--text-3);margin-top:14px}
+  /* 출신 음악인 — 인물DB에 있는 사람은 눌러서 이동 */
+  .sm-tag-link{border-color:rgba(124,99,176,.5);padding:0}
+  .sm-tag-link a{display:inline-flex;align-items:center;gap:5px;color:var(--violet-2);
+    text-decoration:none;padding:5px 13px;font-weight:600}
+  .sm-tag-link:hover{background:var(--violet-2)}
+  .sm-tag-link:hover a{color:#fff}
+  .sm-arrow{font-size:15px;line-height:1;opacity:.75}
+  /* 위키백과에서 가져온 사진 */
+  .sm-photo1{margin:0;grid-column:1/-1}
+  .sm-photo1 img{width:100%;height:auto;max-height:420px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+  .sm-photo1 figcaption{font-size:12.5px;color:var(--text-3);margin-top:9px}
+  .sm-photo1 figcaption a{color:var(--violet-2);text-decoration:none}
   .sm-body-sub{font-size:14px;color:var(--text-3)}
 
   /* 댓글 영역 폭을 위 내용과 맞춘다.
@@ -213,13 +225,191 @@
   }
 
   /* 쉼표·중점·슬래시로 나열된 값을 태그로 */
-  function tags(txt) {
-    var arr = String(txt).split(/[,·;／\/\n]+/).map(function (x) { return x.trim(); })
+  function splitList(txt) {
+    return String(txt).split(/[,·;／\/\n]+/).map(function (x) { return x.trim(); })
       .filter(function (x) { return x; });
+  }
+  function tags(txt) {
+    var arr = splitList(txt);
     if (arr.length < 2) return '<div class="sm-body">' + nl2br(txt) + '</div>';
     return '<div class="sm-tags">' + arr.map(function (x) {
       return '<span class="sm-tag">' + esc(x) + '</span>';
     }).join('') + '</div>';
+  }
+
+  /* 출신 음악인 — 인물DB에 있는 사람은 상세 페이지로 이어준다.
+     이름을 한 번에 조회해 있는 사람만 링크로 만든다. */
+  function alumniTags(txt, boxId) {
+    var arr = splitList(txt);
+    if (!arr.length) return '';
+    var html = '<div class="sm-tags" id="' + boxId + '">' + arr.map(function (x) {
+      return '<span class="sm-tag" data-nm="' + esc(x) + '">' + esc(x) + '</span>';
+    }).join('') + '</div>';
+
+    /* 그린 뒤에 인물DB를 조회해 링크를 붙인다 */
+    setTimeout(function () {
+      var box = document.getElementById(boxId);
+      if (!box) return;
+      var names = arr.slice(0, 40);
+      var inList = names.map(function (n) { return '"' + n.replace(/"/g, '') + '"'; }).join(',');
+      api('persons?select=id,name_ko&name_ko=in.(' + encodeURIComponent(inList) + ')&limit=60')
+        .then(function (rows) {
+          if (!rows || !rows.length) return;
+          var byName = {};
+          rows.forEach(function (r) { byName[String(r.name_ko).trim()] = r.id; });
+          box.querySelectorAll('.sm-tag').forEach(function (el) {
+            var nm = el.getAttribute('data-nm');
+            var id = byName[nm];
+            if (!id) return;
+            el.classList.add('sm-tag-link');
+            el.innerHTML = '<a href="/db/person-view.html?id=' + encodeURIComponent(id) + '">' +
+              esc(nm) + ' <span class="sm-arrow">&#8250;</span></a>';
+          });
+        })
+        .catch(function () { /* 조회 실패 시 링크 없이 그대로 둔다 */ });
+    }, 0);
+
+    return html;
+  }
+
+  /* ============================================================
+     위키백과 대표 이미지 가져오기
+     · 학교DB의 위키 링크에서 문서 제목을 뽑아 위키백과 API 로 대표 이미지를 조회한다
+     · 한국어 문서에 이미지가 없으면 영어·독일어 문서를 차례로 시도한다
+     · 저장하지 않고 그때그때 불러오므로 관리할 파일이 없다
+     ============================================================ */
+  function wikiTitleOf(url) {
+    try {
+      var u = new URL(url);
+      var m = u.pathname.match(/\/wiki\/(.+)$/);
+      if (!m) return null;
+      return { lang: (u.hostname.split('.')[0] || 'ko'), title: decodeURIComponent(m[1]) };
+    } catch (e) { return null; }
+  }
+
+  function fetchWikiImage(lang, title) {
+    var url = 'https://' + lang + '.wikipedia.org/w/api.php'
+      + '?action=query&prop=pageimages&format=json&origin=*'
+      + '&pithumbsize=1000&titles=' + encodeURIComponent(title);
+    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var pages = j && j.query && j.query.pages;
+      if (!pages) return null;
+      for (var k in pages) {
+        var p = pages[k];
+        if (p && p.thumbnail && p.thumbnail.source) {
+          return { src: p.thumbnail.source, lang: lang, title: p.title || title };
+        }
+      }
+      return null;
+    }).catch(function () { return null; });
+  }
+
+  /* 위키미디어 커먼즈에서 학교 사진 찾기 (2차 수단)
+     검색 결과가 엉뚱한 사진일 수 있으므로, 파일 이름에 학교 이름의 주요 낱말이
+     둘 이상 들어 있는 것만 받아들인다. 확신할 수 없으면 사진을 넣지 않는다. */
+  function keyWords(school) {
+    var src = [school.name_en || '', school.name_ko || ''].join(' ');
+    return src.split(/[\s,·\-—()]+/)
+      .map(function (w) { return w.trim(); })
+      .filter(function (w) {
+        if (w.length < 4) return false;
+        return !/^(und|für|the|of|and|for|de|des|der|die|das|university|universität|hochschule|academy|akademie|music|musik|school|schule|college|conservatory|konservatorium|대학교|대학|음악|학교)$/i.test(w);
+      });
+  }
+
+  function fetchCommonsImage(school) {
+    var q = (school.name_en || school.name_ko || '').trim();
+    if (!q) return Promise.resolve(null);
+    var keys = keyWords(school);
+    if (!keys.length) return Promise.resolve(null);
+
+    var url = 'https://commons.wikimedia.org/w/api.php'
+      + '?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=12'
+      + '&gsrsearch=' + encodeURIComponent(q)
+      + '&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=1000';
+
+    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var pages = j && j.query && j.query.pages;
+      if (!pages) return null;
+      var best = null;
+      for (var k in pages) {
+        var p = pages[k];
+        if (!p || !p.imageinfo || !p.imageinfo[0]) continue;
+        var title = String(p.title || '');
+        if (!/\.(jpg|jpeg|png)$/i.test(title)) continue;      /* 사진만 */
+        /* 파일 이름에 학교 이름의 주요 낱말이 둘 이상 들어 있어야 한다 */
+        var low = title.toLowerCase();
+        var hit = keys.filter(function (w) { return low.indexOf(w.toLowerCase()) >= 0; }).length;
+        /* 고유 낱말이 둘 이상 맞으면 통과.
+           학교 이름에 고유 낱말이 하나뿐인 경우(예: Freiburg)에는
+           파일 이름에 음악학교를 가리키는 낱말이 함께 있어야 통과시킨다. */
+        var musicish = /(musik|music|hochschule|konservatorium|conservator|akademie|academy)/i.test(title);
+        var ok = (keys.length >= 2) ? (hit >= 2) : (hit >= 1 && musicish);
+        if (!ok) continue;
+        var ii = p.imageinfo[0];
+        best = {
+          src: ii.thumburl || ii.url,
+          page: ii.descriptionurl || ('https://commons.wikimedia.org/wiki/' + encodeURIComponent(title)),
+          file: title.replace(/^File:/, ''),
+          license: (ii.extmetadata && ii.extmetadata.LicenseShortName && ii.extmetadata.LicenseShortName.value) || ''
+        };
+        break;
+      }
+      return best;
+    }).catch(function () { return null; });
+  }
+
+  function showPhoto(box, o) {
+    box.innerHTML =
+      '<figure class="sm-photo1">' +
+        '<img src="' + esc(o.src) + '" alt="" loading="lazy">' +
+        '<figcaption>사진 출처 · <a href="' + esc(o.page) + '" target="_blank" rel="noopener">' +
+          esc(o.label) + '</a>' + (o.extra ? ' · ' + esc(o.extra) : '') + '</figcaption>' +
+      '</figure>';
+    box.style.display = '';
+  }
+
+  function loadWikiPhoto(school) {
+    var box = document.getElementById('smPhotos');
+    if (!box || !school) return;
+
+    /* 1차 — 위키백과 문서의 대표 이미지 */
+    var cands = [];
+    var w = has(school.link_wiki) ? wikiTitleOf(school.link_wiki) : null;
+    if (w) cands.push(w);
+    if (has(school.name_en)) {
+      cands.push({ lang: 'en', title: school.name_en });
+      cands.push({ lang: 'de', title: school.name_en });
+    }
+    if (has(school.name_ko) && /[가-힣]/.test(school.name_ko)) {
+      cands.push({ lang: 'ko', title: school.name_ko });
+    }
+
+    (function next(i) {
+      if (i < cands.length) {
+        fetchWikiImage(cands[i].lang, cands[i].title).then(function (res) {
+          if (res) {
+            showPhoto(box, {
+              src: res.src,
+              page: 'https://' + res.lang + '.wikipedia.org/wiki/' + encodeURIComponent(res.title),
+              label: '위키백과',
+              extra: '학교 소개 목적으로 인용'
+            });
+          } else next(i + 1);
+        });
+        return;
+      }
+      /* 2차 — 커먼즈 검색 (이름이 확실히 맞는 파일만) */
+      fetchCommonsImage(school).then(function (res) {
+        if (!res) return;   /* 확신할 수 없으면 사진을 넣지 않는다 */
+        showPhoto(box, {
+          src: res.src,
+          page: res.page,
+          label: '위키미디어 커먼즈',
+          extra: res.license ? res.license : ''
+        });
+      });
+    })(0);
   }
 
   function section(title, inner) {
@@ -289,7 +479,9 @@
         '</div>' +
       '</div>';
 
-    /* ── 사진 ── */
+    /* ── 사진 ──
+       ① 직접 지정한 사진(photo_urls)이 있으면 그것을 쓴다
+       ② 없으면 위키백과 문서의 대표 이미지를 자동으로 불러온다 */
     var photos = '';
     if (has(row.photo_urls)) {
       var ps = String(row.photo_urls).split(/\s*\n\s*/).filter(function (x) { return x.trim(); });
@@ -298,6 +490,9 @@
           return '<img src="' + esc(u.trim()) + '" alt="" loading="lazy">';
         }).join('') + '</div>';
       }
+    } else {
+      photos = '<div class="sm-photos" id="smPhotos" style="display:none"></div>';
+      setTimeout(function () { loadWikiPhoto(school); }, 0);
     }
 
     /* ── 학교 소개 고르기 ──
@@ -345,7 +540,7 @@
       }
     }
     if (has(school.departments)) secs += section('전공 분야', tags(school.departments));
-    if (has(school.alumni))      secs += section('출신 음악인', tags(school.alumni));
+    if (has(school.alumni))      secs += section('출신 음악인', alumniTags(school.alumni, 'smAlumni'));
     if (has(school.features))    secs += section('특징', '<div class="sm-body">' + paras(school.features) + '</div>');
 
     /* ── 입시요강 연결 ── */
