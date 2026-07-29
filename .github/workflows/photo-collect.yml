@@ -36,6 +36,11 @@ jobs:
       - name: 이미지 수집 실행
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          # 두 이름을 모두 넘깁니다 — 스크립트가 어느 쪽을 읽어도 작동합니다.
+          #   scripts/ 의 수집기는 SUPABASE_SERVICE_KEY 를,
+          #   seed/auto-seed.mjs 는 아직 SUPABASE_SERVICE_ROLE_KEY 를 읽습니다.
+          #   seed/ 쪽이 모두 SUPABASE_SERVICE_KEY 로 바뀌면 아래 ROLE 줄을 지우면 됩니다.
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           # 수동 실행이면 입력값을, 자동 실행이면 기본값을 씁니다
