@@ -32,26 +32,30 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  /* 위키미디어 주소를 원하는 폭의 축소 이미지로 바꿉니다.
-     원본은 수 MB 인 경우가 많아 화면에 그대로 쓰면 느려집니다. */
-  function thumb(u, w) {
-    if (!u) return u;
-    u = String(u).replace(/^http:\/\//, 'https://');
+  /* 화면에 쓸 이미지 주소를 고릅니다.
+
+     수집할 때 커먼즈가 알려준 축소 주소(thumb, 대개 1280px)를 저장해 두었습니다.
+     그 주소는 확실히 열립니다 — 목록 페이지에서 이미 그대로 쓰고 있습니다.
+     그래서 여기서도 저장된 주소를 그대로 씁니다. 폭을 바꾸려고 주소를 손대면
+     드물게 열리지 않는 경우가 생깁니다.
+
+     저장된 축소 주소가 없을 때만 원본에서 축소 주소를 만듭니다. */
+  function pick(row) {
+    var u = String((row && (row.thumb || row.src)) || '').replace(/^http:\/\//, 'https://');
+    if (!u) return '';
+    if (u.indexOf('/thumb/') >= 0) return u;           /* 이미 축소 주소 — 그대로 */
     if (u.indexOf('Special:FilePath') >= 0) {
-      return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'width=' + (w || 400);
+      return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'width=800';
     }
     if (u.indexOf('upload.wikimedia.org') < 0) return u;
-    if (u.indexOf('/thumb/') >= 0) {
-      /* 이미 축소 주소면 폭만 바꿉니다 */
-      return u.replace(/\/(\d+)px-/, '/' + (w || 400) + 'px-');
-    }
+    /* 원본 주소에서 축소 주소를 만든다 */
     var i = u.indexOf('/wikipedia/');
     if (i < 0) return u;
     var parts = u.slice(i + 11).split('/');
     if (parts.length < 4) return u;
     var proj = parts[0], a = parts[1], b = parts[2], fn = parts.slice(3).join('/');
     if (a.length !== 1 || b.length !== 2) return u;
-    var t = u.slice(0, i + 11) + proj + '/thumb/' + a + '/' + b + '/' + fn + '/' + (w || 400) + 'px-' + fn;
+    var t = u.slice(0, i + 11) + proj + '/thumb/' + a + '/' + b + '/' + fn + '/800px-' + fn;
     if (fn.toLowerCase().slice(-4) === '.svg') t += '.png';
     return t;
   }
@@ -74,10 +78,17 @@
     box.innerHTML = '';
     box.style.overflow = 'hidden';
     var im = document.createElement('img');
-    im.src = thumb(row.thumb || row.src, 400);
+    var big = row.src || row.thumb || '';
+    im.src = pick(row);
     im.alt = name || '';
     im.loading = 'lazy';
     im.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    /* 축소 주소가 열리지 않으면 원본으로 한 번 되돌립니다 */
+    im.onerror = function () {
+      if (this.dataset.fallback) return;
+      this.dataset.fallback = '1';
+      if (big && big !== this.src) this.src = big;
+    };
     box.appendChild(im);
   }
 
@@ -91,9 +102,14 @@
     track.innerHTML = rows.map(function (r) {
       var href = r.page_url || '#';
       var t = esc(r.caption || r.file_name || '');
+      var small = pick(r);
+      var big = r.src || r.thumb || '';
+      /* 축소 주소가 열리지 않으면 원본으로 한 번 되돌립니다 */
+      var onerr = 'if(!this.dataset.fb){this.dataset.fb=1;this.src=this.dataset.big;}';
       return '<a class="pv-tile" href="' + esc(href) + '" target="_blank" rel="noopener"'
         + ' title="' + t + '" style="padding:0;overflow:hidden">'
-        + '<img src="' + esc(thumb(r.thumb || r.src, 400)) + '" alt="" loading="lazy"'
+        + '<img src="' + esc(small) + '" data-big="' + esc(big) + '"'
+        + ' onerror="' + onerr + '" alt="" loading="lazy"'
         + ' style="width:100%;height:100%;object-fit:cover"></a>';
     }).join('');
 
