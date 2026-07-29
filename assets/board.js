@@ -398,7 +398,12 @@ window.OCBoard = (function () {
       var a = listEl.querySelector('a[href*="id=' + focusId + '&"], a[href$="id=' + focusId + '"]');
       if (!a) return;
       focusId = null;
-      var box = (a.closest && a.closest('.board-item, .board-row, .board-doc, .board-article, li')) || a;
+      /* 목록 꼴마다 감싸는 상자가 다릅니다.
+           카드형 .board-item · 행형 .board-row · 문서형 .doc-row
+           기사형 .board-article · 피처드 .board-feat
+         상자를 못 찾으면 링크에만 표시가 붙어, 입시요강처럼 문서형인 곳에서는
+         로고 그림 한 칸만 밝아져 어색해집니다. (2026-07-29 확인) */
+      var box = (a.closest && a.closest('.doc-row, .board-item, .board-row, .board-article, .board-feat, li')) || a;
       box.classList.add('board-focus');
       try { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
       catch (e) { try { box.scrollIntoView(); } catch (e2) {} }
