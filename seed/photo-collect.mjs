@@ -51,9 +51,8 @@ const TARGETS = {
   school: { table: 'schools', type: 'school', nameCol: 'name_ko' },
   venue:  { table: 'venues',  type: 'venue',  nameCol: 'name_ko' },
   org:    { table: 'orgs',    type: 'org',    nameCol: 'name_ko' },
-  /* 현대음악DB — 관계 표에서 쓰는 이름은 modern, 실제 표는 modern_composers 입니다.
-     인물DB와 겹치는 작곡가가 있을 수 있어 중복 점검 후에 돌리는 것이 좋습니다. */
-  modern: { table: 'modern_composers', type: 'modern', nameCol: 'name_ko' },
+  /* 현대음악DB는 인물DB로 통합되었습니다.
+     현대음악 작곡가의 사진은 person 수집에 자연히 포함되므로 별도 대상이 없습니다. */
 };
 
 /* ── 실행 인자 ── */
