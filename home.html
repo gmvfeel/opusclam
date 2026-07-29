@@ -1632,7 +1632,14 @@ if('serviceWorker' in navigator){
         const bio = document.createElement('p'); bio.textContent = r.bio || '';
         info.appendChild(role); info.appendChild(h); info.appendChild(bio);
         wrap.appendChild(ava); wrap.appendChild(info);
-        setCardLink(wrap, r.link);
+        /* 카드 전체를 누를 수 있게 한다.
+           .artist 는 flex 상자여서 덮는 링크가 제자리를 못 잡습니다.
+           position 을 직접 지정한 뒤 링크를 얹습니다. */
+        if(r.link && r.link !== '#'){
+          wrap.style.position = 'relative';
+          wrap.style.cursor = 'pointer';
+          setCardLink(wrap, r.link);
+        }
         box.appendChild(wrap);
       });
     }catch(e){ console.error('artists 로드 실패:', e); }
