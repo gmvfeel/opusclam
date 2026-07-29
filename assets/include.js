@@ -32,10 +32,51 @@
     } catch (e) {}
   }
 
+  /* ── OC커뮤니티 하위 메뉴 ──
+     예전에는 메뉴 열한 줄이 화면마다 복사되어 있었습니다.
+     그래서 게시판을 하나 열면 스무 개가 넘는 파일을 모두 고쳐야 했습니다.
+     이제 partials/subnav-community.html 한 곳만 고치면 됩니다.
+
+     쓰는 법 — 화면에서 메뉴가 놓일 자리에 이 한 줄만 두시면 됩니다.
+       <div id="oc-subnav"></div>
+
+     지금 보고 있는 화면 표시는 주소를 보고 자동으로 붙습니다.
+     헤더와 달리 문서 중간에 있으므로 문서가 다 읽힌 뒤에 넣습니다. */
+  function markSubnav() {
+    var nav = document.querySelector('.pdb-subnav');
+    if (!nav) return;
+    /* 주소에서 화면 이름을 뽑는다 — 목록·상세·글쓰기를 같은 메뉴로 본다 */
+    function nameOf(path) {
+      var f = String(path || '').split('?')[0].split('/').pop() || 'index.html';
+      f = f.replace(/-view\.html$|-write\.html$|\.html$/, '');
+      if (!f) f = 'index';
+      /* 입시요강과 입시커뮤니티는 「입시」 하나로 묶는다 */
+      if (f === 'admission-community') f = 'admission';
+      return f;
+    }
+    var cur = nameOf(location.pathname);
+    nav.querySelectorAll('a[href]').forEach(function (a) {
+      a.classList.toggle('active', nameOf(a.getAttribute('href')) === cur);
+    });
+  }
+
+  function injectSubnav() {
+    inject('oc-subnav', '/partials/subnav-community.html');
+    markSubnav();
+  }
+
   // 헤더만 담당(동기 주입). 푸터는 app.js가 그린다.
   // 페이지는 oc-header / oc-header-auth 중 하나의 자리만 가진다.
   inject('oc-header', '/partials/header.html');            // db·home 등 메인 헤더
   inject('oc-header-auth', '/partials/header-auth.html');  // 회원 페이지 단순 헤더
   markActiveMenu();
+
+  /* 하위 메뉴는 문서 중간에 있으므로 문서가 다 읽힌 뒤에 넣는다.
+     이미 다 읽혔으면 곧바로 넣는다. */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectSubnav);
+  } else {
+    injectSubnav();
+  }
 
 })();
