@@ -131,8 +131,6 @@ html[data-theme="dark"] .board-row:hover{background:#000}
 .board-row-title,
 .doc-home,
 .doc-home a{overflow-wrap:anywhere;word-break:break-word}
-.board,
-.board-wrap{max-width:100%;overflow-x:clip}
 .bv-rel{display:none}
 .bv-rel.is-on{display:flex;gap:14px;align-items:flex-start;margin-top:34px;padding-top:22px;border-top:1px solid var(--line);font-size:15px}
 .bv-foot{display:flex;align-items:center;gap:8px;margin-top:40px;padding-top:22px;border-top:1px solid var(--line)}
