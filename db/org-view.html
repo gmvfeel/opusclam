@@ -1289,6 +1289,7 @@ if('serviceWorker' in navigator){
   upd();
 })();
 </script>
+<script src="/assets/photos.js"></script>
 <script>
 /* 음악단체 뷰: ?id 로드 */
 (function(){
@@ -1316,7 +1317,10 @@ if('serviceWorker' in navigator){
        var _u=[((o.link_home&&o.link_home!=='#')?o.link_home:'https://www.google.com/search?q='+_k),((o.link_wiki&&o.link_wiki!=='#')?o.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k),((o.link_video&&o.link_video!=='#')?o.link_video:'https://www.youtube.com/results?search_query='+_k),'https://music.youtube.com/search?q='+_k];
        for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
      }})();
-document.title=nm+' · 음악단체DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+document.title=nm+' · 음악단체DB · OPUSCLAM.COM';
+     /* 모아둔 사진을 대표 사진과 갤러리에 넣습니다.
+        기존 이미지가 있으면 대표 사진은 바꾸지 않습니다. */
+     if(window.OCPhotos) OCPhotos.mount({ type:'org', id:x.id, existing:x.logo_url, name:nm });var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
    }).catch(function(e){console.error('org view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
 })();
 </script>

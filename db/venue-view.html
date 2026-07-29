@@ -1291,6 +1291,7 @@ if('serviceWorker' in navigator){
   upd();
 })();
 </script>
+<script src="/assets/photos.js"></script>
 <script>
 /* 공연장DB 뷰: ?id 로드 */
 (function(){
@@ -1319,7 +1320,10 @@ if('serviceWorker' in navigator){
        var _u=[((x.link_home&&x.link_home!=='#')?x.link_home:'https://www.google.com/search?q='+_k),((x.link_wiki&&x.link_wiki!=='#')?x.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k),((x.link_video&&x.link_video!=='#')?x.link_video:'https://www.youtube.com/results?search_query='+_k),'https://www.google.com/maps/search/?api=1&query='+_loc];
        for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
      }})();
-document.title=nm+' · 공연장DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+document.title=nm+' · 공연장DB · OPUSCLAM.COM';
+     /* 모아둔 사진을 대표 사진과 갤러리에 넣습니다.
+        기존 이미지가 있으면 대표 사진은 바꾸지 않습니다. */
+     if(window.OCPhotos) OCPhotos.mount({ type:'venue', id:x.id, existing:x.logo_url, name:nm });var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
    }).catch(function(e){console.error('공연장DB view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
 })();
 </script>

@@ -1302,6 +1302,7 @@ if('serviceWorker' in navigator){
   upd();
 })();
 </script>
+<script src="/assets/photos.js"></script>
 <script>
 /* 음악학교DB 뷰: ?id 로드 */
 (function(){
@@ -1398,7 +1399,10 @@ if('serviceWorker' in navigator){
        var _u=[((x.link_home&&x.link_home!=='#')?x.link_home:'https://www.google.com/search?q='+_k),((x.link_wiki&&x.link_wiki!=='#')?x.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k),((x.link_video&&x.link_video!=='#')?x.link_video:'https://www.youtube.com/results?search_query='+_k),'https://www.google.com/maps/search/?api=1&query='+_loc];
        for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
      }})();
-document.title=nm+' · 음악학교DB · OPUSCLAM.COM';var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+document.title=nm+' · 음악학교DB · OPUSCLAM.COM';
+     /* 모아둔 사진을 대표 사진과 갤러리에 넣습니다.
+        기존 이미지가 있으면 대표 사진은 바꾸지 않습니다. */
+     if(window.OCPhotos) OCPhotos.mount({ type:'school', id:x.id, existing:x.logo_url, name:nm });var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
      /* 연결된 입시요강 찾아 버튼 표시 */
      (function(){
        fetch(URL+'/rest/v1/admission?select=id,title,category&school_id=eq.'+encodeURIComponent(id)+'&order=created_at.desc&limit=1',{headers:H})
