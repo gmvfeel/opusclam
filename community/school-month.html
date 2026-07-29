@@ -85,6 +85,9 @@
   .sm-skel{height:150px;border-radius:12px;background:var(--paper-2);animation:smp 1.1s ease-in-out infinite}
   @keyframes smp{0%,100%{opacity:.55}50%{opacity:.9}}
 
+  .sm-src{font-size:12.5px;color:var(--text-3);margin-top:14px}
+  .sm-body-sub{font-size:14px;color:var(--text-3)}
+
   /* 댓글 영역 폭을 위 내용과 맞춘다.
      .bv-comments 는 다른 게시판에서 820px 로 좁게 쓰이므로,
      이 페이지 안에서만 제한을 풀어준다 (후손 선택자라 다른 페이지에는 영향 없음) */
@@ -297,9 +300,50 @@
       }
     }
 
+    /* ── 학교 소개 고르기 ──
+       국내 사이트이므로 국문 소개를 먼저 보여준다.
+       ① 직접 써둔 국문 소개 (monthly_school.intro_ko)
+       ② 입시요강 카드의 「학교 개요」 부분을 뽑아낸 것
+       ③ 음악학교DB 소개글 (자동수집이라 영문일 수 있음) */
+    function introFromAdm() {
+      if (!adm || !adm.body) return '';
+      var html = String(adm.body);
+      /* 「■ 학교 개요」 부터 다음 「■ …」 앞까지를 잘라낸다 */
+      var m = html.match(/■\s*학교 개요([\s\S]*?)(?=<p>\s*<strong>\s*■|$)/);
+      if (!m) return '';
+      var part = m[1];
+      /* 태그를 벗기고 줄바꿈으로 정리 */
+      var txt = part
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/^[\s·\n]+/, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+      return txt.length >= 40 ? txt : '';
+    }
+
+    var introTxt = '', introTag = '';
+    if (has(row.intro_ko)) {
+      introTxt = row.intro_ko;
+    } else {
+      var fromAdm = introFromAdm();
+      if (fromAdm) { introTxt = fromAdm; introTag = '입시요강'; }
+      else if (has(school.description)) { introTxt = school.description; introTag = '음악학교DB'; }
+    }
+
     /* ── 정보 섹션 (내용이 있는 것만) ── */
     var secs = '';
-    if (has(school.description)) secs += section('학교 소개', '<div class="sm-body">' + paras(school.description) + '</div>');
+    if (introTxt) {
+      secs += section('학교 소개', '<div class="sm-body">' + paras(introTxt) +
+        (introTag ? '<p class="sm-src">' + esc(introTag) + '에 정리된 내용입니다.</p>' : '') + '</div>');
+      /* 국문 소개를 보여준 뒤, 학교DB 소개가 따로 있고 내용이 다르면 함께 제공한다 */
+      if (has(row.intro_ko) && has(school.description) && school.description.length >= 120) {
+        secs += section('학교DB 소개', '<div class="sm-body sm-body-sub">' + paras(school.description) + '</div>');
+      }
+    }
     if (has(school.departments)) secs += section('전공 분야', tags(school.departments));
     if (has(school.alumni))      secs += section('출신 음악인', tags(school.alumni));
     if (has(school.features))    secs += section('특징', '<div class="sm-body">' + paras(school.features) + '</div>');
@@ -480,7 +524,7 @@
     var mEl = document.getElementById('smComments');  if (mEl) mEl.innerHTML = '';
 
     /* 선정 기록 전체를 최신순으로 (드롭다운·지난 호에 사용) */
-    api('monthly_school?select=id,ym,school_id,admission_id,photo_urls&order=ym.desc&limit=60')
+    api('monthly_school?select=id,ym,school_id,admission_id,photo_urls,intro_ko&order=ym.desc&limit=60')
       .then(function (list) {
         if (!list.length) { render(null, null, null, []); return; }
 
@@ -496,7 +540,7 @@
           : Promise.resolve([]);
 
         var pAdm = row.admission_id
-          ? api('admission?select=id,title,logo_url&id=eq.' + encodeURIComponent(row.admission_id))
+          ? api('admission?select=id,title,logo_url,body&id=eq.' + encodeURIComponent(row.admission_id))
           : Promise.resolve([]);
 
         Promise.all([pSchools, pAdm]).then(function (res) {
