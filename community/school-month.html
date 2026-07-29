@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이달의 음악학교 · OPUSCLAM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<meta name="description" content="오퍼스클램이 매달 소개하는 음악학교 — 학교 정보와 입학 안내를 한곳에서">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<style>
+  /* ── 이달의 음악학교 (이 페이지 전용) ── */
+  .sm-wrap{max-width:1360px;margin:0 auto;padding:0 24px 80px}
+
+  /* 상단 학교 카드 */
+  .sm-head{display:flex;gap:26px;align-items:flex-start;border:1px solid var(--line);
+    border-radius:14px;padding:26px 28px;background:var(--paper);margin-bottom:26px}
+  .sm-logo{flex:0 0 auto;width:104px;height:104px;border-radius:12px;border:1px solid var(--line);
+    background:var(--paper-2);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .sm-logo img{max-width:100%;max-height:100%;object-fit:contain;padding:10px}
+  .sm-logo .sm-initial{font-family:var(--display);font-size:26px;font-weight:800;color:var(--violet-2);letter-spacing:-.02em}
+  .sm-hinfo{flex:1;min-width:0}
+  .sm-name{font-family:var(--display);font-size:27px;font-weight:800;letter-spacing:-.02em;
+    color:var(--text);margin:0 0 4px;line-height:1.25}
+  .sm-name-en{font-size:14.5px;color:var(--text-2);margin:0 0 14px;overflow-wrap:anywhere}
+  .sm-meta{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:14px;line-height:1.6}
+  .sm-meta dt{color:var(--text-3);white-space:nowrap}
+  .sm-meta dd{margin:0;color:var(--text-2);overflow-wrap:anywhere}
+  .sm-meta a{color:var(--violet-2);text-decoration:none}
+  .sm-meta a:hover{text-decoration:underline}
+  .sm-ymbox{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .sm-ymsel{font-size:14px;padding:9px 14px;border:1px solid var(--line-2);border-radius:8px;
+    background:var(--paper);color:var(--text);cursor:pointer}
+  .sm-badge{font-family:var(--display);font-size:12px;font-weight:700;color:#fff;background:var(--violet-2);
+    border-radius:999px;padding:5px 13px;white-space:nowrap}
+
+  /* 사진 */
+  .sm-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:26px}
+  .sm-photos img{width:100%;height:150px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+
+  /* 정보 섹션 */
+  .sm-sec{border-top:1px solid var(--line);padding:24px 0}
+  .sm-sec:first-of-type{border-top:0}
+  .sm-sec h2{font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-.01em;
+    color:var(--text);margin:0 0 12px;display:flex;align-items:center;gap:9px}
+  .sm-sec h2::before{content:"";width:3px;height:15px;background:var(--violet-2);border-radius:2px}
+  .sm-body{font-size:15px;line-height:1.85;color:var(--text-2);overflow-wrap:anywhere}
+  .sm-body p{margin:0 0 12px}
+  .sm-tags{display:flex;flex-wrap:wrap;gap:8px}
+  .sm-tag{font-size:13px;color:var(--text-2);border:1px solid var(--line-2);border-radius:999px;padding:5px 13px}
+
+  /* 요강 연결 */
+  .sm-adm{display:flex;gap:14px;align-items:center;border:1px solid rgba(124,99,176,.4);
+    border-radius:12px;padding:18px 20px;background:var(--paper-2);margin-top:6px}
+  .sm-adm-t{flex:1;min-width:0}
+  .sm-adm-t b{display:block;font-size:15px;color:var(--text);margin-bottom:3px}
+  .sm-adm-t span{font-size:13.5px;color:var(--text-3)}
+  .sm-adm a{flex:0 0 auto;font-family:var(--display);font-size:13.5px;font-weight:700;color:#fff;
+    background:var(--violet-2);border-radius:8px;padding:11px 20px;text-decoration:none;white-space:nowrap}
+
+  /* 지난 호 */
+  .sm-past{border-top:1px solid var(--line);margin-top:34px;padding-top:24px}
+  .sm-past h2{font-family:var(--display);font-size:15px;font-weight:800;color:var(--text);margin:0 0 14px}
+  .sm-past ul{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+  .sm-past li{border-bottom:1px solid var(--line)}
+  .sm-past a{display:flex;gap:14px;align-items:center;padding:13px 4px;text-decoration:none;font-size:14.5px}
+  .sm-past a:hover{background:var(--paper-2)}
+  .sm-past .ym{flex:0 0 auto;font-family:var(--display);font-size:13px;font-weight:700;color:var(--violet-2);min-width:88px}
+  .sm-past .nm{color:var(--text-2);overflow-wrap:anywhere}
+
+  /* 안내·상태 */
+  .sm-note{font-size:13px;color:var(--text-3);line-height:1.75;margin-top:26px;
+    padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:var(--paper-2)}
+  .sm-empty{padding:70px 20px;text-align:center;color:var(--text-3);font-size:15px;line-height:1.8}
+  .sm-skel{height:150px;border-radius:12px;background:var(--paper-2);animation:smp 1.1s ease-in-out infinite}
+  @keyframes smp{0%,100%{opacity:.55}50%{opacity:.9}}
+
+  @media(max-width:720px){
+    .sm-head{flex-wrap:wrap;gap:18px;padding:20px}
+    .sm-logo{width:76px;height:76px}
+    .sm-name{font-size:22px}
+    .sm-ymbox{order:-1;width:100%;flex-direction:row;justify-content:space-between;align-items:center}
+    .sm-photos{grid-template-columns:repeat(2,1fr)}
+    .sm-photos img{height:118px}
+    .sm-adm{flex-wrap:wrap}
+    .sm-past a{flex-wrap:wrap;gap:4px}
+    .sm-past .ym{min-width:0}
+  }
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-orbit on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/community/index.html">OC커뮤니티</a><span>/</span><span class="on">이달의 음악학교</span>
+    </nav>
+
+    <nav class="pdb-subnav" aria-label="OC커뮤니티 하위 메뉴">
+      <a href="/community/hottopic.html">핫토픽</a>
+      <a href="/community/gallery.html">공연사진 / 영상</a>
+      <a href="/community/admission.html">입시</a>
+      <a href="/community/qna.html">지식나눔</a>
+      <a href="#">SELF PR</a>
+      <a href="/community/school-month.html" class="active">이달의 음악학교</a>
+      <a href="/community/news.html">뉴스</a>
+      <a href="/community/modern.html">현대음악</a>
+      <a href="/community/utility.html">유틸리티 / 악보 / 자료</a>
+      <a href="/community/prenatal.html">태교음악</a>
+    </nav>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">MUSIC SCHOOL THIS MONTH</div>
+          <h1 class="pdb-title">이달의 음악학교</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">매달 한 곳의 음악학교를 소개합니다. 학교 정보와 입학 안내를 한곳에서 보실 수 있습니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="sm-wrap">
+  <div id="smMain"><div class="sm-skel"></div></div>
+  <div id="smPast"></div>
+
+  <div class="sm-note">
+    이 코너는 <strong>음악학교DB</strong>와 <strong>입시요강</strong>에 정리된 내용을 바탕으로 매달 자동으로 구성됩니다.
+    소개·전공·출신 음악인·입학 정보가 충실하게 채워진 학교가 먼저 소개됩니다.<br>
+    학교 정보는 각 학교 공식 자료를 기준으로 정리한 것이며, <strong>모집 요건과 학비 같은 정보는 해마다 달라지므로
+    지원 전에 반드시 해당 학교 공식 페이지에서 확인하시기 바랍니다.</strong>
+    빠진 내용이나 잘못된 정보를 발견하시면 알려주세요.
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function () {
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var H = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+
+  var mainEl = document.getElementById('smMain');
+  var pastEl = document.getElementById('smPast');
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function nl2br(v) { return esc(v).replace(/\r?\n/g, '<br>'); }
+  function ymLabel(ym) {
+    var p = String(ym || '').split('-');
+    return p.length === 2 ? p[0] + '년 ' + parseInt(p[1], 10) + '월' : ym;
+  }
+  function has(v) { return v != null && String(v).trim() !== ''; }
+
+  function api(path) {
+    return fetch(SB_URL + '/rest/v1/' + path, { headers: H }).then(function (r) {
+      if (!r.ok) throw new Error('load failed');
+      return r.json();
+    });
+  }
+
+  /* 소개글이 한국어 문단과 영어 문단으로 이어져 있는 경우가 있어
+     빈 줄 기준으로 문단을 나눠 보여준다 */
+  function paras(txt) {
+    return String(txt).split(/\n\s*\n/).map(function (p) {
+      return '<p>' + nl2br(p.trim()) + '</p>';
+    }).join('');
+  }
+
+  /* 쉼표·중점·슬래시로 나열된 값을 태그로 */
+  function tags(txt) {
+    var arr = String(txt).split(/[,·;／\/\n]+/).map(function (x) { return x.trim(); })
+      .filter(function (x) { return x; });
+    if (arr.length < 2) return '<div class="sm-body">' + nl2br(txt) + '</div>';
+    return '<div class="sm-tags">' + arr.map(function (x) {
+      return '<span class="sm-tag">' + esc(x) + '</span>';
+    }).join('') + '</div>';
+  }
+
+  function section(title, inner) {
+    return '<section class="sm-sec"><h2>' + esc(title) + '</h2>' + inner + '</section>';
+  }
+
+  function render(row, school, adm, list) {
+    if (!school) {
+      mainEl.innerHTML = '<div class="sm-empty">이달의 음악학교가 아직 준비되지 않았습니다.<br>곧 소개해 드리겠습니다.</div>';
+      return;
+    }
+
+    /* ── 상단 카드 ── */
+    var logo = has(school.logo_url)
+      ? '<img src="' + esc(school.logo_url) + '" alt="" loading="lazy">'
+      : '<span class="sm-initial">' + esc(String(school.name_ko || school.name_en || '?').trim().charAt(0)) + '</span>';
+
+    var meta = '';
+    if (has(school.location))   meta += '<dt>위치</dt><dd>' + esc(school.location) + '</dd>';
+    if (has(school.estab_type)) meta += '<dt>구분</dt><dd>' + esc(school.estab_type) + '</dd>';
+    if (has(school.founded))    meta += '<dt>설립</dt><dd>' + esc(school.founded) + '</dd>';
+    if (has(school.link_home))  meta += '<dt>홈페이지</dt><dd><a href="' + esc(school.link_home) + '" target="_blank" rel="noopener">' + esc(school.link_home) + '</a></dd>';
+
+    var opts = list.map(function (m) {
+      return '<option value="' + esc(m.ym) + '"' + (m.ym === row.ym ? ' selected' : '') + '>' + esc(ymLabel(m.ym)) + '</option>';
+    }).join('');
+
+    var nameEn = has(school.name_en) && school.name_en !== school.name_ko
+      ? '<p class="sm-name-en">' + esc(school.name_en) + '</p>' : '';
+
+    var head =
+      '<div class="sm-head">' +
+        '<div class="sm-logo">' + logo + '</div>' +
+        '<div class="sm-hinfo">' +
+          '<h2 class="sm-name">' + esc(school.name_ko || school.name_en) + '</h2>' +
+          nameEn +
+          (meta ? '<dl class="sm-meta">' + meta + '</dl>' : '') +
+        '</div>' +
+        '<div class="sm-ymbox">' +
+          '<span class="sm-badge">' + esc(ymLabel(row.ym)) + '</span>' +
+          (list.length > 1 ? '<select class="sm-ymsel" id="smYm" aria-label="연월 선택">' + opts + '</select>' : '') +
+        '</div>' +
+      '</div>';
+
+    /* ── 사진 ── */
+    var photos = '';
+    if (has(row.photo_urls)) {
+      var ps = String(row.photo_urls).split(/\s*\n\s*/).filter(function (x) { return x.trim(); });
+      if (ps.length) {
+        photos = '<div class="sm-photos">' + ps.map(function (u) {
+          return '<img src="' + esc(u.trim()) + '" alt="" loading="lazy">';
+        }).join('') + '</div>';
+      }
+    }
+
+    /* ── 정보 섹션 (내용이 있는 것만) ── */
+    var secs = '';
+    if (has(school.description)) secs += section('학교 소개', '<div class="sm-body">' + paras(school.description) + '</div>');
+    if (has(school.departments)) secs += section('전공 분야', tags(school.departments));
+    if (has(school.alumni))      secs += section('출신 음악인', tags(school.alumni));
+    if (has(school.features))    secs += section('특징', '<div class="sm-body">' + paras(school.features) + '</div>');
+
+    /* ── 입시요강 연결 ── */
+    if (adm) {
+      secs += section('입학 안내',
+        '<div class="sm-adm">' +
+          '<div class="sm-adm-t"><b>' + esc(adm.title) + '</b>' +
+            '<span>입시요강에 정리된 지원 절차와 확인 사항을 보실 수 있습니다</span></div>' +
+          '<a href="/community/admission-view.html?id=' + encodeURIComponent(adm.id) + '">요강 보기</a>' +
+        '</div>');
+    }
+
+    /* ── 관련 링크 ── */
+    var links = '';
+    if (has(school.link_wiki))  links += '<span class="sm-tag"><a href="' + esc(school.link_wiki) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">위키 문서 &#8599;</a></span>';
+    if (has(school.link_video)) links += '<span class="sm-tag"><a href="' + esc(school.link_video) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">소개 영상 &#8599;</a></span>';
+    if (links) secs += section('관련 자료', '<div class="sm-tags">' + links + '</div>');
+
+    /* 학교DB 상세로 가는 링크 */
+    secs += section('더 보기',
+      '<div class="sm-tags">' +
+        '<span class="sm-tag"><a href="/db/school.html" style="color:inherit;text-decoration:none">음악학교DB 전체 보기</a></span>' +
+        '<span class="sm-tag"><a href="/community/admission.html" style="color:inherit;text-decoration:none">입시요강 게시판</a></span>' +
+      '</div>');
+
+    mainEl.innerHTML = head + photos + secs;
+
+    var sel = document.getElementById('smYm');
+    if (sel) sel.addEventListener('change', function () { load(sel.value); });
+  }
+
+  function renderPast(list, curYm) {
+    var rest = list.filter(function (m) { return m.ym !== curYm; });
+    if (!rest.length) { pastEl.innerHTML = ''; return; }
+    pastEl.innerHTML =
+      '<div class="sm-past"><h2>지난 호</h2><ul>' +
+      rest.map(function (m) {
+        var nm = (m._name || '').trim() || '음악학교';
+        return '<li><a href="?ym=' + encodeURIComponent(m.ym) + '">' +
+          '<span class="ym">' + esc(ymLabel(m.ym)) + '</span>' +
+          '<span class="nm">' + esc(nm) + '</span></a></li>';
+      }).join('') + '</ul></div>';
+  }
+
+  function load(ym) {
+    mainEl.innerHTML = '<div class="sm-skel"></div>';
+    pastEl.innerHTML = '';
+
+    /* 선정 기록 전체를 최신순으로 (드롭다운·지난 호에 사용) */
+    api('monthly_school?select=ym,school_id,admission_id,photo_urls&order=ym.desc&limit=60')
+      .then(function (list) {
+        if (!list.length) { render(null, null, null, []); return; }
+
+        var row = ym ? list.filter(function (m) { return m.ym === ym; })[0] : list[0];
+        if (!row) row = list[0];
+
+        /* 목록에 학교 이름을 붙이기 위해 필요한 학교들을 한 번에 조회 */
+        var ids = list.map(function (m) { return m.school_id; }).filter(function (v) { return v; });
+        var uniq = ids.filter(function (v, i) { return ids.indexOf(v) === i; });
+
+        var pSchools = uniq.length
+          ? api('schools?select=id,name_ko,name_en,location,estab_type,founded,departments,alumni,features,logo_url,description,link_home,link_wiki,link_video&id=in.(' + uniq.join(',') + ')')
+          : Promise.resolve([]);
+
+        var pAdm = row.admission_id
+          ? api('admission?select=id,title&id=eq.' + encodeURIComponent(row.admission_id))
+          : Promise.resolve([]);
+
+        Promise.all([pSchools, pAdm]).then(function (res) {
+          var schools = res[0] || [], adms = res[1] || [];
+          var byId = {};
+          schools.forEach(function (s) { byId[s.id] = s; });
+          list.forEach(function (m) {
+            var s = byId[m.school_id];
+            m._name = s ? (s.name_ko || s.name_en || '') : '';
+          });
+          render(row, byId[row.school_id] || null, adms[0] || null, list);
+          renderPast(list, row.ym);
+        });
+      })
+      .catch(function () {
+        mainEl.innerHTML = '<div class="sm-empty">정보를 불러오지 못했습니다.<br>잠시 후 다시 시도해 주세요.</div>';
+      });
+  }
+
+  var q = new URLSearchParams(location.search);
+  load(q.get('ym') || '');
+})();
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
