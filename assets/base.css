@@ -61,6 +61,11 @@ html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115d
 .wxn-sub .wxn-run{color:var(--text-2)}
 .pdb{position:relative}
 .pdb-bg{position:absolute;top:0;left:0;right:0;height:470px;z-index:0;overflow:hidden;pointer-events:none;opacity:.55;-webkit-mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%)}
+/* 다크모드에서는 뒤쪽 원 패턴이 너무 도드라져 보입니다.
+   어두운 배경에서는 밝은 선이 더 강하게 보이기 때문입니다.
+   많이 낮춰서 은은하게만 남깁니다. */
+html[data-theme="dark"] .pdb-bg{opacity:.16}
+
 .pdb-bg .wave{position:absolute;inset:0;width:100%;height:100%;transform:none;-webkit-mask-image:none;mask-image:none}
 .pdb-bg .scene{position:absolute;inset:0;opacity:1}
 .pdb-bg .scene svg{width:100%;height:100%;display:block}

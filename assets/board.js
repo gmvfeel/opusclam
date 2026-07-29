@@ -217,7 +217,7 @@ window.OCBoard = (function () {
     function featuredHtml(rec, related) {
       var rel = '';
       if (related && related.length) {
-        rel = '<div class="board-feat-div"></div><div class="board-feat-rel"><span class="board-rel-label">관련기사</span><ul class="board-rel-list">'
+        rel = '<div class="board-feat-div"></div><div class="board-feat-rel"><span class="board-rel-label">관련포스트</span><ul class="board-rel-list">'
           + related.map(function (r) { return '<li><a href="' + cfg.viewPage + '?id=' + encodeURIComponent(r.id) + '">- ' + esc(r.title || '') + '</a></li>'; }).join('')
           + '</ul></div>';
       }
@@ -496,36 +496,11 @@ window.OCBoard = (function () {
         return;
       }
 
-      /* 주소로 조건을 받아 첫 화면에 바로 적용한다.
-          ?q=검색어      통합검색에서 넘어올 때
-          ?region=해외   메인의 「해외」 버튼처럼 지역을 정해 들어올 때
-          ?cat=대학      분류를 정해 들어올 때
-         화면의 고르는 것들도 같은 값으로 맞춰 목록과 어긋나지 않게 합니다. */
-      var _sp2 = new URLSearchParams(location.search);
-      var _q   = _sp2.get('q') || '';
-      var _rg  = _sp2.get('region') || '';
-      var _ct  = _sp2.get('cat') || '';
-
-      if (!_q && !_rg && !_ct) { loadPage(1); return; }
-
-      if (_q) {
-        var _inp = document.querySelector('.board-search input');
-        if (_inp) _inp.value = _q;
-        q = _q.trim().replace(/[(),*]/g, ' ').replace(/\s+/g, ' ').trim();
-      }
-      if (_rg) {
-        region = _rg;
-        if (typeof regionSel !== 'undefined' && regionSel) regionSel.value = region;
-      }
-      if (_ct) {
-        cat = _ct;
-        if (typeof catSel !== 'undefined' && catSel) catSel.value = cat;
-        if (catsEl) {
-          catsEl.querySelectorAll('.board-cat-tab').forEach(function (x) {
-            x.classList.toggle('on', (x.getAttribute('data-cat') || '') === cat);
-          });
-        }
-      }
+      var _q = new URLSearchParams(location.search).get('q') || '';
+      if (!_q) { loadPage(1); return; }
+      var _inp = document.querySelector('.board-search input');
+      if (_inp) _inp.value = _q;
+      q = _q.trim().replace(/[(),*]/g, ' ').replace(/\s+/g, ' ').trim();
       loadPage(1);
     })();
   }
@@ -679,7 +654,7 @@ window.OCBoard = (function () {
           }).catch(function () {});
         }
 
-        /* 관련기사 (검색어 우선 → 같은 분류 → 최근글) */
+        /* 관련포스트 (검색어 우선 → 같은 분류 → 최근글) */
         if (cfg.viewPage && !cfg.docView) {
           var base = SB_URL + '/rest/v1/' + cfg.table + '?select=id,title&id=neq.' + encodeURIComponent(o.id);
           var recentUrl = base + '&order=created_at.desc&limit=4';
@@ -697,7 +672,7 @@ window.OCBoard = (function () {
             fetch(urls[i], { headers: HDR }).then(function (r) { return r.json(); }).then(function (rel) {
               if (Array.isArray(rel) && rel.length) {
                 var relBox = box.querySelector('.bv-rel'); if (!relBox) return;
-                relBox.innerHTML = '<span class="board-rel-label">관련기사</span><ul class="board-rel-list">'
+                relBox.innerHTML = '<span class="board-rel-label">관련포스트</span><ul class="board-rel-list">'
                   + rel.map(function (r) { return '<li><a href="' + cfg.viewPage + '?id=' + encodeURIComponent(r.id) + '">- ' + esc(r.title || '') + '</a></li>'; }).join('')
                   + '</ul>';
                 relBox.classList.add('is-on');
