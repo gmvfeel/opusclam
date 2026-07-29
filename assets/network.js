@@ -37,14 +37,17 @@
   /* ---------- 설정 ---------- */
 
   // 종류별 빛깔 · 목록 화면의 강조색(레드)을 인물에 씁니다.
+  // 채도를 낮춘 팔레트입니다.
+  //   원색을 나란히 두면 서로 부딪혀 눈이 피로하고, 클래식 포털의 절제된 느낌과 어긋납니다.
+  //   문헌은 일부러 회색빛으로 두어 뒤로 물립니다 — 인물이 주인공이고 문헌은 곁가지입니다.
   var COLOR = {
-    person:     '#dc2626',
-    org:        '#2563eb',
-    school:     '#059669',
-    academic:   '#7c3aed',
-    foundation: '#d97706',
-    venue:      '#0891b2',
-    modern:     '#db2777'
+    person:     '#b0424f',   // 톤을 낮춘 적색 · 사이트 강조색(#dc2626)과 이어집니다
+    org:        '#3f5e91',   // 차분한 남색
+    school:     '#2f6f68',   // 짙은 청록
+    academic:   '#6f7b8c',   // 슬레이트 · 물러서는 색
+    foundation: '#96703f',   // 톤을 낮춘 황토
+    venue:      '#46707f',
+    modern:     '#7c5878'
   };
   var KIND_KO = {
     person: '인물', org: '단체', school: '학교',
@@ -116,8 +119,8 @@
     frames: 0,
     trimmed: 0,        // 종류별 상한에 걸려 그리지 못한 수 · 아래 띠에 알립니다
 
-    W: 800,
-    H: 460,
+    W: 900,          // 점 30개가 겹치지 않게 넓혔습니다
+    H: 520,
     drag: null
   };
 
@@ -228,10 +231,10 @@
   function step() {
     var i, j, a, b, dx, dy, d2, d, f;
     var N = G.nodes.length;
-    var REPULSE = 2600;
-    var SPRING  = 0.012;
-    var REST    = 96;
-    var CENTER  = 0.0016;
+    var REPULSE = 3400;      // 더 밀어냅니다 · 이름표가 겹치지 않게
+    var SPRING  = 0.011;
+    var REST    = 108;
+    var CENTER  = 0.0014;
     var DAMP    = 0.86;
 
     for (i = 0; i < N; i++) {
@@ -280,7 +283,7 @@
     paintPositions();
     G.frames++;
     // 400 프레임이면 충분히 가라앉습니다. 계속 돌리면 배터리만 먹습니다.
-    if (G.frames > 400 && !G.drag) { G.running = false; return; }
+    if (G.frames > 400 && !G.drag) { G.running = false; tidyLabels(); return; }
     requestAnimationFrame(tick);
   }
   function kick(frames) {
@@ -301,6 +304,14 @@
     svg.setAttribute('class', 'ocn-svg');
     svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.H);
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    // 아주 옅은 그림자 · 동그라미가 배경에서 살짝 떠 보이게 합니다.
+    var defs = document.createElementNS(ns, 'defs');
+    defs.innerHTML =
+      '<filter id="ocn-shadow" x="-60%" y="-60%" width="220%" height="220%">' +
+        '<feDropShadow dx="0" dy="1" stdDeviation="1.1" flood-color="#0f172a" flood-opacity="0.20"/>' +
+      '</filter>';
+    svg.appendChild(defs);
     var gE = document.createElementNS(ns, 'g'); gE.setAttribute('class', 'ocn-edges');
     var gN = document.createElementNS(ns, 'g'); gN.setAttribute('class', 'ocn-nodes');
     svg.appendChild(gE); svg.appendChild(gN);
@@ -315,7 +326,11 @@
 
     G.edges.forEach(function (e) {
       var ln = document.createElementNS(ns, 'line');
-      ln.setAttribute('class', 'ocn-edge');
+      // 사제 관계는 실선으로 또렷하게, 문헌은 점선으로 옅게 둡니다.
+      //   모두 같은 줄로 그리면 무엇이 중요한 관계인지 알 수 없습니다.
+      var kind = /^(teacher|student)$/.test(e.rel) ? ' is-teach'
+               : /^(subject|studied_by|author|wrote)$/.test(e.rel) ? ' is-paper' : '';
+      ln.setAttribute('class', 'ocn-edge' + kind);
       e.el = ln;
       G.gE.appendChild(ln);
     });
@@ -326,15 +341,35 @@
       g.setAttribute('tabindex', '0');
       g.setAttribute('role', 'button');
 
+      // 가운데 점에는 옅은 링을 둘러 한눈에 알아보게 합니다.
+      if (n.center) {
+        var ring = document.createElementNS(ns, 'circle');
+        ring.setAttribute('class', 'ocn-ring');
+        ring.setAttribute('r', radius(n) + 6);
+        ring.setAttribute('fill', 'none');
+        ring.setAttribute('stroke', COLOR[n.type] || '#64748b');
+        g.appendChild(ring);
+      }
+
       var c = document.createElementNS(ns, 'circle');
       c.setAttribute('r', radius(n));
       c.setAttribute('fill', COLOR[n.type] || '#64748b');
+      c.setAttribute('filter', 'url(#ocn-shadow)');
       g.appendChild(c);
 
       var t = document.createElementNS(ns, 'text');
       t.setAttribute('class', 'ocn-label');
       t.setAttribute('y', radius(n) + 13);
-      t.textContent = n.name.length > 14 ? n.name.slice(0, 13) + '…' : n.name;
+      // 문헌 제목은 길어서 잘라 놓으면 뜻을 알 수 없습니다.
+      //   'On Reading Ad…' 는 정보가 아니라 소음입니다.
+      //   그래서 문헌은 이름표를 감추고, 점에 손을 올릴 때만 보이게 합니다.
+      if (n.type === 'academic' && !n.center) {
+        t.setAttribute('class', 'ocn-label is-quiet');
+        t.textContent = n.name.length > 26 ? n.name.slice(0, 25) + '…' : n.name;
+      } else {
+        t.textContent = n.name.length > 15 ? n.name.slice(0, 14) + '…' : n.name;
+      }
+      n.label = t;
       g.appendChild(t);
 
       var ttl = document.createElementNS(ns, 'title');
@@ -349,6 +384,32 @@
 
     paintPositions();
     updateCounter();
+  }
+
+  // 이름표가 겹치면 뒤에 오는 것을 감춥니다.
+  //   2026-07-29 화면 확인 · 'Ferdinand Ries' 와 'ndrea Luche' 가 붙어 읽을 수 없었습니다.
+  //   중요한 것부터 자리를 잡게 하려고 가운데 점 → 이어진 줄이 많은 점 순서로 봅니다.
+  //   배치가 가라앉은 뒤 한 번만 계산합니다. 매 프레임 하면 무겁습니다.
+  function tidyLabels() {
+    var boxes = [];
+    var order = G.nodes.slice().sort(function (a, b) {
+      if (a.center !== b.center) return a.center ? -1 : 1;
+      return b.deg - a.deg;
+    });
+    order.forEach(function (n) {
+      if (!n.label) return;
+      var quiet = n.type === 'academic' && !n.center;
+      if (quiet) { n.label.classList.add('is-quiet'); return; }   // 문헌은 처음부터 감춤
+      var w = n.label.textContent.length * 6.2 + 6;
+      var h = 13;
+      var x = n.x - w / 2;
+      var y = n.y + radius(n) + 3;
+      var hit = boxes.some(function (b) {
+        return !(x + w < b.x || b.x + b.w < x || y + h < b.y || b.y + b.h < y);
+      });
+      if (hit) n.label.classList.add('is-quiet');
+      else { n.label.classList.remove('is-quiet'); boxes.push({ x: x, y: y, w: w, h: h }); }
+    });
   }
 
   function paintPositions() {
@@ -375,7 +436,25 @@
     };
   }
 
+  // 점 30개면 어느 줄이 누구와 이어졌는지 눈으로 따라가기 어렵습니다.
+  //   손을 올린 점의 줄을 진하게 하고, 이어진 상대의 이름표를 보여 줍니다.
+  //   감춰 둔 문헌 제목도 이때 드러납니다.
+  function spotlight(n, on) {
+    for (var i = 0; i < G.edges.length; i++) {
+      var e = G.edges[i];
+      if (e.a !== n && e.b !== n) continue;
+      if (e.el) e.el.classList.toggle('is-hot', on);
+      var other = (e.a === n) ? e.b : e.a;
+      if (other.label) other.label.classList.toggle('is-show', on);
+    }
+    if (n.label) n.label.classList.toggle('is-show', on);
+  }
+
   function bindNode(n, g) {
+    g.addEventListener('mouseenter', function () { spotlight(n, true); });
+    g.addEventListener('mouseleave', function () { spotlight(n, false); });
+    g.addEventListener('focus', function () { spotlight(n, true); });
+    g.addEventListener('blur', function () { spotlight(n, false); });
     g.addEventListener('pointerdown', function (evt) {
       evt.preventDefault();
       var p = svgPoint(evt);
@@ -435,27 +514,44 @@
       + '.ocn-sec{margin-top:18px}'
       + '.ocn-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}'
       + '.ocn-toggle{appearance:none;border:1px solid #dc2626;background:#fff;color:#dc2626;'
-      +   'font:600 13px/1 inherit;padding:9px 14px;border-radius:8px;cursor:pointer}'
+      +   'font:600 13px/1 inherit;padding:9px 15px;border-radius:999px;cursor:pointer;'
+      +   'transition:background .15s,color .15s}'
       + '.ocn-toggle:hover{background:#dc2626;color:#fff}'
-      + '.ocn-note{font-size:12px;color:#6b7280}'
-      + '.ocn-wrap{margin-top:12px;border:1px solid #e5e7eb;border-radius:10px;background:#fcfcfd;'
-      +   'box-shadow:0 1px 2px rgba(0,0,0,.04);overflow:hidden}'
+      + '.ocn-toggle[disabled]{opacity:.5;cursor:default}'
+      + '.ocn-note{font-size:12px;color:#8a9099}'
+      // 배경에 아주 옅은 결을 줍니다. 순백은 평면으로 보입니다.
+      + '.ocn-wrap{margin-top:12px;border:1px solid #e8eaee;border-radius:14px;overflow:hidden;'
+      +   'background:radial-gradient(120% 90% at 50% 0%,#fdfdfe 0%,#f6f7f9 100%);'
+      +   'box-shadow:0 1px 3px rgba(15,23,42,.05)}'
       + '.ocn-svg{display:block;width:100%;height:auto;touch-action:none}'
-      + '.ocn-edge{stroke:#cbd5e1;stroke-width:1.2}'
+      // 줄 · 사제는 또렷하게, 문헌은 점선으로 물러나게
+      + '.ocn-edge{stroke:#d3d8df;stroke-width:1.1;transition:stroke .12s,stroke-width .12s}'
+      + '.ocn-edge.is-teach{stroke:#b9c0ca;stroke-width:1.5}'
+      + '.ocn-edge.is-paper{stroke:#dde1e7;stroke-dasharray:3 3}'
+      + '.ocn-edge.is-hot{stroke:#8b95a3;stroke-width:2}'
       + '.ocn-node{cursor:pointer}'
-      + '.ocn-node circle{stroke:#fff;stroke-width:2;transition:opacity .15s}'
-      + '.ocn-node:hover circle{opacity:.75}'
+      + '.ocn-node circle{stroke:#fff;stroke-width:1.8;transition:opacity .15s}'
+      + '.ocn-node:hover circle{opacity:.82}'
+      + '.ocn-ring{stroke-width:1.4;opacity:.28}'
       + '.ocn-node:focus{outline:none}'
-      + '.ocn-node:focus circle{stroke:#111827;stroke-width:2.5}'
-      + '.ocn-node.is-center circle{stroke-width:3}'
-      + '.ocn-label{font-size:11px;fill:#374151;text-anchor:middle;paint-order:stroke;'
-      +   'stroke:#fff;stroke-width:3px;stroke-linejoin:round;pointer-events:none;user-select:none}'
-      + '.ocn-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;'
-      +   'padding:8px 12px;border-top:1px solid #eef0f3;background:#fff;font-size:12px;color:#6b7280}'
-      + '.ocn-legend{display:flex;align-items:center;gap:10px;flex-wrap:wrap}'
-      + '.ocn-lg{display:inline-flex;align-items:center;gap:4px}'
-      + '.ocn-dot{width:9px;height:9px;border-radius:50%;display:inline-block}'
-      + '@media (max-width:640px){.ocn-label{font-size:12px}}';
+      + '.ocn-node:focus circle{stroke:#334155;stroke-width:2.4}'
+      + '.ocn-node.is-center circle{stroke-width:2.4}'
+      // 이름표 · 흰 테두리를 둘러 줄 위에서도 읽히게 합니다
+      + '.ocn-label{font-size:10.5px;font-weight:500;fill:#3f4653;text-anchor:middle;'
+      +   'paint-order:stroke;stroke:#f8f9fb;stroke-width:3.2px;stroke-linejoin:round;'
+      +   'pointer-events:none;user-select:none;opacity:1;transition:opacity .12s}'
+      // 감출 것 · 겹치는 이름표와 문헌 제목
+      + '.ocn-label.is-quiet{opacity:0}'
+      + '.ocn-label.is-show{opacity:1}'
+      + '.ocn-node:hover .ocn-label{opacity:1}'
+      + '.ocn-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;'
+      +   'padding:9px 14px;border-top:1px solid #eef0f3;background:rgba(255,255,255,.72);'
+      +   'font-size:11.5px;color:#8a9099}'
+      + '.ocn-legend{display:flex;align-items:center;gap:11px;flex-wrap:wrap}'
+      + '.ocn-lg{display:inline-flex;align-items:center;gap:5px;color:#6b7280}'
+      + '.ocn-dot{width:8px;height:8px;border-radius:50%;display:inline-block}'
+      + '@media (max-width:640px){.ocn-label{font-size:11.5px;stroke-width:3.6px}'
+      +   '.ocn-bar{font-size:11px;gap:10px}}';
     var st = document.createElement('style');
     st.id = 'ocn-css';
     st.textContent = css;
