@@ -416,3 +416,14 @@ html[data-theme="dark"] .oc-cell{background:rgba(255,255,255,.04)}
 /* 자료형 뷰: 연결된 학교DB 바로가기 */
 .bv-schoollink{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:7px 14px;border:1px solid var(--violet-2);border-radius:8px;color:var(--violet-2);font-size:12.5px;font-weight:600;text-decoration:none;transition:background .15s,color .15s}
 .bv-schoollink:hover{background:var(--violet-2);color:#fff}
+
+/* ── 뷰에 다녀와 돌아온 글 짚어 주기 ──────────────────────────
+   목록에서 A 글을 눌러 뷰로 갔다가 '목록' 을 누르면
+   A 가 있던 쪽으로 돌아가 그 글을 잠깐 밝혀 준다.
+   DB 리스트의 .row-focus 와 같은 방식 · 같은 빛깔(--violet-2)을 쓴다.
+   계속 칠해 두면 어느 글을 보고 있었는지 헷갈리므로 2.6초 뒤 사라진다. */
+.board-focus{animation:boardflash 2.6s ease}
+@keyframes boardflash{
+  0%,18%{background:rgba(124,99,176,.16);box-shadow:0 0 0 2px rgba(124,99,176,.34)}
+  100%{background:transparent;box-shadow:0 0 0 2px rgba(124,99,176,0)}
+}

@@ -57,6 +57,65 @@ window.OCList = (function () {
     var tbody = document.querySelector('.pdb-table tbody');
     var pager = document.querySelector('.pdb-pager');
     var focusId = new URLSearchParams(location.search).get('focus');
+
+    /* ── 뷰에 다녀와도 보던 자리를 지킨다 ──────────────────
+       페이지 번호만 넘기면 모자란다.
+       '베토벤' 을 찾아 놓고 3쪽에서 한 줄을 눌렀다가 돌아오면,
+       검색어가 없으니 전체 목록 3쪽이 열리고 그 줄은 거기에 없다.
+       그래서 검색어 · 고른 항목 · 페이지를 한 벌로 담아 둔다.
+       주소에 다 실으면 리스트 7개를 모두 고쳐야 하므로
+       이 공용 엔진 한 곳에서 sessionStorage 에 맡긴다.
+       탭을 닫으면 지워지므로 남지 않는다. */
+    var SKEY = 'ocdb-back:' + (cfg.entity || cfg.table);
+
+    function saveSpot(id) {
+      try {
+        var inp = document.querySelector('.pdb-search input');
+        var vals = [];
+        document.querySelectorAll('.pdb-selects select').forEach(function (sl) { vals.push(sl.value); });
+        sessionStorage.setItem(SKEY, JSON.stringify({
+          id: String(id), page: ctx.cur, q: inp ? inp.value : '', sels: vals
+        }));
+      } catch (e) {}
+    }
+
+    function readSpot(id) {
+      try {
+        var v = JSON.parse(sessionStorage.getItem(SKEY) || 'null');
+        if (v && String(v.id) === String(id)) return v;
+      } catch (e) {}
+      return null;
+    }
+
+    /* 줄을 누르는 순간 담아 둔다 (링크를 눌러 뷰로 넘어가기 직전) */
+    if (tbody) {
+      tbody.addEventListener('click', function (e) {
+        var el = e.target;
+        while (el && el !== tbody && el.nodeName !== 'TR') el = el.parentNode;
+        if (el && el.nodeName === 'TR' && el.getAttribute('data-id')) {
+          saveSpot(el.getAttribute('data-id'));
+        }
+      });
+    }
+
+    /* 눌렀던 줄로 데려가고 잠깐 표시해 준다.
+       한 번 쓰고 지워서, 페이지를 옮길 때 다시 튀지 않게 한다. */
+    function focusRow() {
+      if (!focusId) return;
+      var tb = document.querySelector('.pdb-table tbody');
+      if (!tb) return;
+      var tr = tb.querySelector('tr[data-id="' + focusId + '"]');
+      if (!tr) return;                       // 그 줄이 이 페이지에 없으면 그냥 둔다
+      focusId = null;
+      tr.classList.add('row-focus');
+      try {
+        tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch (e) {
+        try { tr.scrollIntoView(); } catch (e2) {}
+      }
+      /* 표시는 잠깐만 남긴다. 계속 칠해 두면 어느 줄을 보고 있는지 헷갈린다. */
+      setTimeout(function () { tr.classList.remove('row-focus'); }, 2600);
+    }
     var ncol = document.querySelectorAll('.pdb-table thead th').length || 10;
     var state = { q: '', filters: '', order: cfg.orderDefault || '' };
     var ctx = { cur: 1, esc: esc, ava: ava, nd: nd, wikiThumb: wikiThumb };
@@ -175,13 +234,18 @@ window.OCList = (function () {
             var drawRows = function () {
               if (tbody) tbody.innerHTML = rows.map(function (rw, ix) { return cfg.renderRow(rw, off + ix + 1, ctx); }).join('');
               renderPager();
+              /* 뷰에서 '리스트로' 눌러 돌아왔을 때 눌렀던 줄로 데려간다.
+                 반드시 줄을 그린 다음에 찾아야 한다.
+                 2026-07-29 · 이 처리가 drawRows 밖에 있어서, 사진을 채우고 그리는
+                 목록(인물·학교·단체·공연장)에서는 아직 줄이 없는 채로 찾다가 실패했다.
+                 사진을 안 쓰는 목록(현대음악·기관재단·학술)만 우연히 동작했다. */
+              focusRow();
             };
             if (cfg.photoFill && cfg.photoFill.type) {
               fillPhotos(rows, cfg.photoFill).then(drawRows, drawRows);
             } else {
               drawRows();
             }
-            if (focusId && tbody) { var _fr = tbody.querySelector('tr[data-id="' + focusId + '"]'); if (_fr) { _fr.classList.add('row-focus'); try { _fr.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} } focusId = null; }
           }
         })
         .catch(function (e) { console.error((cfg.entity || cfg.table) + ' 로드 실패:', e); });
@@ -219,6 +283,21 @@ window.OCList = (function () {
        통합검색에서 ?q=검색어 로 넘어오면 검색창에 넣고 바로 찾는다 */
     var _sp = parseInt(new URLSearchParams(location.search).get('p'), 10) || 1;
     var _q = new URLSearchParams(location.search).get('q') || '';
+
+    /* 뷰에서 '리스트로' 눌러 돌아온 경우 (주소에 focus 가 붙어 있다)
+       담아 둔 검색어 · 고른 항목 · 페이지를 되돌린 뒤 그 쪽을 연다. */
+    var _spot = focusId ? readSpot(focusId) : null;
+    if (_spot) {
+      var _si = document.querySelector('.pdb-search input');
+      if (_si) _si.value = _spot.q || '';
+      var _sels = document.querySelectorAll('.pdb-selects select');
+      if (_spot.sels && _spot.sels.length === _sels.length) {
+        _sels.forEach(function (sl, i) { sl.value = _spot.sels[i]; });
+      }
+      readSearch();
+      loadPage(_spot.page || _sp);
+      return;                    /* 아래 기본 로드는 건너뛴다 */
+    }
     if (_q) {
       var _inp = document.querySelector('.pdb-search input');
       if (_inp) _inp.value = _q;

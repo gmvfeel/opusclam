@@ -198,7 +198,7 @@ window.OCBoard = (function () {
       if (cfg.renderItem) return cfg.renderItem(rec, { esc: esc, fmtDate: fmtDate });
       var pin = rec.is_pinned ? ' board-item-pin' : '';
       var linkIcon = rec.link_url ? '<span class="board-linkicon" title="외부 링크">\u2197</span>' : '';
-      return '<a class="board-item' + pin + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
+      return '<a class="board-item' + pin + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur + '">'
         + '<span class="board-cat ' + catClass(rec.category) + '">' + esc(rec.category || '') + '</span>'
         + '<span class="board-title">' + esc(rec.title || '') + linkIcon + '</span>'
         + '<span class="board-meta"><span class="board-date">' + fmtDate(rec.created_at) + '</span>'
@@ -227,7 +227,7 @@ window.OCBoard = (function () {
         : '';
       return '<div class="board-feat">'
         + '<span class="board-ribbon">HOT</span>'
-        + '<a class="board-feat-body' + (img ? ' has-img' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
+        + '<a class="board-feat-body' + (img ? ' has-img' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur + '">'
         + img
         + '<div class="board-feat-text">'
         + '<div class="board-feat-titlerow"><div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + newHtml(rec) + '</div>' + react + '</div>'
@@ -239,7 +239,7 @@ window.OCBoard = (function () {
     }
     function articleRowHtml(rec, no) {
       var th = cfg.rowThumb ? '<span class="board-row-thumb">' + (rec.thumb_url ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">' : '') + '</span>' : '';
-      return '<a class="board-row' + (cfg.rowThumb ? ' has-thumb' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '">'
+      return '<a class="board-row' + (cfg.rowThumb ? ' has-thumb' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur + '">'
         + '<span class="board-row-no">' + (no > 0 && no < 10 ? '0' + no : no) + '</span>'
         + th
         + '<span class="board-row-main"><span class="board-row-title">' + esc(rec.title || '') + ccHtml(rec) + newHtml(rec) + '</span>'
@@ -301,7 +301,7 @@ window.OCBoard = (function () {
             : textLogo(nameForLogo)));
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
-      var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id);
+      var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur;
       var badges = (rec.region || rec.category)
         ? '<span class="doc-cat">'
           + (rec.region ? '<span class="board-tag" data-cat="' + esc(rec.region) + '">' + esc(rec.region) + '</span>' : '')
@@ -355,6 +355,56 @@ window.OCBoard = (function () {
       pager.innerHTML = h;
     }
 
+    /* ── 뷰에 다녀와도 보던 자리를 지킨다 ──────────────────
+       목록에서 A 글을 눌러 뷰로 갔다가 '목록' 을 누르면
+       A 가 있던 쪽으로 돌아가 그 글을 잠깐 짚어 준다.
+       쪽 번호만으로는 모자라다 — 갈래 · 검색어 · 년도를 걸어 두었으면
+       그것까지 되돌려야 그 글이 그 쪽에 있다.
+       주소에 다 실으면 게시판마다 고쳐야 하므로 이 공용 엔진에서 담아 둔다.
+       탭을 닫으면 지워진다. */
+    var SKEY = 'ocbd-back:' + cfg.table;
+    var focusId = new URLSearchParams(location.search).get('focus');
+
+    function saveSpot(id) {
+      try {
+        sessionStorage.setItem(SKEY, JSON.stringify({
+          id: String(id), page: cur, cat: cat, q: q, yr: yr, region: region, sort: sortCol
+        }));
+      } catch (e) {}
+    }
+    function readSpot(id) {
+      try {
+        var v = JSON.parse(sessionStorage.getItem(SKEY) || 'null');
+        if (v && String(v.id) === String(id)) return v;
+      } catch (e) {}
+      return null;
+    }
+
+    /* 글을 누르는 순간 담아 둔다 */
+    if (listEl) {
+      listEl.addEventListener('click', function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a[href*="?id="]') : null;
+        if (!a) return;
+        var m = String(a.getAttribute('href') || '').match(/[?&]id=([^&]+)/);
+        if (m) saveSpot(decodeURIComponent(m[1]));
+      });
+    }
+
+    /* 돌아왔을 때 그 글로 데려간다.
+       글을 그린 다음에 찾아야 한다 — 그리기 전에 찾으면 없으므로 실패한다.
+       (DB 리스트에서 사진을 채우고 그리는 목록만 이 기능이 안 되던 까닭이 그것이었다) */
+    function focusItem() {
+      if (!focusId || !listEl) return;
+      var a = listEl.querySelector('a[href*="id=' + focusId + '&"], a[href$="id=' + focusId + '"]');
+      if (!a) return;
+      focusId = null;
+      var box = (a.closest && a.closest('.board-item, .board-row, .board-doc, .board-article, li')) || a;
+      box.classList.add('board-focus');
+      try { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      catch (e) { try { box.scrollIntoView(); } catch (e2) {} }
+      setTimeout(function () { box.classList.remove('board-focus'); }, 2600);
+    }
+
     function loadPage(pg) {
       if (listEl) listEl.innerHTML = skeleton(6);
       fetch(buildUrl((pg - 1) * PAGE), { headers: Object.assign({ Prefer: 'count=exact' }, HDR) })
@@ -373,6 +423,7 @@ window.OCBoard = (function () {
             return fetchExtLogos(rows).then(function () {
               if (listEl) listEl.innerHTML = cfg.docStyle ? rows.map(docRowHtml).join('') : (cfg.articleStyle ? renderArticles(rows, (pg - 1) * PAGE) : rows.map(itemHtml).join(''));
               renderPager();
+              focusItem();          /* 반드시 그린 뒤에 */
             });
           }
         })
@@ -415,8 +466,31 @@ window.OCBoard = (function () {
       setTimeout(applyTop, 1000);
     })();
 
-    /* 통합검색에서 ?q=검색어 로 넘어오면 검색창에 넣고 바로 찾는다 */
+    /* 첫 로드
+       ① 뷰에서 '목록' 을 눌러 돌아온 경우 (주소에 focus 가 붙어 있다)
+       ② 통합검색에서 ?q=검색어 로 넘어온 경우
+       ③ 그 밖에는 첫 쪽 */
     (function(){
+      var _sp = focusId ? readSpot(focusId) : null;
+      if (_sp) {
+        cat = _sp.cat || '';  q = _sp.q || '';  yr = _sp.yr || '';
+        region = _sp.region || '';  sortCol = _sp.sort || sortCol;
+        /* 화면의 고르는 것들도 되돌려 목록과 화면이 어긋나지 않게 한다 */
+        var _bi = document.querySelector('.board-search input');
+        if (_bi) _bi.value = q;
+        if (typeof catSel !== 'undefined' && catSel) catSel.value = cat;
+        if (typeof yearSel !== 'undefined' && yearSel) yearSel.value = yr;
+        if (typeof regionSel !== 'undefined' && regionSel) regionSel.value = region;
+        if (sortEl) sortEl.value = sortCol;
+        if (catsEl) {
+          catsEl.querySelectorAll('.board-cat-tab').forEach(function (x) {
+            x.classList.toggle('on', (x.getAttribute('data-cat') || '') === cat);
+          });
+        }
+        loadPage(_sp.page || 1);
+        return;
+      }
+
       var _q = new URLSearchParams(location.search).get('q') || '';
       if (!_q) { loadPage(1); return; }
       var _inp = document.querySelector('.board-search input');
