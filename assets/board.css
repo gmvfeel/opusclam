@@ -36,7 +36,11 @@
 .board-empty{padding:70px 10px;text-align:center;color:var(--text-3);font-size:15px}
 
 /* ── 뉴스형(article) 목록 ── */
-.board-bar{margin:0 calc(50% - 50vw) 22px;position:sticky;top:var(--feat-top,76px);z-index:20;background:var(--paper);padding:12px calc(50vw - 50%);border-bottom:1px solid rgba(30,20,60,.06)}
+/* 툴바 배경을 화면 끝까지 퍼뜨린다.
+   예전에는 margin/padding 에 50vw 를 썼는데, 50vw 는 세로 스크롤바를 포함한 폭이라
+   스크롤바가 있는 페이지에서 그 폭만큼 넘쳐 가로 스크롤이 생겼다.
+   box-shadow 는 레이아웃 폭을 늘리지 않으므로 같은 모양을 내면서 그 문제가 없다. */
+.board-bar{margin:0 0 22px;position:sticky;top:var(--feat-top,76px);z-index:20;background:var(--paper);padding:12px 0;border-bottom:1px solid rgba(30,20,60,.06);box-shadow:-50vw 0 0 var(--paper),50vw 0 0 var(--paper)}
 @media(max-width:640px){.board-bar{position:static;box-shadow:none;padding:0;margin:0 0 22px}}
 .board-sort{min-width:120px}
 .board-count{margin:0 0 16px 2px}
