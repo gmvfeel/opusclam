@@ -1597,11 +1597,18 @@ if('serviceWorker' in navigator){
   /* 현대음악DB — 최근 등록된 작곡가를 가져온다 (커뮤니티 게시판이 아니라 DB 쪽) */
   async function feedModernDb(){
     try{
+      /* 최근 항목 여러 건을 받아 그 안에서 하나를 무작위로 고릅니다.
+         화면을 열 때마다 다른 작곡가가 나옵니다.
+         사진이 있는 항목이 충분하면 그쪽에서 먼저 고릅니다 — 카드가 훨씬 보기 좋습니다.
+         숨긴 항목(hidden)은 애초에 받아오지 않습니다. */
       const rows = await sbGet('modern_composers?select=id,name_ko,name_en,life,nationality,'
         + 'school_style,technique,works,description,image_url'
-        + '&hidden=is.false&order=sort_no.desc,id.desc&limit=1');
+        + '&hidden=is.false&order=sort_no.desc,id.desc&limit=60');
       if(!Array.isArray(rows) || !rows.length) return null;
-      const r = rows[0];
+
+      const withImg = rows.filter(function(x){ return String(x.image_url || '').trim(); });
+      const pool = withImg.length >= 5 ? withImg : rows;
+      const r = pool[Math.floor(Math.random() * pool.length)];
 
       /* 제목 — 이름과 생몰 */
       const nm = r.name_ko || r.name_en || '';
