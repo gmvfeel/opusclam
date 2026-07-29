@@ -306,5 +306,17 @@
   if (document.readyState !== 'loading') boot();
   else document.addEventListener('DOMContentLoaded', boot);
 
-  window.OCLinks = { boot: boot };
+  // network.js(관계 지도) 가 같은 것을 다시 만들지 않도록 내놓습니다.
+  //   조회 · 표 매핑 · 뷰 주소 · 이름 고르기를 함께 씁니다.
+  //   여기 없으면 network.js 안에 같은 코드가 또 생깁니다.
+  window.OCLinks = {
+    boot: boot,
+    rest: rest,
+    TABLE: TABLE,
+    VIEW: VIEW,
+    pickName: pickName,
+    esc: esc,
+    SB: SB,
+    H: H
+  };
 })();
