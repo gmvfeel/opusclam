@@ -50,6 +50,16 @@
   .disp{font-family:var(--display)}
 
   /* ---------- placeholders ---------- */
+  /* 입시요강 지역 버튼 아래 「입시커뮤니티」 버튼
+     style.css 를 건드리지 않고 이 페이지에서만 씁니다 */
+  .exam-comm{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    margin-top:8px;padding:12px 14px;border-radius:6px;text-decoration:none;
+    background:var(--violet-2);color:#fff;transition:.15s}
+  .exam-comm:hover{filter:brightness(1.08)}
+  .exam-comm span{font-size:13px;font-weight:700}
+  .exam-comm em{font-style:normal;font-size:11.5px;opacity:.85;white-space:nowrap}
+  @media(max-width:420px){ .exam-comm em{display:none} }
+
   .card-link{position:absolute;inset:0;z-index:6;border-radius:inherit;text-indent:-9999px;overflow:hidden}
   .ph{background:
       linear-gradient(135deg,rgba(90,74,122,.14),rgba(124,99,176,.06)),
@@ -962,8 +972,9 @@
         <a href="/community/admission.html?q=전남">전남</a>
         <a href="/community/admission.html?q=광주">광주</a>
         <a href="/community/admission.html?q=전북">전북</a>
-        <a href="/community/admission.html?q=제주">제주</a>
+        <a href="/community/admission.html?region=해외" style="border-color:rgba(124,99,176,.55);color:var(--violet-2);font-weight:700">해외</a>
       </div>
+      <a class="exam-comm" href="/community/admission-community.html"><span>입시커뮤니티</span><em>입시·진로 이야기를 나누는 자리 &rarr;</em></a>
     </div>
   </div>
 </section>
