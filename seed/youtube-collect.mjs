@@ -131,11 +131,42 @@ async function loadConfig() {
   return {
     queries: q || [],
     channels: (channels || []).map((c) => ({ ...c, m: String(c.name_match || '').toLowerCase() })),
-    blockTitle: (blocks || []).filter((b) => b.target === 'title')
-                              .map((b) => String(b.word).toLowerCase()),
-    blockChannel: (blocks || []).filter((b) => b.target === 'channel')
-                                .map((b) => String(b.word).toLowerCase()),
+    blockTitle: prepBlocks(blocks, 'title'),
+    blockChannel: prepBlocks(blocks, 'channel'),
   };
+}
+
+/* 제외어를 미리 다듬어 둡니다.
+
+   왜 이렇게 하나 — 첫 채널 시험에서 이런 일이 있었습니다.
+     「discover」 의 cover 에 걸려 정상 영상이 버려졌습니다
+     「Tchaikovsky」 의 vs 에 걸려 차이코프스키가 버려졌습니다
+   글자 이어짐으로 찾았기 때문입니다. 로마자는 낱말 경계로 찾습니다.
+   한글은 낱말 경계가 없으므로 그대로 이어짐으로 찾습니다(「모음집」의 「모음」). */
+function prepBlocks(blocks, target) {
+  return (blocks || [])
+    .filter((b) => b.target === target)
+    .map((b) => {
+      const w = String(b.word || '').toLowerCase().trim();
+      if (!w) return null;
+      if (/[가-힣]/.test(w)) return { w, ko: true };
+      const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s\\-]+');
+      /* 앞 경계만 봅니다 — 뒤는 열어 둡니다.
+           앞을 막으므로   discover 의 cover · Tchaikovsky 의 vs · Malcolm 의 calm 은 안 걸립니다
+           뒤를 열어 두므로 dance 로 dancer·dancing 까지, cover 로 covered 까지 걸립니다 */
+      return { w, ko: false, re: new RegExp('(^|[^a-z0-9])' + esc, 'i') };
+    })
+    .filter(Boolean);
+}
+
+/* 걸리면 그 낱말을, 안 걸리면 null 을 돌려줍니다 */
+function findBlocked(text, list) {
+  const low = String(text || '').toLowerCase();
+  if (!low) return null;
+  for (const b of list) {
+    if (b.ko ? low.includes(b.w) : b.re.test(low)) return b.w;
+  }
+  return null;
 }
 
 /* 이미 담은 영상과, 한 번 버린 영상은 다시 담지 않습니다 */
@@ -368,9 +399,12 @@ function judge(v, qcfg, cfg, persons) {
   const lowT  = title.toLowerCase();
   const lowC  = chName.toLowerCase();
 
-  /* ① 제외어 — 하나라도 걸리면 바로 버립니다 */
-  for (const w of cfg.blockTitle) if (lowT.includes(w)) return { ok: false, why: `제목 제외어 「${w}」` };
-  for (const w of cfg.blockChannel) if (lowC.includes(w)) return { ok: false, why: `채널 제외어 「${w}」` };
+  /* ① 제외어 — 하나라도 걸리면 바로 버립니다.
+        로마자는 낱말 경계로 찾으므로 discover 의 cover 에는 걸리지 않습니다. */
+  const bt = findBlocked(title, cfg.blockTitle);
+  if (bt) return { ok: false, why: `제목 제외어 「${bt}」` };
+  const bc = findBlocked(chName, cfg.blockChannel);
+  if (bc) return { ok: false, why: `채널 제외어 「${bc}」` };
 
   /* 밖에서 재생할 수 없는 영상은 우리 화면에서 못 틉니다 */
   if (v.status && v.status.embeddable === false) return { ok: false, why: '외부 재생 불가' };
@@ -402,10 +436,27 @@ function judge(v, qcfg, cfg, persons) {
   const hits = matchPersons(title, persons);
   if (hits.length) parts.push(`인물 ${hits.map((h) => h.name).join('·')}`);
 
-  /* ⑤ 덧점 */
+  /* ⑤ 클래식 전용이 아닌 채널이면 클래식 단서를 요구합니다.
+
+        첫 채널 시험에서 이런 일이 있었습니다.
+          ARTE Concert 에서 여덟 개가 담겼는데 전부 메탈·테크노·DJ 였습니다
+          파리 필하모니에서 비디오게임 전시·플라멩코가 담겼습니다
+          엘프필하모니에서 힙합·재즈가 담겼습니다
+        이 세 곳은 클래식 전용이 아니라 종합 공연장·방송입니다.
+        그래서 이런 채널은 「클래식임을 알려 주는 단서」가 있어야 통과시킵니다. */
+  const hasOpus = OPUS_RE.test(title);
+  const hasForm = FORM_RE.test(title);
+  if (ch && ch.classical_only === false) {
+    if (!hits.length && !hasOpus && !hasForm) {
+      return { ok: false, why: '클래식 전용이 아닌 채널인데 클래식 단서가 없음'
+                             + ' (작곡가 이름·작품번호·작품 갈래 가운데 하나가 필요합니다)' };
+    }
+  }
+
+  /* ⑥ 덧점 */
   score += 15; parts.push('길이 적정 +15');
-  if (OPUS_RE.test(title)) { score += 8; parts.push('작품번호 +8'); }
-  if (FORM_RE.test(title)) { score += 8; parts.push('작품 갈래 +8'); }
+  if (hasOpus) { score += 8; parts.push('작품번호 +8'); }
+  if (hasForm) { score += 8; parts.push('작품 갈래 +8'); }
   if (LIVE_RE.test(title)) { score += 8; parts.push('실황·초연 +8'); }
   if (desc.length >= 200) { score += 5; parts.push('설명 충실 +5'); }
 
