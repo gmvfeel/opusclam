@@ -479,9 +479,11 @@ html[data-theme="dark"] .oc-cell{background:rgba(255,255,255,.04)}
    ============================================================ */
 .board-list.as-cards{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;
   border-top:1px solid var(--line)}
+/* 둥근 모서리를 두지 않습니다 — 아래 구분선의 좌우 끝이 곡선을 따라
+   위로 말려 보이기 때문입니다. 곧은 선이 목록에서 훨씬 정연합니다. */
 .board-card{display:flex;gap:14px;align-items:flex-start;padding:14px 10px;
   border-bottom:1px solid var(--line-2);text-decoration:none;color:inherit;
-  border-radius:8px;transition:background-color .18s ease}
+  transition:background-color .18s ease}
 /* 마우스를 올렸을 때 — 다른 목록(문서형·인물DB)과 같은 결로 맞췄습니다 */
 .board-card:hover{background:#322152}
 .board-card:hover .bc-title,
