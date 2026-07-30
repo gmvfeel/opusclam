@@ -64,7 +64,8 @@
       <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
     </div>
     <div class="pdb-selects">
-      <select class="board-catsel" aria-label="구분"></select>
+      <select class="board-erasel" aria-label="시대"></select>
+      <select class="board-catsel" aria-label="편성"></select>
       <select class="board-sort" aria-label="정렬">
         <option value="created_at">최신순</option>
         <option value="view_count">인기순</option>
@@ -117,7 +118,10 @@
       viewPage:'spot-view.html', writePage:'spot-write-media.html',
       where:'&section=eq.' + encodeURIComponent('음원영상') + '&hidden=is.false',
       searchCols:['title','title_en','body','keywords','channel_name','matched_names'],
-      categories:[{"value":"","label":"구분선택"}],   /* 아래에서 자료가 있는 편성만 채웁니다 */
+      categories:[{"value":"","label":"편성선택"}],   /* 아래에서 자료가 있는 편성만 채웁니다 */
+      eras:[{"value":"","label":"시대 전체"},
+            {"value":"현대음악이전","label":"현대음악이전"},
+            {"value":"현대음악","label":"현대음악"}],
       cardStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
       commentsTable:'spot_comments'
     });

@@ -112,7 +112,7 @@ window.OCBoard = (function () {
 
   /* ============================ 목록 ============================ */
   function list(cfg) {
-    var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '', yr = '', region = '';
+    var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '', yr = '', region = '', era = '';
     var sortCol = cfg.defaultSort || 'created_at';
     var listEl = document.querySelector('.board-list');
     var pager = document.querySelector('.board-pager');
@@ -161,6 +161,14 @@ window.OCBoard = (function () {
       regionSel.addEventListener('change', function () { region = regionSel.value || ''; loadPage(1); });
     }
 
+    /* 시대 필터 (cfg.eras) — 음원·동영상의 「현대음악이전 / 현대음악」에 씁니다.
+       쓰지 않는 게시판에는 아무 영향이 없습니다. */
+    var eraSel = document.querySelector('.board-erasel');
+    if (eraSel && cfg.eras && cfg.eras.length) {
+      eraSel.innerHTML = cfg.eras.map(function (r) { return '<option value="' + esc(r.value) + '">' + esc(r.label || r.value) + '</option>'; }).join('');
+      eraSel.addEventListener('change', function () { era = eraSel.value || ''; loadPage(1); });
+    }
+
     /* 글자 크기 조절 (인물DB와 동일 단계, .board-list 의 --board-fs 조정) */
     var fsBtns = document.querySelectorAll('.pdb-fontsize .fs-btn');
     if (fsBtns.length && listEl) {
@@ -186,6 +194,7 @@ window.OCBoard = (function () {
       if (cat) u += '&category=eq.' + encodeURIComponent(cat);
       if (yr) u += '&title=ilike.*' + encodeURIComponent(yr) + '*';
       if (region) u += '&region=eq.' + encodeURIComponent(region);
+      if (era) u += '&era=eq.' + encodeURIComponent(era);
       /* 페이지가 지정한 고정 조건 (예: 지식나눔의 갈래 → '&track=eq.음악지식')
          쓰지 않는 게시판에는 영향이 없습니다 */
       if (cfg.where) u += cfg.where;
@@ -403,7 +412,7 @@ window.OCBoard = (function () {
     function saveSpot(id) {
       try {
         sessionStorage.setItem(SKEY, JSON.stringify({
-          id: String(id), page: cur, cat: cat, q: q, yr: yr, region: region, sort: sortCol
+          id: String(id), page: cur, cat: cat, q: q, yr: yr, region: region, era: era, sort: sortCol
         }));
       } catch (e) {}
     }
@@ -520,13 +529,14 @@ window.OCBoard = (function () {
       var _sp = focusId ? readSpot(focusId) : null;
       if (_sp) {
         cat = _sp.cat || '';  q = _sp.q || '';  yr = _sp.yr || '';
-        region = _sp.region || '';  sortCol = _sp.sort || sortCol;
+        region = _sp.region || '';  era = _sp.era || '';  sortCol = _sp.sort || sortCol;
         /* 화면의 고르는 것들도 되돌려 목록과 화면이 어긋나지 않게 한다 */
         var _bi = document.querySelector('.board-search input');
         if (_bi) _bi.value = q;
         if (typeof catSel !== 'undefined' && catSel) catSel.value = cat;
         if (typeof yearSel !== 'undefined' && yearSel) yearSel.value = yr;
         if (typeof regionSel !== 'undefined' && regionSel) regionSel.value = region;
+        if (typeof eraSel !== 'undefined' && eraSel) eraSel.value = era;
         if (sortEl) sortEl.value = sortCol;
         if (catsEl) {
           catsEl.querySelectorAll('.board-cat-tab').forEach(function (x) {
@@ -597,12 +607,25 @@ window.OCBoard = (function () {
         }
         /* 영상이 있으면 사진 대신 플레이어를 놓습니다.
            videoField 를 적지 않은 게시판에는 아무 영향이 없습니다. */
+        /* 영상이 있으면 사진 대신 플레이어를 놓습니다.
+
+           처음에는 유튜브 틀(iframe)을 넣지 않고 사진과 재생 단추만 그립니다.
+           단추를 누르면 그 자리에서 유튜브 틀로 바뀌며 곧바로 재생됩니다.
+             · 재생 단추가 뚜렷해서 누를 곳이 분명합니다
+             · 유튜브 틀은 무거워서, 안 볼 사람에게는 받지 않는 편이 빠릅니다 */
         var player = '';
         if (cfg.videoField && o[cfg.videoField]) {
-          player = '<figure class="bv-video"><iframe src="https://www.youtube.com/embed/'
-            + encodeURIComponent(o[cfg.videoField])
-            + '" title="' + esc(o.title || '') + '" loading="lazy" allowfullscreen'
-            + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"></iframe>'
+          var vid = String(o[cfg.videoField]);
+          var poster = o.thumb_url || ('https://i.ytimg.com/vi/' + encodeURIComponent(vid) + '/maxresdefault.jpg');
+          player = '<figure class="bv-video">'
+            + '<button type="button" class="bv-play" data-video="' + esc(vid) + '"'
+            + ' aria-label="영상 재생">'
+            +   '<img src="' + esc(poster) + '" alt="" loading="lazy"'
+            +     ' onerror="this.src=\'https://i.ytimg.com/vi/' + esc(vid) + '/hqdefault.jpg\'">'
+            +   '<span class="bv-playbtn" aria-hidden="true">'
+            +     '<svg viewBox="0 0 68 48"><path class="bv-playbg" d="M66.5 7.7c-.8-2.9-2.5-5.4-5.4-6.2C55.8 0 34 0 34 0S12.2 0 6.9 1.5C4 2.3 2.3 4.8 1.5 7.7 0 13 0 24 0 24s0 11 1.5 16.3c.8 2.9 2.5 5.4 5.4 6.2C12.2 48 34 48 34 48s21.8 0 27.1-1.5c2.9-.8 4.6-3.3 5.4-6.2C68 35 68 24 68 24s0-11-1.5-16.3z"/><path class="bv-playtri" d="M45 24 27 14v20"/></svg>'
+            +   '</span>'
+            + '</button>'
             + (o.channel_name ? '<figcaption>' + esc(o.channel_name) + '</figcaption>' : '')
             + '</figure>';
         }
@@ -696,6 +719,23 @@ window.OCBoard = (function () {
           window.addEventListener('scroll', upd, { passive: true });
           window.addEventListener('resize', upd);
           upd();
+        })();
+
+        /* 재생 단추 — 누르면 그 자리에서 유튜브 틀로 바뀌며 곧바로 재생됩니다 */
+        (function () {
+          var btn = box.querySelector('.bv-play');
+          if (!btn) return;
+          btn.addEventListener('click', function () {
+            var vid = btn.getAttribute('data-video');
+            if (!vid) return;
+            var fr = document.createElement('iframe');
+            fr.src = 'https://www.youtube.com/embed/' + encodeURIComponent(vid)
+                   + '?autoplay=1&rel=0&modestbranding=1';
+            fr.title = document.title;
+            fr.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen');
+            fr.setAttribute('allowfullscreen', '');
+            btn.replaceWith(fr);
+          });
         })();
 
         /* 조회수 +1 (best-effort) */
