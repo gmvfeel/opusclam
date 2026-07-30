@@ -273,6 +273,64 @@ async function wpSearch(name, lang) {
 }
 
 /* ============================================================
+   2-3) 공식 홈페이지에서 대표 이미지 찾기
+
+   위키데이터에 사진이 없는 항목이 적지 않습니다.
+   그런데 공식 홈페이지에는 로고와 사진이 있는 일이 많습니다.
+
+   대부분의 사이트는 SNS 에 공유될 때 쓰이도록 대표 이미지를
+   <meta property="og:image"> 로 공개해 둡니다.
+   공유되도록 만들어 둔 것이므로 그 주소를 가리키는 것은
+   통념상 문제되지 않습니다. 우리 쪽에 파일을 복제하지도 않습니다.
+
+   찾는 순서
+     og:image → twitter:image → apple-touch-icon → 가장 큰 로고 그림
+   ============================================================ */
+
+/* 상대 주소를 온전한 주소로 바꿉니다 */
+function absUrl(u, base) {
+  try { return new URL(String(u).trim(), base).href; } catch (e) { return null; }
+}
+
+async function siteImage(pageUrl) {
+  if (!pageUrl) return null;
+  let html = '';
+  try {
+    const res = await fetch(pageUrl, {
+      headers: { 'User-Agent': UA, Accept: 'text/html' },
+      redirect: 'follow',
+    });
+    if (!res.ok) return null;
+    const ct = res.headers.get('content-type') || '';
+    if (!/text\/html/i.test(ct)) return null;
+    html = (await res.text()).slice(0, 300000);   /* 앞부분만 봅니다 */
+  } catch (e) { return null; }
+  if (!html) return null;
+
+  const pick = (re) => { const m = html.match(re); return m ? m[1] : null; };
+
+  /* ① 공유용 대표 이미지 */
+  let img = pick(/<meta[^>]+(?:property|name)=["']og:image(?::url)?["'][^>]+content=["']([^"']+)["']/i)
+         || pick(/<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']og:image(?::url)?["']/i)
+         || pick(/<meta[^>]+(?:property|name)=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
+  if (img) return { url: absUrl(img, pageUrl), kind: 'og' };
+
+  /* ② 홈 화면 아이콘 — 로고 그 자체인 일이 많습니다 */
+  img = pick(/<link[^>]+rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["'][^>]+href=["']([^"']+)["']/i)
+     || pick(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["']/i);
+  if (img) return { url: absUrl(img, pageUrl), kind: 'icon' };
+
+  /* ③ 이름에 logo 가 든 그림 */
+  const logos = [...html.matchAll(/<img[^>]+src=["']([^"']*logo[^"']*)["']/gi)].map((m) => m[1]);
+  if (logos.length) {
+    /* 아주 작은 그림(자잘한 아이콘)은 건너뜁니다 */
+    const good = logos.find((u) => !/(1x1|spacer|blank|icon-\d{1,2}|favicon)/i.test(u));
+    if (good) return { url: absUrl(good, pageUrl), kind: 'logo' };
+  }
+  return null;
+}
+
+/* ============================================================
    3) 커먼즈 — 축소본 주소와 라이선스·저작자
    ============================================================ */
 async function commonsInfo(fileNames) {
@@ -390,19 +448,54 @@ async function handleOne(r) {
     }
   }
 
-  if (!ent) return { ok: false, why: '위키데이터·위키백과에서 찾지 못함',
-                     tried: [r.title_en, r.title].filter(Boolean).join(' / ') };
+  if (!ent) {
+    /* 위키데이터에 아예 없는 항목(국내 기관·지원사업 등)은
+       공식 홈페이지의 대표 이미지를 씁니다. */
+    const site = await siteImage(r.link_url);
+    if (site && site.url) {
+      return { ok: true, qid: null, fromSite: site.kind, patch: {
+        thumb_url: site.url,
+        photo_credit: '이미지 출처 · 공식 홈페이지',
+      }, hasLogo: site.kind !== 'og', hasImg: site.kind === 'og' };
+    }
+    return { ok: false, why: '위키데이터·위키백과·홈페이지에서 찾지 못함',
+             tried: [r.title_en, r.title].filter(Boolean).join(' / ') };
+  }
 
   /* 다른 자료가 이미 쓴 항목이면 물리칩니다 */
-  if (usedQids.has(qid) && qid !== r.wikidata_id) {
+  if (qid && usedQids.has(qid) && qid !== r.wikidata_id) {
     return { ok: false, why: '다른 자료가 이미 쓰고 있는 항목', qid: qid };
   }
 
   /* ③ 로고와 사진 */
+  /* 공식 홈페이지 주소(P856)도 함께 받아 둡니다.
+     우리 자료에 주소가 비어 있으면 채웁니다. 주소가 있으면
+     그 홈페이지의 대표 이미지도 찾을 수 있어 두 가지가 함께 좋아집니다. */
+  const siteUrl = claimValues(ent, 'P856')[0] || null;
+
   const logoFile = claimValues(ent, 'P154')[0] || null;   // 로고
   /* 위키데이터 대표 사진(P18)이 없으면 위키백과 문서 대표 이미지를 씁니다 */
   const imgFile  = claimValues(ent, 'P18')[0] || wpImage || null;
-  if (!logoFile && !imgFile) return { ok: false, why: '로고·사진을 찾지 못함', qid: qid };
+
+  /* 위키데이터·위키백과에 그림이 하나도 없으면 공식 홈페이지를 봅니다 */
+  if (!logoFile && !imgFile) {
+    const page = r.link_url || siteUrl;
+    const site = await siteImage(page);
+    const patch0 = { wikidata_id: qid };
+    if (siteUrl && !r.link_url) patch0.link_url = siteUrl;   /* 주소가 비었으면 채웁니다 */
+    if (site && site.url) {
+      patch0.thumb_url = site.url;
+      patch0.photo_credit = '이미지 출처 · 공식 홈페이지';
+      return { ok: true, qid: qid, fromSite: site.kind, patch: patch0,
+               hasLogo: site.kind !== 'og', hasImg: site.kind === 'og' };
+    }
+    /* 그림은 못 찾았지만 주소를 새로 알았으면 그것만이라도 적어 둡니다 */
+    if (patch0.link_url) {
+      return { ok: false, why: '그림은 없지만 홈페이지 주소를 채웠습니다',
+               qid: qid, sideEffect: patch0 };
+    }
+    return { ok: false, why: '로고·사진을 찾지 못함 (홈페이지에도 없음)', qid: qid };
+  }
 
   const info = await commonsInfo([logoFile, imgFile].filter(Boolean));
   const logo = logoFile ? info.get(logoFile) : null;
@@ -410,6 +503,7 @@ async function handleOne(r) {
   if (!logo && !img) return { ok: false, why: '커먼즈에서 파일을 읽지 못함', qid: qid };
 
   const patch = { wikidata_id: qid };
+  if (siteUrl && !r.link_url) patch.link_url = siteUrl;
   if (logo) patch.logo_url = logo.thumb;
   if (img) {
     patch.thumb_url = img.thumb;
@@ -419,7 +513,7 @@ async function handleOne(r) {
     patch.thumb_url = logo.thumb;
     patch.photo_credit = creditText(logo);
   }
-  usedQids.add(qid);
+  if (qid) usedQids.add(qid);
   return { ok: true, qid: qid, patch: patch, hasLogo: !!logo, hasImg: !!img };
 }
 
@@ -454,21 +548,28 @@ async function main() {
         + (res.qid ? ` (${res.qid})` : '')
         + (res.tried ? `\n             찾아본 이름: ${res.tried}` : ''));
       miss++;
-      /* 번호는 찾았으면 적어 둡니다 — 나중에 손으로 사진을 넣을 때 도움이 됩니다 */
-      if (res.qid && !DRY && !r.wikidata_id) {
-        try {
-          await sb(`spot?id=eq.${r.id}`, {
-            method: 'PATCH', headers: { Prefer: 'return=minimal' },
-            body: JSON.stringify({ wikidata_id: res.qid }),
-          });
-        } catch (e) {}
+      /* 그림은 못 찾았어도 알아낸 것(위키데이터 번호·홈페이지 주소)은 적어 둡니다.
+         다음에 다시 돌릴 때 도움이 되고, 화면에서도 홈페이지 링크로 쓰입니다. */
+      if (!DRY) {
+        const side = res.sideEffect || (res.qid && !r.wikidata_id ? { wikidata_id: res.qid } : null);
+        if (side) {
+          try {
+            await sb(`spot?id=eq.${r.id}`, {
+              method: 'PATCH', headers: { Prefer: 'return=minimal' },
+              body: JSON.stringify(side),
+            });
+          } catch (e) {}
+        }
       }
       await sleep(250);
       continue;
     }
 
-    const mark = (res.hasLogo ? '로고' : '') + (res.hasLogo && res.hasImg ? '+' : '') + (res.hasImg ? '사진' : '');
-    console.log(`  [채움] ${String(r.title).slice(0, 34)} — ${mark} (${res.qid})`);
+    const mark = res.fromSite
+      ? ('홈페이지 ' + (res.fromSite === 'og' ? '대표사진' : res.fromSite === 'icon' ? '아이콘' : '로고'))
+      : ((res.hasLogo ? '로고' : '') + (res.hasLogo && res.hasImg ? '+' : '') + (res.hasImg ? '사진' : ''));
+    console.log(`  [채움] ${String(r.title).slice(0, 34)} — ${mark}`
+      + (res.qid ? ` (${res.qid})` : ''));
     if (!DRY) {
       try {
         await sb(`spot?id=eq.${r.id}`, {
