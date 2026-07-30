@@ -948,6 +948,9 @@
         <li><a href="#">문화예술교육형 사회적기업 육성 지원사업</a><span class="dt">~22.03.31</span></li>
       </ul>
 
+      <div class="sec-head" style="margin-top:24px"><div class="t"><span class="en-s">Organizations</span><span class="ko">음악단체 DB</span></div><a class="more en" href="/db/org.html">VIEW MORE +</a></div>
+      <ul class="list" id="orgs-list"></ul>
+
       <div class="sec-head" style="margin-top:24px"><div class="t"><span class="en-s">Database</span><span class="ko">데이터베이스</span></div><a class="more en" href="/db/index.html">VIEW MORE +</a></div>
       <div class="selfpic" id="card-db-pick">
         <div class="thumb ph"></div>
@@ -1609,6 +1612,44 @@ if('serviceWorker' in navigator){
   function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
+  /* ============================================================
+     음악단체 DB — 단체DB 에서 몇 곳을 보여 준다
+
+     단체는 날짜가 뜻을 갖지 않으므로 날짜 자리에 활동 지역을 넣습니다.
+     화면을 열 때마다 다른 단체가 나오도록 최근 항목 가운데 골라 섞습니다.
+     ============================================================ */
+  async function loadOrgs(n){
+    const box = document.getElementById('orgs-list');
+    if(!box) return;
+    try{
+      const rows = await sbGet('orgs?select=id,name_ko,name_en,location,type'
+        + '&name_ko=not.is.null&order=sort_no.desc,id.desc&limit=40');
+      if(!Array.isArray(rows) || !rows.length) return;
+
+      /* 골고루 보이도록 섞은 뒤 앞에서 n 개를 씁니다 */
+      const pool = rows.slice();
+      for(let i = pool.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+      }
+      const pick = pool.slice(0, n || 4);
+
+      box.innerHTML = '';
+      pick.forEach(function(r){
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '/db/org-view.html?id=' + encodeURIComponent(r.id);
+        a.textContent = r.name_ko || r.name_en || '';
+        const dt = document.createElement('span');
+        dt.className = 'dt';
+        /* 지역이 없으면 단체 종류(교향악단·합창단 등)를 대신 씁니다 */
+        dt.textContent = r.location || r.type || '';
+        li.appendChild(a); li.appendChild(dt);
+        box.appendChild(li);
+      });
+    }catch(e){ console.error('음악단체 로드 실패:', e); }
+  }
+
   /* DATABASE 자리 — 일곱 갈래 중 하나를 무작위로 골라 최근 항목을 보여준다 */
   async function loadDbPick(){
     const card = document.getElementById('card-db-pick');
@@ -2033,7 +2074,8 @@ if('serviceWorker' in navigator){
     loadDateList('notice-list', 'notices');
     loadDateList('concours-list', 'concours', 10);
     loadDateList('festival-list', 'festival', 5);
-    loadFunding(13);
+    loadFunding(7);
+    loadOrgs(4);
     loadMedia();
     loadScores();
     loadFeature('card-hot-topic', 'hot_topic');
