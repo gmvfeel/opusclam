@@ -203,6 +203,14 @@ window.OCBoard = (function () {
       return u;
     }
 
+    /* 목록 번호 — 전체 건수를 기준으로 매깁니다(최신 글이 큰 번호).
+       뉴스형이 쓰던 방식을 나머지 목록에도 맞췄습니다. */
+    function noText(no) {
+      var v = Number(no) || 0;
+      if (v <= 0) return '';
+      return v < 10 ? ('0' + v) : String(v);
+    }
+
     /* 재생시간 — 7:32 · 1:05:20 */
     function mmss(sec) {
       var t = Number(sec) || 0;
@@ -216,7 +224,7 @@ window.OCBoard = (function () {
        썸네일 왼쪽, 제목·정보 오른쪽. 두 칸으로 놓입니다(CSS).
        음원·동영상처럼 영상이 중심인 목록에 씁니다.
        cardStyle 을 켜지 않은 게시판에는 아무 영향이 없습니다. */
-    function cardHtml(rec) {
+    function cardHtml(rec, no) {
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur;
       var dur = mmss(rec.duration_sec);
       var img = rec.thumb_url
@@ -233,6 +241,7 @@ window.OCBoard = (function () {
       var head = ko || rec.title || '';
       var sub = (ko && rec.title && ko !== rec.title) ? rec.title : '';
       return '<a class="board-card" href="' + vp + '">'
+        + '<span class="bc-no">' + noText(no) + '</span>'
         + '<span class="bc-th">' + img + (dur ? '<i class="bc-dur">' + dur + '</i>' : '') + '</span>'
         + '<span class="bc-info">'
         +   '<span class="bc-title">'
@@ -245,11 +254,12 @@ window.OCBoard = (function () {
         + '</a>';
     }
 
-    function itemHtml(rec) {
+    function itemHtml(rec, no) {
       if (cfg.renderItem) return cfg.renderItem(rec, { esc: esc, fmtDate: fmtDate });
       var pin = rec.is_pinned ? ' board-item-pin' : '';
       var linkIcon = rec.link_url ? '<span class="board-linkicon" title="외부 링크">\u2197</span>' : '';
       return '<a class="board-item' + pin + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur + '">'
+        + '<span class="board-item-no">' + noText(no) + '</span>'
         + '<span class="board-cat ' + catClass(rec.category) + '">' + esc(rec.category || '') + '</span>'
         + '<span class="board-title">' + esc(rec.title || '') + linkIcon + '</span>'
         + '<span class="board-meta"><span class="board-date">' + fmtDate(rec.created_at) + '</span>'
@@ -330,7 +340,7 @@ window.OCBoard = (function () {
         .catch(function () { ids.forEach(function (k) { extInfo[k] = { logo: '', name: '' }; }); });
     }
 
-    function docRowHtml(rec) {
+    function docRowHtml(rec, no) {
       /* 표시 순서
          1) 글의 사진   2) 글의 로고   3) 학교 이름 약칭(색상 배경)   4) 빈 자리
          학교DB의 이미지는 쓰지 않습니다 — 건물 사진·깃발이 섞여 있습니다 */
@@ -360,6 +370,7 @@ window.OCBoard = (function () {
           + '</span>'
         : '';
       return '<div class="doc-row">'
+        + '<span class="doc-no">' + noText(no) + '</span>'
         + '<a class="doc-logo" href="' + vp + '">' + logo + '</a>'
         + '<div class="doc-main"><a class="doc-title" href="' + vp + '">' + esc(rec.title || '') + ccHtml(rec) + '</a>'
         + '<p class="doc-desc">' + previewText(rec.body, 120) + '</p>' + home + '</div>'
@@ -480,9 +491,16 @@ window.OCBoard = (function () {
               if (listEl) {
                 /* 카드형은 두 칸으로 놓이므로 목록 자리에 표시를 달아 둡니다 */
                 listEl.classList.toggle('as-cards', !!cfg.cardStyle);
-                listEl.innerHTML = cfg.cardStyle ? rows.map(cardHtml).join('')
-                  : (cfg.docStyle ? rows.map(docRowHtml).join('')
-                  : (cfg.articleStyle ? renderArticles(rows, (pg - 1) * PAGE) : rows.map(itemHtml).join('')));
+                /* 번호는 전체 건수에서 거꾸로 셉니다 — 최신 글이 가장 큰 번호입니다 */
+                var off = (pg - 1) * PAGE;
+                var numOf = function (i) { return total - off - i; };
+                listEl.innerHTML = cfg.cardStyle
+                  ? rows.map(function (r, i) { return cardHtml(r, numOf(i)); }).join('')
+                  : (cfg.docStyle
+                  ? rows.map(function (r, i) { return docRowHtml(r, numOf(i)); }).join('')
+                  : (cfg.articleStyle
+                  ? renderArticles(rows, off)
+                  : rows.map(function (r, i) { return itemHtml(r, numOf(i)); }).join('')));
               }
               renderPager();
               focusItem();          /* 반드시 그린 뒤에 */
