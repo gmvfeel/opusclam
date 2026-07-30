@@ -57,6 +57,9 @@
   #scores-list li .icon svg{width:13px;height:13px}
   #scores-list .dl-no{flex:0 0 auto;width:20px;font-family:var(--display);font-size:11px;
     font-weight:700;color:var(--text-3);letter-spacing:.02em;text-align:right}
+  /* 날짜 — 오른쪽 끝에 */
+  #scores-list li .dt{flex:0 0 auto;font-size:11px;color:var(--text-3);white-space:nowrap;
+    padding-left:10px;font-variant-numeric:tabular-nums}
 
   /* 입시요강 「해외」 버튼과 「입시커뮤니티」 버튼
      style.css 를 건드리지 않고 이 페이지에서만 씁니다
@@ -1507,7 +1510,7 @@ if('serviceWorker' in navigator){
      내려받을 파일이 붙어 있는지(file_url)도 함께 확인합니다 */
   async function feedScores(){
     try{
-      const rows = await sbGet('utility?select=id,title,file_url'
+      const rows = await sbGet('utility?select=id,title,file_url,created_at'
         + '&order=is_pinned.desc,created_at.desc&limit=6');
       if(!Array.isArray(rows) || !rows.length) return null;
       return rows.map(function(r){
@@ -1515,6 +1518,7 @@ if('serviceWorker' in navigator){
           title: r.title || '',
           link: '/community/utility-view.html?id=' + encodeURIComponent(r.id),
           has_file: !!String(r.file_url || '').trim(),
+          posted_on: r.created_at || '',
         };
       });
     }catch(e){ return null; }
@@ -1528,6 +1532,14 @@ if('serviceWorker' in navigator){
       if(!Array.isArray(rows) || !rows.length) rows = await feedScores();
       if(!Array.isArray(rows) || !rows.length) return;
       list.innerHTML = '';
+
+      /* 목록에 내려받을 파일이 하나라도 있으면 아이콘 자리를 둡니다.
+         하나도 없으면 그 자리를 아예 없애 제목이 왼쪽으로 붙습니다 —
+         빈 자리만 남으면 제목이 까닭 없이 밀려 보입니다. */
+      const anyFile = rows.some(function(x){
+        return (x.has_file === undefined) ? true : !!x.has_file;
+      });
+
       rows.forEach(function(r, i){
         const li = document.createElement('li');
 
@@ -1535,21 +1547,33 @@ if('serviceWorker' in navigator){
         const no = document.createElement('span');
         no.className = 'dl-no';
         no.textContent = ('0' + (i + 1)).slice(-2);
+        li.appendChild(no);
 
         /* 내려받을 파일이 붙어 있는 글에만 아이콘을 보여준다.
            전용 표(scores)에서 온 항목은 예전처럼 모두 보여줍니다. */
         const showIcon = (r.has_file === undefined) ? true : !!r.has_file;
-        const icon = document.createElement('span');
-        icon.className = 'icon';
-        if(showIcon){
-          icon.innerHTML = DL_ICON;
-        }else{
-          /* 아이콘이 없어도 줄이 밀리지 않게 자리만 비워 둔다 */
-          icon.style.visibility = 'hidden';
+        if(anyFile){
+          const icon = document.createElement('span');
+          icon.className = 'icon';
+          if(showIcon){
+            icon.innerHTML = DL_ICON;
+          }else{
+            /* 다른 줄에는 아이콘이 있으므로 자리를 맞춰 둔다 */
+            icon.style.visibility = 'hidden';
+          }
+          li.appendChild(icon);
         }
 
         const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
-        li.appendChild(no); li.appendChild(icon); li.appendChild(a);
+        li.appendChild(a);
+
+        /* 날짜 — 오른쪽 끝 */
+        const d = fmtDate(r.posted_on);
+        if(d){
+          const dt = document.createElement('span');
+          dt.className = 'dt'; dt.textContent = d;
+          li.appendChild(dt);
+        }
         list.appendChild(li);
       });
     }catch(e){ console.error('scores 로드 실패:', e); }
@@ -1854,6 +1878,37 @@ if('serviceWorker' in navigator){
     }catch(e){ return null; }
   }
 
+  /* ============================================================
+     콩쿨정보 대표 글 — 조회가 많은 것을 앞세운다
+
+     되도록 그림이 있는 항목을 고릅니다. 카드는 그림이 있어야 눈에 들어옵니다.
+     조회가 많은 것을 먼저 받아 그 안에서 그림 있는 것을 고르므로,
+     「조회 많은 것」 을 지키면서 「그림 있는 것」 을 함께 만족시킵니다.
+     ============================================================ */
+  async function feedConcoursTop(){
+    try{
+      const rows = await sbGet('spot?select=id,title,title_ko,body,thumb_url,logo_url,'
+        + 'view_count,category,region,date_from,created_at'
+        + '&section=eq.' + encodeURIComponent('콩쿨')
+        + '&hidden=is.false'
+        + '&order=view_count.desc.nullslast,created_at.desc&limit=15');
+      if(!Array.isArray(rows) || !rows.length) return null;
+
+      /* 조회 많은 순서를 지키면서 그림 있는 것을 먼저 고릅니다 */
+      const img = function(x){ return String(x.thumb_url || x.logo_url || '').trim(); };
+      const withImg = rows.filter(function(x){ return img(x); });
+      const r = withImg.length ? withImg[0] : rows[0];
+
+      return {
+        title: r.title_ko || r.title || '',
+        summary: toSummary(r.body, 110),
+        image_url: img(r),
+        link: '/spot/spot-view.html?id=' + encodeURIComponent(r.id),
+        posted_on: r.date_from || r.created_at || '',
+      };
+    }catch(e){ return null; }
+  }
+
   async function loadFeature(cardId, slot){
     const card = document.getElementById(cardId);
     if(!card) return;
@@ -1864,6 +1919,7 @@ if('serviceWorker' in navigator){
         let auto = null;
         if(slot === 'music_school')      auto = await feedMonthlySchool();
         else if(slot === 'contemporary') auto = await feedModernDb();
+        else if(slot === 'concours_lead') auto = await feedConcoursTop();
         else                             auto = await feedOne(slot);
         rows = auto ? [auto] : [];
       }
