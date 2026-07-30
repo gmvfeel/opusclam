@@ -17,6 +17,65 @@
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/assets/base.css">
 <link rel="stylesheet" href="/assets/hub.css">
+<style>
+  /* ── 날짜별 공연정보 (정보SPOT 전용) ──
+     달력은 이 화면에서만 쓰므로 공용 파일(hub.css)에 넣지 않고 여기 둡니다.
+     나중에 다른 화면에서도 쓰게 되면 그때 공용으로 옮기면 됩니다. */
+  .sp-cal{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);
+    border-radius:14px;overflow:hidden;background:var(--paper)}
+  .sp-calbox{padding:22px 20px 24px}
+  .sp-calside{padding:20px;background:var(--paper-2);border-left:1px solid var(--line);
+    display:flex;flex-direction:column}
+
+  .sp-calhead{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:18px}
+  .sp-calym{font-family:var(--display);font-size:26px;font-weight:400;letter-spacing:-.02em;
+    color:var(--text);font-variant-numeric:tabular-nums;min-width:130px;text-align:center}
+  .sp-calnav{width:30px;height:30px;display:grid;place-items:center;cursor:pointer;
+    border:0;background:transparent;color:var(--text-3);border-radius:50%}
+  .sp-calnav:hover{color:var(--violet-2);background:rgba(124,99,176,.1)}
+  .sp-calnav svg{width:17px;height:17px}
+  .sp-calnav[disabled]{opacity:.3;cursor:default}
+
+  .sp-caldow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+  .sp-caldow span{text-align:center;font-size:12px;font-weight:700;color:var(--text-3);padding:6px 0}
+  .sp-caldow span:first-child{color:#dc2626}
+  .sp-caldow span:last-child{color:var(--violet-2)}
+
+  .sp-calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .sp-day{position:relative;aspect-ratio:1;display:grid;place-items:center;border:0;
+    background:transparent;border-radius:50%;font-size:13px;color:var(--text-2);
+    font-variant-numeric:tabular-nums;cursor:default}
+  .sp-day.pad{visibility:hidden}
+  .sp-day.has{background:var(--paper-2);color:var(--text);font-weight:700;cursor:pointer}
+  .sp-day.has:hover{background:rgba(124,99,176,.16);color:var(--violet-2)}
+  .sp-day.has::after{content:'';position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
+    width:4px;height:4px;border-radius:50%;background:var(--violet-2)}
+  .sp-day.today{box-shadow:inset 0 0 0 1px var(--line-2)}
+  .sp-day.on{background:var(--violet);color:#fff;font-weight:800}
+  .sp-day.on::after{background:#fff}
+
+  .sp-calsidehead{font-size:13px;font-weight:800;letter-spacing:-.02em;color:var(--text);
+    padding-bottom:11px;margin-bottom:4px;border-bottom:1px solid var(--line)}
+  .sp-callist{flex:1;min-height:0}
+  .sp-calitem{display:block;padding:13px 2px;border-bottom:1px solid var(--line-2);
+    text-decoration:none;color:inherit}
+  .sp-calitem:hover .sp-calititle{color:var(--violet-2)}
+  .sp-calititle{font-size:13.5px;font-weight:700;letter-spacing:-.02em;color:var(--text);
+    line-height:1.45;transition:color .18s ease;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .sp-calimeta{margin-top:5px;font-size:12px;color:var(--text-3);line-height:1.55}
+  .sp-calempty{padding:30px 0;text-align:center;font-size:12.5px;color:var(--text-3);line-height:1.7}
+  .sp-calmore{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--violet-2);text-decoration:none}
+  .sp-calmore i{font-style:normal;width:24px;height:24px;display:grid;place-items:center;
+    border:1px solid var(--line-2);border-radius:50%;font-weight:400;font-size:15px}
+
+  @media (max-width:760px){
+    .sp-cal{grid-template-columns:1fr}
+    .sp-calside{border-left:0;border-top:1px solid var(--line)}
+  }
+</style>
 </head>
 <body data-header="overlay">
 <div id="oc-header"></div>
@@ -98,6 +157,36 @@
         </div>
       </div>
       <div class="cm-track" id="ciBox"></div>
+    </section>
+
+    <!-- 날짜별 공연정보 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">날짜별 공연정보<em>CONCERT CALENDAR</em></span>
+        <a class="cm-more" href="/spot/concert.html">VIEW MORE +</a>
+      </div>
+      <div class="sp-cal">
+        <div class="sp-calbox">
+          <div class="sp-calhead">
+            <button type="button" class="sp-calnav" id="calPrev" aria-label="지난달">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
+            </button>
+            <div class="sp-calym" id="calYm">—</div>
+            <button type="button" class="sp-calnav" id="calNext" aria-label="다음달">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+          <div class="sp-caldow" aria-hidden="true">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="sp-calgrid" id="calGrid"></div>
+        </div>
+        <div class="sp-calside">
+          <div class="sp-calsidehead" id="calSideHead">공연 일정</div>
+          <div class="sp-callist" id="calList"></div>
+          <a class="sp-calmore" href="/spot/concert.html">공연정보 전체보기 <i>+</i></a>
+        </div>
+      </div>
     </section>
 
     <!-- New Information — 큰 글 한 건 + 갈래별 탭 -->
@@ -265,6 +354,135 @@
       view:VIEW, label:'음원·동영상',
       emptyText:'등록된 음원·동영상이 아직 없습니다.'
     });
+
+    /* ── 날짜별 공연정보 (달력) ──
+       한 달치를 한 번만 불러 놓고, 날짜를 누르면 그날 공연을 오른쪽에 보여 줍니다.
+       공연이 여러 날에 걸치면(date_from ~ date_to) 그 사이 모든 날에 표시합니다.
+       달력 라이브러리를 쓰지 않습니다 — 따로 드는 비용이 없습니다. */
+    (function(){
+      var grid = document.getElementById('calGrid');
+      if (!grid) return;
+      var ymEl   = document.getElementById('calYm');
+      var listEl = document.getElementById('calList');
+      var headEl = document.getElementById('calSideHead');
+      var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/spot';
+      var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+      var H = { apikey:K, Authorization:'Bearer '+K };
+
+      var today = new Date();
+      var cur   = new Date(today.getFullYear(), today.getMonth(), 1);
+      var byDay = {};     /* '2026-08-13' → [공연, 공연] */
+      var picked = null;  /* 지금 고른 날 */
+
+      function pad(n){ return (n < 10 ? '0' : '') + n; }
+      function key(y, m, d){ return y + '-' + pad(m + 1) + '-' + pad(d); }
+      function esc(v){ return String(v == null ? '' : v)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      function dotDate(s){
+        if (!s) return '';
+        var p = String(s).slice(0,10).split('-');
+        return p.length < 3 ? '' : p[0] + '.' + p[1] + '.' + p[2];
+      }
+
+      /* 이 달과 겹치는 공연을 가져온다 */
+      function load(){
+        var y = cur.getFullYear(), m = cur.getMonth();
+        var first = key(y, m, 1);
+        var last  = key(y, m, new Date(y, m + 1, 0).getDate());
+        byDay = {};
+        var q = '?select=id,title,city,place_etc,date_from,date_to,category'
+              + '&section=eq.' + encodeURIComponent('공연정보')
+              + '&hidden=is.false'
+              + '&date_from=lte.' + last
+              + '&or=(date_to.gte.' + first + ',date_from.gte.' + first + ')'
+              + '&order=date_from.asc&limit=300';
+        return fetch(U + q, { headers:H })
+          .then(function(r){ return r.ok ? r.json() : []; })
+          .then(function(rows){
+            (rows || []).forEach(function(o){
+              if (!o.date_from) return;
+              var a = new Date(o.date_from + 'T00:00:00');
+              var b = o.date_to ? new Date(o.date_to + 'T00:00:00') : a;
+              if (isNaN(a) || isNaN(b)) return;
+              /* 너무 긴 기간이 달력을 다 덮지 않도록 이 달 안쪽만 표시합니다 */
+              var s0 = new Date(Math.max(a, new Date(y, m, 1)));
+              var e0 = new Date(Math.min(b, new Date(y, m + 1, 0)));
+              for (var d = new Date(s0); d <= e0; d.setDate(d.getDate() + 1)) {
+                var k = key(d.getFullYear(), d.getMonth(), d.getDate());
+                (byDay[k] = byDay[k] || []).push(o);
+              }
+            });
+          })
+          .catch(function(){ byDay = {}; });
+      }
+
+      function drawGrid(){
+        var y = cur.getFullYear(), m = cur.getMonth();
+        ymEl.textContent = y + '.' + pad(m + 1);
+        var startDow = new Date(y, m, 1).getDay();
+        var days = new Date(y, m + 1, 0).getDate();
+        var html = '';
+        for (var i = 0; i < startDow; i++) html += '<span class="sp-day pad"></span>';
+        for (var d = 1; d <= days; d++) {
+          var k = key(y, m, d);
+          var cls = 'sp-day';
+          if (byDay[k]) cls += ' has';
+          if (y === today.getFullYear() && m === today.getMonth() && d === today.getDate()) cls += ' today';
+          if (k === picked) cls += ' on';
+          html += byDay[k]
+            ? '<button type="button" class="' + cls + '" data-d="' + k + '">' + d + '</button>'
+            : '<span class="' + cls + '">' + d + '</span>';
+        }
+        grid.innerHTML = html;
+      }
+
+      /* 오른쪽 목록 — 고른 날이 없으면 이 달 전체를 보여 줍니다 */
+      function drawList(){
+        var y = cur.getFullYear(), m = cur.getMonth();
+        var rows, label;
+        if (picked && byDay[picked]) {
+          rows = byDay[picked];
+          label = dotDate(picked) + ' 공연 ' + rows.length + '건';
+        } else {
+          var seen = {}; rows = [];
+          Object.keys(byDay).sort().forEach(function(k){
+            byDay[k].forEach(function(o){ if (!seen[o.id]) { seen[o.id] = 1; rows.push(o); } });
+          });
+          label = y + '년 ' + (m + 1) + '월 공연 ' + rows.length + '건';
+        }
+        headEl.textContent = label;
+        if (!rows.length) {
+          listEl.innerHTML = '<p class="sp-calempty">이 달에 등록된 공연이 없습니다.<br>공연정보가 등록되면 날짜에 표시됩니다.</p>';
+          return;
+        }
+        listEl.innerHTML = rows.slice(0, 4).map(function(o){
+          var when = dotDate(o.date_from) + (o.date_to && o.date_to !== o.date_from ? ' ~ ' + dotDate(o.date_to) : '');
+          var where = o.city || o.place_etc || '';
+          return '<a class="sp-calitem" href="/spot/spot-view.html?id=' + encodeURIComponent(o.id) + '">'
+            + '<span class="sp-calititle">' + esc(o.title || '') + '</span>'
+            + '<span class="sp-calimeta">' + esc(when) + (where ? '<br>' + esc(where) : '') + '</span>'
+            + '</a>';
+        }).join('');
+      }
+
+      function refresh(){ load().then(function(){ drawGrid(); drawList(); }); }
+
+      grid.addEventListener('click', function(e){
+        var b = e.target.closest && e.target.closest('.sp-day[data-d]');
+        if (!b) return;
+        var k = b.getAttribute('data-d');
+        picked = (picked === k) ? null : k;   /* 같은 날을 다시 누르면 이 달 전체로 */
+        drawGrid(); drawList();
+      });
+      document.getElementById('calPrev').addEventListener('click', function(){
+        cur.setMonth(cur.getMonth() - 1); picked = null; refresh();
+      });
+      document.getElementById('calNext').addEventListener('click', function(){
+        cur.setMonth(cur.getMonth() + 1); picked = null; refresh();
+      });
+
+      refresh();
+    })();
 
     /* ── 갈래별 건수 ──
        바로가기 카드의 숫자를 채웁니다. 한 표를 보므로 section 으로 세기만 합니다. */
