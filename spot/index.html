@@ -408,9 +408,10 @@
       view:VIEW, badge:'NEW INFORMATION', label:'새 정보'
     });
 
-    /* 갈래별 탭 — 시안의 「페스티벌/콩쿨 · 국내콩쿨 · 지원금 · 공연 · 관련사이트 · 음원」 */
+    /* 갈래별 탭 — 아래쪽 칸들과 같은 모양으로 맞췄습니다.
+       번호 · 제목과 설명 · 날짜 순서입니다. */
     OCHub.boardTabs({
-      tabsEl:'#niTabs', listEl:'#niList', kind:'rows', n:3,
+      tabsEl:'#niTabs', listEl:'#niList', kind:'compact', n:5,
       tabs:[
         { label:'페스티벌', table:'spot', view:VIEW, list:'/spot/festival.html',
           cols:COLS, filter: sec('페스티벌') + '&hidden=is.false', dateCol:'date_from' },
