@@ -142,7 +142,12 @@
       .then(function(rows){
         var seen = {};
         (rows || []).forEach(function(x){ if (x.category) seen[x.category] = (seen[x.category] || 0) + 1; });
-        var names = Object.keys(seen).sort(function(a,b){ return seen[b] - seen[a] || a.localeCompare(b); });
+        /* 많은 것부터 놓고, 「기타」 는 언제나 맨 뒤로 보냅니다 */
+        var names = Object.keys(seen).sort(function(a,b){
+          if (a === '기타') return 1;
+          if (b === '기타') return -1;
+          return seen[b] - seen[a] || a.localeCompare(b);
+        });
         var sel = document.querySelector('.board-catsel');
         if (!sel || !names.length) return;
         names.forEach(function(n){
