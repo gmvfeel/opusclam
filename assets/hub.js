@@ -320,8 +320,11 @@ window.OCHub = (function () {
        OCHub.board({ ..., dateCol:'deadline' })
      쓰지 않는 화면에는 아무 영향이 없습니다. */
   function bDate(cfg, r) {
-    var v = (cfg.dateCol && r[cfg.dateCol]) ? r[cfg.dateCol] : r.created_at;
-    return ymd(v);
+    /* dateCol 을 적었으면 그 칸만 봅니다.
+       그 칸이 비어 있으면 날짜를 비웁니다 — 올린 날로 대신하면
+       마감일도 개최일도 없는 항목이 모두 「오늘」로 보여 잘못 읽힙니다. */
+    if (cfg.dateCol) return ymd(r[cfg.dateCol]);
+    return ymd(r.created_at);
   }
   function askBoard(cfg) {
     var cols = cfg.cols || 'id,category,title,body,thumb_url,author_name,created_at';
@@ -381,11 +384,17 @@ window.OCHub = (function () {
       + '<span class="bd-featgo">VIEW DETAIL <b>&rarr;</b></span>'
       + '</a>';
   }
-  function bCompact(cfg, r) {
+  /* 좁은 칸용 한 줄 목록.
+     번호 → 제목 → 날짜 순서입니다. 제목이 먼저 눈에 들어와야 하고,
+     제목 칸이 남은 폭을 다 차지하므로 날짜는 오른쪽 끝에 붙습니다. */
+  function bCompact(cfg, r, i) {
+    var no = ('0' + ((i || 0) + 1)).slice(-2);
+    var dt = bDate(cfg, r);
     return '<a class="bd-line" href="' + esc(bHref(cfg, r)) + '">'
-      + '<span class="bd-date">' + esc(bDate(cfg, r)) + '</span>'
+      + '<span class="bd-no">' + no + '</span>'
       + '<span class="bd-linetitle">' + esc(bTxt(r.title, 58)) + '</span>'
       + (r.comment_count ? '<span class="bd-cc">[' + r.comment_count + ']</span>' : '')
+      + (dt ? '<span class="bd-date">' + esc(dt) + '</span>' : '')
       + '</a>';
   }
   var RENDER = { cards: bCard, rows: bRow, feature: bFeature, compact: bCompact };
@@ -400,7 +409,7 @@ window.OCHub = (function () {
         return;
       }
       var fn = RENDER[cfg.kind] || bRow;
-      box.innerHTML = res.rows.map(function (r) { return fn(cfg, r); }).join('');
+      box.innerHTML = res.rows.map(function (r, i) { return fn(cfg, r, i); }).join('');
       if (cfg.countEl) {
         var c = document.querySelector(cfg.countEl);
         if (c) c.textContent = res.total.toLocaleString();
@@ -432,7 +441,7 @@ window.OCHub = (function () {
           var one = { view: t.view, list: t.list, dateCol: t.dateCol || cfg.dateCol };
           var html = (!res || !res.rows.length)
             ? '<p class="bd-empty">아직 등록된 글이 없습니다.</p>'
-            : res.rows.map(function (r) { return fn(one, r); }).join('');
+            : res.rows.map(function (r, i) { return fn(one, r, i); }).join('');
           cache[i] = html; listBox.innerHTML = html;
         });
     }

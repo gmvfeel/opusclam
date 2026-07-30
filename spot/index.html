@@ -385,9 +385,9 @@
         { label:'공연정보', table:'spot', view:VIEW, list:'/spot/concert.html',
           cols:COLS, filter: sec('공연정보') + '&hidden=is.false', dateCol:'date_from' },
         { label:'관련사이트', table:'spot', view:VIEW, list:'/spot/sites.html',
-          cols:COLS, filter: sec('관련사이트') + '&hidden=is.false' },
+          cols:COLS, filter: sec('관련사이트') + '&hidden=is.false', dateCol:'date_from' },
         { label:'음원 / 동영상', table:'spot', view:VIEW, list:'/spot/media.html',
-          cols:COLS, filter: sec('음원영상') + '&hidden=is.false' }
+          cols:COLS, filter: sec('음원영상') + '&hidden=is.false', dateCol:'date_from' }
       ]
     });
 
@@ -421,6 +421,7 @@
       el:'#stList', table:'spot', kind:'compact', n:6, cols:COLS,
       filter: sec('관련사이트') + '&hidden=is.false',
       order:'sort_order.asc.nullslast,created_at.desc.nullslast',
+      dateCol:'date_from',          /* 사이트에는 날짜가 없으므로 빈칸으로 둡니다 */
       view:VIEW, label:'관련사이트',
       emptyText:'등록된 사이트가 아직 없습니다.'
     });
@@ -430,6 +431,7 @@
       el:'#mdList', table:'spot', kind:'compact', n:6, cols:COLS,
       filter: sec('음원영상') + '&hidden=is.false',
       order:'created_at.desc.nullslast',
+      dateCol:'date_from',
       view:VIEW, label:'음원·동영상',
       emptyText:'등록된 음원·동영상이 아직 없습니다.'
     });
