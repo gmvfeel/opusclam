@@ -353,12 +353,19 @@ window.OCBoard = (function () {
       /* 표시 순서 — 로고를 사진보다 앞에 둡니다
          1) 글의 로고  2) 학교DB 로고  3) 글의 사진  4) 약칭 */
       var LG = 'class="is-logo" loading="lazy" style="object-fit:contain;padding:8px"';
+      /* 그림이 안 열릴 때 약칭 배지로 되돌립니다.
+         바깥 사이트나 커먼즈 그림은 주소가 바뀌거나 막히는 일이 있어,
+         그냥 두면 깨진 그림 아이콘이 그대로 보입니다.
+         onerror 에서 감싸개 안쪽을 배지로 바꿔 끼웁니다. */
+      var FB = esc(textLogo(nameForLogo)).replace(/"/g, '&quot;');
+      var ONERR = ' onerror="this.onerror=null;this.outerHTML=this.getAttribute(\'data-fb\')"'
+                + ' data-fb="' + FB + '"';
       var logo = rec.logo_url
-        ? '<img ' + LG + ' src="' + esc(rec.logo_url) + '" alt="">'
+        ? '<img ' + LG + ONERR + ' src="' + esc(rec.logo_url) + '" alt="">'
         : (trusted
-          ? '<img ' + LG + ' src="' + esc(trusted) + '" alt="">'
+          ? '<img ' + LG + ONERR + ' src="' + esc(trusted) + '" alt="">'
           : (rec.thumb_url
-            ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">'
+            ? '<img loading="lazy"' + ONERR + ' src="' + esc(rec.thumb_url) + '" alt="">'
             : textLogo(nameForLogo)));
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
@@ -673,16 +680,24 @@ window.OCBoard = (function () {
         if (cfg.docView) {
           box.innerHTML =
             '<div class="bv-dochead">'
-            + (o.logo_url
-                ? '<img class="bv-doclogo" src="' + esc(o.logo_url) + '" alt="">'
-                : (function(){
-                    if (o._extLogo && /^\/assets\/logos\//.test(o._extLogo))
-                      return '<img class="bv-doclogo" src="' + esc(o._extLogo) + '" alt="">';
-                    var nm = o._extName || o.school_name || o.logo_text || '';
-                    var sn = shortName(nm);
-                    return sn ? '<span class="bv-doclogo bv-doclogo-txt" style="background:' + tintOf(nm)
-                      + ';font-weight:700">' + esc(sn) + '</span>' : '';
-                  })())
+            + (function(){
+                /* 로고 자리 — 그림이 안 열리면 약칭 배지로 되돌립니다 */
+                var nm = o._extName || o.school_name || o.logo_text || '';
+                var sn = shortName(nm);
+                var badge = sn
+                  ? '<span class="bv-doclogo bv-doclogo-txt" style="background:' + tintOf(nm)
+                    + ';font-weight:700">' + esc(sn) + '</span>'
+                  : '';
+                var onerr = badge
+                  ? (' onerror="this.onerror=null;this.outerHTML=this.getAttribute(\'data-fb\')"'
+                     + ' data-fb="' + esc(badge).replace(/"/g, '&quot;') + '"')
+                  : ' onerror="this.onerror=null;this.style.display=\'none\'"';
+                if (o.logo_url)
+                  return '<img class="bv-doclogo"' + onerr + ' src="' + esc(o.logo_url) + '" alt="">';
+                if (o._extLogo && /^\/assets\/logos\//.test(o._extLogo))
+                  return '<img class="bv-doclogo"' + onerr + ' src="' + esc(o._extLogo) + '" alt="">';
+                return badge;
+              })()
             + '<div class="bv-dochead-t">'
             + (o.region ? '<span class="board-tag" data-cat="' + esc(o.region) + '">' + esc(o.region) + '</span> ' : '')
             + (o.category ? '<span class="board-tag" data-cat="' + esc(o.category) + '">' + esc(o.category) + '</span>' : '')
@@ -698,7 +713,14 @@ window.OCBoard = (function () {
             + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
             + '</div></div>'
             + (o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span>' + esc(o.file_name || '첨부파일 보기') + '</span></a>' : '')
-            + (player || (o.thumb_url ? '<figure class="bv-docphoto"><img src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' + (o.photo_credit ? '<figcaption>' + esc(o.photo_credit) + '</figcaption>' : '') + '</figure>' : ''))
+            + (player || (o.thumb_url
+                ? '<figure class="bv-docphoto"><img src="' + esc(o.thumb_url) + '" alt="" loading="lazy"'
+                  /* 사진이 안 열리면 사진 자리(설명까지)를 통째로 없앱니다 —
+                     깨진 그림과 빈 설명이 남는 것보다 낫습니다 */
+                  + ' onerror="this.onerror=null;var f=this.closest(\'figure\');if(f)f.remove()">'
+                  + (o.photo_credit ? '<figcaption>' + esc(o.photo_credit) + '</figcaption>' : '')
+                  + '</figure>'
+                : ''))
             + body
             + enhance
             + '<div class="bv-foot"></div>';

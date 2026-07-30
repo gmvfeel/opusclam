@@ -28,6 +28,7 @@
      node seed/spot-photo.mjs --limit=10          열 건만
      node seed/spot-photo.mjs --dry               저장하지 않고 찾은 것만 봅니다
      node seed/spot-photo.mjs --force             이미 채워진 것도 다시 찾습니다
+     node seed/spot-photo.mjs --verify            담긴 그림이 열리는지 훑어 깨진 것을 비웁니다
 
    필요한 환경변수
      SUPABASE_URL
@@ -55,6 +56,9 @@ const args = Object.fromEntries(
   })
 );
 const ONLY_SEC = args.section ? String(args.section) : null;
+/* --verify : 새로 찾지 않고, 이미 담긴 그림이 열리는지만 훑어
+   열리지 않는 것을 비웁니다 (깨진 그림 자리를 없앱니다) */
+const VERIFY = !!args.verify;
 const LIMIT    = Number(args.limit || 200);
 const DRY      = !!args.dry;
 const FORCE    = !!args.force;
@@ -359,6 +363,32 @@ async function commonsInfo(fileNames) {
   return out;
 }
 
+/* ── 그림이 실제로 열리는지 확인합니다 ──
+
+   이것이 없어서 첫 실행 뒤 목록에 깨진 그림이 나왔습니다.
+   바깥 사이트 그림은 주소가 있어도
+     · 지워졌거나
+     · 다른 사이트에서 불러오는 것을 막았거나
+     · 그림이 아닌 것(안내 페이지)이 오는
+   일이 있습니다. 담기 전에 한 번 두드려 봅니다. */
+async function imageOk(url) {
+  if (!url) return false;
+  try {
+    /* 먼저 머리만 물어봅니다 (본문을 받지 않아 빠릅니다) */
+    let res = await fetch(url, { method: 'HEAD', headers: { 'User-Agent': UA }, redirect: 'follow' });
+    /* 머리 요청을 받지 않는 서버가 있어, 그때는 조금만 받아 봅니다 */
+    if (res.status === 405 || res.status === 501) {
+      res = await fetch(url, { headers: { 'User-Agent': UA, Range: 'bytes=0-2047' }, redirect: 'follow' });
+    }
+    if (!res.ok) return false;
+    const ct = res.headers.get('content-type') || '';
+    if (!/^image\//i.test(ct)) return false;              /* 그림이 아니면 버립니다 */
+    const len = Number(res.headers.get('content-length') || 0);
+    if (len && len < 500) return false;                    /* 빈 그림·자리표 */
+    return true;
+  } catch (e) { return false; }
+}
+
 /* 저작자 표기 — 커먼즈 사진은 라이선스에 따라 표기가 필요합니다 */
 function creditText(info) {
   const bits = [];
@@ -452,7 +482,7 @@ async function handleOne(r) {
     /* 위키데이터에 아예 없는 항목(국내 기관·지원사업 등)은
        공식 홈페이지의 대표 이미지를 씁니다. */
     const site = await siteImage(r.link_url);
-    if (site && site.url) {
+    if (site && site.url && await imageOk(site.url)) {
       return { ok: true, qid: null, fromSite: site.kind, patch: {
         thumb_url: site.url,
         photo_credit: '이미지 출처 · 공식 홈페이지',
@@ -483,7 +513,7 @@ async function handleOne(r) {
     const site = await siteImage(page);
     const patch0 = { wikidata_id: qid };
     if (siteUrl && !r.link_url) patch0.link_url = siteUrl;   /* 주소가 비었으면 채웁니다 */
-    if (site && site.url) {
+    if (site && site.url && await imageOk(site.url)) {
       patch0.thumb_url = site.url;
       patch0.photo_credit = '이미지 출처 · 공식 홈페이지';
       return { ok: true, qid: qid, fromSite: site.kind, patch: patch0,
@@ -504,23 +534,72 @@ async function handleOne(r) {
 
   const patch = { wikidata_id: qid };
   if (siteUrl && !r.link_url) patch.link_url = siteUrl;
-  if (logo) patch.logo_url = logo.thumb;
-  if (img) {
+
+  /* 커먼즈 그림도 실제로 열리는지 확인합니다 */
+  const logoOk = logo ? await imageOk(logo.thumb) : false;
+  const imgOk  = img  ? await imageOk(img.thumb)  : false;
+  if (!logoOk && !imgOk) {
+    /* 둘 다 열리지 않으면 홈페이지를 봅니다 */
+    const site = await siteImage(r.link_url || siteUrl);
+    if (site && site.url && await imageOk(site.url)) {
+      patch.thumb_url = site.url;
+      patch.photo_credit = '이미지 출처 · 공식 홈페이지';
+      return { ok: true, qid: qid, fromSite: site.kind, patch: patch,
+               hasLogo: site.kind !== 'og', hasImg: site.kind === 'og' };
+    }
+    return { ok: false, why: '찾은 그림이 열리지 않음', qid: qid,
+             sideEffect: patch.link_url ? patch : null };
+  }
+  if (logoOk) patch.logo_url = logo.thumb;
+  if (imgOk) {
     patch.thumb_url = img.thumb;
     patch.photo_credit = creditText(img);
-  } else if (logo) {
+  } else if (logoOk) {
     /* 사진이 없고 로고만 있으면 로고를 대표 그림으로도 씁니다 */
     patch.thumb_url = logo.thumb;
     patch.photo_credit = creditText(logo);
   }
   if (qid) usedQids.add(qid);
-  return { ok: true, qid: qid, patch: patch, hasLogo: !!logo, hasImg: !!img };
+  return { ok: true, qid: qid, patch: patch, hasLogo: logoOk, hasImg: imgOk };
 }
 
 /* ============================================================
    5) 실행
    ============================================================ */
+/* 이미 담긴 그림이 열리는지 훑습니다 */
+async function verifyAll() {
+  console.log('── 담긴 그림이 열리는지 훑습니다 ──');
+  let q = 'spot?select=id,title,logo_url,thumb_url&video_id=is.null'
+        + '&or=(logo_url.not.is.null,thumb_url.not.is.null)'
+        + `&limit=${LIMIT}`;
+  if (ONLY_SEC) q += '&section=eq.' + encodeURIComponent(ONLY_SEC);
+  const rows = (await sb(q)) || [];
+  console.log(`대상 ${rows.length}건${DRY ? ' · 고치지 않음(dry)' : ''}`);
+  let bad = 0;
+  for (const r of rows) {
+    const patch = {};
+    if (r.logo_url  && !(await imageOk(r.logo_url)))  patch.logo_url = null;
+    if (r.thumb_url && !(await imageOk(r.thumb_url))) { patch.thumb_url = null; patch.photo_credit = null; }
+    if (!Object.keys(patch).length) continue;
+    bad++;
+    console.log(`  [열리지 않음] ${String(r.title).slice(0, 34)} — `
+      + Object.keys(patch).filter((k) => k !== 'photo_credit').join(', ') + ' 비움');
+    if (!DRY) {
+      try {
+        await sb(`spot?id=eq.${r.id}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify(patch),
+        });
+      } catch (e) { console.log(`      비우기 실패: ${e.message}`); }
+    }
+    await sleep(120);
+  }
+  console.log(`\n── 끝 ── 열리지 않아 비운 것 ${bad}건`);
+  if (DRY) console.log('※ --dry 였으므로 고치지 않았습니다.');
+}
+
 async function main() {
+  if (VERIFY) return verifyAll();
   console.log('── 정보SPOT 사진·로고 수집 ──');
 
   /* 이미 담긴 위키데이터 항목을 먼저 알아 둡니다 —
