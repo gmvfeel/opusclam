@@ -390,10 +390,20 @@ window.OCHub = (function () {
   function bCompact(cfg, r, i) {
     var no = ('0' + ((i || 0) + 1)).slice(-2);
     var dt = bDate(cfg, r);
+    /* 제목 아래 한 줄 설명.
+       제목만 두면 가운데가 비어 보이고, 무엇에 관한 항목인지 목록에서 알기 어렵습니다.
+       설명이 없는 게시판에서는 이 줄이 아예 생기지 않으므로 예전과 같아 보입니다. */
+    /* 넉넉히 잘라 넘기고, 실제로 몇 자까지 보일지는 CSS 가 칸 폭에 맞춰 정합니다.
+       여기서 짧게 자르면 넓은 화면에서 오른쪽이 비어 보입니다. */
+    var desc = bTxt(r.body, cfg.descLen || 90);
     return '<a class="bd-line" href="' + esc(bHref(cfg, r)) + '">'
       + '<span class="bd-no">' + no + '</span>'
-      + '<span class="bd-linetitle">' + esc(bTxt(r.title, 58)) + '</span>'
-      + (r.comment_count ? '<span class="bd-cc">[' + r.comment_count + ']</span>' : '')
+      + '<span class="bd-lbody">'
+      +   '<span class="bd-linetitle">' + esc(bTxt(r.title, 58))
+      +     (r.comment_count ? ' <span class="bd-cc">[' + r.comment_count + ']</span>' : '')
+      +   '</span>'
+      +   (desc ? '<span class="bd-linedesc">' + esc(desc) + '</span>' : '')
+      + '</span>'
       + (dt ? '<span class="bd-date">' + esc(dt) + '</span>' : '')
       + '</a>';
   }
