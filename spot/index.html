@@ -81,18 +81,39 @@
      글자와 막대가 1.5배로 커졌습니다. 그래서 HTML 로 바꿨습니다.
      이러면 글자 크기가 화면 폭과 무관하게 그대로 유지되고,
      마우스를 올렸을 때 알림창도 곧바로 뜹니다. */
-  .sp-mchart{display:flex;align-items:flex-end;gap:6px;height:190px;padding:22px 4px 0}
-  .sp-mcol{position:relative;flex:1;display:flex;flex-direction:column;
-    align-items:center;justify-content:flex-end;height:100%;cursor:default}
+  .sp-mchart{position:relative;padding-left:26px}
+  .sp-mcols{position:relative;display:flex;align-items:flex-end;gap:5px;
+    height:172px;padding-top:20px;box-sizing:border-box}
+
+  /* 값 눈금 — 막대 높이를 눈으로 재도록 가로줄을 깔아 둡니다 */
+  .sp-mgrid{position:absolute;left:0;right:0;top:20px;bottom:0;pointer-events:none}
+  .sp-mgrid i{position:absolute;left:0;right:0;height:0;border-top:1px dashed var(--line-2)}
+  .sp-mgrid i.base{border-top:1px solid var(--line)}
+  .sp-mgrid i b{position:absolute;left:-26px;top:-8px;width:21px;text-align:right;
+    font-size:11px;font-weight:400;color:var(--text-3);font-variant-numeric:tabular-nums}
+
+  .sp-mcol{position:relative;flex:1;display:flex;align-items:flex-end;justify-content:center;
+    height:100%;cursor:default}
   .sp-mcol.has{cursor:pointer}
-  .sp-mval{font-size:11.5px;font-weight:800;color:var(--text-2);margin-bottom:4px;
-    font-variant-numeric:tabular-nums;visibility:hidden}
-  .sp-mcol.has .sp-mval{visibility:visible}
-  .sp-mbar{width:100%;max-width:46px;border-radius:4px 4px 0 0;background:var(--line-2);
-    min-height:3px;transition:filter .15s ease}
+  /* 값이 없는 달도 자리를 옅게 보여 줍니다 — 빈 곳이 많아도 헐거워 보이지 않습니다 */
+  .sp-mcol::before{content:'';position:absolute;bottom:0;top:0;width:100%;max-width:52px;
+    background:var(--paper-2);opacity:.55;border-radius:5px 5px 0 0}
+  html[data-theme="dark"] .sp-mcol::before{opacity:.35}
+  .sp-mbar{position:relative;width:100%;max-width:52px;border-radius:5px 5px 0 0;
+    background:var(--line-2);min-height:3px;transition:filter .15s ease}
   .sp-mcol.has:hover .sp-mbar{filter:brightness(1.18)}
-  .sp-mlabel{margin-top:9px;font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
-  .sp-mcol.has .sp-mlabel{color:var(--text-2);font-weight:700}
+  .sp-mval{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+    margin-bottom:5px;font-size:11.5px;font-weight:800;color:var(--text-2);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .sp-mlabels{display:flex;gap:5px;margin-top:9px}
+  .sp-mlabels span{flex:1;text-align:center;font-size:11.5px;color:var(--text-3);
+    font-variant-numeric:tabular-nums}
+  .sp-mlabels span.has{color:var(--text-2);font-weight:700}
+  /* 이번 달 — 지금이 어디쯤인지 한눈에 */
+  .sp-mlabels span.now{color:var(--violet-2);font-weight:800}
+  .sp-mlabels span.now::after{content:'';display:block;width:4px;height:4px;border-radius:50%;
+    background:var(--violet-2);margin:3px auto 0}
 
   /* 마우스를 올리면 뜨는 알림창 — 월별·국가별이 함께 씁니다 */
   .sp-tip{position:absolute;left:50%;bottom:100%;transform:translate(-50%,-8px);
@@ -473,9 +494,30 @@
       function monthsHtml(rows){
         var max = 0;
         rows.forEach(function(r){ if ((Number(r.n)||0) > max) max = Number(r.n)||0; });
+
+        /* 눈금 값 정하기 — 값이 작을 때는 1씩, 클 때는 네 단계로 나눕니다.
+           눈금 맨 위를 실제 최대값보다 조금 올려 막대가 천장에 붙지 않게 합니다. */
+        var top, ticks = [];
+        if (max <= 0) { top = 1; ticks = [0, 1]; }
+        else if (max <= 5) {
+          top = max; for (var v = 0; v <= top; v++) ticks.push(v);
+        } else {
+          var step = Math.ceil(max / 4);                     /* 네 단계로 나눕니다 */
+          top = step * 4;
+          for (var v2 = 0; v2 <= top; v2 += step) ticks.push(v2);
+        }
+
+        var grid = ticks.map(function(t){
+          var pos = top ? (t / top * 100) : 0;
+          return '<i class="' + (t === 0 ? 'base' : '') + '" style="bottom:' + pos.toFixed(2) + '%">'
+               + '<b>' + t + '</b></i>';
+        }).join('');
+
+        var thisMonth = new Date().getMonth() + 1;
+
         var cols = rows.map(function(r){
           var n = Number(r.n) || 0;
-          var h = max ? Math.max(n / max * 100, n > 0 ? 4 : 0) : 0;
+          var h = top ? Math.max(n / top * 100, n > 0 ? 4 : 0) : 0;
           var t = max ? (n / max) : 0;
           var l = Math.round(206 - 138 * t);                  /* 값이 클수록 진하게 */
           var bg = n > 0
@@ -487,14 +529,25 @@
             + '>'
             + (n > 0 ? '<span class="sp-tip"><b>' + r.m + '월</b> ' + num(n) + '건'
                      + '<em>달력에서 보기</em></span>' : '')
-            + '<span class="sp-mval">' + (n > 0 ? n : '') + '</span>'
-            + '<span class="sp-mbar"' + (bg ? ' style="height:' + h.toFixed(1) + '%;background:' + bg + '"' : '') + '></span>'
-            + '<span class="sp-mlabel">' + r.m + '</span>'
+            + '<span class="sp-mbar"' + (bg ? ' style="height:' + h.toFixed(1) + '%;background:' + bg + '"' : '') + '>'
+            + (n > 0 ? '<span class="sp-mval">' + n + '</span>' : '')
+            + '</span>'
             + '</div>';
         }).join('');
+
+        var labels = rows.map(function(r){
+          var n = Number(r.n) || 0;
+          var cls = (n > 0 ? 'has' : '') + (r.m === thisMonth ? ' now' : '');
+          return '<span class="' + cls.trim() + '"'
+               + (r.m === thisMonth ? ' title="이번 달"' : '') + '>' + r.m + '</span>';
+        }).join('');
+
         return '<div class="hb-ptitle"><b>월별 개최 분포</b>'
-             + '<span>페스티벌·콩쿨·공연이 어느 달에 열리는지</span></div>'
-             + '<div class="sp-mchart">' + cols + '</div>';
+             + '<span>페스티벌·콩쿨·공연이 어느 달에 열리는지 · 막대를 누르면 그 달 달력으로</span></div>'
+             + '<div class="sp-mchart">'
+             +   '<div class="sp-mcols"><div class="sp-mgrid">' + grid + '</div>' + cols + '</div>'
+             +   '<div class="sp-mlabels">' + labels + '</div>'
+             + '</div>';
       }
 
       /* ② 갈래별 구성비 — 한 줄 띠 + 범례 (DATABASE 메인과 같은 모양) */
