@@ -847,6 +847,11 @@
           <li><a href="#">2016 대한민국 신인음악콩쿠르 안내</a><span class="dt">21.11.22</span></li>
         </ul>
       </div>
+
+      <div class="col-block">
+        <div class="sec-head"><div class="t"><span class="en-s">Festival</span><span class="ko">페스티벌정보</span></div><a class="more en" href="/spot/festival.html">MORE +</a></div>
+        <ul class="list" id="festival-list"></ul>
+      </div>
     </div>
 
     <!-- column 2 -->
@@ -1827,7 +1832,7 @@ if('serviceWorker' in navigator){
       const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/random_self_pr', {
         method: 'POST',
         headers: Object.assign({ 'Content-Type': 'application/json' }, H),
-        body: JSON.stringify({ p_n: 2 }),
+        body: JSON.stringify({ p_n: 3 }),
       });
       if(!res.ok) return null;
       const rows = await res.json();
@@ -1848,9 +1853,15 @@ if('serviceWorker' in navigator){
     const box = document.getElementById('artists-list');
     if(!box) return;
     try{
-      let rows = await sbGet('artists?select=name,role,bio,image_url,link&order=sort_order.asc');
+      /* 세 명을 보여 줍니다.
+         전용 표(artists)에 등록된 것이 있으면 그것을 먼저 쓰고,
+         비어 있으면 인물DB에서 무작위로 고릅니다.
+         어느 쪽으로 오든 세 명이 되도록 두 곳 모두 개수를 맞춰 둡니다. */
+      let rows = await sbGet('artists?select=name,role,bio,image_url,link'
+        + '&order=sort_order.asc&limit=3');
       /* 전용 표가 비어 있으면 인물DB에서 무작위로 */
       if(!Array.isArray(rows) || !rows.length) rows = await feedRandomArtists();
+      if(Array.isArray(rows) && rows.length > 3) rows = rows.slice(0, 3);
       if(!Array.isArray(rows) || !rows.length) return;
       box.innerHTML = '';
       rows.forEach(function(r, i){
@@ -2020,7 +2031,8 @@ if('serviceWorker' in navigator){
     loadTicker();
     loadDbPick();                      /* DATABASE 자리 — 일곱 갈래 무작위 */
     loadDateList('notice-list', 'notices');
-    loadDateList('concours-list', 'concours', 13);
+    loadDateList('concours-list', 'concours', 10);
+    loadDateList('festival-list', 'festival', 5);
     loadFunding(13);
     loadMedia();
     loadScores();
