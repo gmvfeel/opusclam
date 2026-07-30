@@ -1410,14 +1410,20 @@ if('serviceWorker' in navigator){
     }catch(e){ return null; }
   }
 
-  async function loadDateList(elId, table){
+  async function loadDateList(elId, table, n){
     const list = document.getElementById(elId);
     if(!list) return;
     try{
-      let rows = await sbGet(table + '?select=title,link,posted_on&order=sort_order.asc');
+      /* n 을 주면 그만큼만 보여 준다.
+         순서는 sort_order 를 먼저 보고, 그것이 비어 있으면 날짜 늦은 순으로.
+         날짜가 잡힌 것을 앞에 두어야 「어떤 것을 보여 줄지」 가 뜻을 갖는다. */
+      const lim = n ? ('&limit=' + n) : '';
+      let rows = await sbGet(table + '?select=title,link,posted_on'
+        + '&order=sort_order.asc.nullslast,posted_on.desc.nullslast' + lim);
       /* 전용 표가 비어 있으면 게시판에서 가져온다 */
       if(!Array.isArray(rows) || !rows.length) rows = await feedList(table);
       if(!Array.isArray(rows) || !rows.length) return;
+      if(n) rows = rows.slice(0, n);
       list.innerHTML = '';
       rows.forEach(function(r){
         const li = document.createElement('li');
@@ -1890,7 +1896,7 @@ if('serviceWorker' in navigator){
     loadTicker();
     loadDbPick();                      /* DATABASE 자리 — 일곱 갈래 무작위 */
     loadDateList('notice-list', 'notices');
-    loadDateList('concours-list', 'concours');
+    loadDateList('concours-list', 'concours', 13);
     loadFunding();
     loadScores();
     loadFeature('card-hot-topic', 'hot_topic');
