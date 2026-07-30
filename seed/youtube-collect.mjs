@@ -682,6 +682,24 @@ async function main() {
   if (MODE === 'channels' || MODE === 'both') add(await runChannels(cfg, seen, persons));
   if (MODE === 'search'   || MODE === 'both') add(await runSearch(cfg, seen, persons));
 
+  /* 편성(Symphony·Concerto·Chamber…)과 시대(현대음악이전·현대음악)를 붙입니다.
+     규칙은 SQL 함수 한 곳에만 있습니다 — 여기서 또 적으면 곧 어긋납니다. */
+  if (tot.n && !DRY) {
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/rpc/spot_media_classify`, {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_force: false }),
+      });
+      if (r.ok) {
+        const j = await r.json();
+        console.log(`\n분류 — 편성 ${j.form_filled}건 · 시대 ${j.era_filled}건 (전체 ${j.total}건)`);
+      } else {
+        console.log(`\n분류 건너뜀: HTTP ${r.status}`);
+      }
+    } catch (e) { console.log(`\n분류 건너뜀: ${e.message}`); }
+  }
+
   console.log(`\n── 끝 ──`);
   console.log(`담은 것 ${tot.n}개 · 버린 것 ${tot.rej}개 · 쓴 한도 약 ${tot.quota} (하루 10,000)`);
   if (DRY) console.log('※ --dry 였으므로 아무것도 저장하지 않았습니다.');
