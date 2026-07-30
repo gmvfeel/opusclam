@@ -104,7 +104,17 @@
   .sp-mcol.has:hover .sp-mbar{filter:brightness(1.18)}
   .sp-mval{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
     margin-bottom:5px;font-size:11.5px;font-weight:800;color:var(--text-2);
-    font-variant-numeric:tabular-nums;white-space:nowrap}
+    font-variant-numeric:tabular-nums;white-space:nowrap;z-index:3}
+
+  /* 막대 위에 겹치는 흐름선 — 달을 따라 오르내리는 결이 한눈에 보입니다.
+     막대와 같은 자리(같은 좌표계)에 깔아야 꼭짓점이 막대 끝에 정확히 앉습니다. */
+  .sp-mline{position:absolute;left:0;right:0;top:20px;bottom:0;z-index:2;pointer-events:none}
+  .sp-mline svg{width:100%;height:100%;display:block;overflow:visible}
+  .sp-mline path{fill:none;stroke:#C9A94E;stroke-width:2;stroke-linecap:round;
+    stroke-linejoin:round;vector-effect:non-scaling-stroke}
+  .sp-mline circle{fill:#fff;stroke:#C9A94E;stroke-width:2;
+    vector-effect:non-scaling-stroke}
+  html[data-theme="dark"] .sp-mline circle{fill:#17171a}
 
   .sp-mlabels{display:flex;gap:5px;margin-top:9px}
   .sp-mlabels span{flex:1;text-align:center;font-size:11.5px;color:var(--text-3);
@@ -535,6 +545,34 @@
             + '</div>';
         }).join('');
 
+        /* 흐름선 — 각 달의 값 지점을 부드럽게 잇습니다.
+           좌표는 백분율(0~100)로 쓰고 preserveAspectRatio 를 none 으로 두어
+           칸 폭이 어떻게 바뀌어도 막대와 어긋나지 않습니다.
+           선 굵기는 non-scaling-stroke 로 고정해 늘어나지 않게 합니다. */
+        var pts = rows.map(function(r, i){
+          var n = Number(r.n) || 0;
+          return {
+            x: (i + 0.5) / rows.length * 100,
+            y: 100 - (top ? (n / top * 100) : 0),
+            n: n
+          };
+        });
+        var line = '';
+        pts.forEach(function(p, i){
+          if (i === 0) { line += 'M' + p.x.toFixed(2) + ' ' + p.y.toFixed(2); return; }
+          var q = pts[i - 1], mx = (q.x + p.x) / 2;
+          /* 앞뒤 점에서 가로로 빠지는 곡선 — 값이 튀어 올라 보이지 않습니다 */
+          line += ' C' + mx.toFixed(2) + ' ' + q.y.toFixed(2)
+                + ',' + mx.toFixed(2) + ' ' + p.y.toFixed(2)
+                + ',' + p.x.toFixed(2) + ' ' + p.y.toFixed(2);
+        });
+        var dots = pts.filter(function(p){ return p.n > 0; }).map(function(p){
+          return '<circle cx="' + p.x.toFixed(2) + '" cy="' + p.y.toFixed(2) + '" r="3.2"/>';
+        }).join('');
+        var lineSvg = '<div class="sp-mline"><svg viewBox="0 0 100 100"'
+          + ' preserveAspectRatio="none" aria-hidden="true">'
+          + '<path d="' + line + '"/>' + dots + '</svg></div>';
+
         var labels = rows.map(function(r){
           var n = Number(r.n) || 0;
           var cls = (n > 0 ? 'has' : '') + (r.m === thisMonth ? ' now' : '');
@@ -545,7 +583,8 @@
         return '<div class="hb-ptitle"><b>월별 개최 분포</b>'
              + '<span>페스티벌·콩쿨·공연이 어느 달에 열리는지 · 막대를 누르면 그 달 달력으로</span></div>'
              + '<div class="sp-mchart">'
-             +   '<div class="sp-mcols"><div class="sp-mgrid">' + grid + '</div>' + cols + '</div>'
+             +   '<div class="sp-mcols"><div class="sp-mgrid">' + grid + '</div>'
+             +     cols + lineSvg + '</div>'
              +   '<div class="sp-mlabels">' + labels + '</div>'
              + '</div>';
       }
