@@ -56,6 +56,24 @@
   .bd-cardimg img{width:100%;height:100%;object-fit:cover;display:block}
   .bd-noimg{display:grid;place-items:center}
   .bd-noimg i{font-style:normal;font-size:28px;font-weight:800;color:#c3c5d4}
+  /* 영상 카드 — 재생시간 배지와 재생 표시 */
+  .bd-cardimg{position:relative}
+  .bd-dur{position:absolute;right:5px;bottom:5px;font-style:normal;font-size:10.5px;
+    font-weight:700;color:#fff;background:rgba(0,0,0,.74);border-radius:3px;
+    padding:1px 5px;line-height:1.45;font-variant-numeric:tabular-nums}
+  .bd-playmark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    font-style:normal;width:38px;height:38px;border-radius:50%;
+    background:rgba(0,0,0,.55);color:#fff;font-size:14px;
+    display:grid;place-items:center;padding-left:2px;
+    transition:background .18s ease,transform .18s ease}
+  .bd-card.is-video:hover .bd-playmark{background:#f00;transform:translate(-50%,-50%) scale(1.08)}
+
+  /* 두 칸 카드 — 좁은 칸(.cm-two 안)에서 카드를 두 줄로 놓습니다 */
+  .bd-cards2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+  .bd-cards2 .bd-card{margin:0}
+  @media (max-width:760px){
+    .bd-cards2{grid-template-columns:minmax(0,1fr)}
+  }
   .bd-cardbody{display:flex;flex-direction:column;gap:5px;padding:12px 14px 13px}
   .bd-cat{align-self:flex-start;font-size:10.5px;font-weight:800;letter-spacing:-.01em;
     color:var(--violet-2);background:rgba(124,99,176,.12);border-radius:6px;padding:3px 8px}

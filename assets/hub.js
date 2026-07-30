@@ -347,15 +347,33 @@ window.OCHub = (function () {
       });
   }
 
+  /* 재생시간 — 7:32 · 1:05:20 */
+  function durText(sec) {
+    var t = Number(sec) || 0;
+    if (!t) return '';
+    var h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s2 = t % 60;
+    return h ? (h + ':' + ('0' + m).slice(-2) + ':' + ('0' + s2).slice(-2))
+             : (m + ':' + ('0' + s2).slice(-2));
+  }
+
   function bCard(cfg, r) {
     var img = r.thumb_url || r.logo_url || '';
-    return '<a class="bd-card" href="' + esc(bHref(cfg, r)) + '">'
+    /* 영상이면 재생시간 배지와 재생 표시를 얹습니다.
+       음원·동영상 목록에 쓰이며, 그 칸이 없는 게시판에는 아무 영향이 없습니다. */
+    var dur = durText(r.duration_sec);
+    var isVideo = !!r.video_id;
+    /* 한국어 표기가 있으면 그것을 앞세웁니다 (일본어·독일어 제목 때문입니다) */
+    var head = (cfg.koField && r[cfg.koField]) ? r[cfg.koField] : r.title;
+    return '<a class="bd-card' + (isVideo ? ' is-video' : '') + '" href="' + esc(bHref(cfg, r)) + '">'
       + (img
-          ? '<span class="bd-cardimg"><img src="' + esc(thumb(img, 480)) + '" alt="" loading="lazy"></span>'
-          : '<span class="bd-cardimg bd-noimg"><i>' + esc((r.title || '?').trim().charAt(0)) + '</i></span>')
+          ? '<span class="bd-cardimg"><img src="' + esc(thumb(img, 480)) + '" alt="" loading="lazy">'
+            + (dur ? '<i class="bd-dur">' + dur + '</i>' : '')
+            + (isVideo ? '<i class="bd-playmark" aria-hidden="true">&#9654;</i>' : '')
+            + '</span>'
+          : '<span class="bd-cardimg bd-noimg"><i>' + esc((head || '?').trim().charAt(0)) + '</i></span>')
       + '<span class="bd-cardbody">'
       +   (r.category ? '<span class="bd-cat">' + esc(r.category) + '</span>' : '')
-      +   '<span class="bd-title">' + esc(bTxt(r.title, 46)) + '</span>'
+      +   '<span class="bd-title">' + esc(bTxt(head, 46)) + '</span>'
       +   '<span class="bd-desc">' + esc(bTxt(r.body, 74)) + '</span>'
       + '</span></a>';
   }

@@ -350,7 +350,7 @@
             <span class="cm-title">음원 / 동영상<em>MEDIA</em></span>
             <a class="cm-more" href="/spot/media.html">VIEW MORE +</a>
           </div>
-          <div id="mdList"></div>
+          <div id="mdList" class="bd-cards2"></div>
         </div>
       </div>
     </section>
@@ -462,12 +462,13 @@
       emptyText:'등록된 사이트가 아직 없습니다.'
     });
 
-    /* ── 음원 · 동영상 ── */
+    /* ── 음원 · 동영상 — 썸네일이 보이는 카드로 ── */
     OCHub.board({
-      el:'#mdList', table:'spot', kind:'compact', n:6, cols:COLS,
+      el:'#mdList', table:'spot', kind:'cards', n:4,
+      cols: COLS + ',video_id,duration_sec,title_ko',
       filter: sec('음원영상') + '&hidden=is.false',
       order:'created_at.desc.nullslast',
-      dateCol:'date_from',
+      koField:'title_ko',
       view:VIEW, label:'음원·동영상',
       emptyText:'등록된 음원·동영상이 아직 없습니다.'
     });
