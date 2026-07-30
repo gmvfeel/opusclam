@@ -232,11 +232,11 @@
     <section class="cm-sec">
       <div class="cm-quick">
         <a class="cm-qcard" href="/spot/festival.html">
-          <span class="cm-qlabel">페스티벌 / 콩쿨정보</span>
+          <span class="cm-qlabel">페스티벌정보</span>
           <span class="cm-qcount"><b id="cFes">—</b><i>건</i></span>
         </a>
-        <a class="cm-qcard" href="/spot/concours-kr.html">
-          <span class="cm-qlabel">국내콩쿨정보</span>
+        <a class="cm-qcard" href="/spot/concours.html">
+          <span class="cm-qlabel">국내/외콩쿨정보</span>
           <span class="cm-qcount"><b id="cCoK">—</b><i>건</i></span>
         </a>
         <a class="cm-qcard" href="/spot/funding.html">
@@ -319,7 +319,7 @@
       <div class="cm-two">
         <div>
           <div class="cm-head">
-            <span class="cm-title">페스티벌 / 콩쿨<em>FESTIVAL &amp; COMPETITION</em></span>
+            <span class="cm-title">페스티벌 · 콩쿨<em>FESTIVAL &amp; COMPETITION</em></span>
             <a class="cm-more" href="/spot/festival.html">VIEW MORE +</a>
           </div>
           <div class="bd-tabs" id="fcTabs"></div>
@@ -412,10 +412,10 @@
     OCHub.boardTabs({
       tabsEl:'#niTabs', listEl:'#niList', kind:'rows', n:3,
       tabs:[
-        { label:'페스티벌 / 콩쿨', table:'spot', view:VIEW, list:'/spot/festival.html',
-          cols:COLS, filter: sec('페스티벌콩쿨') + '&hidden=is.false', dateCol:'date_from' },
-        { label:'국내콩쿨', table:'spot', view:VIEW, list:'/spot/concours-kr.html',
-          cols:COLS, filter: sec('국내콩쿨') + '&hidden=is.false', dateCol:'date_from' },
+        { label:'페스티벌', table:'spot', view:VIEW, list:'/spot/festival.html',
+          cols:COLS, filter: sec('페스티벌') + '&hidden=is.false', dateCol:'date_from' },
+        { label:'콩쿨', table:'spot', view:VIEW, list:'/spot/concours.html',
+          cols:COLS, filter: sec('콩쿨') + '&hidden=is.false', dateCol:'date_from' },
         { label:'지원금 / 정책자금', table:'spot', view:VIEW, list:'/spot/funding.html',
           cols:COLS, filter: sec('지원금') + '&hidden=is.false', dateCol:'deadline' },
         { label:'공연정보', table:'spot', view:VIEW, list:'/spot/concert.html',
@@ -432,13 +432,13 @@
       tabsEl:'#fcTabs', listEl:'#fcList', kind:'compact', n:6,
       tabs:[
         { label:'페스티벌', table:'spot', view:VIEW, list:'/spot/festival.html',
-          cols:COLS, filter: sec('페스티벌콩쿨') + '&category=eq.' + encodeURIComponent('페스티벌') + '&hidden=is.false',
+          cols:COLS, filter: sec('페스티벌') + '&hidden=is.false',
           order:'date_from.asc.nullslast', dateCol:'date_from' },
-        { label:'콩쿨', table:'spot', view:VIEW, list:'/spot/festival.html',
-          cols:COLS, filter: sec('페스티벌콩쿨') + '&category=eq.' + encodeURIComponent('콩쿨') + '&hidden=is.false',
+        { label:'해외콩쿨', table:'spot', view:VIEW, list:'/spot/concours.html',
+          cols:COLS, filter: sec('콩쿨') + '&region=eq.' + encodeURIComponent('해외') + '&hidden=is.false',
           order:'date_from.asc.nullslast', dateCol:'date_from' },
-        { label:'국내콩쿨', table:'spot', view:VIEW, list:'/spot/concours-kr.html',
-          cols:COLS, filter: sec('국내콩쿨') + '&hidden=is.false',
+        { label:'국내콩쿨', table:'spot', view:VIEW, list:'/spot/concours.html',
+          cols:COLS, filter: sec('콩쿨') + '&region=eq.' + encodeURIComponent('국내') + '&hidden=is.false',
           order:'date_from.asc.nullslast', dateCol:'date_from' }
       ]
     });
@@ -486,7 +486,7 @@
 
       /* 갈래별 빛깔 — 관계 지도·데이터 분석에서 쓰는 팔레트와 결을 맞췄습니다 */
       var COLOR = {
-        '페스티벌콩쿨':'#7c63b0', '국내콩쿨':'#d93a4c', '지원금':'#c08a3e',
+        '페스티벌':'#7c63b0', '콩쿨':'#d93a4c', '지원금':'#c08a3e',
         '공연정보':'#3b6fc4',   '관련사이트':'#0f9b8e', '음원영상':'#8b95a8'
       };
 
@@ -853,8 +853,8 @@
       var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
       var H = { apikey:K, Authorization:'Bearer '+K, Prefer:'count=exact' };
       var MAP = [
-        ['#cFes','페스티벌콩쿨'], ['#cCoK','국내콩쿨'], ['#cFun','지원금'],
-        ['#cCon','공연정보'],     ['#cSit','관련사이트'], ['#cMed','음원영상']
+        ['#cFes','페스티벌'], ['#cCoK','콩쿨'], ['#cFun','지원금'],
+        ['#cCon','공연정보'], ['#cSit','관련사이트'], ['#cMed','음원영상']
       ];
       MAP.forEach(function(m){
         fetch(U + '?select=id&limit=1&hidden=is.false&section=eq.' + encodeURIComponent(m[1]), { headers:H })

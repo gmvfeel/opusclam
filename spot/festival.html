@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>해외페스티벌 / 콩쿨정보 · OPUSCLAM</title>
+<title>페스티벌정보 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -38,7 +38,7 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">페스티벌 / 콩쿨정보</span>
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">페스티벌정보</span>
     </nav>
 
     <!-- 정보SPOT 하위 메뉴 — partials/subnav-spot.html 한 곳에서 관리합니다 -->
@@ -48,10 +48,10 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OPUSCLAM INFORMATION SERVICE</div>
-          <h1 class="pdb-title">해외페스티벌 / 콩쿨정보</h1>
+          <h1 class="pdb-title">페스티벌정보</h1>
         </div>
       </div>
-      <p class="pdb-lead">해외 주요 음악 페스티벌과 국제 콩쿨의 개최지·기간·참가 안내를 모았습니다.</p>
+      <p class="pdb-lead">국내외 음악 페스티벌의 개최지·기간·참가 안내를 모았습니다.</p>
     </header>
   </div>
 </section>
@@ -110,15 +110,15 @@
 <script src="/assets/board.js"></script>
 <script>
   /* 정보SPOT 은 표 하나(spot)에 여섯 갈래를 담고 section 으로 나눕니다.
-     이 화면은 「페스티벌콩쿨」 갈래만 봅니다 — where 한 줄로 정합니다.
+     이 화면은 「페스티벌」 갈래만 봅니다 — where 한 줄로 정합니다.
      목록의 모양·검색·페이지 넘김은 모두 공용 엔진(assets/board.js)이 합니다. */
   document.addEventListener('DOMContentLoaded', function(){
     OCBoard.list({
       table:'spot', pageSize:20,
       viewPage:'spot-view.html', writePage:'spot-write-festival.html',
-      where:'&section=eq.' + encodeURIComponent('페스티벌콩쿨') + '&hidden=is.false',
+      where:'&section=eq.' + encodeURIComponent('페스티벌') + '&hidden=is.false',
       searchCols:['title','title_en','body','keywords','country','city','organizer'],
-      categories:[{"value": "", "label": "구분선택"}, {"value": "페스티벌", "label": "페스티벌"}, {"value": "콩쿨", "label": "콩쿨"}],
+      categories:[{"value": "", "label": "구분선택"}, {"value": "종합", "label": "종합"}, {"value": "오페라", "label": "오페라"}, {"value": "현대음악", "label": "현대음악"}, {"value": "피아노", "label": "피아노"}, {"value": "고음악", "label": "고음악"}, {"value": "실내악", "label": "실내악"}, {"value": "성악", "label": "성악"}],
       regions:[{"value":"","label":"국내/해외"},{"value":"국내","label":"국내"},{"value":"해외","label":"해외"}],
       docStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
       commentsTable:'spot_comments'

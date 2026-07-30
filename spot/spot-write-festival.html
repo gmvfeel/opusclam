@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>해외페스티벌 / 콩쿨정보 등록 · OPUSCLAM</title>
+<title>페스티벌정보 등록 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -71,9 +71,9 @@
      그래서 등록하는 분은 갈래를 고를 필요가 없습니다. */
   OCBoardWrite.init({
     table:'spot', listPage:'festival.html', viewPage:'spot-view.html', bucket:'spot',
-    fixed:{ section:'페스티벌콩쿨' },
-    formTitle:'해외페스티벌 / 콩쿨정보 등록',
-    categories:[{"value": "페스티벌"}, {"value": "콩쿨"}],
+    fixed:{ section:'페스티벌' },
+    formTitle:'페스티벌정보 등록',
+    categories:[{"value": "종합"}, {"value": "오페라"}, {"value": "현대음악"}, {"value": "피아노"}, {"value": "고음악"}, {"value": "실내악"}, {"value": "성악"}],
     regions:[{"value":"국내"},{"value":"해외"}],
     docFields:{
       homeLabel:'홈페이지', homeHint:'(공식 홈페이지 주소, 선택)',

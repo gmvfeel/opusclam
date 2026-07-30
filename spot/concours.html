@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>국내콩쿨정보 · OPUSCLAM</title>
+<title>국내/외콩쿨정보 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -38,7 +38,7 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">국내콩쿨정보</span>
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">국내/외콩쿨정보</span>
     </nav>
 
     <!-- 정보SPOT 하위 메뉴 — partials/subnav-spot.html 한 곳에서 관리합니다 -->
@@ -48,10 +48,10 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OPUSCLAM INFORMATION SERVICE</div>
-          <h1 class="pdb-title">국내콩쿨정보</h1>
+          <h1 class="pdb-title">국내/외콩쿨정보</h1>
         </div>
       </div>
-      <p class="pdb-lead">국내에서 열리는 음악 콩쿨의 부문·일정·접수 안내를 모았습니다.</p>
+      <p class="pdb-lead">국내외 음악 콩쿨의 부문·일정·접수 안내를 한곳에 모았습니다.</p>
     </header>
   </div>
 </section>
@@ -64,7 +64,8 @@
       <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
     </div>
     <div class="pdb-selects">
-      <select class="board-catsel" aria-label="구분"></select>
+      <select class="board-regionsel" aria-label="국내/해외"></select>
+      <select class="board-catsel" aria-label="부문"></select>
       <select class="board-sort" aria-label="정렬">
         <option value="created_at">최신순</option>
         <option value="view_count">인기순</option>
@@ -114,10 +115,11 @@
   document.addEventListener('DOMContentLoaded', function(){
     OCBoard.list({
       table:'spot', pageSize:20,
-      viewPage:'spot-view.html', writePage:'spot-write-concours-kr.html',
-      where:'&section=eq.' + encodeURIComponent('국내콩쿨') + '&hidden=is.false',
+      viewPage:'spot-view.html', writePage:'spot-write-concours.html',
+      where:'&section=eq.' + encodeURIComponent('콩쿨') + '&hidden=is.false',
       searchCols:['title','title_en','body','keywords','country','city','organizer'],
-      categories:[{"value": "", "label": "구분선택"}, {"value": "피아노", "label": "피아노"}, {"value": "현악", "label": "현악"}, {"value": "관악", "label": "관악"}, {"value": "성악", "label": "성악"}, {"value": "작곡", "label": "작곡"}, {"value": "지휘", "label": "지휘"}, {"value": "국악", "label": "국악"}, {"value": "종합", "label": "종합"}],
+      regions:[{"value":"","label":"국내/해외"},{"value":"국내","label":"국내"},{"value":"해외","label":"해외"}],
+      categories:[{"value": "", "label": "부문선택"}, {"value": "종합", "label": "종합"}, {"value": "피아노", "label": "피아노"}, {"value": "현악", "label": "현악"}, {"value": "관악", "label": "관악"}, {"value": "성악", "label": "성악"}, {"value": "작곡", "label": "작곡"}, {"value": "지휘", "label": "지휘"}, {"value": "국악", "label": "국악"}],
       docStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
       commentsTable:'spot_comments'
     });

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>국내콩쿨정보 등록 · OPUSCLAM</title>
+<title>국내/외콩쿨정보 등록 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -48,7 +48,7 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OPUSCLAM INFORMATION SERVICE</div>
-          <h1 class="pdb-title">국내콩쿨정보 등록</h1>
+          <h1 class="pdb-title" id="bwHead">국내/외콩쿨정보 등록</h1>
         </div>
       </div>
       <p class="pdb-lead"></p>
@@ -70,10 +70,11 @@
   /* 정보SPOT 등록 — 갈래(section)는 이 화면이 정해서 넣습니다(fixed).
      그래서 등록하는 분은 갈래를 고를 필요가 없습니다. */
   OCBoardWrite.init({
-    table:'spot', listPage:'concours-kr.html', viewPage:'spot-view.html', bucket:'spot',
-    fixed:{ section:'국내콩쿨' },
-    formTitle:'국내콩쿨정보 등록',
-    categories:[{"value": "피아노"}, {"value": "현악"}, {"value": "관악"}, {"value": "성악"}, {"value": "작곡"}, {"value": "지휘"}, {"value": "국악"}, {"value": "종합"}],
+    table:'spot', listPage:'concours.html', viewPage:'spot-view.html', bucket:'spot',
+    fixed:{ section:'콩쿨' },
+    formTitle:'국내/외콩쿨정보 등록',
+    regions:[{"value":"국내"},{"value":"해외"}],
+    categories:[{"value": "종합"}, {"value": "피아노"}, {"value": "현악"}, {"value": "관악"}, {"value": "성악"}, {"value": "작곡"}, {"value": "지휘"}, {"value": "국악"}],
     docFields:{
       homeLabel:'홈페이지', homeHint:'(공식 홈페이지 주소, 선택)',
       fileLabel:'안내 파일', fileHint:'(요강·공고 문서 hwp·pdf·doc 등, 선택)',
