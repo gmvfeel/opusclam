@@ -194,6 +194,41 @@ window.OCBoard = (function () {
       return u;
     }
 
+    /* 재생시간 — 7:32 · 1:05:20 */
+    function mmss(sec) {
+      var t = Number(sec) || 0;
+      if (!t) return '';
+      var h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s2 = t % 60;
+      return h ? (h + ':' + ('0' + m).slice(-2) + ':' + ('0' + s2).slice(-2))
+               : (m + ':' + ('0' + s2).slice(-2));
+    }
+
+    /* ── 카드형 목록 ──
+       썸네일 왼쪽, 제목·정보 오른쪽. 두 칸으로 놓입니다(CSS).
+       음원·동영상처럼 영상이 중심인 목록에 씁니다.
+       cardStyle 을 켜지 않은 게시판에는 아무 영향이 없습니다. */
+    function cardHtml(rec) {
+      var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur;
+      var dur = mmss(rec.duration_sec);
+      var img = rec.thumb_url
+        ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">'
+        : '<i class="bc-noimg">' + esc(String(rec.title || '?').trim().charAt(0)) + '</i>';
+      var meta = [];
+      if (rec.source || rec.channel_name) meta.push('출처 : ' + esc(rec.source || rec.channel_name));
+      if (rec.created_at) meta.push('등록일 : ' + fmtDate(rec.created_at));
+      meta.push('VIEW : ' + (rec.view_count || 0));
+      return '<a class="board-card" href="' + vp + '">'
+        + '<span class="bc-th">' + img + (dur ? '<i class="bc-dur">' + dur + '</i>' : '') + '</span>'
+        + '<span class="bc-info">'
+        +   '<span class="bc-title">'
+        +     (rec.category ? '<em class="bc-cat">[ ' + esc(rec.category) + ' ]</em> ' : '')
+        +     esc(rec.title || '') + newHtml(rec) + ccHtml(rec)
+        +   '</span>'
+        +   '<span class="bc-meta">' + meta.join('<i>·</i>') + '</span>'
+        + '</span>'
+        + '</a>';
+    }
+
     function itemHtml(rec) {
       if (cfg.renderItem) return cfg.renderItem(rec, { esc: esc, fmtDate: fmtDate });
       var pin = rec.is_pinned ? ' board-item-pin' : '';
@@ -426,7 +461,13 @@ window.OCBoard = (function () {
             if (pager) pager.innerHTML = '';
           } else {
             return fetchExtLogos(rows).then(function () {
-              if (listEl) listEl.innerHTML = cfg.docStyle ? rows.map(docRowHtml).join('') : (cfg.articleStyle ? renderArticles(rows, (pg - 1) * PAGE) : rows.map(itemHtml).join(''));
+              if (listEl) {
+                /* 카드형은 두 칸으로 놓이므로 목록 자리에 표시를 달아 둡니다 */
+                listEl.classList.toggle('as-cards', !!cfg.cardStyle);
+                listEl.innerHTML = cfg.cardStyle ? rows.map(cardHtml).join('')
+                  : (cfg.docStyle ? rows.map(docRowHtml).join('')
+                  : (cfg.articleStyle ? renderArticles(rows, (pg - 1) * PAGE) : rows.map(itemHtml).join('')));
+              }
               renderPager();
               focusItem();          /* 반드시 그린 뒤에 */
             });
@@ -554,6 +595,17 @@ window.OCBoard = (function () {
             }).join('') + '</div>';
           }
         }
+        /* 영상이 있으면 사진 대신 플레이어를 놓습니다.
+           videoField 를 적지 않은 게시판에는 아무 영향이 없습니다. */
+        var player = '';
+        if (cfg.videoField && o[cfg.videoField]) {
+          player = '<figure class="bv-video"><iframe src="https://www.youtube.com/embed/'
+            + encodeURIComponent(o[cfg.videoField])
+            + '" title="' + esc(o.title || '') + '" loading="lazy" allowfullscreen'
+            + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"></iframe>'
+            + (o.channel_name ? '<figcaption>' + esc(o.channel_name) + '</figcaption>' : '')
+            + '</figure>';
+        }
         var body = o.body ? '<div class="bv-body">' + (window.DOMPurify ? window.DOMPurify.sanitize(o.body, { ADD_ATTR: ['target', 'style'] }) : nl2br(o.body)) + '</div>' : '';
         var enhance = '';
         if (cfg.enhance) {
@@ -592,7 +644,7 @@ window.OCBoard = (function () {
             + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
             + '</div></div>'
             + (o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span>' + esc(o.file_name || '첨부파일 보기') + '</span></a>' : '')
-            + (o.thumb_url ? '<figure class="bv-docphoto"><img src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' + (o.photo_credit ? '<figcaption>' + esc(o.photo_credit) + '</figcaption>' : '') + '</figure>' : '')
+            + (player || (o.thumb_url ? '<figure class="bv-docphoto"><img src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' + (o.photo_credit ? '<figcaption>' + esc(o.photo_credit) + '</figcaption>' : '') + '</figure>' : ''))
             + body
             + enhance
             + '<div class="bv-foot"></div>';

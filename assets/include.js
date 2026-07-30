@@ -54,6 +54,8 @@
       if (f === 'admission-community') f = 'admission';
       /* 정보SPOT — 상세·글쓰기 화면(spot-view·spot-write)은 「전체」로 둔다 */
       if (f === 'spot-view' || f === 'spot-write') f = 'index';
+      /* 음원·동영상은 시대별 화면이 따로 있으므로 각자 자기 메뉴가 켜집니다.
+         다만 상세에서 돌아올 때를 위해 media-* 를 그대로 둡니다. */
       return f;
     }
     var cur = nameOf(location.pathname);

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>음원 / 동영상 · OPUSCLAM</title>
+<title>음원 / 동영상 · 현대음악이전 · OPUSCLAM</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -38,7 +38,7 @@
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">음원 / 동영상</span>
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">현대음악이전</span>
     </nav>
 
     <!-- 정보SPOT 하위 메뉴 — partials/subnav-spot.html 한 곳에서 관리합니다 -->
@@ -48,10 +48,10 @@
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">OPUSCLAM INFORMATION SERVICE</div>
-          <h1 class="pdb-title">음원 / 동영상</h1>
+          <h1 class="pdb-title">음원 / 동영상 · 현대음악이전</h1>
         </div>
       </div>
-      <p class="pdb-lead">감상할 수 있는 음원과 연주 영상을 모았습니다. 믿을 수 있는 공식 채널에서 자동으로 모으고, 확인을 거친 것만 올립니다.</p>
+      <p class="pdb-lead">바로크부터 낭만주의까지 — 현대 이전 작품의 연주 영상입니다.</p>
     </header>
   </div>
 </section>
@@ -115,7 +115,8 @@
     OCBoard.list({
       table:'spot', pageSize:20,
       viewPage:'spot-view.html', writePage:'spot-write-media.html',
-      where:'&section=eq.' + encodeURIComponent('음원영상') + '&hidden=is.false',
+      where:'&section=eq.' + encodeURIComponent('음원영상') + '&hidden=is.false'
+        + '&era=eq.' + encodeURIComponent('현대음악이전'),
       searchCols:['title','title_en','body','keywords','channel_name','matched_names'],
       categories:[{"value":"","label":"구분선택"}],   /* 아래에서 자료가 있는 편성만 채웁니다 */
       cardStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
@@ -129,7 +130,7 @@
   (function(){
     var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/spot';
     var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-    var ERA = null;
+    var ERA = '현대음악이전';
     var q = '?select=category&section=eq.' + encodeURIComponent('음원영상')
           + '&hidden=is.false&category=not.is.null&limit=1000'
           + (ERA ? '&era=eq.' + encodeURIComponent(ERA) : '');
