@@ -168,6 +168,52 @@ const NO_KINDS = new Set([
   'Q431289',   // 상표
 ]);
 
+/* ── 이름이 실제로 닿는지 확인합니다 ──
+
+   이것이 없어서 첫 시험에서 엉뚱한 사진이 들어갔습니다.
+     「롱티보 국제 콩쿠르」 로 찾았는데 「리즈 국제 피아노 콩쿠르」 문서가 잡히고,
+     갈래가 「음악 경연」 이라 그대로 통과했습니다.
+     「인디애나폴리스」 에는 차이콥스키 콩쿠르가, 「아르코 국제교류」 에는
+     예술의전당 사진이 들어갔습니다.
+
+   방법 — 우리 이름에서 갈래를 뜻하는 말을 떼어내고 남은 고유명사가
+   찾은 이름 안에 있어야 합니다. 「롱티보」 가 「리즈…」 에 없으므로 걸러집니다. */
+
+/* 갈래·꾸밈을 뜻하는 말 — 고유명사가 아니므로 견줄 때 뺍니다 */
+const GENERIC = new RegExp(
+  '(국제|전국|세계|음악|콩쿠르|콩쿨|경연|대회|페스티벌|축제|음악제|음악축제|음악회|'
+  + '피아노|바이올린|첼로|성악|작곡|관악|국악|현악|지휘|실내악|오페라|'
+  + '지원|사업|공모|공연예술|예술|재단|위원회|센터|협회|연맹|기금|'
+  + 'international|national|world|music|musical|competition|concours|concorso|'
+  + 'wettbewerb|festival|festspiele|festspiel|piano|violin|cello|voice|vocal|'
+  + 'composition|award|prize|foundation|council|center|centre|association|federation|'
+  + 'the|of|for|and|de|du|des|la|le|les|von|der|die|das|und|und|in|at|'
+  + '주최|주관|기념|제\\d+회|\\d{4})', 'gi');
+
+/* 견줄 수 있게 다듬습니다 — 갈래어를 떼고 기호·빈칸을 없앱니다 */
+function coreOf(name) {
+  let t = String(name || '')
+    .replace(/[(（][^)）]*[)）]/g, ' ')      /* 괄호 안 제거 */
+    .replace(GENERIC, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, '')       /* 글자와 숫자만 남깁니다 */
+    .toLowerCase();
+  return t;
+}
+
+/* 우리 이름의 고유명사가 찾은 이름 안에 있는지 봅니다.
+   한쪽이 다른 쪽에 담기면 맞는 것으로 봅니다
+   (「Tanglewood」 ↔ 「Tanglewood Music Center」 처럼 길이가 다를 수 있습니다). */
+function nameMatches(ourName, foundName) {
+  const a = coreOf(ourName), b = coreOf(foundName);
+  if (!a || !b) return false;
+  if (a.length < 2 || b.length < 2) return false;
+  if (a === b) return true;
+  if (a.length >= 3 && b.includes(a)) return true;
+  if (b.length >= 3 && a.includes(b)) return true;
+  /* 앞 세 글자만 같은 것으로는 인정하지 않습니다 — 「리즈」와 「롱티보」 를 가릅니다 */
+  return false;
+}
+
 /* 이 항목이 우리가 찾던 것인지 확인합니다 */
 function looksRight(ent) {
   const kinds = claimValues(ent, 'P31').map((v) => v && v.id).filter(Boolean);
@@ -267,6 +313,10 @@ function creditText(info) {
 /* ============================================================
    4) 한 항목 처리
    ============================================================ */
+/* 이미 쓴 위키데이터 항목 — 같은 사진이 여러 자료에 들어가는 것을 막습니다.
+   첫 시험에서 예술의전당 사진이 아르코 지원사업에도 들어갔습니다. */
+const usedQids = new Set();
+
 async function handleOne(r) {
   /* ① 위키데이터 번호를 이미 알면 그대로 씁니다 */
   let qid = r.wikidata_id || null;
@@ -293,7 +343,17 @@ async function handleOne(r) {
       const ents = await wdEntities(hits.slice(0, 3).map((h) => h.id));
       for (const h of hits.slice(0, 3)) {
         const e = ents[h.id];
-        if (e && looksRight(e)) { qid = h.id; ent = e; break; }
+        if (!e || !looksRight(e)) continue;
+        /* 이름이 실제로 닿는지 봅니다.
+           견줄 때는 「찾을 때 쓴 언어」 의 라벨만 씁니다 —
+           한글 이름과 영문 라벨은 글자가 달라 견줄 수 없습니다
+           (「쇼팽」 ↔ 「Chopin」 은 같은 것인데 글자로는 하나도 겹치지 않습니다).
+           별칭으로 걸린 경우(h.match)는 그 별칭도 함께 봅니다. */
+        const cand = [h.label, h.match && h.match.text,
+                      e.labels && e.labels[lang] && e.labels[lang].value]
+                     .filter(Boolean);
+        if (!cand.some((c) => nameMatches(name, c))) continue;
+        qid = h.id; ent = e; break;
       }
       if (ent) break;
       await sleep(200);
@@ -309,7 +369,9 @@ async function handleOne(r) {
         catch (e) { continue; }
         if (!cands) continue;
         /* 위키데이터 번호가 붙은 후보를 먼저 확인합니다 */
-        const withQ = cands.filter((c) => c.qid);
+        /* 문서 제목이 우리 이름과 실제로 닿는 것만 남깁니다.
+           위키백과 검색은 관대해서 이름이 조금만 비슷해도 결과를 냅니다. */
+        const withQ = cands.filter((c) => c.qid && nameMatches(name, c.title));
         if (withQ.length) {
           const ents = await wdEntities(withQ.map((c) => c.qid));
           for (const c of withQ) {
@@ -330,6 +392,11 @@ async function handleOne(r) {
 
   if (!ent) return { ok: false, why: '위키데이터·위키백과에서 찾지 못함',
                      tried: [r.title_en, r.title].filter(Boolean).join(' / ') };
+
+  /* 다른 자료가 이미 쓴 항목이면 물리칩니다 */
+  if (usedQids.has(qid) && qid !== r.wikidata_id) {
+    return { ok: false, why: '다른 자료가 이미 쓰고 있는 항목', qid: qid };
+  }
 
   /* ③ 로고와 사진 */
   const logoFile = claimValues(ent, 'P154')[0] || null;   // 로고
@@ -352,6 +419,7 @@ async function handleOne(r) {
     patch.thumb_url = logo.thumb;
     patch.photo_credit = creditText(logo);
   }
+  usedQids.add(qid);
   return { ok: true, qid: qid, patch: patch, hasLogo: !!logo, hasImg: !!img };
 }
 
@@ -360,6 +428,15 @@ async function handleOne(r) {
    ============================================================ */
 async function main() {
   console.log('── 정보SPOT 사진·로고 수집 ──');
+
+  /* 이미 담긴 위키데이터 항목을 먼저 알아 둡니다 —
+     이번에 찾은 것이 그것과 겹치면 물리칩니다. */
+  try {
+    const used = await sb('spot?select=wikidata_id&wikidata_id=not.is.null&limit=1000');
+    for (const u of (used || [])) if (u.wikidata_id) usedQids.add(u.wikidata_id);
+    if (usedQids.size) console.log(`이미 쓰고 있는 위키데이터 항목 ${usedQids.size}개`);
+  } catch (e) {}
+
   const rows = await loadTargets();
   console.log(`대상 ${rows.length}건${DRY ? ' · 저장 안 함(dry)' : ''}${FORCE ? ' · 다시 찾기' : ''}`);
   if (!rows.length) return;
