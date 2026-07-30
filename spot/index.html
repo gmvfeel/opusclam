@@ -310,8 +310,6 @@
         <span class="cm-title">새로 등록된 정보<em>NEW INFORMATION</em></span>
       </div>
       <div id="niFeat"></div>
-      <div class="bd-tabs" id="niTabs" style="margin-top:22px"></div>
-      <div id="niList"></div>
     </section>
 
     <!-- 페스티벌·콩쿨 | 지원금 -->
@@ -408,26 +406,6 @@
       view:VIEW, badge:'NEW INFORMATION', label:'새 정보'
     });
 
-    /* 갈래별 탭 — 아래쪽 칸들과 같은 모양으로 맞췄습니다.
-       번호 · 제목과 설명 · 날짜 순서입니다. */
-    OCHub.boardTabs({
-      tabsEl:'#niTabs', listEl:'#niList', kind:'compact', n:5,
-      tabs:[
-        { label:'페스티벌', table:'spot', view:VIEW, list:'/spot/festival.html',
-          cols:COLS, filter: sec('페스티벌') + '&hidden=is.false', dateCol:'date_from' },
-        { label:'콩쿨', table:'spot', view:VIEW, list:'/spot/concours.html',
-          cols:COLS, filter: sec('콩쿨') + '&hidden=is.false', dateCol:'date_from' },
-        { label:'지원금 / 정책자금', table:'spot', view:VIEW, list:'/spot/funding.html',
-          cols:COLS, filter: sec('지원금') + '&hidden=is.false', dateCol:'deadline' },
-        { label:'공연정보', table:'spot', view:VIEW, list:'/spot/concert.html',
-          cols:COLS, filter: sec('공연정보') + '&hidden=is.false', dateCol:'date_from' },
-        { label:'관련사이트', table:'spot', view:VIEW, list:'/spot/sites.html',
-          cols:COLS, filter: sec('관련사이트') + '&hidden=is.false', dateCol:'date_from' },
-        { label:'음원 / 동영상', table:'spot', view:VIEW, list:'/spot/media.html',
-          cols:COLS, filter: sec('음원영상') + '&hidden=is.false', dateCol:'date_from' }
-      ]
-    });
-
     /* ── 페스티벌 · 콩쿨 (왼쪽 칸) ── */
     OCHub.boardTabs({
       tabsEl:'#fcTabs', listEl:'#fcList', kind:'compact', n:6,
@@ -463,7 +441,9 @@
       emptyText:'등록된 사이트가 아직 없습니다.'
     });
 
-    /* ── 음원 · 동영상 — 썸네일이 보이는 카드로 ── */
+    /* ── 음원 · 동영상 — 썸네일이 보이는 카드로 ──
+          다른 칸은 목록 모양이지만 여기만 카드입니다.
+          영상은 무엇인지 그림으로 보여 주는 편이 훨씬 잘 전해집니다. */
     OCHub.board({
       el:'#mdList', table:'spot', kind:'cards', n:4,
       cols: COLS + ',video_id,duration_sec,title_ko',
