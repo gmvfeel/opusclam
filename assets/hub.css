@@ -170,12 +170,14 @@
   .bd-line:hover .bd-no,
   .bd-line:hover .bd-cc{color:#fff}
   html[data-theme="dark"] .bd-line:hover{background:#000}
-  .bd-date{flex:0 0 auto;margin-left:auto;padding-left:6px;padding-top:1px;font-size:11.5px;
+  .bd-date{flex:0 0 auto;margin-left:auto;padding-left:24px;padding-top:1px;font-size:11.5px;
     color:var(--text-3);font-variant-numeric:tabular-nums}
 
   /* 목록 오른쪽의 구분 배지 + 날짜 묶음 */
+  /* 제목·설명과 배지 사이를 넉넉히 띄웁니다.
+     좁으면 설명이 배지에 닿을 듯 잘려 답답해 보입니다. */
   .bd-lmeta{flex:0 0 auto;margin-left:auto;display:flex;align-items:center;gap:7px;
-    padding-left:10px;padding-top:1px}
+    padding-left:30px;padding-top:1px}
   .bd-lmeta .bd-date{margin-left:0;padding-left:0}
   .bd-tag{flex:0 0 auto;font-style:normal;font-size:11px;line-height:1.5;
     padding:2px 9px;border-radius:99px;border:1px solid var(--line-2);
@@ -188,8 +190,11 @@
   .bd-line:hover .bd-tag{border-color:rgba(255,255,255,.5);color:#fff;background:transparent}
   .bd-line:hover .bd-date{color:rgba(255,255,255,.82)}
 
+  @media (max-width:860px){
+    .bd-lmeta{padding-left:16px}
+  }
   @media (max-width:560px){
-    .bd-lmeta{gap:5px;padding-left:6px}
+    .bd-lmeta{gap:5px;padding-left:10px}
     .bd-tag{font-size:10.5px;padding:1px 7px}
   }
   .bd-linetitle{min-width:0;font-size:13.2px;color:var(--text-2);
