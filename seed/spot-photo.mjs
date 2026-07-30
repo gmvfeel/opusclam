@@ -182,6 +182,51 @@ function looksRight(ent) {
 }
 
 /* ============================================================
+   2-2) 위키백과를 거쳐 찾기
+
+   위키데이터 검색은 이름이 라벨과 거의 같아야 걸립니다.
+   그래서 「ARD 뮌헨 국제음악콩쿠르」 처럼 우리가 붙인 이름으로는
+   위키데이터에 항목이 분명히 있어도 못 찾는 일이 많습니다.
+
+   위키백과 검색은 훨씬 관대합니다. 문서를 찾으면
+     · 그 문서에 붙은 위키데이터 번호(wikibase_item) 를 얻고
+     · 문서 대표 이미지(pageimage) 도 함께 얻습니다
+   대표 이미지는 위키데이터에 P18 이 없는 항목에도 있는 일이 많습니다.
+   ============================================================ */
+async function wpSearch(name, lang) {
+  const base = `https://${lang}.wikipedia.org/w/api.php`;
+  /* 이름으로 문서를 찾습니다 */
+  const s1 = await wdGet(base + '?action=query&format=json&origin=*'
+    + '&list=search&srlimit=3&srsearch=' + encodeURIComponent(name));
+  const hits = (s1 && s1.query && s1.query.search) || [];
+  if (!hits.length) return null;
+
+  /* 찾은 문서들의 위키데이터 번호와 대표 이미지를 한 번에 받습니다 */
+  const titles = hits.map((h) => h.title).join('|');
+  const s2 = await wdGet(base + '?action=query&format=json&origin=*'
+    + '&prop=pageprops|pageimages&ppprop=wikibase_item&piprop=original'
+    + '&titles=' + encodeURIComponent(titles));
+  const pages = (s2 && s2.query && s2.query.pages) || {};
+  const out = [];
+  for (const k of Object.keys(pages)) {
+    const p = pages[k];
+    if (Number(k) < 0) continue;
+    out.push({
+      title: p.title,
+      qid: p.pageprops && p.pageprops.wikibase_item,
+      /* original.source 는 커먼즈 원본 주소입니다 (파일 이름만 떼어 씁니다) */
+      imageFile: p.original && p.original.source
+        ? decodeURIComponent(String(p.original.source).split('/').pop())
+        : null,
+    });
+  }
+  /* 찾은 순서를 지킵니다 (검색이 매긴 관련도 순) */
+  out.sort((a, b) => hits.findIndex((h) => h.title === a.title)
+                   - hits.findIndex((h) => h.title === b.title));
+  return out.length ? out : null;
+}
+
+/* ============================================================
    3) 커먼즈 — 축소본 주소와 라이선스·저작자
    ============================================================ */
 async function commonsInfo(fileNames) {
@@ -226,6 +271,7 @@ async function handleOne(r) {
   /* ① 위키데이터 번호를 이미 알면 그대로 씁니다 */
   let qid = r.wikidata_id || null;
   let ent = null;
+  let wpImage = null;   /* 위키데이터에 사진이 없을 때 쓰는 위키백과 대표 이미지 */
 
   if (qid) {
     const ents = await wdEntities([qid]);
@@ -252,14 +298,44 @@ async function handleOne(r) {
       if (ent) break;
       await sleep(200);
     }
+
+    /* ③ 위키데이터 검색이 빗나가면 위키백과를 거쳐 찾습니다.
+          이름이 조금 달라도 문서를 찾아내므로 훨씬 잘 걸립니다. */
+    if (!ent) {
+      for (const [name, lang] of tries) {
+        if (!name) continue;
+        let cands = null;
+        try { cands = await wpSearch(name, lang === 'ko' ? 'ko' : 'en'); }
+        catch (e) { continue; }
+        if (!cands) continue;
+        /* 위키데이터 번호가 붙은 후보를 먼저 확인합니다 */
+        const withQ = cands.filter((c) => c.qid);
+        if (withQ.length) {
+          const ents = await wdEntities(withQ.map((c) => c.qid));
+          for (const c of withQ) {
+            const e = ents[c.qid];
+            if (e && looksRight(e)) {
+              qid = c.qid; ent = e;
+              /* 위키데이터에 사진이 없으면 위키백과 대표 이미지를 씁니다 */
+              if (c.imageFile && !claimValues(e, 'P18').length) wpImage = c.imageFile;
+              break;
+            }
+          }
+        }
+        if (ent) break;
+        await sleep(200);
+      }
+    }
   }
 
-  if (!ent) return { ok: false, why: '위키데이터에서 찾지 못함' };
+  if (!ent) return { ok: false, why: '위키데이터·위키백과에서 찾지 못함',
+                     tried: [r.title_en, r.title].filter(Boolean).join(' / ') };
 
   /* ③ 로고와 사진 */
   const logoFile = claimValues(ent, 'P154')[0] || null;   // 로고
-  const imgFile  = claimValues(ent, 'P18')[0]  || null;   // 대표 사진
-  if (!logoFile && !imgFile) return { ok: false, why: '위키데이터에 로고·사진이 없음', qid: qid };
+  /* 위키데이터 대표 사진(P18)이 없으면 위키백과 문서 대표 이미지를 씁니다 */
+  const imgFile  = claimValues(ent, 'P18')[0] || wpImage || null;
+  if (!logoFile && !imgFile) return { ok: false, why: '로고·사진을 찾지 못함', qid: qid };
 
   const info = await commonsInfo([logoFile, imgFile].filter(Boolean));
   const logo = logoFile ? info.get(logoFile) : null;
@@ -298,7 +374,8 @@ async function main() {
 
     if (!res.ok) {
       console.log(`  [못 찾음] ${String(r.title).slice(0, 34)} — ${res.why}`
-        + (res.qid ? ` (${res.qid})` : ''));
+        + (res.qid ? ` (${res.qid})` : '')
+        + (res.tried ? `\n             찾아본 이름: ${res.tried}` : ''));
       miss++;
       /* 번호는 찾았으면 적어 둡니다 — 나중에 손으로 사진을 넣을 때 도움이 됩니다 */
       if (res.qid && !DRY && !r.wikidata_id) {
