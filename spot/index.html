@@ -71,6 +71,25 @@
   .sp-calmore i{font-style:normal;width:24px;height:24px;display:grid;place-items:center;
     border:1px solid var(--line-2);border-radius:50%;font-weight:400;font-size:15px}
 
+  /* 시안처럼 날짜별 공연정보와 음원·동영상을 나란히 놓습니다.
+     달력 쪽을 조금 넓게(약 6:4) 두어 날짜가 눌리지 않게 했습니다. */
+  .sp-two64{display:grid;grid-template-columns:minmax(0,1.42fr) minmax(0,1fr);gap:30px;
+    align-items:start}
+
+  /* 좁은 칸에 놓이므로 달력을 조금 작게 */
+  .sp-two64 .sp-calbox{padding:16px 14px 18px}
+  .sp-two64 .sp-calside{padding:16px 15px}
+  .sp-two64 .sp-calym{font-size:22px;min-width:104px}
+  .sp-two64 .sp-caldow span{font-size:11px;padding:4px 0}
+  .sp-two64 .sp-day{font-size:12px}
+  .sp-two64 .sp-calgrid,.sp-two64 .sp-caldow{gap:3px}
+  .sp-two64 .sp-calititle{font-size:12.8px}
+  .sp-two64 .sp-calimeta{font-size:11.5px}
+  .sp-two64 .sp-calitem{padding:11px 2px}
+
+  @media (max-width:980px){
+    .sp-two64{grid-template-columns:minmax(0,1fr);gap:38px}
+  }
   @media (max-width:760px){
     .sp-cal{grid-template-columns:1fr}
     .sp-calside{border-left:0;border-top:1px solid var(--line)}
@@ -274,36 +293,6 @@
       <div class="cm-track" id="ciBox"></div>
     </section>
 
-    <!-- 날짜별 공연정보 -->
-    <section class="cm-sec">
-      <div class="cm-head">
-        <span class="cm-title">날짜별 공연정보<em>CONCERT CALENDAR</em></span>
-        <a class="cm-more" href="/spot/concert.html">VIEW MORE +</a>
-      </div>
-      <div class="sp-cal">
-        <div class="sp-calbox">
-          <div class="sp-calhead">
-            <button type="button" class="sp-calnav" id="calPrev" aria-label="지난달">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
-            </button>
-            <div class="sp-calym" id="calYm">—</div>
-            <button type="button" class="sp-calnav" id="calNext" aria-label="다음달">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
-            </button>
-          </div>
-          <div class="sp-caldow" aria-hidden="true">
-            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
-          </div>
-          <div class="sp-calgrid" id="calGrid"></div>
-        </div>
-        <div class="sp-calside">
-          <div class="sp-calsidehead" id="calSideHead">공연 일정</div>
-          <div class="sp-callist" id="calList"></div>
-          <a class="sp-calmore" href="/spot/concert.html">공연정보 전체보기 <i>+</i></a>
-        </div>
-      </div>
-    </section>
-
     <!-- New Information — 큰 글 한 건 + 갈래별 탭 -->
     <section class="cm-sec">
       <div class="cm-head">
@@ -333,24 +322,54 @@
       </div>
     </section>
 
-    <!-- 관련사이트 | 음원·동영상 -->
+    <!-- 날짜별 공연정보 | 음원·동영상 -->
     <section class="cm-sec">
-      <div class="cm-two">
+      <div class="sp-two64">
         <div>
           <div class="cm-head">
-            <span class="cm-title">관련사이트<em>RELATED SITES</em></span>
-            <a class="cm-more" href="/spot/sites.html">VIEW MORE +</a>
+            <span class="cm-title">날짜별 공연정보<em>CONCERT CALENDAR</em></span>
+            <a class="cm-more" href="/spot/concert.html">VIEW MORE +</a>
           </div>
-          <div id="stList"></div>
+          <div class="sp-cal">
+            <div class="sp-calbox">
+              <div class="sp-calhead">
+                <button type="button" class="sp-calnav" id="calPrev" aria-label="지난달">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
+                </button>
+                <div class="sp-calym" id="calYm">—</div>
+                <button type="button" class="sp-calnav" id="calNext" aria-label="다음달">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+              <div class="sp-caldow" aria-hidden="true">
+                <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+              </div>
+              <div class="sp-calgrid" id="calGrid"></div>
+            </div>
+            <div class="sp-calside">
+              <div class="sp-calsidehead" id="calSideHead">공연 일정</div>
+              <div class="sp-callist" id="calList"></div>
+              <a class="sp-calmore" href="/spot/concert.html">공연정보 전체보기 <i>+</i></a>
+            </div>
+          </div>
         </div>
         <div>
           <div class="cm-head">
             <span class="cm-title">음원 / 동영상<em>MEDIA</em></span>
             <a class="cm-more" href="/spot/media.html">VIEW MORE +</a>
           </div>
-          <div id="mdList" class="bd-cards2"></div>
+          <div id="mdList" class="bd-cards1"></div>
         </div>
       </div>
+    </section>
+
+    <!-- 관련사이트 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">관련사이트<em>RELATED SITES</em></span>
+        <a class="cm-more" href="/spot/sites.html">VIEW MORE +</a>
+      </div>
+      <div id="stList"></div>
     </section>
 
   </div>
@@ -445,7 +464,7 @@
           다른 칸은 목록 모양이지만 여기만 카드입니다.
           영상은 무엇인지 그림으로 보여 주는 편이 훨씬 잘 전해집니다. */
     OCHub.board({
-      el:'#mdList', table:'spot', kind:'cards', n:4,
+      el:'#mdList', table:'spot', kind:'cards', n:2,
       cols: COLS + ',video_id,duration_sec,title_ko',
       filter: sec('음원영상') + '&hidden=is.false',
       order:'created_at.desc.nullslast',

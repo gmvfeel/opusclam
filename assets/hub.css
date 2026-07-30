@@ -74,6 +74,12 @@
   @media (max-width:760px){
     .bd-cards2{grid-template-columns:minmax(0,1fr)}
   }
+  /* 한 줄 카드 — 좁은 칸에서 카드를 위아래로 놓습니다.
+     썸네일이 커져 영상이 무엇인지 잘 보입니다. */
+  .bd-cards1{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+  .bd-cards1 .bd-card{margin:0}
+  .bd-cards1 .bd-cardimg{aspect-ratio:16/9}
+  .bd-cards1 .bd-title{font-size:14px}
   .bd-cardbody{display:flex;flex-direction:column;gap:5px;padding:12px 14px 13px}
   .bd-cat{align-self:flex-start;font-size:10.5px;font-weight:800;letter-spacing:-.01em;
     color:var(--violet-2);background:rgba(124,99,176,.12);border-radius:6px;padding:3px 8px}
