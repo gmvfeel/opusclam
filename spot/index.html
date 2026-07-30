@@ -143,6 +143,39 @@
       </div>
     </div>
 
+    <!-- 정보SPOT 현황 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">정보SPOT 현황<em>STATISTICS</em></span>
+      </div>
+      <div class="hb-stat">
+        <div class="hb-panel" id="spMonths" style="padding:16px 16px 8px"></div>
+        <div class="hb-figs">
+          <div class="hb-fig">
+            <span class="hb-figcap">전체 등록</span>
+            <span class="hb-fignum"><b id="spTotal">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig up">
+            <span class="hb-figcap">이번 달 열리는 일정</span>
+            <span class="hb-fignum"><b id="spMonth">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig gold">
+            <span class="hb-figcap">마감 임박 지원사업</span>
+            <span class="hb-fignum"><b id="spClosing">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig">
+            <span class="hb-figcap">이번 주 신규</span>
+            <span class="hb-fignum"><b id="spWeek">—</b><i>건</i></span>
+          </div>
+        </div>
+      </div>
+      <div class="hb-compose" id="spCompose"></div>
+      <div class="hb-panel" id="spCountryPanel" style="margin-top:16px">
+        <div class="hb-ptitle"><b>국가별 분포</b><span>등록된 정보가 많은 순 · 상위 8곳</span></div>
+        <div id="spCountry"></div>
+      </div>
+    </section>
+
     <!-- Concert Information — 공연정보 가로 카드 -->
     <section class="cm-sec" id="ciWrap">
       <div class="cm-head">
@@ -354,6 +387,164 @@
       view:VIEW, label:'음원·동영상',
       emptyText:'등록된 음원·동영상이 아직 없습니다.'
     });
+
+    /* ── 정보SPOT 현황 ──
+       숫자·월별 분포·갈래별 구성비·국가별을 SQL 함수 한 번(spot_stats)으로 받습니다.
+       지표마다 따로 물으면 요청이 다섯 배가 됩니다.
+       그림은 차트 라이브러리 없이 SVG 로 직접 그립니다.
+       폭은 viewBox 로 맞추므로 칸 안에서 찌그러지지 않습니다. */
+    (function(){
+      var box = document.getElementById('spMonths');
+      if (!box) return;
+      var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/rpc/spot_stats';
+      var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+      /* 갈래별 빛깔 — 관계 지도·데이터 분석에서 쓰는 팔레트와 결을 맞췄습니다 */
+      var COLOR = {
+        '페스티벌콩쿨':'#7c63b0', '국내콩쿨':'#d93a4c', '지원금':'#c08a3e',
+        '공연정보':'#3b6fc4',   '관련사이트':'#0f9b8e', '음원영상':'#8b95a8'
+      };
+
+      function esc(v){ return String(v == null ? '' : v)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      function num(v){ return (Number(v) || 0).toLocaleString(); }
+      function put(id, v){ var el = document.getElementById(id); if (el) el.textContent = num(v); }
+
+      /* 뼈대 — 자료가 오기 전 잠깐 보여 줍니다 */
+      function skel(){
+        box.innerHTML = '<div class="hb-ptitle"><b>월별 개최 분포</b>'
+          + '<span>불러오는 중…</span></div>'
+          + '<div class="bd-loading" style="min-height:150px">'
+          + '<span class="hub-skel w7"></span><span class="hub-skel w5"></span>'
+          + '<span class="hub-skel w7"></span></div>';
+      }
+
+      /* ① 월별 개최 분포 — 열두 달 막대.
+         달은 견주는 항목이 아니라 흐름이므로 한 계열의 밝기 차이로 그립니다. */
+      function monthsSvg(rows){
+        var W = 720, H = 240, PL = 8, PR = 8, PT = 16, PB = 30;
+        var iw = W - PL - PR, ih = H - PT - PB;
+        var max = 0;
+        rows.forEach(function(r){ if ((Number(r.n)||0) > max) max = Number(r.n)||0; });
+        var gap = 8, bw = (iw - gap * 11) / 12;
+        var out = '';
+        rows.forEach(function(r, i){
+          var n = Number(r.n) || 0;
+          var h = max ? Math.max(ih * n / max, n > 0 ? 3 : 0) : 0;
+          var x = PL + i * (bw + gap);
+          var y = PT + ih - h;
+          /* 값이 클수록 진하게 (밝기 206 → 68 사이) */
+          var t = max ? (n / max) : 0;
+          var l = Math.round(206 - 138 * t);
+          var fill = n > 0 ? 'rgb(' + Math.round(l*0.42) + ',' + Math.round(l*0.48) + ',' + l + ')'
+                           : 'var(--line-2)';
+          out += '<rect x="' + x.toFixed(1) + '" y="' + (n > 0 ? y.toFixed(1) : (PT+ih-2)) + '"'
+               + ' width="' + bw.toFixed(1) + '" height="' + (n > 0 ? h.toFixed(1) : 2) + '"'
+               + ' rx="3" fill="' + fill + '"><title>' + r.m + '월 ' + num(n) + '건</title></rect>';
+          if (n > 0) {
+            out += '<text x="' + (x + bw/2).toFixed(1) + '" y="' + (y - 5).toFixed(1) + '"'
+                 + ' text-anchor="middle" font-size="11" font-weight="700"'
+                 + ' fill="var(--text-2)">' + n + '</text>';
+          }
+          out += '<text x="' + (x + bw/2).toFixed(1) + '" y="' + (PT + ih + 18)
+               + '" text-anchor="middle" font-size="11" fill="var(--text-3)">' + r.m + '</text>';
+        });
+        return '<div class="hb-ptitle"><b>월별 개최 분포</b>'
+             + '<span>페스티벌·콩쿨·공연이 어느 달에 열리는지</span></div>'
+             + '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" role="img"'
+             + ' aria-label="월별 개최 분포">' + out + '</svg>';
+      }
+
+      /* ② 갈래별 구성비 — 한 줄 띠 + 범례 (DATABASE 메인과 같은 모양) */
+      function composeHtml(rows, total){
+        var el = document.getElementById('spCompose');
+        if (!el) return;
+        if (!rows || !rows.length) {
+          el.innerHTML = '<p class="bd-empty" style="padding:8px 0">'
+            + '자료가 등록되면 갈래별 비율이 표시됩니다.</p>';
+          return;
+        }
+        var sum = Number(total) || rows.reduce(function(a,r){ return a + (Number(r.n)||0); }, 0);
+        var seg = rows.map(function(r){
+          var pct = sum ? (Number(r.n)||0) / sum * 100 : 0;
+          return '<span class="bar-seg" style="width:' + pct.toFixed(2) + '%;background:'
+            + (COLOR[r.key] || '#8b95a8') + '" title="' + esc(r.label) + ' ' + num(r.n) + '"></span>';
+        }).join('');
+        var leg = rows.map(function(r){
+          var pct = sum ? (Number(r.n)||0) / sum * 100 : 0;
+          return '<span class="bar-leg"><i style="background:' + (COLOR[r.key] || '#8b95a8') + '"></i>'
+            + '<b>' + esc(r.label) + '</b><u>' + num(r.n) + '</u>'
+            + '<s>' + pct.toFixed(1) + '%</s></span>';
+        }).join('');
+        el.innerHTML = '<div class="bar-track">' + seg + '</div>'
+                     + '<div class="bar-legs">' + leg + '</div>';
+      }
+
+      /* ③ 국가별 분포 — 가로 막대 여덟 줄 */
+      function countryHtml(rows){
+        var el = document.getElementById('spCountry');
+        if (!el) return;
+        if (!rows || !rows.length) {
+          el.innerHTML = '<p class="bd-empty" style="padding:14px 0">'
+            + '국가 정보가 담긴 자료가 등록되면 표시됩니다.</p>';
+          return;
+        }
+        var max = 0;
+        rows.forEach(function(r){ if ((Number(r.n)||0) > max) max = Number(r.n)||0; });
+        var W = 720, RH = 26, PT = 4, LW = 120;
+        var H = PT * 2 + rows.length * RH;
+        var out = '';
+        rows.forEach(function(r, i){
+          var n = Number(r.n) || 0;
+          var y = PT + i * RH;
+          var bw = max ? Math.max((W - LW - 46) * n / max, 2) : 2;
+          out += '<text x="0" y="' + (y + 15) + '" font-size="12" fill="var(--text-2)">'
+               + esc(String(r.name).slice(0, 14)) + '</text>'
+               + '<rect x="' + LW + '" y="' + (y + 5) + '" width="' + bw.toFixed(1) + '"'
+               + ' height="13" rx="3" fill="#7c63b0"><title>' + esc(r.name) + ' ' + num(n)
+               + '건</title></rect>'
+               + '<text x="' + (LW + bw + 8).toFixed(1) + '" y="' + (y + 15) + '"'
+               + ' font-size="11.5" font-weight="700" fill="var(--text)">' + num(n) + '</text>';
+        });
+        el.innerHTML = '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" role="img"'
+                     + ' aria-label="국가별 분포">' + out + '</svg>';
+      }
+
+      function fail(){
+        box.innerHTML = '<div class="hb-ptitle"><b>월별 개최 분포</b></div>'
+          + '<div style="min-height:150px;display:flex;flex-direction:column;'
+          +      'align-items:center;justify-content:center;gap:12px">'
+          + '<p class="bd-empty" style="padding:0">현황을 불러오지 못했습니다.</p>'
+          + '<button type="button" id="spRetry" style="appearance:none;cursor:pointer;'
+          +      'border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);'
+          +      'font:700 12.5px/1 inherit;padding:9px 16px;border-radius:8px">'
+          + '다시 불러오기</button></div>';
+        var b = document.getElementById('spRetry');
+        if (b) b.addEventListener('click', run);
+      }
+
+      function run(){
+        skel();
+        fetch(U, { method:'POST',
+                   headers:{ apikey:K, Authorization:'Bearer '+K, 'Content-Type':'application/json' },
+                   body:'{}' })
+          .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(function(d){
+            if (!d) throw new Error('빈 응답');
+            /* 넷을 따로 감쌉니다 — 하나가 어긋나도 나머지는 보이게 합니다 */
+            try {
+              put('spTotal', d.total); put('spMonth', d.month_events);
+              put('spClosing', d.closing); put('spWeek', d.week_new);
+            } catch (e1) { }
+            try { box.innerHTML = monthsSvg(d.months || []); } catch (e2) { box.innerHTML = ''; }
+            try { composeHtml(d.compose || [], d.total); } catch (e3) { }
+            try { countryHtml(d.countries || []); } catch (e4) { }
+          })
+          .catch(function(){ fail(); });
+      }
+
+      run();
+    })();
 
     /* ── 날짜별 공연정보 (달력) ──
        한 달치를 한 번만 불러 놓고, 날짜를 누르면 그날 공연을 오른쪽에 보여 줍니다.
