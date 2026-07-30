@@ -75,6 +75,52 @@
     .sp-cal{grid-template-columns:1fr}
     .sp-calside{border-left:0;border-top:1px solid var(--line)}
   }
+
+  /* ── 현황 그래프 (정보SPOT 전용) ──
+     예전에는 SVG 로 그렸는데, viewBox 720 폭이 실제 폭에 맞춰 늘어나면서
+     글자와 막대가 1.5배로 커졌습니다. 그래서 HTML 로 바꿨습니다.
+     이러면 글자 크기가 화면 폭과 무관하게 그대로 유지되고,
+     마우스를 올렸을 때 알림창도 곧바로 뜹니다. */
+  .sp-mchart{display:flex;align-items:flex-end;gap:6px;height:190px;padding:22px 4px 0}
+  .sp-mcol{position:relative;flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:flex-end;height:100%;cursor:default}
+  .sp-mcol.has{cursor:pointer}
+  .sp-mval{font-size:11.5px;font-weight:800;color:var(--text-2);margin-bottom:4px;
+    font-variant-numeric:tabular-nums;visibility:hidden}
+  .sp-mcol.has .sp-mval{visibility:visible}
+  .sp-mbar{width:100%;max-width:46px;border-radius:4px 4px 0 0;background:var(--line-2);
+    min-height:3px;transition:filter .15s ease}
+  .sp-mcol.has:hover .sp-mbar{filter:brightness(1.18)}
+  .sp-mlabel{margin-top:9px;font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+  .sp-mcol.has .sp-mlabel{color:var(--text-2);font-weight:700}
+
+  /* 마우스를 올리면 뜨는 알림창 — 월별·국가별이 함께 씁니다 */
+  .sp-tip{position:absolute;left:50%;bottom:100%;transform:translate(-50%,-8px);
+    z-index:5;padding:7px 11px;border-radius:8px;background:#1b1c2b;color:#fff;
+    font-size:12px;line-height:1.5;white-space:nowrap;pointer-events:none;
+    opacity:0;transition:opacity .14s ease}
+  .sp-tip b{font-weight:700}
+  .sp-tip em{font-style:normal;opacity:.72;margin-left:5px}
+  .sp-mcol.has:hover .sp-tip,
+  .sp-crow:hover .sp-tip{opacity:1}
+  html[data-theme="dark"] .sp-tip{background:#3a3a40}
+
+  /* 국가별 분포 — 한 줄씩 */
+  .sp-clist{display:flex;flex-direction:column;gap:9px;padding:2px 0}
+  .sp-crow{position:relative;display:grid;grid-template-columns:104px 1fr 44px;
+    align-items:center;gap:11px}
+  .sp-cname{font-size:12.5px;color:var(--text-2);overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .sp-ctrack{height:9px;border-radius:99px;background:var(--paper-2);overflow:hidden}
+  .sp-ctrack i{display:block;height:100%;border-radius:99px;background:#7c63b0}
+  .sp-cnum{font-size:12.5px;font-weight:800;color:var(--text);text-align:right;
+    font-variant-numeric:tabular-nums}
+  .sp-crow:hover .sp-cname{color:var(--text)}
+
+  @media (max-width:760px){
+    .sp-mchart{height:150px;gap:3px}
+    .sp-crow{grid-template-columns:78px 1fr 36px;gap:8px}
+  }
 </style>
 </head>
 <body data-header="overlay">
@@ -420,39 +466,33 @@
       }
 
       /* ① 월별 개최 분포 — 열두 달 막대.
-         달은 견주는 항목이 아니라 흐름이므로 한 계열의 밝기 차이로 그립니다. */
-      function monthsSvg(rows){
-        var W = 720, H = 240, PL = 8, PR = 8, PT = 16, PB = 30;
-        var iw = W - PL - PR, ih = H - PT - PB;
+            달은 견주는 항목이 아니라 흐름이므로 한 계열의 밝기 차이로 그립니다.
+            막대를 누르면 아래 달력이 그 달로 옮겨 갑니다. */
+      function monthsHtml(rows){
         var max = 0;
         rows.forEach(function(r){ if ((Number(r.n)||0) > max) max = Number(r.n)||0; });
-        var gap = 8, bw = (iw - gap * 11) / 12;
-        var out = '';
-        rows.forEach(function(r, i){
+        var cols = rows.map(function(r){
           var n = Number(r.n) || 0;
-          var h = max ? Math.max(ih * n / max, n > 0 ? 3 : 0) : 0;
-          var x = PL + i * (bw + gap);
-          var y = PT + ih - h;
-          /* 값이 클수록 진하게 (밝기 206 → 68 사이) */
+          var h = max ? Math.max(n / max * 100, n > 0 ? 4 : 0) : 0;
           var t = max ? (n / max) : 0;
-          var l = Math.round(206 - 138 * t);
-          var fill = n > 0 ? 'rgb(' + Math.round(l*0.42) + ',' + Math.round(l*0.48) + ',' + l + ')'
-                           : 'var(--line-2)';
-          out += '<rect x="' + x.toFixed(1) + '" y="' + (n > 0 ? y.toFixed(1) : (PT+ih-2)) + '"'
-               + ' width="' + bw.toFixed(1) + '" height="' + (n > 0 ? h.toFixed(1) : 2) + '"'
-               + ' rx="3" fill="' + fill + '"><title>' + r.m + '월 ' + num(n) + '건</title></rect>';
-          if (n > 0) {
-            out += '<text x="' + (x + bw/2).toFixed(1) + '" y="' + (y - 5).toFixed(1) + '"'
-                 + ' text-anchor="middle" font-size="11" font-weight="700"'
-                 + ' fill="var(--text-2)">' + n + '</text>';
-          }
-          out += '<text x="' + (x + bw/2).toFixed(1) + '" y="' + (PT + ih + 18)
-               + '" text-anchor="middle" font-size="11" fill="var(--text-3)">' + r.m + '</text>';
-        });
+          var l = Math.round(206 - 138 * t);                  /* 값이 클수록 진하게 */
+          var bg = n > 0
+            ? 'rgb(' + Math.round(l*0.42) + ',' + Math.round(l*0.48) + ',' + l + ')'
+            : '';
+          return '<div class="sp-mcol' + (n > 0 ? ' has' : '') + '"'
+            + (n > 0 ? ' data-m="' + r.m + '" role="button" tabindex="0"'
+                     + ' aria-label="' + r.m + '월 ' + n + '건 · 달력에서 보기"' : '')
+            + '>'
+            + (n > 0 ? '<span class="sp-tip"><b>' + r.m + '월</b> ' + num(n) + '건'
+                     + '<em>달력에서 보기</em></span>' : '')
+            + '<span class="sp-mval">' + (n > 0 ? n : '') + '</span>'
+            + '<span class="sp-mbar"' + (bg ? ' style="height:' + h.toFixed(1) + '%;background:' + bg + '"' : '') + '></span>'
+            + '<span class="sp-mlabel">' + r.m + '</span>'
+            + '</div>';
+        }).join('');
         return '<div class="hb-ptitle"><b>월별 개최 분포</b>'
              + '<span>페스티벌·콩쿨·공연이 어느 달에 열리는지</span></div>'
-             + '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" role="img"'
-             + ' aria-label="월별 개최 분포">' + out + '</svg>';
+             + '<div class="sp-mchart">' + cols + '</div>';
       }
 
       /* ② 갈래별 구성비 — 한 줄 띠 + 범례 (DATABASE 메인과 같은 모양) */
@@ -480,7 +520,7 @@
                      + '<div class="bar-legs">' + leg + '</div>';
       }
 
-      /* ③ 국가별 분포 — 가로 막대 여덟 줄 */
+      /* ③ 국가별 분포 — 한 줄씩. 이름·막대·숫자를 같은 줄에 놓습니다. */
       function countryHtml(rows){
         var el = document.getElementById('spCountry');
         if (!el) return;
@@ -489,25 +529,35 @@
             + '국가 정보가 담긴 자료가 등록되면 표시됩니다.</p>';
           return;
         }
-        var max = 0;
-        rows.forEach(function(r){ if ((Number(r.n)||0) > max) max = Number(r.n)||0; });
-        var W = 720, RH = 26, PT = 4, LW = 120;
-        var H = PT * 2 + rows.length * RH;
-        var out = '';
-        rows.forEach(function(r, i){
-          var n = Number(r.n) || 0;
-          var y = PT + i * RH;
-          var bw = max ? Math.max((W - LW - 46) * n / max, 2) : 2;
-          out += '<text x="0" y="' + (y + 15) + '" font-size="12" fill="var(--text-2)">'
-               + esc(String(r.name).slice(0, 14)) + '</text>'
-               + '<rect x="' + LW + '" y="' + (y + 5) + '" width="' + bw.toFixed(1) + '"'
-               + ' height="13" rx="3" fill="#7c63b0"><title>' + esc(r.name) + ' ' + num(n)
-               + '건</title></rect>'
-               + '<text x="' + (LW + bw + 8).toFixed(1) + '" y="' + (y + 15) + '"'
-               + ' font-size="11.5" font-weight="700" fill="var(--text)">' + num(n) + '</text>';
+        var max = 0, sum = 0;
+        rows.forEach(function(r){
+          var n = Number(r.n) || 0; sum += n;
+          if (n > max) max = n;
         });
-        el.innerHTML = '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" role="img"'
-                     + ' aria-label="국가별 분포">' + out + '</svg>';
+        el.innerHTML = '<div class="sp-clist">' + rows.map(function(r){
+          var n = Number(r.n) || 0;
+          var w = max ? Math.max(n / max * 100, 2) : 2;
+          var pct = sum ? (n / sum * 100) : 0;
+          return '<div class="sp-crow">'
+            + '<span class="sp-tip"><b>' + esc(r.name) + '</b> ' + num(n) + '건'
+            +   '<em>' + pct.toFixed(1) + '%</em></span>'
+            + '<span class="sp-cname" title="' + esc(r.name) + '">' + esc(r.name) + '</span>'
+            + '<span class="sp-ctrack"><i style="width:' + w.toFixed(1) + '%"></i></span>'
+            + '<span class="sp-cnum">' + num(n) + '</span>'
+            + '</div>';
+        }).join('') + '</div>';
+      }
+
+      /* 월 막대 → 달력으로.
+         달력은 아래쪽에서 따로 그리므로, 그쪽이 내어 준 창구를 부릅니다. */
+      function onMonthPick(e){
+        var c = e.target.closest && e.target.closest('.sp-mcol.has');
+        if (!c) return;
+        var m = parseInt(c.getAttribute('data-m'), 10);
+        if (!m) return;
+        if (window.ocSpotCalendar && window.ocSpotCalendar.goMonth) {
+          window.ocSpotCalendar.goMonth(m);
+        }
       }
 
       function fail(){
@@ -536,7 +586,14 @@
               put('spTotal', d.total); put('spMonth', d.month_events);
               put('spClosing', d.closing); put('spWeek', d.week_new);
             } catch (e1) { }
-            try { box.innerHTML = monthsSvg(d.months || []); } catch (e2) { box.innerHTML = ''; }
+            try {
+              box.innerHTML = monthsHtml(d.months || []);
+              /* 막대를 누르면 아래 달력이 그 달로 갑니다 (2026년 기준) */
+              box.addEventListener('click', onMonthPick);
+              box.addEventListener('keydown', function(e){
+                if (e.key === 'Enter' || e.key === ' ') onMonthPick(e);
+              });
+            } catch (e2) { box.innerHTML = ''; }
             try { composeHtml(d.compose || [], d.total); } catch (e3) { }
             try { countryHtml(d.countries || []); } catch (e4) { }
           })
@@ -656,7 +713,23 @@
         }).join('');
       }
 
-      function refresh(){ load().then(function(){ drawGrid(); drawList(); }); }
+      function refresh(){ return load().then(function(){ drawGrid(); drawList(); }); }
+
+      /* 위쪽 「월별 개최 분포」에서 달을 눌렀을 때 쓰는 창구입니다.
+         두 곳이 따로 그려지므로 이렇게 이름을 하나 내어 둡니다. */
+      window.ocSpotCalendar = {
+        goMonth: function (m) {
+          if (!m || m < 1 || m > 12) return;
+          cur = new Date(cur.getFullYear(), m - 1, 1);
+          picked = null;
+          refresh().then(function(){
+            var box = document.querySelector('.sp-cal');
+            if (box && box.scrollIntoView) {
+              box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          });
+        }
+      };
 
       grid.addEventListener('click', function(e){
         var b = e.target.closest && e.target.closest('.sp-day[data-d]');
