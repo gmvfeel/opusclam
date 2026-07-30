@@ -86,6 +86,8 @@
   .sp-two64 .sp-calititle{font-size:12.8px}
   .sp-two64 .sp-calimeta{font-size:11.5px}
   .sp-two64 .sp-calitem{padding:11px 2px}
+  /* 달력 아래 빈 자리에 놓이는 덩어리 (관련사이트) */
+  .sp-under{margin-top:34px}
 
   @media (max-width:980px){
     .sp-two64{grid-template-columns:minmax(0,1fr);gap:38px}
@@ -277,20 +279,13 @@
       </div>
     </section>
 
-    <!-- Concert Information — 공연정보 가로 카드 -->
-    <section class="cm-sec" id="ciWrap">
+    <!-- 공연정보 -->
+    <section class="cm-sec">
       <div class="cm-head">
         <span class="cm-title">공연정보<em>CONCERT INFORMATION</em></span>
-        <div class="cm-arrows">
-          <button type="button" class="cm-arw" data-car="prev" aria-label="이전">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
-          </button>
-          <button type="button" class="cm-arw" data-car="next" aria-label="다음">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
-          </button>
-        </div>
+        <a class="cm-more" href="/spot/concert.html">VIEW MORE +</a>
       </div>
-      <div class="cm-track" id="ciBox"></div>
+      <div id="ciBox"></div>
     </section>
 
     <!-- New Information — 큰 글 한 건 + 갈래별 탭 -->
@@ -352,6 +347,15 @@
               <a class="sp-calmore" href="/spot/concert.html">공연정보 전체보기 <i>+</i></a>
             </div>
           </div>
+
+          <!-- 관련사이트 — 달력 아래 빈 자리에 놓습니다 -->
+          <div class="sp-under">
+            <div class="cm-head">
+              <span class="cm-title">관련사이트<em>RELATED SITES</em></span>
+              <a class="cm-more" href="/spot/sites.html">VIEW MORE +</a>
+            </div>
+            <div id="stList"></div>
+          </div>
         </div>
         <div>
           <div class="cm-head">
@@ -361,15 +365,6 @@
           <div id="mdList" class="bd-cards1"></div>
         </div>
       </div>
-    </section>
-
-    <!-- 관련사이트 -->
-    <section class="cm-sec">
-      <div class="cm-head">
-        <span class="cm-title">관련사이트<em>RELATED SITES</em></span>
-        <a class="cm-more" href="/spot/sites.html">VIEW MORE +</a>
-      </div>
-      <div id="stList"></div>
     </section>
 
   </div>
@@ -406,16 +401,15 @@
 
     function sec(name){ return '&section=eq.' + encodeURIComponent(name); }
 
-    /* ── 공연정보 — 가로로 넘겨 보는 카드 ── */
+    /* ── 공연정보 ── */
     OCHub.board({
-      el:'#ciBox', table:'spot', kind:'cards', n:8, cols:COLS,
+      el:'#ciBox', table:'spot', kind:'compact', n:6, cols:COLS,
       filter: sec('공연정보') + '&hidden=is.false',
       order:'date_from.desc.nullslast,created_at.desc.nullslast',
       dateCol:'date_from', view:VIEW, list:'/spot/concert.html',
       countEl:'#cCon', label:'공연정보',
       emptyText:'등록된 공연정보가 아직 없습니다.'
     });
-    OCHub.bindCarousel('#ciWrap', '#ciBox');
 
     /* ── 새로 등록된 정보 — 첫 건은 크게 ── */
     OCHub.board({
