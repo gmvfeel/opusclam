@@ -2,9 +2,15 @@
    OPUSCLAM 음원·동영상 수집 — seed/youtube-collect.mjs
 
    무엇을 하나
-    · spot_media_query 에 등록된 검색 조건으로 유튜브를 찾아
-      쓸 만한 영상만 골라 spot 표(section='음원영상')에 담습니다
+    · 믿을 수 있는 채널(spot_media_channel)이 새로 올린 영상을 받아
+      spot 표(section='음원영상')에 담습니다  ← 주력
+    · 검색 조건(spot_media_query)으로 찾아오는 길도 있습니다  ← 보조
     · 담긴 것은 숨김 상태이며, 어드민에서 확인해 내보낸 것만 화면에 나옵니다
+
+   왜 채널 훑기가 주력인가
+     첫 시험에서 검색으로 26개를 담았는데 쓸 만한 것이 6개였습니다
+     (재즈·무용·코믹콘이 섞였습니다). 쓸 만했던 6개는 모두 정식 채널 것이었습니다.
+     한도도 검색은 707, 채널 훑기는 약 120 입니다.
 
    어떻게 걸러내나 — 네 겹
     1) 제목·채널 제외어   spot_media_block  (모음집·배경음악·홍보 영상)
@@ -23,10 +29,13 @@
      설명 충실   5   (200자 이상)
 
    쓰는 법
-     node seed/youtube-collect.mjs                 모든 활성 조건
-     node seed/youtube-collect.mjs --id=3          조건 하나만
-     node seed/youtube-collect.mjs --dry           저장하지 않고 점수만 봅니다
-     node seed/youtube-collect.mjs --show-rejected 버린 것도 이유와 함께 보여줍니다
+     node seed/youtube-collect.mjs                      채널 훑기 (주력)
+     node seed/youtube-collect.mjs --channels=20        채널 20곳만 (처음 나눠 돌 때)
+     node seed/youtube-collect.mjs --mode=search        검색만 (보조)
+     node seed/youtube-collect.mjs --mode=both          둘 다
+     node seed/youtube-collect.mjs --per=25             채널마다 최신 25개까지
+     node seed/youtube-collect.mjs --dry                저장하지 않고 결과만 봅니다
+     node seed/youtube-collect.mjs --show-rejected      버린 것도 이유와 함께
 
    필요한 환경변수
      SUPABASE_URL
@@ -67,6 +76,18 @@ const args = Object.fromEntries(
 const ONLY_ID   = args.id ? Number(args.id) : null;
 const DRY       = !!args.dry;
 const SHOW_REJ  = !!args['show-rejected'];
+/* 방식 — channels 채널 훑기(주력) · search 검색(보조) · both 둘 다 */
+const MODE      = String(args.mode || 'channels');
+/* 한 번에 훑을 채널 수. 처음에는 채널 번호를 알아내는 데 한도가 들어
+   나눠 도는 편이 안전합니다 (예: --channels=20 으로 사흘에 나누기) */
+const CH_LIMIT  = args.channels ? Number(args.channels) : null;
+/* 채널마다 최신 몇 개를 볼지 */
+const PER_CH    = args.per ? Number(args.per) : 15;
+
+if (!['channels', 'search', 'both'].includes(MODE)) {
+  console.error('--mode 는 channels / search / both 중 하나여야 합니다.');
+  process.exit(1);
+}
 
 async function sb(path, opts = {}) {
   const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
@@ -141,7 +162,12 @@ const RISKY = new Set([
 ]);
 
 async function loadPersons() {
-  const rows = await sbAll('persons?hidden=is.false', 'id,name_ko,name_en,field');
+  /* 작곡가로 등록되고 시대 정보가 있는 사람만 봅니다.
+     연주자·지휘자까지 넣으면 흔한 성이 늘어나 엉뚱하게 걸립니다. */
+  const rows = await sbAll(
+    'persons?hidden=is.false&field=ilike.*%EC%9E%91%EA%B3%A1*&era_name=not.is.null',
+    'id,name_ko,name_en'
+  );
   const list = [];
   for (const p of rows) {
     const push = (raw) => {
@@ -149,41 +175,41 @@ async function loadPersons() {
       if (!s) return;
       const low = s.toLowerCase();
       if (RISKY.has(low)) return;
-      /* 한글은 세 글자부터, 로마자는 다섯 글자부터 씁니다.
-         짧은 이름은 다른 낱말에 걸려 엉뚱한 결과를 냅니다. */
       const hangul = /[가-힣]/.test(s);
-      if (hangul ? s.replace(/\s/g, '').length < 3 : low.length < 5) return;
+      /* 한글은 세 글자부터. 로마자는 「이름 성」처럼 두 낱말 이상이어야 합니다.
+         성만으로는 찾지 않습니다 — 이것이 첫 시험에서 엉뚱한 결과를 낸 까닭입니다. */
+      if (hangul) {
+        if (s.replace(/\s/g, '').length < 3) return;
+      } else {
+        const words = low.split(/\s+/).filter(Boolean);
+        if (words.length < 2) return;
+        if (low.length < 8) return;
+        if (words.some((w) => RISKY.has(w))) return;
+      }
       list.push({ id: p.id, name: s, key: low });
     };
     push(p.name_ko);
     push(p.name_en);
-    /* 로마자 이름의 성만으로도 찾습니다 (베토벤·말러처럼 성만 쓰는 일이 흔합니다).
-       다만 다섯 글자 이상이고 흔한 낱말이 아닐 때만 씁니다. */
-    const en = String(p.name_en || '').trim();
-    if (en && !/[가-힣]/.test(en)) {
-      const parts = en.split(/\s+/).filter(Boolean);
-      if (parts.length > 1) {
-        const sur = parts[parts.length - 1].replace(/[^A-Za-zÀ-ÿ'-]/g, '');
-        const low = sur.toLowerCase();
-        if (sur.length >= 5 && !RISKY.has(low)) list.push({ id: p.id, name: sur, key: low });
-      }
-    }
   }
-  /* 같은 열쇠는 하나만 남깁니다 */
   const map = new Map();
   for (const it of list) if (!map.has(it.key)) map.set(it.key, it);
   return [...map.values()];
 }
 
-function matchPersons(text, persons) {
-  const low = String(text || '').toLowerCase();
+/* 제목에서만 찾습니다.
+   첫 시험에서 설명문 900자까지 뒤졌더니 「Musician」「London」「Still」 같은 성이
+   온갖 낱말에 걸려, 재즈 영상이 인물 네 명 매칭으로 48점을 받고 통과했습니다.
+   이제 점수를 주지 않고, 어느 인물과 이어 줄지 찾는 데만 씁니다. */
+function matchPersons(title, persons) {
+  const low = String(title || '').toLowerCase();
   if (!low) return [];
   const hit = [];
+  const seen = new Set();
   for (const p of persons) {
-    if (low.includes(p.key)) {
-      hit.push(p);
-      if (hit.length >= 6) break;
-    }
+    if (!low.includes(p.key)) continue;
+    if (seen.has(p.id)) continue;
+    seen.add(p.id); hit.push(p);
+    if (hit.length >= 4) break;
   }
   return hit;
 }
@@ -242,6 +268,90 @@ function isoToSec(iso) {
 }
 
 /* ============================================================
+   채널 훑기 — 이제 이것이 주력입니다
+
+   왜 검색이 아니라 채널인가
+     첫 시험에서 검색으로 26개를 담았는데 쓸 만한 것이 6개였습니다.
+     쓸 만했던 6개는 모두 정식 채널이 올린 것이었습니다.
+     그러니 검색으로 뒤지는 대신, 믿을 수 있는 채널이 새로 올리는 것을 받습니다.
+
+   드는 한도
+     채널 번호를 이미 아는 곳   2 (올린 목록 + 상세)
+     번호를 모르는 곳           102 (채널 찾기 100 + 위 2) — 처음 한 번만
+   ============================================================ */
+
+/* 채널 번호와 「올린 것 모음」 목록 번호를 알아냅니다.
+   손잡이(@handle)를 알면 1, 이름으로 찾아야 하면 100 이 듭니다. */
+async function resolveChannel(ch) {
+  if (ch.uploads_playlist) return { uploads: ch.uploads_playlist, cost: 0, chId: ch.channel_id };
+
+  /* ① 번호를 안다 */
+  if (ch.channel_id) {
+    const j = await ytGet(`${YT}/channels?key=${YT_KEY}&part=contentDetails&id=${ch.channel_id}`);
+    const up = j?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (up) return { uploads: up, cost: 1, chId: ch.channel_id };
+  }
+
+  /* ② 손잡이를 안다 */
+  if (ch.handle) {
+    const h = String(ch.handle).replace(/^@/, '');
+    const j = await ytGet(`${YT}/channels?key=${YT_KEY}&part=contentDetails,snippet&forHandle=${encodeURIComponent(h)}`);
+    const it = j?.items?.[0];
+    if (it?.contentDetails?.relatedPlaylists?.uploads) {
+      return { uploads: it.contentDetails.relatedPlaylists.uploads, cost: 1, chId: it.id, foundName: it.snippet?.title };
+    }
+  }
+
+  /* ③ 이름으로 찾는다 (한도 100 · 처음 한 번만) */
+  const p = new URLSearchParams({
+    key: YT_KEY, part: 'snippet', type: 'channel',
+    q: ch.name_match, maxResults: '3',
+  });
+  const j = await ytGet(`${YT}/search?${p}`);
+  const items = j?.items || [];
+  /* 찾은 것 가운데 이름이 실제로 들어맞는 것만 씁니다.
+     엉뚱한 채널을 잡으면 그 뒤 모든 영상이 잘못 들어옵니다. */
+  const want = String(ch.name_match).toLowerCase();
+  const hit = items.find((it) => String(it.snippet?.channelTitle || it.snippet?.title || '')
+    .toLowerCase().includes(want));
+  if (!hit) {
+    return { uploads: null, cost: 100, why: `이름 「${ch.name_match}」 로 채널을 못 찾음`,
+             candidates: items.map((it) => it.snippet?.channelTitle || it.snippet?.title).filter(Boolean) };
+  }
+  const chId = hit.snippet?.channelId || hit.id?.channelId;
+  if (!chId) return { uploads: null, cost: 100, why: '채널 번호를 못 읽음' };
+
+  const j2 = await ytGet(`${YT}/channels?key=${YT_KEY}&part=contentDetails&id=${chId}`);
+  const up = j2?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+  return { uploads: up || null, cost: 101, chId,
+           foundName: hit.snippet?.channelTitle || hit.snippet?.title,
+           why: up ? null : '올린 목록을 못 읽음' };
+}
+
+/* 그 채널이 올린 최신 영상 번호를 받아옵니다 (한도 1) */
+async function ytUploads(uploadsId, n) {
+  const p = new URLSearchParams({
+    key: YT_KEY, part: 'contentDetails',
+    playlistId: uploadsId, maxResults: String(Math.min(n || 20, 50)),
+  });
+  const j = await ytGet(`${YT}/playlistItems?${p}`);
+  return (j?.items || []).map((it) => it.contentDetails?.videoId).filter(Boolean);
+}
+
+/* 채널 훑기용 판정 기준 — 채널이 이미 믿을 수 있으므로 길이와 제외어만 봅니다 */
+function channelQuery(ch) {
+  return {
+    id: null,
+    category: '동영상',
+    min_sec: 300,        /* 5분 미만은 홍보·짧은 소식 */
+    max_sec: 7200,       /* 2시간 넘으면 모음집·전곡 묶음 */
+    min_score: 0,        /* 채널을 이미 믿으므로 점수 문턱을 두지 않습니다 */
+    trusted_only: true,
+    _channel: ch,
+  };
+}
+
+/* ============================================================
    점수 매기기
    ============================================================ */
 const OPUS_RE = /\b(op\.?\s?\d+|bwv\s?\d+|kv?\.?\s?\d{2,3}|d\.?\s?\d{2,4}|hob\.|rv\s?\d+|sz\.\s?\d+|woo\s?\d+)/i;
@@ -272,10 +382,13 @@ function judge(v, qcfg, cfg, persons) {
   if (sec < minS) return { ok: false, why: `너무 짧음 ${Math.round(sec/60)}분 (기준 ${Math.round(minS/60)}분)` };
   if (sec > maxS) return { ok: false, why: `너무 김 ${Math.round(sec/60)}분 (기준 ${Math.round(maxS/60)}분)` };
 
-  /* ③ 채널 신뢰도 */
+  /* ③ 채널 신뢰도
+        채널 훑기로 온 영상은 어느 채널에서 왔는지 이미 알고 있습니다(_channel).
+        그때는 이름으로 다시 찾지 않습니다 — 채널 표기가 조금 달라도(일본어·약칭)
+        엉뚱하게 「믿을 수 있는 채널이 아님」으로 버려지는 것을 막습니다. */
   let score = 0;
   const parts = [];
-  const ch = cfg.channels.find((c) =>
+  const ch = qcfg._channel || cfg.channels.find((c) =>
     (c.channel_id && c.channel_id === chId) || (c.m && lowC.includes(c.m)));
   if (ch) {
     const add = ch.trust >= 3 ? 45 : ch.trust === 2 ? 32 : 18;
@@ -284,17 +397,10 @@ function judge(v, qcfg, cfg, persons) {
     return { ok: false, why: '믿을 수 있는 채널이 아님' };
   }
 
-  /* ④ 인물DB 대조 */
-  const hits = matchPersons(title + ' ' + desc.slice(0, 900), persons);
-  if (hits.length) {
-    /* 한글 이름은 로마자보다 무게를 더 둡니다.
-       「진은숙」이 제목에 있으면 우연히 겹칠 일이 거의 없습니다.
-       반면 로마자 성(Bach·Ligeti)은 다른 뜻으로 쓰일 수 있습니다. */
-    let add = 0;
-    for (const h of hits) add += /[가-힣]/.test(h.name) ? 20 : 14;
-    add = Math.min(add, 48);
-    score += add; parts.push(`인물 ${hits.map((h) => h.name).join('·')} +${add}`);
-  }
+  /* ④ 인물DB 대조 — 점수를 주지 않습니다.
+        어느 인물과 이어 줄지 찾기만 합니다. 오탐이 나도 점수에 영향이 없습니다. */
+  const hits = matchPersons(title, persons);
+  if (hits.length) parts.push(`인물 ${hits.map((h) => h.name).join('·')}`);
 
   /* ⑤ 덧점 */
   score += 15; parts.push('길이 적정 +15');
@@ -341,7 +447,7 @@ function buildRow(v, j, qcfg) {
     matched_names: (j.hits || []).map((h) => h.name).join(', ') || null,
     person_ids: (j.hits || []).map((h) => h.id),
     media_score: j.score,
-    media_query_id: qcfg.id,
+    media_query_id: qcfg.id || null,
     fetched_at: new Date().toISOString(),
     review_status: 'pending',
     hidden: true,                 /* 확인 전에는 화면에 나오지 않습니다 */
@@ -354,64 +460,133 @@ function buildRow(v, j, qcfg) {
 /* ============================================================
    실행
    ============================================================ */
-async function main() {
-  console.log('── 음원·동영상 수집 시작 ──');
-  const cfg = await loadConfig();
-  if (!cfg.queries.length) {
-    console.log('활성 검색 조건이 없습니다. spot_media_query 를 확인하세요.');
-    return;
-  }
-  console.log(`검색 조건 ${cfg.queries.length}개 · 믿을 수 있는 채널 ${cfg.channels.length}곳 ·`
-            + ` 제외어 ${cfg.blockTitle.length + cfg.blockChannel.length}개`);
+async function runChannels(cfg, seen, persons) {
+  let n = 0, rej = 0, quota = 0;
+  const chans = await sb('spot_media_channel?select=*&is_active=is.true'
+    + '&order=last_run_at.asc.nullsfirst,sort_order.asc.nullslast,id.asc'
+    + (CH_LIMIT ? `&limit=${CH_LIMIT}` : ''));
 
-  const seen = await loadSeen();
-  console.log(`이미 담긴(또는 버린) 영상 ${seen.length || seen.size}개`);
+  console.log(`\n══ 채널 훑기 — ${(chans || []).length}곳 ══`);
 
-  const persons = await loadPersons();
-  console.log(`인물DB 대조용 이름 ${persons.length}개`);
-
-  let totalNew = 0, totalRej = 0, quota = 0;
-  const newChannelIds = new Map();
-
-  for (const q of cfg.queries) {
+  for (const ch of (chans || [])) {
     if (isStop()) { console.log('시간·실패 한도에 걸려 여기까지 저장하고 멈춥니다.'); break; }
-    console.log(`\n[${q.id}] ${q.name} — "${q.q}"`);
 
-    let ids = [];
-    try {
-      ids = await ytSearch(q);
-      quota += 100;
-    } catch (e) {
-      console.log(`  검색 실패: ${e.message}`);
+    let r;
+    try { r = await resolveChannel(ch); }
+    catch (e) { console.log(`  [건너뜀] ${ch.name} — ${e.message}`); continue; }
+    quota += r.cost || 0;
+
+    if (!r.uploads) {
+      console.log(`  [못 찾음] ${ch.name} — ${r.why}`);
+      if (r.candidates?.length) console.log(`             비슷한 채널: ${r.candidates.join(' / ')}`);
+      if (!DRY) {
+        try {
+          await sb(`spot_media_channel?id=eq.${ch.id}`, {
+            method: 'PATCH', headers: { Prefer: 'return=minimal' },
+            body: JSON.stringify({ resolve_note: r.why, last_run_at: new Date().toISOString() }),
+          });
+        } catch (e) {}
+      }
       continue;
     }
+
+    /* 알아낸 번호를 적어 둡니다 — 다음부터는 한도 2 로 끝납니다 */
+    if (!DRY && (!ch.uploads_playlist || (!ch.channel_id && r.chId))) {
+      try {
+        await sb(`spot_media_channel?id=eq.${ch.id}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            uploads_playlist: r.uploads,
+            channel_id: r.chId || ch.channel_id || null,
+            resolve_note: null,
+          }),
+        });
+      } catch (e) {}
+    }
+
+    let ids = [];
+    try { ids = await ytUploads(r.uploads, PER_CH); quota += 1; }
+    catch (e) { console.log(`  [실패] ${ch.name} — ${e.message}`); continue; }
+
     const fresh = ids.filter((id) => !seen.has(id));
-    console.log(`  찾음 ${ids.length}개 · 새것 ${fresh.length}개`);
+    if (!fresh.length) { console.log(`  ${ch.name} — 새것 없음`); await sleep(250); continue; }
+
+    let items = [];
+    try { items = await ytDetails(fresh); quota += 1; }
+    catch (e) { console.log(`  [실패] ${ch.name} — ${e.message}`); continue; }
+
+    const q = channelQuery(ch);
+    const rows = [];
+    for (const v of items) {
+      const jd = judge(v, q, cfg, persons);
+      if (!jd.ok) {
+        rej++;
+        if (SHOW_REJ) console.log(`    버림 · ${String(v.snippet?.title || '').slice(0, 44)} → ${jd.why}`);
+        continue;
+      }
+      console.log(`    담음 ${String(jd.score).padStart(3)}점 · ${jd.title.slice(0, 52)}`);
+      if (jd.parts.length) console.log(`           ${jd.parts.join(' / ')}`);
+      rows.push(buildRow(v, jd, q));
+      seen.add(v.id);
+    }
+    console.log(`  ${ch.name} — 새것 ${fresh.length}개 중 ${rows.length}개 담음`);
+
+    if (rows.length && !DRY) {
+      try {
+        await sb('spot?on_conflict=video_id', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' },
+          body: JSON.stringify(rows),
+        });
+      } catch (e) { console.log(`    저장 실패: ${e.message}`); }
+    }
+    if (!DRY) {
+      try {
+        await sb(`spot_media_channel?id=eq.${ch.id}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ last_run_at: new Date().toISOString(), last_found: rows.length }),
+        });
+      } catch (e) {}
+    }
+    n += rows.length;
+    await sleep(250);
+  }
+  return { n, rej, quota };
+}
+
+async function runSearch(cfg, seen, persons) {
+  let n = 0, rej = 0, quota = 0;
+  if (!cfg.queries.length) { console.log('\n켜진 검색 조건이 없습니다.'); return { n, rej, quota }; }
+
+  console.log(`\n══ 검색 (보조) — 조건 ${cfg.queries.length}개 ══`);
+  for (const q of cfg.queries) {
+    if (isStop()) break;
+    console.log(`\n  [${q.id}] ${q.name} — "${q.q}"`);
+
+    let ids = [];
+    try { ids = await ytSearch(q); quota += 100; }
+    catch (e) { console.log(`    검색 실패: ${e.message}`); continue; }
+
+    const fresh = ids.filter((id) => !seen.has(id));
+    console.log(`    찾음 ${ids.length}개 · 새것 ${fresh.length}개`);
     if (!fresh.length) { await sleep(300); continue; }
 
     let items = [];
-    try {
-      items = await ytDetails(fresh);
-      quota += 1;
-    } catch (e) {
-      console.log(`  상세 실패: ${e.message}`);
-      continue;
-    }
+    try { items = await ytDetails(fresh); quota += 1; }
+    catch (e) { console.log(`    상세 실패: ${e.message}`); continue; }
 
     const rows = [];
     for (const v of items) {
-      const j = judge(v, q, cfg, persons);
-      if (!j.ok) {
-        totalRej++;
-        if (SHOW_REJ) console.log(`  버림 · ${String(v.snippet?.title || '').slice(0, 46)} → ${j.why}`);
+      const jd = judge(v, q, cfg, persons);
+      if (!jd.ok) {
+        rej++;
+        if (SHOW_REJ) console.log(`    버림 · ${String(v.snippet?.title || '').slice(0, 44)} → ${jd.why}`);
         continue;
       }
-      console.log(`  담음 ${j.score}점 · ${j.title.slice(0, 46)}`);
-      console.log(`        ${j.parts.join(' / ')}`);
-      rows.push(buildRow(v, j, q));
+      console.log(`    담음 ${jd.score}점 · ${jd.title.slice(0, 52)}`);
+      console.log(`           ${jd.parts.join(' / ')}`);
+      rows.push(buildRow(v, jd, q));
       seen.add(v.id);
-      /* 채널 번호를 아직 모르는 신뢰 채널이면 기억해 둡니다 */
-      if (j.ch && !j.ch.channel_id && j.chId) newChannelIds.set(j.ch.id, j.chId);
     }
 
     if (rows.length && !DRY) {
@@ -421,42 +596,45 @@ async function main() {
           headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' },
           body: JSON.stringify(rows),
         });
-      } catch (e) {
-        console.log(`  저장 실패: ${e.message}`);
-      }
+      } catch (e) { console.log(`    저장 실패: ${e.message}`); }
     }
-    totalNew += rows.length;
-
     if (!DRY) {
       try {
         await sb(`spot_media_query?id=eq.${q.id}`, {
-          method: 'PATCH',
-          headers: { Prefer: 'return=minimal' },
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
           body: JSON.stringify({ last_run_at: new Date().toISOString(), last_found: rows.length }),
         });
-      } catch (e) { /* 기록 실패는 넘어갑니다 */ }
+      } catch (e) {}
     }
+    n += rows.length;
     await sleep(400);
   }
+  return { n, rej, quota };
+}
 
-  /* 신뢰 채널의 번호를 채워 둡니다 — 다음부터는 이름이 아니라 번호로 정확히 알아봅니다 */
-  if (newChannelIds.size && !DRY) {
-    for (const [id, chId] of newChannelIds) {
-      try {
-        await sb(`spot_media_channel?id=eq.${id}`, {
-          method: 'PATCH',
-          headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify({ channel_id: chId }),
-        });
-      } catch (e) { /* 넘어갑니다 */ }
-    }
-    console.log(`\n채널 번호 ${newChannelIds.size}곳을 채웠습니다.`);
-  }
+async function main() {
+  console.log('── 음원·동영상 수집 시작 ──');
+  const cfg = await loadConfig();
+  console.log(`믿을 수 있는 채널 ${cfg.channels.length}곳 · 검색 조건 ${cfg.queries.length}개 ·`
+            + ` 제외어 ${cfg.blockTitle.length + cfg.blockChannel.length}개`);
+
+  const seen = await loadSeen();
+  console.log(`이미 담긴(또는 버린) 영상 ${seen.size}개`);
+
+  const persons = await loadPersons();
+  console.log(`인물 대조용 이름 ${persons.length}개 (작곡가 · 전체 이름만)`);
+  console.log(`방식: ${MODE}${DRY ? ' · 저장 안 함(dry)' : ''}`);
+
+  let tot = { n: 0, rej: 0, quota: 0 };
+  const add = (r) => { tot.n += r.n; tot.rej += r.rej; tot.quota += r.quota; };
+
+  if (MODE === 'channels' || MODE === 'both') add(await runChannels(cfg, seen, persons));
+  if (MODE === 'search'   || MODE === 'both') add(await runSearch(cfg, seen, persons));
 
   console.log(`\n── 끝 ──`);
-  console.log(`담은 것 ${totalNew}개 · 버린 것 ${totalRej}개 · 쓴 한도 약 ${quota} (하루 10,000)`);
+  console.log(`담은 것 ${tot.n}개 · 버린 것 ${tot.rej}개 · 쓴 한도 약 ${tot.quota} (하루 10,000)`);
   if (DRY) console.log('※ --dry 였으므로 아무것도 저장하지 않았습니다.');
-  else if (totalNew) console.log('※ 담긴 것은 숨김 상태입니다. 어드민에서 확인해 내보내 주세요.');
+  else if (tot.n) console.log('※ 담긴 것은 숨김 상태입니다. 어드민에서 확인해 내보내 주세요.');
 }
 
 main().catch((e) => {
