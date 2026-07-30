@@ -312,6 +312,7 @@
             <span class="cm-title">지원금 / 정책자금<em>FUNDING</em></span>
             <a class="cm-more" href="/spot/funding.html">VIEW MORE +</a>
           </div>
+          <div class="bd-tabs" id="fnTabs"></div>
           <div id="fnList"></div>
         </div>
       </div>
@@ -440,13 +441,22 @@
     });
 
     /* ── 지원금 — 마감이 가까운 것부터 ── */
-    OCHub.board({
-      el:'#fnList', table:'spot', kind:'compact', n:6, cols:COLS + ',region',
-      filter: sec('지원금') + '&hidden=is.false',
-      order:'deadline.asc.nullslast', dateCol:'deadline',
-      dateFallback:true, badges:['region','category'],
-      view:VIEW, label:'지원금',
-      emptyText:'등록된 지원사업이 아직 없습니다.'
+    /* 갈래 안에서 다시 나누는 탭 — 자료가 늘면 탭을 더하면 됩니다.
+       지금 없는 「시설·장비」「교육」 은 「전체」 에서 보입니다. */
+    var fnTab = function (label, cat) {
+      return {
+        label: label, table:'spot', view:VIEW, list:'/spot/funding.html',
+        cols: COLS + ',region',
+        filter: sec('지원금') + '&hidden=is.false'
+              + (cat ? '&category=eq.' + encodeURIComponent(cat) : ''),
+        order:'deadline.asc.nullslast', dateCol:'deadline', dateFallback:true,
+        badges:['region','category']
+      };
+    };
+    OCHub.boardTabs({
+      tabsEl:'#fnTabs', listEl:'#fnList', kind:'compact', n:6,
+      tabs:[ fnTab('전체', null), fnTab('창작지원','창작지원'),
+             fnTab('단체지원','단체지원'), fnTab('국제교류','국제교류') ]
     });
 
     /* ── 관련사이트 ── */
