@@ -385,6 +385,32 @@
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .split .body .dt{font-size:11px;color:var(--text-3);margin-top:8px}
 
+  /* 음원·동영상 카드 — 영상이므로 큰 그림을 위에 둡니다 */
+  .mediacard{display:block;text-decoration:none;color:inherit}
+  .mediacard .mc-th{position:relative;width:100%;aspect-ratio:16/9;border-radius:8px;
+    overflow:hidden;background:var(--paper-2);display:block}
+  .mediacard .mc-th img{width:100%;height:100%;object-fit:cover;display:block;
+    transition:opacity .2s ease}
+  .mediacard:hover .mc-th img{opacity:.85}
+  .mediacard .mc-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:46px;height:46px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;
+    display:grid;place-items:center;font-size:16px;padding-left:3px;
+    transition:background .18s ease,transform .18s ease}
+  .mediacard:hover .mc-play{background:#f00;transform:translate(-50%,-50%) scale(1.08)}
+  .mediacard .mc-dur{position:absolute;right:6px;bottom:6px;font-size:11px;font-weight:700;
+    color:#fff;background:rgba(0,0,0,.74);border-radius:3px;padding:1px 5px;line-height:1.45;
+    font-variant-numeric:tabular-nums}
+  .mediacard .mc-body{padding-top:11px}
+  .mediacard .mc-cat{display:inline-block;font-size:11px;font-weight:700;color:var(--violet-2);
+    margin-bottom:5px}
+  .mediacard .mc-title{font-size:14.5px;font-weight:700;line-height:1.4;margin-bottom:5px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    transition:color .18s ease}
+  .mediacard:hover .mc-title{color:var(--violet-2)}
+  .mediacard .mc-sub{font-size:12px;color:var(--text-2);line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .mediacard .mc-meta{font-size:11px;color:var(--text-3);margin-top:8px}
+
   /* sidebar */
   .side .card{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:22px}
   .pr-slide{position:relative;color:#fff}
@@ -869,6 +895,11 @@
             <div class="dt">2021.11.22</div>
           </div>
         </div>
+      </div>
+
+      <div class="col-block">
+        <div class="sec-head"><div class="t"><span class="en-s">Media</span><span class="ko">음원 / 동영상</span></div><a class="more en" href="/spot/media.html">MORE +</a></div>
+        <div id="card-media"></div>
       </div>
     </div>
 
@@ -1611,6 +1642,93 @@ if('serviceWorker' in navigator){
     }catch(e){ /* 실패하면 원래 모습 그대로 */ }
   }
 
+  /* ============================================================
+     음원 · 동영상 — 정보SPOT 에서 가장 최근에 내보낸 영상 한 건
+
+     유튜브에서 자동으로 모아 어드민에서 확인을 거친 것만 나옵니다
+     (review_status 가 approved 이고 숨김이 아닌 것).
+     화면을 열 때마다 최근 몇 건 가운데 하나를 무작위로 골라
+     같은 영상만 계속 보이지 않게 합니다.
+     ============================================================ */
+  function mcDur(sec){
+    const t = Number(sec) || 0;
+    if(!t) return '';
+    const h = Math.floor(t/3600), m = Math.floor((t%3600)/60), s2 = t%60;
+    return h ? (h + ':' + ('0'+m).slice(-2) + ':' + ('0'+s2).slice(-2))
+             : (m + ':' + ('0'+s2).slice(-2));
+  }
+
+  async function loadMedia(){
+    const box = document.getElementById('card-media');
+    if(!box) return;
+    try{
+      const rows = await sbGet('spot?select=id,title,title_ko,body,category,era,'
+        + 'thumb_url,video_id,duration_sec,channel_name,published_at'
+        + '&section=eq.' + encodeURIComponent('음원영상')
+        + '&hidden=is.false&video_id=not.is.null'
+        + '&order=created_at.desc&limit=12');
+      if(!Array.isArray(rows) || !rows.length) return;
+
+      /* 그림이 있는 것을 먼저 고릅니다 — 카드가 훨씬 보기 좋습니다 */
+      const withImg = rows.filter(function(x){ return String(x.thumb_url || '').trim(); });
+      const pool = withImg.length ? withImg : rows;
+      const r = pool[Math.floor(Math.random() * pool.length)];
+
+      const head = r.title_ko || r.title || '';
+      const sub  = (r.title_ko && r.title && r.title_ko !== r.title) ? r.title : (r.channel_name || '');
+      const dur  = mcDur(r.duration_sec);
+      const cat  = [r.category, r.era].filter(Boolean).join(' · ');
+
+      const a = document.createElement('a');
+      a.className = 'mediacard';
+      a.href = '/spot/spot-view.html?id=' + encodeURIComponent(r.id);
+
+      const th = document.createElement('span');
+      th.className = 'mc-th';
+      if(r.thumb_url){
+        const img = document.createElement('img');
+        img.src = r.thumb_url; img.alt = ''; img.loading = 'lazy';
+        /* 그림이 열리지 않으면 자리만 남기고 지웁니다 */
+        img.onerror = function(){ this.remove(); };
+        th.appendChild(img);
+      }
+      const pl = document.createElement('span');
+      pl.className = 'mc-play'; pl.textContent = '\u25B6';
+      th.appendChild(pl);
+      if(dur){
+        const d = document.createElement('span');
+        d.className = 'mc-dur'; d.textContent = dur;
+        th.appendChild(d);
+      }
+      a.appendChild(th);
+
+      const bd = document.createElement('div');
+      bd.className = 'mc-body';
+      if(cat){
+        const c = document.createElement('span');
+        c.className = 'mc-cat'; c.textContent = cat;
+        bd.appendChild(c);
+      }
+      const t = document.createElement('div');
+      t.className = 'mc-title'; t.textContent = head;
+      bd.appendChild(t);
+      if(sub){
+        const p = document.createElement('div');
+        p.className = 'mc-sub'; p.textContent = sub;
+        bd.appendChild(p);
+      }
+      if(r.channel_name && sub !== r.channel_name){
+        const m = document.createElement('div');
+        m.className = 'mc-meta'; m.textContent = r.channel_name;
+        bd.appendChild(m);
+      }
+      a.appendChild(bd);
+
+      box.innerHTML = '';
+      box.appendChild(a);
+    }catch(e){ console.error('음원·동영상 로드 실패:', e); }
+  }
+
   /* 현대음악DB — 최근 등록된 작곡가를 가져온다 (커뮤니티 게시판이 아니라 DB 쪽) */
   async function feedModernDb(){
     try{
@@ -1904,6 +2022,7 @@ if('serviceWorker' in navigator){
     loadDateList('notice-list', 'notices');
     loadDateList('concours-list', 'concours', 13);
     loadFunding(13);
+    loadMedia();
     loadScores();
     loadFeature('card-hot-topic', 'hot_topic');
     loadFeature('card-music-school', 'music_school');
