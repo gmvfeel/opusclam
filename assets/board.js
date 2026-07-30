@@ -226,13 +226,20 @@ window.OCBoard = (function () {
       if (rec.source || rec.channel_name) meta.push('출처 : ' + esc(rec.source || rec.channel_name));
       if (rec.created_at) meta.push('등록일 : ' + fmtDate(rec.created_at));
       meta.push('VIEW : ' + (rec.view_count || 0));
+      /* 한국어 표기가 있으면 그것을 앞세우고 원문을 아래에 둡니다.
+         일본어·독일어 제목만 있으면 무엇인지 알기 어렵기 때문입니다.
+         koField 를 적지 않은 게시판에는 아무 영향이 없습니다. */
+      var ko = cfg.koField ? (rec[cfg.koField] || '') : '';
+      var head = ko || rec.title || '';
+      var sub = (ko && rec.title && ko !== rec.title) ? rec.title : '';
       return '<a class="board-card" href="' + vp + '">'
         + '<span class="bc-th">' + img + (dur ? '<i class="bc-dur">' + dur + '</i>' : '') + '</span>'
         + '<span class="bc-info">'
         +   '<span class="bc-title">'
         +     (rec.category ? '<em class="bc-cat">[ ' + esc(rec.category) + ' ]</em> ' : '')
-        +     esc(rec.title || '') + newHtml(rec) + ccHtml(rec)
+        +     esc(head) + newHtml(rec) + ccHtml(rec)
         +   '</span>'
+        +   (sub ? '<span class="bc-orig">' + esc(sub) + '</span>' : '')
         +   '<span class="bc-meta">' + meta.join('<i>·</i>') + '</span>'
         + '</span>'
         + '</a>';
@@ -661,7 +668,13 @@ window.OCBoard = (function () {
             + '<div class="bv-dochead-t">'
             + (o.region ? '<span class="board-tag" data-cat="' + esc(o.region) + '">' + esc(o.region) + '</span> ' : '')
             + (o.category ? '<span class="board-tag" data-cat="' + esc(o.category) + '">' + esc(o.category) + '</span>' : '')
-            + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'
+            + (function(){
+                var ko = cfg.koField ? (o[cfg.koField] || '') : '';
+                var head = ko || o.title || '';
+                var sub = (ko && o.title && ko !== o.title) ? o.title : '';
+                return '<h1 class="bv-title">' + esc(head) + '</h1>'
+                  + (sub ? '<p class="bv-origtitle">' + esc(sub) + '</p>' : '');
+              })()
             + (o.link_url ? '<div class="bv-dochome">관련홈페이지 <a href="' + esc(o.link_url) + '" target="_blank" rel="noopener">' + esc(o.link_url) + '</a></div>' : '')
             + (o.school_id ? '<a class="bv-schoollink" href="' + (cfg.schoolViewPath || '/school-view.html') + '?id=' + encodeURIComponent(o.school_id) + '"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-5h6v5"/></svg><span>이 학교 정보 보기</span></a>' : '')
             + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'

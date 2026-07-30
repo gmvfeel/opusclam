@@ -122,7 +122,8 @@
       eras:[{"value":"","label":"시대 전체"},
             {"value":"현대음악이전","label":"현대음악이전"},
             {"value":"현대음악","label":"현대음악"}],
-      cardStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
+      cardStyle:true, koField:'title_ko',   /* 한국어 표기가 있으면 앞세웁니다 */
+      writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
       commentsTable:'spot_comments'
     });
   });

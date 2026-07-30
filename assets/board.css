@@ -483,11 +483,20 @@ html[data-theme="dark"] .board-card:hover{background:#000}
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   transition:color .18s ease}
 .bc-cat{font-style:normal;font-weight:700;color:var(--violet-2);transition:color .18s ease}
+/* 원문 제목 — 한국어 표기가 있을 때 그 아래에 작게 */
+.bc-orig{font-size:11.5px;color:var(--text-3);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+  transition:color .18s ease}
+.board-card:hover .bc-orig{color:rgba(255,255,255,.72)}
 .bc-meta{font-size:11.5px;color:var(--text-3);display:flex;flex-wrap:wrap;
   align-items:center;gap:5px;transition:color .18s ease}
 .bc-meta i{font-style:normal;opacity:.5}
 
 /* 상세 화면의 영상 플레이어 */
+/* 상세 화면의 원문 제목 */
+.bv-origtitle{margin:6px 0 0;font-size:13px;color:var(--text-3);line-height:1.6;
+  word-break:break-word}
+
 .bv-video{margin:20px 0 22px;padding:0}
 .bv-video iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;display:block;
   background:#000}
