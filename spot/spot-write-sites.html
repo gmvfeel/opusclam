@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관련사이트 등록 · OPUSCLAM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-orbit on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">등록</span>
+    </nav>
+
+    <!-- 정보SPOT 하위 메뉴 — partials/subnav-spot.html 한 곳에서 관리합니다 -->
+    <div id="oc-subnav" data-src="/partials/subnav-spot.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM INFORMATION SERVICE</div>
+          <h1 class="pdb-title">관련사이트 등록</h1>
+        </div>
+      </div>
+      <p class="pdb-lead"></p>
+    </header>
+  </div>
+</section>
+
+<main class="board">
+  <div id="bw-root"></div>
+</main>
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/board-write.js"></script>
+<script>
+  /* 정보SPOT 등록 — 갈래(section)는 이 화면이 정해서 넣습니다(fixed).
+     그래서 등록하는 분은 갈래를 고를 필요가 없습니다. */
+  OCBoardWrite.init({
+    table:'spot', listPage:'sites.html', viewPage:'spot-view.html', bucket:'spot',
+    fixed:{ section:'관련사이트' },
+    formTitle:'관련사이트 등록',
+    categories:[{"value": "기관·단체"}, {"value": "악보·자료"}, {"value": "매체·평론"}, {"value": "콩쿨·페스티벌"}, {"value": "교육"}, {"value": "기타"}],
+    regions:[{"value":"국내"},{"value":"해외"}],
+    docFields:{
+      homeLabel:'홈페이지', homeHint:'(공식 홈페이지 주소, 선택)',
+      fileLabel:'안내 파일', fileHint:'(요강·공고 문서 hwp·pdf·doc 등, 선택)',
+      extra:[
+        { col:'country', label:'국가 · 지역', hint:'(예: 대한민국)', placeholder:'대한민국' }
+      ]
+    }
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

@@ -52,6 +52,8 @@
       if (!f) f = 'index';
       /* 입시요강과 입시커뮤니티는 「입시」 하나로 묶는다 */
       if (f === 'admission-community') f = 'admission';
+      /* 정보SPOT — 상세·글쓰기 화면(spot-view·spot-write)은 「전체」로 둔다 */
+      if (f === 'spot-view' || f === 'spot-write') f = 'index';
       return f;
     }
     var cur = nameOf(location.pathname);
@@ -60,8 +62,17 @@
     });
   }
 
+  /* 어느 하위 메뉴를 넣을지는 자리표가 정한다.
+
+       <div id="oc-subnav"></div>                                   → 커뮤니티 (예전 그대로)
+       <div id="oc-subnav" data-src="/partials/subnav-spot.html"></div> → 정보SPOT
+
+     data-src 를 적지 않으면 커뮤니티 메뉴를 넣습니다.
+     그래서 이미 만들어 둔 커뮤니티 화면들은 한 곳도 고치지 않아도 됩니다. */
   function injectSubnav() {
-    inject('oc-subnav', '/partials/subnav-community.html');
+    var slot = document.getElementById('oc-subnav');
+    var url = (slot && slot.getAttribute('data-src')) || '/partials/subnav-community.html';
+    inject('oc-subnav', url);
     markSubnav();
   }
 

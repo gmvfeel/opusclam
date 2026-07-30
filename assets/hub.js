@@ -315,6 +315,14 @@ window.OCHub = (function () {
   function bHref(cfg, r) {
     return cfg.view ? cfg.view + '?id=' + encodeURIComponent(r.id) : (cfg.list || '#');
   }
+  /* 어느 칸의 날짜를 보여 줄지 — 적지 않으면 올린 날(created_at)
+     정보SPOT 처럼 「여는 날·마감일」이 중요한 곳에서 dateCol 로 바꿉니다.
+       OCHub.board({ ..., dateCol:'deadline' })
+     쓰지 않는 화면에는 아무 영향이 없습니다. */
+  function bDate(cfg, r) {
+    var v = (cfg.dateCol && r[cfg.dateCol]) ? r[cfg.dateCol] : r.created_at;
+    return ymd(v);
+  }
   function askBoard(cfg) {
     var cols = cfg.cols || 'id,category,title,body,thumb_url,author_name,created_at';
     var url = SB_URL + '/rest/v1/' + cfg.table + '?select=' + cols
@@ -355,7 +363,7 @@ window.OCHub = (function () {
       + '<span class="bd-rowbody">'
       +   '<span class="bd-title">' + esc(bTxt(r.title, 60)) + '</span>'
       +   '<span class="bd-desc">' + esc(bTxt(r.body, 130)) + '</span>'
-      +   '<span class="bd-meta">' + esc(join([r.category, r.author_name, ymd(r.created_at)])) + '</span>'
+      +   '<span class="bd-meta">' + esc(join([r.category, r.author_name, bDate(cfg, r)])) + '</span>'
       + '</span>'
       + '<span class="bd-go">VIEW DETAIL <b>&rarr;</b></span>'
       + '</a>';
@@ -368,14 +376,14 @@ window.OCHub = (function () {
       +   '<span class="bd-featcat">' + esc(cfg.badge || r.category || 'HOT TOPIC') + '</span>'
       +   '<span class="bd-feattitle">' + esc(bTxt(r.title, 70)) + '</span>'
       +   '<span class="bd-featdesc">' + esc(bTxt(r.body, 210)) + '</span>'
-      +   '<span class="bd-meta">' + esc(join([r.author_name, ymd(r.created_at)])) + '</span>'
+      +   '<span class="bd-meta">' + esc(join([r.author_name, bDate(cfg, r)])) + '</span>'
       + '</span>'
       + '<span class="bd-featgo">VIEW DETAIL <b>&rarr;</b></span>'
       + '</a>';
   }
   function bCompact(cfg, r) {
     return '<a class="bd-line" href="' + esc(bHref(cfg, r)) + '">'
-      + '<span class="bd-date">' + esc(ymd(r.created_at)) + '</span>'
+      + '<span class="bd-date">' + esc(bDate(cfg, r)) + '</span>'
       + '<span class="bd-linetitle">' + esc(bTxt(r.title, 58)) + '</span>'
       + (r.comment_count ? '<span class="bd-cc">[' + r.comment_count + ']</span>' : '')
       + '</a>';
@@ -419,9 +427,12 @@ window.OCHub = (function () {
                  n: cfg.n || 3, cols: t.cols, filter: t.filter, order: t.order })
         .then(function (res) {
           var fn = RENDER[cfg.kind || 'rows'];
+          /* 탭에도 날짜 칸 고르기(dateCol)를 넘깁니다.
+             적지 않은 탭은 예전처럼 올린 날을 보여 줍니다. */
+          var one = { view: t.view, list: t.list, dateCol: t.dateCol || cfg.dateCol };
           var html = (!res || !res.rows.length)
             ? '<p class="bd-empty">아직 등록된 글이 없습니다.</p>'
-            : res.rows.map(function (r) { return fn({ view: t.view, list: t.list }, r); }).join('');
+            : res.rows.map(function (r) { return fn(one, r); }).join('');
           cache[i] = html; listBox.innerHTML = html;
         });
     }

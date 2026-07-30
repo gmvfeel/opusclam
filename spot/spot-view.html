@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>정보SPOT · OPUSCLAM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-orbit on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on" id="pvCrumb">상세</span>
+    </nav>
+
+    <!-- 정보SPOT 하위 메뉴 — partials/subnav-spot.html 한 곳에서 관리합니다 -->
+    <div id="oc-subnav" data-src="/partials/subnav-spot.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM INFORMATION SERVICE</div>
+          <h1 class="pdb-title" id="pvTitle">정보SPOT</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">순수음악 관련 국내외 페스티벌·콩쿨정보, 공연정보와 지원금·정책자금 정보까지 한곳에 모았습니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="board">
+  <div class="pv-utility">
+    <div class="pv-tools">
+      <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.5 9.7l5.9-.9z"/></svg>즐겨찾기</button>
+      <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v18l-6-4-6 4z"/></svg>킵</button>
+      <button type="button" class="pv-tool" data-save aria-haspopup="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>저장</button>
+      <button type="button" class="pv-tool" data-share><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.1 10.9l7.8-4.7M8.1 13.1l7.8 4.7"/></svg>공유</button>
+    </div>
+    <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+      <span class="fs-label">글자크기</span>
+      <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+      <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+      <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+    </div>
+  </div>
+
+  <article class="board-view pv">
+    <div class="board-empty">불러오는 중…</div>
+  </article>
+  <section class="bv-comments"></section>
+  <a class="pv-tolist-m" href="/spot/index.html">&#8592; 목록으로</a>
+</main>
+
+<div class="pv-sidetabs">
+  <a class="pv-listtab" href="/spot/index.html" aria-label="리스트로 가기">
+    <span class="pv-listtab-arrow">&#8249;</span>
+    <span class="pv-listtab-text">리스트</span>
+  </a>
+  <a class="pv-writetab" href="/spot/index.html" aria-label="글쓰기" style="display:none">
+    <span class="pv-writetab-ic">&#43;</span>
+    <span class="pv-writetab-text">글쓰기</span>
+  </a>
+</div>
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/board.js"></script>
+<script src="/assets/pv.js" defer></script>
+<script>
+/* ============================================================
+   정보SPOT 상세 — 여섯 갈래가 이 한 화면을 함께 씁니다.
+
+   왜 갈래마다 상세 화면을 따로 두지 않았나
+     담는 항목과 보여 주는 모양이 모두 같습니다.
+     다른 것은 「목록으로」가 어느 목록을 가리키는지 하나뿐입니다.
+     그래서 글의 갈래(section)를 먼저 한 번 물어보고,
+     그 답에 맞는 목록 주소를 넣은 다음 공용 엔진을 띄웁니다.
+   ============================================================ */
+(function(){
+  var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* 갈래 → 목록 화면 · 화면 이름 */
+  var MAP = {
+    '페스티벌콩쿨': { list:'festival.html',    name:'해외페스티벌 / 콩쿨정보' },
+    '국내콩쿨':     { list:'concours-kr.html', name:'국내콩쿨정보' },
+    '지원금':       { list:'funding.html',     name:'지원금 / 정책자금정보' },
+    '공연정보':     { list:'concert.html',     name:'공연정보' },
+    '관련사이트':   { list:'sites.html',       name:'관련사이트' },
+    '음원영상':     { list:'media.html',       name:'음원 / 동영상' }
+  };
+  var FALLBACK = { list:'index.html', name:'정보SPOT' };
+
+  function start(info){
+    /* 화면 위쪽 표시와 「목록으로」 단추들을 갈래에 맞춥니다 */
+    var h = document.getElementById('pvTitle');
+    if (h) h.textContent = info.name;
+    var c = document.getElementById('pvCrumb');
+    if (c) { c.textContent = info.name; c.className = ''; c.setAttribute('href', '/spot/' + info.list); }
+    ['.pv-tolist-m', '.pv-listtab'].forEach(function(sel){
+      var el = document.querySelector(sel);
+      if (el) el.setAttribute('href', '/spot/' + info.list);
+    });
+    document.title = info.name + ' · OPUSCLAM';
+
+    OCBoard.view({
+      table:'spot',
+      listPage:'/spot/' + info.list,
+      viewPage:'spot-view.html',
+      writePage:'/spot/spot-write-' + info.list,
+      writeRole:'member', docView:true,
+      incrementFn:'spot_view_inc',
+      commentsTable:'spot_comments',
+      extraLinks:[
+        { col:'video_url', label:'음원 · 동영상 보기' },
+        { col:'source_url', label:'원문 출처' }
+      ],
+      enhance:{ label:'정보보강하기', db:'spot', email:'contact@opusclam.com' }
+    });
+  }
+
+  var id = new URLSearchParams(location.search).get('id');
+  if (!id) { start(FALLBACK); return; }
+
+  fetch(SB + '/rest/v1/spot?select=section&id=eq.' + encodeURIComponent(id),
+        { headers:{ apikey:KEY, Authorization:'Bearer ' + KEY } })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(rows){
+      var s = (rows && rows[0] && rows[0].section) || '';
+      start(MAP[s] || FALLBACK);
+    })
+    .catch(function(){ start(FALLBACK); });
+})();
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

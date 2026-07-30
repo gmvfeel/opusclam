@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지원금 / 정책자금정보 · OPUSCLAM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-orbit on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">지원금 / 정책자금</span>
+    </nav>
+
+    <!-- 정보SPOT 하위 메뉴 — partials/subnav-spot.html 한 곳에서 관리합니다 -->
+    <div id="oc-subnav" data-src="/partials/subnav-spot.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM INFORMATION SERVICE</div>
+          <h1 class="pdb-title">지원금 / 정책자금정보</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">창작·공연·단체 운영을 위한 지원사업과 정책자금 공고를 모았습니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="board">
+  <div class="board-bar pdb-toolbar">
+    <div class="board-search pdb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" placeholder="제목·내용 검색" aria-label="검색">
+      <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
+    </div>
+    <div class="pdb-selects">
+      <select class="board-catsel" aria-label="구분"></select>
+      <select class="board-sort" aria-label="정렬">
+        <option value="created_at">최신순</option>
+        <option value="view_count">인기순</option>
+      </select>
+    </div>
+    <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+      <span class="fs-label">글자크기</span>
+      <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+      <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+      <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+    </div>
+  </div>
+
+  <div class="board-count pdb-count">전체 <b>0</b>건</div>
+  <div class="board-list"></div>
+
+  <div class="board-foot">
+    <div class="board-pager"></div>
+    <div class="board-actions"></div>
+  </div>
+</main>
+
+<section class="bigban">
+  <div class="wrap">
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+  </div>
+</section>
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/board.js"></script>
+<script>
+  /* 정보SPOT 은 표 하나(spot)에 여섯 갈래를 담고 section 으로 나눕니다.
+     이 화면은 「지원금」 갈래만 봅니다 — where 한 줄로 정합니다.
+     목록의 모양·검색·페이지 넘김은 모두 공용 엔진(assets/board.js)이 합니다. */
+  document.addEventListener('DOMContentLoaded', function(){
+    OCBoard.list({
+      table:'spot', pageSize:20,
+      viewPage:'spot-view.html', writePage:'spot-write-funding.html',
+      where:'&section=eq.' + encodeURIComponent('지원금') + '&hidden=is.false',
+      searchCols:['title','title_en','body','keywords','country','city','organizer'],
+      categories:[{"value": "", "label": "구분선택"}, {"value": "창작지원", "label": "창작지원"}, {"value": "단체지원", "label": "단체지원"}, {"value": "국제교류", "label": "국제교류"}, {"value": "시설·장비", "label": "시설·장비"}, {"value": "교육", "label": "교육"}, {"value": "기타", "label": "기타"}],
+      docStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
+      commentsTable:'spot_comments'
+    });
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
