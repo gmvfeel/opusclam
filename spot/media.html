@@ -127,32 +127,34 @@
     });
   });
 
-  /* 「구분」 고르는 칸을 자료가 있는 편성으로만 채웁니다.
-     편성을 열여섯 가지로 담고 있는데, 자료가 없는 것까지 늘어놓으면
-     고르기만 번거로워집니다. */
+  /* 「편성」 고르는 칸을 채웁니다.
+
+     열여섯 갈래를 모두 늘어놓고, 자료가 있는 것에만 건수를 붙입니다.
+     처음에는 자료 있는 것만 보이게 했는데, 그러면 타악(Percussion)처럼
+     아직 자료가 없는 갈래가 목록에서 사라져 무엇을 담을 수 있는지 알기 어렵습니다.
+     순서는 큰 편성 → 작은 편성 → 악기별 → 성악 → 특수 로 두었고,
+     「기타」 는 언제나 맨 뒤입니다. */
   (function(){
+    var ORDER = ['Symphony','Orchestral','Concerto','Chamber','Ensemble',
+                 'Piano','Strings','Wind','Brass','Percussion','Organ',
+                 'Vocal','Choral','Oratorio/Mass','Opera','Electronic','기타'];
     var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/spot';
     var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-    var ERA = null;
     var q = '?select=category&section=eq.' + encodeURIComponent('음원영상')
-          + '&hidden=is.false&category=not.is.null&limit=1000'
-          + (ERA ? '&era=eq.' + encodeURIComponent(ERA) : '');
+          + '&hidden=is.false&category=not.is.null&limit=2000';
     fetch(U + q, { headers:{ apikey:K, Authorization:'Bearer ' + K } })
       .then(function(r){ return r.ok ? r.json() : []; })
       .then(function(rows){
         var seen = {};
         (rows || []).forEach(function(x){ if (x.category) seen[x.category] = (seen[x.category] || 0) + 1; });
-        /* 많은 것부터 놓고, 「기타」 는 언제나 맨 뒤로 보냅니다 */
-        var names = Object.keys(seen).sort(function(a,b){
-          if (a === '기타') return 1;
-          if (b === '기타') return -1;
-          return seen[b] - seen[a] || a.localeCompare(b);
-        });
         var sel = document.querySelector('.board-catsel');
-        if (!sel || !names.length) return;
-        names.forEach(function(n){
+        if (!sel) return;
+        /* 목록에 없는 갈래가 자료에 있으면 뒤에 붙입니다 (규칙을 늘렸을 때를 위해) */
+        var extra = Object.keys(seen).filter(function(k){ return ORDER.indexOf(k) < 0; }).sort();
+        ORDER.slice(0, -1).concat(extra, ['기타']).forEach(function(n){
           var o = document.createElement('option');
-          o.value = n; o.textContent = n + ' (' + seen[n] + ')';
+          o.value = n;
+          o.textContent = seen[n] ? (n + ' (' + seen[n] + ')') : n;
           sel.appendChild(o);
         });
       }).catch(function(){});
