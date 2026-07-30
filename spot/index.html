@@ -403,10 +403,11 @@
 
     /* ── 공연정보 ── */
     OCHub.board({
-      el:'#ciBox', table:'spot', kind:'compact', n:6, cols:COLS,
+      el:'#ciBox', table:'spot', kind:'compact', n:6, cols:COLS + ',region',
       filter: sec('공연정보') + '&hidden=is.false',
       order:'date_from.desc.nullslast,created_at.desc.nullslast',
-      dateCol:'date_from', view:VIEW, list:'/spot/concert.html',
+      dateCol:'date_from', dateFallback:true, badges:['region','category'],
+      view:VIEW, list:'/spot/concert.html',
       countEl:'#cCon', label:'공연정보',
       emptyText:'등록된 공연정보가 아직 없습니다.'
     });
@@ -424,29 +425,34 @@
       tabsEl:'#fcTabs', listEl:'#fcList', kind:'compact', n:6,
       tabs:[
         { label:'페스티벌', table:'spot', view:VIEW, list:'/spot/festival.html',
-          cols:COLS, filter: sec('페스티벌') + '&hidden=is.false',
-          order:'date_from.asc.nullslast', dateCol:'date_from' },
+          cols:COLS + ',region', filter: sec('페스티벌') + '&hidden=is.false',
+          order:'date_from.asc.nullslast', dateCol:'date_from', dateFallback:true,
+          badges:['region','category'] },
         { label:'해외콩쿨', table:'spot', view:VIEW, list:'/spot/concours.html',
-          cols:COLS, filter: sec('콩쿨') + '&region=eq.' + encodeURIComponent('해외') + '&hidden=is.false',
-          order:'date_from.asc.nullslast', dateCol:'date_from' },
+          cols:COLS + ',region', filter: sec('콩쿨') + '&region=eq.' + encodeURIComponent('해외') + '&hidden=is.false',
+          order:'date_from.asc.nullslast', dateCol:'date_from', dateFallback:true,
+          badges:['region','category'] },
         { label:'국내콩쿨', table:'spot', view:VIEW, list:'/spot/concours.html',
-          cols:COLS, filter: sec('콩쿨') + '&region=eq.' + encodeURIComponent('국내') + '&hidden=is.false',
-          order:'date_from.asc.nullslast', dateCol:'date_from' }
+          cols:COLS + ',region', filter: sec('콩쿨') + '&region=eq.' + encodeURIComponent('국내') + '&hidden=is.false',
+          order:'date_from.asc.nullslast', dateCol:'date_from', dateFallback:true,
+          badges:['region','category'] }
       ]
     });
 
     /* ── 지원금 — 마감이 가까운 것부터 ── */
     OCHub.board({
-      el:'#fnList', table:'spot', kind:'compact', n:6, cols:COLS,
+      el:'#fnList', table:'spot', kind:'compact', n:6, cols:COLS + ',region',
       filter: sec('지원금') + '&hidden=is.false',
       order:'deadline.asc.nullslast', dateCol:'deadline',
+      dateFallback:true, badges:['region','category'],
       view:VIEW, label:'지원금',
       emptyText:'등록된 지원사업이 아직 없습니다.'
     });
 
     /* ── 관련사이트 ── */
     OCHub.board({
-      el:'#stList', table:'spot', kind:'compact', n:6, cols:COLS,
+      el:'#stList', table:'spot', kind:'compact', n:6, cols:COLS + ',region',
+      badges:['region','category'],
       filter: sec('관련사이트') + '&hidden=is.false',
       order:'sort_order.asc.nullslast,created_at.desc.nullslast',
       dateCol:'date_from',          /* 사이트에는 날짜가 없으므로 빈칸으로 둡니다 */

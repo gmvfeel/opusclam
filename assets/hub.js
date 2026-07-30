@@ -323,7 +323,13 @@ window.OCHub = (function () {
     /* dateCol 을 적었으면 그 칸만 봅니다.
        그 칸이 비어 있으면 날짜를 비웁니다 — 올린 날로 대신하면
        마감일도 개최일도 없는 항목이 모두 「오늘」로 보여 잘못 읽힙니다. */
-    if (cfg.dateCol) return ymd(r[cfg.dateCol]);
+    if (cfg.dateCol) {
+      var v = ymd(r[cfg.dateCol]);
+      /* dateFallback 을 켜면 그 칸이 비었을 때 올린 날로 대신합니다.
+         목록 오른쪽이 뻥 비어 보이는 것을 막고 싶을 때 씁니다. */
+      if (!v && cfg.dateFallback) return ymd(r.created_at);
+      return v;
+    }
     return ymd(r.created_at);
   }
   function askBoard(cfg) {
@@ -422,8 +428,28 @@ window.OCHub = (function () {
       +   '</span>'
       +   (desc ? '<span class="bd-linedesc">' + esc(desc) + '</span>' : '')
       + '</span>'
-      + (dt ? '<span class="bd-date">' + esc(dt) + '</span>' : '')
+      + bTags(cfg, r, dt)
       + '</a>';
+  }
+
+  /* 목록 오른쪽에 구분 배지와 날짜를 놓습니다.
+       cfg.badges = ['region','category'] 처럼 어느 칸을 배지로 보일지 적습니다.
+     배지를 적지 않은 게시판은 예전처럼 날짜만 나옵니다. */
+  function bTags(cfg, r, dt) {
+    var cols = cfg.badges || [];
+    var tags = '';
+    for (var k = 0; k < cols.length; k++) {
+      var v = r[cols[k]];
+      if (v) tags += '<i class="bd-tag" data-t="' + esc(v) + '">' + esc(v) + '</i>';
+    }
+    if (!tags && !dt) return '';
+    /* 배지가 없으면 예전처럼 날짜만 놓습니다 —
+       배지를 쓰지 않는 게시판의 모습이 달라지지 않게 하기 위해서입니다. */
+    if (!tags) return '<span class="bd-date">' + esc(dt) + '</span>';
+    return '<span class="bd-lmeta">'
+      + tags
+      + (dt ? '<span class="bd-date">' + esc(dt) + '</span>' : '')
+      + '</span>';
   }
   var RENDER = { cards: bCard, rows: bRow, feature: bFeature, compact: bCompact };
 
@@ -464,9 +490,17 @@ window.OCHub = (function () {
                  n: cfg.n || 3, cols: t.cols, filter: t.filter, order: t.order })
         .then(function (res) {
           var fn = RENDER[cfg.kind || 'rows'];
-          /* 탭에도 날짜 칸 고르기(dateCol)를 넘깁니다.
-             적지 않은 탭은 예전처럼 올린 날을 보여 줍니다. */
-          var one = { view: t.view, list: t.list, dateCol: t.dateCol || cfg.dateCol };
+          /* 탭 하나하나에도 목록 설정을 넘깁니다.
+             예전에 dateCol 을 넘기지 않아 탭 목록만 올린 날이 나오던 일이 있었습니다.
+             그 뒤로 설정을 더할 때마다 이 줄에 함께 적어야 합니다. */
+          var one = {
+            view: t.view, list: t.list,
+            dateCol: t.dateCol || cfg.dateCol,
+            dateFallback: t.dateFallback !== undefined ? t.dateFallback : cfg.dateFallback,
+            badges: t.badges || cfg.badges,
+            koField: t.koField || cfg.koField,
+            descLen: t.descLen || cfg.descLen
+          };
           var html = (!res || !res.rows.length)
             ? '<p class="bd-empty">아직 등록된 글이 없습니다.</p>'
             : res.rows.map(function (r, i) { return fn(one, r, i); }).join('');
