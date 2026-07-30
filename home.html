@@ -1436,11 +1436,17 @@ if('serviceWorker' in navigator){
   }
 
   // 지원금 — 제목 + 마감일(텍스트)
-  async function loadFunding(){
+  async function loadFunding(n){
     const list = document.getElementById('funding-list');
     if(!list) return;
     try{
-      const rows = await sbGet('funding?select=title,link,deadline&order=sort_order.asc');
+      /* n 을 주면 그만큼만 보여 준다.
+         순서는 sort_order 를 따른다 — 지원사업은 마감일로 줄 세우기 어렵고
+         (마감이 지난 것도 다음 공모를 알리는 뜻이 있다)
+         우리 쪽에서 보여 줄 순서를 정하는 편이 낫다. */
+      const lim = n ? ('&limit=' + n) : '';
+      const rows = await sbGet('funding?select=title,link,deadline'
+        + '&order=sort_order.asc.nullslast,title.asc' + lim);
       if(!Array.isArray(rows) || !rows.length) return;
       list.innerHTML = '';
       rows.forEach(function(r){
@@ -1897,7 +1903,7 @@ if('serviceWorker' in navigator){
     loadDbPick();                      /* DATABASE 자리 — 일곱 갈래 무작위 */
     loadDateList('notice-list', 'notices');
     loadDateList('concours-list', 'concours', 13);
-    loadFunding();
+    loadFunding(13);
     loadScores();
     loadFeature('card-hot-topic', 'hot_topic');
     loadFeature('card-music-school', 'music_school');
