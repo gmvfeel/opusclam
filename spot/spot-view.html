@@ -51,8 +51,11 @@
           <h1 class="pdb-title" id="pvTitle">정보SPOT</h1>
         </div>
       </div>
-      <p class="pdb-lead">순수음악 관련 국내외 페스티벌·콩쿨정보, 공연정보와 지원금·정책자금 정보까지 한곳에 모았습니다.</p>
+      <p class="pdb-lead" id="pvLead">순수음악 관련 국내외 페스티벌·콩쿨정보, 공연정보와 지원금·정책자금 정보까지 한곳에 모았습니다.</p>
     </header>
+
+    <!-- 커뮤니티·DB 상세 화면과 같은 굵은 구분선 -->
+    <div class="pv-topline"></div>
   </div>
 </section>
 
@@ -122,12 +125,24 @@
   };
   var FALLBACK = { list:'index.html', name:'정보SPOT' };
 
+  /* 갈래마다 설명 한 줄 — 커뮤니티 상세 화면처럼 어느 게시판인지 알려 줍니다 */
+  var LEAD = {
+    '페스티벌':   '국내외 음악 페스티벌의 개최지·기간·참가 안내를 모았습니다.',
+    '콩쿨':       '국내외 음악 콩쿨의 부문·일정·접수 안내를 한곳에 모았습니다.',
+    '지원금':     '창작·단체·국제교류 지원사업과 정책자금 공모 안내입니다.',
+    '공연정보':   '국내에서 열리는 클래식 공연 일정을 모았습니다.',
+    '관련사이트': '클래식 음악과 관련된 기관·단체·자료 사이트를 모았습니다.',
+    '음원영상':   '감상할 수 있는 음원과 연주 영상을 모았습니다.'
+  };
+
   function start(info){
     /* 화면 위쪽 표시와 「목록으로」 단추들을 갈래에 맞춥니다 */
     var h = document.getElementById('pvTitle');
     if (h) h.textContent = info.name;
     var c = document.getElementById('pvCrumb');
     if (c) { c.textContent = info.name; c.className = ''; c.setAttribute('href', '/spot/' + info.list); }
+    var ld = document.getElementById('pvLead');
+    if (ld && info.lead) ld.textContent = info.lead;
     ['.pv-tolist-m', '.pv-listtab'].forEach(function(sel){
       var el = document.querySelector(sel);
       if (el) el.setAttribute('href', '/spot/' + info.list);
@@ -160,8 +175,11 @@
         { headers:{ apikey:KEY, Authorization:'Bearer ' + KEY } })
     .then(function(r){ return r.ok ? r.json() : []; })
     .then(function(rows){
-      var s = (rows && rows[0] && rows[0].section) || '';
-      start(MAP[s] || FALLBACK);
+      var sec = (rows && rows[0] && rows[0].section) || '';
+      var info = MAP[sec] || FALLBACK;
+      /* 갈래별 설명을 함께 넘깁니다 */
+      if (LEAD[sec]) info = { list: info.list, name: info.name, lead: LEAD[sec] };
+      start(info);
     })
     .catch(function(){ start(FALLBACK); });
 })();
