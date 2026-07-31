@@ -116,6 +116,11 @@
   <!-- ── 오른쪽 · 목록 ───────────────────────────────────── -->
   <div class="rc-main-col">
 
+  <!-- ── 붙어 따라오는 덩어리 — 도구줄과 건수줄 ──────────
+       목록을 내려도 검색·정렬·등록과 표 머리가 화면에 남습니다.
+       높이는 assets/recruit-list.js 가 재어 표 머리의 top 에 넣습니다. -->
+  <div class="rc-sticky">
+
   <!-- ── 도구줄 — 다른 게시판(인물DB 등)과 같은 짜임 ────── -->
   <div class="pdb-toolbar rc-toolbar">
     <div class="pdb-search">
@@ -146,6 +151,8 @@
       </div>
     </div>
   </div>
+
+  </div><!-- /rc-sticky -->
 
   <!-- ── 표 ──────────────────────────────────────────────── -->
   <div class="pdb-tablewrap">

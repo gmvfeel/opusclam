@@ -20,13 +20,36 @@
   align-items: start;
 }
 
-/* 왼쪽 칸 — 목록을 내려도 화면에 붙어 따라옵니다.
-   직종 체크 상자가 서른 개를 넘어 세로로 길어지므로,
-   목록을 보다가 조건을 바꾸려고 위로 올라가지 않아도 됩니다.
+/* ── 붙어 따라오기 ────────────────────────────────────────
+   목록을 내려도 왼쪽 찾는 칸과 오른쪽 도구줄이 화면에 남습니다.
+   조건을 바꾸거나 검색하려고 위로 올라가지 않아도 됩니다.
 
-   ★ sticky 는 안쪽에 overflow 를 두면 듣지 않습니다.
-     그래서 이 칸에는 overflow 를 걸지 않았습니다. */
-.rc-side { position: sticky; top: 84px; }
+   붙는 자리는 한 값(--rc-top)으로 모아 둡니다 —
+   헤더 높이가 바뀌면 여기 한 곳만 고치면 됩니다.
+
+   ★ sticky 는 안쪽이나 감싼 곳에 overflow 가 있으면 듣지 않습니다.
+     그래서 이 칸들에는 overflow 를 걸지 않았습니다. */
+.rc-layout { --rc-top: 84px; }
+
+.rc-side { position: sticky; top: var(--rc-top); }
+
+/* 오른쪽 도구줄 + 건수줄 — 함께 붙어 따라옵니다 */
+.rc-sticky {
+  position: sticky; top: var(--rc-top); z-index: 24;
+  background: var(--paper);
+  /* 목록이 아래로 지나갈 때 경계가 보이게 */
+  box-shadow: 0 6px 10px -8px rgba(20, 16, 40, .3);
+}
+
+/* 표 머리 — 도구줄 <b>아래에</b> 붙습니다.
+   그 높이는 화면 폭에 따라 달라져 숫자를 박아 둘 수 없으므로
+   assets/recruit-list.js 가 재어 --rc-sticky-h 에 넣습니다. */
+.rc-table thead th {
+  position: sticky;
+  top: calc(var(--rc-top) + var(--rc-sticky-h, 112px));
+  z-index: 3;
+  background: var(--paper);
+}
 
 /* 오른쪽 칸 — 표가 넘치지 않게 min-width: 0 이 꼭 필요합니다.
    grid 칸의 기본값(auto)이면 표 내용이 칸을 밀어 넓혀 버립니다. */
@@ -235,15 +258,6 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
 
 /* ── 건수·정렬 ────────────────────────────────────────────*/
 
-/* ── 표 목록 ──────────────────────────────────────────────
-   다른 게시판(인물DB 등)과 같은 짜임을 씁니다.
-   .pdb-toolbar · .pdb-meta · .pdb-table 은 style.css 의 공용 스타일이므로
-   여기서는 <b>칸 폭과 리쿠르트에만 있는 것</b>만 정합니다. */
-.rc-toolbar { margin-top: 0; }
-
-/* 업체·단체명 — 라벨 성격이라 작고 옅게 */
-
-/* 채용제목 — 이 줄에서 가장 먼저 읽혀야 합니다 */
 
 /* 제목 아래 짧은 조건 — 근무형태 · 지역 · 급여 */
 .rc-sub {
@@ -264,7 +278,9 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
    다른 게시판(인물DB 등)과 같은 짜임을 씁니다.
    .pdb-toolbar · .pdb-meta · .pdb-table 은 style.css 의 공용 스타일이므로
    여기서는 <b>칸 폭과 리쿠르트에만 있는 것</b>만 정합니다. */
-.rc-toolbar { margin-top: 0; }
+.rc-toolbar { margin-top: 0; padding-top: 2px; }
+/* 붙어 따라올 때 위쪽이 잘려 보이지 않게 */
+.rc-sticky .pdb-meta { margin-bottom: 14px; }
 
 .rc-table { table-layout: fixed; }
 .rc-table th.c-no,   .rc-table td.c-no   { width: 52px;  text-align: center; }
@@ -348,9 +364,14 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
 
 /* ── 좁은 화면 ────────────────────────────────────────────*/
 @media (max-width: 1300px) {
-  /* 좁아지면 두 칸을 위아래로 풉니다 — 붙어 따라오기도 끕니다 */
+  /* 좁아지면 두 칸을 위아래로 풉니다 — 붙어 따라오기도 끕니다.
+     위아래로 놓이면 왼쪽 칸이 화면을 다 덮어 버리기 때문입니다.
+     표를 옆으로 밀어 보게 되면(overflow-x) sticky 가 듣지 않으므로
+     표 머리도 함께 풉니다. */
   .rc-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .rc-side { position: static; }
+  .rc-sticky { position: static; box-shadow: none; }
+  .rc-table thead th { position: static; }
   .rc-finder { flex-direction: row; gap: 14px; }
   .rc-finder .rc-panel { flex: 1; min-width: 0; }
   .rc-job2 { gap: 9px 16px; }

@@ -368,6 +368,21 @@
     drawPager();
   }
 
+  /* ── 붙어 따라오기 높이 재기 ──────────────────────────────
+     도구줄·건수줄이 화면에 붙어 따라오면, 표 머리는 그 아래에 붙어야
+     합니다. 그런데 그 높이는 화면 폭에 따라 달라지므로 CSS 에 숫자를
+     박아 둘 수 없습니다. 그래서 재어서 CSS 변수에 넣습니다.
+
+     ★ 표 머리(thead th)의 sticky 는 감싼 곳에 overflow 가 걸리면
+       듣지 않습니다. .pdb-tablewrap 은 좁은 화면에서만 overflow-x 가
+       걸리므로, 그 폭에서는 붙어 따라오기를 끕니다(recruit.css). */
+  function measureSticky() {
+    var head = el('.rc-sticky');
+    if (!head) return;
+    var h = Math.round(head.getBoundingClientRect().height);
+    if (h > 0) document.documentElement.style.setProperty('--rc-sticky-h', h + 'px');
+  }
+
   /* ── 시작 ─────────────────────────────────────────────────*/
   function init(options) {
     cfg = Object.assign({ kind: 'job', pageSize: 15 }, options || {});
@@ -389,6 +404,18 @@
     });
 
     go(1);
+
+    /* 높이를 재어 표 머리가 도구줄 아래에 붙게 합니다.
+       글꼴이 늦게 오면 높이가 바뀌므로 조금 뒤에 한 번 더 잽니다. */
+    measureSticky();
+    setTimeout(measureSticky, 300);
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(measureSticky);
+      var head = el('.rc-sticky');
+      if (head) ro.observe(head);
+    } else {
+      window.addEventListener('resize', measureSticky);
+    }
   }
 
   window.OCRecruitList = { init: init };
