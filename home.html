@@ -426,9 +426,18 @@
   .pr-slide .cap h4{color:var(--link-idle);font-size:15px;font-weight:700;margin:5px 0 6px;line-height:1.35;transition:color .2s ease}
   .pr-slide:hover .cap h4{color:var(--link-hover)}
   .pr-slide .cap p{color:var(--text-2);font-size:12px;line-height:1.5}
-  .pr-slide .dots{display:flex;gap:6px;padding:0 18px 16px}
-  .pr-slide .dots i{width:7px;height:7px;border-radius:50%;background:var(--line-2)}
-  .pr-slide .dots i.on{background:var(--violet-2);width:18px;border-radius:4px}
+  /* 점 — 카드 전체를 덮는 링크(.card-link, z-index 6)보다 위에 두어야
+     누를 수 있습니다. 아래 깔리면 점을 눌러도 링크가 눌립니다. */
+  .pr-slide .dots{display:flex;gap:2px;padding:0 14px 10px;position:relative;z-index:20}
+  /* 카드 전체를 덮는 링크를 점보다 아래로 내립니다 — 점이 가려지지 않게 */
+  .pr-slide .card-link{z-index:5}
+  /* 누르기 쉽게 감싸는 자리를 넓힙니다 — 점 자체는 작지만 손가락이 닿는 곳은 넉넉해야 합니다 */
+  .pr-slide .dots i{width:7px;height:7px;border-radius:50%;background:var(--line-2);
+    box-sizing:content-box;padding:6px 4px;background-clip:content-box;cursor:pointer;
+    transition:background-color .18s ease,width .18s ease}
+  .pr-slide .dots i:hover{background:var(--text-3);background-clip:content-box}
+  .pr-slide .dots i.on{background:var(--violet-2);width:18px;border-radius:4px;
+    background-clip:content-box}
 
   .ticket{background:linear-gradient(120deg,#3a2f5e,#5a4a7a);color:#fff;border-radius:10px;padding:22px 20px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between}
   .ticket .en-s{font-family:var(--display);font-weight:700;font-size:17px;line-height:1;letter-spacing:.02em}
@@ -2095,10 +2104,30 @@ if('serviceWorker' in navigator){
         rows.forEach(function(_, i){
           const d = document.createElement('i');
           if(i === 0) d.className = 'on';
-          d.style.cursor = 'pointer';
-          d.addEventListener('click', function(ev){
-            ev.preventDefault(); ev.stopPropagation();
-            show(i); rewind();
+          d.setAttribute('role', 'button');
+          d.setAttribute('aria-label', (i + 1) + '번째 공연 보기');
+
+          /* 누르는 순간(pointerdown)에 곧바로 넘깁니다.
+
+             앞서 pointerdown 에서 preventDefault 를 불렀더니
+             뒤따르는 click 이 아예 생기지 않아 아무 일도 일어나지 않았습니다.
+             그래서 누르는 순간에 처리하고, preventDefault 는 부르지 않습니다. */
+          var jump = function (ev) {
+            ev.stopPropagation();
+            if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+            show(i);
+            rewind();
+          };
+          d.addEventListener('pointerdown', jump);
+          /* 포인터 이벤트를 모르는 브라우저를 위해 */
+          d.addEventListener('touchstart', jump, { passive: true });
+
+          /* 뒤따르는 click 이 카드 링크로 새지 않게 막습니다 —
+             여기서는 preventDefault 를 불러도 됩니다(이미 넘긴 뒤이므로). */
+          d.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
           });
           dots.appendChild(d);
         });
