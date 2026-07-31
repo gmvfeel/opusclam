@@ -340,6 +340,50 @@ window.OCBoard = (function () {
         .catch(function () { ids.forEach(function (k) { extInfo[k] = { logo: '', name: '' }; }); });
     }
 
+    /* ── 공연 목록 모양 ──────────────────────────────────────
+       공연은 「무엇을·언제·어디서」 가 한눈에 보여야 합니다.
+       그래서 포스터를 왼쪽에 두고 일시·장소를 라벨과 함께 적습니다.
+       시안(04_공연정보)의 모양입니다.
+       ────────────────────────────────────────────────────── */
+    function conRowHtml(rec, no) {
+      var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur;
+      var head = (cfg.koField && rec[cfg.koField]) ? rec[cfg.koField] : rec.title;
+
+      /* 포스터 — 없으면 이름 첫 글자로 자리를 채웁니다 */
+      var img = rec.thumb_url
+        ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy"'
+          + ' onerror="this.onerror=null;this.style.display=\'none\'">'
+        : '<i class="con-noimg">' + esc(String(head || '?').trim().charAt(0)) + '</i>';
+
+      /* 일시 — 하루면 한 날짜만, 여러 날이면 기간으로 */
+      var d = function (v) { return String(v || '').slice(0, 10).replace(/-/g, '.'); };
+      var df = d(rec.date_from), dt = d(rec.date_to);
+      var when = df;
+      if (dt && dt !== df) {
+        when += ' ~ ' + (dt.slice(0, 4) === df.slice(0, 4) ? dt.slice(5) : dt);
+      }
+      if (!when && rec.date_text) when = rec.date_text;
+
+      var lines = '';
+      if (when) lines += '<span><b>일시</b>' + esc(when) + '</span>';
+      if (rec.venue_name) lines += '<span><b>장소</b>' + esc(rec.venue_name) + '</span>';
+      else if (rec.city) lines += '<span><b>장소</b>' + esc(rec.city) + '</span>';
+      if (rec.organizer) lines += '<span><b>주최</b>' + esc(rec.organizer) + '</span>';
+
+      return '<div class="con-row">'
+        + '<span class="con-no">' + noText(no) + '</span>'
+        + '<a class="con-th" href="' + vp + '">' + img + '</a>'
+        + '<div class="con-main">'
+        +   '<a class="con-title" href="' + vp + '">' + esc(head || '') + newHtml(rec) + '</a>'
+        +   (lines ? '<div class="con-meta">' + lines + '</div>' : '')
+        + '</div>'
+        + '<div class="con-right">'
+        +   '<span class="con-date">' + fmtDate(rec.created_at) + '</span>'
+        +   '<span class="con-view">VIEW ' + (rec.view_count || 0) + '</span>'
+        + '</div>'
+        + '</div>';
+    }
+
     function docRowHtml(rec, no) {
       /* 표시 순서
          1) 글의 사진   2) 글의 로고   3) 학교 이름 약칭(색상 배경)   4) 빈 자리
@@ -501,13 +545,15 @@ window.OCBoard = (function () {
                 /* 번호는 전체 건수에서 거꾸로 셉니다 — 최신 글이 가장 큰 번호입니다 */
                 var off = (pg - 1) * PAGE;
                 var numOf = function (i) { return total - off - i; };
-                listEl.innerHTML = cfg.cardStyle
+                listEl.innerHTML = cfg.concertStyle
+                  ? rows.map(function (r, i) { return conRowHtml(r, numOf(i)); }).join('')
+                  : (cfg.cardStyle
                   ? rows.map(function (r, i) { return cardHtml(r, numOf(i)); }).join('')
                   : (cfg.docStyle
                   ? rows.map(function (r, i) { return docRowHtml(r, numOf(i)); }).join('')
                   : (cfg.articleStyle
                   ? renderArticles(rows, off)
-                  : rows.map(function (r, i) { return itemHtml(r, numOf(i)); }).join('')));
+                  : rows.map(function (r, i) { return itemHtml(r, numOf(i)); }).join(''))));
               }
               renderPager();
               focusItem();          /* 반드시 그린 뒤에 */

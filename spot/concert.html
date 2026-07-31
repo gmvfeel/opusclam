@@ -117,10 +117,12 @@
       table:'spot', pageSize:20,
       viewPage:'spot-view.html', writePage:'spot-write-concert.html',
       where:'&section=eq.' + encodeURIComponent('공연정보') + '&hidden=is.false',
-      searchCols:['title','title_en','body','keywords','country','city','organizer'],
+      searchCols:['title','title_en','body','keywords','country','city','organizer','venue_name'],
       categories:[{"value": "", "label": "구분선택"}, {"value": "국내공연", "label": "국내공연"}, {"value": "내한공연", "label": "내한공연"}, {"value": "해외공연", "label": "해외공연"}],
       regions:[{"value":"","label":"국내/해외"},{"value":"국내","label":"국내"},{"value":"해외","label":"해외"}],
-      docStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
+      /* 공연은 「무엇을·언제·어디서」 가 한눈에 보여야 하므로
+         포스터와 일시·장소를 함께 보여 주는 모양을 씁니다 (시안 04_공연정보) */
+      concertStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'date_from',
       commentsTable:'spot_comments'
     });
   });

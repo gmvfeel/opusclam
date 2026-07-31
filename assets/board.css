@@ -598,3 +598,81 @@ html[data-theme="dark"] .board-card:hover{background:#000}
   .sp-plist{grid-template-columns:minmax(0,1fr)}
   .sp-pgo{display:none}
 }
+
+/* ============================================================
+   공연 목록 — 정보SPOT 공연정보 (시안 04_공연정보)
+   포스터를 왼쪽에 두고 일시·장소를 라벨과 함께 적습니다.
+   ============================================================ */
+.con-row{display:flex;align-items:flex-start;gap:16px;padding:16px 10px;
+  border-bottom:1px solid var(--line-2);transition:background-color .18s ease}
+.con-row:hover{background:#322152}
+.con-row:hover .con-title,
+.con-row:hover .con-meta,
+.con-row:hover .con-meta b,
+.con-row:hover .con-no,
+.con-row:hover .con-date,
+.con-row:hover .con-view{color:#fff}
+html[data-theme="dark"] .con-row:hover{background:#000}
+
+.con-no{flex:0 0 auto;width:30px;padding-top:3px;color:var(--text-3);font-size:12.5px;
+  font-variant-numeric:tabular-nums;text-align:center;line-height:1}
+
+/* 포스터 — 공연 포스터는 세로로 깁니다 */
+.con-th{flex:0 0 auto;width:66px;aspect-ratio:3/4;border-radius:6px;overflow:hidden;
+  background:var(--paper-2);border:1px solid var(--line-2);display:grid;place-items:center}
+.con-th img{width:100%;height:100%;object-fit:cover;display:block}
+.con-noimg{font-style:normal;font-size:22px;font-weight:800;color:#c3c5d4}
+
+.con-main{flex:1;min-width:0;padding-top:2px}
+.con-title{display:block;font-size:15px;font-weight:700;color:var(--ink);
+  text-decoration:none;line-height:1.4;margin-bottom:9px;transition:color .18s ease}
+.con-meta{display:flex;flex-direction:column;gap:4px}
+.con-meta span{font-size:12.5px;color:var(--text-2);line-height:1.5;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.con-meta b{display:inline-block;width:34px;font-weight:400;color:var(--text-3);
+  margin-right:8px}
+
+.con-right{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px;
+  padding-top:3px;padding-left:12px}
+.con-date{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+.con-view{font-size:11px;color:var(--text-3);white-space:nowrap}
+
+@media (max-width:640px){
+  .con-row{gap:11px;padding:13px 4px}
+  .con-no{display:none}
+  .con-th{width:54px}
+  .con-title{font-size:14px}
+  .con-meta span{font-size:12px}
+  .con-meta b{width:30px;margin-right:6px}
+  .con-right{padding-left:6px}
+  .con-view{display:none}
+}
+
+/* ============================================================
+   공연정보 상세 머리 — 시안 04_공연정보_view
+   왼쪽 포스터, 오른쪽 일시·장소 표와 예매 단추.
+   ============================================================ */
+.sc-head{display:flex;gap:22px;align-items:flex-start;margin:0 0 26px}
+.sc-poster{flex:0 0 auto;width:230px;border-radius:10px;overflow:hidden;
+  border:1px solid var(--line-2);background:var(--paper-2)}
+.sc-poster img{width:100%;height:auto;display:block}
+.sc-info{flex:1;min-width:0;background:var(--paper-2);border:1px solid var(--line-2);
+  border-radius:10px;padding:22px 24px}
+.sc-table{width:100%;border-collapse:collapse;font-size:.95em}
+.sc-table th{width:80px;padding:9px 0;text-align:left;vertical-align:top;
+  font-weight:400;color:var(--text-3);white-space:nowrap}
+.sc-table td{padding:9px 0;vertical-align:top;color:var(--text);line-height:1.6}
+.sc-buywrap{margin-top:20px;text-align:center}
+.sc-buy{display:inline-block;padding:13px 44px;border-radius:6px;
+  background:var(--violet-2);color:#fff;font-size:14.5px;font-weight:700;
+  text-decoration:none;transition:filter .18s ease}
+.sc-buy:hover{filter:brightness(1.08)}
+
+@media (max-width:720px){
+  .sc-head{flex-direction:column;gap:16px}
+  .sc-poster{width:100%;max-width:280px;margin:0 auto}
+  .sc-info{width:100%;padding:18px 16px}
+  .sc-table th{width:64px;font-size:.94em}
+  .sc-buy{display:block;padding:14px 0}
+}
