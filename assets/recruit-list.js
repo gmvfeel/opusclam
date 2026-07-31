@@ -265,11 +265,15 @@
   function jobRow(o, no) {
     var vp = cfg.viewPage + '?id=' + encodeURIComponent(o.id);
 
+    /* 접수기간 — 두 줄로 나누어 좁은 칸에도 온전히 보이게 합니다 */
+    var lines = R.applyLines(o.apply_from, o.apply_to, o.apply_always, o.apply_until_hired);
     var left = R.daysLeft(o.apply_to);
-    var when = R.applyLabel(o.apply_from, o.apply_to, o.apply_always, o.apply_until_hired);
     /* 마감이 이레 안쪽이면 눈에 띄게 알려 줍니다 */
     var dday = (left != null && left >= 0 && left <= 7)
       ? ' <b class="rc-dday">D-' + left + '</b>' : '';
+    var when = '<span class="rc-when-1">' + esc(lines.top) + '</span>'
+      + (lines.bottom ? '<span class="rc-when-2">' + esc(lines.bottom) + dday + '</span>'
+                      : (dday ? '<span class="rc-when-2">' + dday + '</span>' : ''));
 
     /* 제목 아래 조건 — 근무형태와 지역만 짧게 (표가 빽빽해지지 않게) */
     var bits = [];
@@ -286,7 +290,7 @@
       +   '<a href="' + vp + '">' + esc(o.title || '') + '</a>'
       +   (bits.length ? '<span class="rc-sub">' + bits.map(esc).join(' · ') + '</span>' : '')
       + '</td>'
-      + '<td class="c-when">' + esc(when) + dday + '</td>'
+      + '<td class="c-when">' + when + '</td>'
       + '<td class="c-hit">' + (o.view_count || 0) + '</td>'
       + '</tr>';
   }

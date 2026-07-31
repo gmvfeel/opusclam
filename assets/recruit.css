@@ -255,7 +255,7 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 .rc-table { table-layout: fixed; }
 .rc-table th.c-no,   .rc-table td.c-no   { width: 52px;  text-align: center; }
 .rc-table th.c-org,  .rc-table td.c-org  { width: 132px; text-align: center; }
-.rc-table th.c-when, .rc-table td.c-when { width: 118px; text-align: center; }
+.rc-table th.c-when, .rc-table td.c-when { width: 132px; text-align: center; }
 .rc-table th.c-hit,  .rc-table td.c-hit  { width: 62px;  text-align: center; }
 
 /* 채용제목 — 머리칸은 가운데, 줄 내용은 왼쪽에 둡니다.
@@ -269,6 +269,12 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 /* 채용기간·조회수 — 곁들이는 정보이므로 작게 */
 .rc-table td.c-when,
 .rc-table td.c-hit { font-size: .86em; color: var(--text-3); }
+
+/* 접수기간은 두 줄로 — 좁은 칸에 「2026.08.01 ~ 2026.08.31」 을
+   한 줄로 넣으면 잘리므로 시작과 마감을 아래위로 놓습니다. */
+.rc-table td.c-when { line-height: 1.5; }
+.rc-when-1, .rc-when-2 { display: block; white-space: nowrap; }
+.rc-when-2 { color: var(--text-2); }
 
 /* 업체·단체명 — 라벨 성격이라 작고 옅게 */
 .rc-table td.c-org a {
@@ -345,7 +351,7 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
   .rc-table th.c-org, .rc-table td.c-org,
   .rc-table th.c-hit, .rc-table td.c-hit { display: none; }
   .rc-table th.c-no, .rc-table td.c-no { width: 40px; }
-  .rc-table th.c-when, .rc-table td.c-when { width: 96px; }
+  .rc-table th.c-when, .rc-table td.c-when { width: 104px; }
 }
 
 @media (max-width: 640px) {

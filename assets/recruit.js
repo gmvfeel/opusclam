@@ -259,7 +259,32 @@
     return s;
   }
 
-  /* 접수기간을 사람이 읽기 좋게 */
+  /* 접수기간을 두 줄로 나눕니다 — 표의 좁은 칸에 온전히 들어가게.
+     「2026.08.01 ~ 2026.08.31」 은 스물한 자라 한 줄에 넣으면 잘립니다.
+     같은 해면 마감 쪽 연도를 빼서 더 짧게 만듭니다.
+       { top: '2026.08.01', bottom: '~ 08.31' }
+     한 줄로 끝나는 것(상시모집 등)은 bottom 이 빕니다. */
+  function applyLines(from, to, always, untilHired) {
+    if (always) return { top: '상시모집', bottom: '' };
+    if (untilHired) return { top: '채용시까지', bottom: '' };
+    var d = function (v) { return String(v || '').slice(0, 10).replace(/-/g, '.'); };
+    var a = d(from), b = d(to);
+    if (a && b) {
+      /* 해가 넘어가면 마감 쪽도 연도를 적어야 하는데 그러면 열두 자가 되어
+         좁은 칸에서 잘립니다. 그때는 아래위 모두 두 자 연도로 줄입니다.
+           2026.12.28 / ~ 2027.01.03  →  26.12.28 / ~ 27.01.03 */
+      if (b.slice(0, 4) !== a.slice(0, 4)) {
+        return { top: a.slice(2), bottom: '~ ' + b.slice(2) };
+      }
+      return { top: a, bottom: '~ ' + b.slice(5) };
+    }
+    /* 한쪽만 있는 경우도 두 줄로 나눠 잘리지 않게 합니다 */
+    if (b) return { top: '마감', bottom: b };
+    if (a) return { top: a, bottom: '~ 계속' };
+    return { top: '상시모집', bottom: '' };
+  }
+
+  /* 접수기간을 사람이 읽기 좋게 (한 줄로 — 상세 화면에서 씁니다) */
   function applyLabel(from, to, always, untilHired) {
     if (always) return '상시모집';
     if (untilHired) return '채용시까지';
@@ -296,6 +321,7 @@
     fillChecks: fillChecks, fillRadios: fillRadios, checked: checked,
     /* 보여 주기 */
     jobLabel: jobLabel, regionLabel: regionLabel,
-    payLabel: payLabel, applyLabel: applyLabel, daysLeft: daysLeft,
+    payLabel: payLabel, applyLabel: applyLabel, applyLines: applyLines,
+    daysLeft: daysLeft,
   };
 })();
