@@ -73,13 +73,16 @@
   <section class="rc-panel" id="rcSearch">
     <h2 class="rc-panel-h">상세검색</h2>
     <div class="rc-form">
-      <!-- 지역은 1차·2차를 나란히 두므로 한 줄을 다 씁니다 -->
-      <div class="rc-fld rc-fld--wide rc-fld--region">
+      <!-- 지역 — 1차·2차를 <b>폼과 똑같은 칸</b>에 하나씩 놓습니다.
+           따로 감싸서 나누면 여백 셈이 달라져 풀다운 폭이 어긋납니다.
+           2차 쪽 라벨은 자리만 차지하게 두어 위아래가 가지런합니다. -->
+      <div class="rc-fld">
         <label for="rcR1">지역</label>
-        <div class="rc-two">
-          <select id="rcR1" aria-label="1차지역"></select>
-          <select id="rcR2" aria-label="2차지역"></select>
-        </div>
+        <select id="rcR1" aria-label="1차지역"></select>
+      </div>
+      <div class="rc-fld">
+        <label class="rc-lbl-ghost" aria-hidden="true">지역</label>
+        <select id="rcR2" aria-label="2차지역"></select>
       </div>
       <div class="rc-fld rc-fld--wide">
         <label>근무형태</label>
