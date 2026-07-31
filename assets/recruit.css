@@ -257,7 +257,18 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 .rc-table th.c-org,  .rc-table td.c-org  { width: 132px; text-align: center; }
 .rc-table th.c-when, .rc-table td.c-when { width: 118px; text-align: center; }
 .rc-table th.c-hit,  .rc-table td.c-hit  { width: 62px;  text-align: center; }
+
+/* 채용제목 — 머리칸은 가운데, 줄 내용은 왼쪽에 둡니다.
+   제목은 길이가 저마다 달라 가운데로 모으면 눈이 줄마다 헤맵니다. */
+.rc-table th.c-title { text-align: center; }
 .rc-table td.c-title { text-align: left; }
+
+/* 번호 — 굵게 두어 몇 번째 글인지 얼른 짚힙니다 */
+.rc-table td.c-no { font-weight: 700; color: var(--text-2); }
+
+/* 채용기간·조회수 — 곁들이는 정보이므로 작게 */
+.rc-table td.c-when,
+.rc-table td.c-hit { font-size: .86em; color: var(--text-3); }
 
 /* 업체·단체명 — 라벨 성격이라 작고 옅게 */
 .rc-table td.c-org a {
@@ -266,9 +277,10 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 }
 .rc-table td.c-org a:hover { color: var(--violet-2); }
 
-/* 채용제목 — 이 줄에서 가장 먼저 읽혀야 합니다 */
+/* 채용제목 — 굵게 하지 않습니다. 목록의 거의 모든 줄이 굵으면
+   무엇이 도드라지는지 알 수 없어 오히려 읽기 어렵습니다. */
 .rc-table td.c-title a {
-  color: var(--ink); text-decoration: none; font-weight: 600;
+  color: var(--ink); text-decoration: none; font-weight: 400;
   display: block; line-height: 1.45;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
