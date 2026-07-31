@@ -352,7 +352,9 @@
                   view:'/community/gallery-view.html', list:'/community/gallery.html',
                   countEl:'#cGal', label:'공연사진·영상',
                   emptyText:'등록된 공연 소식이 아직 없습니다.' });
-    OCHub.bindCarousel('#prWrap', '#prBox');
+    /* 공연사진·영상도 저절로 넘어가게 — 다섯 초마다 한 장씩.
+       화살표를 누르면 두 장씩 넘어가고, 마우스를 올리면 멈춥니다. */
+    OCHub.bindCarousel('#prWrap', '#prBox', { auto: 5000 });
 
     /* Hot Topic — 핀 글 우선, 첫 건은 크게 · 나머지는 목록 */
     OCHub.board({ el:'#hotFeat', table:'hottopic', kind:'feature', n:1,

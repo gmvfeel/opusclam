@@ -696,17 +696,28 @@ window.OCHub = (function () {
       var card = track.querySelector(':scope > *');
       return card ? card.getBoundingClientRect().width + 14 : 280;
     }
+
+    /* 어디로 갈지 「몇 번째 카드」 로 세어 그 자리로 옮깁니다.
+
+       처음에는 scrollBy 로 조금씩 밀었는데 저절로 넘기기가 듣지 않았습니다.
+       이 칸에는 scroll-snap 이 걸려 있어, 밀어 놓아도 스냅이 가까운 자리로
+       되돌리기 때문입니다. 그래서 갈 자리를 정해 그곳으로 옮깁니다. */
+    function maxLeft() { return Math.max(0, track.scrollWidth - track.clientWidth - 2); }
+    function goTo(px) {
+      var to = Math.max(0, Math.min(px, maxLeft()));
+      track.scrollTo({ left: to, behavior: 'smooth' });
+    }
     function step(dir, n) {
-      track.scrollBy({ left: dir * cardW() * (n || 2), behavior: 'smooth' });
+      goTo(track.scrollLeft + dir * cardW() * (n || 2));
     }
 
     var timer = null;
     function tick() {
-      /* 끝에 닿으면 처음으로 돌아갑니다 — 한 바퀴 돌게 됩니다 */
-      var max = track.scrollWidth - track.clientWidth - 4;
-      if (max <= 0) return;                       /* 넘칠 만큼 없으면 가만히 */
-      if (track.scrollLeft >= max) track.scrollTo({ left: 0, behavior: 'smooth' });
-      else step(1, 1);                            /* 저절로 넘길 때는 한 장씩 */
+      var max = maxLeft();
+      if (max <= 4) return;                       /* 넘칠 만큼 없으면 가만히 */
+      /* 끝에 거의 닿았으면 처음으로 — 한 바퀴 돌게 됩니다 */
+      if (track.scrollLeft >= max - 4) goTo(0);
+      else goTo(track.scrollLeft + cardW());      /* 저절로 넘길 때는 한 장씩 */
     }
     function play() {
       if (!opts.auto || timer) return;

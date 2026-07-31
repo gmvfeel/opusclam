@@ -48,8 +48,11 @@
   .cm-qcount i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3)}
 
   /* Concert PR — 가로 카드 */
-  .cm-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;
-    padding-bottom:4px;scrollbar-width:none}
+  /* scroll-snap 을 mandatory 에서 proximity 로 낮춥니다.
+     mandatory 는 프로그램이 옮겨 놓은 자리도 가까운 스냅으로 되돌려
+     저절로 넘기기가 듣지 않았습니다. proximity 는 손으로 밀 때만 거듭니다. */
+  .cm-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;
+    padding-bottom:4px;scrollbar-width:none;scroll-behavior:smooth}
   .cm-track::-webkit-scrollbar{display:none}
   .cm-track > *{flex:0 0 calc((100% - 42px)/4);scroll-snap-align:start}
 
