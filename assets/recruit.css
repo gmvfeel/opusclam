@@ -29,7 +29,9 @@
 
    ★ sticky 는 안쪽이나 감싼 곳에 overflow 가 있으면 듣지 않습니다.
      그래서 이 칸들에는 overflow 를 걸지 않았습니다. */
-.rc-layout { --rc-top: 84px; }
+/* 붙는 자리 — 다른 게시판과 같은 값(--feat-top, 76px)을 씁니다.
+   그쪽이 바뀌면 리쿠르트도 함께 바뀌어 어긋나지 않습니다. */
+.rc-layout { --rc-top: var(--feat-top, 76px); }
 
 .rc-side { position: sticky; top: var(--rc-top); }
 
@@ -37,8 +39,6 @@
 .rc-sticky {
   position: sticky; top: var(--rc-top); z-index: 24;
   background: var(--paper);
-  /* 목록이 아래로 지나갈 때 경계가 보이게 */
-  box-shadow: 0 6px 10px -8px rgba(20, 16, 40, .3);
 }
 
 /* 표 머리 — 도구줄 <b>아래에</b> 붙습니다.
@@ -370,7 +370,7 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
      표 머리도 함께 풉니다. */
   .rc-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .rc-side { position: static; }
-  .rc-sticky { position: static; box-shadow: none; }
+  .rc-sticky { position: static; }
   .rc-table thead th { position: static; }
   .rc-finder { flex-direction: row; gap: 14px; }
   .rc-finder .rc-panel { flex: 1; min-width: 0; }
