@@ -46,7 +46,7 @@
 .rc-panel {
   /* 아주 옅은 베이지 — 목록(흰 바탕)과 갈라 보이게 하되
      글씨 읽기를 방해하지 않을 만큼만 얹습니다. */
-  background: #fbf8f2;
+  background: #fdfbf7;
   /* 테두리는 굵고 어둡게 — 칸의 경계가 또렷해야 채울 자리가 보입니다 */
   border: 3px solid #514a6b;
   border-radius: 12px;
@@ -65,7 +65,8 @@ html[data-theme="dark"] .rc-panel {
 /* 칸 제목 — 가운데, 큰 글씨 */
 .rc-panel-h {
   font-family: var(--display);
-  font-size: 1.34em; font-weight: 800; letter-spacing: -.02em;
+  /* 굵기는 600 — 800 은 제목이 뭉쳐 보여 오히려 읽기 어렵습니다 */
+  font-size: 1.34em; font-weight: 600; letter-spacing: -.01em;
   color: var(--ink); text-align: left;
   margin: 0 0 20px; padding-bottom: 15px;
   border-bottom: 1px solid var(--line-2);
@@ -82,7 +83,7 @@ html[data-theme="dark"] .rc-panel {
   display: flex; flex-direction: column; align-items: stretch; gap: 7px;
   padding: 11px 0;
 }
-.rc-jobrow + .rc-jobrow { border-top: 1px solid #ece5d8; }
+.rc-jobrow + .rc-jobrow { border-top: 1px solid #f0ebe0; }
 html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 
 /* 대분류 — 라벨처럼 보이되 누르면 그 줄이 통째로 켜집니다 */
@@ -144,7 +145,7 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 /* 줄 사이 옅은 선 — 첫 줄에 놓이는 것들만 뺍니다.
    지금 짜임은 「지역 1차 · 지역 2차」 가 첫 줄이므로 둘 다 뺍니다.
    하나만 빼면 같은 줄인데 한쪽에만 선이 그려져 어긋나 보입니다. */
-.rc-fld { border-top: 1px solid #ece5d8; }
+.rc-fld { border-top: 1px solid #f0ebe0; }
 .rc-fld:nth-child(1), .rc-fld:nth-child(2) { border-top: 0; }
 html[data-theme="dark"] .rc-fld { border-top-color: #2c2c2c; }
 
