@@ -48,16 +48,16 @@
   /* 테두리는 굵고 어둡게 — 칸의 경계가 또렷해야 채울 자리가 보입니다 */
   border: 3px solid #514a6b;
   border-radius: 12px;
-  padding: 20px 18px 18px;
+  padding: 26px 34px 24px;
 }
 html[data-theme="dark"] .rc-panel { border-color: #7a7295; }
 
 /* 칸 제목 — 가운데, 큰 글씨 */
 .rc-panel-h {
   font-family: var(--display);
-  font-size: 1.1em; font-weight: 800; letter-spacing: -.02em;
-  color: var(--ink); text-align: center;
-  margin: 0 0 16px; padding-bottom: 13px;
+  font-size: 1.34em; font-weight: 800; letter-spacing: -.02em;
+  color: var(--ink); text-align: left;
+  margin: 0 0 20px; padding-bottom: 15px;
   border-bottom: 1px solid var(--line-2);
 }
 
@@ -335,7 +335,8 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 
 @media (max-width: 900px) {
   .rc-finder { flex-direction: column; }
-  .rc-panel { padding: 20px 16px 16px; }
+  .rc-panel { padding: 22px 22px 18px; }
+  .rc-panel-h { font-size: 1.22em; }
   .rc-job2 { gap: 9px 16px; }
 }
 @media (max-width: 760px) {
@@ -349,8 +350,8 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 
 @media (max-width: 640px) {
   .rc-wrap { padding: 0 14px 50px; }
-  .rc-panel { padding: 18px 14px 14px; border-width: 2px; }
-  .rc-panel-h { font-size: 1.04em; }
+  .rc-panel { padding: 18px 16px 14px; border-width: 2px; }
+  .rc-panel-h { font-size: 1.12em; }
   .rc-form { grid-template-columns: minmax(0, 1fr); }
   .rc-job2 { gap: 8px 13px; }
   /* 한 칸이 되면 지역 2차의 빈 라벨은 자리를 차지할 까닭이 없습니다 */
