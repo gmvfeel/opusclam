@@ -180,8 +180,75 @@
       /* 갈래별 설명을 함께 넘깁니다 */
       if (LEAD[sec]) info = { list: info.list, name: info.name, lead: LEAD[sec] };
       start(info);
+      linkPersons(id);
     })
     .catch(function(){ start(FALLBACK); });
+
+  /* ============================================================
+     이어진 작곡가 보여 주기 — 오퍼스클램의 자료는 서로 이어져야 합니다
+
+     영상을 모을 때 제목에서 찾아낸 작곡가를 person_ids 에 담아 두었습니다.
+     그것을 인물DB 와 맞춰 「이 작곡가 정보 보기」 로 이어 줍니다.
+     인물 쪽에서도 「이 사람의 연주 영상」 을 볼 수 있으니 양쪽으로 오갑니다.
+
+     자료가 없으면 아무것도 그리지 않습니다.
+     ============================================================ */
+  function linkPersons(vid){
+    if(!vid) return;
+    fetch(SB + '/rest/v1/spot?select=person_ids,matched_names&id=eq.' + encodeURIComponent(vid),
+          { headers:{ apikey:KEY, Authorization:'Bearer ' + KEY } })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){
+        var ids = (rows && rows[0] && rows[0].person_ids) || [];
+        if(!Array.isArray(ids) || !ids.length) return;
+        return fetch(SB + '/rest/v1/persons?select=id,name_ko,name_en,era_name,field'
+              + '&id=in.(' + ids.join(',') + ')&limit=6',
+              { headers:{ apikey:KEY, Authorization:'Bearer ' + KEY } })
+          .then(function(r){ return r.ok ? r.json() : []; });
+      })
+      .then(function(people){
+        if(!Array.isArray(people) || !people.length) return;
+        draw(people);
+      })
+      .catch(function(){});
+  }
+
+  function draw(people){
+    /* 본문이 그려진 뒤에 넣어야 하므로 자리가 나타날 때까지 잠깐 기다립니다 */
+    var tries = 0;
+    var tick = setInterval(function(){
+      var body = document.querySelector('.board-view .bv-body')
+              || document.querySelector('.board-view');
+      tries++;
+      if(!body){ if(tries > 40) clearInterval(tick); return; }
+      clearInterval(tick);
+      if(document.getElementById('spPersons')) return;
+
+      var wrap = document.createElement('div');
+      wrap.id = 'spPersons';
+      wrap.className = 'sp-persons';
+      var h = '<div class="sp-ph">이 영상과 이어진 인물</div><div class="sp-plist">';
+      people.forEach(function(p){
+        var nm = p.name_ko || p.name_en || '';
+        var sub = [p.era_name, p.field].filter(Boolean).join(' · ');
+        var ini = nm.trim().charAt(0) || '?';
+        h += '<a class="sp-pcard" href="/db/person-view.html?id=' + encodeURIComponent(p.id) + '">'
+           + '<span class="sp-pava">' + esc(ini) + '</span>'
+           + '<span class="sp-pbody"><b>' + esc(nm) + '</b>'
+           + (sub ? '<span>' + esc(sub) + '</span>' : '') + '</span>'
+           + '<span class="sp-pgo">인물 정보 →</span></a>';
+      });
+      h += '</div>';
+      wrap.innerHTML = h;
+      body.parentNode.insertBefore(wrap, body.nextSibling);
+    }, 120);
+  }
+
+  function esc(v){
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
 })();
 </script>
 <script src="/assets/app.js" defer></script>

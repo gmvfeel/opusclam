@@ -569,3 +569,32 @@ html[data-theme="dark"] .board-card:hover{background:#000}
   .doc-no{padding-top:16px}
   .bc-no{width:18px;font-size:11px}
 }
+
+/* ============================================================
+   이어진 인물 — 정보SPOT 상세 화면에서 인물DB 로 건너가는 자리
+   자료끼리 서로 이어지게 하는 원칙에 따라, 영상에서 작곡가로,
+   작곡가에서 다시 그 사람의 영상으로 오갈 수 있게 합니다.
+   ============================================================ */
+.sp-persons{margin:26px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
+.sp-ph{font-family:var(--display);font-size:1.02em;font-weight:800;letter-spacing:-.01em;
+  color:var(--ink);margin-bottom:12px;padding-left:11px;border-left:3px solid var(--violet-2);
+  line-height:1.4}
+.sp-plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.sp-pcard{display:flex;align-items:center;gap:11px;padding:11px 13px;
+  border:1px solid var(--line-2);border-radius:9px;text-decoration:none;color:inherit;
+  background:var(--paper);transition:border-color .18s ease,background-color .18s ease}
+.sp-pcard:hover{border-color:var(--violet-2);background:var(--paper-2)}
+.sp-pava{flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:#efe9fb;color:#5b4a92;font-weight:800;font-size:15px}
+.sp-pbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sp-pbody b{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.sp-pbody span{font-size:11.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.sp-pgo{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--violet-2);white-space:nowrap;
+  opacity:0;transition:opacity .18s ease}
+.sp-pcard:hover .sp-pgo{opacity:1}
+@media (max-width:560px){
+  .sp-plist{grid-template-columns:minmax(0,1fr)}
+  .sp-pgo{display:none}
+}

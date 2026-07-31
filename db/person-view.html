@@ -515,12 +515,8 @@
       </section>
 
       <section class="pv-sec">
-        <div class="pv-sechead"><h2 class="pv-h">음원</h2><span class="pv-auto">자동 연동</span></div>
-        <div class="pv-list">
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span><span class="pv-li-main"><b>골드베르크 변주곡 <span class="pv-en">Goldberg Variations</span></b><span>대표 음원</span></span><span class="pv-li-act">재생 →</span></a>
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span><span class="pv-li-main"><b>b단조 미사 <span class="pv-en">Mass in B minor</span></b><span>합창·오케스트라</span></span><span class="pv-li-act">재생 →</span></a>
-          <a class="pv-lirow" href="#"><span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span><span class="pv-li-main"><b>무반주 첼로 모음곡 <span class="pv-en">Cello Suites</span></b><span>전곡</span></span><span class="pv-li-act">재생 →</span></a>
-        </div>
+        <div class="pv-sechead"><h2 class="pv-h">음원 · 영상</h2><span class="pv-auto">자동 연동</span></div>
+        <div class="pv-list" id="pvMedia"></div>
       </section>
 
       <section class="pv-sec">
@@ -1390,6 +1386,57 @@ if('serviceWorker' in navigator){
      })();
      // 아직 데이터 없는 섹션 숨김: 관련 인물
      var ppl=document.querySelector('.pv-people'); if(ppl){var sec=ppl.closest('.pv-sec'); if(sec) sec.style.display='none';}
+
+     /* ============================================================
+        음원 · 영상 — 정보SPOT 에서 이 인물과 이어진 것을 가져온다
+
+        영상을 모을 때 제목에서 찾아낸 작곡가를 person_ids 에 담아 두었습니다.
+        그 자료를 여기서 되짚어 「이 사람의 연주 영상」 을 보여 줍니다.
+        자료가 없으면 이 칸을 숨깁니다 — 빈 칸이 남는 것보다 낫습니다.
+        ============================================================ */
+     (function(){
+       var box=document.getElementById('pvMedia'); if(!box) return;
+       var sec=box.closest('.pv-sec');
+       var hide=function(){ if(sec) sec.style.display='none'; };
+
+       function dur(sec2){
+         var t=Number(sec2)||0; if(!t) return '';
+         var h=Math.floor(t/3600), m=Math.floor((t%3600)/60), s2=t%60;
+         return h?(h+':'+('0'+m).slice(-2)+':'+('0'+s2).slice(-2)):(m+':'+('0'+s2).slice(-2));
+       }
+
+       /* person_ids 배열에 이 사람이 든 자료를 찾습니다 (cs = 포함) */
+       fetch(URL+'/rest/v1/spot?select=id,title,title_ko,category,era,duration_sec,'
+             +'channel_name,thumb_url,video_id'
+             +'&section=eq.'+encodeURIComponent('음원영상')
+             +'&hidden=is.false&video_id=not.is.null'
+             +'&person_ids=cs.%7B'+encodeURIComponent(id)+'%7D'
+             +'&order=created_at.desc&limit=6',{headers:H})
+        .then(function(r){ return r.ok?r.json():[]; })
+        .then(function(rows){
+          if(!Array.isArray(rows)||!rows.length){ hide(); return; }
+          var ic='<span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+               +' stroke-width="1.7"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/>'
+               +'<circle cx="16.5" cy="16" r="2.5"/></svg></span>';
+          box.innerHTML='';
+          rows.forEach(function(r2){
+            var head=r2.title_ko||r2.title||'';
+            var sub=[];
+            if(r2.category) sub.push(r2.category);
+            if(r2.era) sub.push(r2.era);
+            if(r2.channel_name) sub.push(r2.channel_name);
+            var d=dur(r2.duration_sec);
+            var a=document.createElement('a');
+            a.className='pv-lirow';
+            a.href='/spot/spot-view.html?id='+encodeURIComponent(r2.id);
+            a.innerHTML=ic
+              +'<span class="pv-li-main"><b>'+esc(head)+'</b>'
+              +'<span>'+esc(sub.join(' · '))+(d?(' · '+d):'')+'</span></span>'
+              +'<span class="pv-li-act">보기 →</span>';
+            box.appendChild(a);
+          });
+        }).catch(function(){ hide(); });
+     })();
           (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
        var _k=encodeURIComponent((p.name_ko||p.name_en||'').trim());
        var _e=encodeURIComponent((p.name_en||p.name_ko||'').trim());
