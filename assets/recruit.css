@@ -277,9 +277,12 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
 .rc-table th.c-hit,  .rc-table td.c-hit  { width: 62px;  text-align: center; }
 
 /* 채용제목 — 머리칸은 가운데, 줄 내용은 왼쪽에 둡니다.
-   제목은 길이가 저마다 달라 가운데로 모으면 눈이 줄마다 헤맵니다. */
+   제목은 길이가 저마다 달라 가운데로 모으면 눈이 줄마다 헤맵니다.
+
+   왼쪽 여백을 조금 더 둡니다(기본 9px → 20px).
+   앞 칸(업체명)이 가운데 정렬이라 그 글자와 제목이 붙어 보이기 때문입니다. */
 .rc-table th.c-title { text-align: center; }
-.rc-table td.c-title { text-align: left; }
+.rc-table td.c-title { text-align: left; padding-left: 20px; }
 
 /* 번호 — 굵게 두어 몇 번째 글인지 얼른 짚힙니다 */
 .rc-table td.c-no { font-weight: 700; color: var(--text-2); }
