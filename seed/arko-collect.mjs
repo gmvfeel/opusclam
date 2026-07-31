@@ -32,6 +32,7 @@
      node seed/arko-collect.mjs --url=…/content/NNNN  페이지를 직접 지정
      node seed/arko-collect.mjs --year=2027         그 연도 탭을 골라 읽기
      node seed/arko-collect.mjs --dry --debug       무엇을 읽었는지 자세히 보기
+     node seed/arko-collect.mjs --all               문학·시각예술까지 다 담기
 
    필요한 환경변수
      SUPABASE_URL
@@ -53,6 +54,7 @@ const args = Object.fromEntries(
 );
 const DRY = !!args.dry;
 const DEBUG = !!args.debug;
+const ALL = !!args.all;   /* 문학·시각예술까지 다 담기 */
 const WANT_YEAR = args.year ? Number(args.year) : null;
 
 /* 2026년 공모 페이지 — 여기서 시작해 연도 탭을 따라갑니다 */
@@ -126,6 +128,87 @@ function findYearLinks(html) {
      · 날짜가 있는 칸  → 신청기간
    분야 칸은 읽지 않습니다 — 우리 쪽 구분은 따로 정해 두었습니다.
    ============================================================ */
+/* ============================================================
+   이미지맵에서 사업명을 읽습니다 — 이 페이지의 진짜 짜임
+
+   아르코의 「한눈에 보기」 는 표가 아니라 <b>그림 한 장</b>입니다.
+   GIF 위에 누를 수 있는 자리(<area>)를 얹은 이미지맵이고,
+   사업명은 그 자리의 title 에 적혀 있습니다.
+
+     <img src="…1809934….gif" usemap="#notice-250923">
+     <area title="공연예술 창작산실(올해의신작) 새창열림" href="https://artnuri.or.kr/…">
+
+   표는 <div class="hide"> 안에 눈이 불편한 분을 위해 숨겨져 있습니다.
+   그래서 표만 읽으면 일부만 잡혔습니다.
+
+   여기서는 두 곳을 함께 읽어 합칩니다.
+     · 이미지맵 — 사업명과 상세 공고 링크 (온전히 얻습니다)
+     · 숨은 표  — 신청기간
+   ============================================================ */
+
+/* 사업명 앞에 붙는 분야 — 떼어낼 것만 골라 적습니다.
+
+   ★ 모두 떼면 안 됩니다.
+     「시각예술 창작산실」 과 「다원예술 창작산실」 은 접두어를 떼면
+     둘 다 「창작산실」 이 되어 구분할 수 없습니다.
+     그래서 우리 열쇠에 접두어가 없는 분야만 떼어냅니다.
+
+       공연예술 창작산실(올해의신작)  →  창작산실(올해의신작)   (뗌)
+       국제교류 해외레지던시참가지원  →  해외레지던시참가지원   (뗌)
+       다원예술 창작산실              →  다원예술 창작산실       (남김)
+       시각예술 창작산실              →  시각예술 창작산실       (남김)
+
+   「공연예술대관료지원」 처럼 공백이 없는 것은 이름의 일부이므로 건드리지 않습니다. */
+const FIELD_PREFIX = ['공연예술', '국제교류'];
+
+function cleanAreaTitle(t) {
+  let x = String(t || '')
+    .replace(/\s*새창열림\s*$/, '')       /* 「… 새창열림」 꼬리 */
+    .replace(/\s*새\s*창\s*열림\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  /* 분야 접두어 떼기 (공백으로 갈린 것만) */
+  for (const f of FIELD_PREFIX) {
+    if (x.startsWith(f + ' ')) { x = x.slice(f.length + 1).trim(); break; }
+  }
+  /* 괄호 앞뒤 공백 다듬기 — 우리 열쇠와 맞추기 위해 */
+  return x.replace(/\s+\(/g, '(').replace(/\(\s+/g, '(')
+          .replace(/\s+\)/g, ')').replace(/\s*·\s*/g, '·').trim();
+}
+
+/* 클래식 음악과 무관한 분야 — 기본으로 담지 않습니다.
+
+   정보SPOT 은 클래식 음악 정보 자리이므로 문학·시각예술 사업은 뺐습니다.
+   (지금 담긴 20건도 같은 기준으로 골랐습니다)
+   다 담고 싶으시면 --all 을 붙이시면 됩니다. */
+const OFF_TOPIC = /(문학|소설|시각\s*예술)/;
+
+/* 사업이 아닌 자리 — 설명자료·신청·영상 링크 */
+function isNotProgram(t) {
+  return /(설명자료|미리보기|다운로드|바로가기|영상|유튜브|youtu|보기$)/.test(String(t || ''));
+}
+
+function parseAreas(html, debug) {
+  const out = [];
+  const areas = html.match(/<area[^>]*>/gi) || [];
+  if (debug) console.log(`  [살펴보기] 이미지맵 자리 ${areas.length}개`);
+
+  for (const a of areas) {
+    const t = (a.match(/title=["']([^"']+)["']/i) || [])[1]
+           || (a.match(/alt=["']([^"']+)["']/i) || [])[1] || '';
+    const href = (a.match(/href=["']([^"']+)["']/i) || [])[1] || '';
+    const name = cleanAreaTitle(t);
+    if (!name || name.length < 3) continue;
+    if (isNotProgram(name)) continue;
+    if (isFieldWord(name)) continue;
+    if (!ALL && OFF_TOPIC.test(name)) continue;   /* 문학·시각예술은 기본으로 뺍니다 */
+    if (out.some((x) => x.name === name)) continue;
+    out.push({ name: name, link: href, period: '' });
+  }
+  if (debug) console.log(`  [살펴보기] 이미지맵에서 읽은 사업 ${out.length}개`);
+  return out;
+}
+
 /* 분야 이름 — 사업명이 아닙니다.
    아르코 페이지의 분야 칸에도 링크가 붙어 있어 사업명으로 잡히던 일이 있었습니다.
    분야는 종류가 정해져 있으므로 이름으로 걸러내는 것이 가장 확실합니다. */
@@ -329,7 +412,42 @@ async function main() {
   try {
     const html = await getHtml(pageUrl);
     if (DEBUG) console.log(`  [살펴보기] 받은 글자 ${html.length}자`);
-    rows = parseRows(html, DEBUG);
+
+    /* ① 이미지맵에서 사업명과 링크를 읽습니다 (여기가 온전합니다) */
+    const areas = parseAreas(html, DEBUG);
+    /* ② 숨은 표에서 신청기간을 읽습니다 */
+    const table = parseRows(html, DEBUG);
+
+    /* ③ 합칩니다 — 이름이 같은 것끼리 짝지어 기간을 채웁니다 */
+    const nk = (v) => String(v || '').replace(/[\s·—–\-()]/g, '').toLowerCase();
+    const periodBy = {};
+    for (const t of table) {
+      if (!t.period) continue;
+      periodBy[nk(t.name)] = t.period;
+      /* 표의 이름에 분야가 붙어 있을 수도 있어 떼어낸 이름으로도 담아 둡니다 */
+      periodBy[nk(cleanAreaTitle(t.name))] = t.period;
+    }
+
+    if (areas.length) {
+      rows = areas.map((a) => ({
+        name: a.name, link: a.link,
+        period: periodBy[nk(a.name)] || '',
+      }));
+      /* 표에만 있는 사업(별도공모 등)도 놓치지 않습니다 */
+      for (const t of table) {
+        const nm = cleanAreaTitle(t.name);
+        if (!ALL && OFF_TOPIC.test(nm)) continue;
+        const key = nk(nm);
+        if (rows.some((r) => nk(r.name) === key)) continue;
+        rows.push({ name: nm, link: t.link, period: t.period });
+      }
+    } else {
+      rows = table;
+    }
+    if (DEBUG) {
+      const withP = rows.filter((r) => r.period).length;
+      console.log(`  [살펴보기] 합친 결과 ${rows.length}개 · 기간을 찾은 것 ${withP}개`);
+    }
   } catch (e) {
     console.error('페이지를 읽지 못했습니다:', e.message);
     process.exit(1);
@@ -360,6 +478,10 @@ async function main() {
     const found = byKey[norm(r.name)];
 
     if (found) {
+      /* 기간을 읽지 못했으면 건드리지 않습니다 —
+         그림에서 사업명은 얻었지만 기간은 표에만 있어서,
+         못 읽었을 때 덮어쓰면 이미 담긴 올바른 날짜를 잃습니다. */
+      if (!p.from && !/(예정|미정)/.test(r.period || '')) { same++; continue; }
       if (found.deadline_text === dl) { same++; continue; }
       console.log(`  [갱신] ${r.name}`);
       console.log(`         ${found.deadline_text || '(없음)'} → ${dl}`);

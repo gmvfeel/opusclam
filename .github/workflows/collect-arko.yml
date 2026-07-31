@@ -38,7 +38,15 @@ on:
         required: false
         default: ''
       debug:
-        description: '무엇을 읽었는지 자세히 보기 (표·행·칸을 찍습니다)'
+        description: '무엇을 읽었는지 자세히 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      all:
+        description: '문학·시각예술까지 다 담기 (기본은 클래식 관련만)'
         required: false
         default: 'no'
         type: choice
@@ -82,6 +90,7 @@ jobs:
           if [ -n "$Y" ]; then OPTS="$OPTS --year=$Y"; fi
           if [ -n "$U" ]; then OPTS="$OPTS --url=$U"; fi
           if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
+          if [ "${{ github.event.inputs.all }}" = "yes" ]; then OPTS="$OPTS --all"; fi
 
           echo "── 실행 : node seed/arko-collect.mjs $OPTS ──"
           node seed/arko-collect.mjs $OPTS
