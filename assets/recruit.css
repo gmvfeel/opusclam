@@ -92,7 +92,9 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
        현악파트·관악파트… (짧음)  → 한 줄에 다섯
        음악잡지기자·판매/서비스직  → 한 줄에 넷
      칸 수를 넷으로 못박으면 짧은 줄에 자리가 남아 헐거워 보입니다. */
-  flex: 1; display: flex; flex-wrap: wrap;
+  /* flex: 1 을 쓰지 않습니다 — 부모가 세로로 쌓는 칸이라
+     세로 크기가 눌릴 수 있습니다 (풀다운에서 겪은 일과 같은 까닭) */
+  display: flex; flex-wrap: wrap;
   gap: 9px 18px;
   padding-left: 0;
 }
@@ -144,8 +146,14 @@ html[data-theme="dark"] .rc-fld { border-top-color: #2c2c2c; }
 }
 
 .rc-fld select, .rc-fld input[type="text"] {
-  flex: 1; min-width: 0; max-width: none;
-  height: 36px; padding: 0 11px;
+  /* ★ flex: 1 을 쓰면 안 됩니다.
+     .rc-fld 는 세로로 쌓는 칸(flex-direction: column)이라
+     flex: 1 의 flex-basis: 0% 가 <b>세로 크기</b>에 작용해
+     아래 height 를 덮어 풀다운이 납작하게 눌립니다.
+     가로를 채우는 것은 부모의 align-items: stretch 가 이미 해 줍니다. */
+  flex: none;
+  width: 100%; min-width: 0; max-width: none;
+  height: 38px; padding: 0 11px;
   border: 1px solid #d4d0dd; border-radius: 4px;
   background: var(--paper); color: var(--text);
   font-family: inherit; font-size: 13px;
@@ -175,8 +183,8 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
   box-shadow: 0 0 0 3px rgba(124, 99, 176, .12);
 }
 
-/* 체크·라디오 묶음 */
-.rc-checks { flex: 1; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+/* 체크·라디오 묶음 — 여기도 flex: 1 을 쓰지 않습니다 (위와 같은 까닭) */
+.rc-checks { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; min-height: 38px; }
 .rc-check {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 13px; color: var(--text-2); cursor: pointer;
