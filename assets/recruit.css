@@ -227,7 +227,9 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
 .rc-btn:hover { border-color: var(--violet-2); color: var(--violet-2); }
 .rc-btn svg { width: 16px; height: 16px; }
 .rc-btn--go { background: #3f3a4e; border-color: #3f3a4e; color: #fff; }
-.rc-btn--go:hover { background: var(--violet-2); border-color: var(--violet-2); color: #fff; }
+/* 마우스를 올리면 더 어두워집니다 — 눌릴 자리라는 것이 또렷해집니다.
+   보라로 밝히면 「켜졌다」 는 느낌이라 누르는 단추에는 맞지 않습니다. */
+.rc-btn--go:hover { background: #17141f; border-color: #17141f; color: #fff; }
 .rc-btn--write {
   background: var(--violet-2); border-color: var(--violet-2); color: #fff;
 }
