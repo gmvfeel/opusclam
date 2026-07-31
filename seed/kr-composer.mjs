@@ -332,14 +332,19 @@ async function main() {
   /* 이미 담긴 사람 — 한글만 남겨 견줍니다 */
   const have = [];
   for (let off = 0; ; off += 1000) {
-    const part = await sb(`persons?select=id,name_ko&limit=1000&offset=${off}`);
+    const part = await sb(`persons?select=id,name_ko,wikidata_id&limit=1000&offset=${off}`);
     if (!part || !part.length) break;
     have.push(...part);
     if (part.length < 1000) break;
   }
   const onlyKo = (v) => String(v || '').replace(/[^가-힣]/g, '');
   const haveSet = new Set(have.map((h) => onlyKo(h.name_ko)).filter(Boolean));
-  console.log(`인물DB 에 이미 있는 사람 : ${have.length}명\n`);
+  /* 위키데이터 번호는 겹치면 안 되는 규칙이 걸려 있습니다.
+     이미 있는 번호를 그대로 담으면 저장이 통째로 거부됩니다 —
+     실제로 한 사람 때문에 스물일곱 명이 모두 실패한 일이 있었습니다. */
+  const haveQid = new Set(have.map((h) => h.wikidata_id).filter(Boolean));
+  console.log(`인물DB 에 이미 있는 사람 : ${have.length}명`);
+  console.log(`  그 가운데 위키데이터 번호가 있는 사람 : ${haveQid.size}명\n`);
 
   const found = [], skipped = [], missing = [];
 
@@ -381,7 +386,16 @@ async function main() {
       if (DEBUG) console.log(`  [건너뜀] ${r.name} — 옛 인물 ${life}`);
       continue;
     }
-    if (DEBUG) console.log(`  ${r.name.padEnd(9)} ${(life || '생몰년 없음').padEnd(14)} (${from})`);
+    /* 위키데이터 번호가 이미 쓰이고 있으면 번호만 비웁니다.
+       같은 번호를 두 사람이 가질 수 없으므로, 사람은 담고 번호는 뺍니다.
+       (같은 사람이 두 번 담기는 것은 이름으로 이미 걸러집니다) */
+    let qid = r.qid;
+    let qidNote = '';
+    if (qid && haveQid.has(qid)) { qidNote = ` (위키데이터 번호 ${qid} 는 이미 쓰이고 있어 비웠습니다)`; qid = null; }
+    else if (qid) haveQid.add(qid);   /* 이번에 담는 것끼리도 겹치지 않게 */
+
+    if (DEBUG) console.log(`  ${r.name.padEnd(9)} ${(life || '생몰년 없음').padEnd(14)} (${from})${qidNote}`);
+    else if (qidNote) console.log(`  ${r.name} —${qidNote}`);
 
     rows.push({
       name_ko: r.name,
@@ -393,7 +407,7 @@ async function main() {
       school: pickSchool(r.extract),
       description: r.extract.slice(0, 900),
       link_wiki: 'https://ko.wikipedia.org/wiki/' + encodeURIComponent(r.title.replace(/ /g, '_')),
-      wikidata_id: r.qid,
+      wikidata_id: qid,
       is_oc: false,
       hidden: false,
     });
@@ -431,9 +445,13 @@ async function main() {
 
   if (!rows.length) { console.log('새로 담을 사람이 없습니다.'); return; }
 
+  /* 묶어 담다가 한 사람이 걸리면 그 묶음이 통째로 거부됩니다.
+     그래서 실패하면 한 명씩 다시 담아, 걸리는 사람만 빼고 나머지를 지킵니다. */
   let saved = 0;
-  for (let i = 0; i < rows.length; i += 50) {
-    const part = rows.slice(i, i + 50);
+  const failed = [];
+
+  for (let i = 0; i < rows.length; i += 25) {
+    const part = rows.slice(i, i + 25);
     try {
       await sb('persons', {
         method: 'POST', headers: { Prefer: 'return=minimal' },
@@ -441,11 +459,36 @@ async function main() {
       });
       saved += part.length;
     } catch (e) {
-      console.log(`  [저장 실패] ${i + 1}~${i + part.length}번째 — ${e.message}`);
+      console.log(`  [묶음 실패] ${i + 1}~${i + part.length}번째 — 한 명씩 다시 담습니다`);
+      for (const one of part) {
+        try {
+          await sb('persons', {
+            method: 'POST', headers: { Prefer: 'return=minimal' },
+            body: JSON.stringify([one]),
+          });
+          saved++;
+        } catch (e2) {
+          const why = String(e2.message || '');
+          /* 무엇 때문에 걸렸는지 알아보기 쉽게 다듬습니다 */
+          let short = why;
+          const m = why.match(/Key \(([^)]+)\)=\(([^)]+)\) already exists/);
+          if (m) short = `${m[1]} 값 ${m[2]} 이 이미 있습니다`;
+          else if (/violates not-null/.test(why)) short = '비울 수 없는 칸이 비었습니다';
+          else if (/column .* does not exist/.test(why)) {
+            const c = why.match(/column "?([a-z_]+)"? does not exist/);
+            short = `인물DB 에 「${c ? c[1] : '?'}」 칸이 없습니다`;
+          }
+          failed.push({ name: one.name_ko, why: short });
+        }
+      }
     }
   }
   console.log('── 끝 ──');
-  console.log(`담은 사람 ${saved}명`);
+  console.log(`담은 사람 ${saved}명${failed.length ? ` · 담지 못한 사람 ${failed.length}명` : ''}`);
+  if (failed.length) {
+    console.log('\n── 담지 못한 사람 ──');
+    failed.forEach((f) => console.log(`  ${f.name.padEnd(9)} ${f.why}`));
+  }
   console.log('※ 출처는 한국어 위키백과(CC BY-SA)이며 각 항목에 링크를 적어 두었습니다.');
 }
 
