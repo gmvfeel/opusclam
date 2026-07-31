@@ -439,6 +439,14 @@ async function main() {
         if (!ALL && OFF_TOPIC.test(nm)) continue;
         const key = nk(nm);
         if (rows.some((r) => nk(r.name) === key)) continue;
+
+        /* 숨은 표에는 구분이 빠진 짧은 이름이 섞여 있습니다.
+             그림  : 창작산실(올해의신작) · 창작산실(2차 제작지원) …
+             표    : 창작산실                ← 구분이 없습니다
+           이미 담은 사업의 앞부분과 같으면 그것을 뭉뚱그린 이름이므로
+           새 사업으로 담지 않습니다. */
+        if (rows.some((r) => nk(r.name).startsWith(key) && nk(r.name) !== key)) continue;
+
         rows.push({ name: nm, link: t.link, period: t.period });
       }
     } else {
