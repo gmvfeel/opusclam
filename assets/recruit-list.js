@@ -32,7 +32,10 @@
   var cfg = null, cur = 1, total = 0;
   /* 지금 걸러 보고 있는 조건 */
   var q = {
-    cat1: '', cat2: '', r1: '', r2: '',
+    /* 고른 직종들 — 「오케스트라|현악파트」 꼴로 담습니다.
+       여러 개를 함께 고를 수 있습니다 (현악파트와 관악파트를 같이 보기) */
+    jobs: [],
+    r1: '', r2: '',
     emp: '무관', days: '', hour: '', pay: '', gender: '',
     kw: '', tab: '', sort: 'created_at.desc',
   };
@@ -50,8 +53,20 @@
 
     if (cfg.kind === 'job') p.push('hidden=is.false');
 
-    if (q.cat1) p.push('job_cat1=eq.' + encodeURIComponent(q.cat1));
-    if (q.cat2) p.push('job_cat2=eq.' + encodeURIComponent(q.cat2));
+    /* 고른 직종 — 여러 개면 「이 가운데 하나라도」 로 묶습니다.
+       대분류만 고른 것과 소분류까지 고른 것이 섞일 수 있어
+       각각을 and 로 묶고 그것들을 or 로 잇습니다. */
+    if (q.jobs && q.jobs.length) {
+      var terms = q.jobs.map(function (v) {
+        var a = v.split('|');
+        return a[1]
+          ? 'and(job_cat1.eq.' + encodeURIComponent(a[0]) + ',job_cat2.eq.' + encodeURIComponent(a[1]) + ')'
+          : 'job_cat1.eq.' + encodeURIComponent(a[0]);
+      });
+      p.push(terms.length === 1 && terms[0].indexOf('and(') !== 0
+        ? terms[0].replace('.eq.', '=eq.')
+        : 'or=(' + terms.join(',') + ')');
+    }
     if (q.r1)   p.push('region1=eq.' + encodeURIComponent(q.r1));
     if (q.r2)   p.push('region2=eq.' + encodeURIComponent(q.r2));
 
@@ -87,31 +102,63 @@
   }
 
   /* ── 직종구분 표 ──────────────────────────────────────────*/
+  /* 직종구분 — 체크 상자로 고릅니다.
+     여러 개를 함께 고를 수 있습니다. 대분류 이름을 누르면 그 줄이 통째로
+     켜지거나 꺼집니다. */
   function drawJobTable() {
     var box = el('#rcJobs');
     if (!box) return;
     var html = '';
-    Object.keys(R.JOBS).forEach(function (c1) {
+    Object.keys(R.JOBS).forEach(function (c1, ri) {
+      var mine = R.JOBS[c1].map(function (c2) { return c1 + '|' + c2; });
+      var allOn = mine.every(function (v) { return q.jobs.indexOf(v) >= 0; });
       html += '<div class="rc-jobrow">'
-        + '<button type="button" class="rc-job1' + (q.cat1 === c1 && !q.cat2 ? ' on' : '') + '"'
-        + ' data-c1="' + esc(c1) + '">' + esc(c1) + '</button>'
+        + '<button type="button" class="rc-job1' + (allOn ? ' on' : '') + '"'
+        + ' data-all="' + esc(c1) + '" title="' + esc(c1) + ' 전체 고르기/풀기">'
+        + esc(c1) + '</button>'
         + '<div class="rc-job2">';
-      R.JOBS[c1].forEach(function (c2) {
-        var on = (q.cat1 === c1 && q.cat2 === c2) ? ' on' : '';
-        html += '<button type="button" class="rc-jobtag' + on + '"'
-          + ' data-c1="' + esc(c1) + '" data-c2="' + esc(c2) + '">' + esc(c2) + '</button>';
+      R.JOBS[c1].forEach(function (c2, i) {
+        var v = c1 + '|' + c2;
+        var on = q.jobs.indexOf(v) >= 0;
+        var id = 'rcjob-' + ri + '-' + i;
+        html += '<label class="rc-jobck" for="' + id + '">'
+          + '<input type="checkbox" id="' + id + '" value="' + esc(v) + '"'
+          + (on ? ' checked' : '') + '>'
+          + '<span>' + esc(c2) + '</span></label>';
       });
       html += '</div></div>';
     });
     box.innerHTML = html;
+  }
 
+  function bindJobTable() {
+    var box = el('#rcJobs');
+    if (!box) return;
+
+    /* 체크 상자를 누를 때 */
+    box.addEventListener('change', function (e) {
+      var cb = e.target;
+      if (!cb || cb.type !== 'checkbox') return;
+      var v = cb.value;
+      var at = q.jobs.indexOf(v);
+      if (cb.checked && at < 0) q.jobs.push(v);
+      if (!cb.checked && at >= 0) q.jobs.splice(at, 1);
+      drawJobTable();
+      go(1);
+    });
+
+    /* 대분류 이름을 누르면 그 줄을 통째로 켜거나 끕니다 */
     box.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-c1]');
+      var b = e.target.closest('[data-all]');
       if (!b) return;
-      var c1 = b.getAttribute('data-c1'), c2 = b.getAttribute('data-c2') || '';
-      /* 같은 것을 다시 누르면 풉니다 */
-      if (q.cat1 === c1 && q.cat2 === c2) { q.cat1 = ''; q.cat2 = ''; }
-      else { q.cat1 = c1; q.cat2 = c2; }
+      var c1 = b.getAttribute('data-all');
+      var mine = R.JOBS[c1].map(function (c2) { return c1 + '|' + c2; });
+      var allOn = mine.every(function (v) { return q.jobs.indexOf(v) >= 0; });
+      if (allOn) {
+        q.jobs = q.jobs.filter(function (v) { return mine.indexOf(v) < 0; });
+      } else {
+        mine.forEach(function (v) { if (q.jobs.indexOf(v) < 0) q.jobs.push(v); });
+      }
       drawJobTable();
       go(1);
     });
@@ -146,9 +193,14 @@
       go(1);
     });
     if (reset) reset.addEventListener('click', function () {
-      q = { cat1: '', cat2: '', r1: '', r2: '', emp: '무관', days: '', hour: '',
+      q = { jobs: [], r1: '', r2: '', emp: '무관', days: '', hour: '',
             pay: '', gender: '', kw: '', tab: q.tab, sort: q.sort };
-      drawJobTable(); drawSearch(); go(1);
+      /* 셀렉트와 라디오도 처음 상태로 되돌립니다 */
+      ['#rcR1', '#rcR2', '#rcDays', '#rcHour', '#rcPay', '#rcGender', '#rcKw']
+        .forEach(function (sel) { var x = el(sel); if (x) x.value = ''; });
+      var first = document.querySelector('input[name="rc-emp"]');
+      if (first) first.checked = true;
+      drawJobTable(); go(1);
     });
   }
 
@@ -171,8 +223,14 @@
       if (!b) return;
       var v = b.getAttribute('data-tab');
       /* 인재정보 탭은 직종으로 거릅니다 */
-      if (v.indexOf('cat:') === 0) { q.cat1 = v.slice(4); q.cat2 = ''; q.tab = v; }
-      else { q.tab = v; if (cfg.kind !== 'job') { q.cat1 = ''; q.cat2 = ''; } }
+      if (v.indexOf('cat:') === 0) {
+        var c1 = v.slice(4);
+        q.jobs = R.JOBS[c1] ? R.JOBS[c1].map(function (c2) { return c1 + '|' + c2; }) : [];
+        q.tab = v;
+      } else {
+        q.tab = v;
+        if (cfg.kind !== 'job') q.jobs = [];
+      }
       drawTabs(); drawJobTable(); go(1);
     });
   }
@@ -269,7 +327,7 @@
 
     if (!rows || !rows.length) {
       list.innerHTML = '<p class="rc-empty">'
-        + (q.cat1 || q.kw || q.r1
+        + ((q.jobs && q.jobs.length) || q.kw || q.r1
           ? '조건에 맞는 정보가 없습니다. 조건을 바꿔 보시겠습니까?'
           : (cfg.kind === 'job' ? '등록된 채용정보가 아직 없습니다.' : '등록된 인재정보가 아직 없습니다.'))
         + '</p>';
@@ -293,6 +351,7 @@
     if (!R) { console.error('assets/recruit.js 를 먼저 불러야 합니다.'); return; }
 
     drawJobTable();
+    bindJobTable();
     drawSearch();
     drawTabs();
 

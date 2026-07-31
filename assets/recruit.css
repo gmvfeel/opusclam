@@ -26,12 +26,12 @@
 
 .rc-panel {
   background: var(--paper);
-  /* 테두리는 굵고 조금 진하게 — 칸의 경계가 또렷해야 채울 자리가 보입니다 */
-  border: 2px solid #c9c1e0;
+  /* 테두리는 굵고 진하게 — 칸의 경계가 또렷해야 채울 자리가 보입니다 */
+  border: 3px solid #a99cc9;
   border-radius: 12px;
   padding: 30px 34px 26px;
 }
-html[data-theme="dark"] .rc-panel { border-color: #443e52; }
+html[data-theme="dark"] .rc-panel { border-color: #565070; }
 
 /* 칸 제목 — 가운데, 큰 글씨 */
 .rc-panel-h {
@@ -44,40 +44,49 @@ html[data-theme="dark"] .rc-panel { border-color: #443e52; }
 
 /* ── 직종구분 ─────────────────────────────────────────────
    대분류 하나에 소분류 여러 개가 붙는 줄을 쌓습니다. */
+/* ── 직종구분 ─────────────────────────────────────────────
+   체크 상자로 고릅니다. 대분류는 왼쪽 라벨 자리에 놓고,
+   소분류를 체크 상자로 나열합니다 (잡코리아 등록 화면의 결).
+   여러 개를 함께 고를 수 있습니다. */
 .rc-jobs { display: flex; flex-direction: column; }
 .rc-jobrow {
-  display: flex; align-items: center; gap: 0;
-  border-bottom: 1px solid var(--line-2);
+  display: flex; align-items: flex-start; gap: 16px;
+  padding: 13px 0;
 }
-.rc-jobrow:last-child { border-bottom: 0; }
+.rc-jobrow + .rc-jobrow { border-top: 1px solid #f1eef8; }
+html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 
-/* 대분류 — 옅은 바탕을 두어 표의 머리칸처럼 읽히게 합니다 */
+/* 대분류 — 라벨처럼 보이되 누르면 그 줄이 통째로 켜집니다 */
 .rc-job1 {
-  flex: 0 0 auto; width: 128px; align-self: stretch;
-  padding: 13px 14px; border: 0;
-  background: var(--paper-2);
-  font-size: 13.5px; font-weight: 700; color: var(--ink);
+  flex: 0 0 auto; width: 96px;
+  padding: 3px 0; border: 0; background: none;
+  font-size: 13.5px; font-weight: 700; color: var(--text-2);
   text-align: left; cursor: pointer;
-  transition: background-color .18s ease, color .18s ease;
+  transition: color .18s ease;
 }
-.rc-job1:hover { background: #efe9fb; color: var(--violet-2); }
-.rc-job1.on { background: var(--violet-2); color: #fff; }
+.rc-job1:hover { color: var(--violet-2); }
+.rc-job1.on { color: var(--violet-2); }
+.rc-job1.on::after { content: ' ✓'; font-size: 11px; }
 
+/* 소분류 체크 상자들 */
 .rc-job2 {
-  flex: 1; display: flex; flex-wrap: wrap; gap: 4px 4px;
-  padding: 9px 14px;
+  flex: 1; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 9px 8px;
 }
-.rc-jobtag {
-  padding: 5px 11px; border: 1px solid transparent; border-radius: 14px;
-  background: none; color: var(--text-2);
-  font-size: 12.5px; cursor: pointer; white-space: nowrap;
-  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+.rc-jobck {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; color: var(--text-2); cursor: pointer;
+  white-space: nowrap; min-width: 0;
 }
-.rc-jobtag:hover { background: var(--paper-2); color: var(--ink); }
-.rc-jobtag.on {
-  background: var(--violet-2); border-color: var(--violet-2); color: #fff;
-  font-weight: 600;
+.rc-jobck input {
+  flex: 0 0 auto;
+  width: 17px; height: 17px; margin: 0;
+  accent-color: var(--violet-2); cursor: pointer;
 }
+.rc-jobck span { overflow: hidden; text-overflow: ellipsis; }
+.rc-jobck:hover { color: var(--ink); }
+.rc-jobck input:checked + span { color: var(--violet-2); font-weight: 600; }
 
 /* ── 상세검색 ─────────────────────────────────────────────*/
 /* 한 줄에 하나씩 — 라벨을 왼쪽에 고정합니다.
@@ -99,11 +108,27 @@ html[data-theme="dark"] .rc-fld + .rc-fld { border-top-color: #2c2c2c; }
 .rc-fld select, .rc-fld input[type="text"] {
   flex: 1; min-width: 0; max-width: 300px;
   height: 38px; padding: 0 12px;
-  border: 1px solid var(--line-2); border-radius: 5px;
+  border: 1px solid #d4d0dd; border-radius: 4px;
   background: var(--paper); color: var(--text);
   font-family: inherit; font-size: 13px;
   transition: border-color .16s ease;
 }
+
+/* 풀다운 — 브라우저가 그리는 화살표 대신 작은 삼각형을 직접 넣습니다.
+   브라우저마다 모양이 달라 화면이 들쭉날쭉해지기 때문입니다. */
+.rc-fld select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23888' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  cursor: pointer;
+}
+html[data-theme="dark"] .rc-fld select {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23aaa' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+}
+html[data-theme="dark"] .rc-fld select,
+html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 /* 키워드는 길게 적으므로 넓게 둡니다 */
 .rc-fld--wide input[type="text"] { max-width: none; }
 .rc-fld select:hover, .rc-fld input:hover { border-color: #cfc9de; }
@@ -289,7 +314,8 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
   .rc-panel { padding: 24px 20px 20px; }
   .rc-panel-h { font-size: 1.2em; margin-bottom: 18px; padding-bottom: 15px; }
   .rc-fld select, .rc-fld input[type="text"] { max-width: none; }
-  .rc-job1 { width: 88px; font-size: 13px; }
+  .rc-job1 { width: 82px; font-size: 13px; }
+  .rc-job2 { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
   .rc-org { width: 100px; }
   .rc-who { width: 118px; font-size: 13px; }
   .rc-when { width: 104px; }
@@ -302,8 +328,9 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
   .rc-fld { flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 0; }
   .rc-fld > label { width: auto; }
   .rc-fld select + select { margin-left: 0; margin-top: 6px; }
-  .rc-jobrow { flex-direction: column; gap: 6px; }
-  .rc-job1 { width: auto; }
+  .rc-jobrow { flex-direction: column; gap: 8px; padding: 11px 0; }
+  .rc-job1 { width: auto; font-weight: 700; color: var(--ink); }
+  .rc-job2 { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   .rc-row { flex-wrap: wrap; gap: 8px 12px; padding: 14px 4px; }
   .rc-no { display: none; }
   .rc-org, .rc-who { width: auto; font-size: 12.5px; color: var(--violet-2); }
