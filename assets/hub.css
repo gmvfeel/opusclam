@@ -654,3 +654,16 @@
     .hub-date,.hub-view{display:none}
     .hb-title{font-size:17.5px}
   }
+
+  /* ============================================================
+     묶음 바꿔 보여주기 — 몇 개씩 나눠 차례로 보여 줄 때 쓰는 점과 나타남
+     ============================================================ */
+  @keyframes hubFade{ from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+  .hub-rdots{display:flex;justify-content:center;gap:3px;padding:14px 0 2px}
+  .hub-rdots i{width:7px;height:7px;border-radius:50%;background:var(--line-2);
+    box-sizing:content-box;padding:5px 4px;background-clip:content-box;cursor:pointer;
+    transition:background-color .18s ease,width .18s ease}
+  .hub-rdots i:hover{background:var(--text-3);background-clip:content-box}
+  .hub-rdots i.on{background:var(--violet-2);width:18px;border-radius:4px;
+    background-clip:content-box}

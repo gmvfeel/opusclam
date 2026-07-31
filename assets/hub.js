@@ -750,6 +750,113 @@ window.OCHub = (function () {
 
 
   /* ============================================================
+     묶음 바꿔 보여주기 — 세로로 놓인 목록을 몇 개씩 나눠 차례로
+
+     OCHub.rotateBox('#latestBox', { per: 4, every: 5000 })
+
+     왜 가로로 밀지 않는가
+       DATABASE 메인의 두 칸은 세로로 놓인 목록·격자입니다.
+       가로로 미는 것은 맞지 않고, 한 줄씩 위로 올리면 읽는 중에 글이 움직여
+       읽기 어렵습니다. 그래서 <b>몇 개씩 묶어 통째로 바꿉니다</b> —
+       바뀌는 순간만 살짝 겹치고, 읽는 동안은 가만히 있습니다.
+
+     칸이 나중에 채워지는 것을 지켜봅니다 — 자료를 받아 그리기 때문입니다.
+     ============================================================ */
+  function rotateBox(sel, opts) {
+    opts = opts || {};
+    var box = typeof sel === 'string' ? document.querySelector(sel) : sel;
+    if (!box) return;
+    var per = opts.per || 4;
+    var every = opts.every || 5000;
+
+    var timer = null, at = 0, pages = 1, kids = [], dots = null;
+
+    function build() {
+      kids = [].slice.call(box.children).filter(function (k) {
+        return k.nodeType === 1 && !k.classList.contains('hub-rdots');
+      });
+      pages = Math.ceil(kids.length / per);
+
+      /* 나눌 만큼 없으면 아무것도 하지 않습니다 */
+      if (kids.length <= per) {
+        stop();
+        kids.forEach(function (k) { k.style.display = ''; });
+        if (dots) { dots.remove(); dots = null; }
+        return false;
+      }
+
+      /* 몇 묶음인지 알 수 있게 점을 놓습니다 */
+      if (!dots) {
+        dots = document.createElement('div');
+        dots.className = 'hub-rdots';
+        box.parentNode.insertBefore(dots, box.nextSibling);
+      }
+      dots.innerHTML = '';
+      for (var p = 0; p < pages; p++) {
+        (function (p) {
+          var d = document.createElement('i');
+          d.setAttribute('role', 'button');
+          d.setAttribute('aria-label', (p + 1) + '번째 묶음 보기');
+          /* 누르는 순간 넘깁니다 — click 을 기다리면 늦고,
+             pointerdown 에서 preventDefault 를 부르면 아예 오지 않습니다 */
+          d.addEventListener('pointerdown', function (ev) {
+            ev.stopPropagation();
+            show(p); rewind();
+          });
+          dots.appendChild(d);
+        })(p);
+      }
+      if (at >= pages) at = 0;
+      show(at);
+      return true;
+    }
+
+    function show(p) {
+      at = p;
+      kids.forEach(function (k, i) {
+        var mine = Math.floor(i / per) === p;
+        if (mine) {
+          k.style.display = '';
+          /* 바뀌는 순간만 살짝 나타나게 */
+          k.style.animation = 'none';
+          void k.offsetWidth;
+          k.style.animation = 'hubFade .34s ease';
+        } else {
+          k.style.display = 'none';
+        }
+      });
+      if (dots) {
+        [].forEach.call(dots.children, function (d, k) {
+          d.className = (k === p) ? 'on' : '';
+        });
+      }
+    }
+
+    function tick() { if (pages > 1) show((at + 1) % pages); }
+    function play() { if (timer || pages <= 1) return; timer = setInterval(tick, every); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    function rewind() { stop(); play(); }
+
+    if (build()) play();
+
+    /* 읽는 중에 바뀌지 않게 */
+    box.addEventListener('mouseenter', stop);
+    box.addEventListener('mouseleave', play);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stop(); else play();
+    });
+
+    /* 칸이 채워지거나 보기 방식이 바뀌면 다시 나눕니다 */
+    if (window.MutationObserver) {
+      new MutationObserver(function () {
+        var was = timer;
+        stop();
+        if (build() && was !== null) play(); else if (build()) play();
+      }).observe(box, { childList: true });
+    }
+  }
+
+  /* ============================================================
      성장 그래프 — 차트 라이브러리 없이 SVG 로 직접 그린다
      OCHub.stats({ curve:'#el', bars:'#el', total:'#el', week:'#el', upd:'#el', days:30 })
      ============================================================ */
@@ -1462,6 +1569,7 @@ window.OCHub = (function () {
   }
 
   return { init: init, bindViewToggle: bindViewToggle, esc: esc, thumb: thumb,
-           board: board, boardTabs: boardTabs, one: one, bindCarousel: bindCarousel,
+           board: board, boardTabs: boardTabs, one: one,
+           bindCarousel: bindCarousel, rotateBox: rotateBox,
            stats: stats, insight: insight, qnaTop: qnaTop };
 })();
