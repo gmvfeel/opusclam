@@ -779,9 +779,28 @@
               + '&hidden=is.false'
               + '&date_from=lte.' + last
               + '&or=(date_to.gte.' + first + ',date_from.gte.' + first + ')'
-              + '&order=date_from.asc&limit=300';
-        return fetch(U + q, { headers:H })
-          .then(function(r){ return r.ok ? r.json() : []; })
+              + '&order=date_from.asc,id.asc';
+
+        /* 한 번에 몰아 받지 않고 나눠 받습니다.
+
+           예전에는 limit=300 으로 한 번에 받았는데, 한 달 공연이 300건에
+           가까워지면 뒷부분이 잘립니다. 그리고 데이터 반출을 막으려고
+           「한 번에 받을 수 있는 양」 을 낮추면 그 한도에도 걸립니다.
+           그래서 작게 여러 번 받아 이어 붙입니다. */
+        var SIZE = 150;
+        function part(off, acc) {
+          return fetch(U + q + '&offset=' + off + '&limit=' + SIZE, { headers:H })
+            .then(function(r){ return r.ok ? r.json() : []; })
+            .then(function(rows){
+              rows = rows || [];
+              acc = acc.concat(rows);
+              /* 받아 온 것이 요청한 만큼이면 더 있을 수 있습니다 */
+              if (rows.length >= SIZE && off + SIZE < 1500) return part(off + SIZE, acc);
+              return acc;
+            });
+        }
+
+        return part(0, [])
           .then(function(rows){
             (rows || []).forEach(function(o){
               if (!o.date_from) return;

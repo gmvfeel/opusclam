@@ -141,10 +141,24 @@
                  'Vocal','Choral','Oratorio/Mass','Opera','Electronic','기타'];
     var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/spot';
     var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+    /* 편성 목록을 세기 위해 category 만 받습니다.
+       한 번에 몰아 받지 않고 나눠 받습니다 — 「한 번에 받을 수 있는 양」 을
+       낮추어도 편성이 빠지지 않게 하려는 것입니다. */
     var q = '?select=category&section=eq.' + encodeURIComponent('음원영상')
-          + '&hidden=is.false&category=not.is.null&limit=2000';
-    fetch(U + q, { headers:{ apikey:K, Authorization:'Bearer ' + K } })
-      .then(function(r){ return r.ok ? r.json() : []; })
+          + '&hidden=is.false&category=not.is.null&order=category.asc';
+    var H2 = { apikey:K, Authorization:'Bearer ' + K };
+    var SIZE = 150;
+    function part(off, acc) {
+      return fetch(U + q + '&offset=' + off + '&limit=' + SIZE, { headers:H2 })
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .then(function(rows){
+          rows = rows || [];
+          acc = acc.concat(rows);
+          if (rows.length >= SIZE && off + SIZE < 3000) return part(off + SIZE, acc);
+          return acc;
+        });
+    }
+    part(0, [])
       .then(function(rows){
         var seen = {};
         (rows || []).forEach(function(x){ if (x.category) seen[x.category] = (seen[x.category] || 0) + 1; });

@@ -1,15 +1,67 @@
 # ============================================================
-# OPUSCLAM.COM  robots.txt
-# 정식 검색엔진은 허용, 무단 크롤링·데이터 수집 봇은 차단합니다.
+#  OPUSCLAM.COM  robots.txt
+#
+#  정식 검색엔진은 반기고, 무단 수집 봇은 막습니다.
+#
+#  ★ 2026-07-31 손봄
+#    이전 판은 차단 경로가 모두 없는 파일을 가리키고 있었습니다.
+#    폴더 구조가 바뀌었는데(관리 → /admin/, 회원 → /account/)
+#    robots.txt 가 따라가지 않아 아무것도 막지 못하는 상태였습니다.
+#    실제 경로로 바로잡고, 폴더 단위로 막아 앞으로 파일이 늘어도
+#    저절로 막히게 했습니다.
+#
+#  robots.txt 로 할 수 있는 일과 못 하는 일
+#    · 예의를 지키는 봇은 이 파일을 읽고 따릅니다
+#    · 악의적인 수집기는 무시합니다 — 그것은 다른 수단으로 막아야 합니다
+#    · 다만 「막는다고 밝혔다」 는 기록이 되어, 무단 수집을 다툴 때
+#      상대가 이를 알고도 어겼다는 근거가 됩니다
+#
+#  자세한 이용 조건: https://opusclam.com/legal/data-protection.html
 # ============================================================
 
-# --- 무단 크롤러 / AI 학습 수집 봇: 전면 차단 ---
+
+# ────────────────────────────────────────────────────────────
+#  1. 무단 수집·AI 학습 봇 — 전면 차단
+#
+#  오퍼스클램의 데이터는 우리가 세운 정제 규칙과 분류·연결 체계로
+#  다시 만들어 낸 결과물입니다. 학습 자료로 쓰이는 것을 허락하지 않습니다.
+# ────────────────────────────────────────────────────────────
+
+# --- 대형 언어모형 학습·수집 ---
 User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: OAI-SearchBot
 User-agent: ClaudeBot
+User-agent: Claude-Web
+User-agent: Claude-User
+User-agent: Claude-SearchBot
 User-agent: anthropic-ai
-User-agent: CCBot
 User-agent: Google-Extended
 User-agent: Applebot-Extended
+User-agent: CCBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Amazonbot
+User-agent: meta-externalagent
+User-agent: meta-externalfetcher
+User-agent: FacebookBot
+User-agent: cohere-ai
+User-agent: cohere-training-data-crawler
+User-agent: Diffbot
+User-agent: YouBot
+User-agent: Timpibot
+User-agent: Webzio-Extended
+User-agent: omgili
+User-agent: omgilibot
+User-agent: ImagesiftBot
+User-agent: Kangaroo Bot
+User-agent: AI2Bot
+User-agent: Ai2Bot-Dolma
+User-agent: PanguBot
+User-agent: Sidetrade indexer bot
+Disallow: /
+
+# --- 자료 긁어가는 도구·상업 분석 봇 ---
 User-agent: Bytespider
 User-agent: PetalBot
 User-agent: AhrefsBot
@@ -17,38 +69,79 @@ User-agent: SemrushBot
 User-agent: MJ12bot
 User-agent: DotBot
 User-agent: DataForSeoBot
+User-agent: BLEXBot
+User-agent: SeekportBot
+User-agent: Barkrowler
+User-agent: ZoominfoBot
 User-agent: Scrapy
+User-agent: python-requests
+User-agent: python-urllib
+User-agent: Go-http-client
+User-agent: node-fetch
+User-agent: axios
+User-agent: curl
+User-agent: Wget
+User-agent: HTTrack
+User-agent: Nutch
+User-agent: SiteSucker
+User-agent: WebCopier
+User-agent: WebZIP
+User-agent: Offline Explorer
 Disallow: /
 
-# --- 정식 검색엔진(구글·네이버·다음·빙): 공개 페이지 허용, 관리/개인 페이지 차단 ---
+
+# ────────────────────────────────────────────────────────────
+#  2. 정식 검색엔진 — 공개 페이지는 반깁니다
+#
+#  구글·네이버·다음·빙에는 공개 페이지가 잘 보이기를 바랍니다.
+#  다만 관리 화면과 회원 개인 화면은 색인에서 뺍니다.
+# ────────────────────────────────────────────────────────────
+
 User-agent: Googlebot
+User-agent: Googlebot-Image
 User-agent: Yeti
 User-agent: Daumoa
 User-agent: bingbot
+User-agent: NaverBot
 Allow: /
-Disallow: /admin.html
-Disallow: /db-write.html
-Disallow: /db/db-write.html
-Disallow: /mypage.html
-Disallow: /change-password.html
-Disallow: /reset-password.html
-Disallow: /withdraw.html
-Disallow: /find-id.html
-Disallow: /find-pw.html
-Disallow: /find-id-result.html
-Disallow: /join-check.html
+# 관리 화면 — 폴더 단위로 막아 앞으로 도구가 늘어도 저절로 막힙니다
+Disallow: /admin/
+# 회원 개인 화면
+Disallow: /account/
+# 글쓰기·수정 화면 (색인될 값이 없습니다)
+Disallow: /db/write.html
+Disallow: /*-write.html
+Disallow: /*?edit=
+# 검색 결과 화면 (같은 내용이 여러 주소로 잡히는 것을 막습니다)
+Disallow: /search.html?
+Disallow: /*?q=
+Disallow: /*?page=
+# 예의상 요청 사이를 띄워 주십시오
+Crawl-delay: 1
 
-# --- 그 외 모든 봇: 공개 페이지 허용, 관리/개인 페이지 차단 ---
+
+# ────────────────────────────────────────────────────────────
+#  3. 그 밖 모든 봇
+#
+#  위에 적히지 않은 봇에도 같은 기준을 씁니다.
+#  요청 사이를 더 넉넉히 띄우도록 청합니다.
+# ────────────────────────────────────────────────────────────
+
 User-agent: *
 Allow: /
-Disallow: /admin.html
-Disallow: /db-write.html
-Disallow: /db/db-write.html
-Disallow: /mypage.html
-Disallow: /change-password.html
-Disallow: /reset-password.html
-Disallow: /withdraw.html
-Disallow: /find-id.html
-Disallow: /find-pw.html
-Disallow: /find-id-result.html
-Disallow: /join-check.html
+Disallow: /admin/
+Disallow: /account/
+Disallow: /db/write.html
+Disallow: /*-write.html
+Disallow: /*?edit=
+Disallow: /search.html?
+Disallow: /*?q=
+Disallow: /*?page=
+Crawl-delay: 5
+
+
+# ────────────────────────────────────────────────────────────
+#  4. 사이트맵
+# ────────────────────────────────────────────────────────────
+
+Sitemap: https://opusclam.com/sitemap.xml
