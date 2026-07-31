@@ -36,7 +36,8 @@
        여러 개를 함께 고를 수 있습니다 (현악파트와 관악파트를 같이 보기) */
     jobs: [],
     r1: '', r2: '',
-    emp: '무관', days: '', pay: '',
+    /* 고른 근무형태들 — 여러 개를 함께 고를 수 있습니다 */
+    emps: [], days: '', pay: '',
     kw: '', tab: '', sort: 'created_at.desc',
   };
 
@@ -70,9 +71,12 @@
     if (q.r1)   p.push('region1=eq.' + encodeURIComponent(q.r1));
     if (q.r2)   p.push('region2=eq.' + encodeURIComponent(q.r2));
 
-    /* 근무형태 — 여러 값을 담은 칸이라 「겹치는 것이 있으면」 으로 봅니다 */
-    var emp = q.tab || (q.emp && q.emp !== '무관' ? q.emp : '');
-    if (emp) p.push('emp_types=cs.%7B' + encodeURIComponent(emp) + '%7D');
+    /* 근무형태 — 여러 값을 담은 칸입니다.
+       고른 것 가운데 <b>하나라도 겹치면</b> 보여 줍니다(ov = overlap).
+       「정규직 또는 계약직」 처럼 넓게 찾을 수 있습니다. */
+    if (q.emps && q.emps.length) {
+      p.push('emp_types=ov.%7B' + q.emps.map(encodeURIComponent).join(',') + '%7D');
+    }
 
     if (q.days) p.push('work_days=eq.' + encodeURIComponent(q.days));
 
@@ -173,6 +177,9 @@
     R.fill(el('#rcPay'), R.PAY_BANDS.map(function (b) {
       return { value: b.label, label: b.label };
     }), null);
+    /* 근무형태 — 「무관」 은 뺍니다. 아무것도 고르지 않은 것이 곧 무관입니다. */
+    R.fillChecks(el('#rcEmp'),
+      R.EMP_SEARCH.filter(function (t) { return t !== '무관'; }), 'rc-emp');
 
     var go2 = el('#rcGo'), reset = el('#rcReset');
     if (go2) go2.addEventListener('click', function () {
@@ -180,13 +187,16 @@
       q.r2 = (el('#rcR2') || {}).value || '';
       q.days = (el('#rcDays') || {}).value || '';
       q.pay = (el('#rcPay') || {}).value || '';
+      q.emps = R.checked('#rcEmp', 'rc-emp');
       go(1);
     });
     if (reset) reset.addEventListener('click', function () {
-      q = { jobs: [], r1: '', r2: '', emp: '무관', days: '',
+      q = { jobs: [], r1: '', r2: '', emps: [], days: '',
             pay: '', kw: q.kw, tab: q.tab, sort: q.sort };
       ['#rcR1', '#rcR2', '#rcDays', '#rcPay']
         .forEach(function (sel) { var x = el(sel); if (x) x.value = ''; });
+      [].forEach.call(document.querySelectorAll('input[name="rc-emp"]'),
+        function (x) { x.checked = false; });
       drawJobTable(); go(1);
     });
   }
@@ -194,31 +204,6 @@
   /* ── 도구줄 — 검색창 · 구분 · 정렬 · 글자크기 ────────────
      다른 게시판(인물DB 등)과 같은 짜임입니다. */
   function drawToolbar() {
-    /* 구분 — 채용은 근무형태로, 인재는 직종 대분류로 */
-    var sel = el('#rcEmpSel');
-    if (sel) {
-      var items = (cfg.kind === 'job')
-        ? [{ value: '', label: '구분선택' }].concat(
-            R.EMP_SEARCH.filter(function (t) { return t !== '무관'; })
-                        .map(function (t) { return { value: t, label: t }; }))
-        : [{ value: '', label: '구분선택' }].concat(
-            Object.keys(R.JOBS).map(function (c) { return { value: 'cat:' + c, label: c }; }));
-      items.splice(1, 0, { value: '', label: cfg.kind === 'job' ? '전체' : '전체' });
-      R.fill(sel, items, null);
-      sel.addEventListener('change', function () {
-        var v = sel.value;
-        if (v.indexOf('cat:') === 0) {
-          var c1 = v.slice(4);
-          q.jobs = R.JOBS[c1] ? R.JOBS[c1].map(function (c2) { return c1 + '|' + c2; }) : [];
-          q.tab = '';
-          drawJobTable();
-        } else {
-          q.tab = v;
-        }
-        go(1);
-      });
-    }
-
     /* 정렬 */
     var sort = el('#rcSort');
     if (sort) {
@@ -366,7 +351,7 @@
 
     if (!rows || !rows.length) {
       list.innerHTML = '<tr><td colspan="' + span + '" class="rc-empty">'
-        + ((q.jobs && q.jobs.length) || q.kw || q.r1
+        + ((q.jobs && q.jobs.length) || (q.emps && q.emps.length) || q.kw || q.r1
           ? '조건에 맞는 정보가 없습니다. 조건을 바꿔 보시겠습니까?'
           : (cfg.kind === 'job' ? '등록된 채용정보가 아직 없습니다.' : '등록된 인재정보가 아직 없습니다.'))
         + '</td></tr>';

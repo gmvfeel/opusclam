@@ -44,7 +44,9 @@
 .rc-finder { display: flex; flex-direction: column; gap: 14px; }
 
 .rc-panel {
-  background: var(--paper);
+  /* 아주 옅은 베이지 — 목록(흰 바탕)과 갈라 보이게 하되
+     글씨 읽기를 방해하지 않을 만큼만 얹습니다. */
+  background: #fbf8f2;
   /* 테두리는 굵고 어둡게 — 칸의 경계가 또렷해야 채울 자리가 보입니다 */
   border: 3px solid #514a6b;
   border-radius: 12px;
@@ -54,6 +56,8 @@
   box-shadow: 0 3px 14px -4px rgba(30, 24, 60, .16);
 }
 html[data-theme="dark"] .rc-panel {
+  /* 어두운 화면에서는 베이지가 탁해 보이므로 살짝 밝은 회색으로 */
+  background: #1e1e1e;
   border-color: #7a7295;
   box-shadow: 0 3px 16px -4px rgba(0, 0, 0, .5);
 }
@@ -78,7 +82,7 @@ html[data-theme="dark"] .rc-panel {
   display: flex; flex-direction: column; align-items: stretch; gap: 7px;
   padding: 11px 0;
 }
-.rc-jobrow + .rc-jobrow { border-top: 1px solid #f1eef8; }
+.rc-jobrow + .rc-jobrow { border-top: 1px solid #ece5d8; }
 html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 
 /* 대분류 — 라벨처럼 보이되 누르면 그 줄이 통째로 켜집니다 */
@@ -140,7 +144,7 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 /* 줄 사이 옅은 선 — 첫 줄에 놓이는 것들만 뺍니다.
    지금 짜임은 「지역 1차 · 지역 2차」 가 첫 줄이므로 둘 다 뺍니다.
    하나만 빼면 같은 줄인데 한쪽에만 선이 그려져 어긋나 보입니다. */
-.rc-fld { border-top: 1px solid #f1eef8; }
+.rc-fld { border-top: 1px solid #ece5d8; }
 .rc-fld:nth-child(1), .rc-fld:nth-child(2) { border-top: 0; }
 html[data-theme="dark"] .rc-fld { border-top-color: #2c2c2c; }
 
@@ -153,6 +157,7 @@ html[data-theme="dark"] .rc-fld { border-top-color: #2c2c2c; }
   font-size: 12.5px; font-weight: 700; color: var(--text-2);
 }
 
+/* 입력칸은 흰 바탕으로 — 베이지 위에서 「여기에 고르거나 적는다」 가 또렷해집니다 */
 .rc-fld select, .rc-fld input[type="text"] {
   /* ★ flex: 1 을 쓰면 안 됩니다.
      .rc-fld 는 세로로 쌓는 칸(flex-direction: column)이라
@@ -163,7 +168,7 @@ html[data-theme="dark"] .rc-fld { border-top-color: #2c2c2c; }
   width: 100%; min-width: 0; max-width: none;
   height: 38px; padding: 0 11px;
   border: 1px solid #d4d0dd; border-radius: 4px;
-  background: var(--paper); color: var(--text);
+  background: #fff; color: var(--text);
   font-family: inherit; font-size: 13px;
   transition: border-color .16s ease;
 }
@@ -182,7 +187,9 @@ html[data-theme="dark"] .rc-fld select {
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23aaa' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
 }
 html[data-theme="dark"] .rc-fld select,
-html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
+html[data-theme="dark"] .rc-fld input[type="text"] {
+  border-color: #444; background: #141414;
+}
 /* 키워드는 길게 적으므로 넓게 둡니다 */
 .rc-fld--wide input[type="text"] { max-width: none; }
 .rc-fld select:hover, .rc-fld input:hover { border-color: #cfc9de; }

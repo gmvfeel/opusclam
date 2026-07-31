@@ -73,6 +73,12 @@
   <section class="rc-panel" id="rcSearch">
     <h2 class="rc-panel-h">상세검색</h2>
     <div class="rc-form">
+      <!-- 근무형태 — 여러 개를 함께 고를 수 있습니다.
+           「정규직이든 계약직이든 상관없다」 는 경우가 많아 체크 상자로 둡니다. -->
+      <div class="rc-fld rc-fld--wide">
+        <label>근무형태</label>
+        <div id="rcEmp" class="rc-checks"></div>
+      </div>
       <!-- 지역 — 1차·2차를 <b>폼과 똑같은 칸</b>에 하나씩 놓습니다.
            따로 감싸서 나누면 여백 셈이 달라져 풀다운 폭이 어긋납니다.
            2차 쪽 라벨은 자리만 차지하게 두어 위아래가 가지런합니다. -->
@@ -118,7 +124,6 @@
       <button class="pdb-searchbtn" type="button" id="rcSearchBtn">검색</button>
     </div>
     <div class="pdb-selects">
-      <select id="rcEmpSel" aria-label="구분"></select>
       <select id="rcSort" aria-label="정렬"></select>
     </div>
   </div>
