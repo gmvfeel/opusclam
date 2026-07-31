@@ -679,19 +679,62 @@ window.OCHub = (function () {
   }
 
   /* 가로로 넘기는 캐러셀 (Concert PR 처럼) */
-  function bindCarousel(wrapSel, trackSel) {
+  /* 가로로 넘겨 보는 칸 — 화살표로 넘기고, 원하면 저절로 넘어가게 합니다.
+
+     OCHub.bindCarousel('#wrap', '#track')                단추로만
+     OCHub.bindCarousel('#wrap', '#track', { auto: 5000 })  다섯 초마다 저절로
+
+     저절로 넘기기는 부르는 곳에서 켜야 합니다 —
+     커뮤니티 메인에서도 이 함수를 쓰므로 기본으로 켜면
+     요청하지 않은 곳까지 움직이게 됩니다. */
+  function bindCarousel(wrapSel, trackSel, opts) {
+    opts = opts || {};
     var wrap = document.querySelector(wrapSel), track = document.querySelector(trackSel);
     if (!wrap || !track) return;
-    function step(dir) {
+
+    function cardW() {
       var card = track.querySelector(':scope > *');
-      var w = card ? card.getBoundingClientRect().width + 14 : 280;
-      track.scrollBy({ left: dir * w * 2, behavior: 'smooth' });
+      return card ? card.getBoundingClientRect().width + 14 : 280;
     }
+    function step(dir, n) {
+      track.scrollBy({ left: dir * cardW() * (n || 2), behavior: 'smooth' });
+    }
+
+    var timer = null;
+    function tick() {
+      /* 끝에 닿으면 처음으로 돌아갑니다 — 한 바퀴 돌게 됩니다 */
+      var max = track.scrollWidth - track.clientWidth - 4;
+      if (max <= 0) return;                       /* 넘칠 만큼 없으면 가만히 */
+      if (track.scrollLeft >= max) track.scrollTo({ left: 0, behavior: 'smooth' });
+      else step(1, 1);                            /* 저절로 넘길 때는 한 장씩 */
+    }
+    function play() {
+      if (!opts.auto || timer) return;
+      timer = setInterval(tick, opts.auto);
+    }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    function rewind() { stop(); play(); }         /* 손으로 넘기면 시계를 다시 */
+
     wrap.addEventListener('click', function (e) {
       var b = e.target.closest && e.target.closest('[data-car]');
       if (!b) return;
       step(b.getAttribute('data-car') === 'next' ? 1 : -1);
+      rewind();
     });
+
+    if (opts.auto) {
+      play();
+      /* 보고 있는 중에 넘어가면 성가시므로 마우스를 올리면 멈춥니다 */
+      wrap.addEventListener('mouseenter', stop);
+      wrap.addEventListener('mouseleave', play);
+      /* 손가락으로 밀 때도 잠시 멈춥니다 */
+      track.addEventListener('touchstart', stop, { passive: true });
+      track.addEventListener('touchend', rewind, { passive: true });
+      /* 다른 창을 보고 있을 때는 돌리지 않습니다 (쓸데없이 움직이지 않게) */
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) stop(); else play();
+      });
+    }
   }
 
 
