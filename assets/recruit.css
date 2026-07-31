@@ -5,7 +5,9 @@
    base.css · board.css 의 색과 자를 그대로 물려받습니다.
    ============================================================ */
 
-.rc-wrap { max-width: 1260px; margin: 0 auto; padding: 0 20px 70px; }
+/* 가로는 .board 에 맡깁니다 — 다른 페이지와 같은 폭(내용 1312px)이 되게.
+   여기서 max-width 를 따로 정하면 나중에 .board 를 고칠 때 리쿠르트만 어긋납니다. */
+.rc-wrap { /* max-width·padding 은 .board 가 정합니다 */ }
 
 /* ── 두 칸 짜임 ───────────────────────────────────────────
    왼쪽에 찾는 칸, 오른쪽에 목록을 둡니다.
@@ -13,7 +15,7 @@
 .rc-layout {
   margin-top: 44px;
   display: grid;
-  grid-template-columns: 330px minmax(0, 1fr);
+  grid-template-columns: 480px minmax(0, 1fr);
   gap: 26px;
   align-items: start;
 }
@@ -86,8 +88,8 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 /* 소분류 체크 상자들 */
 .rc-job2 {
   flex: 1; display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 6px;
   padding-left: 2px;
 }
 .rc-jobck {
@@ -105,22 +107,32 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 .rc-jobck input:checked + span { color: var(--violet-2); font-weight: 600; }
 
 /* ── 상세검색 ─────────────────────────────────────────────*/
-/* 한 줄에 하나씩 — 라벨을 왼쪽에 고정합니다.
-   두 칸으로 나누면 라벨 자리가 어긋나 눈이 헤맵니다. */
-.rc-form { display: flex; flex-direction: column; }
+/* 한 줄에 둘씩 — 고르는 항목의 글자가 짧아 한 줄에 하나씩 둘 까닭이 없습니다.
+   지역·근무형태·키워드처럼 넓게 써야 하는 것만 한 줄을 다 씁니다. */
+.rc-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
 .rc-fld {
   display: flex; flex-direction: column; align-items: stretch; gap: 6px;
   min-width: 0; padding: 9px 0;
 }
-.rc-fld + .rc-fld { border-top: 1px solid #f1eef8; }
-html[data-theme="dark"] .rc-fld + .rc-fld { border-top-color: #2c2c2c; }
+.rc-fld--wide { grid-column: 1 / -1; }
+
+/* 줄 사이 옅은 선 — 두 칸이므로 두 개씩 건너 그립니다 */
+.rc-fld { border-top: 1px solid #f1eef8; }
+.rc-fld:first-child, .rc-fld:nth-child(2):not(.rc-fld--wide) { border-top: 0; }
+html[data-theme="dark"] .rc-fld { border-top-color: #2c2c2c; }
+
+/* 지역은 1차·2차를 나란히 */
+.rc-fld--region .rc-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .rc-fld > label {
   flex: 0 0 auto; width: auto;
   font-size: 12.5px; font-weight: 700; color: var(--text-2);
 }
-/* 셀렉트가 둘인 줄(지역)은 아래위로 놓습니다 */
-.rc-fld select + select { margin-left: 0; margin-top: 6px; }
+.rc-fld--region select { margin: 0; }
 .rc-fld select, .rc-fld input[type="text"] {
   flex: 1; min-width: 0; max-width: none;
   height: 36px; padding: 0 11px;
@@ -324,15 +336,13 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
 .rc-btn--write { position: absolute; right: 0; }
 
 /* ── 좁은 화면 ────────────────────────────────────────────*/
-@media (max-width: 1040px) {
+@media (max-width: 1180px) {
   /* 좁아지면 두 칸을 위아래로 풉니다 — 붙어 따라오기도 끕니다 */
   .rc-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .rc-side { position: static; }
   .rc-finder { flex-direction: row; gap: 14px; }
   .rc-finder .rc-panel { flex: 1; min-width: 0; }
-  .rc-job2 { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
-  .rc-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
-  .rc-fld--wide { grid-column: 1 / -1; }
+  .rc-job2 { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
   .rc-actions { flex-direction: row; justify-content: center; }
   .rc-actions .rc-btn { width: auto; min-width: 160px; }
 }
@@ -340,6 +350,7 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
 @media (max-width: 900px) {
   .rc-finder { flex-direction: column; }
   .rc-panel { padding: 20px 16px 16px; }
+  .rc-job2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .rc-org { width: 100px; }
   .rc-who { width: 118px; font-size: 13px; }
   .rc-when { width: 104px; }
@@ -349,6 +360,8 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
   .rc-panel { padding: 18px 14px 14px; border-width: 2px; }
   .rc-panel-h { font-size: 1.04em; }
   .rc-form { grid-template-columns: minmax(0, 1fr); }
+  .rc-job2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rc-fld--region .rc-two { grid-template-columns: 1fr; }
   .rc-actions { flex-direction: column; }
   .rc-actions .rc-btn { width: 100%; }
   .rc-jobrow { flex-direction: column; gap: 8px; padding: 11px 0; }

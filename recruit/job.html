@@ -73,15 +73,19 @@
   <section class="rc-panel" id="rcSearch">
     <h2 class="rc-panel-h">상세검색</h2>
     <div class="rc-form">
-      <div class="rc-fld">
+      <!-- 지역은 1차·2차를 나란히 두므로 한 줄을 다 씁니다 -->
+      <div class="rc-fld rc-fld--wide rc-fld--region">
         <label for="rcR1">지역</label>
-        <select id="rcR1" aria-label="1차지역"></select>
-        <select id="rcR2" aria-label="2차지역"></select>
+        <div class="rc-two">
+          <select id="rcR1" aria-label="1차지역"></select>
+          <select id="rcR2" aria-label="2차지역"></select>
+        </div>
       </div>
       <div class="rc-fld rc-fld--wide">
         <label>근무형태</label>
         <div id="rcEmp" class="rc-checks"></div>
       </div>
+      <!-- 아래 넷은 고르는 글자가 짧아 한 줄에 둘씩 놓습니다 -->
       <div class="rc-fld">
         <label for="rcDays">기간</label>
         <select id="rcDays" aria-label="근무요일"></select>
