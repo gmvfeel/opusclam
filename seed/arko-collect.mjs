@@ -152,52 +152,86 @@ function parseRows(html, debug) {
     const tds = tr.match(/<t[dh][\s>][\s\S]*?<\/t[dh]>/gi) || [];
     if (tds.length < 2) continue;
 
-    let name = '', link = '', period = '', plain = '';
+    /* ── 사업명 칸 찾기 ──────────────────────────────────
 
-    /* 링크가 있는 칸을 사업명으로 먼저 찾습니다.
-       분야 칸(「공연 예술」 처럼)이 사업명으로 잡히던 일이 있었습니다 —
-       분야는 링크가 없고 사업명에는 상세 공고 링크가 붙어 있습니다. */
-    for (const td of tds) {
-      /* 한 칸에 링크가 여럿 있을 수 있으므로 모두 살펴봅니다 */
-      const as = [...td.matchAll(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
-      for (const a of as) {
-        const t = strip(a[2]);
-        if (t.length < 3) continue;
-        if (isFieldWord(t)) continue;          /* 분야 이름은 사업명이 아닙니다 */
-        if (/^20\d\d$/.test(t)) continue;      /* 연도 탭 */
-        const href = a[1];
-        if (href === '#' || href.charAt(0) === '#') continue;
-        name = t;
-        link = href.charAt(0) === '/' ? BASE + href : href;
-        break;
-      }
-      if (name) break;
-    }
+       두 가지를 함께 다뤄야 했습니다.
 
-    /* 신청기간을 찾습니다 */
+       ① 사업명이 링크 안팎에 걸쳐 있습니다
+            <td><a>창작산실</a>(올해의신작)</td>
+          링크 글자만 읽으면 「창작산실」 이 되어 여러 사업이 같은 이름이 됩니다.
+          그래서 <b>칸 전체 글자</b>를 사업명으로 씁니다.
+
+       ② 한 칸에 사업이 여럿 묶여 있습니다
+            <td><a>창작산실</a>(올해의신작)<br><a>창작산실</a>(2차 제작지원)</td>
+          그래서 칸을 <br> 로 나누어 조각마다 하나의 사업으로 봅니다.
+          이 짜임을 몰라 26개 가운데 14개만 읽던 일이 있었습니다.
+       ────────────────────────────────────────────────── */
+    let period = '', plain = '';
+
+    /* 먼저 신청기간 칸을 찾습니다 */
     for (const td of tds) {
       const text = strip(td);
-      if (!text || text === name) continue;
+      if (!text) continue;
       const hasDate = /\d{4}\s*\.\s*\d{1,2}|\d{1,2}\s*\.\s*\d{1,2}\s*\.?\s*\(|예정|미정|마감/.test(text);
       if (hasDate && !period) period = text;
-      else if (!hasDate && !plain && !isFieldWord(text)
-               && text.length >= 4 && text.length <= 60) plain = text;
+    }
+
+    /* 사업명 조각을 모읍니다 */
+    const names = [];
+    for (const td of tds) {
+      /* 링크가 없는 칸(분야·기간)은 건너뜁니다 */
+      if (!/<a[^>]+href=/i.test(td)) {
+        const t = strip(td);
+        if (t && !isFieldWord(t) && !plain
+            && !/\d{4}\s*\.\s*\d{1,2}|예정|미정|마감/.test(t)
+            && t.length >= 4 && t.length <= 60) plain = t;
+        continue;
+      }
+      /* 칸을 <br> 로 나누어 조각마다 하나의 사업으로 봅니다 */
+      const pieces = td
+        .replace(/<t[dh][^>]*>|<\/t[dh]>/gi, '')
+        .split(/<br\s*\/?>/i);
+      for (const piece of pieces) {
+        const a = piece.match(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
+        if (!a) continue;
+        const href = a[1];
+        if (href === '#' || href.charAt(0) === '#') continue;
+        const inner = strip(a[2]);
+        if (/^20\d\d$/.test(inner)) continue;          /* 연도 탭 */
+        /* 조각 전체 글자 — 링크 밖의 괄호까지 함께 담습니다 */
+        const whole = strip(piece);
+        let nm = whole.length >= inner.length ? whole : inner;
+        /* 태그를 지우면서 괄호 앞에 공백이 생깁니다.
+             <a>창작산실</a>(올해의신작)  →  「창작산실 (올해의신작)」
+           아르코 표기는 공백이 없으므로 다듬습니다 — 그러지 않으면
+           이미 담긴 항목과 짝이 맞지 않습니다. */
+        nm = nm.replace(/\s+\(/g, '(').replace(/\(\s+/g, '(')
+               .replace(/\s+\)/g, ')').replace(/\s*·\s*/g, '·')
+               .replace(/\s{2,}/g, ' ').trim();
+        if (nm.length < 3) continue;
+        if (isFieldWord(nm) || isFieldWord(inner)) continue;
+        names.push({ name: nm, link: href.charAt(0) === '/' ? BASE + href : href });
+      }
     }
 
     /* 링크가 아예 없는 표라면 글자 칸을 사업명으로 씁니다 */
-    if (!name) name = plain;
-    if (!name || name.length < 3) continue;
-    if (isFieldWord(name)) continue;           /* 머리글·분야 줄 */
-
-    /* 표에서 여러 사업이 기간 칸을 함께 쓰는 일이 많습니다
-       (한 칸에 여러 줄을 묶어 두는 짜임).
+    if (!names.length && plain && !isFieldWord(plain)) {
+      names.push({ name: plain, link: '' });
+    }
+    if (!names.length) continue;
+    /* 표에서 여러 사업이 기간 칸을 함께 쓰는 일이 많습니다.
        기간이 비어 있으면 바로 앞 사업의 기간을 물려받습니다. */
     if (!period && rows.length) period = rows[rows.length - 1].period;
 
     if (debug) {
-      console.log(`      칸 ${tds.length}개 | 사업명 「${name}」 | 기간 「${(period || '').slice(0, 34)}」`);
+      console.log(`      칸 ${tds.length}개 | 사업 ${names.length}개 | 기간 「${(period || '').slice(0, 30)}」`);
+      names.forEach((x) => console.log(`          └ ${x.name}`));
     }
-    rows.push({ name: name, link: link, period: period });
+    for (const x of names) {
+      /* 같은 사업이 두 번 담기지 않게 */
+      if (rows.some((r) => r.name === x.name)) continue;
+      rows.push({ name: x.name, link: x.link, period: period });
+    }
   }
   if (debug) {
     /* 표가 아니라 목록(ul/li)으로 짜였을 수도 있어 함께 살펴봅니다 */
@@ -311,15 +345,19 @@ async function main() {
   /* ③ 이미 담긴 것을 불러 짝을 맞춥니다 */
   const have = (await sb('spot?select=id,title,arko_key,deadline_text&section=eq.'
     + encodeURIComponent('지원금') + '&arko_key=not.is.null&limit=200')) || [];
+  /* 짝을 맞출 때 공백과 기호 차이는 무시합니다.
+     아르코 표기가 조금 달라져도(「창작산실(올해의신작)」 ↔ 「창작산실 (올해의 신작)」)
+     같은 사업으로 알아보게 하려는 것입니다. */
+  const norm = (v) => String(v || '').replace(/[\s·—–\-()]/g, '').toLowerCase();
   const byKey = {};
-  for (const h of have) byKey[h.arko_key] = h;
+  for (const h of have) byKey[norm(h.arko_key)] = h;
 
   let upd = 0, add = 0, same = 0;
 
   for (const r of rows) {
     const p = parsePeriod(r.period);
     const dl = shortDeadline(p);
-    const found = byKey[r.name];
+    const found = byKey[norm(r.name)];
 
     if (found) {
       if (found.deadline_text === dl) { same++; continue; }
