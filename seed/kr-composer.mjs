@@ -351,13 +351,39 @@ async function main() {
      실제로 한 사람 때문에 스물일곱 명이 모두 실패한 일이 있었습니다. */
   const haveQid = new Set(have.map((h) => h.wikidata_id).filter(Boolean));
   console.log(`인물DB 에 이미 있는 사람 : ${have.length}명`);
-  console.log(`  그 가운데 위키데이터 번호가 있는 사람 : ${haveQid.size}명\n`);
+  console.log(`  그 가운데 위키데이터 번호가 있는 사람 : ${haveQid.size}명`);
+
+  /* ── 다시 담지 않을 사람 ──────────────────────────────────
+     한 번 지운 사람이 수집기를 돌릴 때마다 되살아나면 안 됩니다.
+     person_block 표에 적힌 사람은 건너뜁니다.
+     (표가 아직 없으면 그냥 넘어갑니다) */
+  const blockName = new Set(), blockQid = new Set();
+  try {
+    for (let off = 0; off < 20000; off += 150) {
+      const part = await sb(`person_block?select=name_ko,wikidata_id&order=id&limit=150&offset=${off}`);
+      if (!part || !part.length) break;
+      for (const b of part) {
+        if (b.name_ko) blockName.add(onlyKo(b.name_ko) || b.name_ko);
+        if (b.wikidata_id) blockQid.add(b.wikidata_id);
+      }
+    }
+    if (blockName.size || blockQid.size) {
+      console.log(`  다시 담지 않을 사람 : ${blockName.size}명`);
+    }
+  } catch (e) {
+    console.log('  (다시 담지 않을 사람 목록을 읽지 못했습니다 — 표가 아직 없을 수 있습니다)');
+  }
+  console.log('');
 
   const found = [], skipped = [], missing = [];
 
   /* ① 위키백과에서 사람을 찾습니다 */
+  const blocked = [];
+
   for (const name of KR_COMPOSERS) {
     if (haveSet.has(onlyKo(name))) { skipped.push(name); continue; }
+    /* 한 번 지운 사람은 다시 담지 않습니다 */
+    if (blockName.has(onlyKo(name)) || blockName.has(name)) { blocked.push(name); continue; }
 
     const r = await findPerson(name);
     await new Promise((x) => setTimeout(x, 220));
@@ -393,6 +419,13 @@ async function main() {
       if (DEBUG) console.log(`  [건너뜀] ${r.name} — 옛 인물 ${life}`);
       continue;
     }
+    /* 위키데이터 번호가 블록리스트에 있으면 담지 않습니다 */
+    if (r.qid && blockQid.has(r.qid)) {
+      blocked.push(r.name);
+      if (DEBUG) console.log(`  [건너뜀] ${r.name} — 다시 담지 않을 사람입니다`);
+      continue;
+    }
+
     /* 위키데이터 번호가 이미 쓰이고 있으면 번호만 비웁니다.
        같은 번호를 두 사람이 가질 수 없으므로, 사람은 담고 번호는 뺍니다.
        (같은 사람이 두 번 담기는 것은 이름으로 이미 걸러집니다) */
@@ -421,7 +454,13 @@ async function main() {
   }
 
   console.log('── 찾은 결과 ──');
-  console.log(`담을 사람 ${rows.length}명 · 이미 있어 건너뜀 ${skipped.length}명 · 못 찾음 ${missing.length}명\n`);
+  console.log(`담을 사람 ${rows.length}명 · 이미 있어 건너뜀 ${skipped.length}명`
+    + `${blocked.length ? ` · 다시 담지 않을 사람 ${blocked.length}명` : ''}`
+    + ` · 못 찾음 ${missing.length}명\n`);
+  if (blocked.length) {
+    console.log('── 다시 담지 않을 사람 (한 번 지운 분들) ──');
+    console.log('  ' + blocked.join(', ') + '\n');
+  }
 
   if (rows.length) {
     console.log('── 담을 사람 ──');
