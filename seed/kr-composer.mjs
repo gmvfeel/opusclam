@@ -87,10 +87,14 @@ const KR_COMPOSERS = [
 ];
 
 /* 이 사람이 작곡가인지 가려낼 말 — 소개글에 하나라도 있어야 담습니다 */
-const OK_WORDS = /(작곡가|작곡을|작곡 활동|작곡을 공부|음악가)/;
+/* 이 사람이 작곡가인지 가려낼 말 — 소개글에 하나라도 있어야 담습니다.
+   처음에는 「작곡가」 라는 말만 찾았는데, 위키백과 소개글이
+   「음악대학 교수」「작곡 전공」「관현악 작품을 발표」 처럼 시작하는 분들이
+   걸러졌습니다(최우정·임준희·이영조·박영희 등). 그래서 넓혔습니다. */
+const OK_WORDS = /(작곡가|작곡을|작곡 활동|작곡 전공|작곡과|작곡법|음악가|교향곡|관현악|실내악|오페라|칸타타|가곡|협주곡|국악 작곡|현대음악)/;
 
 /* 이 말이 있으면 담지 않습니다 — 같은 이름의 다른 사람일 수 있습니다 */
-const NG_WORDS = /(가수이자|랩퍼|래퍼|아이돌|배우이자|배우로|정치인|축구|야구|기업인|의사|변호사)/;
+const NG_WORDS = /(가수이자|랩퍼|래퍼|아이돌|배우이자|배우로|정치인|축구|야구|기업인|의사|변호사|고려|조선 전기|조선 중기|조선 후기|문신|장군|승려|왕자|국왕)/;
 
 async function sb(path, opts = {}) {
   const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
@@ -185,15 +189,36 @@ async function findPerson(name) {
    ============================================================ */
 function pickLife(text) {
   const t = String(text || '');
-  const m = t.match(/(\d{4})\s*년[^~)]{0,24}[~–-]\s*(\d{4})?\s*년?/);
-  if (m) {
-    const b = m[1], d = m[2] || '';
-    return { born: Number(b), died: d ? Number(d) : null, life: d ? `${b} – ${d}` : `${b}~` };
+  const NOW = new Date().getFullYear();
+
+  /* 소개글 첫머리의 괄호 안을 먼저 봅니다 — 여기가 가장 믿을 만합니다.
+       홍난파(洪蘭坡, 1898년 4월 10일 ~ 1941년 8월 30일)는 …
+       이건용(1947년 ~ )은 …
+     괄호 밖까지 훑으면 「2026년 현재」 같은 말을 사망년으로 잘못 읽습니다.
+     실제로 「백병동 1936 – 2026」「최영섭 1929 – 2026」 처럼 잡힌 일이 있었습니다. */
+  const head = t.slice(0, 260);
+  const paren = head.match(/\(([^)]{4,90})\)/);
+  const zone = paren ? paren[1] : head;
+
+  const ok = (y) => y >= 1800 && y <= NOW;      /* 사람의 생몰년으로 볼 수 있는 범위 */
+
+  /* 「1898년 … ~ 1941년」 */
+  let m = zone.match(/(\d{4})\s*년[^~–-]{0,26}[~–-]\s*(\d{4})\s*년/);
+  if (m && ok(+m[1]) && ok(+m[2]) && +m[2] > +m[1]) {
+    return { born: +m[1], died: +m[2], life: `${m[1]} – ${m[2]}` };
   }
-  const m2 = t.match(/(\d{4})\s*년[^.]{0,20}?(출생|태어|생)/);
-  if (m2) return { born: Number(m2[1]), died: null, life: `${m2[1]}~` };
-  const m3 = t.match(/\((\d{4})\s*[~–-]/);
-  if (m3) return { born: Number(m3[1]), died: null, life: `${m3[1]}~` };
+  /* 「1947년 ~ 」 — 살아 계신 분 */
+  m = zone.match(/(\d{4})\s*년[^~–-]{0,26}[~–-]\s*\)?\s*$/)
+   || zone.match(/(\d{4})\s*년\s*[~–-]/);
+  if (m && ok(+m[1])) return { born: +m[1], died: null, life: `${m[1]}~` };
+  /* 「1959년생」 */
+  m = zone.match(/(\d{4})\s*년\s*생/);
+  if (m && ok(+m[1])) return { born: +m[1], died: null, life: `${m[1]}~` };
+
+  /* 괄호에서 못 찾으면 첫머리에서 「태어났다」 를 봅니다 */
+  m = head.match(/(\d{4})\s*년[^.]{0,24}?(출생|태어)/);
+  if (m && ok(+m[1])) return { born: +m[1], died: null, life: `${m[1]}~` };
+
   return { born: null, died: null, life: null };
 }
 
@@ -212,8 +237,12 @@ function pickEra(born) {
 
 /* 국악 쪽인지 봅니다 — 분야를 갈라 두면 나중에 가려 보기 좋습니다 */
 function pickField(text) {
-  const t = String(text || '');
-  if (/(국악|판소리|창극|정악|민속악|가야금|거문고|대금|해금)/.test(t)) return '작곡·국악';
+  /* 첫머리(소개 문장)만 봅니다.
+     본문 어딘가에 「국악」 이 한 번 나온 것으로 국악 작곡가라 하면
+     서양 현대음악 작곡가가 국악으로 잡힙니다(강석희가 그랬습니다). */
+  const t = String(text || '').slice(0, 200);
+  if (/(국악|판소리|창극|정악|민속악|가야금|거문고|대금|해금|한국음악)\s*(작곡|작품|계|을|를|에)/.test(t)
+      || /국악\s*(작곡가|작곡)/.test(t)) return '작곡·국악';
   return '작곡';
 }
 
@@ -251,6 +280,15 @@ async function main() {
     }
 
     const life = pickLife(r.extract);
+
+    /* 생몰년이 너무 옛것이면 같은 이름의 옛 인물입니다.
+       「정추」 로 고려 말 인물(1333–1382)이 잡힌 일이 있었습니다. */
+    if (life.born && life.born < 1850) {
+      missing.push({ name: name, why: `같은 이름의 옛 인물로 보입니다 (${life.life})` });
+      if (DEBUG) console.log(`  [건너뜀] ${name} — 옛 인물 ${life.life}`);
+      continue;
+    }
+
     rows.push({
       name_ko: name,
       field: pickField(r.extract),
