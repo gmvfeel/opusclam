@@ -84,11 +84,8 @@
         <label class="rc-lbl-ghost" aria-hidden="true">지역</label>
         <select id="rcR2" aria-label="2차지역"></select>
       </div>
-      <div class="rc-fld rc-fld--wide">
-        <label>근무형태</label>
-        <div id="rcEmp" class="rc-checks"></div>
-      </div>
-      <!-- 기간·급여는 고르는 글자가 짧아 한 줄에 둘씩 놓습니다 -->
+      <!-- 기간·급여는 고르는 글자가 짧아 한 줄에 둘씩 놓습니다.
+           근무형태와 키워드는 오른쪽 도구줄로 옮겼습니다 (중복을 없애려고) -->
       <div class="rc-fld">
         <label for="rcDays">기간</label>
         <select id="rcDays" aria-label="근무요일"></select>
@@ -96,10 +93,6 @@
       <div class="rc-fld">
         <label for="rcPay">급여</label>
         <select id="rcPay" aria-label="급여"></select>
-      </div>
-      <div class="rc-fld rc-fld--wide">
-        <label for="rcKw">키워드</label>
-        <input type="text" id="rcKw" placeholder="단체명·직무·내용으로 찾기">
       </div>
     </div>
     <div class="rc-actions">
@@ -117,19 +110,47 @@
   <!-- ── 오른쪽 · 목록 ───────────────────────────────────── -->
   <div class="rc-main-col">
 
-  <!-- ── 탭 ──────────────────────────────────────────────── -->
-  <div id="rcTabs" class="rc-tabs"></div>
-
-  <!-- ── 건수·정렬 ───────────────────────────────────────── -->
-  <div class="rc-bar">
-    <div id="rcCount" class="rc-count">불러오는 중…</div>
-    <div class="rc-sorts">
+  <!-- ── 도구줄 — 다른 게시판(인물DB 등)과 같은 짜임 ────── -->
+  <div class="pdb-toolbar rc-toolbar">
+    <div class="pdb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="rcKw" placeholder="단체명 · 채용제목 · 직무로 검색">
+      <button class="pdb-searchbtn" type="button" id="rcSearchBtn">검색</button>
+    </div>
+    <div class="pdb-selects">
+      <select id="rcEmpSel" aria-label="구분"></select>
       <select id="rcSort" aria-label="정렬"></select>
     </div>
   </div>
 
-  <!-- ── 목록 ────────────────────────────────────────────── -->
-  <div id="rcList" class="rc-list"></div>
+  <!-- ── 건수·글자크기 ───────────────────────────────────── -->
+  <div class="pdb-meta">
+    <div class="pdb-count" id="rcCount">불러오는 중…</div>
+    <div class="pdb-meta-right">
+      <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+        <span class="fs-label">글자크기</span>
+        <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+        <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+        <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 표 ──────────────────────────────────────────────── -->
+  <div class="pdb-tablewrap">
+    <table class="pdb-table rc-table">
+      <thead>
+        <tr>
+          <th class="c-no">No</th>
+          <th class="c-org">업체 · 단체명</th>
+          <th class="c-title">채용제목</th>
+          <th class="c-when">채용기간</th>
+          <th class="c-hit">조회수</th>
+        </tr>
+      </thead>
+      <tbody id="rcList"></tbody>
+    </table>
+  </div>
 
   <!-- ── 페이지 넘김·등록 ────────────────────────────────── -->
   <div class="rc-foot">

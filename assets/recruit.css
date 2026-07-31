@@ -28,6 +28,8 @@
      그래서 이 칸에는 overflow 를 걸지 않았습니다. */
 .rc-side { position: sticky; top: 84px; }
 
+/* 오른쪽 칸 — 표가 넘치지 않게 min-width: 0 이 꼭 필요합니다.
+   grid 칸의 기본값(auto)이면 표 내용이 칸을 밀어 넓혀 버립니다. */
 .rc-main-col { min-width: 0; }
 
 /* ── 찾는 칸을 한 덩어리로 감쌉니다 ───────────────────────
@@ -216,119 +218,71 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 .rc-btn--write:hover { filter: brightness(1.08); color: #fff; }
 
 /* ── 탭 ───────────────────────────────────────────────────*/
-.rc-tabs {
-  display: flex; flex-wrap: wrap; gap: 0;
-  margin: 0; border-bottom: 2px solid var(--line-2);
-}
-.rc-tab {
-  padding: 13px 26px; border: 0; background: none;
-  color: var(--text-3); font-family: inherit; font-size: 14px; font-weight: 600;
-  cursor: pointer; position: relative;
-  transition: color .18s ease;
-}
-.rc-tab:not(:last-child)::after {
-  content: ''; position: absolute; right: 0; top: 50%;
-  transform: translateY(-50%); width: 1px; height: 13px;
-  background: var(--line-2);
-}
-.rc-tab:hover { color: var(--text); }
-.rc-tab.on { color: var(--ink); }
-.rc-tab.on::before {
-  content: ''; position: absolute; left: 0; right: 0; bottom: -2px;
-  height: 2px; background: var(--ink);
-}
 
 /* ── 건수·정렬 ────────────────────────────────────────────*/
-.rc-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 14px; padding: 18px 4px 12px;
-}
-.rc-count { font-size: 13.5px; color: var(--text-2); }
-.rc-count b { color: var(--violet-2); font-weight: 700; }
-.rc-count span { color: var(--text-3); font-size: 12.5px; }
-.rc-sorts select {
-  height: 34px; padding: 0 10px;
-  border: 1px solid var(--line-2); border-radius: 6px;
-  background: var(--paper); color: var(--text);
-  font-family: inherit; font-size: 13px;
-}
 
-/* ── 목록 ─────────────────────────────────────────────────*/
-.rc-list { border-top: 1px solid var(--ink); }
-.rc-row {
-  display: flex; align-items: center; gap: 13px;
-  padding: 16px 6px;
-  border-bottom: 1px solid var(--line-2);
-  transition: background-color .18s ease;
-}
-.rc-row:hover { background: #322152; }
-.rc-row:hover .rc-title,
-.rc-row:hover .rc-org,
-.rc-row:hover .rc-who,
-.rc-row:hover .rc-no,
-.rc-row:hover .rc-cond span,
-.rc-row:hover .rc-when,
-.rc-row:hover .rc-view,
-.rc-row:hover .rc-view i { color: #fff; }
-.rc-row:hover .rc-cond span { border-color: rgba(255,255,255,.28); }
-html[data-theme="dark"] .rc-row:hover { background: #000; }
+/* ── 표 목록 ──────────────────────────────────────────────
+   다른 게시판(인물DB 등)과 같은 짜임을 씁니다.
+   .pdb-toolbar · .pdb-meta · .pdb-table 은 style.css 의 공용 스타일이므로
+   여기서는 <b>칸 폭과 리쿠르트에만 있는 것</b>만 정합니다. */
+.rc-toolbar { margin-top: 0; }
 
-.rc-no {
-  flex: 0 0 auto; width: 32px;
-  font-family: var(--display); font-size: 12.5px; color: var(--text-3);
-  text-align: center; font-variant-numeric: tabular-nums;
-}
-.rc-org {
-  flex: 0 0 auto; width: 112px;
-  font-size: 12.5px; font-weight: 700; color: var(--text-2);
-  text-decoration: none; line-height: 1.45;
+/* 업체·단체명 — 라벨 성격이라 작고 옅게 */
+
+/* 채용제목 — 이 줄에서 가장 먼저 읽혀야 합니다 */
+
+/* 제목 아래 짧은 조건 — 근무형태 · 지역 · 급여 */
+.rc-sub {
+  display: block; margin-top: 3px;
+  font-size: .88em; color: var(--text-3); line-height: 1.5;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.rc-who {
-  flex: 0 0 auto; width: 150px;
-  font-size: 13.5px; font-weight: 700; color: var(--ink);
-}
-/* 인재정보 줄 — 번호 대신 가린 이름이 앞에 오므로 여백을 조금 다르게 */
-.rc-row--talent { padding-left: 4px; }
-.rc-row--talent .rc-title { font-size: 14.5px; }
 
-.rc-main { flex: 1; min-width: 0; }
-/* 제목 — 업체명과 굵기·크기가 비슷하면 어느 것이 제목인지 흐려집니다.
-   업체명은 작고 옅게(라벨 성격), 제목은 본문 크기로 두어 갈라 보이게 합니다. */
-.rc-title {
-  display: block; font-size: 14.5px; font-weight: 600; color: var(--ink);
-  text-decoration: none; line-height: 1.45; margin-bottom: 6px;
-  transition: color .18s ease;
-}
-.rc-row:hover .rc-title { text-decoration: underline; text-underline-offset: 3px; }
+/* 마감이 가까우면 눈에 띄게 */
+.rc-dday { color: #d94a4a; font-weight: 700; white-space: nowrap; }
 
-.rc-cond { display: flex; flex-wrap: wrap; gap: 5px 7px; }
-.rc-cond span {
-  font-size: 12px; color: var(--text-3);
-  padding: 1px 8px; border: 1px solid var(--line-2); border-radius: 10px;
-  white-space: nowrap;
+.rc-loading, .rc-empty {
+  padding: 60px 20px; text-align: center;
+  color: var(--text-3); font-size: 14px;
 }
-.rc-cond--job span { border-color: transparent; color: var(--violet-2); padding-left: 0; }
 
-.rc-when {
-  flex: 0 0 auto; width: 108px; text-align: right;
-  font-size: 12.5px; color: var(--text-3); line-height: 1.55;
-  font-variant-numeric: tabular-nums;
-}
-.rc-dday {
-  display: block; color: #d94a4a; font-size: 12px; font-weight: 700;
-  margin-top: 2px;
-}
-.rc-row:hover .rc-dday { color: #ff9b9b; }
+/* ── 표 목록 ──────────────────────────────────────────────
+   다른 게시판(인물DB 등)과 같은 짜임을 씁니다.
+   .pdb-toolbar · .pdb-meta · .pdb-table 은 style.css 의 공용 스타일이므로
+   여기서는 <b>칸 폭과 리쿠르트에만 있는 것</b>만 정합니다. */
+.rc-toolbar { margin-top: 0; }
 
-.rc-view {
-  flex: 0 0 auto; width: 46px; text-align: center;
-  font-size: 13px; color: var(--text-3); font-variant-numeric: tabular-nums;
+.rc-table { table-layout: fixed; }
+.rc-table th.c-no,   .rc-table td.c-no   { width: 52px;  text-align: center; }
+.rc-table th.c-org,  .rc-table td.c-org  { width: 132px; text-align: center; }
+.rc-table th.c-when, .rc-table td.c-when { width: 118px; text-align: center; }
+.rc-table th.c-hit,  .rc-table td.c-hit  { width: 62px;  text-align: center; }
+.rc-table td.c-title { text-align: left; }
+
+/* 업체·단체명 — 라벨 성격이라 작고 옅게 */
+.rc-table td.c-org a {
+  color: var(--text-2); text-decoration: none; font-weight: 600;
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.rc-view i {
-  display: block; font-style: normal; font-size: 10.5px;
-  color: var(--text-3); margin-bottom: 1px;
+.rc-table td.c-org a:hover { color: var(--violet-2); }
+
+/* 채용제목 — 이 줄에서 가장 먼저 읽혀야 합니다 */
+.rc-table td.c-title a {
+  color: var(--ink); text-decoration: none; font-weight: 600;
+  display: block; line-height: 1.45;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.rc-table tbody tr:hover td.c-title a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* 제목 아래 짧은 조건 — 근무형태 · 지역 · 급여 */
+.rc-sub {
+  display: block; margin-top: 3px;
+  font-size: .88em; color: var(--text-3); line-height: 1.5;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* 마감이 가까우면 눈에 띄게 */
+.rc-dday { color: #d94a4a; font-weight: 700; white-space: nowrap; }
 
 .rc-loading, .rc-empty {
   padding: 60px 20px; text-align: center;
@@ -371,10 +325,16 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
   .rc-finder { flex-direction: column; }
   .rc-panel { padding: 20px 16px 16px; }
   .rc-job2 { gap: 9px 16px; }
-  .rc-org { width: 100px; }
-  .rc-who { width: 118px; font-size: 13px; }
-  .rc-when { width: 104px; }
 }
+@media (max-width: 760px) {
+  /* 좁은 화면에서는 표에서 업체명·조회수를 감춥니다.
+     제목과 채용기간만 남겨도 무엇을 언제까지 뽑는지 알 수 있습니다. */
+  .rc-table th.c-org, .rc-table td.c-org,
+  .rc-table th.c-hit, .rc-table td.c-hit { display: none; }
+  .rc-table th.c-no, .rc-table td.c-no { width: 40px; }
+  .rc-table th.c-when, .rc-table td.c-when { width: 96px; }
+}
+
 @media (max-width: 640px) {
   .rc-wrap { padding: 0 14px 50px; }
   .rc-panel { padding: 18px 14px 14px; border-width: 2px; }
@@ -388,13 +348,6 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
   .rc-jobrow { flex-direction: column; gap: 8px; padding: 11px 0; }
   .rc-job1 { width: auto; font-weight: 700; color: var(--ink); }
   .rc-job2 { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .rc-row { flex-wrap: wrap; gap: 8px 12px; padding: 14px 4px; }
-  .rc-no { display: none; }
-  .rc-org, .rc-who { width: auto; font-size: 12.5px; color: var(--violet-2); }
-  .rc-main { flex: 1 1 100%; order: 3; }
-  .rc-when { width: auto; margin-left: auto; }
-  .rc-view { display: none; }
-  .rc-tab { padding: 11px 15px; font-size: 13px; }
   .rc-foot { flex-direction: column; gap: 16px; }
   .rc-btn--write { position: static; width: 100%; }
 }

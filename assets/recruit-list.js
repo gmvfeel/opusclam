@@ -173,7 +173,6 @@
     R.fill(el('#rcPay'), R.PAY_BANDS.map(function (b) {
       return { value: b.label, label: b.label };
     }), null);
-    R.fillRadios(el('#rcEmp'), R.EMP_SEARCH, 'rc-emp', '무관');
 
     var go2 = el('#rcGo'), reset = el('#rcReset');
     if (go2) go2.addEventListener('click', function () {
@@ -181,99 +180,139 @@
       q.r2 = (el('#rcR2') || {}).value || '';
       q.days = (el('#rcDays') || {}).value || '';
       q.pay = (el('#rcPay') || {}).value || '';
-      q.kw = ((el('#rcKw') || {}).value || '').trim();
-      q.emp = document.querySelector('input[name="rc-emp"]:checked');
-      q.emp = q.emp ? q.emp.value : '무관';
       go(1);
     });
     if (reset) reset.addEventListener('click', function () {
       q = { jobs: [], r1: '', r2: '', emp: '무관', days: '',
-            pay: '', kw: '', tab: q.tab, sort: q.sort };
-      /* 셀렉트와 라디오도 처음 상태로 되돌립니다 */
-      ['#rcR1', '#rcR2', '#rcDays', '#rcPay', '#rcKw']
+            pay: '', kw: q.kw, tab: q.tab, sort: q.sort };
+      ['#rcR1', '#rcR2', '#rcDays', '#rcPay']
         .forEach(function (sel) { var x = el(sel); if (x) x.value = ''; });
-      var first = document.querySelector('input[name="rc-emp"]');
-      if (first) first.checked = true;
       drawJobTable(); go(1);
     });
   }
 
-  /* ── 탭 ───────────────────────────────────────────────────*/
-  function drawTabs() {
-    var box = el('#rcTabs');
-    if (!box) return;
-    var tabs = (cfg.kind === 'job')
-      ? [['', '전체채용정보'], ['정규직', '정규직'], ['계약직', '계약직'], ['프리랜서', '프리랜서']]
-      : [['', '전체인재정보']].concat(Object.keys(R.JOBS).map(function (c) { return ['cat:' + c, c]; }));
+  /* ── 도구줄 — 검색창 · 구분 · 정렬 · 글자크기 ────────────
+     다른 게시판(인물DB 등)과 같은 짜임입니다. */
+  function drawToolbar() {
+    /* 구분 — 채용은 근무형태로, 인재는 직종 대분류로 */
+    var sel = el('#rcEmpSel');
+    if (sel) {
+      var items = (cfg.kind === 'job')
+        ? [{ value: '', label: '구분선택' }].concat(
+            R.EMP_SEARCH.filter(function (t) { return t !== '무관'; })
+                        .map(function (t) { return { value: t, label: t }; }))
+        : [{ value: '', label: '구분선택' }].concat(
+            Object.keys(R.JOBS).map(function (c) { return { value: 'cat:' + c, label: c }; }));
+      items.splice(1, 0, { value: '', label: cfg.kind === 'job' ? '전체' : '전체' });
+      R.fill(sel, items, null);
+      sel.addEventListener('change', function () {
+        var v = sel.value;
+        if (v.indexOf('cat:') === 0) {
+          var c1 = v.slice(4);
+          q.jobs = R.JOBS[c1] ? R.JOBS[c1].map(function (c2) { return c1 + '|' + c2; }) : [];
+          q.tab = '';
+          drawJobTable();
+        } else {
+          q.tab = v;
+        }
+        go(1);
+      });
+    }
 
-    box.innerHTML = tabs.map(function (t) {
-      var on = (q.tab === t[0] || (!q.tab && !t[0])) ? ' on' : '';
-      return '<button type="button" class="rc-tab' + on + '" data-tab="' + esc(t[0]) + '">'
-        + esc(t[1]) + '</button>';
-    }).join('');
+    /* 정렬 */
+    var sort = el('#rcSort');
+    if (sort) {
+      R.fill(sort, R.SORTS, null);
+      sort.value = q.sort;
+      sort.addEventListener('change', function () { q.sort = sort.value; go(1); });
+    }
 
-    box.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-tab]');
-      if (!b) return;
-      var v = b.getAttribute('data-tab');
-      /* 인재정보 탭은 직종으로 거릅니다 */
-      if (v.indexOf('cat:') === 0) {
-        var c1 = v.slice(4);
-        q.jobs = R.JOBS[c1] ? R.JOBS[c1].map(function (c2) { return c1 + '|' + c2; }) : [];
-        q.tab = v;
-      } else {
-        q.tab = v;
-        if (cfg.kind !== 'job') q.jobs = [];
-      }
-      drawTabs(); drawJobTable(); go(1);
+    /* 검색 */
+    var kw = el('#rcKw'), btn = el('#rcSearchBtn');
+    function doSearch() { q.kw = (kw ? kw.value : '').trim(); go(1); }
+    if (btn) btn.addEventListener('click', doSearch);
+    if (kw) kw.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+    });
+
+    /* 글자크기 — 다른 게시판과 같은 방식으로 --tbl-fs 를 조절합니다 */
+    var STEPS = [12.5, 13.5, 14.5, 15.5, 16.5];
+    var at = 1;
+    function applyFs() {
+      var wrap = el('.pdb-tablewrap');
+      if (wrap) wrap.style.setProperty('--tbl-fs', STEPS[at] + 'px');
+      try { localStorage.setItem('oc-rc-fs', String(at)); } catch (e) {}
+    }
+    try {
+      var saved = localStorage.getItem('oc-rc-fs');
+      if (saved != null && STEPS[Number(saved)]) at = Number(saved);
+    } catch (e) {}
+    applyFs();
+    [].forEach.call(document.querySelectorAll('.pdb-fontsize [data-fs]'), function (b) {
+      b.addEventListener('click', function () {
+        var d = b.getAttribute('data-fs');
+        if (d === 'up') at = Math.min(STEPS.length - 1, at + 1);
+        else if (d === 'down') at = Math.max(0, at - 1);
+        else at = 1;
+        applyFs();
+      });
     });
   }
 
   /* ── 목록 한 줄 ───────────────────────────────────────────*/
+  /* 표 한 줄 — 다른 게시판(인물DB 등)과 같은 짜임입니다.
+     No · 업체/단체명 · 채용제목 · 채용기간 · 조회수 */
   function jobRow(o, no) {
     var vp = cfg.viewPage + '?id=' + encodeURIComponent(o.id);
-    var bits = [];
-    bits.push(o.career_any === false ? '경력' : '경력무관');
-    bits.push(o.edu_any === false && o.edu ? o.edu : '학력무관');
-    bits.push(R.regionLabel(o.region1, o.region2) || '지역협의');
-    (o.emp_types || []).slice(0, 2).forEach(function (t) { bits.push(t); });
-    var pay = R.payLabel(o.pay_type, o.pay_amount, o.pay_daily);
-    if (pay) bits.push(pay);
 
     var left = R.daysLeft(o.apply_to);
     var when = R.applyLabel(o.apply_from, o.apply_to, o.apply_always, o.apply_until_hired);
+    /* 마감이 이레 안쪽이면 눈에 띄게 알려 줍니다 */
     var dday = (left != null && left >= 0 && left <= 7)
-      ? '<b class="rc-dday">D-' + left + '</b>' : '';
+      ? ' <b class="rc-dday">D-' + left + '</b>' : '';
 
-    return '<div class="rc-row">'
-      + '<span class="rc-no">' + (no < 10 ? '0' + no : no) + '</span>'
-      + '<a class="rc-org" href="' + vp + '">' + esc(o.org_name || '') + '</a>'
-      + '<div class="rc-main">'
-      +   '<a class="rc-title" href="' + vp + '">' + esc(o.title || '') + '</a>'
-      +   '<div class="rc-cond">' + bits.map(function (b) {
-            return '<span>' + esc(b) + '</span>'; }).join('') + '</div>'
-      + '</div>'
-      + '<div class="rc-when">' + esc(when) + dday + '</div>'
-      + '<div class="rc-view"><i>VIEW</i>' + (o.view_count || 0) + '</div>'
-      + '</div>';
+    /* 제목 아래 조건 — 근무형태와 지역만 짧게 (표가 빽빽해지지 않게) */
+    var bits = [];
+    (o.emp_types || []).slice(0, 2).forEach(function (t) { bits.push(t); });
+    var reg = R.regionLabel(o.region1, o.region2);
+    if (reg) bits.push(reg);
+    var pay = R.payLabel(o.pay_type, o.pay_amount, o.pay_daily);
+    if (pay) bits.push(pay);
+
+    return '<tr>'
+      + '<td class="c-no">' + no + '</td>'
+      + '<td class="c-org"><a href="' + vp + '">' + esc(o.org_name || '') + '</a></td>'
+      + '<td class="c-title">'
+      +   '<a href="' + vp + '">' + esc(o.title || '') + '</a>'
+      +   (bits.length ? '<span class="rc-sub">' + bits.map(esc).join(' · ') + '</span>' : '')
+      + '</td>'
+      + '<td class="c-when">' + esc(when) + dday + '</td>'
+      + '<td class="c-hit">' + (o.view_count || 0) + '</td>'
+      + '</tr>';
   }
 
   function talentRow(o, no) {
     var vp = cfg.viewPage + '?id=' + encodeURIComponent(o.id);
-    var who = (o.name_masked || '') + ' [ ' + (o.gender || '-')
-            + (o.age ? ' / ' + o.age + '세' : '') + ' ]';
+    var who = (o.name_masked || '') + ' [' + (o.gender || '-')
+            + (o.age ? ' / ' + o.age + '세' : '') + ']';
     var d = String(o.created_at || '').slice(2, 10).replace(/-/g, '.');
-    return '<div class="rc-row rc-row--talent">'
-      + '<span class="rc-who">' + esc(who) + '</span>'
-      + '<div class="rc-main">'
-      +   '<a class="rc-title" href="' + vp + '">' + esc(o.title || '') + '</a>'
-      +   '<div class="rc-cond rc-cond--job">'
-      +     '<span>' + esc(R.jobLabel(o.job_cat1, o.job_cat2, o.job_etc) || '희망직종 미정') + '</span>'
-      +   '</div>'
-      + '</div>'
-      + '<div class="rc-when">' + esc(d) + '</div>'
-      + '<div class="rc-view"><i>VIEW</i>' + (o.view_count || 0) + '</div>'
-      + '</div>';
+    var bits = [];
+    var jl = R.jobLabel(o.job_cat1, o.job_cat2, o.job_etc);
+    if (jl) bits.push(jl);
+    var reg = R.regionLabel(o.region1, o.region2);
+    if (reg) bits.push(reg);
+    if (o.now_status) bits.push(o.now_status);
+
+    return '<tr>'
+      + '<td class="c-no">' + no + '</td>'
+      + '<td class="c-org">' + esc(who) + '</td>'
+      + '<td class="c-title">'
+      +   '<a href="' + vp + '">' + esc(o.title || '') + '</a>'
+      +   (bits.length ? '<span class="rc-sub">' + bits.map(esc).join(' · ') + '</span>' : '')
+      + '</td>'
+      + '<td class="c-when">' + esc(d) + '</td>'
+      + '<td class="c-hit">' + (o.view_count || 0) + '</td>'
+      + '</tr>';
   }
 
   /* ── 페이지 넘김 ──────────────────────────────────────────*/
@@ -300,13 +339,15 @@
     cur = page || 1;
     var list = el('#rcList');
     if (!list) return;
-    list.innerHTML = '<div class="rc-loading">불러오는 중…</div>';
+    var span = 5;   /* 표 칸 수 */
+    list.innerHTML = '<tr><td colspan="' + span + '" class="rc-loading">불러오는 중…</td></tr>';
 
     var rows;
     try {
       rows = await fetchRows((cur - 1) * cfg.pageSize, cfg.pageSize);
     } catch (e) {
-      list.innerHTML = '<p class="rc-empty">자료를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>';
+      list.innerHTML = '<tr><td colspan="' + span + '" class="rc-empty">'
+        + '자료를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</td></tr>';
       return;
     }
 
@@ -320,11 +361,11 @@
     }
 
     if (!rows || !rows.length) {
-      list.innerHTML = '<p class="rc-empty">'
+      list.innerHTML = '<tr><td colspan="' + span + '" class="rc-empty">'
         + ((q.jobs && q.jobs.length) || q.kw || q.r1
           ? '조건에 맞는 정보가 없습니다. 조건을 바꿔 보시겠습니까?'
           : (cfg.kind === 'job' ? '등록된 채용정보가 아직 없습니다.' : '등록된 인재정보가 아직 없습니다.'))
-        + '</p>';
+        + '</td></tr>';
       drawPager();
       return;
     }
@@ -347,19 +388,7 @@
     drawJobTable();
     bindJobTable();
     drawSearch();
-    drawTabs();
-
-    var sort = el('#rcSort');
-    if (sort) {
-      R.fill(sort, R.SORTS, null);
-      sort.value = q.sort;
-      sort.addEventListener('change', function () { q.sort = sort.value; go(1); });
-    }
-
-    var kw = el('#rcKw');
-    if (kw) kw.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { q.kw = kw.value.trim(); go(1); }
-    });
+    drawToolbar();
 
     var pager = el('#rcPager');
     if (pager) pager.addEventListener('click', function (e) {
