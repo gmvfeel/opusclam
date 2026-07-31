@@ -48,9 +48,15 @@
   /* 테두리는 굵고 어둡게 — 칸의 경계가 또렷해야 채울 자리가 보입니다 */
   border: 3px solid #514a6b;
   border-radius: 12px;
-  padding: 26px 34px 24px;
+  padding: 28px 44px 26px;
+  /* 살짝 떠 보이게 — 그림자를 옅게 두면 칸이 바닥에서 들려 보입니다.
+     짙게 하면 어수선해지므로 번짐만 넓게 잡습니다. */
+  box-shadow: 0 3px 14px -4px rgba(30, 24, 60, .16);
 }
-html[data-theme="dark"] .rc-panel { border-color: #7a7295; }
+html[data-theme="dark"] .rc-panel {
+  border-color: #7a7295;
+  box-shadow: 0 3px 16px -4px rgba(0, 0, 0, .5);
+}
 
 /* 칸 제목 — 가운데, 큰 글씨 */
 .rc-panel-h {
@@ -341,7 +347,7 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 
 @media (max-width: 900px) {
   .rc-finder { flex-direction: column; }
-  .rc-panel { padding: 22px 22px 18px; }
+  .rc-panel { padding: 24px 28px 20px; }
   .rc-panel-h { font-size: 1.22em; }
   .rc-job2 { gap: 9px 16px; }
 }
@@ -356,7 +362,7 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 
 @media (max-width: 640px) {
   .rc-wrap { padding: 0 14px 50px; }
-  .rc-panel { padding: 18px 16px 14px; border-width: 2px; }
+  .rc-panel { padding: 20px 18px 16px; border-width: 2px; }
   .rc-panel-h { font-size: 1.12em; }
   .rc-form { grid-template-columns: minmax(0, 1fr); }
   .rc-job2 { gap: 8px 13px; }
