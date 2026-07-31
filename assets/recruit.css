@@ -5,7 +5,10 @@
    base.css · board.css 의 색과 자를 그대로 물려받습니다.
    ============================================================ */
 
+/* 가로 — 목록은 넓게, 찾는 칸은 좁게 둡니다.
+   찾는 칸이 너무 넓으면 라벨과 입력칸이 멀어져 눈이 오래 옮겨갑니다. */
 .rc-wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 70px; }
+.rc-finder { max-width: 980px; margin-left: auto; margin-right: auto; }
 
 /* ── 찾는 칸을 한 덩어리로 감쌉니다 ───────────────────────
    시안(01_채용정보)처럼 점선으로 두르고, 그 안에 직종구분과
@@ -13,31 +16,30 @@
 
    제목 아래 여백은 다른 화면과 맞춥니다 —
    기존 목록 화면은 첫 칸에 margin-top:44px 를 줍니다. */
+/* ── 찾는 칸 ──────────────────────────────────────────────
+   잡코리아 등록 화면처럼, 칸마다 따로 떨어진 카드로 두고
+   제목을 가운데 크게 놓습니다. 어디를 채우는 자리인지 한눈에 보입니다. */
 .rc-finder {
   margin-top: 44px;
-  /* 찾는 칸의 테두리 — 굵은 실선으로 두어 「여기서 찾는다」 를 또렷하게.
-     기존 --line 계열은 아주 옅어(#efeae0) 굵게 해도 눈에 들어오지 않으므로
-     조금 진한 색을 따로 씁니다. */
-  border: 3px solid #b9b0d2;
-  border-radius: 14px;
-  background: var(--paper);
-  padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 14px;
 }
-html[data-theme="dark"] .rc-finder { border-color: #4a4458; }
 
 .rc-panel {
   background: var(--paper);
-  border-radius: 10px;
-  padding: 20px 22px;
+  /* 테두리는 굵고 조금 진하게 — 칸의 경계가 또렷해야 채울 자리가 보입니다 */
+  border: 2px solid #c9c1e0;
+  border-radius: 12px;
+  padding: 30px 34px 26px;
 }
-.rc-panel + .rc-panel { border-top: 1px solid var(--line-2); }
+html[data-theme="dark"] .rc-panel { border-color: #443e52; }
 
+/* 칸 제목 — 가운데, 큰 글씨 */
 .rc-panel-h {
   font-family: var(--display);
-  font-size: 1.02em; font-weight: 800; letter-spacing: -.01em;
-  color: var(--ink);
-  margin: 0 0 14px; padding-bottom: 11px;
-  border-bottom: 2px solid var(--ink);
+  font-size: 1.32em; font-weight: 800; letter-spacing: -.02em;
+  color: var(--ink); text-align: center;
+  margin: 0 0 24px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--line-2);
 }
 
 /* ── 직종구분 ─────────────────────────────────────────────
@@ -78,31 +80,32 @@ html[data-theme="dark"] .rc-finder { border-color: #4a4458; }
 }
 
 /* ── 상세검색 ─────────────────────────────────────────────*/
-.rc-form {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 34px;
-}
+/* 한 줄에 하나씩 — 라벨을 왼쪽에 고정합니다.
+   두 칸으로 나누면 라벨 자리가 어긋나 눈이 헤맵니다. */
+.rc-form { display: flex; flex-direction: column; }
 .rc-fld {
-  display: flex; align-items: center; gap: 12px; min-width: 0;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--line-2);
+  display: flex; align-items: center; gap: 14px; min-width: 0;
+  padding: 11px 0;
 }
-.rc-fld--wide { grid-column: 1 / -1; }
-/* 마지막 줄의 밑줄은 지웁니다 */
-.rc-fld:last-child, .rc-fld:nth-last-child(2):not(.rc-fld--wide) { border-bottom: 0; }
+.rc-fld + .rc-fld { border-top: 1px solid #f1eef8; }
+html[data-theme="dark"] .rc-fld + .rc-fld { border-top-color: #2c2c2c; }
 
 .rc-fld > label {
-  flex: 0 0 auto; width: 58px;
-  font-size: 13px; font-weight: 600; color: var(--text-2);
+  flex: 0 0 auto; width: 82px;
+  font-size: 13.5px; font-weight: 700; color: var(--text-2);
 }
+/* 셀렉트가 둘인 줄(지역)은 두 칸으로 나눕니다 */
+.rc-fld select + select { margin-left: 8px; }
 .rc-fld select, .rc-fld input[type="text"] {
-  flex: 1; min-width: 0;
-  height: 34px; padding: 0 11px;
+  flex: 1; min-width: 0; max-width: 300px;
+  height: 38px; padding: 0 12px;
   border: 1px solid var(--line-2); border-radius: 5px;
   background: var(--paper); color: var(--text);
   font-family: inherit; font-size: 13px;
   transition: border-color .16s ease;
 }
+/* 키워드는 길게 적으므로 넓게 둡니다 */
+.rc-fld--wide input[type="text"] { max-width: none; }
 .rc-fld select:hover, .rc-fld input:hover { border-color: #cfc9de; }
 .rc-fld select:focus, .rc-fld input:focus {
   outline: none; border-color: var(--violet-2);
@@ -283,7 +286,9 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
 
 /* ── 좁은 화면 ────────────────────────────────────────────*/
 @media (max-width: 900px) {
-  .rc-form { grid-template-columns: minmax(0, 1fr); }
+  .rc-panel { padding: 24px 20px 20px; }
+  .rc-panel-h { font-size: 1.2em; margin-bottom: 18px; padding-bottom: 15px; }
+  .rc-fld select, .rc-fld input[type="text"] { max-width: none; }
   .rc-job1 { width: 88px; font-size: 13px; }
   .rc-org { width: 100px; }
   .rc-who { width: 118px; font-size: 13px; }
@@ -291,7 +296,12 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
 }
 @media (max-width: 640px) {
   .rc-wrap { padding: 0 14px 50px; }
-  .rc-panel { padding: 16px 14px; }
+  .rc-panel { padding: 20px 15px 16px; border-width: 1px; }
+  .rc-panel-h { font-size: 1.1em; }
+  /* 좁은 화면에서는 라벨을 위로 올립니다 */
+  .rc-fld { flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 0; }
+  .rc-fld > label { width: auto; }
+  .rc-fld select + select { margin-left: 0; margin-top: 6px; }
   .rc-jobrow { flex-direction: column; gap: 6px; }
   .rc-job1 { width: auto; }
   .rc-row { flex-wrap: wrap; gap: 8px 12px; padding: 14px 4px; }
