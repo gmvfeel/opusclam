@@ -380,7 +380,11 @@ window.OCHub = (function () {
       + '<span class="bd-cardbody">'
       +   (r.category ? '<span class="bd-cat">' + esc(r.category) + '</span>' : '')
       +   '<span class="bd-title">' + esc(bTxt(head, 46)) + '</span>'
-      +   '<span class="bd-desc">' + esc(bTxt(r.body, 74)) + '</span>'
+      /* 밑줄 — 기본은 본문 앞부분이지만, cfg.cardSub 를 주면 그것으로 바꿉니다.
+         공연 카드에는 본문보다 「기간 · 공연장」 이 훨씬 쓸모 있습니다. */
+      +   '<span class="bd-desc">'
+      +     esc(cfg.cardSub ? cfg.cardSub(r) : bTxt(r.body, 74))
+      +   '</span>'
       + '</span></a>';
   }
   function bRow(cfg, r) {

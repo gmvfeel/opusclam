@@ -2012,7 +2012,7 @@ if('serviceWorker' in navigator){
      그것을 먼저 씁니다. 아직 광고가 없을 때는 빈 자리로 두는 대신
      정보SPOT 에 담긴 실제 공연을 보여 줍니다 — 이름부터 「공연 홍보」 자리이니
      실제 공연이 놓이는 것이 자연스럽습니다. */
-  async function feedUpcomingConcert(){
+  async function feedUpcomingConcerts(n){
     try{
       const today = new Date();
       const p = (n) => String(n).padStart(2, '0');
@@ -2026,28 +2026,35 @@ if('serviceWorker' in navigator){
         + '&order=date_from.asc&limit=24');
       if(!Array.isArray(rows) || !rows.length) return null;
 
-      /* 포스터가 있는 것을 먼저 고릅니다 — 이 자리는 그림이 커서 비면 허전합니다 */
+      /* 포스터가 있는 것만 씁니다 — 이 자리는 그림이 커서 비면 허전합니다 */
       const withImg = rows.filter(function(x){ return String(x.thumb_url || '').trim(); });
       const pool = withImg.length ? withImg : rows;
-      const r = pool[Math.floor(Math.random() * pool.length)];
 
-      /* 「2026.08.15 ~ 08.16 · 예술의전당」 처럼 다듬습니다 */
-      const df = String(r.date_from || '').slice(0, 10);
-      const dt = String(r.date_to || '').slice(0, 10);
-      const dot = function(d){ return d ? d.replace(/-/g, '.') : ''; };
-      let when = dot(df);
-      if(dt && dt !== df){
-        when += ' ~ ' + (dt.slice(0,4) === df.slice(0,4) ? dot(dt).slice(5) : dot(dt));
+      /* 섞어서 몇 개를 고릅니다 — 화면을 열 때마다 다른 공연이 나옵니다 */
+      const bag = pool.slice();
+      for(let i = bag.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = bag[i]; bag[i] = bag[j]; bag[j] = t;
       }
-      const bits = [when, r.venue_name].filter(Boolean);
+      const pick = bag.slice(0, n || 4);
 
-      return {
-        label: 'Concert · ' + df.slice(0, 7).replace('-', '.'),
-        title: r.title || '',
-        summary: bits.join(' · '),
-        image_url: r.thumb_url || '',
-        link: '/spot/spot-view.html?id=' + encodeURIComponent(r.id),
-      };
+      const dot = function(d){ return d ? d.replace(/-/g, '.') : ''; };
+      return pick.map(function(r){
+        /* 「2026.08.15 ~ 08.16 · 예술의전당」 처럼 다듬습니다 */
+        const df = String(r.date_from || '').slice(0, 10);
+        const dt = String(r.date_to || '').slice(0, 10);
+        let when = dot(df);
+        if(dt && dt !== df){
+          when += ' ~ ' + (dt.slice(0,4) === df.slice(0,4) ? dot(dt).slice(5) : dot(dt));
+        }
+        return {
+          label: 'Concert · ' + df.slice(0, 7).replace('-', '.'),
+          title: r.title || '',
+          summary: [when, r.venue_name].filter(Boolean).join(' · '),
+          image_url: r.thumb_url || '',
+          link: '/spot/spot-view.html?id=' + encodeURIComponent(r.id),
+        };
+      });
     }catch(e){ return null; }
   }
 
@@ -2055,20 +2062,88 @@ if('serviceWorker' in navigator){
     const card = document.getElementById('concert-pr');
     if(!card) return;
     try{
-      let rows = await sbGet('features?slot=eq.concert_pr&select=label,title,summary,image_url,link&order=sort_order.asc,created_at.desc&limit=1');
-      /* 광고가 등록되어 있지 않으면 다가오는 공연을 보여 준다 */
+      /* 광고가 등록되어 있으면 그것을 먼저 (여러 개면 차례로 넘깁니다) */
+      let rows = await sbGet('features?slot=eq.concert_pr&select=label,title,summary,image_url,link&order=sort_order.asc,created_at.desc&limit=4');
+      /* 광고가 없으면 다가오는 공연 넷을 받아 차례로 보여 줍니다 */
       if(!Array.isArray(rows) || !rows.length){
-        const up = await feedUpcomingConcert();
-        rows = up ? [up] : [];
+        rows = await feedUpcomingConcerts(4);
       }
       if(!Array.isArray(rows) || !rows.length) return;
-      const r = rows[0];
-      const lbl = card.querySelector('.en-s'); if(lbl && r.label != null) lbl.textContent = r.label;
-      const h = card.querySelector('h4'); if(h) h.textContent = r.title || '';
-      const p = card.querySelector('p'); if(p && r.summary != null) p.textContent = r.summary;
-      setCardLink(card, r.link);
-      if(r.image_url){ const img = card.querySelector('.img'); if(img){ img.classList.remove('ph'); img.style.backgroundImage = 'url("' + r.image_url + '")'; img.style.backgroundSize = 'cover'; img.style.backgroundPosition = 'center'; } }
+      startPrSlide(card, rows);
     }catch(e){ console.error('concert_pr 로드 실패:', e); }
+  }
+
+  /* ============================================================
+     CONCERT PR 넘기기 — 시간차를 두고 차례로 바뀝니다
+
+     마크업에 점(dots)이 넷 준비되어 있었는데 아직 움직이지 않았습니다.
+     실제 자료 수에 맞춰 점을 다시 만들고, 여섯 초마다 넘깁니다.
+     점을 누르면 그 자리로 가고, 마우스를 올리면 멈춥니다
+     (읽는 중에 바뀌면 성가시기 때문입니다).
+     ============================================================ */
+  function startPrSlide(card, rows){
+    const lbl  = card.querySelector('.en-s');
+    const h    = card.querySelector('h4');
+    const desc = card.querySelector('p');
+    const img  = card.querySelector('.img');
+    const dots = card.querySelector('.dots');
+
+    /* 점을 실제 개수에 맞춰 다시 만듭니다 */
+    if(dots){
+      dots.innerHTML = '';
+      if(rows.length > 1){
+        rows.forEach(function(_, i){
+          const d = document.createElement('i');
+          if(i === 0) d.className = 'on';
+          d.style.cursor = 'pointer';
+          d.addEventListener('click', function(ev){
+            ev.preventDefault(); ev.stopPropagation();
+            show(i); rewind();
+          });
+          dots.appendChild(d);
+        });
+      }
+    }
+
+    let at = -1;
+    let timer = null;
+
+    function show(i){
+      if(i === at) return;
+      at = i;
+      const r = rows[i];
+      if(lbl && r.label != null) lbl.textContent = r.label;
+      if(h) h.textContent = r.title || '';
+      if(desc && r.summary != null) desc.textContent = r.summary;
+      setCardLink(card, r.link);
+      if(img){
+        if(r.image_url){
+          img.classList.remove('ph');
+          img.style.backgroundImage = 'url("' + r.image_url + '")';
+          img.style.backgroundSize = 'cover';
+          img.style.backgroundPosition = 'center';
+        }else{
+          img.classList.add('ph');
+          img.style.backgroundImage = '';
+        }
+      }
+      if(dots){
+        [].forEach.call(dots.children, function(d, k){
+          d.className = (k === i) ? 'on' : '';
+        });
+      }
+    }
+
+    function next(){ show((at + 1) % rows.length); }
+    function rewind(){ if(timer){ clearInterval(timer); timer = setInterval(next, 6000); } }
+
+    show(0);
+    if(rows.length > 1){
+      timer = setInterval(next, 6000);
+      /* 읽는 중에 바뀌지 않게 */
+      card.addEventListener('mouseenter', function(){ if(timer){ clearInterval(timer); timer = null; } });
+      card.addEventListener('mouseleave', function(){ if(!timer) timer = setInterval(next, 6000); });
+    }
   }
 
   // 빅배너(히어로) 슬라이드

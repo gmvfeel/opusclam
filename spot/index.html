@@ -279,13 +279,24 @@
       </div>
     </section>
 
-    <!-- 공연정보 -->
-    <section class="cm-sec">
+    <!-- 공연정보 — 시안처럼 포스터 카드를 가로로 넘겨 봅니다.
+         공연은 포스터가 곧 알림이므로 목록보다 카드가 맞습니다. -->
+    <section class="cm-sec" id="ciWrap">
       <div class="cm-head">
         <span class="cm-title">공연정보<em>CONCERT INFORMATION</em></span>
-        <a class="cm-more" href="/spot/concert.html">VIEW MORE +</a>
+        <div class="cm-headright">
+          <a class="cm-more" href="/spot/concert.html">VIEW MORE +</a>
+          <div class="cm-arrows">
+            <button type="button" class="cm-arw" data-car="prev" aria-label="이전 공연">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
+            </button>
+            <button type="button" class="cm-arw" data-car="next" aria-label="다음 공연">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <div id="ciBox"></div>
+      <div class="cm-track as-poster" id="ciBox"></div>
     </section>
 
     <!-- New Information — 큰 글 한 건 + 갈래별 탭 -->
@@ -402,16 +413,31 @@
 
     function sec(name){ return '&section=eq.' + encodeURIComponent(name); }
 
-    /* ── 공연정보 ── */
+    /* ── 공연정보 — 포스터 카드를 가로로 ──
+          앞으로 열릴 공연을 가까운 날짜부터 보여 줍니다.
+          지난 공연을 앞세우면 쓸모가 없습니다. */
     OCHub.board({
-      el:'#ciBox', table:'spot', kind:'compact', n:6, cols:COLS + ',region',
-      filter: sec('공연정보') + '&hidden=is.false',
-      order:'date_from.desc.nullslast,created_at.desc.nullslast',
-      dateCol:'date_from', dateFallback:true, badges:['region','category'],
+      el:'#ciBox', table:'spot', kind:'cards', n:12,
+      cols: COLS + ',region,venue_name,date_to',
+      filter: sec('공연정보') + '&hidden=is.false'
+            + '&date_from=gte.' + new Date().toISOString().slice(0, 10),
+      order:'date_from.asc.nullslast',
+      dateCol:'date_from',
+      /* 카드 밑줄에 기간과 공연장을 넣습니다 (본문 설명 대신) */
+      cardSub: function(r){
+        var d = function(v){ return String(v || '').slice(0, 10).replace(/-/g, '.'); };
+        var df = d(r.date_from), dt = d(r.date_to);
+        var when = df;
+        if(dt && dt !== df){
+          when += ' ~ ' + (dt.slice(0, 4) === df.slice(0, 4) ? dt.slice(5) : dt);
+        }
+        return [when, r.venue_name].filter(Boolean).join('\n');
+      },
       view:VIEW, list:'/spot/concert.html',
       countEl:'#cCon', label:'공연정보',
       emptyText:'등록된 공연정보가 아직 없습니다.'
     });
+    OCHub.bindCarousel('#ciWrap', '#ciBox');
 
     /* ── 새로 등록된 정보 — 첫 건은 크게 ── */
     OCHub.board({
