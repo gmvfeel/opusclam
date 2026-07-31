@@ -24,6 +24,46 @@ window.OCBoard = (function () {
   var THUMB = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M2 21h3V9H2v12zM22 10c0-1.1-.9-2-2-2h-6.3l1-4.6c.02-.1.03-.2.03-.3 0-.4-.17-.8-.44-1.06L13.2 1 7.6 6.6C7.22 7 7 7.5 7 8v10c0 1.1.9 2 2 2h8c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1z"/></svg>';
 
   function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  /* ── 그림을 알맞은 크기로 ────────────────────────────────
+
+     큰 그림을 잘게 줄이면 계단이 생겨 지글거립니다.
+     공연 포스터는 폭이 500~800px 인데 목록에서는 80px 로 그리니
+     여덟 배 넘게 줄어 특히 눈에 띕니다.
+     그래서 「보낼 때부터 알맞은 크기로」 받습니다.
+
+     거치는 곳이 멈추면 그림이 안 보일 수 있으므로
+     imgTag() 가 실패하면 원본으로 되돌립니다.
+     ────────────────────────────────────────────────────── */
+  function rsz(u, w) {
+    if (!u || !w) return u || '';
+    u = String(u).replace(/^http:\/\//, 'https://');
+    if (u.indexOf('images.weserv.nl') >= 0) return u;
+    if (u.indexOf('ytimg.com') >= 0 || u.indexOf('youtube.com') >= 0) return u;
+    if (u.indexOf('data:') === 0 || u.charAt(0) === '/') return u;   /* 우리 쪽 그림 */
+    /* 위키미디어는 그쪽이 줄여 주는 길이 있습니다 */
+    if (u.indexOf('Special:FilePath') >= 0) {
+      return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'width=' + Math.round(w * 2);
+    }
+    if (u.indexOf('upload.wikimedia.org') >= 0) return u;
+    /* 고해상도 화면에서도 또렷하도록 두 배로 받습니다 */
+    var px = Math.round(Math.min(w * 2, 1200));
+    return 'https://images.weserv.nl/?url=' + encodeURIComponent(u)
+         + '&w=' + px + '&output=webp&q=82&we';
+  }
+
+  /* 그림 하나를 만듭니다 — 줄인 것을 먼저 쓰고, 안 되면 원본으로 되돌립니다 */
+  function imgTag(u, w, extra) {
+    if (!u) return '';
+    var small = rsz(u, w);
+    var orig = String(u).replace(/^http:\/\//, 'https://');
+    var fb = (small !== orig)
+      ? ' data-orig="' + esc(orig) + '"'
+        + ' onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}'
+        + 'else{this.onerror=null;this.style.display=\'none\';}"'
+      : ' onerror="this.onerror=null;this.style.display=\'none\'"';
+    return '<img src="' + esc(small) + '" alt="" loading="lazy"' + (extra || '') + fb + '>';
+  }
   function fmtDate(iso) {
     if (!iso) return '';
     var d = new Date(iso); if (isNaN(d)) return esc(String(iso).slice(0, 10));
@@ -228,7 +268,7 @@ window.OCBoard = (function () {
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur;
       var dur = mmss(rec.duration_sec);
       var img = rec.thumb_url
-        ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">'
+        ? imgTag(rec.thumb_url, 200)
         : '<i class="bc-noimg">' + esc(String(rec.title || '?').trim().charAt(0)) + '</i>';
       var meta = [];
       if (rec.source || rec.channel_name) meta.push('출처 : ' + esc(rec.source || rec.channel_name));
@@ -282,7 +322,7 @@ window.OCBoard = (function () {
           + related.map(function (r) { return '<li><a href="' + cfg.viewPage + '?id=' + encodeURIComponent(r.id) + '">- ' + esc(r.title || '') + '</a></li>'; }).join('')
           + '</ul></div>';
       }
-      var img = rec.thumb_url ? '<img class="board-feat-img" src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">' : '';
+      var img = rec.thumb_url ? imgTag(rec.thumb_url, 420, ' class="board-feat-img"') : '';
       var react = cfg.reactions
         ? '<div class="board-feat-react"><span class="rc up">' + THUMB + '<b>' + (rec.like_count || 0) + '</b></span><span class="rc down">' + THUMB + '<b>' + (rec.dislike_count || 0) + '</b></span></div>'
         : '';
@@ -299,7 +339,7 @@ window.OCBoard = (function () {
         + '</div>';
     }
     function articleRowHtml(rec, no) {
-      var th = cfg.rowThumb ? '<span class="board-row-thumb">' + (rec.thumb_url ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy">' : '') + '</span>' : '';
+      var th = cfg.rowThumb ? '<span class="board-row-thumb">' + (rec.thumb_url ? imgTag(rec.thumb_url, 120) : '') + '</span>' : '';
       return '<a class="board-row' + (cfg.rowThumb ? ' has-thumb' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur + '">'
         + '<span class="board-row-no">' + (no > 0 && no < 10 ? '0' + no : no) + '</span>'
         + th
@@ -350,9 +390,9 @@ window.OCBoard = (function () {
       var head = (cfg.koField && rec[cfg.koField]) ? rec[cfg.koField] : rec.title;
 
       /* 포스터 — 없으면 이름 첫 글자로 자리를 채웁니다 */
+      /* 포스터는 목록에서 작게 그리므로 알맞은 크기로 받습니다 */
       var img = rec.thumb_url
-        ? '<img src="' + esc(rec.thumb_url) + '" alt="" loading="lazy"'
-          + ' onerror="this.onerror=null;this.style.display=\'none\'">'
+        ? imgTag(rec.thumb_url, 110)
         : '<i class="con-noimg">' + esc(String(head || '?').trim().charAt(0)) + '</i>';
 
       /* 일시 — 하루면 한 날짜만, 여러 날이면 기간으로 */

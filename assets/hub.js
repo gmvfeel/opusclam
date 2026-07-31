@@ -46,19 +46,57 @@ window.OCHub = (function () {
   function join(a) { return a.filter(function (x) { return x != null && String(x).trim() !== ''; }).join(' · '); }
 
   /* 위키미디어 원본을 작은 이미지로 */
+  /* ── 그림을 알맞은 크기로 ────────────────────────────────
+
+     큰 그림을 화면에서 잘게 줄이면 계단이 생겨 지글거립니다.
+     KOPIS 공연 포스터는 폭이 500~800px 인데 목록에서는 80px 로 그리니
+     여덟 배 넘게 줄어들어 특히 눈에 띕니다.
+
+     그래서 「보낼 때부터 알맞은 크기로」 받습니다.
+       · 위키미디어  — 그쪽이 줄여 주는 길이 있어 그것을 씁니다 (값 0원)
+       · 유튜브      — 이미 여러 크기를 주므로 그대로 씁니다
+       · 그 밖        — 무료 그림 줄이는 곳(images.weserv.nl)을 거칩니다
+
+     거치는 곳이 멈추면 그림이 안 보일 수 있으므로,
+     그림을 그리는 쪽에서 실패하면 원본으로 되돌리게 해 두었습니다.
+     ────────────────────────────────────────────────────── */
   function thumb(u, w) {
     if (!u) return '';
     u = String(u).replace(/^http:\/\//, 'https://');
+
+    /* 위키미디어 — 그쪽 방식으로 줄입니다 */
     if (u.indexOf('Special:FilePath') >= 0) return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'width=' + w;
-    if (u.indexOf('upload.wikimedia.org') < 0 || u.indexOf('/thumb/') >= 0) return u;
-    var i = u.indexOf('/wikipedia/'); if (i < 0) return u;
-    var p = u.slice(i + 11).split('/');
-    if (p.length < 4) return u;
-    var proj = p[0], a = p[1], b = p[2], fn = p.slice(3).join('/');
-    if (a.length !== 1 || b.length !== 2) return u;
-    var t = u.slice(0, i + 11) + proj + '/thumb/' + a + '/' + b + '/' + fn + '/' + w + 'px-' + fn;
-    if (fn.toLowerCase().slice(-4) === '.svg') t += '.png';
-    return t;
+    if (u.indexOf('upload.wikimedia.org') >= 0 && u.indexOf('/thumb/') < 0) {
+      var i = u.indexOf('/wikipedia/');
+      if (i >= 0) {
+        var p = u.slice(i + 11).split('/');
+        if (p.length >= 4) {
+          var proj = p[0], a = p[1], b = p[2], fn = p.slice(3).join('/');
+          if (a.length === 1 && b.length === 2) {
+            var t = u.slice(0, i + 11) + proj + '/thumb/' + a + '/' + b + '/' + fn + '/' + w + 'px-' + fn;
+            if (fn.toLowerCase().slice(-4) === '.svg') t += '.png';
+            return t;
+          }
+        }
+      }
+      return u;
+    }
+    return resize(u, w);
+  }
+
+  /* 그림 줄이는 곳을 거칩니다 — 값이 들지 않고 열쇠도 필요 없습니다 */
+  function resize(u, w) {
+    if (!u || !w) return u || '';
+    u = String(u).replace(/^http:\/\//, 'https://');
+    /* 이미 거친 것, 위키미디어 축소본, 유튜브 썸네일은 그대로 */
+    if (u.indexOf('images.weserv.nl') >= 0) return u;
+    if (u.indexOf('/thumb/') >= 0 && u.indexOf('wikimedia') >= 0) return u;
+    if (u.indexOf('ytimg.com') >= 0 || u.indexOf('youtube.com') >= 0) return u;
+    if (u.indexOf('data:') === 0 || u.charAt(0) === '/') return u;   /* 우리 쪽 그림 */
+    /* 고해상도 화면에서도 또렷하도록 두 배로 받습니다 */
+    var px = Math.round(Math.min(w * 2, 1200));
+    return 'https://images.weserv.nl/?url=' + encodeURIComponent(u)
+         + '&w=' + px + '&output=webp&q=82&we';
   }
 
   /* 표 하나 조회 — 실패하면 null */
@@ -1570,6 +1608,6 @@ window.OCHub = (function () {
 
   return { init: init, bindViewToggle: bindViewToggle, esc: esc, thumb: thumb,
            board: board, boardTabs: boardTabs, one: one,
-           bindCarousel: bindCarousel, rotateBox: rotateBox,
+           bindCarousel: bindCarousel, rotateBox: rotateBox, resize: resize,
            stats: stats, insight: insight, qnaTop: qnaTop };
 })();

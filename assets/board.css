@@ -618,7 +618,7 @@ html[data-theme="dark"] .con-row:hover{background:#000}
   font-variant-numeric:tabular-nums;text-align:center;line-height:1}
 
 /* 포스터 — 공연 포스터는 세로로 깁니다 */
-.con-th{flex:0 0 auto;width:66px;aspect-ratio:3/4;border-radius:6px;overflow:hidden;
+.con-th{flex:0 0 auto;width:84px;aspect-ratio:3/4;border-radius:6px;overflow:hidden;
   background:var(--paper-2);border:1px solid var(--line-2);display:grid;place-items:center}
 .con-th img{width:100%;height:100%;object-fit:cover;display:block}
 .con-noimg{font-style:normal;font-size:22px;font-weight:800;color:#c3c5d4}
@@ -644,7 +644,7 @@ html[data-theme="dark"] .con-row:hover{background:#000}
   gap:0 26px}
 .board-list.as-concert .con-row{padding:15px 8px}
 .board-list.as-concert .con-no{width:24px;font-size:11.5px}
-.board-list.as-concert .con-th{width:78px}
+.board-list.as-concert .con-th{width:96px}
 .board-list.as-concert .con-title{font-size:14.2px;margin-bottom:8px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .board-list.as-concert .con-meta span{font-size:12px;white-space:normal;
