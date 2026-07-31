@@ -1,7 +1,8 @@
 name: 인물DB 한국 작곡가 보강
 
 # ── 무엇을 하나 ──
-#  한국어 위키백과에서 한국 작곡가를 찾아 인물DB 에 담습니다.
+#  정해진 명단(52명)의 한국 클래식 작곡가를 한국어 위키백과에서 찾아
+#  인물DB 에 담습니다.
 #
 # ── 왜 필요한가 ──
 #  인물 9,145명은 대부분 위키데이터에서 왔습니다. 그런데 위키데이터는
@@ -11,8 +12,13 @@ name: 인물DB 한국 작곡가 보강
 #    담김 : 윤이상 · 진은숙 · 강석희 · 백병동  (국제적으로 알려진 분들)
 #    빠짐 : 이영조 · 김택수 · 최우정 · 임준희 · 이건용 · 홍난파 …
 #
-#  한국 작곡가는 한국어 위키백과에 훨씬 잘 정리되어 있어 그쪽을 봅니다.
-#  한국 클래식 포털이므로 자료가 조금 빈약해도 담습니다.
+# ── 왜 명단으로 하나 ──
+#  처음에는 「대한민국의 작곡가」 분류를 훑었습니다. 그런데 1,146명 가운데
+#  대부분이 대중음악 쪽이었습니다(가수·랩퍼·배우·연주단체).
+#  걸러내기를 조여도 섞일 위험이 남아, 명단을 정해 그 이름만 찾습니다.
+#
+#  명단을 늘리시려면 seed/kr-composer.mjs 의 KR_COMPOSERS 에
+#  이름을 한 줄 더하시면 됩니다.
 #
 # ── 언제 실행되나 ──
 #  손으로만 돌립니다. 한 번 담으면 크게 늘어나지 않으므로
@@ -24,18 +30,6 @@ on:
       save:
         description: '실제로 담기 (처음에는 no 로 목록을 확인하세요)'
         required: true
-        default: 'no'
-        type: choice
-        options:
-          - 'no'
-          - 'yes'
-      limit:
-        description: '몇 명까지 볼지 (비우면 전체)'
-        required: false
-        default: ''
-      loose:
-        description: '걸러내기를 느슨하게 (더 많이 담김)'
-        required: false
         default: 'no'
         type: choice
         options:
@@ -73,8 +67,6 @@ jobs:
         run: |
           OPTS=""
           if [ "${{ github.event.inputs.save }}" != "yes" ]; then OPTS="$OPTS --dry"; fi
-          if [ -n "${{ github.event.inputs.limit }}" ]; then OPTS="$OPTS --limit=${{ github.event.inputs.limit }}"; fi
-          if [ "${{ github.event.inputs.loose }}" = "yes" ]; then OPTS="$OPTS --loose"; fi
           if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
 
           echo "── 실행 : node seed/kr-composer.mjs $OPTS ──"
