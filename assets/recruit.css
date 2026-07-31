@@ -1,0 +1,275 @@
+/* ============================================================
+   OPUSCLAM 리쿠르트 스타일 — assets/recruit.css
+
+   채용정보·인재정보 목록과 상세·등록 화면이 함께 씁니다.
+   base.css · board.css 의 색과 자를 그대로 물려받습니다.
+   ============================================================ */
+
+.rc-wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 70px; }
+
+/* ── 네모 칸 (직종구분·상세검색) ──────────────────────────── */
+.rc-panel {
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 22px 24px;
+  margin: 0 0 16px;
+}
+.rc-panel-h {
+  font-family: var(--display);
+  font-size: 1.02em; font-weight: 800; letter-spacing: -.01em;
+  color: var(--ink);
+  margin: 0 0 16px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-2);
+}
+
+/* ── 직종구분 ─────────────────────────────────────────────
+   대분류 하나에 소분류 여러 개가 붙는 줄을 쌓습니다. */
+.rc-jobs { display: flex; flex-direction: column; gap: 2px; }
+.rc-jobrow {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--line-2);
+}
+.rc-jobrow:last-child { border-bottom: 0; }
+
+.rc-job1 {
+  flex: 0 0 auto; width: 110px;
+  padding: 5px 0; border: 0; background: none;
+  font-size: 13.5px; font-weight: 700; color: var(--ink);
+  text-align: left; cursor: pointer;
+  transition: color .18s ease;
+}
+.rc-job1:hover, .rc-job1.on { color: var(--violet-2); }
+
+.rc-job2 { flex: 1; display: flex; flex-wrap: wrap; gap: 4px 6px; }
+.rc-jobtag {
+  padding: 5px 11px; border: 1px solid transparent; border-radius: 14px;
+  background: none; color: var(--text-2);
+  font-size: 12.5px; cursor: pointer; white-space: nowrap;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+.rc-jobtag:hover { background: var(--paper-2); color: var(--ink); }
+.rc-jobtag.on {
+  background: var(--violet-2); border-color: var(--violet-2); color: #fff;
+  font-weight: 600;
+}
+
+/* ── 상세검색 ─────────────────────────────────────────────*/
+.rc-form {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 28px;
+}
+.rc-fld { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rc-fld--wide { grid-column: 1 / -1; }
+.rc-fld > label {
+  flex: 0 0 auto; width: 62px;
+  font-size: 13px; color: var(--text-2);
+}
+.rc-fld select, .rc-fld input[type="text"] {
+  flex: 1; min-width: 0;
+  height: 36px; padding: 0 10px;
+  border: 1px solid var(--line-2); border-radius: 6px;
+  background: var(--paper); color: var(--text);
+  font-family: inherit; font-size: 13px;
+}
+.rc-fld select:focus, .rc-fld input:focus {
+  outline: none; border-color: var(--violet-2);
+}
+
+/* 체크·라디오 묶음 */
+.rc-checks { flex: 1; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.rc-check {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--text-2); cursor: pointer;
+}
+.rc-check input { width: 15px; height: 15px; accent-color: var(--violet-2); cursor: pointer; }
+
+/* ── 단추 ─────────────────────────────────────────────────*/
+.rc-actions {
+  display: flex; justify-content: center; gap: 10px;
+  margin-top: 20px; padding-top: 18px;
+  border-top: 1px solid var(--line-2);
+}
+.rc-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 42px; padding: 0 26px;
+  border: 1px solid var(--line-2); border-radius: 6px;
+  background: var(--paper); color: var(--text);
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+}
+.rc-btn:hover { border-color: var(--violet-2); color: var(--violet-2); }
+.rc-btn svg { width: 16px; height: 16px; }
+.rc-btn--go {
+  background: #3f3a4e; border-color: #3f3a4e; color: #fff;
+  min-width: 190px;
+}
+.rc-btn--go:hover { background: var(--violet-2); border-color: var(--violet-2); color: #fff; }
+.rc-btn--write {
+  background: var(--violet-2); border-color: var(--violet-2); color: #fff;
+}
+.rc-btn--write:hover { filter: brightness(1.08); color: #fff; }
+
+/* ── 탭 ───────────────────────────────────────────────────*/
+.rc-tabs {
+  display: flex; flex-wrap: wrap; gap: 0;
+  margin: 26px 0 0; border-bottom: 2px solid var(--line-2);
+}
+.rc-tab {
+  padding: 13px 26px; border: 0; background: none;
+  color: var(--text-3); font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; position: relative;
+  transition: color .18s ease;
+}
+.rc-tab:not(:last-child)::after {
+  content: ''; position: absolute; right: 0; top: 50%;
+  transform: translateY(-50%); width: 1px; height: 13px;
+  background: var(--line-2);
+}
+.rc-tab:hover { color: var(--text); }
+.rc-tab.on { color: var(--ink); }
+.rc-tab.on::before {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -2px;
+  height: 2px; background: var(--ink);
+}
+
+/* ── 건수·정렬 ────────────────────────────────────────────*/
+.rc-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; padding: 18px 4px 12px;
+}
+.rc-count { font-size: 13.5px; color: var(--text-2); }
+.rc-count b { color: var(--violet-2); font-weight: 700; }
+.rc-count span { color: var(--text-3); font-size: 12.5px; }
+.rc-sorts select {
+  height: 34px; padding: 0 10px;
+  border: 1px solid var(--line-2); border-radius: 6px;
+  background: var(--paper); color: var(--text);
+  font-family: inherit; font-size: 13px;
+}
+
+/* ── 목록 ─────────────────────────────────────────────────*/
+.rc-list { border-top: 1px solid var(--ink); }
+.rc-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 17px 8px;
+  border-bottom: 1px solid var(--line-2);
+  transition: background-color .18s ease;
+}
+.rc-row:hover { background: #322152; }
+.rc-row:hover .rc-title,
+.rc-row:hover .rc-org,
+.rc-row:hover .rc-who,
+.rc-row:hover .rc-no,
+.rc-row:hover .rc-cond span,
+.rc-row:hover .rc-when,
+.rc-row:hover .rc-view,
+.rc-row:hover .rc-view i { color: #fff; }
+.rc-row:hover .rc-cond span { border-color: rgba(255,255,255,.28); }
+html[data-theme="dark"] .rc-row:hover { background: #000; }
+
+.rc-no {
+  flex: 0 0 auto; width: 32px;
+  font-family: var(--display); font-size: 12.5px; color: var(--text-3);
+  text-align: center; font-variant-numeric: tabular-nums;
+}
+.rc-org {
+  flex: 0 0 auto; width: 132px;
+  font-size: 13.5px; font-weight: 700; color: var(--ink);
+  text-decoration: none; line-height: 1.4;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rc-who {
+  flex: 0 0 auto; width: 150px;
+  font-size: 13.5px; font-weight: 700; color: var(--ink);
+}
+/* 인재정보 줄 — 번호 대신 가린 이름이 앞에 오므로 여백을 조금 다르게 */
+.rc-row--talent { padding-left: 4px; }
+.rc-row--talent .rc-title { font-size: 14.5px; }
+
+.rc-main { flex: 1; min-width: 0; }
+.rc-title {
+  display: block; font-size: 15px; font-weight: 700; color: var(--ink);
+  text-decoration: none; line-height: 1.4; margin-bottom: 7px;
+  transition: color .18s ease;
+}
+.rc-row:hover .rc-title { text-decoration: underline; text-underline-offset: 3px; }
+
+.rc-cond { display: flex; flex-wrap: wrap; gap: 5px 7px; }
+.rc-cond span {
+  font-size: 12px; color: var(--text-3);
+  padding: 1px 8px; border: 1px solid var(--line-2); border-radius: 10px;
+  white-space: nowrap;
+}
+.rc-cond--job span { border-color: transparent; color: var(--violet-2); padding-left: 0; }
+
+.rc-when {
+  flex: 0 0 auto; width: 128px; text-align: right;
+  font-size: 12.5px; color: var(--text-3); line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+.rc-dday {
+  display: block; color: #d94a4a; font-size: 12px; font-weight: 700;
+  margin-top: 2px;
+}
+.rc-row:hover .rc-dday { color: #ff9b9b; }
+
+.rc-view {
+  flex: 0 0 auto; width: 54px; text-align: center;
+  font-size: 13px; color: var(--text-3); font-variant-numeric: tabular-nums;
+}
+.rc-view i {
+  display: block; font-style: normal; font-size: 10.5px;
+  color: var(--text-3); margin-bottom: 1px;
+}
+
+.rc-loading, .rc-empty {
+  padding: 60px 20px; text-align: center;
+  color: var(--text-3); font-size: 14px;
+}
+
+/* ── 페이지 넘김 ──────────────────────────────────────────*/
+.rc-foot {
+  display: flex; align-items: center; justify-content: center;
+  position: relative; margin-top: 32px;
+}
+.rc-pager { display: flex; gap: 5px; }
+.rc-pg {
+  min-width: 34px; height: 34px; padding: 0 9px;
+  border: 1px solid var(--line-2); border-radius: 6px;
+  background: var(--paper); color: var(--text-2);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+.rc-pg:hover:not(:disabled) { border-color: var(--violet-2); color: var(--violet-2); }
+.rc-pg.on {
+  background: var(--violet-2); border-color: var(--violet-2); color: #fff; font-weight: 700;
+}
+.rc-pg:disabled { opacity: .35; cursor: default; }
+.rc-btn--write { position: absolute; right: 0; }
+
+/* ── 좁은 화면 ────────────────────────────────────────────*/
+@media (max-width: 900px) {
+  .rc-form { grid-template-columns: minmax(0, 1fr); }
+  .rc-job1 { width: 88px; font-size: 13px; }
+  .rc-org { width: 100px; }
+  .rc-who { width: 118px; font-size: 13px; }
+  .rc-when { width: 104px; }
+}
+@media (max-width: 640px) {
+  .rc-wrap { padding: 0 14px 50px; }
+  .rc-panel { padding: 16px 14px; }
+  .rc-jobrow { flex-direction: column; gap: 6px; }
+  .rc-job1 { width: auto; }
+  .rc-row { flex-wrap: wrap; gap: 8px 12px; padding: 14px 4px; }
+  .rc-no { display: none; }
+  .rc-org, .rc-who { width: auto; font-size: 12.5px; color: var(--violet-2); }
+  .rc-main { flex: 1 1 100%; order: 3; }
+  .rc-when { width: auto; margin-left: auto; }
+  .rc-view { display: none; }
+  .rc-tab { padding: 11px 15px; font-size: 13px; }
+  .rc-foot { flex-direction: column; gap: 16px; }
+  .rc-btn--write { position: static; width: 100%; }
+}

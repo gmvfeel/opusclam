@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>채용정보 · 리쿠르트 · OPUSCLAM.COM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<link rel="stylesheet" href="/assets/recruit.css">
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave"></div>
+    <div class="scene scene-spot on">
+      <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+        <g fill="url(#dg)"></g>
+      </svg>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/recruit/job.html">리쿠르트</a><span>/</span><span class="on">채용정보</span>
+    </nav>
+
+    <!-- 리쿠르트 하위 메뉴 — partials/subnav-recruit.html 한 곳에서 관리합니다 -->
+    <div id="oc-subnav" data-src="/partials/subnav-recruit.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM RECRUIT SERVICE</div>
+          <h1 class="pdb-title">채용정보</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">순수음악 분야의 연주자·행정직·강사 채용 정보를 모았습니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="board rc-wrap">
+
+  <!-- ── 직종구분 ────────────────────────────────────────── -->
+  <section class="rc-panel">
+    <h2 class="rc-panel-h">직종구분</h2>
+    <div id="rcJobs" class="rc-jobs"></div>
+  </section>
+
+  <!-- ── 상세검색 ────────────────────────────────────────── -->
+  <section class="rc-panel" id="rcSearch">
+    <h2 class="rc-panel-h">상세검색</h2>
+    <div class="rc-form">
+      <div class="rc-fld">
+        <label for="rcR1">지역</label>
+        <select id="rcR1" aria-label="1차지역"></select>
+        <select id="rcR2" aria-label="2차지역"></select>
+      </div>
+      <div class="rc-fld rc-fld--wide">
+        <label>근무형태</label>
+        <div id="rcEmp" class="rc-checks"></div>
+      </div>
+      <div class="rc-fld">
+        <label for="rcDays">기간</label>
+        <select id="rcDays" aria-label="근무요일"></select>
+      </div>
+      <div class="rc-fld">
+        <label for="rcHour">시간</label>
+        <select id="rcHour" aria-label="근무시간"></select>
+      </div>
+      <div class="rc-fld">
+        <label for="rcPay">급여</label>
+        <select id="rcPay" aria-label="급여"></select>
+      </div>
+      <div class="rc-fld">
+        <label for="rcGender">성별</label>
+        <select id="rcGender" aria-label="성별"></select>
+      </div>
+      <div class="rc-fld rc-fld--wide">
+        <label for="rcKw">키워드</label>
+        <input type="text" id="rcKw" placeholder="단체명·직무·내용으로 찾기">
+      </div>
+    </div>
+    <div class="rc-actions">
+      <button type="button" id="rcGo" class="rc-btn rc-btn--go">
+        선택조건으로 검색
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+      <button type="button" id="rcReset" class="rc-btn">초기화</button>
+    </div>
+  </section>
+
+  <!-- ── 탭 ──────────────────────────────────────────────── -->
+  <div id="rcTabs" class="rc-tabs"></div>
+
+  <!-- ── 건수·정렬 ───────────────────────────────────────── -->
+  <div class="rc-bar">
+    <div id="rcCount" class="rc-count">불러오는 중…</div>
+    <div class="rc-sorts">
+      <select id="rcSort" aria-label="정렬"></select>
+    </div>
+  </div>
+
+  <!-- ── 목록 ────────────────────────────────────────────── -->
+  <div id="rcList" class="rc-list"></div>
+
+  <!-- ── 페이지 넘김·등록 ────────────────────────────────── -->
+  <div class="rc-foot">
+    <div id="rcPager" class="rc-pager"></div>
+    <a id="rcWrite" class="rc-btn rc-btn--write" href="/recruit/job-write.html">채용정보 등록</a>
+  </div>
+
+</main>
+
+<!-- 광고 배너와 푸터는 assets/app.js 가 여기에 넣습니다 -->
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+
+<script src="/assets/recruit.js"></script>
+<script src="/assets/recruit-list.js"></script>
+<script>
+  /* 채용정보 목록 — 엔진은 인재정보와 함께 씁니다(assets/recruit-list.js) */
+  document.addEventListener('DOMContentLoaded', function () {
+    OCRecruitList.init({
+      kind: 'job',
+      table: 'recruit_jobs',
+      viewPage: '/recruit/job-view.html',
+      writePage: '/recruit/job-write.html',
+      pageSize: 15,
+    });
+
+    /* 「채용정보 등록」 단추는 단체·기업·학교 회원에게만 보입니다.
+       서버에서도 막고 있지만(권한 규칙), 할 수 없는 단추를 보여 주는 것은
+       누른 뒤에 거절당하는 것보다 불친절합니다. */
+    (function () {
+      var btn = document.getElementById('rcWrite');
+      if (!btn) return;
+      btn.style.display = 'none';
+      if (!window.supabase) return;
+      var c = window.supabase.createClient(
+        'https://ptdxzxkgddvkusamkiol.supabase.co',
+        'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu');
+      c.auth.getSession().then(function (r) {
+        var u = r.data && r.data.session && r.data.session.user;
+        if (!u) return;
+        c.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle()
+         .then(function (mr) {
+           var m = mr.data || {};
+           if (m.member_type === 'industry' || m.member_type === 'school' || m.is_admin) {
+             btn.style.display = '';
+           }
+         });
+      });
+    })();
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
