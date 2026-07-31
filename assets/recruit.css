@@ -18,12 +18,12 @@
   /* 찾는 칸의 테두리 — 굵은 실선으로 두어 「여기서 찾는다」 를 또렷하게.
      기존 --line 계열은 아주 옅어(#efeae0) 굵게 해도 눈에 들어오지 않으므로
      조금 진한 색을 따로 씁니다. */
-  border: 2px solid #d8d3e4;
+  border: 3px solid #b9b0d2;
   border-radius: 14px;
   background: var(--paper);
-  padding: 10px 12px;
+  padding: 12px 14px;
 }
-html[data-theme="dark"] .rc-finder { border-color: #3a3a3a; }
+html[data-theme="dark"] .rc-finder { border-color: #4a4458; }
 
 .rc-panel {
   background: var(--paper);
