@@ -96,6 +96,22 @@ const OK_WORDS = /(작곡가|작곡을|작곡 활동|작곡 전공|작곡과|작
 /* 이 말이 있으면 담지 않습니다 — 같은 이름의 다른 사람일 수 있습니다 */
 const NG_WORDS = /(가수이자|랩퍼|래퍼|아이돌|배우이자|배우로|정치인|축구|야구|기업인|의사|변호사|고려|조선 전기|조선 중기|조선 후기|문신|장군|승려|왕자|국왕)/;
 
+/* 「작곡가로 보이는 정도」 를 셈합니다 — 높을수록 작곡가일 가능성이 큽니다 */
+function scoreComposer(ex, title) {
+  const head = String(ex || '').slice(0, 220);
+  let n = 0;
+  if (/작곡가/.test(head)) n += 5;
+  if (/작곡가/.test(String(title || ''))) n += 4;
+  if (/(작곡을|작곡 활동|작곡 전공|작곡과)/.test(head)) n += 3;
+  if (/(교향곡|관현악|실내악|오페라|칸타타|협주곡|현대음악)/.test(ex)) n += 2;
+  if (/(가곡|합창|국악 작곡)/.test(ex)) n += 2;
+  if (/(음악대학|음악원|예술종합학교|음대)/.test(ex)) n += 1;
+  if (/음악가/.test(head)) n += 1;
+  /* 작곡과 관계없는 쪽이면 깎습니다 */
+  if (/(지휘자|피아니스트|바이올리니스트|성악가|소프라노|테너)/.test(head) && !/작곡/.test(head)) n -= 3;
+  return n;
+}
+
 async function sb(path, opts = {}) {
   const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
     ...opts,
@@ -137,18 +153,28 @@ async function findPerson(name) {
     return { name: name, found: false, why: '위키백과를 읽지 못했습니다' };
   }
 
+  /* 문서가 여럿이면 「작곡가로 보이는 정도」 를 점수로 매겨 가장 나은 것을 고릅니다.
+     예전에는 처음 만난 문서만 보고 판단해, 동명이인 문서가 먼저 잡히면
+     확실한 작곡가도 걸러졌습니다(이영조·최우정·임준희 등). */
   const pages = Object.values((data.query && data.query.pages) || {});
+  const cands = [];
   for (const p of pages) {
     if (!p.title || p.missing !== undefined) continue;
     const ex = String(p.extract || '').replace(/\s+/g, ' ').trim();
     tried.push(p.title);
     if (!ex) continue;
     if (NG_WORDS.test(ex.slice(0, 160))) continue;   /* 같은 이름의 다른 사람 */
-    if (!OK_WORDS.test(ex)) continue;
-    return {
-      name: name, found: true, title: p.title, extract: ex,
-      qid: (p.pageprops && p.pageprops.wikibase_item) || null,
-    };
+    cands.push({ page: p, ex: ex, score: scoreComposer(ex, p.title) });
+  }
+  if (cands.length) {
+    cands.sort((a, b) => b.score - a.score);
+    const best = cands[0];
+    if (best.score > 0) {
+      return {
+        name: name, found: true, title: best.page.title, extract: best.ex,
+        qid: (best.page.pageprops && best.page.pageprops.wikibase_item) || null,
+      };
+    }
   }
 
   /* 검색으로 한 번 더 — 「이름 작곡가」 로 찾습니다 */
@@ -185,7 +211,57 @@ async function findPerson(name) {
 }
 
 /* ============================================================
-   소개글에서 정보를 캐냅니다
+   위키데이터에서 생몰년을 받습니다 — 여기가 가장 정확합니다
+
+   왜 소개글을 읽지 않는가
+     문장 모양에 따라 계속 어긋났습니다.
+       「백병동(1936년 ~ )은 … 2026년 현재 …」  →  1936–2026 으로 잘못 읽음
+       괄호 안만 보게 조이니 이번엔 김성태의 생몰년을 놓쳤습니다.
+
+     위키데이터에는 생몰일이 <b>숫자 칸</b>(P569 태어남 · P570 죽음)으로
+     들어 있어 헷갈릴 일이 없습니다. 그쪽을 먼저 씁니다.
+     위키데이터에 없을 때만 소개글을 봅니다.
+   ============================================================ */
+const WD = 'https://www.wikidata.org/w/api.php';
+
+async function wdLife(qids) {
+  const out = {};
+  for (let i = 0; i < qids.length; i += 40) {
+    const part = qids.slice(i, i + 40);
+    try {
+      const q = new URLSearchParams({
+        action: 'wbgetentities', ids: part.join('|'),
+        props: 'claims', format: 'json', origin: '*',
+      });
+      const res = await fetch(`${WD}?${q}`, { headers: { 'User-Agent': UA } });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const ents = (data && data.entities) || {};
+      for (const id of Object.keys(ents)) {
+        const cl = (ents[id] && ents[id].claims) || {};
+        const year = (prop) => {
+          const arr = cl[prop];
+          if (!arr || !arr.length) return null;
+          const t = arr[0].mainsnak && arr[0].mainsnak.datavalue
+                 && arr[0].mainsnak.datavalue.value
+                 && arr[0].mainsnak.datavalue.value.time;
+          if (!t) return null;
+          const m = String(t).match(/([+-])(\d{4})/);
+          if (!m || m[1] === '-') return null;      /* 기원전은 사람이 아닙니다 */
+          const y = Number(m[2]);
+          return (y >= 1700 && y <= new Date().getFullYear()) ? y : null;
+        };
+        const born = year('P569'), died = year('P570');
+        if (born || died) out[id] = { born: born, died: died };
+      }
+    } catch (e) { /* 못 받으면 소개글로 갑니다 */ }
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  return out;
+}
+
+/* ============================================================
+   소개글에서 정보를 캐냅니다 — 위키데이터에 없을 때만 씁니다
    ============================================================ */
 function pickLife(text) {
   const t = String(text || '');
@@ -265,8 +341,9 @@ async function main() {
   const haveSet = new Set(have.map((h) => onlyKo(h.name_ko)).filter(Boolean));
   console.log(`인물DB 에 이미 있는 사람 : ${have.length}명\n`);
 
-  const rows = [], skipped = [], missing = [];
+  const found = [], skipped = [], missing = [];
 
+  /* ① 위키백과에서 사람을 찾습니다 */
   for (const name of KR_COMPOSERS) {
     if (haveSet.has(onlyKo(name))) { skipped.push(name); continue; }
 
@@ -278,24 +355,41 @@ async function main() {
       if (DEBUG) console.log(`  [못 찾음] ${name} — ${r.why}`);
       continue;
     }
+    found.push(r);
+  }
 
-    const life = pickLife(r.extract);
+  /* ② 위키데이터에서 생몰년을 받습니다 — 소개글보다 정확합니다 */
+  const qids = found.map((r) => r.qid).filter(Boolean);
+  const wdBy = qids.length ? await wdLife(qids) : {};
+  if (DEBUG) console.log(`  [위키데이터] 생몰년을 받은 사람 ${Object.keys(wdBy).length}명 / ${qids.length}명\n`);
 
-    /* 생몰년이 너무 옛것이면 같은 이름의 옛 인물입니다.
-       「정추」 로 고려 말 인물(1333–1382)이 잡힌 일이 있었습니다. */
-    if (life.born && life.born < 1850) {
-      missing.push({ name: name, why: `같은 이름의 옛 인물로 보입니다 (${life.life})` });
-      if (DEBUG) console.log(`  [건너뜀] ${name} — 옛 인물 ${life.life}`);
+  /* ③ 담을 것을 짭니다 */
+  const rows = [];
+  for (const r of found) {
+    /* 위키데이터를 먼저, 없으면 소개글에서 */
+    const wd = r.qid ? wdBy[r.qid] : null;
+    let born = wd && wd.born, died = wd && wd.died, from = '위키데이터';
+    if (!born) {
+      const g = pickLife(r.extract);
+      born = g.born; died = g.died; from = '소개글';
+    }
+    const life = born ? (died ? `${born} – ${died}` : `${born}~`) : null;
+
+    /* 생몰년이 너무 옛것이면 같은 이름의 옛 인물입니다 */
+    if (born && born < 1850) {
+      missing.push({ name: r.name, why: `같은 이름의 옛 인물로 보입니다 (${life})` });
+      if (DEBUG) console.log(`  [건너뜀] ${r.name} — 옛 인물 ${life}`);
       continue;
     }
+    if (DEBUG) console.log(`  ${r.name.padEnd(9)} ${(life || '생몰년 없음').padEnd(14)} (${from})`);
 
     rows.push({
-      name_ko: name,
+      name_ko: r.name,
       field: pickField(r.extract),
       nationality: '대한민국 (KOR)',
       nat_code: 'KOR',
-      life: life.life,
-      era_name: pickEra(life.born),
+      life: life,
+      era_name: pickEra(born),
       school: pickSchool(r.extract),
       description: r.extract.slice(0, 900),
       link_wiki: 'https://ko.wikipedia.org/wiki/' + encodeURIComponent(r.title.replace(/ /g, '_')),
