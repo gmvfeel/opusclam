@@ -87,12 +87,12 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 
 /* 소분류 체크 상자들 */
 .rc-job2 {
-  flex: 1; display: grid;
-  /* 칸을 똑같이 넷으로 나누면 「현악파트」 처럼 짧은 이름 뒤에 빈 자리가
-     남아 항목끼리 멀어 보입니다. 그래서 <b>내용 크기에 맞춰</b> 놓고
-     남는 자리는 오른쪽에 둡니다. 세로줄은 그대로 맞습니다. */
-  grid-template-columns: repeat(4, max-content);
-  justify-content: start;
+  /* 칸을 몇 개로 나눌지 미리 정하지 않고 <b>들어가는 만큼</b> 놓습니다.
+     그래야 줄마다 알맞은 개수가 됩니다.
+       현악파트·관악파트… (짧음)  → 한 줄에 다섯
+       음악잡지기자·판매/서비스직  → 한 줄에 넷
+     칸 수를 넷으로 못박으면 짧은 줄에 자리가 남아 헐거워 보입니다. */
+  flex: 1; display: flex; flex-wrap: wrap;
   gap: 9px 18px;
   padding-left: 0;
 }
@@ -348,7 +348,7 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
   .rc-side { position: static; }
   .rc-finder { flex-direction: row; gap: 14px; }
   .rc-finder .rc-panel { flex: 1; min-width: 0; }
-  .rc-job2 { grid-template-columns: repeat(4, max-content); gap: 9px 16px; }
+  .rc-job2 { gap: 9px 16px; }
   .rc-actions { flex-direction: row; justify-content: center; }
   .rc-actions .rc-btn { width: auto; min-width: 160px; }
 }
@@ -356,7 +356,7 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
 @media (max-width: 900px) {
   .rc-finder { flex-direction: column; }
   .rc-panel { padding: 20px 16px 16px; }
-  .rc-job2 { grid-template-columns: repeat(4, max-content); }
+  .rc-job2 { gap: 9px 16px; }
   .rc-org { width: 100px; }
   .rc-who { width: 118px; font-size: 13px; }
   .rc-when { width: 104px; }
@@ -366,7 +366,7 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
   .rc-panel { padding: 18px 14px 14px; border-width: 2px; }
   .rc-panel-h { font-size: 1.04em; }
   .rc-form { grid-template-columns: minmax(0, 1fr); }
-  .rc-job2 { grid-template-columns: repeat(3, max-content); gap: 9px 14px; }
+  .rc-job2 { gap: 8px 13px; }
   .rc-fld--region .rc-two { grid-template-columns: 1fr; }
   .rc-actions { flex-direction: column; }
   .rc-actions .rc-btn { width: 100%; }
