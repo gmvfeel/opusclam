@@ -330,12 +330,19 @@ async function main() {
   console.log(`명단 ${KR_COMPOSERS.length}명${DRY ? ' · 담지 않음(dry)' : ''}\n`);
 
   /* 이미 담긴 사람 — 한글만 남겨 견줍니다 */
+  /* ── 나눠 받기 ────────────────────────────────────────────
+     Supabase 에 「한 번에 받을 수 있는 양」 제한이 걸려 있습니다(200개).
+     예전에는 1000개씩 달라 하고 「받은 것이 1000보다 적으면 끝」 으로 봤는데,
+     200개만 오니 첫 묶음에서 멈춰 <b>앞쪽 200명만 알고</b> 나머지 8,900명을
+     모른 채 「없는 사람」 이라 판단했습니다.
+     그래서 150개씩 달라 하고, <b>아무것도 오지 않을 때까지</b> 받습니다.
+     ────────────────────────────────────────────────────── */
   const have = [];
-  for (let off = 0; ; off += 1000) {
-    const part = await sb(`persons?select=id,name_ko,wikidata_id&limit=1000&offset=${off}`);
+  const STEP = 150;
+  for (let off = 0; off < 60000; off += STEP) {
+    const part = await sb(`persons?select=id,name_ko,wikidata_id&order=id&limit=${STEP}&offset=${off}`);
     if (!part || !part.length) break;
     have.push(...part);
-    if (part.length < 1000) break;
   }
   const onlyKo = (v) => String(v || '').replace(/[^가-힣]/g, '');
   const haveSet = new Set(have.map((h) => onlyKo(h.name_ko)).filter(Boolean));

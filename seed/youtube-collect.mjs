@@ -109,10 +109,9 @@ async function sbAll(path, select) {
   const out = [];
   for (let from = 0; ; from += 1000) {
     const rows = await sb(`${path}${path.includes('?') ? '&' : '?'}select=${select}` +
-                          `&limit=1000&offset=${from}`);
+                          `&limit=150&offset=${from}`);
     if (!Array.isArray(rows) || !rows.length) break;
     out.push(...rows);
-    if (rows.length < 1000) break;
   }
   return out;
 }

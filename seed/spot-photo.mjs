@@ -605,8 +605,14 @@ async function main() {
   /* 이미 담긴 위키데이터 항목을 먼저 알아 둡니다 —
      이번에 찾은 것이 그것과 겹치면 물리칩니다. */
   try {
-    const used = await sb('spot?select=wikidata_id&wikidata_id=not.is.null&limit=1000');
-    for (const u of (used || [])) if (u.wikidata_id) usedQids.add(u.wikidata_id);
+    /* 나눠 받습니다 — 한 번에 받을 수 있는 양에 제한이 있어(200개)
+       1000개를 한 번에 달라 하면 앞쪽만 오고 나머지를 놓칩니다. */
+    for (let off = 0; off < 20000; off += 150) {
+      const used = await sb('spot?select=wikidata_id&wikidata_id=not.is.null'
+        + `&order=id&limit=150&offset=${off}`);
+      if (!used || !used.length) break;
+      for (const u of used) if (u.wikidata_id) usedQids.add(u.wikidata_id);
+    }
     if (usedQids.size) console.log(`이미 쓰고 있는 위키데이터 항목 ${usedQids.size}개`);
   } catch (e) {}
 

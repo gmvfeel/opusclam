@@ -97,11 +97,10 @@ async function loadTargets() {
   for (;;) {
     const rows = await sb(
       `entity_photos?select=entity_id&entity_type=eq.${T.type}` +
-      `&limit=1000&offset=${from}`
+      `&limit=150&offset=${from}`
     );
     if (!rows || !rows.length) break;
     rows.forEach((r) => done.add(r.entity_id));
-    if (rows.length < 1000) break;
     from += 1000;
   }
   console.log(`이미 사진이 있는 항목: ${done.size}건`);
@@ -111,7 +110,7 @@ async function loadTargets() {
   while (out.length < LIMIT) {
     const rows = await sb(
       `${T.table}?select=id,${T.nameCol},wikidata_id` +
-      `&wikidata_id=not.is.null&order=id&limit=1000&offset=${off}`
+      `&wikidata_id=not.is.null&order=id&limit=150&offset=${off}`
     );
     if (!rows || !rows.length) break;
     for (const r of rows) {
@@ -121,7 +120,6 @@ async function loadTargets() {
       out.push({ id: r.id, name: r[T.nameCol] || '', qid: qid[0] });
       if (out.length >= LIMIT) break;
     }
-    if (rows.length < 1000) break;
     off += 1000;
   }
   return out;
