@@ -272,7 +272,10 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
 
 .rc-table { table-layout: fixed; }
 .rc-table th.c-no,   .rc-table td.c-no   { width: 52px;  text-align: center; }
-.rc-table th.c-org,  .rc-table td.c-org  { width: 132px; text-align: center; }
+.rc-table th.c-org { width: 132px; text-align: center; }
+/* 업체·단체명 줄은 왼쪽 정렬 — 이름 길이가 저마다 달라
+   가운데로 모으면 줄마다 시작점이 어긋나 눈이 헤맵니다. */
+.rc-table td.c-org { width: 132px; text-align: left; }
 .rc-table th.c-when, .rc-table td.c-when { width: 132px; text-align: center; }
 .rc-table th.c-hit,  .rc-table td.c-hit  { width: 62px;  text-align: center; }
 
@@ -282,7 +285,7 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
    왼쪽 여백을 조금 더 둡니다(기본 9px → 20px).
    앞 칸(업체명)이 가운데 정렬이라 그 글자와 제목이 붙어 보이기 때문입니다. */
 .rc-table th.c-title { text-align: center; }
-.rc-table td.c-title { text-align: left; padding-left: 20px; }
+.rc-table td.c-title { text-align: left; padding-left: 16px; }
 
 /* 번호 — 굵게 두어 몇 번째 글인지 얼른 짚힙니다 */
 .rc-table td.c-no { font-weight: 700; color: var(--text-2); }
@@ -389,3 +392,25 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
   .rc-foot { flex-direction: column; gap: 16px; }
   .rc-btn--write { position: static; width: 100%; }
 }
+
+/* ============================================================
+   리쿠르트 히어로 무늬 — assets/hero-scene.js 의 hire 가 그립니다
+
+   DATABASE 별자리(scene-net)와 같은 깜빡임(netnode·netline)을 씁니다.
+   이미 style.css 에 있는 것이라 새로 만들지 않았습니다.
+   점·선마다 박자를 달리 두는 것은 hero-scene.js 가 맡습니다.
+   ============================================================ */
+.scene-hire line {
+  stroke: #c06fa2; stroke-width: .7; fill: none;
+  will-change: opacity;
+  animation: netline ease-in-out infinite;
+}
+html[data-theme="dark"] .scene-hire line { stroke: #9a9a9a; }
+
+.scene-hire circle {
+  transform-box: fill-box; transform-origin: center;
+  will-change: transform, opacity;
+  animation: netnode ease-in-out infinite;
+}
+/* 두른 고리는 깜빡이지 않게 — 「구하는 자리」 표시가 흔들리면 어수선합니다 */
+.scene-hire circle[fill="none"] { animation: none; }

@@ -7,12 +7,13 @@
      <div class="scene scene-net   on">   DATABASE    별자리 그물
      <div class="scene scene-orbit on">   OC커뮤니티  동심원 링 무리
      <div class="scene scene-spot  on">   정보SPOT    점 격자 위의 지점
+     <div class="scene scene-hire  on">   리쿠르트    그물 위의 구하는 자리
 
    무늬를 새로 늘릴 때 —
      아래 SCENES 에 그리는 함수 하나만 더하고 ORDER 에 이름을 넣으면 됩니다.
      예전에는 「orbit 이면 그리고 끝, 아니면 net」처럼 조건문이 박혀 있어서
      무늬를 늘릴 때마다 조건문이 하나씩 붙었습니다.
-     레슨:ON · 리쿠르트 · SHOPPING 무늬도 여기에 더하면 됩니다.
+     레슨:ON · SHOPPING 무늬도 여기에 더하면 됩니다.
 
    빛깔은 화면마다 있는 <linearGradient id="dg"> 를 그대로 씁니다.
    어두운 모드에서는 assets/base.css 가 전체를 옅게 낮춥니다.
@@ -112,6 +113,84 @@
       }
     },
 
+    /* ── 리쿠르트 · 그물 위의 구하는 자리 ──
+       DATABASE 의 별자리 그물(net)과 같은 결로 그립니다.
+       사람과 사람이 이어진 그물이라는 뜻은 리쿠르트에도 그대로 맞습니다.
+
+       다른 점 —
+         · 점을 조금 덜 흩고 사이를 넓게 둡니다 (그물이 덜 빽빽하게)
+         · 그중 몇 곳에 <b>고리를 두릅니다</b> — 사람을 구하는 자리입니다
+         · 고리 안쪽 점은 조금 빠르게 깜빡여 눈에 띕니다 */
+    hire: function (g) {
+      var NN = 52, maxD = 150, nodes = [];
+      var i, a, b;
+
+      for (i = 0; i < NN; i++) {
+        nodes.push({ x: Math.random() * W, y: Math.random() * H });
+      }
+
+      /* 가까운 것끼리 잇습니다 — net 과 같은 방식 */
+      for (a = 0; a < nodes.length; a++) {
+        for (b = a + 1; b < nodes.length; b++) {
+          var dx = nodes[a].x - nodes[b].x, dy = nodes[a].y - nodes[b].y;
+          var d = Math.sqrt(dx * dx + dy * dy);
+          if (d < maxD) {
+            var ln = attr(el('line'), {
+              x1: nodes[a].x.toFixed(1), y1: nodes[a].y.toFixed(1),
+              x2: nodes[b].x.toFixed(1), y2: nodes[b].y.toFixed(1)
+            });
+            ln.style.animationDuration = (3.2 + Math.random() * 3.2).toFixed(2) + 's';
+            ln.style.animationDelay = (-Math.random() * 4.5).toFixed(2) + 's';
+            g.appendChild(ln);
+          }
+        }
+      }
+
+      /* 「구하는 자리」 를 몇 곳 고릅니다 — 서로 너무 붙지 않게 */
+      var wanted = [], tries = 0;
+      while (wanted.length < 7 && tries < 200) {
+        tries++;
+        var cand = nodes[Math.floor(Math.random() * nodes.length)];
+        var tooClose = wanted.some(function (w) {
+          var ddx = w.x - cand.x, ddy = w.y - cand.y;
+          return Math.sqrt(ddx * ddx + ddy * ddy) < 190;
+        });
+        if (!tooClose && wanted.indexOf(cand) < 0) wanted.push(cand);
+      }
+
+      /* 자리를 찍습니다 */
+      nodes.forEach(function (n) {
+        var isWanted = wanted.indexOf(n) >= 0;
+
+        if (isWanted) {
+          /* 두르는 고리 — 두 겹으로 두어 눈에 들어오게 */
+          g.appendChild(attr(el('circle'), {
+            cx: n.x.toFixed(1), cy: n.y.toFixed(1),
+            r: rnd(9, 12).toFixed(1),
+            fill: 'none', stroke: 'url(#dg)',
+            'stroke-width': '1.4', opacity: '0.55'
+          }));
+          g.appendChild(attr(el('circle'), {
+            cx: n.x.toFixed(1), cy: n.y.toFixed(1),
+            r: rnd(17, 22).toFixed(1),
+            fill: 'none', stroke: 'url(#dg)',
+            'stroke-width': '0.8', opacity: '0.22'
+          }));
+        }
+
+        var c = attr(el('circle'), {
+          cx: n.x.toFixed(1), cy: n.y.toFixed(1),
+          r: (isWanted ? rnd(2.6, 3.4) : rnd(1.1, 2.1)).toFixed(1)
+        });
+        /* 구하는 자리는 조금 빠르게 깜빡입니다 */
+        c.style.animationDuration = isWanted
+          ? (1.7 + Math.random() * 0.9).toFixed(2) + 's'
+          : (3 + Math.random() * 3).toFixed(2) + 's';
+        c.style.animationDelay = (-Math.random() * 4).toFixed(2) + 's';
+        g.appendChild(c);
+      });
+    },
+
     /* ── DATABASE 등 기본 · 별자리 그물 ──
        점을 흩고 가까운 것끼리 잇습니다. 깜빡임은 style.css 가 맡습니다. */
     net: function (g) {
@@ -146,7 +225,7 @@
   };
 
   /* 찾는 순서 — 화면에 있는 첫 무늬만 그리고 끝냅니다 */
-  var ORDER = ['orbit', 'spot', 'net'];
+  var ORDER = ['orbit', 'spot', 'hire', 'net'];
 
   function draw() {
     for (var i = 0; i < ORDER.length; i++) {
