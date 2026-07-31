@@ -230,10 +230,6 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
 /* 마우스를 올리면 더 어두워집니다 — 눌릴 자리라는 것이 또렷해집니다.
    보라로 밝히면 「켜졌다」 는 느낌이라 누르는 단추에는 맞지 않습니다. */
 .rc-btn--go:hover { background: #17141f; border-color: #17141f; color: #fff; }
-.rc-btn--write {
-  background: var(--violet-2); border-color: var(--violet-2); color: #fff;
-}
-.rc-btn--write:hover { filter: brightness(1.08); color: #fff; }
 
 /* ── 탭 ───────────────────────────────────────────────────*/
 
@@ -334,7 +330,7 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
 /* ── 페이지 넘김 ──────────────────────────────────────────*/
 .rc-foot {
   display: flex; align-items: center; justify-content: center;
-  position: relative; margin-top: 32px;
+  margin-top: 32px;
 }
 .rc-pager { display: flex; gap: 5px; }
 .rc-pg {
@@ -349,7 +345,6 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
   background: var(--violet-2); border-color: var(--violet-2); color: #fff; font-weight: 700;
 }
 .rc-pg:disabled { opacity: .35; cursor: default; }
-.rc-btn--write { position: absolute; right: 0; }
 
 /* ── 좁은 화면 ────────────────────────────────────────────*/
 @media (max-width: 1300px) {
@@ -389,8 +384,6 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
   .rc-jobrow { flex-direction: column; gap: 8px; padding: 11px 0; }
   .rc-job1 { width: auto; font-weight: 700; color: var(--ink); }
   .rc-job2 { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .rc-foot { flex-direction: column; gap: 16px; }
-  .rc-btn--write { position: static; width: 100%; }
 }
 
 /* ============================================================
