@@ -37,6 +37,14 @@ on:
         description: '페이지를 직접 지정 (비우면 2026년 페이지에서 시작)'
         required: false
         default: ''
+      debug:
+        description: '무엇을 읽었는지 자세히 보기 (표·행·칸을 찍습니다)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
   schedule:
     # 매주 화요일 오전 8시(KST) = 월요일 23:00 UTC
     - cron: '0 23 * * 1'
@@ -73,6 +81,7 @@ jobs:
           if [ "$SAVE" != "yes" ]; then OPTS="$OPTS --dry"; fi
           if [ -n "$Y" ]; then OPTS="$OPTS --year=$Y"; fi
           if [ -n "$U" ]; then OPTS="$OPTS --url=$U"; fi
+          if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
 
           echo "── 실행 : node seed/arko-collect.mjs $OPTS ──"
           node seed/arko-collect.mjs $OPTS

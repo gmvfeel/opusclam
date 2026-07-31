@@ -31,6 +31,7 @@
      node seed/arko-collect.mjs --dry               담지 않고 보기만
      node seed/arko-collect.mjs --url=…/content/NNNN  페이지를 직접 지정
      node seed/arko-collect.mjs --year=2027         그 연도 탭을 골라 읽기
+     node seed/arko-collect.mjs --dry --debug       무엇을 읽었는지 자세히 보기
 
    필요한 환경변수
      SUPABASE_URL
@@ -51,6 +52,7 @@ const args = Object.fromEntries(
   })
 );
 const DRY = !!args.dry;
+const DEBUG = !!args.debug;
 const WANT_YEAR = args.year ? Number(args.year) : null;
 
 /* 2026년 공모 페이지 — 여기서 시작해 연도 탭을 따라갑니다 */
@@ -124,9 +126,27 @@ function findYearLinks(html) {
      · 날짜가 있는 칸  → 신청기간
    분야 칸은 읽지 않습니다 — 우리 쪽 구분은 따로 정해 두었습니다.
    ============================================================ */
-function parseRows(html) {
+/* 분야 이름 — 사업명이 아닙니다.
+   아르코 페이지의 분야 칸에도 링크가 붙어 있어 사업명으로 잡히던 일이 있었습니다.
+   분야는 종류가 정해져 있으므로 이름으로 걸러내는 것이 가장 확실합니다. */
+const FIELD_WORDS = [
+  '문학', '시각 예술', '시각예술', '다원 예술', '다원예술',
+  '공연 예술', '공연예술', '어린이 청소년', '어린이청소년',
+  '청년', '국제', '지역', '전 장르', '전장르', '모든 장르',
+  '분야', '구분', '사업명', '지원사업명', '지원신청', '지원신청 기간', '비고',
+];
+function isFieldWord(t) {
+  const x = String(t || '').replace(/\s+/g, '');
+  return FIELD_WORDS.some((w) => w.replace(/\s+/g, '') === x);
+}
+
+function parseRows(html, debug) {
   const rows = [];
   const trs = html.match(/<tr[\s>][\s\S]*?<\/tr>/gi) || [];
+  if (debug) {
+    const tables = (html.match(/<table[\s>]/gi) || []).length;
+    console.log(`  [살펴보기] 표 ${tables}개 · 행 ${trs.length}개`);
+  }
 
   for (const tr of trs) {
     const tds = tr.match(/<t[dh][\s>][\s\S]*?<\/t[dh]>/gi) || [];
@@ -138,12 +158,20 @@ function parseRows(html) {
        분야 칸(「공연 예술」 처럼)이 사업명으로 잡히던 일이 있었습니다 —
        분야는 링크가 없고 사업명에는 상세 공고 링크가 붙어 있습니다. */
     for (const td of tds) {
-      const a = td.match(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
-      if (a && strip(a[2]).length >= 3) {
-        name = strip(a[2]);
-        link = a[1].charAt(0) === '/' ? BASE + a[1] : a[1];
+      /* 한 칸에 링크가 여럿 있을 수 있으므로 모두 살펴봅니다 */
+      const as = [...td.matchAll(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
+      for (const a of as) {
+        const t = strip(a[2]);
+        if (t.length < 3) continue;
+        if (isFieldWord(t)) continue;          /* 분야 이름은 사업명이 아닙니다 */
+        if (/^20\d\d$/.test(t)) continue;      /* 연도 탭 */
+        const href = a[1];
+        if (href === '#' || href.charAt(0) === '#') continue;
+        name = t;
+        link = href.charAt(0) === '/' ? BASE + href : href;
         break;
       }
+      if (name) break;
     }
 
     /* 신청기간을 찾습니다 */
@@ -152,21 +180,29 @@ function parseRows(html) {
       if (!text || text === name) continue;
       const hasDate = /\d{4}\s*\.\s*\d{1,2}|\d{1,2}\s*\.\s*\d{1,2}\s*\.?\s*\(|예정|미정|마감/.test(text);
       if (hasDate && !period) period = text;
-      else if (!hasDate && !plain && text.length >= 4 && text.length <= 60) plain = text;
+      else if (!hasDate && !plain && !isFieldWord(text)
+               && text.length >= 4 && text.length <= 60) plain = text;
     }
 
     /* 링크가 아예 없는 표라면 글자 칸을 사업명으로 씁니다 */
     if (!name) name = plain;
     if (!name || name.length < 3) continue;
-    /* 머리글 줄은 건너뜁니다 */
-    if (/^(분야|사업명|지원사업명|지원신청|구분)$/.test(name)) continue;
+    if (isFieldWord(name)) continue;           /* 머리글·분야 줄 */
 
     /* 표에서 여러 사업이 기간 칸을 함께 쓰는 일이 많습니다
        (한 칸에 여러 줄을 묶어 두는 짜임).
        기간이 비어 있으면 바로 앞 사업의 기간을 물려받습니다. */
     if (!period && rows.length) period = rows[rows.length - 1].period;
 
+    if (debug) {
+      console.log(`      칸 ${tds.length}개 | 사업명 「${name}」 | 기간 「${(period || '').slice(0, 34)}」`);
+    }
     rows.push({ name: name, link: link, period: period });
+  }
+  if (debug) {
+    /* 표가 아니라 목록(ul/li)으로 짜였을 수도 있어 함께 살펴봅니다 */
+    const lis = (html.match(/<li[\s>][\s\S]*?<\/li>/gi) || []).length;
+    console.log(`  [살펴보기] 표에서 읽은 사업 ${rows.length}개 · 목록(li) ${lis}개`);
   }
   return rows;
 }
@@ -258,7 +294,8 @@ async function main() {
   let rows = [];
   try {
     const html = await getHtml(pageUrl);
-    rows = parseRows(html);
+    if (DEBUG) console.log(`  [살펴보기] 받은 글자 ${html.length}자`);
+    rows = parseRows(html, DEBUG);
   } catch (e) {
     console.error('페이지를 읽지 못했습니다:', e.message);
     process.exit(1);
