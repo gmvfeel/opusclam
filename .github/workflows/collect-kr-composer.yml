@@ -1,0 +1,81 @@
+name: 인물DB 한국 작곡가 보강
+
+# ── 무엇을 하나 ──
+#  한국어 위키백과에서 한국 작곡가를 찾아 인물DB 에 담습니다.
+#
+# ── 왜 필요한가 ──
+#  인물 9,145명은 대부분 위키데이터에서 왔습니다. 그런데 위키데이터는
+#  영문 정보가 넉넉한 사람에 치우쳐 있어, 국내에서만 활동한 작곡가가
+#  통째로 빠졌습니다. 서른 명을 짚어 보니 열넷이 없었습니다.
+#
+#    담김 : 윤이상 · 진은숙 · 강석희 · 백병동  (국제적으로 알려진 분들)
+#    빠짐 : 이영조 · 김택수 · 최우정 · 임준희 · 이건용 · 홍난파 …
+#
+#  한국 작곡가는 한국어 위키백과에 훨씬 잘 정리되어 있어 그쪽을 봅니다.
+#  한국 클래식 포털이므로 자료가 조금 빈약해도 담습니다.
+#
+# ── 언제 실행되나 ──
+#  손으로만 돌립니다. 한 번 담으면 크게 늘어나지 않으므로
+#  때때로 확인하는 편이 알맞습니다.
+#  ★ 처음에는 「실제로 담기: no」 로 누가 들어올지 먼저 보세요.
+on:
+  workflow_dispatch:
+    inputs:
+      save:
+        description: '실제로 담기 (처음에는 no 로 목록을 확인하세요)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      limit:
+        description: '몇 명까지 볼지 (비우면 전체)'
+        required: false
+        default: ''
+      loose:
+        description: '걸러내기를 느슨하게 (더 많이 담김)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      debug:
+        description: '분류를 어떻게 훑었는지 자세히 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+concurrency:
+  group: collect-kr-composer
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 한국 작곡가 보강 실행
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          OPTS=""
+          if [ "${{ github.event.inputs.save }}" != "yes" ]; then OPTS="$OPTS --dry"; fi
+          if [ -n "${{ github.event.inputs.limit }}" ]; then OPTS="$OPTS --limit=${{ github.event.inputs.limit }}"; fi
+          if [ "${{ github.event.inputs.loose }}" = "yes" ]; then OPTS="$OPTS --loose"; fi
+          if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
+
+          echo "── 실행 : node seed/kr-composer.mjs $OPTS ──"
+          node seed/kr-composer.mjs $OPTS
