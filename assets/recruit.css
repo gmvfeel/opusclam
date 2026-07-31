@@ -5,10 +5,28 @@
    base.css · board.css 의 색과 자를 그대로 물려받습니다.
    ============================================================ */
 
-/* 가로 — 목록은 넓게, 찾는 칸은 좁게 둡니다.
-   찾는 칸이 너무 넓으면 라벨과 입력칸이 멀어져 눈이 오래 옮겨갑니다. */
-.rc-wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 70px; }
-.rc-finder { max-width: 980px; margin-left: auto; margin-right: auto; }
+.rc-wrap { max-width: 1260px; margin: 0 auto; padding: 0 20px 70px; }
+
+/* ── 두 칸 짜임 ───────────────────────────────────────────
+   왼쪽에 찾는 칸, 오른쪽에 목록을 둡니다.
+   조건을 바꾸면 오른쪽이 바로 바뀌므로 눈이 멀리 옮겨가지 않습니다. */
+.rc-layout {
+  margin-top: 44px;
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+
+/* 왼쪽 칸 — 목록을 내려도 화면에 붙어 따라옵니다.
+   직종 체크 상자가 서른 개를 넘어 세로로 길어지므로,
+   목록을 보다가 조건을 바꾸려고 위로 올라가지 않아도 됩니다.
+
+   ★ sticky 는 안쪽에 overflow 를 두면 듣지 않습니다.
+     그래서 이 칸에는 overflow 를 걸지 않았습니다. */
+.rc-side { position: sticky; top: 84px; }
+
+.rc-main-col { min-width: 0; }
 
 /* ── 찾는 칸을 한 덩어리로 감쌉니다 ───────────────────────
    시안(01_채용정보)처럼 점선으로 두르고, 그 안에 직종구분과
@@ -19,26 +37,23 @@
 /* ── 찾는 칸 ──────────────────────────────────────────────
    잡코리아 등록 화면처럼, 칸마다 따로 떨어진 카드로 두고
    제목을 가운데 크게 놓습니다. 어디를 채우는 자리인지 한눈에 보입니다. */
-.rc-finder {
-  margin-top: 44px;
-  display: flex; flex-direction: column; gap: 14px;
-}
+.rc-finder { display: flex; flex-direction: column; gap: 14px; }
 
 .rc-panel {
   background: var(--paper);
   /* 테두리는 굵고 진하게 — 칸의 경계가 또렷해야 채울 자리가 보입니다 */
   border: 3px solid #a99cc9;
   border-radius: 12px;
-  padding: 30px 34px 26px;
+  padding: 20px 18px 18px;
 }
 html[data-theme="dark"] .rc-panel { border-color: #565070; }
 
 /* 칸 제목 — 가운데, 큰 글씨 */
 .rc-panel-h {
   font-family: var(--display);
-  font-size: 1.32em; font-weight: 800; letter-spacing: -.02em;
+  font-size: 1.1em; font-weight: 800; letter-spacing: -.02em;
   color: var(--ink); text-align: center;
-  margin: 0 0 24px; padding-bottom: 20px;
+  margin: 0 0 16px; padding-bottom: 13px;
   border-bottom: 1px solid var(--line-2);
 }
 
@@ -50,17 +65,17 @@ html[data-theme="dark"] .rc-panel { border-color: #565070; }
    여러 개를 함께 고를 수 있습니다. */
 .rc-jobs { display: flex; flex-direction: column; }
 .rc-jobrow {
-  display: flex; align-items: flex-start; gap: 16px;
-  padding: 13px 0;
+  display: flex; flex-direction: column; align-items: stretch; gap: 7px;
+  padding: 11px 0;
 }
 .rc-jobrow + .rc-jobrow { border-top: 1px solid #f1eef8; }
 html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 
 /* 대분류 — 라벨처럼 보이되 누르면 그 줄이 통째로 켜집니다 */
 .rc-job1 {
-  flex: 0 0 auto; width: 96px;
-  padding: 3px 0; border: 0; background: none;
-  font-size: 13.5px; font-weight: 700; color: var(--text-2);
+  flex: 0 0 auto; width: auto;
+  padding: 0; border: 0; background: none;
+  font-size: 13px; font-weight: 700; color: var(--ink);
   text-align: left; cursor: pointer;
   transition: color .18s ease;
 }
@@ -71,8 +86,9 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 /* 소분류 체크 상자들 */
 .rc-job2 {
   flex: 1; display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-  gap: 9px 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 6px;
+  padding-left: 2px;
 }
 .rc-jobck {
   display: inline-flex; align-items: center; gap: 7px;
@@ -93,21 +109,21 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
    두 칸으로 나누면 라벨 자리가 어긋나 눈이 헤맵니다. */
 .rc-form { display: flex; flex-direction: column; }
 .rc-fld {
-  display: flex; align-items: center; gap: 14px; min-width: 0;
-  padding: 11px 0;
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  min-width: 0; padding: 9px 0;
 }
 .rc-fld + .rc-fld { border-top: 1px solid #f1eef8; }
 html[data-theme="dark"] .rc-fld + .rc-fld { border-top-color: #2c2c2c; }
 
 .rc-fld > label {
-  flex: 0 0 auto; width: 82px;
-  font-size: 13.5px; font-weight: 700; color: var(--text-2);
+  flex: 0 0 auto; width: auto;
+  font-size: 12.5px; font-weight: 700; color: var(--text-2);
 }
-/* 셀렉트가 둘인 줄(지역)은 두 칸으로 나눕니다 */
-.rc-fld select + select { margin-left: 8px; }
+/* 셀렉트가 둘인 줄(지역)은 아래위로 놓습니다 */
+.rc-fld select + select { margin-left: 0; margin-top: 6px; }
 .rc-fld select, .rc-fld input[type="text"] {
-  flex: 1; min-width: 0; max-width: 300px;
-  height: 38px; padding: 0 12px;
+  flex: 1; min-width: 0; max-width: none;
+  height: 36px; padding: 0 11px;
   border: 1px solid #d4d0dd; border-radius: 4px;
   background: var(--paper); color: var(--text);
   font-family: inherit; font-size: 13px;
@@ -147,9 +163,10 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 
 /* ── 단추 ─────────────────────────────────────────────────*/
 .rc-actions {
-  display: flex; justify-content: center; gap: 10px;
-  margin-top: 22px;
+  display: flex; flex-direction: column; gap: 7px;
+  margin-top: 16px;
 }
+.rc-actions .rc-btn { width: 100%; height: 40px; padding: 0 14px; }
 .rc-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   height: 42px; padding: 0 26px;
@@ -161,10 +178,7 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 }
 .rc-btn:hover { border-color: var(--violet-2); color: var(--violet-2); }
 .rc-btn svg { width: 16px; height: 16px; }
-.rc-btn--go {
-  background: #3f3a4e; border-color: #3f3a4e; color: #fff;
-  min-width: 190px;
-}
+.rc-btn--go { background: #3f3a4e; border-color: #3f3a4e; color: #fff; }
 .rc-btn--go:hover { background: var(--violet-2); border-color: var(--violet-2); color: #fff; }
 .rc-btn--write {
   background: var(--violet-2); border-color: var(--violet-2); color: #fff;
@@ -174,7 +188,7 @@ html[data-theme="dark"] .rc-fld input[type="text"] { border-color: #444; }
 /* ── 탭 ───────────────────────────────────────────────────*/
 .rc-tabs {
   display: flex; flex-wrap: wrap; gap: 0;
-  margin: 34px 0 0; border-bottom: 2px solid var(--line-2);
+  margin: 0; border-bottom: 2px solid var(--line-2);
 }
 .rc-tab {
   padding: 13px 26px; border: 0; background: none;
@@ -310,24 +324,33 @@ html[data-theme="dark"] .rc-row:hover { background: #000; }
 .rc-btn--write { position: absolute; right: 0; }
 
 /* ── 좁은 화면 ────────────────────────────────────────────*/
+@media (max-width: 1040px) {
+  /* 좁아지면 두 칸을 위아래로 풉니다 — 붙어 따라오기도 끕니다 */
+  .rc-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .rc-side { position: static; }
+  .rc-finder { flex-direction: row; gap: 14px; }
+  .rc-finder .rc-panel { flex: 1; min-width: 0; }
+  .rc-job2 { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .rc-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+  .rc-fld--wide { grid-column: 1 / -1; }
+  .rc-actions { flex-direction: row; justify-content: center; }
+  .rc-actions .rc-btn { width: auto; min-width: 160px; }
+}
+
 @media (max-width: 900px) {
-  .rc-panel { padding: 24px 20px 20px; }
-  .rc-panel-h { font-size: 1.2em; margin-bottom: 18px; padding-bottom: 15px; }
-  .rc-fld select, .rc-fld input[type="text"] { max-width: none; }
-  .rc-job1 { width: 82px; font-size: 13px; }
-  .rc-job2 { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  .rc-finder { flex-direction: column; }
+  .rc-panel { padding: 20px 16px 16px; }
   .rc-org { width: 100px; }
   .rc-who { width: 118px; font-size: 13px; }
   .rc-when { width: 104px; }
 }
 @media (max-width: 640px) {
   .rc-wrap { padding: 0 14px 50px; }
-  .rc-panel { padding: 20px 15px 16px; border-width: 1px; }
-  .rc-panel-h { font-size: 1.1em; }
-  /* 좁은 화면에서는 라벨을 위로 올립니다 */
-  .rc-fld { flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 0; }
-  .rc-fld > label { width: auto; }
-  .rc-fld select + select { margin-left: 0; margin-top: 6px; }
+  .rc-panel { padding: 18px 14px 14px; border-width: 2px; }
+  .rc-panel-h { font-size: 1.04em; }
+  .rc-form { grid-template-columns: minmax(0, 1fr); }
+  .rc-actions { flex-direction: column; }
+  .rc-actions .rc-btn { width: 100%; }
   .rc-jobrow { flex-direction: column; gap: 8px; padding: 11px 0; }
   .rc-job1 { width: auto; font-weight: 700; color: var(--ink); }
   .rc-job2 { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
