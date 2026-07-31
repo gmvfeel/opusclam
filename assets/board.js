@@ -753,7 +753,7 @@ window.OCBoard = (function () {
         var enhance = '';
         if (cfg.enhance) {
           var _href = cfg.writePage ? (cfg.writePage + '?mode=enhance&db=' + encodeURIComponent(cfg.enhance.db || cfg.table) + '&id=' + encodeURIComponent(o.id)) : (cfg.enhance.url || '#');
-          var _mail = esc(cfg.enhance.email || 'contact@opusclam.com');
+          var _mail = esc(cfg.enhance.email || 'cser@wixon.co.kr');
           var _src = cfg.enhance.source || '본 오퍼스클램 데이터는 웹상에 공개된 내용을 취합·수집하여 등록되므로, 잘못된 정보를 포함할 수 있습니다. 잘못된 정보의 수정을 원하시거나 보강할 내용이 있는 경우, 아래 <b>메일문의하기</b> 또는 <b>정보보강</b>을 통해 알려주시면 신속히 반영하겠습니다.';
           enhance = '<section class="pv-contrib">'
             + '<a class="pv-enhance" href="' + _href + '">'
