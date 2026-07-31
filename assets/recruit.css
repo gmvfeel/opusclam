@@ -126,9 +126,11 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
 }
 .rc-fld--wide { grid-column: 1 / -1; }
 
-/* 줄 사이 옅은 선 — 두 칸이므로 두 개씩 건너 그립니다 */
+/* 줄 사이 옅은 선 — 첫 줄만 빼고 그립니다.
+   두 칸에 나란히 놓인 것들은 같은 줄이므로 각자 위에 선이 그려져
+   자연스럽게 한 줄로 이어져 보입니다. */
 .rc-fld { border-top: 1px solid #f1eef8; }
-.rc-fld:first-child, .rc-fld:nth-child(2):not(.rc-fld--wide) { border-top: 0; }
+.rc-fld:first-child { border-top: 0; }
 html[data-theme="dark"] .rc-fld { border-top-color: #2c2c2c; }
 
 /* 지역은 1차·2차를 나란히 */

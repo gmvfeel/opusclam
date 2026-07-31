@@ -36,7 +36,7 @@
        여러 개를 함께 고를 수 있습니다 (현악파트와 관악파트를 같이 보기) */
     jobs: [],
     r1: '', r2: '',
-    emp: '무관', days: '', hour: '', pay: '', gender: '',
+    emp: '무관', days: '', pay: '',
     kw: '', tab: '', sort: 'created_at.desc',
   };
 
@@ -74,8 +74,7 @@
     var emp = q.tab || (q.emp && q.emp !== '무관' ? q.emp : '');
     if (emp) p.push('emp_types=cs.%7B' + encodeURIComponent(emp) + '%7D');
 
-    if (q.days)   p.push('work_days=eq.' + encodeURIComponent(q.days));
-    if (q.gender && q.gender !== '전체') p.push('gender=eq.' + encodeURIComponent(q.gender));
+    if (q.days) p.push('work_days=eq.' + encodeURIComponent(q.days));
 
     if (q.kw) {
       var k = encodeURIComponent('%' + q.kw + '%');
@@ -171,11 +170,9 @@
 
     R.bindPair('#rcR1', '#rcR2', 'region');
     R.fill(el('#rcDays'), R.WORK_DAYS, '근무요일선택');
-    R.fill(el('#rcHour'), R.HOURS, '근무시간선택');
     R.fill(el('#rcPay'), R.PAY_BANDS.map(function (b) {
       return { value: b.label, label: b.label };
     }), null);
-    R.fill(el('#rcGender'), ['전체'].concat(R.GENDERS.filter(function (g) { return g !== '무관'; })), null);
     R.fillRadios(el('#rcEmp'), R.EMP_SEARCH, 'rc-emp', '무관');
 
     var go2 = el('#rcGo'), reset = el('#rcReset');
@@ -183,20 +180,17 @@
       q.r1 = (el('#rcR1') || {}).value || '';
       q.r2 = (el('#rcR2') || {}).value || '';
       q.days = (el('#rcDays') || {}).value || '';
-      q.hour = (el('#rcHour') || {}).value || '';
       q.pay = (el('#rcPay') || {}).value || '';
-      q.gender = (el('#rcGender') || {}).value || '';
       q.kw = ((el('#rcKw') || {}).value || '').trim();
-      var e2 = R.checked('#rcEmp', 'rc-emp');
       q.emp = document.querySelector('input[name="rc-emp"]:checked');
       q.emp = q.emp ? q.emp.value : '무관';
       go(1);
     });
     if (reset) reset.addEventListener('click', function () {
-      q = { jobs: [], r1: '', r2: '', emp: '무관', days: '', hour: '',
-            pay: '', gender: '', kw: '', tab: q.tab, sort: q.sort };
+      q = { jobs: [], r1: '', r2: '', emp: '무관', days: '',
+            pay: '', kw: '', tab: q.tab, sort: q.sort };
       /* 셀렉트와 라디오도 처음 상태로 되돌립니다 */
-      ['#rcR1', '#rcR2', '#rcDays', '#rcHour', '#rcPay', '#rcGender', '#rcKw']
+      ['#rcR1', '#rcR2', '#rcDays', '#rcPay', '#rcKw']
         .forEach(function (sel) { var x = el(sel); if (x) x.value = ''; });
       var first = document.querySelector('input[name="rc-emp"]');
       if (first) first.checked = true;
