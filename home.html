@@ -2006,11 +2006,61 @@ if('serviceWorker' in navigator){
   }
 
   // 한여름밤 배너(Concert PR)
+  /* 다가오는 공연 하나 — CONCERT PR 자리에 쓸 자료를 만든다.
+
+     이 자리는 본디 광고 자리입니다. 그래서 features 표에 등록된 것이 있으면
+     그것을 먼저 씁니다. 아직 광고가 없을 때는 빈 자리로 두는 대신
+     정보SPOT 에 담긴 실제 공연을 보여 줍니다 — 이름부터 「공연 홍보」 자리이니
+     실제 공연이 놓이는 것이 자연스럽습니다. */
+  async function feedUpcomingConcert(){
+    try{
+      const today = new Date();
+      const p = (n) => String(n).padStart(2, '0');
+      const from = today.getFullYear() + '-' + p(today.getMonth()+1) + '-' + p(today.getDate());
+
+      const rows = await sbGet('spot?select=id,title,body,thumb_url,venue_name,date_from,date_to,'
+        + 'kopis_state,category'
+        + '&section=eq.' + encodeURIComponent('공연정보')
+        + '&hidden=is.false'
+        + '&date_from=gte.' + from
+        + '&order=date_from.asc&limit=24');
+      if(!Array.isArray(rows) || !rows.length) return null;
+
+      /* 포스터가 있는 것을 먼저 고릅니다 — 이 자리는 그림이 커서 비면 허전합니다 */
+      const withImg = rows.filter(function(x){ return String(x.thumb_url || '').trim(); });
+      const pool = withImg.length ? withImg : rows;
+      const r = pool[Math.floor(Math.random() * pool.length)];
+
+      /* 「2026.08.15 ~ 08.16 · 예술의전당」 처럼 다듬습니다 */
+      const df = String(r.date_from || '').slice(0, 10);
+      const dt = String(r.date_to || '').slice(0, 10);
+      const dot = function(d){ return d ? d.replace(/-/g, '.') : ''; };
+      let when = dot(df);
+      if(dt && dt !== df){
+        when += ' ~ ' + (dt.slice(0,4) === df.slice(0,4) ? dot(dt).slice(5) : dot(dt));
+      }
+      const bits = [when, r.venue_name].filter(Boolean);
+
+      return {
+        label: 'Concert · ' + df.slice(0, 7).replace('-', '.'),
+        title: r.title || '',
+        summary: bits.join(' · '),
+        image_url: r.thumb_url || '',
+        link: '/spot/spot-view.html?id=' + encodeURIComponent(r.id),
+      };
+    }catch(e){ return null; }
+  }
+
   async function loadConcertPR(){
     const card = document.getElementById('concert-pr');
     if(!card) return;
     try{
-      const rows = await sbGet('features?slot=eq.concert_pr&select=label,title,summary,image_url,link&order=sort_order.asc,created_at.desc&limit=1');
+      let rows = await sbGet('features?slot=eq.concert_pr&select=label,title,summary,image_url,link&order=sort_order.asc,created_at.desc&limit=1');
+      /* 광고가 등록되어 있지 않으면 다가오는 공연을 보여 준다 */
+      if(!Array.isArray(rows) || !rows.length){
+        const up = await feedUpcomingConcert();
+        rows = up ? [up] : [];
+      }
       if(!Array.isArray(rows) || !rows.length) return;
       const r = rows[0];
       const lbl = card.querySelector('.en-s'); if(lbl && r.label != null) lbl.textContent = r.label;
