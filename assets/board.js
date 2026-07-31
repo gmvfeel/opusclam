@@ -542,6 +542,8 @@ window.OCBoard = (function () {
               if (listEl) {
                 /* 카드형은 두 칸으로 놓이므로 목록 자리에 표시를 달아 둡니다 */
                 listEl.classList.toggle('as-cards', !!cfg.cardStyle);
+                /* 공연 목록도 두 칸으로 — 목록 폭이 넓어 한 줄에 하나면 비어 보입니다 */
+                listEl.classList.toggle('as-concert', !!cfg.concertStyle);
                 /* 번호는 전체 건수에서 거꾸로 셉니다 — 최신 글이 가장 큰 번호입니다 */
                 var off = (pg - 1) * PAGE;
                 var numOf = function (i) { return total - off - i; };
