@@ -104,14 +104,18 @@ async function sb(path, opts = {}) {
   return txt ? JSON.parse(txt) : null;
 }
 
-/* 1000행씩 끝까지 받아옵니다 (Supabase 기본 상한이 1000행입니다) */
+/* 끝까지 받아옵니다.
+   ★ 예전에는 150개씩 달라 하면서 offset 은 1000씩 뛰었습니다.
+     그러면 한 바퀴마다 850개를 빠뜨립니다. 받은 만큼만 나아가도록 고쳤습니다. */
 async function sbAll(path, select) {
   const out = [];
-  for (let from = 0; ; from += 1000) {
+  let from = 0;
+  for (;;) {
     const rows = await sb(`${path}${path.includes('?') ? '&' : '?'}select=${select}` +
                           `&limit=150&offset=${from}`);
     if (!Array.isArray(rows) || !rows.length) break;
     out.push(...rows);
+    from += rows.length;
   }
   return out;
 }

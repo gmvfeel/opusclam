@@ -101,7 +101,7 @@ async function loadTargets() {
     );
     if (!rows || !rows.length) break;
     rows.forEach((r) => done.add(r.entity_id));
-    from += 1000;
+    from += rows.length;         // ★ 150개 받고 1000씩 건너뛰어 850개를 빠뜨렸습니다
   }
   console.log(`이미 사진이 있는 항목: ${done.size}건`);
 
@@ -120,7 +120,7 @@ async function loadTargets() {
       out.push({ id: r.id, name: r[T.nameCol] || '', qid: qid[0] });
       if (out.length >= LIMIT) break;
     }
-    off += 1000;
+    off += rows.length;          // ★ 받은 만큼만 나아갑니다
   }
   return out;
 }

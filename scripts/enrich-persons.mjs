@@ -30,6 +30,11 @@ const cap3  = (t) => t ? String(t).split(/,\s*|\s·\s/).map(s => s.trim()).filte
 
 /* ---------- Supabase (REST) ---------- */
 const H = { apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY, 'Content-Type': 'application/json' };
+/* ★ 나눠받기 — 「받은 만큼만 나아가고, 아무것도 오지 않을 때 끝냅니다」
+   예전에는 「1000개 달라 하고 1000보다 적게 오면 끝」 이었습니다.
+   그런데 Supabase 의 Max rows 가 200 이라 서버가 200에서 잘라 줍니다.
+   그러면 200 < 1000 이므로 첫 200개만 읽고 멈췄습니다.
+   상한이 몇이든(200이든 1000이든) 맞게 돌도록 고쳤습니다. */
 async function sbGetAll(table, select, filter, maxRows) {
   const out = []; const STEP = 1000; let from = 0;
   const cap = (maxRows === undefined || maxRows === null) ? 100000 : maxRows;
@@ -46,7 +51,8 @@ async function sbGetAll(table, select, filter, maxRows) {
       throw new Error('GET ' + r.status);
     }
     const batch = await r.json(); out.push(...batch);
-    if (batch.length < take) break; from += take;
+    if (!batch.length) break;              // 더 없으면 끝
+    from += batch.length;                 // ★ 받은 만큼만 나아갑니다
   }
   return out;
 }

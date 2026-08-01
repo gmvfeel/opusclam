@@ -101,8 +101,7 @@ async function loadTargets() {
     );
     if (!rows || !rows.length) break;
     rows.forEach((r) => count.set(r.entity_id, (count.get(r.entity_id) || 0) + 1));
-    if (rows.length < 1000) break;
-    from += 1000;
+    from += rows.length;        // ★ 받은 만큼만 나아갑니다 (서버가 200에서 자릅니다)
   }
   const already = [...count.values()].filter((n) => n >= 2).length;
   console.log(`이미 여러 장을 가진 항목: ${already}건 (건너뜁니다)`);
@@ -128,8 +127,7 @@ async function loadTargets() {
       });
       if (out.length >= LIMIT) break;
     }
-    if (rows.length < 1000) break;
-    off += 1000;
+    off += rows.length;          // ★ 받은 만큼만 나아갑니다
   }
   return out;
 }
