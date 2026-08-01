@@ -694,8 +694,8 @@ html[data-theme="dark"] .rv-lk { color: #b9b4e0; }
   font-family: var(--display);
   font-size: 21px; font-weight: 700; letter-spacing: -.015em;
   color: var(--ink); line-height: 1.3;
-  margin: 34px 0 20px;
-  padding-bottom: 12px;
+  margin: 28px 0 16px;
+  padding-bottom: 10px;
   border-bottom: 2px solid var(--rv-deep);
 }
 /* 머리칸 바로 아래에 오는 첫 묶음은 위 여백을 줄입니다 */
@@ -718,7 +718,7 @@ html[data-theme="dark"] .rv-lk { color: #b9b4e0; }
 /* ── 아래 단추 ────────────────────────────────────────────*/
 .rv-btns {
   display: flex; justify-content: center; gap: 10px;
-  margin: 30px 0 0; padding-top: 26px; border-top: 1px solid var(--line);
+  margin: 26px 0 0; padding-top: 22px; border-top: 1px solid var(--line);
 }
 .rv-btn {
   min-width: 132px; height: 44px; border-radius: 5px;
@@ -997,13 +997,16 @@ html[data-theme="dark"] .rw-msg { background: #1b1b1b; border-color: #333; }
 .rw-lk { font-weight: 700; text-decoration: underline; }
 
 /* ── 칸 짜임 — 한 줄에 둘 ─────────────────────────────────*/
+/* 줄 사이 — 위아래 안여백 8px + 격자 2px = 18px.
+   앞서는 26px 이었는데 칸이 많아 화면이 성기게 보였습니다.
+   글자 크기는 그대로 두고 <b>사이만</b> 좁힙니다. */
 .rw-grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px 18px; margin-bottom: 8px;
+  gap: 2px 18px; margin-bottom: 4px;
 }
 .rw-f {
-  display: flex; flex-direction: column; align-items: stretch; gap: 7px;
-  min-width: 0; padding: 11px 0;
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  min-width: 0; padding: 8px 0;
 }
 .rw-f--full { grid-column: 1 / -1; }
 .rw-f > span {
@@ -1019,7 +1022,7 @@ html[data-theme="dark"] .rw-msg { background: #1b1b1b; border-color: #333; }
 .rw-f input[type="text"], .rw-f input[type="tel"], .rw-f input[type="email"],
 .rw-f select, .rw-f textarea {
   flex: none; width: 100%; min-width: 0;
-  padding: 0 11px; height: 40px;
+  padding: 0 11px; height: 38px;
   border: 1px solid #d4d0dd; border-radius: 4px;
   background: #fff; color: var(--text);
   font-family: inherit; font-size: 13.5px;
@@ -1065,6 +1068,8 @@ html[data-theme="dark"] .rw-f textarea { background: #141414; border-color: #444
 }
 .rw-inline em { flex: 0 0 auto; font-style: normal; color: var(--text-3); }
 .rw-inline .rc-checks { flex: 0 0 auto; }
+/* 체크·라디오 줄은 입력칸만큼 높을 까닭이 없습니다 */
+.rw-f .rc-checks { min-height: 34px; }
 
 /* 내 정보 불러오기 */
 .rw-pull {
@@ -1077,7 +1082,7 @@ html[data-theme="dark"] .rw-f textarea { background: #141414; border-color: #444
 .rw-pull:hover { background: var(--rv-deep); color: #fff; }
 
 .rw-hint {
-  margin: -6px 0 16px; padding: 12px 14px;
+  margin: -2px 0 12px; padding: 11px 14px;
   background: #f7f7fa; border-radius: 6px;
   font-size: 12.5px; line-height: 1.7; color: var(--text-3);
 }
@@ -1085,7 +1090,7 @@ html[data-theme="dark"] .rw-f textarea { background: #141414; border-color: #444
 html[data-theme="dark"] .rw-hint { background: #1a1a1a; }
 
 /* ── 학교 줄 ──────────────────────────────────────────────*/
-.rw-schools { display: flex; flex-direction: column; gap: 12px; }
+.rw-schools { display: flex; flex-direction: column; gap: 10px; }
 .rw-school {
   position: relative;
   border: 1px solid var(--line); border-radius: 8px;
@@ -1093,9 +1098,9 @@ html[data-theme="dark"] .rw-hint { background: #1a1a1a; }
 }
 html[data-theme="dark"] .rw-school { background: #191919; border-color: #333; }
 .rw-school-grid {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px 14px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 14px;
 }
-.rw-school .rw-f { padding: 6px 0; gap: 5px; }
+.rw-school .rw-f { padding: 5px 0; gap: 4px; }
 .rw-school .rw-f > span { font-size: 11.5px; }
 .rw-school .rw-f input, .rw-school .rw-f select { height: 36px; font-size: 13px; }
 .rw-f--name { grid-column: span 2; }
@@ -1135,7 +1140,7 @@ html[data-theme="dark"] .rw-school { background: #191919; border-color: #333; }
 .rw-del:hover { border-color: #c0392b; color: #c0392b; }
 
 .rw-add {
-  margin: 12px 0 26px; height: 38px; padding: 0 18px; cursor: pointer;
+  margin: 10px 0 18px; height: 38px; padding: 0 18px; cursor: pointer;
   border: 1px dashed var(--line-2); border-radius: 6px;
   background: var(--paper); color: var(--text-2);
   font-family: var(--sans); font-size: 13px; font-weight: 600;
@@ -1144,11 +1149,11 @@ html[data-theme="dark"] .rw-school { background: #191919; border-color: #333; }
 
 /* ── 공개·동의 ────────────────────────────────────────────*/
 .rw-agree {
-  margin-top: 26px; padding: 18px 20px;
+  margin-top: 22px; padding: 16px 18px;
   background: #f7f7fa; border-radius: 8px;
 }
 html[data-theme="dark"] .rw-agree { background: #1a1a1a; }
-.rw-agree p { margin: 12px 0; font-size: 12.5px; line-height: 1.7; color: var(--text-3); }
+.rw-agree p { margin: 10px 0; font-size: 12.5px; line-height: 1.65; color: var(--text-3); }
 .rw-agree .rc-check b { color: var(--rv-deep); }
 
 /* ── 좁은 화면 ────────────────────────────────────────────*/
@@ -1316,7 +1321,7 @@ html[data-theme="dark"] .rw-draftbar { background: #262013; border-color: #4a3d1
    ★ 앞서는 세 칸을 각각 별개의 줄로 두고 보이지 않는 이름표를
      넣었습니다. 안 보이면서 자리는 차지해(visibility: hidden)
      줄마다 여백이 겹겹이 쌓였습니다. */
-.rw-addr { display: flex; flex-direction: column; gap: 8px; }
+.rw-addr { display: flex; flex-direction: column; gap: 7px; }
 .rw-addr-top { display: flex; gap: 8px; align-items: stretch; }
 .rw-addr-top #rwZip {
   flex: 0 0 132px; width: 132px;
@@ -1325,7 +1330,7 @@ html[data-theme="dark"] .rw-draftbar { background: #262013; border-color: #4a3d1
 html[data-theme="dark"] .rw-addr-top #rwZip { background: #1a1a1a; }
 .rw-find--addr {
   flex: 0 0 auto; margin-top: 0;
-  height: 40px; padding: 0 18px; font-size: 12.5px;
+  height: 38px; padding: 0 18px; font-size: 12.5px;   /* 우편번호 칸과 같은 키 */
 }
 @media (max-width: 480px) {
   /* 아주 좁으면 단추를 아래로 내려 온전한 폭을 씁니다 */
