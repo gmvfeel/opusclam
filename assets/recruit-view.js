@@ -206,7 +206,9 @@
         : '');
 
     /* ── 접수기간·방법 ── */
-    var sec2 = '<section class="rv-sec"><h2>접수기간 및 방법</h2>'
+    /* 「접수기간 / 방법」 은 바로 위 큰 제목이 이미 말해 주므로
+       같은 말을 소제목으로 되풀이하지 않고 표만 둡니다. */
+    var sec2 = '<section class="rv-sec">'
       +   '<table class="rv-tbl"><tbody>'
       +     row('접수기간',
             esc(R.applyLabel(o.apply_from, o.apply_to, o.apply_always, o.apply_until_hired)) + ddayTag
@@ -237,10 +239,13 @@
     box.innerHTML = ''
       + '<h1 class="rv-title">' + esc(o.title || '') + '</h1>'
       + head
-      + tabs('info')
-      + '<div class="rv-pane" id="rvPaneInfo">' + sec1 + '</div>'
-      + tabs('apply')
-      + '<div class="rv-pane" id="rvPaneApply">' + sec2 + '</div>'
+      /* 두 묶음을 큰 제목으로 갈라 둡니다.
+         앞서는 옮겨 가는 탭 단추를 두었는데, 한 화면에 내용이
+         모두 펼쳐져 있으므로 누를 까닭이 없었습니다. */
+      + '<h2 class="rv-group">채용상세정보</h2>'
+      + sec1
+      + '<h2 class="rv-group">접수기간 / 방법</h2>'
+      + sec2
       + '<div class="rv-btns">' + applyBtn
       +   '<a class="rv-btn rv-btn--list" href="' + cfg.listPage + '">목록</a></div>'
       /* 자료 출처·문의 — 다른 뷰 화면과 같은 짜임입니다 */
@@ -252,31 +257,8 @@
       +   '">메일문의하기</a>'
       + '</div>';
 
-    bindTabs();
     markCurrent(o.id);
     document.title = (o.title || '채용정보') + ' · 리쿠르트 · OPUSCLAM.COM';
-  }
-
-  /* 두 갈래 탭 — 시안처럼 위아래 두 곳에 둡니다.
-     아래까지 읽고 나서 접수방법으로 건너뛸 수 있어야 하기 때문입니다. */
-  function tabs(on) {
-    return '<div class="rv-tabs" role="tablist">'
-      + '<button type="button" class="rv-tab' + (on === 'info' ? ' on' : '') + '" data-go="info">채용정보</button>'
-      + '<button type="button" class="rv-tab' + (on === 'apply' ? ' on' : '') + '" data-go="apply">접수기간 / 방법</button>'
-      + '</div>';
-  }
-  function bindTabs() {
-    var box = el('#rvDoc');
-    if (!box) return;
-    box.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-go]');
-      if (!b) return;
-      var pane = el(b.getAttribute('data-go') === 'apply' ? '#rvPaneApply' : '#rvPaneInfo');
-      if (!pane) return;
-      /* 붙어 있는 헤더에 가리지 않게 조금 위에서 멈춥니다 */
-      var top = pane.getBoundingClientRect().top + window.pageYOffset - 140;
-      window.scrollTo({ top: top, behavior: 'smooth' });
-    });
   }
 
   /* 오른쪽 목록에서 지금 보고 있는 줄을 눈에 띄게 합니다 */
