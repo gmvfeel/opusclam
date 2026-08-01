@@ -193,9 +193,23 @@
     return drawJob(o);
   }
 
-  function drawJob(o) {
-    var box = el('#rvDoc');
-    if (!box) return;
+  /* 채용 상세의 속 — 상세 화면과 미리보기가 함께 씁니다.
+     인재 쪽(talentHtml)과 같은 까닭입니다 — 따로 만들면
+     한쪽만 고쳐져 미리보기와 실제가 달라집니다. */
+  function jobHtml(o, opt) {
+    return drawJob(o, Object.assign({ html: true }, opt || {}));
+  }
+
+  function previewJob(o) {
+    if (!R) R = window.OCRecruit;
+    if (!cfg) cfg = { kind: 'job', listPage: '/recruit/job.html' };
+    return drawJob(o || {}, { html: true, preview: true });
+  }
+
+  function drawJob(o, opt) {
+    opt = opt || {};
+    var box = opt.html ? null : el('#rvDoc');
+    if (!opt.html && !box) return;
 
     var dday = R.daysLeft(o.apply_to);
     var ddayTag = (dday != null && dday >= 0 && dday <= 7)
@@ -300,8 +314,8 @@
         + '">지원하기</a>'
       : '<span class="rv-btn rv-btn--off" title="등록된 이메일이 없습니다. 문의처를 확인해 주십시오.">지원하기</span>';
 
-    box.innerHTML = ''
-      + '<h1 class="rv-title">' + esc(o.title || '') + '</h1>'
+    var out = ''
+      + '<h1 class="rv-title">' + esc(o.title || '(제목을 아직 적지 않았습니다)') + '</h1>'
       + head
       /* 두 묶음을 큰 제목으로 갈라 둡니다.
          앞서는 옮겨 가는 탭 단추를 두었는데, 한 화면에 내용이
@@ -310,17 +324,25 @@
       + sec1
       + '<h2 class="rv-group">접수기간 / 방법</h2>'
       + sec2
-      + '<div class="rv-btns">' + applyBtn
-      +   '<a class="rv-btn rv-btn--list" href="' + cfg.listPage + '">목록</a></div>'
-      /* 자료 출처·문의 — 다른 뷰 화면과 같은 짜임입니다 */
-      + '<div class="rv-note">'
-      +   '<p>등록된 내용은 채용 주체가 직접 올린 것입니다. 채용 조건과 일정은 바뀔 수 있으니 '
-      +   '지원 전에 문의처로 다시 확인해 주십시오.</p>'
-      +   '<a class="rv-mail" href="mailto:cser@wixon.co.kr?subject='
-      +   encodeURIComponent('[오퍼스클램] 채용정보 문의 — ' + (o.title || ''))
-      +   '">메일문의하기</a>'
-      + '</div>';
+      ;
 
+    /* 미리보기에는 지원·목록 단추와 문의 안내를 붙이지 않습니다 —
+       아직 담기지 않았으므로 지원할 곳도, 돌아갈 목록도 없습니다. */
+    if (!opt.preview) {
+      out += '<div class="rv-btns">' + applyBtn
+        + '<a class="rv-btn rv-btn--list" href="' + cfg.listPage + '">목록</a></div>'
+        + '<div class="rv-note">'
+        +   '<p>등록된 내용은 채용 주체가 직접 올린 것입니다. 채용 조건과 일정은 바뀔 수 있으니 '
+        +   '지원 전에 문의처로 다시 확인해 주십시오.</p>'
+        +   '<a class="rv-mail" href="mailto:cser@wixon.co.kr?subject='
+        +   encodeURIComponent('[오퍼스클램] 채용정보 문의 — ' + (o.title || ''))
+        +   '">메일문의하기</a>'
+        + '</div>';
+    }
+
+    if (opt.html) return out;
+
+    box.innerHTML = out;
     markCurrent(o.id);
     document.title = (o.title || '채용정보') + ' · 리쿠르트 · OPUSCLAM.COM';
   }
@@ -693,5 +715,8 @@
     window.addEventListener('resize', measureAside);
   }
 
-  window.OCRecruitView = { init: init, markCurrent: markCurrent, previewTalent: previewTalent };
+  window.OCRecruitView = {
+    init: init, markCurrent: markCurrent,
+    previewTalent: previewTalent, previewJob: previewJob, jobHtml: jobHtml,
+  };
 })();

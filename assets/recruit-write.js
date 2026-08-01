@@ -34,6 +34,23 @@
   var SCHOOL_TABLE = 'schools';          /* ★ 확인 필요 — 음악학교DB 표 이름 */
   var SCHOOL_NAME_COL = 'name_ko';       /* ★ 확인 필요 — 학교명 칸 */
 
+  /* 어느 등록 화면인가 — 'talent'(인재) 또는 'job'(채용).
+     ★ 두 화면이 <b>한 엔진</b>을 씁니다. 도우미·미리보기·임시저장·
+       주소검색·CSS 가 모두 공용이고, 갈래마다 다른 것(담을 칸,
+       꼭 채울 것, 담을 표)만 갈라 둡니다. */
+  var MODE = 'talent';
+  var TABLE = 'recruit_talents';
+
+  /* 채용공고를 올린 단체가 담긴 DB —
+     ★ 표 이름은 확인이 필요합니다(recruit-13 SQL). 틀리면 「찾기」 만
+       조용히 실패하고, 단체명을 직접 적으면 등록 자체는 됩니다. */
+  var ORG_DBS = {
+    org:        { label: '음악단체DB',      table: 'organizations', nameCol: 'name_ko' },
+    venue:      { label: '공연장DB',        table: 'venues',        nameCol: 'name_ko' },
+    school:     { label: '음악학교DB',      table: 'schools',       nameCol: 'name_ko' },
+    foundation: { label: '관련기관·재단DB', table: 'foundations',   nameCol: 'name_ko' },
+  };
+
   var R, cfg = null, C = null, me = null, editId = null, busy = false;
 
   function el(s, root) { return (root || document).querySelector(s); }
@@ -283,6 +300,29 @@
     { sel: '#rwAgree',     label: '약관 동의', ok: function () { var x = el('#rwAgree'); return !!(x && x.checked); } },
   ];
 
+  /* ── 채용등록 — 꼭 채울 것 ── */
+  var MUST_J = [
+    { sel: '#rwTitle',   label: '채용제목',  ok: function () { return !!val('#rwTitle'); } },
+    { sel: '#rwOrgName', label: '단체명',    ok: function () { return !!val('#rwOrgName'); } },
+    { sel: '#rwCat1',    label: '모집직종',  ok: function () { return !!val('#rwCat1'); } },
+    { sel: '#rwR1',      label: '근무지역',  ok: function () { return !!val('#rwR1'); } },
+    { sel: '#rwApply',   label: '접수기간',  ok: function () {
+        return !!val('#rwApplyTo') || chk('#rwAlways') || chk('#rwUntilHired'); } },
+    { sel: '#rwMethods', label: '접수방법',  ok: function () { return R.checked('#rwMethods', 'rw-method').length > 0; } },
+    { sel: '#rwCName',   label: '담당자명',  ok: function () { return !!val('#rwCName'); } },
+    { sel: '#rwAgree',   label: '약관 동의', ok: function () { return chk('#rwAgree'); } },
+  ];
+
+  var SOFT_J = [
+    { sel: '#rwDuty',       label: '담당업무',     ok: function () { return !!val('#rwDuty'); } },
+    { sel: '#rwHeadcount',  label: '모집인원',     ok: function () { return !!val('#rwHeadcount'); } },
+    { sel: '#rwEmp',        label: '근무형태',     ok: function () { return R.checked('#rwEmp', 'rw-emp').length > 0; } },
+    { sel: '#rwPayType',    label: '급여사항',     ok: function () { return !!val('#rwPayType'); } },
+    { sel: '#rwBody',       label: '상세모집내용', ok: function () { return !!val('#rwBody'); } },
+    { sel: '#rwCEmail',     label: '이메일',       ok: function () { return !!val('#rwCEmail'); } },
+    { sel: '#rwOrgId',      label: '단체DB 연결',  ok: function () { return !!val('#rwOrgId'); } },
+  ];
+
   /* 권장 — 없어도 담기지만, 있으면 뽑는 쪽이 훨씬 잘 봅니다 */
   var SOFT = [
     { sel: '#rwSchools', label: '학력 한 곳 이상', ok: function () { return readSchools().length > 0; } },
@@ -290,6 +330,11 @@
     { sel: '#rwBody',    label: '자기소개서',      ok: function () { return !!val('#rwBody'); } },
     { sel: '#rwPayType', label: '희망급여',        ok: function () { return !!val('#rwPayType'); } },
   ];
+
+  /* 갈래에 맞는 목록을 돌려줍니다 — 도우미와 need() 가 함께 씁니다 */
+  function musts() { return MODE === 'job' ? MUST_J : MUST; }
+  function softs() { return MODE === 'job' ? SOFT_J : SOFT; }
+  function chk(sel) { var x = el(sel); return !!(x && x.checked); }
 
   function drawChecks() {
     var line = function (it) {
@@ -300,16 +345,17 @@
         + '<i aria-hidden="true"></i><span>' + esc(it.label) + '</span></button></li>';
     };
 
+    var M = musts(), S = softs();
     var must = el('#rwCheck');
-    if (must) must.innerHTML = MUST.map(line).join('');
+    if (must) must.innerHTML = M.map(line).join('');
     var soft = el('#rwCheckSoft');
-    if (soft) soft.innerHTML = '<li class="rw-check-h">권장</li>' + SOFT.map(line).join('');
+    if (soft) soft.innerHTML = '<li class="rw-check-h">권장</li>' + S.map(line).join('');
 
-    var done = MUST.filter(function (it) { try { return !!it.ok(); } catch (e) { return false; } }).length;
+    var done = M.filter(function (it) { try { return !!it.ok(); } catch (e) { return false; } }).length;
     var bar = el('#rwProgBar');
-    if (bar) bar.style.width = Math.round(done / MUST.length * 100) + '%';
+    if (bar) bar.style.width = Math.round(done / M.length * 100) + '%';
     var txt = el('#rwProgTxt');
-    if (txt) txt.textContent = '꼭 채울 것 ' + done + ' / ' + MUST.length;
+    if (txt) txt.textContent = '꼭 채울 것 ' + done + ' / ' + M.length;
   }
 
   /* 못 채운 줄을 누르면 그 칸으로 데려갑니다 */
@@ -336,8 +382,8 @@
     var box = el('#rwMine'), wrap = el('#rwMineBox');
     if (!box || !wrap) return;
     try {
-      var r = await C.from('recruit_talents')
-        .select('id,title,is_open,created_at')
+      var r = await C.from(TABLE)
+        .select(MODE === 'job' ? 'id,title,hidden,created_at' : 'id,title,is_open,created_at')
         .eq('member_id', me.user.id)
         .order('created_at', { ascending: false })
         .limit(6);
@@ -382,13 +428,66 @@
 
   /* ── 빠진 것 짚기 ─────────────────────────────────────────*/
   function need() {
-    return MUST.filter(function (it) {
+    return musts().filter(function (it) {
       try { return !it.ok(); } catch (e) { return true; }
     }).map(function (it) { return [it.sel, it.label]; });
   }
 
   /* ── 담기 ─────────────────────────────────────────────────*/
-  function gather() {
+  function gather() { return MODE === 'job' ? gatherJob() : gatherTalent(); }
+
+  /* 채용공고 — 시안(03_채용등록)의 네 묶음을 그대로 담습니다 */
+  function gatherJob() {
+    var orgDb = val('#rwOrgDb') || 'org';
+    return {
+      title: val('#rwTitle'),
+      org_name: val('#rwOrgName'),
+      /* 어느 DB의 몇 번인가 — 상세 화면의 「단체정보 상세보기」 가 이 짝을 씁니다.
+         DB에서 고르지 않았으면 번호가 비고, 그때는 그 DB의 목록으로 갑니다. */
+      org_db: orgDb,
+      org_id: num(val('#rwOrgId')),
+      org_field: val('#rwOrgField'),
+      org_home: val('#rwOrgHome'),
+      org_addr: [val('#rwOrgZip') ? '(' + val('#rwOrgZip') + ')' : '',
+                 val('#rwOrgAddr1'), val('#rwOrgAddr2')]
+                .filter(function (x) { return x; }).join(' '),
+
+      job_cat1: val('#rwCat1'), job_cat2: val('#rwCat2'), job_etc: val('#rwJobEtc'),
+      region1: val('#rwR1'), region2: val('#rwR2'),
+      duty: val('#rwDuty'),
+      headcount: num(val('#rwHeadcount')),
+      emp_types: R.checked('#rwEmp', 'rw-emp'),
+      work_days: val('#rwDays'),
+      work_start: val('#rwStart'), work_end: val('#rwEnd'),
+      pay_type: val('#rwPayType'), pay_amount: val('#rwPayAmount'),
+      pay_daily: chk('#rwPayDaily'),
+      audition: radio('rw-aud'),
+      audition_piece: (radio('rw-aud') === '있음') ? val('#rwAudPiece') : null,
+
+      gender: radio('rw-gender') || '무관',
+      age_any: chk('#rwAgeAny'),
+      age_min: chk('#rwAgeAny') ? null : num(val('#rwAgeMin')),
+      age_max: chk('#rwAgeAny') ? null : num(val('#rwAgeMax')),
+      edu_any: chk('#rwEduAny'),
+      edu: chk('#rwEduAny') ? null : val('#rwEdu'),
+      prefer: R.checked('#rwPrefer', 'rw-prefer'),
+
+      body: val('#rwBody'),
+      keywords: val('#rwKeywords'),
+
+      apply_from: val('#rwApplyFrom') || null,
+      apply_to: (chk('#rwAlways') || chk('#rwUntilHired')) ? null : (val('#rwApplyTo') || null),
+      apply_always: chk('#rwAlways'),
+      apply_until_hired: chk('#rwUntilHired'),
+      apply_methods: R.checked('#rwMethods', 'rw-method'),
+      contact_name: val('#rwCName'),
+      contact_email: val('#rwCEmail'),
+      contact_phone: val('#rwCPhone'),
+      contact_fax: val('#rwCFax'),
+    };
+  }
+
+  function gatherTalent() {
     var by = num(val('#rwBy'));
     var tel = el('#rwTelSame') && el('#rwTelSame').checked ? val('#rwPhone') : val('#rwTel');
 
@@ -438,10 +537,10 @@
       var d = gather();
       var res;
       if (editId) {
-        res = await C.from('recruit_talents').update(d).eq('id', editId).select('id').maybeSingle();
+        res = await C.from(TABLE).update(d).eq('id', editId).select('id').maybeSingle();
       } else {
         d.member_id = me.user.id;
-        res = await C.from('recruit_talents').insert(d).select('id').maybeSingle();
+        res = await C.from(TABLE).insert(d).select('id').maybeSingle();
       }
       if (res.error) throw res.error;
       var id = (res.data && res.data.id) || editId;
@@ -460,7 +559,9 @@
       /* 권한 규칙에 막힌 것과 그 밖의 문제를 갈라 알려 줍니다 —
          「알 수 없는 오류」 는 아무 도움이 되지 않습니다. */
       if (/row-level security|permission|policy/i.test(m)) {
-        say('등록 권한이 없습니다. 인재정보는 <b>전공자·일반 회원</b>만 올릴 수 있습니다.', 'warn');
+        say(MODE === 'job'
+          ? '등록 권한이 없습니다. 채용정보는 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원만 올릴 수 있습니다.'
+          : '등록 권한이 없습니다. 인재정보는 <b>전공자·일반 회원</b>만 올릴 수 있습니다.', 'warn');
       } else {
         say('담지 못했습니다. 잠시 후 다시 시도해 주십시오.<br>' + esc(m), 'warn');
       }
@@ -477,7 +578,7 @@
        걸러 내도록 고쳐야 하고, 한 곳만 빠뜨려도 남의 미완성 글이
        목록에 나옵니다. 따로 둔 표(recruit_drafts)에 담습니다.
      회원 한 사람이 갈래마다 하나씩 갖습니다. */
-  var DRAFT_KIND = 'talent';
+  var DRAFT_KIND = 'talent';   /* initJob 이 'job' 으로 바꿉니다 */
 
   async function saveDraft(quiet) {
     if (!me || !me.user) { if (!quiet) say('로그인이 필요합니다.', 'warn'); return; }
@@ -536,7 +637,50 @@
 
   /* 담긴 덩이를 폼에 되돌립니다 — 고치기(loadForEdit)와 같은 일이므로
      한 함수로 묶어 두 곳에서 함께 씁니다. */
-  function fillFrom(o) {
+  function fillFrom(o) { return MODE === 'job' ? fillFromJob(o) : fillFromTalent(o); }
+
+  function fillFromJob(o) {
+    setVal('#rwTitle', o.title);
+    setVal('#rwOrgName', o.org_name);
+    setVal('#rwOrgDb', o.org_db || 'org');
+    setVal('#rwOrgId', o.org_id == null ? '' : o.org_id);
+    markOrgLinked(!!o.org_id);
+    setVal('#rwOrgField', o.org_field);
+    setVal('#rwOrgHome', o.org_home);
+    setVal('#rwOrgAddr1', o.org_addr);
+    setVal('#rwCat1', o.job_cat1);
+    if (o.job_cat1) { R.fillJobCat2(el('#rwCat2'), o.job_cat1, '2차직종선택'); setVal('#rwCat2', o.job_cat2); }
+    setVal('#rwJobEtc', o.job_etc);
+    setVal('#rwR1', o.region1);
+    if (o.region1) { R.fillRegion2(el('#rwR2'), o.region1, '2차지역선택'); setVal('#rwR2', o.region2); }
+    setVal('#rwDuty', o.duty);
+    setVal('#rwHeadcount', o.headcount);
+    setChecks('rw-emp', o.emp_types);
+    setVal('#rwDays', o.work_days);
+    setVal('#rwStart', o.work_start); setVal('#rwEnd', o.work_end);
+    setVal('#rwPayType', o.pay_type); setVal('#rwPayAmount', o.pay_amount);
+    if (el('#rwPayDaily')) el('#rwPayDaily').checked = !!o.pay_daily;
+    setRadio('rw-aud', o.audition);
+    setVal('#rwAudPiece', o.audition_piece);
+    setRadio('rw-gender', o.gender || '무관');
+    if (el('#rwAgeAny')) el('#rwAgeAny').checked = (o.age_any !== false);
+    setVal('#rwAgeMin', o.age_min); setVal('#rwAgeMax', o.age_max);
+    if (el('#rwEduAny')) el('#rwEduAny').checked = (o.edu_any !== false);
+    setVal('#rwEdu', o.edu);
+    setChecks('rw-prefer', o.prefer);
+    setVal('#rwBody', o.body);
+    setVal('#rwKeywords', o.keywords);
+    setVal('#rwApplyFrom', o.apply_from); setVal('#rwApplyTo', o.apply_to);
+    if (el('#rwAlways')) el('#rwAlways').checked = !!o.apply_always;
+    if (el('#rwUntilHired')) el('#rwUntilHired').checked = !!o.apply_until_hired;
+    setChecks('rw-method', o.apply_methods);
+    setVal('#rwCName', o.contact_name); setVal('#rwCEmail', o.contact_email);
+    setVal('#rwCPhone', o.contact_phone); setVal('#rwCFax', o.contact_fax);
+    toggleJob();
+    drawChecks();
+  }
+
+  function fillFromTalent(o) {
     setVal('#rwTitle', o.title);
     setVal('#rwCat1', o.job_cat1);
     if (o.job_cat1) { R.fillJobCat2(el('#rwCat2'), o.job_cat1, '희망분야'); setVal('#rwCat2', o.job_cat2); }
@@ -595,7 +739,11 @@
     }
 
     var body = el('#rwPvBody');
-    if (body) body.innerHTML = window.OCRecruitView.previewTalent(gather());
+    if (body) {
+      body.innerHTML = (MODE === 'job')
+        ? window.OCRecruitView.previewJob(gather())
+        : window.OCRecruitView.previewTalent(gather());
+    }
     var wrap = el('#rwPv');
     if (wrap) {
       wrap.hidden = false;
@@ -614,13 +762,14 @@
   /* ── 고칠 때 불러오기 ─────────────────────────────────────*/
   async function loadForEdit(id) {
     try {
-      var r = await C.from('recruit_talents').select('*').eq('id', id).maybeSingle();
+      var r = await C.from(TABLE).select('*').eq('id', id).maybeSingle();
       if (r.error) throw r.error;
       var o = r.data;
-      if (!o) { say('고치실 인재정보를 찾지 못했습니다.', 'warn'); return; }
+      if (!o) { say('고치실 내용을 찾지 못했습니다.', 'warn'); return; }
 
       editId = o.id;
-      var h = el('#rwHead'); if (h) h.textContent = '인재정보 고치기';
+      var h = el('#rwHead');
+      if (h) h.textContent = (MODE === 'job') ? '채용정보 고치기' : '인재정보 고치기';
       fillFrom(o);
       if (el('#rwAgree')) el('#rwAgree').checked = true;
       drawChecks();
@@ -793,5 +942,197 @@
     });
   }
 
-  window.OCRecruitWrite = { initTalent: initTalent };
+  /* ============================================================
+     채용등록 — initJob
+     ============================================================ */
+
+  /* 단체 찾기 — 네 DB 가운데 고른 곳을 뒤집니다.
+     ★ 여기가 네트워킹의 고리입니다.
+       고르면 org_db + org_id 가 담기고, 채용 상세의
+       「회사 / 단체정보 상세보기」 가 그 단체 화면으로 바로 갑니다.
+       고르지 않고 이름만 적어도 등록은 됩니다 — 막다른 길은
+       만들지 않되, 고르시도록 권합니다(도우미의 권장 항목). */
+  function markOrgLinked(on) {
+    var tag = el('#rwOrgLinked');
+    if (tag) tag.hidden = !on;
+  }
+
+  async function findOrg() {
+    var out = el('#rwOrgRes');
+    var kw = val('#rwOrgName');
+    var key = val('#rwOrgDb') || 'org';
+    var db = ORG_DBS[key];
+    if (!out || !db) return;
+    if (kw.length < 2) {
+      out.hidden = false;
+      out.innerHTML = '<p class="sc-hint">단체명을 두 글자 이상 적고 다시 눌러 주십시오.</p>';
+      return;
+    }
+    out.hidden = false;
+    out.innerHTML = '<p class="sc-hint">' + esc(db.label) + ' 에서 찾는 중…</p>';
+    try {
+      var r = await C.from(db.table)
+        .select('id,' + db.nameCol)
+        .ilike(db.nameCol, '%' + kw + '%')
+        .limit(8);
+      if (r.error) throw r.error;
+      var rows = r.data || [];
+      if (!rows.length) {
+        out.innerHTML = '<p class="sc-hint">' + esc(db.label) + ' 에서 찾지 못했습니다. '
+          + '다른 DB를 골라 보시거나, 적으신 이름 그대로 등록하셔도 됩니다.</p>';
+        return;
+      }
+      out.innerHTML = rows.map(function (x) {
+        return '<button type="button" class="sc-pick" data-id="' + esc(x.id) + '"'
+          + ' data-name="' + esc(x[db.nameCol] || '') + '">'
+          + esc(x[db.nameCol] || '') + '</button>';
+      }).join('');
+    } catch (e) {
+      out.innerHTML = '<p class="sc-hint">' + esc(db.label) + ' 을 읽지 못했습니다. '
+        + '단체명을 직접 적으셔도 등록됩니다.</p>';
+    }
+  }
+
+  /* 「무관」 을 켜면 나이·학력 칸을 잠급니다.
+     오디션이 「없음」 이면 곡명 칸도 잠급니다.
+     쓸 수 없는 칸이 열려 있으면 적어야 하는 줄로 오해합니다. */
+  function toggleJob() {
+    var ageAny = chk('#rwAgeAny');
+    ['#rwAgeMin', '#rwAgeMax'].forEach(function (id) {
+      var x = el(id); if (x) { x.disabled = ageAny; if (ageAny) x.value = ''; }
+    });
+    var eduAny = chk('#rwEduAny');
+    var e = el('#rwEdu'); if (e) { e.disabled = eduAny; if (eduAny) e.value = ''; }
+
+    var aud = (radio('rw-aud') === '있음');
+    var ap = el('#rwAudPiece'); if (ap) { ap.disabled = !aud; if (!aud) ap.value = ''; }
+
+    /* 상시모집·채용시까지면 마감일을 잠급니다 — 두 값이 어긋나면
+       목록의 마감순 정렬이 뒤죽박죽이 됩니다. */
+    var noEnd = chk('#rwAlways') || chk('#rwUntilHired');
+    var at = el('#rwApplyTo'); if (at) { at.disabled = noEnd; if (noEnd) at.value = ''; }
+  }
+
+  async function initJob(options) {
+    cfg = Object.assign({ listPage: '/recruit/job.html', viewPage: '/recruit/job-view.html' }, options || {});
+    MODE = 'job';
+    TABLE = 'recruit_jobs';
+    DRAFT_KIND = 'job';
+    R = window.OCRecruit;
+    if (!R || !window.supabase) { console.error('recruit.js · supabase-js 를 먼저 불러야 합니다.'); return; }
+    C = window.supabase.createClient(SB, KEY);
+
+    /* 분류 채우기 */
+    R.bindPair('#rwCat1', '#rwCat2', 'job', '1차직종선택', '2차직종선택');
+    R.bindPair('#rwR1', '#rwR2', 'region', '1차지역선택', '2차지역선택');
+    R.fill(el('#rwDays'), R.WORK_DAYS, '근무요일선택');
+    R.fill(el('#rwStart'), R.HOURS, '근무시작시간');
+    R.fill(el('#rwEnd'), R.HOURS, '근무종료시간');
+    R.fill(el('#rwPayType'), R.PAY_TYPES, '급여선택');
+    R.fill(el('#rwEdu'), R.EDU, '학력선택');
+    R.fillChecks(el('#rwEmp'), R.EMP_TYPES, 'rw-emp');
+    R.fillChecks(el('#rwPrefer'), R.PREFER, 'rw-prefer');
+    R.fillChecks(el('#rwMethods'), R.APPLY_METHOD, 'rw-method');
+    R.fillRadios(el('#rwGenderBox'), R.GENDERS, 'rw-gender', '무관');
+    R.fillRadios(el('#rwAud'), R.AUDITION, 'rw-aud', R.AUDITION[0]);
+    /* 어느 DB의 단체인가 */
+    R.fill(el('#rwOrgDb'), Object.keys(ORG_DBS).map(function (k) {
+      return { value: k, label: ORG_DBS[k].label };
+    }), null);
+    /* 접수방법은 이메일이 가장 흔하므로 미리 켜 둡니다 */
+    setChecks('rw-method', ['이메일']);
+    toggleJob();
+
+    drawChecks();
+    bindChecks();
+    measureAside();
+
+    /* 로그인·권한 미리 보기 */
+    var s2 = await C.auth.getSession();
+    var u = s2.data && s2.data.session && s2.data.session.user;
+    if (!u) {
+      say('채용정보를 올리시려면 먼저 로그인해 주십시오. '
+        + '<a class="rw-lk" href="' + LOGIN_PAGE + '?next='
+        + encodeURIComponent(location.pathname + location.search) + '">로그인하기</a>', 'warn');
+      lock();
+      return;
+    }
+    var mr = await C.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle();
+    var m = mr.data || {};
+    me = { user: u, type: m.member_type || '', admin: !!m.is_admin };
+    if (!(m.member_type === 'industry' || m.member_type === 'school' || m.is_admin)) {
+      say('채용정보는 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원만 올릴 수 있습니다. '
+        + '전공자·일반 회원은 <a class="rw-lk" href="/recruit/talent-write.html">인재정보</a>를 올려 주십시오.', 'warn');
+      lock();
+      return;
+    }
+
+    var id = new URLSearchParams(location.search).get('id');
+    if (id) await loadForEdit(id);
+
+    /* 단추 잇기 — 인재등록과 같은 것을 씁니다 */
+    ['#rwPreview', '#rwPreview2'].forEach(function (x) {
+      var b = el(x); if (b) b.addEventListener('click', preview);
+    });
+    ['#rwDraft', '#rwDraft2'].forEach(function (x) {
+      var b = el(x); if (b) b.addEventListener('click', function () { saveDraft(false); });
+    });
+    var pub = el('#rwPublish');
+    if (pub) pub.addEventListener('click', save);
+    ['#rwPvClose', '#rwPvEdit', '#rwPvDim'].forEach(function (x) {
+      var b = el(x); if (b) b.addEventListener('click', closePreview);
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePreview(); });
+
+    /* 무관·오디션·상시모집 잠금 */
+    ['#rwAgeAny', '#rwEduAny', '#rwAlways', '#rwUntilHired'].forEach(function (x) {
+      var b = el(x); if (b) b.addEventListener('change', function () { toggleJob(); drawChecks(); });
+    });
+    els('input[name="rw-aud"]').forEach(function (x) {
+      x.addEventListener('change', function () { toggleJob(); drawChecks(); });
+    });
+
+    /* 단체 찾기 */
+    var find = el('#rwOrgFind');
+    if (find) find.addEventListener('click', findOrg);
+    var res = el('#rwOrgRes');
+    if (res) res.addEventListener('click', function (e) {
+      var pick = e.target.closest('.sc-pick');
+      if (!pick) return;
+      setVal('#rwOrgName', pick.getAttribute('data-name') || '');
+      setVal('#rwOrgId', pick.getAttribute('data-id') || '');
+      markOrgLinked(true);
+      res.hidden = true; res.innerHTML = '';
+      drawChecks();
+    });
+    var onm = el('#rwOrgName');
+    if (onm) onm.addEventListener('input', function () {
+      /* 이름을 손으로 고치면 DB 연결을 풉니다 —
+         고른 단체와 다른 이름이 담기면 이어짐이 거짓이 됩니다 */
+      setVal('#rwOrgId', '');
+      markOrgLinked(false);
+    });
+    var odb = el('#rwOrgDb');
+    if (odb) odb.addEventListener('change', function () {
+      setVal('#rwOrgId', ''); markOrgLinked(false);
+      var o2 = el('#rwOrgRes'); if (o2) { o2.hidden = true; o2.innerHTML = ''; }
+    });
+
+    var form = el('#rwForm');
+    if (form) {
+      form.addEventListener('input', drawChecks);
+      form.addEventListener('change', drawChecks);
+    }
+    drawMine();
+    offerDraft();
+
+    setTimeout(measureAside, 300);
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(measureAside);
+      var ab = el('#rwAside'); if (ab) ro.observe(ab);
+    }
+    window.addEventListener('resize', measureAside);
+  }
+
+  window.OCRecruitWrite = { initTalent: initTalent, initJob: initJob };
 })();

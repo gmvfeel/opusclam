@@ -1391,3 +1391,24 @@ html[data-theme="dark"] .rw-pv-foot { background: #1a1a1a; }
   .rw-pv-foot { flex-direction: column-reverse; }
   .rw-pv-foot .rv-btn { width: 100%; }
 }
+
+/* ── 채용등록 · 단체 찾기 ─────────────────────────────────
+   어느 DB인지 고르고, 이름을 적고, 그 DB에서 찾습니다.
+   고르면 org_db + org_id 가 담겨 상세 화면의 「단체정보 상세보기」 가
+   그 단체 화면으로 바로 갑니다 — 네트워킹의 고리입니다. */
+.rw-org { display: flex; flex-direction: column; gap: 7px; }
+.rw-org-top { display: flex; gap: 8px; align-items: stretch; }
+.rw-org-top #rwOrgDb { flex: 0 0 170px; width: 170px; }
+.rw-org-top #rwOrgName { flex: 1 1 auto; min-width: 0; }
+.rw-find--org { flex: 0 0 auto; margin-top: 0; height: 38px; padding: 0 16px; font-size: 12.5px; }
+.rw-org .sc-linked { align-self: flex-start; margin: 0; }
+.rw-org .sc-results { margin-top: 4px; }
+
+/* 우대조건처럼 항목이 많은 체크 묶음 — 줄을 넉넉히 나눕니다 */
+.rc-checks--wrap { gap: 8px 16px; }
+
+@media (max-width: 760px) {
+  .rw-org-top { flex-wrap: wrap; }
+  .rw-org-top #rwOrgDb { flex: 1 1 140px; width: auto; }
+  .rw-find--org { flex: 1 1 100%; }
+}
