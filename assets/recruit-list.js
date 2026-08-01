@@ -89,7 +89,7 @@
     if (q.kw) {
       var k = encodeURIComponent('%' + q.kw + '%');
       var cols = (cfg.kind === 'job')
-        ? ['title', 'org_name', 'duty', 'body', 'job_etc']
+        ? ['title', 'org_name', 'duty', 'body', 'job_etc', 'keywords']
         : ['title', 'career', 'body', 'job_etc'];
       p.push('or=(' + cols.map(function (c) { return c + '.ilike.' + k; }).join(',') + ')');
     }
@@ -369,6 +369,44 @@
       + '</tr>';
   }
 
+  /* ── 간추린 한 줄 — 상세 화면 오른쪽의 좁은 목록 ──────────
+     460px 남짓한 자리에는 다섯 칸이 들어가지 않습니다.
+     제목을 살리고 업체명·지역을 아래 작은 줄로 접어 넣습니다.
+     번호·조회수는 뺍니다 — 좁은 자리에서 값보다 자리를 더 먹습니다. */
+  function miniRow(o) {
+    var vp = cfg.viewPage + '?id=' + encodeURIComponent(o.id);
+    var sub = [];
+    if (cfg.kind === 'job') {
+      if (o.org_name) sub.push(o.org_name);
+    } else {
+      var g = String(o.gender || '').replace('남성', '남').replace('여성', '여');
+      var who = (o.name_masked || '') + (g ? ' ' + g : '') + (o.age ? '/' + o.age : '');
+      if (who.trim()) sub.push(who);
+    }
+    var reg = R.regionLabel(o.region1, o.region2);
+    if (reg) sub.push(reg);
+
+    var when = '';
+    if (cfg.kind === 'job') {
+      var left = R.daysLeft(o.apply_to);
+      if (o.apply_always) when = '상시';
+      else if (o.apply_until_hired) when = '채용시';
+      else if (left != null && left < 0) when = '<span class="rc-mini-end">마감</span>';
+      else if (left != null && left <= 7) when = '<b class="rc-dday">D-' + left + '</b>';
+      else when = esc(String(o.apply_to || '').slice(5).replace('-', '.'));
+    } else {
+      when = esc(String(o.created_at || '').slice(5, 10).replace('-', '.'));
+    }
+
+    return '<tr>'
+      + '<td class="c-title">'
+      +   '<a href="' + vp + '">' + esc(o.title || '') + '</a>'
+      +   (sub.length ? '<span class="rc-sub">' + sub.map(esc).join(' · ') + '</span>' : '')
+      + '</td>'
+      + '<td class="c-when">' + when + '</td>'
+      + '</tr>';
+  }
+
   /* ── 페이지 넘김 ──────────────────────────────────────────*/
   function drawPager() {
     var box = el('#rcPager');
@@ -393,7 +431,7 @@
     cur = page || 1;
     var list = el('#rcList');
     if (!list) return;
-    var span = 5;   /* 표 칸 수 */
+    var span = cfg.mini ? 2 : 5;   /* 표 칸 수 */
     list.innerHTML = '<tr><td colspan="' + span + '" class="rc-loading">불러오는 중…</td></tr>';
 
     var rows;
@@ -427,8 +465,16 @@
     /* 번호는 전체 건수에서 거꾸로 셉니다 (큰 번호가 최신) */
     var base = total - (cur - 1) * cfg.pageSize;
     list.innerHTML = rows.map(function (o, i) {
+      if (cfg.mini) return miniRow(o);
       return (cfg.kind === 'job') ? jobRow(o, base - i) : talentRow(o, base - i);
     }).join('');
+
+    /* 상세 화면에서는 지금 보고 있는 줄을 다시 표시해 줍니다 —
+       쪽을 넘기면 줄이 새로 그려지므로 표시가 지워지기 때문입니다. */
+    if (window.OCRecruitView && window.OCRecruitView.markCurrent) {
+      var nowId = new URLSearchParams(location.search).get('id');
+      if (nowId) window.OCRecruitView.markCurrent(nowId);
+    }
 
     drawPager();
   }
@@ -473,17 +519,57 @@
     document.documentElement.style.setProperty('--rc-side-top', Math.round(top) + 'px');
   }
 
+  /* ── 주소에 실린 조건 읽기 ────────────────────────────────
+     오퍼스클램은 모든 것이 서로 이어져야 합니다.
+     상세 화면에서 「오케스트라 › 현악파트」 를 누르면
+       /recruit/job.html?cat1=오케스트라&cat2=현악파트
+     로 옵니다. 여기서 그 값을 읽어 처음부터 걸러 놓습니다.
+
+     ★ 아는 값만 받습니다. 주소에 엉뚱한 값이 실려 와도
+       분류에 없으면 그냥 무시합니다(빈 목록이 나오지 않게). */
+  function seedFromUrl() {
+    var p = new URLSearchParams(location.search);
+    var c1 = p.get('cat1'), c2 = p.get('cat2');
+    if (c1 && R.JOBS[c1]) {
+      q.jobs = (c2 && R.JOBS[c1].indexOf(c2) >= 0)
+        ? [c1 + '|' + c2]
+        : R.JOBS[c1].map(function (x) { return c1 + '|' + x; });
+    }
+    var r1 = p.get('r1'), r2 = p.get('r2');
+    if (r1 && R.REGIONS[r1]) {
+      q.r1 = r1;
+      if (r2 && (R.REGIONS[r1] || []).indexOf(r2) >= 0) q.r2 = r2;
+    }
+    var kw = p.get('kw');
+    if (kw) q.kw = kw;
+  }
+
+  /* 읽은 조건을 화면의 칸에도 비춰 줍니다 —
+     걸러져 있는데 칸이 비어 있으면 「왜 이것만 나오나」 하고 헤맵니다. */
+  function reflectUrl() {
+    var r1 = el('#rcR1'), r2 = el('#rcR2'), kw = el('#rcKw');
+    if (r1 && q.r1) {
+      r1.value = q.r1;
+      /* 2차 지역 목록은 1차가 바뀔 때 채워집니다(R.bindPair) */
+      r1.dispatchEvent(new Event('change'));
+      if (r2 && q.r2) r2.value = q.r2;
+    }
+    if (kw && q.kw) kw.value = q.kw;
+  }
+
   /* ── 시작 ─────────────────────────────────────────────────*/
   function init(options) {
     cfg = Object.assign({ kind: 'job', pageSize: 15 }, options || {});
     R = window.OCRecruit;
     if (!R) { console.error('assets/recruit.js 를 먼저 불러야 합니다.'); return; }
 
+    seedFromUrl();
     bindCat();
     drawJobTable();
     bindJobTable();
     drawSearch();
     drawToolbar();
+    reflectUrl();
 
     var pager = el('#rcPager');
     if (pager) pager.addEventListener('click', function (e) {

@@ -525,3 +525,207 @@ html[data-theme="dark"] .scene-hire line { stroke: #9a9a9a; }
 }
 /* 두른 고리는 깜빡이지 않게 — 「구하는 자리」 표시가 흔들리면 어수선합니다 */
 .scene-hire circle[fill="none"] { animation: none; }
+
+/* ============================================================
+   리쿠르트 상세 화면 — 채용정보 view · 인재정보 view 공용
+
+   목록 화면과 같은 두 칸 짜임입니다.
+     왼쪽  · 상세 내용 (읽는 주인공이라 넓게)
+     오른쪽 · 다른 정보 목록 (다음 공고로 넘어가는 길)
+
+   ★ 인재 상세(talent-view.html)도 이 짜임을 그대로 씁니다.
+     왼쪽 안쪽 내용만 달라지고, 칸·탭·단추·붙어 따라오기는 공용입니다.
+     오퍼스파인(미술)에도 그대로 복제됩니다.
+   ============================================================ */
+.rv-layout {
+  --rc-top: 120px;
+  margin-top: 44px;
+  display: grid;
+  /* 왼쪽을 넓게 — 상세 화면의 주인공은 내용입니다.
+     오른쪽 460px 은 제목 두 줄이 들어가는 가장 좁은 폭입니다. */
+  grid-template-columns: minmax(0, 1fr) 460px;
+  gap: 26px;
+  align-items: start;
+}
+.rv-main { min-width: 0; }
+
+/* ── 왼쪽 · 상세 ──────────────────────────────────────────*/
+.rv-doc { min-width: 0; }
+.rv-title {
+  font-family: var(--display);
+  font-size: 27px; font-weight: 700; line-height: 1.32;
+  color: var(--ink); margin: 0 0 22px;
+  padding-bottom: 20px; border-bottom: 2px solid var(--ink);
+}
+
+/* 회사·단체 머리칸 — 옅은 바탕으로 본문과 갈라 둡니다 */
+.rv-orgbox {
+  position: relative;
+  background: #f7f6fa; border: 1px solid var(--line);
+  border-radius: 8px; padding: 18px 22px; margin-bottom: 26px;
+}
+html[data-theme="dark"] .rv-orgbox { background: #191919; border-color: #333; }
+.rv-orglink {
+  position: absolute; top: 18px; right: 22px;
+  font-size: 12.5px; font-weight: 600; color: var(--violet-2);
+}
+.rv-orglink:hover { text-decoration: underline; }
+@media (max-width: 700px) {
+  .rv-orglink { position: static; display: inline-block; margin-top: 12px; }
+}
+
+/* ── 표 — 왼쪽에 이름, 오른쪽에 값 ────────────────────────*/
+.rv-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.rv-tbl th, .rv-tbl td {
+  padding: 12px 14px; text-align: left; vertical-align: top;
+  border-top: 1px solid var(--line);
+}
+.rv-tbl tr:first-child th, .rv-tbl tr:first-child td { border-top: 0; }
+.rv-tbl th {
+  width: 118px; font-weight: 600; color: var(--text-2);
+  background: #fafafc;
+}
+.rv-tbl th.th2 { width: 100px; }
+html[data-theme="dark"] .rv-tbl th { background: #1c1c1c; }
+.rv-tbl td { color: var(--text); line-height: 1.62; }
+/* 머리칸의 표는 바탕이 이미 옅으므로 이름 칸을 칠하지 않습니다 */
+.rv-tbl--org th { background: transparent; width: 108px; }
+.rv-tbl--org th, .rv-tbl--org td { padding: 7px 0; border-top: 0; }
+.rv-tbl--org { font-size: 13px; }
+/* 표 안의 작은 이름표 — 「근무요일 · 근무시간」 처럼 한 칸에 둘 이상일 때 */
+.rv-k {
+  display: inline-block; min-width: 62px;
+  font-size: 12px; font-weight: 600; color: var(--text-3);
+}
+.rv-arrow { color: var(--text-3); margin: 0 2px; }
+.rv-dim { color: var(--text-3); }
+.rv-lk { color: var(--violet-2); font-weight: 600; }
+.rv-lk:hover { text-decoration: underline; }
+.rv-closed {
+  margin-left: 6px; font-size: 11.5px; font-weight: 700;
+  color: #fff; background: #8a8a95; border-radius: 3px; padding: 2px 6px;
+}
+
+/* ── 두 갈래 탭 — 시안처럼 위아래 두 곳에 둡니다 ──────────
+   아래까지 읽고 나서 접수방법으로 건너뛸 수 있어야 합니다. */
+.rv-tabs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  margin: 30px 0 26px;
+}
+.rv-tab {
+  height: 52px; border-radius: 6px; cursor: pointer;
+  font-family: var(--display); font-size: 15px; font-weight: 600;
+  background: #fff; color: var(--violet-2);
+  border: 1px solid var(--violet-2);
+  transition: background .16s ease, color .16s ease;
+}
+.rv-tab:hover { background: #f4f0fb; }
+.rv-tab.on { background: var(--violet-2); color: #fff; }
+html[data-theme="dark"] .rv-tab { background: #171717; }
+
+/* ── 묶음 제목 ────────────────────────────────────────────*/
+.rv-sec { margin: 0 0 30px; }
+.rv-sec > h2 {
+  font-family: var(--display);
+  font-size: 18px; font-weight: 700; color: var(--ink);
+  margin: 0 0 12px;
+}
+.rv-body { font-size: 13.8px; line-height: 1.78; color: var(--text); }
+.rv-body--long { color: var(--text-2); }
+
+/* ── 아래 단추 ────────────────────────────────────────────*/
+.rv-btns {
+  display: flex; justify-content: center; gap: 12px;
+  margin: 36px 0 0; padding-top: 30px; border-top: 1px solid var(--line);
+}
+.rv-btn {
+  min-width: 138px; height: 46px; border-radius: 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; letter-spacing: -.01em;
+}
+.rv-btn--go   { background: var(--violet-2); color: #fff; }
+.rv-btn--go:hover { background: var(--violet); }
+.rv-btn--list { background: #4a4a55; color: #fff; }
+.rv-btn--list:hover { background: #35353e; }
+/* 누를 수 없는 지원하기 — 왜 못 누르는지 title 로 알려 줍니다 */
+.rv-btn--off { background: #d8d8de; color: #7a7a85; cursor: not-allowed; }
+
+/* ── 자료 출처·문의 — 다른 뷰 화면과 같은 짜임 ────────────*/
+.rv-note {
+  margin-top: 34px; padding: 18px 20px;
+  background: #fafafc; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 12.5px; line-height: 1.7; color: var(--text-3);
+}
+html[data-theme="dark"] .rv-note { background: #171717; border-color: #333; }
+.rv-note p { margin: 0 0 12px; }
+.rv-mail {
+  display: inline-flex; align-items: center; height: 34px; padding: 0 16px;
+  border: 1px solid var(--line-2); border-radius: 999px;
+  font-size: 12.5px; font-weight: 600; color: var(--text-2); background: #fff;
+}
+.rv-mail:hover { border-color: var(--violet-2); color: var(--violet-2); }
+html[data-theme="dark"] .rv-mail { background: #1f1f1f; }
+
+.rv-loading, .rv-empty {
+  padding: 72px 20px; text-align: center;
+  color: var(--text-3); font-size: 14px; line-height: 1.8;
+}
+
+/* ── 오른쪽 · 다른 정보 목록 ──────────────────────────────
+   붙는 자리는 --rv-aside-top 이 정합니다.
+   assets/recruit-view.js 가 키를 재어 넣습니다 —
+   화면에 들어가면 위쪽에, 화면보다 길면 아래쪽 끝이 보이는 자리에.
+   (인재정보의 찾는 칸과 똑같은 방식입니다) */
+.rv-aside {
+  position: sticky; top: var(--rv-aside-top, var(--rc-top));
+  min-width: 0;
+}
+.rv-aside-box {
+  background: #fdfbf7; border: 3px solid #514a6b; border-radius: 12px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 3px 14px -4px rgba(30, 24, 60, .16);
+}
+html[data-theme="dark"] .rv-aside-box {
+  background: #1e1e1e; border-color: #7a7295;
+  box-shadow: 0 3px 16px -4px rgba(0, 0, 0, .5);
+}
+.rv-aside-h {
+  font-family: var(--display);
+  font-size: 1.2em; font-weight: 600; color: var(--ink);
+  margin: 0 0 4px; padding-bottom: 13px;
+  border-bottom: 1px solid var(--line-2);
+}
+.rv-aside .rc-foot { margin-top: 6px; }
+
+/* ── 간추린 목록 — 두 칸만 씁니다 ─────────────────────────*/
+.rc-table--mini { font-size: 13px; }
+.rc-table--mini th.c-title, .rc-table--mini td.c-title { width: auto; text-align: left; }
+.rc-table--mini th.c-when,  .rc-table--mini td.c-when  { width: 62px; text-align: right; white-space: nowrap; }
+.rc-table--mini td { padding: 11px 2px; vertical-align: top; }
+/* 좁은 자리라 표 머리를 붙이지 않습니다 — 두 칸뿐이라 없어도 압니다 */
+.rc-table--mini thead { display: none; }
+.rc-table--mini td.c-title a { display: block; line-height: 1.45; }
+.rc-table--mini .rc-sub { font-size: 11.5px; }
+.rc-mini-end { font-size: 11.5px; color: var(--text-3); }
+
+/* 지금 보고 있는 줄 — 어디를 읽고 있는지 잃지 않게 */
+.rc-table--mini tr.rc-row-on td { background: #efeaf9; }
+.rc-table--mini tr.rc-row-on td.c-title a { color: var(--violet); font-weight: 700; }
+html[data-theme="dark"] .rc-table--mini tr.rc-row-on td { background: #2a2440; }
+
+/* ── 좁은 화면 ────────────────────────────────────────────*/
+@media (max-width: 1300px) {
+  /* 위아래로 풉니다 — 붙어 따라오기도 끕니다 */
+  .rv-layout { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .rv-aside { position: static; }
+}
+@media (max-width: 700px) {
+  .rv-title { font-size: 22px; }
+  .rv-tabs { grid-template-columns: 1fr; gap: 8px; }
+  .rv-tbl th { width: 92px; }
+  .rv-tbl th, .rv-tbl td { padding: 10px 8px; }
+  /* 오디션여부·오디션곡명을 한 줄에 넷으로 두면 좁아 못 읽습니다 */
+  .rv-tbl th.th2 { width: 92px; }
+  .rv-btns { flex-direction: column; }
+  .rv-btn { width: 100%; }
+}
