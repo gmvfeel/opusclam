@@ -1454,3 +1454,23 @@ html[data-theme="dark"] .rw-photo-box { background: #1a1a1a; border-color: #3a3a
 .rw-photo-state {
   margin: 8px 0 0; font-size: 12px; font-weight: 600; color: var(--rv-deep);
 }
+
+/* ── 오디션여부 · 지정곡 ──────────────────────────────────
+   여부와 곡을 한 덩이로 묶고 사이를 8px 로 좁힙니다.
+   앞서는 곡 칸을 따로 줄로 두고 보이지 않는 이름표를 넣었더니
+   자리만 차지해 사이가 멀어졌습니다(주소 칸과 같은 까닭). */
+.rw-aud { display: flex; flex-direction: column; gap: 8px; }
+.rw-audlist { display: flex; flex-direction: column; gap: 7px; }
+.rw-audlist[hidden] { display: none; }
+.rw-audrow { display: flex; gap: 8px; align-items: stretch; }
+.rw-audrow > input { flex: 1 1 auto; width: auto; min-width: 0; }
+.rw-audrow .aud-del {
+  position: static; flex: 0 0 auto;
+  height: 38px; padding: 0 12px;
+}
+/* 작은 추가 단추 — 「학교추가」 보다 한 단 작게 (곡은 자주 늘립니다) */
+.rw-add--sm {
+  align-self: flex-start;
+  margin: 0; height: 32px; padding: 0 14px; font-size: 12.5px;
+}
+.rw-add--sm[hidden] { display: none; }

@@ -146,13 +146,20 @@
         </span>
       </label>
 
+      <!-- 오디션여부와 지정곡을 <b>한 덩이</b>로 묶습니다.
+           따로 줄을 두고 보이지 않는 이름표를 넣으면 자리만 차지해
+           사이가 벌어집니다(주소 칸과 같은 까닭).
+
+           지정곡은 여러 곡일 수 있으므로 한 줄에 한 곡씩 늘려 적습니다.
+           담을 때는 줄바꿈으로 이어 담고, 상세 화면에서 줄마다 나뉘어
+           보입니다. -->
       <div class="rw-f rw-f--full"><span>오디션여부</span>
-        <div id="rwAud" class="rc-checks"></div>
+        <div class="rw-aud">
+          <div id="rwAud" class="rc-checks"></div>
+          <div class="rw-audlist" id="rwAudList"></div>
+          <button type="button" class="rw-add rw-add--sm" id="rwAudAdd">+ 곡 추가</button>
+        </div>
       </div>
-      <label class="rw-f rw-f--full"><span class="rw-ghost">오디션곡명</span>
-        <input type="text" id="rwAudPiece" maxlength="400"
-               placeholder="오디션이 「있음」 일 때 지정곡을 적어 주십시오">
-      </label>
     </div>
 
     <!-- ── 단체정보 ─────────────────────────────────────────── -->

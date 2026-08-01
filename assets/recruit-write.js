@@ -544,7 +544,8 @@
       pay_type: val('#rwPayType'), pay_amount: val('#rwPayAmount'),
       pay_daily: chk('#rwPayDaily'),
       audition: radio('rw-aud'),
-      audition_piece: (radio('rw-aud') === '있음') ? val('#rwAudPiece') : null,
+      /* 여러 곡을 줄바꿈으로 이어 한 칸에 담습니다 */
+      audition_piece: (radio('rw-aud') === '있음') ? (readAud().join('\n') || null) : null,
 
       gender: radio('rw-gender') || '무관',
       age_any: chk('#rwAgeAny'),
@@ -744,7 +745,17 @@
     setVal('#rwPayType', o.pay_type); setVal('#rwPayAmount', o.pay_amount);
     if (el('#rwPayDaily')) el('#rwPayDaily').checked = !!o.pay_daily;
     setRadio('rw-aud', o.audition);
-    setVal('#rwAudPiece', o.audition_piece);
+    /* 담긴 것을 줄마다 한 곡으로 되돌립니다.
+       옛 자료가 「·」 로 이어져 있으면 그것도 갈라 줍니다. */
+    var box = el('#rwAudList');
+    if (box) {
+      box.innerHTML = '';
+      String(o.audition_piece || '')
+        .split(/\r?\n|\s+·\s+/)
+        .map(function (x) { return x.trim(); })
+        .filter(function (x) { return x; })
+        .forEach(addAud);
+    }
     setRadio('rw-gender', o.gender || '무관');
     if (el('#rwAgeAny')) el('#rwAgeAny').checked = (o.age_any !== false);
     setVal('#rwAgeMin', o.age_min); setVal('#rwAgeMax', o.age_max);
@@ -1084,6 +1095,33 @@
     }
   }
 
+  /* ── 오디션 지정곡 ────────────────────────────────────────
+     한 곡이 아닐 때가 많습니다 — 협주곡 한 악장, 무반주 한 곡,
+     오케스트라 발췌 몇 개가 함께 지정되는 것이 보통입니다.
+     그래서 한 줄에 한 곡씩 늘려 적게 합니다.
+
+     담을 때는 <b>줄바꿈으로 이어</b> 한 칸(audition_piece)에 넣습니다.
+     칸을 새로 만들지 않아도 되고, 상세 화면이 줄바꿈을 살려 그리므로
+     줄마다 나뉘어 보입니다. */
+  function audRow(v) {
+    return '<div class="rw-audrow">'
+      + '<input type="text" class="aud-p" maxlength="300" value="' + esc(v || '') + '"'
+      + ' placeholder="예 — W.A. Mozart 바이올린 협주곡 제4번 제1악장 (카덴차 포함)">'
+      + '<button type="button" class="rw-del aud-del" aria-label="이 곡 지우기">지우기</button>'
+      + '</div>';
+  }
+
+  function addAud(v) {
+    var box = el('#rwAudList');
+    if (box) box.insertAdjacentHTML('beforeend', audRow(v));
+  }
+
+  function readAud() {
+    return els('#rwAudList .aud-p')
+      .map(function (x) { return String(x.value || '').trim(); })
+      .filter(function (x) { return x; });
+  }
+
   /* 「무관」 을 켜면 나이·학력 칸을 잠급니다.
      오디션이 「없음」 이면 곡명 칸도 잠급니다.
      쓸 수 없는 칸이 열려 있으면 적어야 하는 줄로 오해합니다. */
@@ -1095,8 +1133,13 @@
     var eduAny = chk('#rwEduAny');
     var e = el('#rwEdu'); if (e) { e.disabled = eduAny; if (eduAny) e.value = ''; }
 
+    /* 오디션이 「없음」 이면 곡 칸을 감춥니다 —
+       잠그기만 하면 쓸 수 없는 칸이 자리를 차지해 답답합니다. */
     var aud = (radio('rw-aud') === '있음');
-    var ap = el('#rwAudPiece'); if (ap) { ap.disabled = !aud; if (!aud) ap.value = ''; }
+    var list = el('#rwAudList'), addb = el('#rwAudAdd');
+    if (list) list.hidden = !aud;
+    if (addb) addb.hidden = !aud;
+    if (aud && list && !els('#rwAudList .rw-audrow').length) addAud('');
 
     /* 상시모집·채용시까지면 마감일을 잠급니다 — 두 값이 어긋나면
        목록의 마감순 정렬이 뒤죽박죽이 됩니다. */
@@ -1181,6 +1224,20 @@
     });
     els('input[name="rw-aud"]').forEach(function (x) {
       x.addEventListener('change', function () { toggleJob(); drawChecks(); });
+    });
+
+    /* 오디션 곡 늘리고 줄이기 */
+    var audAdd = el('#rwAudAdd');
+    if (audAdd) audAdd.addEventListener('click', function () { addAud(''); drawChecks(); });
+    var audList = el('#rwAudList');
+    if (audList) audList.addEventListener('click', function (e) {
+      if (!e.target.closest('.aud-del')) return;
+      var row = e.target.closest('.rw-audrow');
+      if (!row) return;
+      /* 마지막 한 줄은 남겨 둡니다 — 곡을 적을 자리가 사라지면 안 됩니다 */
+      if (els('#rwAudList .rw-audrow').length <= 1) { addAud(''); }
+      row.remove();
+      drawChecks();
     });
 
     /* 단체 찾기 */
