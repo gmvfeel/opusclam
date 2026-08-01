@@ -501,19 +501,26 @@
     }
   }
 
-  async function drawTalent(o) {
-    var box = el('#rvDoc');
-    if (!box) return;
+  /* ── 인재 상세의 속 — 상세 화면과 미리보기가 <b>함께</b> 씁니다.
+       등록 화면에서 미리보기를 따로 만들면, 한쪽만 고쳐져
+       「미리보기와 실제가 다른」 일이 반드시 생깁니다.
 
-    var v = await viewer();
+       preview 일 때 빼는 것 —
+         · 연락처 가림막  (아직 담기지 않았으므로 열 것이 없습니다)
+         · 목록 단추·문의 안내 (미리보기 창에는 쓸 곳이 없습니다) */
+  function talentHtml(o, opt) {
+    opt = opt || {};
+    var g = String(o.gender || '').replace('남성', '남').replace('여성', '여');
+    /* 미리보기에서는 이름을 실제로 가려 보여 줍니다 —
+       「남에게 이렇게 보인다」 를 확인하는 것이 미리보기의 뜻입니다. */
+    var who = opt.preview ? maskName(o.name) : (o.name_masked || '');
+    var age = o.age || (o.birth_year ? (new Date().getFullYear() - Number(o.birth_year) + 1) : '');
 
-    box.innerHTML = ''
-      + '<h1 class="rv-title">' + esc(o.title || '') + '</h1>'
-      /* 누구인지 — 뷰가 가려 준 이름과 성별·나이 */
-      + '<div class="rv-who">' + esc(o.name_masked || '')
-      +   '<span>' + esc(String(o.gender || '').replace('남성', '남').replace('여성', '여'))
-      +   (o.age ? ' / ' + esc(o.age) + '세' : '') + '</span></div>'
-      + maskBlock(v)
+    return ''
+      + '<h1 class="rv-title">' + esc(o.title || '(제목을 아직 적지 않았습니다)') + '</h1>'
+      + '<div class="rv-who">' + esc(who)
+      +   '<span>' + esc(g) + (age ? ' / ' + esc(age) + '세' : '') + '</span></div>'
+      + (opt.preview ? previewMaskNote() : maskBlock(opt.viewer || { user: null }))
       + '<h2 class="rv-group">인재상세정보</h2>'
       + wishBlock(o)
       + schoolsBlock(o)
@@ -521,7 +528,32 @@
       + (has(o.body)
         ? '<section class="rv-sec"><h2>자기소개서</h2>'
           + '<div class="rv-body rv-body--long">' + nl(o.body) + '</div></section>'
-        : '')
+        : '');
+  }
+
+  /* 이름 가리기 — 뷰가 하는 것과 같은 꼴(조**)로 보여 줍니다 */
+  function maskName(name) {
+    var n = String(name || '').trim();
+    if (!n) return '';
+    if (n.length <= 1) return n;
+    return n.charAt(0) + Array(n.length).join('*');
+  }
+
+  function previewMaskNote() {
+    return '<div class="rv-mask rv-mask--note">'
+      + '<div class="rv-mask-over" style="position:static;background:none">'
+      +   '<p>이름과 연락처는 <b>채용하는 단체·학교 회원이 열람할 때만</b> 보입니다. '
+      +   '다른 분들에게는 이 자리가 가려집니다.</p>'
+      + '</div></div>';
+  }
+
+  async function drawTalent(o) {
+    var box = el('#rvDoc');
+    if (!box) return;
+
+    var v = await viewer();
+
+    box.innerHTML = talentHtml(o, { viewer: v })
       + '<div class="rv-btns">'
       +   '<a class="rv-btn rv-btn--list" href="' + cfg.listPage + '">목록</a>'
       + '</div>'
@@ -538,6 +570,15 @@
 
     markCurrent(o.id);
     document.title = (o.title || '인재정보') + ' · 리쿠르트 · OPUSCLAM.COM';
+  }
+
+  /* 미리보기 — 등록 화면이 부릅니다. HTML 만 돌려줍니다.
+     ★ R(분류 자료)이 필요하므로 부르기 전에 채워 둡니다.
+       상세 화면을 거치지 않고 바로 부를 수 있게 하려는 것입니다. */
+  function previewTalent(o) {
+    if (!R) R = window.OCRecruit;
+    if (!cfg) cfg = { kind: 'talent', listPage: '/recruit/talent.html' };
+    return talentHtml(o || {}, { preview: true });
   }
 
   /* 오른쪽 목록에서 지금 보고 있는 줄을 눈에 띄게 합니다 */
@@ -652,5 +693,5 @@
     window.addEventListener('resize', measureAside);
   }
 
-  window.OCRecruitView = { init: init, markCurrent: markCurrent };
+  window.OCRecruitView = { init: init, markCurrent: markCurrent, previewTalent: previewTalent };
 })();

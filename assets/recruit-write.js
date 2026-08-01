@@ -385,7 +385,7 @@
       birth_year: by, birth_month: num(val('#rwBm')), birth_day: num(val('#rwBd')),
       gender: radio('rw-gender'),
       phone: val('#rwPhone'), tel: tel, email: val('#rwEmail'),
-      addr1: val('#rwAddr1'), addr2: val('#rwAddr2'),
+      zipcode: val('#rwZip'), addr1: val('#rwAddr1'), addr2: val('#rwAddr2'),
       veteran: radio('rw-vet'),
       disability: radio('rw-dis'),
       disability_grade: (radio('rw-dis') === '유') ? val('#rwDisGrade') : null,
@@ -411,7 +411,8 @@
     }
 
     busy = true;
-    var btn = el('#rwSave');
+    /* 게시 단추는 미리보기 창 안에 있습니다(#rwPublish) */
+    var btn = el('#rwPublish');
     if (btn) { btn.disabled = true; btn.textContent = '담는 중…'; }
 
     try {
@@ -425,10 +426,17 @@
       }
       if (res.error) throw res.error;
       var id = (res.data && res.data.id) || editId;
+      /* 게시했으니 임시저장은 지웁니다 — 남겨 두면 다음에 왔을 때
+         「이어서 적기」 가 이미 게시한 내용을 다시 내놓습니다. */
+      try {
+        await C.from('recruit_drafts').delete()
+          .eq('member_id', me.user.id).eq('kind', DRAFT_KIND);
+      } catch (e) {}
       location.href = cfg.viewPage + '?id=' + encodeURIComponent(id);
     } catch (e) {
       busy = false;
-      if (btn) { btn.disabled = false; btn.textContent = '작성완료'; }
+      if (btn) { btn.disabled = false; btn.textContent = '게시하기'; }
+      closePreview();      /* 까닭을 폼에서 읽을 수 있게 창을 닫습니다 */
       var m = String((e && e.message) || '');
       /* 권한 규칙에 막힌 것과 그 밖의 문제를 갈라 알려 줍니다 —
          「알 수 없는 오류」 는 아무 도움이 되지 않습니다. */
@@ -438,6 +446,150 @@
         say('담지 못했습니다. 잠시 후 다시 시도해 주십시오.<br>' + esc(m), 'warn');
       }
     }
+  }
+
+  /* ============================================================
+     임시저장 · 미리보기 · 게시
+     ============================================================ */
+
+  /* ── 임시저장 ─────────────────────────────────────────────
+     ★ 인재정보 표에 담지 않습니다.
+       미완성 내용이 그 표에 섞이면 목록·상세·뷰가 모두 그것을
+       걸러 내도록 고쳐야 하고, 한 곳만 빠뜨려도 남의 미완성 글이
+       목록에 나옵니다. 따로 둔 표(recruit_drafts)에 담습니다.
+     회원 한 사람이 갈래마다 하나씩 갖습니다. */
+  var DRAFT_KIND = 'talent';
+
+  async function saveDraft(quiet) {
+    if (!me || !me.user) { if (!quiet) say('로그인이 필요합니다.', 'warn'); return; }
+    try {
+      var r = await C.from('recruit_drafts').upsert({
+        member_id: me.user.id,
+        kind: DRAFT_KIND,
+        data: gather(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'member_id,kind' });
+      if (r.error) throw r.error;
+      if (!quiet) say('임시저장했습니다. 나중에 이 화면에 다시 오시면 이어서 적으실 수 있습니다.', 'ok');
+      stampDraft(new Date());
+    } catch (e) {
+      if (!quiet) say('임시저장하지 못했습니다.<br>' + esc(String((e && e.message) || '')), 'warn');
+    }
+  }
+
+  function stampDraft(d) {
+    var box = el('#rwDraftAt');
+    if (!box || !d) return;
+    var t = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    box.textContent = '임시저장 ' + t;
+    box.hidden = false;
+  }
+
+  /* 적던 것이 있으면 이어서 적을지 물어봅니다.
+     묻지 않고 덮어씌우면 「내가 안 적은 것이 적혀 있는」 놀람이 됩니다. */
+  async function offerDraft() {
+    if (!me || !me.user || editId) return;      /* 고치는 중이면 묻지 않습니다 */
+    try {
+      var r = await C.from('recruit_drafts')
+        .select('data,updated_at')
+        .eq('member_id', me.user.id).eq('kind', DRAFT_KIND).maybeSingle();
+      if (r.error || !r.data || !r.data.data) return;
+      var d = r.data.data;
+      if (!d || !Object.keys(d).length) return;
+      var when = String(r.data.updated_at || '').slice(0, 16).replace('T', ' ');
+
+      var bar = el('#rwDraftBar');
+      if (!bar) return;
+      bar.innerHTML = '<span>적으시던 내용이 있습니다 <em>' + esc(when) + '</em></span>'
+        + '<button type="button" id="rwDraftUse">이어서 적기</button>'
+        + '<button type="button" id="rwDraftDrop" class="is-plain">버리기</button>';
+      bar.hidden = false;
+
+      var use = el('#rwDraftUse');
+      if (use) use.addEventListener('click', function () { fillFrom(d); bar.hidden = true; });
+      var drop = el('#rwDraftDrop');
+      if (drop) drop.addEventListener('click', async function () {
+        bar.hidden = true;
+        try { await C.from('recruit_drafts').delete().eq('member_id', me.user.id).eq('kind', DRAFT_KIND); } catch (e) {}
+      });
+    } catch (e) { /* 임시저장이 없으면 그냥 지나갑니다 */ }
+  }
+
+  /* 담긴 덩이를 폼에 되돌립니다 — 고치기(loadForEdit)와 같은 일이므로
+     한 함수로 묶어 두 곳에서 함께 씁니다. */
+  function fillFrom(o) {
+    setVal('#rwTitle', o.title);
+    setVal('#rwCat1', o.job_cat1);
+    if (o.job_cat1) { R.fillJobCat2(el('#rwCat2'), o.job_cat1, '희망분야'); setVal('#rwCat2', o.job_cat2); }
+    setVal('#rwJobEtc', o.job_etc);
+    setVal('#rwPayType', o.pay_type); setVal('#rwPayAmount', o.pay_amount);
+    if (el('#rwPayDaily')) el('#rwPayDaily').checked = !!o.pay_daily;
+    setVal('#rwR1', o.region1);
+    if (o.region1) { R.fillRegion2(el('#rwR2'), o.region1, '2차지역선택'); setVal('#rwR2', o.region2); }
+    setChecks('rw-emp', o.emp_types);
+    setRadio('rw-status', o.now_status);
+    setVal('#rwName', o.name);
+    setVal('#rwBy', o.birth_year);
+    setVal('#rwBm', o.birth_month ? pad2(o.birth_month) : '');
+    setVal('#rwBd', o.birth_day ? pad2(o.birth_day) : '');
+    setRadio('rw-gender', o.gender);
+    setVal('#rwPhone', o.phone); setVal('#rwTel', o.tel); setVal('#rwEmail', o.email);
+    setVal('#rwZip', o.zipcode); setVal('#rwAddr1', o.addr1); setVal('#rwAddr2', o.addr2);
+    setRadio('rw-vet', o.veteran); setRadio('rw-dis', o.disability);
+    setVal('#rwDisGrade', o.disability_grade);
+    setRadio('rw-mil', o.military);
+    setVal('#rwMilFrom', o.military_from); setVal('#rwMilTo', o.military_to);
+    setVal('#rwCareer', o.career); setVal('#rwBody', o.body);
+    if (el('#rwOpen')) el('#rwOpen').checked = (o.is_open !== false);
+
+    var list = o.schools;
+    if (typeof list === 'string') { try { list = JSON.parse(list); } catch (e) { list = null; } }
+    var box = el('#rwSchools');
+    if (box && Array.isArray(list) && list.length) {
+      box.innerHTML = '';
+      list.forEach(addSchool);
+    }
+    toggleDis();
+    drawChecks();
+  }
+
+  /* ── 미리보기 ─────────────────────────────────────────────
+     ★ 상세 화면(recruit-view.js)의 <b>같은 코드</b>로 그립니다.
+       미리보기를 따로 만들면 한쪽만 고쳐져 「미리보기와 실제가
+       다른」 일이 반드시 생깁니다.
+
+     빠진 것이 있으면 미리보기 대신 그것을 먼저 알려 줍니다 —
+     담을 수 없는 것을 보여 주고 게시 단추를 내놓는 것은 거짓입니다. */
+  function preview() {
+    hush();
+    var bad = need();
+    if (bad.length) {
+      say('아래 항목을 채우신 뒤에 미리보기를 보실 수 있습니다 — <b>'
+        + bad.map(function (b) { return esc(b[1]); }).join(' · ') + '</b>', 'warn');
+      var first = el(bad[0][0]);
+      if (first) { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); try { first.focus(); } catch (e) {} }
+      return;
+    }
+    if (!window.OCRecruitView || !window.OCRecruitView.previewTalent) {
+      say('미리보기를 열지 못했습니다. 화면을 새로 불러 주십시오.', 'warn');
+      return;
+    }
+
+    var body = el('#rwPvBody');
+    if (body) body.innerHTML = window.OCRecruitView.previewTalent(gather());
+    var wrap = el('#rwPv');
+    if (wrap) {
+      wrap.hidden = false;
+      document.body.classList.add('rw-noscroll');
+      var close = el('#rwPvClose');
+      if (close) { try { close.focus(); } catch (e) {} }
+    }
+  }
+
+  function closePreview() {
+    var wrap = el('#rwPv');
+    if (wrap) wrap.hidden = true;
+    document.body.classList.remove('rw-noscroll');
   }
 
   /* ── 고칠 때 불러오기 ─────────────────────────────────────*/
@@ -450,41 +602,9 @@
 
       editId = o.id;
       var h = el('#rwHead'); if (h) h.textContent = '인재정보 고치기';
-      setVal('#rwTitle', o.title);
-      setVal('#rwCat1', o.job_cat1);
-      if (o.job_cat1) {
-        R.fillJobCat2(el('#rwCat2'), o.job_cat1, '희망분야');
-        setVal('#rwCat2', o.job_cat2);
-      }
-      setVal('#rwJobEtc', o.job_etc);
-      setVal('#rwPayType', o.pay_type); setVal('#rwPayAmount', o.pay_amount);
-      if (el('#rwPayDaily')) el('#rwPayDaily').checked = !!o.pay_daily;
-      setVal('#rwR1', o.region1);
-      if (o.region1) { R.fillRegion2(el('#rwR2'), o.region1, '2차지역선택'); setVal('#rwR2', o.region2); }
-      setChecks('rw-emp', o.emp_types);
-      setRadio('rw-status', o.now_status);
-      setVal('#rwName', o.name);
-      setVal('#rwBy', o.birth_year); setVal('#rwBm', o.birth_month ? pad2(o.birth_month) : '');
-      setVal('#rwBd', o.birth_day ? pad2(o.birth_day) : '');
-      setRadio('rw-gender', o.gender);
-      setVal('#rwPhone', o.phone); setVal('#rwTel', o.tel); setVal('#rwEmail', o.email);
-      setVal('#rwAddr1', o.addr1); setVal('#rwAddr2', o.addr2);
-      setRadio('rw-vet', o.veteran); setRadio('rw-dis', o.disability);
-      setVal('#rwDisGrade', o.disability_grade);
-      setRadio('rw-mil', o.military);
-      setVal('#rwMilFrom', o.military_from); setVal('#rwMilTo', o.military_to);
-      setVal('#rwCareer', o.career); setVal('#rwBody', o.body);
-      if (el('#rwOpen')) el('#rwOpen').checked = (o.is_open !== false);
+      fillFrom(o);
       if (el('#rwAgree')) el('#rwAgree').checked = true;
-
-      var list = o.schools;
-      if (typeof list === 'string') { try { list = JSON.parse(list); } catch (e) { list = null; } }
-      var box = el('#rwSchools');
-      if (box && Array.isArray(list) && list.length) {
-        box.innerHTML = '';
-        list.forEach(addSchool);
-      }
-      toggleDis();
+      drawChecks();
     } catch (e) {
       say('불러오지 못했습니다. 목록에서 다시 시도해 주십시오.', 'warn');
     }
@@ -571,9 +691,26 @@
     if (pull) pull.addEventListener('click', pullMe);
     var addBtn = el('#rwAddSchool');
     if (addBtn) addBtn.addEventListener('click', function () { addSchool(); });
-    ['#rwSave', '#rwSave2'].forEach(function (id) {
+    /* 미리보기 → 그 안에서 「고치기」 또는 「게시하기」 를 고릅니다.
+       바로 게시하지 않는 까닭 — 남에게 어떻게 보이는지 한 번 보고
+       나서 내놓는 편이 낫고, 특히 이름 가림막이 어떻게 걸리는지
+       확인할 자리가 필요합니다. */
+    ['#rwPreview', '#rwPreview2'].forEach(function (id) {
       var b = el(id);
-      if (b) b.addEventListener('click', save);
+      if (b) b.addEventListener('click', preview);
+    });
+    ['#rwDraft', '#rwDraft2'].forEach(function (id) {
+      var b = el(id);
+      if (b) b.addEventListener('click', function () { saveDraft(false); });
+    });
+    var pub = el('#rwPublish');
+    if (pub) pub.addEventListener('click', save);
+    ['#rwPvClose', '#rwPvEdit', '#rwPvDim'].forEach(function (id) {
+      var b = el(id);
+      if (b) b.addEventListener('click', closePreview);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closePreview();
     });
 
     /* 작성 도우미 — 무엇이든 적거나 고를 때마다 다시 셉니다.
@@ -590,6 +727,7 @@
       });
     }
     drawMine();
+    offerDraft();
 
     measureAside();
     setTimeout(measureAside, 300);

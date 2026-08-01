@@ -70,6 +70,10 @@
          닫으면 사라져 다시 볼 수 없기 때문입니다. -->
     <div class="rw-msg" id="rwMsg" role="status" hidden></div>
 
+    <!-- 적으시던 내용이 있으면 여기에 뜹니다.
+         묻지 않고 덮어씌우면 「내가 안 적은 것이 적혀 있는」 놀람이 됩니다. -->
+    <div class="rw-draftbar" id="rwDraftBar" hidden></div>
+
     <!-- ── 희망근무조건 ─────────────────────────────────────── -->
     <h2 class="rv-group">희망근무조건 <em class="rw-req">* 꼭 채워 주십시오</em></h2>
 
@@ -149,11 +153,23 @@
         <input type="email" id="rwEmail" maxlength="120" placeholder="name@example.com">
       </label>
 
-      <label class="rw-f rw-f--full"><span>주소</span>
-        <input type="text" id="rwAddr1" maxlength="160" placeholder="시·군·구까지">
+      <!-- 주소 — assets/addr.js 가 맡습니다.
+           표시(data-addr-search)만 붙이면 저절로 듣습니다.
+           회원가입·채용등록·단체등록도 같은 표시를 붙여 쓰면
+           네 화면의 주소가 언제나 같은 꼴로 담깁니다. -->
+      <div class="rw-f rw-f--full"><span>주소</span>
+        <span class="rw-inline rw-inline--zip">
+          <input type="text" id="rwZip" maxlength="10" placeholder="우편번호" readonly>
+          <button type="button" class="rw-find rw-find--addr"
+                  data-addr-search
+                  data-zip="#rwZip" data-addr1="#rwAddr1" data-addr2="#rwAddr2">주소검색</button>
+        </span>
+      </div>
+      <label class="rw-f rw-f--full"><span class="rw-ghost">주소</span>
+        <input type="text" id="rwAddr1" maxlength="160" placeholder="주소검색을 누르시면 채워집니다">
       </label>
       <label class="rw-f rw-f--full"><span class="rw-ghost">상세주소</span>
-        <input type="text" id="rwAddr2" maxlength="160" placeholder="나머지 주소">
+        <input type="text" id="rwAddr2" maxlength="160" placeholder="나머지 주소를 적어 주십시오">
       </label>
     </div>
 
@@ -214,8 +230,12 @@
       <label class="rc-check"><input type="checkbox" id="rwAgree"><span><b>위 내용에 동의합니다 *</b></span></label>
     </div>
 
+    <!-- 게시는 미리보기 창 안에서 고릅니다 —
+         남에게 어떻게 보이는지 한 번 보고 나서 내놓는 편이 낫고,
+         특히 이름 가림막이 어떻게 걸리는지 확인할 자리가 필요합니다. -->
     <div class="rv-btns">
-      <button type="button" class="rv-btn rv-btn--go" id="rwSave">작성완료</button>
+      <button type="button" class="rv-btn rv-btn--go" id="rwPreview">미리보기</button>
+      <button type="button" class="rv-btn rv-btn--soft" id="rwDraft">임시저장</button>
       <a class="rv-btn rv-btn--list" href="/recruit/talent.html">취소</a>
     </div>
 
@@ -248,9 +268,10 @@
       <ul class="rw-check rw-check--soft" id="rwCheckSoft"></ul>
 
       <div class="rw-aside-btns">
-        <button type="button" class="rv-btn rv-btn--go rv-btn--sm" id="rwSave2">작성완료</button>
-        <a class="rv-btn rv-btn--list rv-btn--sm" href="/recruit/talent.html">취소</a>
+        <button type="button" class="rv-btn rv-btn--go rv-btn--sm" id="rwPreview2">미리보기</button>
+        <button type="button" class="rv-btn rv-btn--soft rv-btn--sm" id="rwDraft2">임시저장</button>
       </div>
+      <div class="rw-draft-at" id="rwDraftAt" hidden></div>
     </div>
 
     <!-- 내가 등록한 인재정보 — 있으면 여기서 바로 고치러 갑니다 -->
@@ -262,13 +283,36 @@
   </aside>
 
  </div><!-- /rw-layout -->
+
+ <!-- ── 미리보기 창 ─────────────────────────────────────────
+      속은 assets/recruit-view.js 가 그립니다 —
+      인재 상세 화면과 <b>같은 코드</b>입니다. 따로 만들면 한쪽만
+      고쳐져 「미리보기와 실제가 다른」 일이 반드시 생깁니다. -->
+ <div class="rw-pv" id="rwPv" hidden>
+   <div class="rw-pv-dim" id="rwPvDim"></div>
+   <div class="rw-pv-win" role="dialog" aria-modal="true" aria-label="미리보기">
+     <div class="rw-pv-head">
+       <b>미리보기</b>
+       <span>다른 분들에게 이렇게 보입니다</span>
+       <button type="button" class="rw-pv-x" id="rwPvClose" aria-label="닫기">✕</button>
+     </div>
+     <div class="rw-pv-body rv-doc" id="rwPvBody"></div>
+     <div class="rw-pv-foot">
+       <button type="button" class="rv-btn rv-btn--list" id="rwPvEdit">고치기</button>
+       <button type="button" class="rv-btn rv-btn--go" id="rwPublish">게시하기</button>
+     </div>
+   </div>
+ </div>
 </main>
 
 <div id="oc-footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
+<script src="/assets/addr.js"></script>
 <script src="/assets/recruit.js"></script>
+<!-- 미리보기를 상세 화면과 같은 코드로 그리려고 함께 부릅니다 -->
+<script src="/assets/recruit-view.js"></script>
 <script src="/assets/recruit-write.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
