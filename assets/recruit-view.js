@@ -70,15 +70,6 @@
       + '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + v + '</td></tr>';
   }
 
-  /* 두 값을 한 줄에 나란히 — 시안의 「오디션여부 · 오디션곡명」 꼴 */
-  function row2(l1, v1, l2, v2) {
-    if (!has(v1) && !has(v2)) return '';
-    return '<tr>'
-      + '<th>' + esc(l1) + '</th><td>' + (has(v1) ? v1 : '-') + '</td>'
-      + '<th class="th2">' + esc(l2) + '</th><td>' + (has(v2) ? v2 : '-') + '</td>'
-      + '</tr>';
-  }
-
   /* ── 걸러진 목록으로 가는 링크 ─────────────────────────────
      오퍼스클램은 모든 것이 서로 이어져야 합니다.
      직종·지역을 누르면 그 조건으로 걸러진 목록으로 갑니다.
@@ -185,13 +176,18 @@
         ? '<section class="rv-sec"><h2>담당업무</h2><div class="rv-body">' + nl(o.duty) + '</div></section>'
         : '')
       + '<section class="rv-sec"><h2>모집요강 및 응시자격</h2>'
-      +   '<table class="rv-tbl rv-tbl--wrap2"><tbody>'
+      +   '<table class="rv-tbl"><tbody>'
       +     row('모집직종', jobCell(o))
       +     row('고용형태', arrCell(o.emp_types))
       +     row('모집인원', has(o.headcount) ? esc(o.headcount) + ' 명' : '')
       +     row('근무형태', workCell(o))
       +     row('자격요건', qualCell(o))
-      +     row2('오디션여부', esc(o.audition || ''), '오디션곡명', esc(o.audition_piece || ''))
+      +     row('오디션여부', esc(o.audition || ''))
+      /* 오디션곡명은 <b>한 줄을 다 씁니다.</b>
+         앞서는 오디션여부와 한 줄에 네 칸으로 두었는데, 그 한 줄
+         때문에 표가 4열이 되어 나머지 줄의 오른쪽 두 열이 통째로
+         비어 남았습니다. 곡명은 길어지므로 넓은 자리가 맞습니다. */
+      +     row('오디션곡명', nl(o.audition_piece || ''))
       +     row('우대조건', arrCell(o.prefer))
       +   '</tbody></table>'
       + '</section>'

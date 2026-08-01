@@ -624,8 +624,10 @@ html[data-theme="dark"] .rv-orgbox { background: #191919; }
   background: #f7f7fa; white-space: nowrap;
 }
 html[data-theme="dark"] .rv-tbl th { background: #1c1c1c; }
-.rv-tbl th.th2 { width: 96px; }
 .rv-tbl td { color: var(--text); line-height: 1.66; }
+/* ★ 표는 언제나 <b>두 칸</b>(이름·값)입니다.
+   한 줄만 네 칸으로 두면 표 전체가 4열이 되어, 나머지 줄의
+   오른쪽 두 열이 통째로 비어 남습니다. 그 실수를 걷어냈습니다. */
 /* 머리칸의 표는 띠 안이라 선도 두지 않습니다 */
 /* 머리칸의 표는 옅은 띠 안이라 선을 두지 않습니다 —
    선까지 그으면 띠 안에 또 상자가 생겨 답답해집니다. */
@@ -815,10 +817,6 @@ html[data-theme="dark"] .rc-table--mini tr.rc-row-on td { background: #2a2440; }
   .rv-group { font-size: 19px; margin: 28px 0 16px; }
   .rv-tbl th { width: 92px; }
   .rv-tbl th, .rv-tbl td { padding: 10px 10px; }
-  /* 오디션여부·오디션곡명을 한 줄에 넷으로 두면 좁아 못 읽습니다 —
-     위아래로 풀어 각각 한 줄씩 쓰게 합니다.
-     선은 그대로 남아 어느 줄이 한 칸인지 보입니다. */
-  .rv-tbl--wrap2 th, .rv-tbl--wrap2 td { display: block; width: auto; }
   .rv-tbl--org th, .rv-tbl--org td { padding: 6px 0; }
   .rv-tbl--org td.rv-orgname { font-size: 16px; }
   .rv-btns { flex-direction: column; }
