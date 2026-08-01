@@ -343,7 +343,10 @@
 
   function talentRow(o, no) {
     var vp = cfg.viewPage + '?id=' + encodeURIComponent(o.id);
-    var who = (o.name_masked || '') + ' [' + (o.gender || '-')
+    /* 성별은 DB에 「남성·여성」 으로 담기지만 목록에서는 한 자로 줄입니다 —
+       한 줄에 이름·성별·나이가 함께 들어가 자리가 좁습니다. */
+    var g = String(o.gender || '').replace('남성', '남').replace('여성', '여');
+    var who = (o.name_masked || '') + ' [' + (g || '-')
             + (o.age ? ' / ' + o.age + '세' : '') + ']';
     var d = String(o.created_at || '').slice(2, 10).replace(/-/g, '.');
     var bits = [];
@@ -351,7 +354,8 @@
     if (jl) bits.push(jl);
     var reg = R.regionLabel(o.region1, o.region2);
     if (reg) bits.push(reg);
-    if (o.now_status) bits.push(o.now_status);
+    /* 현재상태는 「구직중 (구직희망)」 처럼 길어 괄호 앞만 씁니다 */
+    if (o.now_status) bits.push(String(o.now_status).split(' (')[0]);
 
     return '<tr>'
       + '<td class="c-no">' + no + '</td>'

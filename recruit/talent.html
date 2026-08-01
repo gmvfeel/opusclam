@@ -103,13 +103,15 @@
       <!-- 성별 — 인재정보에만 있는 칸입니다.
            고르는 값이 셋뿐이라 풀다운보다 라디오가 빠릅니다.
            한 줄을 다 쓰게 두어 마지막 줄이 반쪽만 차는 것을 막습니다.
-           엔진(assets/recruit-list.js)이 name="rc-gender" 로 읽습니다. -->
+           엔진(assets/recruit-list.js)이 name="rc-gender" 로 읽습니다.
+           ★ 값은 DB에 담기는 그대로 「남성·여성」 입니다 (recruit.js 의 GENDERS).
+             보이는 글자만 짧게 「남·여」 로 둡니다. -->
       <div class="rc-fld rc-fld--wide">
         <label>성별</label>
         <div class="rc-checks">
           <label class="rc-check"><input type="radio" name="rc-gender" value="" checked><span>전체</span></label>
-          <label class="rc-check"><input type="radio" name="rc-gender" value="남"><span>남</span></label>
-          <label class="rc-check"><input type="radio" name="rc-gender" value="여"><span>여</span></label>
+          <label class="rc-check"><input type="radio" name="rc-gender" value="남성"><span>남</span></label>
+          <label class="rc-check"><input type="radio" name="rc-gender" value="여성"><span>여</span></label>
         </div>
       </div>
     </div>
