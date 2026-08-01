@@ -28,11 +28,13 @@
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var HDR = { apikey: KEY, Authorization: 'Bearer ' + KEY };
 
-  /* 단체DB 상세 화면 경로 —
-     ★ 확인이 필요합니다. 실제 경로가 다르면 이 한 줄만 고치십시오.
-       org_id 가 담긴 공고에서만 「단체정보 상세보기」 가 보이므로,
-       경로가 틀려도 지금은 아무 링크도 그려지지 않습니다. */
+  /* 단체DB 경로 —
+     ★ 확인이 필요합니다. 실제 경로가 다르면 이 두 줄만 고치십시오.
+       ORG_VIEW · 그 단체의 상세 화면 (org_id 로 바로 갑니다)
+       ORG_LIST · 단체DB 목록      (org_id 가 아직 없는 옛 자료는
+                                    이름으로 찾아 갑니다) */
   var ORG_VIEW = '/db/group-view.html';
+  var ORG_LIST = '/db/group.html';
 
   var R, cfg = null, cur = null;
 
@@ -56,6 +58,16 @@
   function row(label, valueHtml) {
     if (!has(valueHtml)) return '';
     return '<tr><th>' + esc(label) + '</th><td>' + valueHtml + '</td></tr>';
+  }
+
+  /* 값이 없어도 줄을 남기는 표 — 회사·단체 머리칸에 씁니다.
+     여기 넷(단체명·분야·웹사이트·주소)은 「등록하지 않았다」 는 것도
+     알아야 하는 정보입니다. 지원하기 전에 무엇을 더 물어야 하는지
+     알 수 있어야 하기 때문입니다. */
+  function rowAlways(label, valueHtml, cls) {
+    var v = has(valueHtml) ? valueHtml : '<span class="rv-none">미등록</span>';
+    return '<tr><th>' + esc(label) + '</th>'
+      + '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + v + '</td></tr>';
   }
 
   /* 두 값을 한 줄에 나란히 — 시안의 「오디션여부 · 오디션곡명」 꼴 */
@@ -143,28 +155,29 @@
     var closed = (dday != null && dday < 0 && !o.apply_always && !o.apply_until_hired);
 
     /* ── 머리칸 — 회사·단체 ──
-       상세보기 단추는 <b>언제나</b> 보입니다.
-       org_id 가 담긴 공고는 단체DB로 가고, 없으면 그 단체의 다른
-       채용정보로 갑니다. 앞서는 org_id 가 있을 때만 그렸더니
-       샘플 45건이 모두 비어 있어 단추가 아예 보이지 않았습니다. */
-    var orgLink = '';
-    if (has(o.org_id)) {
-      orgLink = '<a class="rv-orglink" href="' + ORG_VIEW + '?id=' + encodeURIComponent(o.org_id) + '">'
-        + '회사 / 단체정보 상세보기 <span aria-hidden="true">→</span></a>';
-    } else if (has(o.org_name)) {
-      orgLink = '<a class="rv-orglink" href="' + cfg.listPage + '?kw=' + encodeURIComponent(o.org_name) + '">'
-        + '이 단체의 다른 채용정보 <span aria-hidden="true">→</span></a>';
-    }
+       오퍼스클램의 채용정보는 사업자·단체 회원만 올릴 수 있습니다.
+       그러므로 모든 공고에는 반드시 등록된 단체가 하나 있습니다.
+       단추는 언제나 「회사 / 단체정보 상세보기」 하나입니다 —
+       단체DB의 그 단체 화면으로 갑니다.
+
+       ★ org_id 가 담겨 있으면 그것으로 바로 가고, 아직 이어지지
+         않은 옛 자료는 단체DB에서 이름으로 찾아 갑니다. */
+    var orgHref = has(o.org_id)
+      ? (ORG_VIEW + '?id=' + encodeURIComponent(o.org_id))
+      : (ORG_LIST + '?kw=' + encodeURIComponent(o.org_name || ''));
 
     var head = '<div class="rv-orgbox">'
       + '<table class="rv-tbl rv-tbl--org"><tbody>'
-      +   row('회사 / 단체명', esc(o.org_name || ''))
-      +   row('분야', esc(o.org_field || ''))
-      +   row('홈페이지', homeCell(o))
-      +   row('주소', esc(o.org_addr || ''))
+      +   rowAlways('회사 / 단체명', esc(o.org_name || ''), 'rv-orgname')
+      +   rowAlways('분야', esc(o.org_field || ''))
+      +   rowAlways('웹사이트', homeCell(o))
+      +   rowAlways('주소', esc(o.org_addr || ''))
       + '</tbody></table>'
       + '</div>'
-      + (orgLink ? '<div class="rv-orgfoot">' + orgLink + '</div>' : '');
+      + '<div class="rv-orgfoot">'
+      +   '<a class="rv-orglink" href="' + orgHref + '">'
+      +   '회사 / 단체정보 상세보기 <span aria-hidden="true">→</span></a>'
+      + '</div>';
 
     /* ── 채용정보 ── */
     var sec1 = ''

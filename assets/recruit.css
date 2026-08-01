@@ -549,6 +549,10 @@ html[data-theme="dark"] .scene-hire line { stroke: #9a9a9a; }
    ============================================================ */
 .rv-layout {
   --rc-top: 120px;
+  /* 단추·강조에 쓰는 짙은 색 — 보라는 옅어 단추의 경계가 흐렸습니다.
+     한 곳에 모아 두어 나중에 색을 바꿀 때 여기만 고치면 됩니다. */
+  --rv-deep: #33305a;
+  --rv-deep-h: #262346;
   margin-top: 44px;
   display: grid;
   /* 왼쪽 750px 고정 — 글줄이 너무 길면 눈이 돌아오는 자리를 잃습니다.
@@ -597,27 +601,47 @@ html[data-theme="dark"] .rv-orgbox { background: #191919; }
   background: var(--paper);
   transition: border-color .16s ease, color .16s ease;
 }
-.rv-orglink:hover { border-color: var(--violet-2); color: var(--violet-2); }
+.rv-orglink:hover { border-color: var(--rv-deep); color: var(--rv-deep); }
 
 /* ── 표 — 이름은 작은 회색, 값은 본문 ─────────────────────
    이름칸을 칠하지 않아 상자가 겹치지 않습니다. */
-.rv-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+/* ── 표 — 선을 모두 두르고 항목칸을 옅게 칠합니다 ──────────
+   앞서는 선을 가로로만 두고 항목칸을 칠하지 않았더니
+   어디까지가 한 칸인지 보이지 않았습니다.
+   선은 <b>옅게</b>(var(--line)) 두어 격자가 눈을 찌르지 않게 합니다. */
+.rv-tbl {
+  width: 100%; border-collapse: collapse; font-size: 13.5px;
+  border: 1px solid var(--line);
+}
 .rv-tbl th, .rv-tbl td {
-  padding: 11px 0; text-align: left; vertical-align: top;
-  border-top: 1px solid var(--line);
+  padding: 11px 14px; text-align: left; vertical-align: top;
+  border: 1px solid var(--line);
 }
-.rv-tbl tr:first-child th, .rv-tbl tr:first-child td { border-top: 0; }
+/* 항목칸 — 옅은 바탕과 짙은 글씨로, 값과 또렷이 갈라집니다 */
 .rv-tbl th {
-  width: 104px; padding-right: 16px;
-  font-size: 12.5px; font-weight: 600; color: var(--text-3);
-  white-space: nowrap;
+  width: 116px;
+  font-size: 12.5px; font-weight: 700; color: var(--text-2);
+  background: #f7f7fa; white-space: nowrap;
 }
-.rv-tbl th.th2 { width: 92px; padding-left: 20px; }
+html[data-theme="dark"] .rv-tbl th { background: #1c1c1c; }
+.rv-tbl th.th2 { width: 96px; }
 .rv-tbl td { color: var(--text); line-height: 1.66; }
 /* 머리칸의 표는 띠 안이라 선도 두지 않습니다 */
-.rv-tbl--org { font-size: 13px; }
-.rv-tbl--org th, .rv-tbl--org td { padding: 5px 0; border-top: 0; }
-.rv-tbl--org th { width: 96px; }
+/* 머리칸의 표는 옅은 띠 안이라 선을 두지 않습니다 —
+   선까지 그으면 띠 안에 또 상자가 생겨 답답해집니다. */
+.rv-tbl--org { font-size: 13px; border: 0; }
+.rv-tbl--org th, .rv-tbl--org td {
+  padding: 6px 0; border: 0; background: transparent;
+}
+.rv-tbl--org th { width: 104px; }
+/* 회사·단체명 — 이 칸의 주인이므로 크게 둡니다 */
+.rv-tbl--org td.rv-orgname {
+  font-family: var(--display);
+  font-size: 17px; font-weight: 700; color: var(--ink);
+  line-height: 1.35; padding-top: 2px; padding-bottom: 8px;
+}
+/* 등록하지 않은 값 — 빈칸으로 두면 「없다」 와 구별되지 않습니다 */
+.rv-none { color: var(--text-3); font-size: 12.5px; }
 
 /* 한 칸에 둘 이상을 담을 때 쓰는 작은 이름표 */
 .rv-k {
@@ -626,7 +650,8 @@ html[data-theme="dark"] .rv-orgbox { background: #191919; }
 }
 .rv-arrow { color: var(--text-3); margin: 0 3px; }
 .rv-dim { color: var(--text-3); }
-.rv-lk { color: var(--violet-2); font-weight: 600; }
+.rv-lk { color: var(--rv-deep); font-weight: 600; }
+html[data-theme="dark"] .rv-lk { color: #b9b4e0; }
 .rv-lk:hover { text-decoration: underline; }
 .rv-closed {
   margin-left: 6px; font-size: 11.5px; font-weight: 700;
@@ -642,23 +667,26 @@ html[data-theme="dark"] .rv-orgbox { background: #191919; }
 }
 .rv-tab {
   height: 44px; border-radius: 6px; cursor: pointer;
-  font-family: var(--display); font-size: 14px; font-weight: 600;
-  background: var(--paper); color: var(--violet-2);
-  border: 1px solid var(--violet-2);
+  font-family: var(--display); font-size: 14.5px; font-weight: 600;
+  background: var(--paper); color: var(--rv-deep);
+  border: 1px solid var(--rv-deep);
   transition: background .16s ease, color .16s ease;
 }
-.rv-tab:hover { background: #f4f0fb; }
-.rv-tab.on { background: var(--violet-2); color: #fff; }
-html[data-theme="dark"] .rv-tab:hover { background: #241d33; }
+.rv-tab:hover { background: #f1f0f7; }
+.rv-tab.on { background: var(--rv-deep); color: #fff; border-color: var(--rv-deep); }
+html[data-theme="dark"] .rv-tab { color: #b9b4e0; border-color: #6a6494; }
+html[data-theme="dark"] .rv-tab:hover { background: #22203a; }
+html[data-theme="dark"] .rv-tab.on { background: #4a457a; border-color: #4a457a; color: #fff; }
 
 /* ── 묶음 제목 — 왼쪽 세로 막대로 층을 보입니다 ────────────*/
 .rv-sec { margin: 0 0 26px; }
 .rv-sec:last-child { margin-bottom: 0; }
 .rv-sec > h2 {
   font-family: var(--display);
-  font-size: 15.5px; font-weight: 700; letter-spacing: -.01em;
-  color: var(--ink); margin: 0 0 12px;
-  padding-left: 11px; border-left: 3px solid var(--violet-2);
+  /* 내용(13.5px)과 층이 또렷이 갈라지도록 키웁니다 */
+  font-size: 18px; font-weight: 700; letter-spacing: -.015em;
+  color: var(--ink); margin: 0 0 14px;
+  padding-left: 12px; border-left: 4px solid var(--rv-deep);
   line-height: 1.3;
 }
 .rv-body { font-size: 13.5px; line-height: 1.8; color: var(--text); }
@@ -674,8 +702,8 @@ html[data-theme="dark"] .rv-tab:hover { background: #241d33; }
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 13.5px; font-weight: 600; letter-spacing: -.01em;
 }
-.rv-btn--go   { background: var(--violet-2); color: #fff; }
-.rv-btn--go:hover { background: var(--violet); }
+.rv-btn--go   { background: var(--rv-deep); color: #fff; }
+.rv-btn--go:hover { background: var(--rv-deep-h); }
 .rv-btn--list { background: #4a4a55; color: #fff; }
 .rv-btn--list:hover { background: #35353e; }
 /* 누를 수 없는 지원하기 — 왜 못 누르는지 title 로 알려 줍니다 */
@@ -784,11 +812,14 @@ html[data-theme="dark"] .rc-table--mini tr.rc-row-on td { background: #2a2440; }
   .rv-doc { padding: 24px 22px 22px; }
   .rv-title { font-size: 20px; }
   .rv-tabs { grid-template-columns: 1fr; gap: 8px; }
-  .rv-tbl th { width: 88px; padding-right: 12px; }
+  .rv-tbl th { width: 92px; }
+  .rv-tbl th, .rv-tbl td { padding: 10px 10px; }
   /* 오디션여부·오디션곡명을 한 줄에 넷으로 두면 좁아 못 읽습니다 —
-     위아래로 풀어 각각 한 줄씩 쓰게 합니다. */
-  .rv-tbl th.th2 { padding-left: 0; }
+     위아래로 풀어 각각 한 줄씩 쓰게 합니다.
+     선은 그대로 남아 어느 줄이 한 칸인지 보입니다. */
   .rv-tbl--wrap2 th, .rv-tbl--wrap2 td { display: block; width: auto; }
+  .rv-tbl--org th, .rv-tbl--org td { padding: 6px 0; }
+  .rv-tbl--org td.rv-orgname { font-size: 16px; }
   .rv-btns { flex-direction: column; }
   .rv-btn { width: 100%; }
 }
