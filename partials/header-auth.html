@@ -1,3 +1,12 @@
+<!-- 회원 화면 공용 헤더 (로그인·회원가입·마이페이지 등 16개 화면이 함께 씁니다)
+     · 이 파일 한 곳만 고치면 그 화면들에 모두 반영됩니다
+     · 테마 전환은 assets/auth.js 가 .theme-toggle 을 보고 맡습니다
+     · 「레슨 : ON」 과 「SHOPPING」 은 아직 화면이 없어 # 그대로 두었습니다
+       (본 헤더도 같습니다. 화면이 생기면 두 곳을 함께 고칩니다)
+     · 「CUSTOMER CENTER」 도 아직 화면이 없습니다
+     ★ 전체메뉴(≡) 는 이 헤더에 펼칠 메뉴가 없어 눌러도 아무 일이 없습니다.
+       960px 아래에서는 위 큰 메뉴가 숨으므로 그 폭에서는 길이 막힙니다.
+       고치는 방법은 파트너님과 정하기로 두었습니다. -->
 <div class="gnb">
   <div class="util"><div class="in">
     <div class="l"><a href="https://wxn.co.kr" target="_blank" rel="noopener">WIXON ASSOCIATES INC</a><a href="https://lpstock.co.kr" target="_blank" rel="noopener">LPSTOCK</a><a href="https://opusclam.com" target="_blank" rel="noopener">OPUSCLAM COMMUNITY</a></div>
@@ -5,11 +14,11 @@
   </div></div>
   <div class="mast"><div class="in">
     <a class="logo" href="/home.html"><img src="/assets/logo.png" alt="OPUSCLAM.COM"></a>
-    <nav class="nav"><a href="/home.html">DATABASE</a><a href="#">OC커뮤니티</a><a href="#">정보SPOT</a><a href="#">레슨 : ON</a><a href="#">리쿠르트</a><a href="#">SHOPPING</a></nav>
+    <nav class="nav"><a href="/db/index.html">DATABASE</a><a href="/community/index.html">OC커뮤니티</a><a href="/spot/index.html">정보SPOT</a><a href="#" aria-disabled="true" title="준비 중입니다">레슨 : ON</a><a href="/recruit/guide.html">리쿠르트</a><a href="#" aria-disabled="true" title="준비 중입니다">SHOPPING</a></nav>
     <div class="tools">
-      <a class="school" href="#">학교등록</a>
+      <a class="school" href="/account/join-school.html">학교등록</a>
       <span class="authlink"><a href="/account/login.html">로그인</a> <a href="/account/join.html">회원가입</a></span>
-      <span class="circ" title="검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span>
+      <a class="circ" href="/search.html" title="통합검색" aria-label="통합검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></a>
       <span class="circ theme-toggle" title="테마 전환"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
       <button class="burger" title="전체메뉴"><span></span><span></span><span></span></button>
     </div>
