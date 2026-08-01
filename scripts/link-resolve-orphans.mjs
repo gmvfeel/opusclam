@@ -61,10 +61,36 @@ const SCHOOL_CAT = [
   [/graduate school|대학원/i,                                                               '대학원'],
   [/universit|대학교|université|universität|università|universidad/i,                        '종합대학'],
   [/gymnasium|\bschule\b|고등학교|high school|lycée|secondary school|grammar school/i,       '기타'],
+  /* ★ 위 줄들에 걸리지 않는 음악·예술 학교를 받아 줍니다.
+     Juilliard School · Cornish College of the Arts 처럼
+     「음악대학」·「예술대학」 표현이 아닌 이름이 「기타」 로 떨어졌습니다. */
+  [/conservator|conservatoire|konservat|konzervat|음악학교|음악원|odeio|musikhochschule|musikschule/i, '음악원'],
+  [/college of (the )?arts|school of (the )?arts|arts college|예술학교|art school/i,          '예술대학'],
+  [/\bmusic\b|음악|musik|musique|musica|música/i,                                            '음악학교'],
 ];
 
-// 음악과 관련된 학술원만 담습니다
+/* ★ 음악·예술 학교인지 — 「일반학교」 를 갈라 두는 데 씁니다.
+
+   왜 필요한가
+     이 수집기는 「인물의 출신학교로 이름은 적혀 있는데 DB에 없는 곳」 을
+     채워 넣습니다. 음악가도 초·중·고를 다녔으니 경기고·이화여고·
+     Lycée Masséna·Japan Electronics College 같은 일반 학교가 딸려 옵니다.
+
+   지우지 않고 <b>갈래를 갈라</b> 둡니다.
+     · 「인물 → 모교」 는 그 자체로 값이 있습니다(네트워킹)
+     · 지워 봐야 다음 달에 또 들어옵니다
+     · 갈래가 갈려 있으면 음악학교DB 목록에서 걸러 볼 수 있습니다 */
+const MUS_SCHOOL = /음악|예술|성악|기악|국악|무용|합창|관악|현악|피아노|바이올린|music|musik|musique|musica|música|conservator|conservatoire|konservat|konzervat|odeio|philharmon|opera|ballet|choir|choral|kunst|művész|arts/i;
+
+/* 음악과 관련된 학술원만 담습니다 */
 const MUSIC_ORG = /music|musik|musique|musica|música|composer|composition|음악|작곡|philharmon|conservator|opera|singing|choral|sound/i;
+
+/* ★ 밴드 · 연주팀 · 듀오는 학술원이 아닙니다.
+   fellow_of(학회 회원) 로 들어오면 안 되는 것들입니다 —
+   Rasputina(첼로 록밴드) · 스트라토바리우스(메탈밴드) ·
+   Igudesman & Joo(음악 코미디 듀오) 가 그렇게 들어왔습니다.
+   관계 자체는 값이 있으므로 <b>버리지 않고 소속(member_of)으로 옮깁니다.</b> */
+const BAND_LIKE = /\bband\b|밴드|rock group|musical group|musical ensemble|ensemble$|\bduo\b|듀오|\btrio\b|삼중주|\bquartet\b|사중주|\bquintet\b|orchestra$|악단$|그룹$|girl group|boy band|metal band|punk band|jazz group|음악 그룹|연주단|중창단/i;
 
 // 담지 않을 것들 · 미술 · 과학 · 비밀결사 등
 const DENY_ORG = /freemason|프리메이슨|fine arts$|미술 아카데미|academy of (painting|sculpture)|masonic/i;
@@ -191,6 +217,10 @@ function toRow(b, kind, fallbackName) {
   if (kind === 'school') {
     let cat = '기타';
     for (const [re, name] of SCHOOL_CAT) if (re.test(hay)) { cat = name; break; }
+    /* ★ 음악·예술 낱말이 없는데 갈래가 「기타」 로 떨어진 것은
+       일반 고등학교·전문학교입니다. 「일반학교」 로 갈라 둡니다.
+       (종합대학·대학원은 그대로 둡니다 — 음악대학을 품은 대학이 많습니다) */
+    if (cat === '기타' && !MUS_SCHOOL.test(hay)) cat = '일반학교';
     return Object.assign(base, { category: cat });
   }
   // 학술원 · 기관·재단DB 로 갑니다.
@@ -205,10 +235,34 @@ function toRow(b, kind, fallbackName) {
   });
 }
 
+/* 밴드·연주팀을 음악단체DB(orgs) 행으로 만듭니다.
+   기관·재단 행과 칸이 다르므로 따로 둡니다. */
+function toOrgRow(b, label) {
+  const nameKo = clean(val(b, 'nameKo')) || clean(label);
+  const nameEn = clean(val(b, 'nameEn'));
+  if (!nameKo && !nameEn) return null;
+  return {
+    name_ko: nameKo || nameEn,
+    name_en: nameEn,
+    org_type: '연주팀 · 밴드',
+    description: clean(val(b, 'descKo')) || clean(val(b, 'descEn')) || null,
+    wikidata_id: qidOf(val(b, 'item')),
+    source: 'wikidata',
+    is_oc: false,
+    hidden: false,
+  };
+}
+
 function musicalOrg(row, types) {
   const hay = [row.name_ko, row.name_en, row.description, types].filter(Boolean).join(' ');
   if (DENY_ORG.test(hay)) return false;
   return MUSIC_ORG.test(hay);
+}
+
+/* 밴드·연주팀인가 — 학술원이 아니라 소속(member_of)으로 이어야 합니다 */
+function bandLike(row, types) {
+  const hay = [row.name_ko, row.name_en, row.description, types].filter(Boolean).join(' ');
+  return BAND_LIKE.test(hay);
 }
 
 // ── 한 갈래 처리 ─────────────────────────────────────────────
@@ -258,20 +312,38 @@ async function run(kind) {
 
   const ents = need.length ? await fetchEntities(need) : {};
 
-  const fresh = [], skipped = { 음악무관: 0, 정보없음: 0 };
+  const fresh = [], bands = [], skipped = { 음악무관: 0, 정보없음: 0 };
   for (const q of need) {
     const b = ents[q];
     if (!b) { skipped.정보없음++; continue; }
     const row = toRow(b, kind, byQid.get(q).label);
     if (!row) { skipped.정보없음++; continue; }
-    if (kind === 'fellow' && !musicalOrg(row, val(b, 'types'))) { skipped.음악무관++; continue; }
+    if (kind === 'fellow') {
+      if (!musicalOrg(row, val(b, 'types'))) { skipped.음악무관++; continue; }
+      /* ★ 밴드·연주팀·듀오는 학술원이 아닙니다.
+         Rasputina(첼로 록밴드) · 스트라토바리우스(메탈밴드) ·
+         Igudesman & Joo(음악 코미디 듀오) 가 fellow_of 로 들어왔습니다.
+         버리지 않고 <b>음악단체DB(orgs)에 담아 소속(member_of)으로</b> 옮깁니다 —
+         「누가 어느 팀에 속했는가」 는 그 자체로 값이 있습니다. */
+      if (bandLike(row, val(b, 'types'))) {
+        bands.push({ qid: q, row: toOrgRow(b, byQid.get(q).label), n: byQid.get(q).n });
+        continue;
+      }
+    }
     fresh.push({ qid: q, row, n: byQid.get(q).n });
   }
   fresh.sort((a, b) => b.n - a.n);
+  bands.sort((a, b) => b.n - a.n);
 
   console.log('  · 담을 것 ' + fresh.length + '곳'
+    + (bands.length ? ' · 밴드·연주팀 ' + bands.length + '곳(음악단체DB로)' : '')
     + (skipped.음악무관 ? ' · 음악과 무관해 건너뜀 ' + skipped.음악무관 + '곳' : '')
     + (skipped.정보없음 ? ' · 자료를 못 받음 ' + skipped.정보없음 + '곳' : ''));
+  if (bands.length) {
+    console.log('  · 밴드·연주팀 (소속 관계로 옮깁니다):');
+    bands.slice(0, 8).forEach(x =>
+      console.log('     ' + String(x.row ? (x.row.name_ko || '') : '').slice(0, 34).padEnd(36) + x.n + '명'));
+  }
 
   if (kind === 'school') {
     const cnt = {};
@@ -302,6 +374,32 @@ async function run(kind) {
     haveMap.set(f.qid, id);
   }
   console.log('  · 새로 담음 ' + ins + '곳' + (dup ? ' · 이미 있어 이어만 씀 ' + dup + '곳' : ''));
+
+  /* ── 밴드·연주팀 — 음악단체DB에 담고 관계를 소속으로 옮깁니다 ── */
+  let bIns = 0, bMoved = 0;
+  for (const x of bands) {
+    if (!x.row) continue;
+    let id = null;
+    try { id = await sbInsertOne('orgs', x.row); }
+    catch (e) { console.log('     밴드 저장 실패(' + x.qid + ') · ' + String(e.message).slice(0, 70)); continue; }
+    if (id === 'dup') {
+      const again = await sbGetAll('orgs', 'id', '&wikidata_id=eq.' + encodeURIComponent(x.qid));
+      id = again.length ? again[0].id : null;
+    } else if (id) bIns++;
+    if (!id) continue;
+    try {
+      /* 학회 회원(fellow_of) → 소속(member_of) 으로 고치고 단체를 가리키게 합니다 */
+      await sbPatch('entity_links',
+        'rel=eq.fellow_of&to_id=is.null&to_ref=eq.' + encodeURIComponent(x.qid),
+        { rel: 'member_of', to_type: 'org', to_id: id });
+      bMoved += x.n;
+    } catch (e) {
+      console.log('     밴드 관계 옮기기 실패(' + x.qid + ') · ' + String(e.message).slice(0, 70));
+    }
+  }
+  if (bands.length) {
+    console.log('  · 밴드·연주팀 — 음악단체DB에 ' + bIns + '곳 담음 · 소속 관계로 옮긴 것 ' + bMoved + '건');
+  }
 
   // 관계를 이어줍니다
   for (const [qid, id] of haveMap) {
