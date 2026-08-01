@@ -31,8 +31,8 @@
 
   /* 음악학교DB — 출신학교를 여기서 골라 school_id 로 담습니다.
      인재 → 출신학교 → 그 학교의 입시요강 으로 이어지는 고리입니다. */
-  var SCHOOL_TABLE = 'schools';          /* ★ 확인 필요 — 음악학교DB 표 이름 */
-  var SCHOOL_NAME_COL = 'name_ko';       /* ★ 확인 필요 — 학교명 칸 */
+  var SCHOOL_TABLE = 'schools';          /* 확인됨 — 음악학교DB */
+  var SCHOOL_NAME_COL = 'name_ko';       /* 확인됨 — 학교명 칸 */
 
   /* 어느 등록 화면인가 — 'talent'(인재) 또는 'job'(채용).
      ★ 두 화면이 <b>한 엔진</b>을 씁니다. 도우미·미리보기·임시저장·
@@ -41,15 +41,20 @@
   var MODE = 'talent';
   var TABLE = 'recruit_talents';
 
-  /* 채용공고를 올린 단체가 담긴 DB —
-     ★ 표 이름은 확인이 필요합니다(recruit-13 SQL). 틀리면 「찾기」 만
-       조용히 실패하고, 단체명을 직접 적으면 등록 자체는 됩니다. */
+  /* 채용공고를 올린 단체가 담긴 DB — 표 이름을 확인해 맞추었습니다.
+     네 표 모두 이름칸이 name_ko 로 같습니다. */
   var ORG_DBS = {
-    org:        { label: '음악단체DB',      table: 'organizations', nameCol: 'name_ko' },
-    venue:      { label: '공연장DB',        table: 'venues',        nameCol: 'name_ko' },
-    school:     { label: '음악학교DB',      table: 'schools',       nameCol: 'name_ko' },
-    foundation: { label: '관련기관·재단DB', table: 'foundations',   nameCol: 'name_ko' },
+    org:        { label: '음악단체DB',      table: 'orgs',        nameCol: 'name_ko' },
+    venue:      { label: '공연장DB',        table: 'venues',      nameCol: 'name_ko' },
+    school:     { label: '음악학교DB',      table: 'schools',     nameCol: 'name_ko' },
+    foundation: { label: '관련기관·재단DB', table: 'foundations', nameCol: 'name_ko' },
   };
+
+  /* 사진 올릴 저장소 — 게시판들과 같은 결로 리쿠르트 몫을 따로 둡니다.
+     경로는 「회원번호/talent-시각.jpg」 입니다. 회원 폴더 밑에 두면
+     권한 규칙에서 「자기 폴더만」 으로 막기가 쉽습니다. */
+  var PHOTO_BUCKET = 'recruit';
+  var PHOTO_MAX = 800;        /* 긴 쪽 최대 픽셀 — 원본을 그대로 올리면 무겁습니다 */
 
   var R, cfg = null, C = null, me = null, editId = null, busy = false;
 
@@ -329,6 +334,7 @@
     { sel: '#rwCareer',  label: '경력사항',        ok: function () { return !!val('#rwCareer'); } },
     { sel: '#rwBody',    label: '자기소개서',      ok: function () { return !!val('#rwBody'); } },
     { sel: '#rwPayType', label: '희망급여',        ok: function () { return !!val('#rwPayType'); } },
+    { sel: '#rwPhoto',   label: '사진',            ok: function () { return !!val('#rwPhotoUrl'); } },
   ];
 
   /* 갈래에 맞는 목록을 돌려줍니다 — 도우미와 need() 가 함께 씁니다 */
@@ -426,6 +432,82 @@
     document.documentElement.style.setProperty('--rw-aside-top', Math.round(top) + 'px');
   }
 
+  /* ── 사진 올리기 ──────────────────────────────────────────
+     ★ 원본을 그대로 올리지 않습니다.
+       요즘 휴대폰 사진은 한 장에 4~8MB 입니다. 그대로 올리면
+       올리는 사람도 보는 사람도 느려지고 저장소도 빨리 찹니다.
+       화면에서 긴 쪽 800px, JPEG 로 줄여 올립니다(대개 100KB 안쪽).
+
+     ★ 실패해도 등록은 됩니다 — 사진은 없어도 되는 것입니다. */
+  function shrink(file) {
+    return new Promise(function (done, fail) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var r = Math.min(1, PHOTO_MAX / Math.max(w, h));
+          var cw = Math.round(w * r), ch = Math.round(h * r);
+          var cv = document.createElement('canvas');
+          cv.width = cw; cv.height = ch;
+          cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
+          cv.toBlob(function (blob) {
+            URL.revokeObjectURL(url);
+            blob ? done(blob) : fail(new Error('canvas'));
+          }, 'image/jpeg', 0.85);
+        } catch (e) { URL.revokeObjectURL(url); fail(e); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); fail(new Error('image')); };
+      img.src = url;
+    });
+  }
+
+  function showPhoto(url) {
+    var box = el('#rwPhotoBox');
+    if (!box) return;
+    if (url) {
+      box.innerHTML = '<img src="' + esc(url) + '" alt="등록한 사진">'
+        + '<button type="button" class="rw-photo-x" id="rwPhotoDel">사진 지우기</button>';
+      var d = el('#rwPhotoDel');
+      if (d) d.addEventListener('click', function () { setVal('#rwPhotoUrl', ''); showPhoto(''); drawChecks(); });
+    } else {
+      box.innerHTML = '<span class="rw-photo-none">사진 없음</span>';
+    }
+  }
+
+  async function uploadPhoto(file) {
+    if (!me || !me.user) { say('로그인이 필요합니다.', 'warn'); return; }
+    if (!/^image\//.test(file.type)) { say('이미지 파일만 올릴 수 있습니다.', 'warn'); return; }
+
+    var st = el('#rwPhotoState');
+    if (st) { st.hidden = false; st.textContent = '사진을 줄여 올리는 중…'; }
+
+    try {
+      var blob = await shrink(file);
+      var path = me.user.id + '/talent-' + Date.now() + '.jpg';
+      var up = await C.storage.from(PHOTO_BUCKET)
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+      if (up.error) throw up.error;
+
+      var pub = C.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+      var url = pub && pub.data && pub.data.publicUrl;
+      if (!url) throw new Error('url');
+
+      setVal('#rwPhotoUrl', url);
+      showPhoto(url);
+      drawChecks();
+      if (st) st.hidden = true;
+    } catch (e) {
+      if (st) st.hidden = true;
+      var m = String((e && e.message) || '');
+      if (/bucket/i.test(m)) {
+        say('사진 저장소가 아직 준비되지 않았습니다. 사진 없이도 등록하실 수 있습니다.', 'warn');
+      } else {
+        say('사진을 올리지 못했습니다. 사진 없이도 등록하실 수 있습니다.<br>' + esc(m), 'warn');
+      }
+    }
+  }
+
   /* ── 빠진 것 짚기 ─────────────────────────────────────────*/
   function need() {
     return musts().filter(function (it) {
@@ -504,6 +586,7 @@
       gender: radio('rw-gender'),
       phone: val('#rwPhone'), tel: tel, email: val('#rwEmail'),
       zipcode: val('#rwZip'), addr1: val('#rwAddr1'), addr2: val('#rwAddr2'),
+      photo_url: val('#rwPhotoUrl') || null,
       veteran: radio('rw-vet'),
       disability: radio('rw-dis'),
       disability_grade: (radio('rw-dis') === '유') ? val('#rwDisGrade') : null,
@@ -698,6 +781,8 @@
     setRadio('rw-gender', o.gender);
     setVal('#rwPhone', o.phone); setVal('#rwTel', o.tel); setVal('#rwEmail', o.email);
     setVal('#rwZip', o.zipcode); setVal('#rwAddr1', o.addr1); setVal('#rwAddr2', o.addr2);
+    setVal('#rwPhotoUrl', o.photo_url);
+    showPhoto(o.photo_url || '');
     setRadio('rw-vet', o.veteran); setRadio('rw-dis', o.disability);
     setVal('#rwDisGrade', o.disability_grade);
     setRadio('rw-mil', o.military);
@@ -857,6 +942,12 @@
     /* 단추 잇기 */
     var pull = el('#rwPull');
     if (pull) pull.addEventListener('click', pullMe);
+    var ph = el('#rwPhoto');
+    if (ph) ph.addEventListener('change', function () {
+      if (ph.files && ph.files[0]) uploadPhoto(ph.files[0]);
+      ph.value = '';     /* 같은 파일을 다시 골라도 듣게 비웁니다 */
+    });
+    showPhoto(val('#rwPhotoUrl'));
     var addBtn = el('#rwAddSchool');
     if (addBtn) addBtn.addEventListener('click', function () { addSchool(); });
     /* 미리보기 → 그 안에서 「고치기」 또는 「게시하기」 를 고릅니다.

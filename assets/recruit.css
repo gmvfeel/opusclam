@@ -1323,19 +1323,26 @@ html[data-theme="dark"] .rw-draftbar { background: #262013; border-color: #4a3d1
      줄마다 여백이 겹겹이 쌓였습니다. */
 .rw-addr { display: flex; flex-direction: column; gap: 7px; }
 .rw-addr-top { display: flex; gap: 8px; align-items: stretch; }
-.rw-addr-top #rwZip {
+
+/* ★ 이름표(#rwZip)가 아니라 <b>자리</b>로 겁니다.
+   앞서는 인재등록의 칸 이름에 걸어 두었더니, 채용등록의 우편번호 칸은
+   이름이 달라(#rwOrgZip) 규칙이 걸리지 않았습니다. 그러면 .rw-f input 의
+   「flex: none; width: 100%」 가 살아나 칸이 줄어들지 못하고 단추를
+   밖으로 밀어냅니다. 자리로 걸어 두면 어느 화면에 붙여도 듣습니다. */
+.rw-addr-top > input {
   flex: 0 0 132px; width: 132px;
   background: #f6f6f9; cursor: default;
 }
-html[data-theme="dark"] .rw-addr-top #rwZip { background: #1a1a1a; }
+html[data-theme="dark"] .rw-addr-top > input { background: #1a1a1a; }
 .rw-find--addr {
   flex: 0 0 auto; margin-top: 0;
   height: 38px; padding: 0 18px; font-size: 12.5px;   /* 우편번호 칸과 같은 키 */
+  white-space: nowrap;
 }
-@media (max-width: 480px) {
-  /* 아주 좁으면 단추를 아래로 내려 온전한 폭을 씁니다 */
+@media (max-width: 560px) {
+  /* 좁으면 단추를 아래로 내려 온전한 폭을 씁니다 */
   .rw-addr-top { flex-wrap: wrap; }
-  .rw-addr-top #rwZip { flex: 1 1 120px; width: auto; }
+  .rw-addr-top > input { flex: 1 1 120px; width: auto; }
   .rw-find--addr { flex: 1 1 100%; }
 }
 
@@ -1398,17 +1405,52 @@ html[data-theme="dark"] .rw-pv-foot { background: #1a1a1a; }
    그 단체 화면으로 바로 갑니다 — 네트워킹의 고리입니다. */
 .rw-org { display: flex; flex-direction: column; gap: 7px; }
 .rw-org-top { display: flex; gap: 8px; align-items: stretch; }
-.rw-org-top #rwOrgDb { flex: 0 0 170px; width: 170px; }
-.rw-org-top #rwOrgName { flex: 1 1 auto; min-width: 0; }
-.rw-find--org { flex: 0 0 auto; margin-top: 0; height: 38px; padding: 0 16px; font-size: 12.5px; }
+/* 여기도 이름표가 아니라 자리로 겁니다 (위와 같은 까닭) */
+.rw-org-top > select { flex: 0 0 170px; width: 170px; }
+.rw-org-top > input[type="text"] { flex: 1 1 auto; width: auto; min-width: 0; }
+.rw-find--org {
+  flex: 0 0 auto; margin-top: 0;
+  height: 38px; padding: 0 16px; font-size: 12.5px; white-space: nowrap;
+}
 .rw-org .sc-linked { align-self: flex-start; margin: 0; }
 .rw-org .sc-results { margin-top: 4px; }
 
 /* 우대조건처럼 항목이 많은 체크 묶음 — 줄을 넉넉히 나눕니다 */
 .rc-checks--wrap { gap: 8px 16px; }
 
-@media (max-width: 760px) {
+@media (max-width: 860px) {
   .rw-org-top { flex-wrap: wrap; }
-  .rw-org-top #rwOrgDb { flex: 1 1 140px; width: auto; }
+  .rw-org-top > select { flex: 1 1 140px; width: auto; }
   .rw-find--org { flex: 1 1 100%; }
+}
+
+/* ── 사진 등록 ────────────────────────────────────────────*/
+.rw-photo { display: flex; gap: 16px; align-items: flex-start; }
+.rw-photo-box {
+  flex: 0 0 auto; width: 104px; min-height: 128px;
+  border: 1px solid var(--line-2); border-radius: 6px;
+  background: #f6f6f9; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+html[data-theme="dark"] .rw-photo-box { background: #1a1a1a; border-color: #3a3a3a; }
+.rw-photo-box img { width: 100%; height: auto; display: block; }
+.rw-photo-none { font-size: 11.5px; color: var(--text-3); }
+.rw-photo-x {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 26px; cursor: pointer; border: 0;
+  background: rgba(20, 18, 34, .72); color: #fff;
+  font-family: inherit; font-size: 11px; font-weight: 600;
+}
+.rw-photo-side { flex: 1 1 auto; min-width: 0; }
+.rw-find--photo {
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-top: 0; height: 34px; padding: 0 16px; cursor: pointer;
+}
+.rw-photo-hint {
+  margin: 9px 0 0; font-size: 11.5px; line-height: 1.65; color: var(--text-3);
+}
+.rw-photo-hint b { color: var(--rv-deep); }
+.rw-photo-state {
+  margin: 8px 0 0; font-size: 12px; font-weight: 600; color: var(--rv-deep);
 }

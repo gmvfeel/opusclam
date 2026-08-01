@@ -131,6 +131,24 @@
         <div id="rwGenderBox" class="rc-checks"></div>
       </div>
 
+      <!-- 사진 — 고르면 화면에서 긴 쪽 800px JPEG 로 줄여 올립니다.
+           원본을 그대로 올리면 4~8MB 라 올리는 사람도 보는 사람도
+           느려지고 저장소도 빨리 찹니다.
+           사진은 없어도 등록됩니다 — 실패해도 막지 않습니다. -->
+      <div class="rw-f rw-f--full"><span>사진</span>
+        <div class="rw-photo">
+          <div class="rw-photo-box" id="rwPhotoBox"></div>
+          <div class="rw-photo-side">
+            <label class="rw-find rw-find--photo" for="rwPhoto">사진 고르기</label>
+            <input type="file" id="rwPhoto" accept="image/*" hidden>
+            <input type="hidden" id="rwPhotoUrl" value="">
+            <p class="rw-photo-hint">권장 — 얼굴이 또렷한 세로 사진.
+              이름·연락처와 함께 <b>열람한 회원에게만</b> 보입니다.</p>
+            <p class="rw-photo-state" id="rwPhotoState" hidden></p>
+          </div>
+        </div>
+      </div>
+
       <div class="rw-f rw-f--full"><span>생년월일 <b>*</b></span>
         <span class="rw-inline rw-inline--3">
           <select id="rwBy"></select>
