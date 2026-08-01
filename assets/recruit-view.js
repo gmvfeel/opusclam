@@ -28,16 +28,22 @@
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var HDR = { apikey: KEY, Authorization: 'Bearer ' + KEY };
 
-  /* 음악단체DB 경로 — DATABASE › 음악단체DB
-       ORG_VIEW · 그 단체의 상세 화면 (org_id 로 바로 갑니다)
-       ORG_LIST · 음악단체DB 목록
+  /* ── 어느 DB의 단체인가 ───────────────────────────────────
+     채용정보를 올리는 회원의 성격에 따라 그 단체가 담긴 DB가 다릅니다.
+     그래서 공고에 org_db(어느 DB) + org_id(몇 번) 을 짝으로 담습니다.
 
-     ★ ORG_VIEW 는 확인된 경로입니다(/db/org-view.html?id=…).
-       ORG_LIST 는 이 프로젝트의 이름 짓는 버릇대로 맞춘 것입니다 —
-       job.html ↔ job-view.html, talent.html ↔ talent-view.html 처럼
-       목록은 -view 를 뗀 이름입니다. 다르면 이 한 줄만 고치십시오. */
-  var ORG_VIEW = '/db/org-view.html';
-  var ORG_LIST = '/db/org.html';
+     ★ 목록 경로는 파트너님이 확인해 주신 것입니다.
+       상세 경로는 org-view.html 이 확인되었고, 나머지 셋은 같은
+       이름 짓는 버릇(-view 를 붙이는)으로 맞추었습니다.
+       다르면 이 표의 view 한 줄만 고치십시오. */
+  var ORG_DBS = {
+    org:        { label: '음악단체DB',      list: '/db/org.html',        view: '/db/org-view.html' },
+    venue:      { label: '공연장DB',        list: '/db/venue.html',      view: '/db/venue-view.html' },
+    school:     { label: '음악학교DB',      list: '/db/school.html',     view: '/db/school-view.html' },
+    foundation: { label: '관련기관·재단DB', list: '/db/foundation.html', view: '/db/foundation-view.html' },
+  };
+  /* 어느 DB인지 담겨 있지 않을 때 기댈 곳 — 채용은 음악단체가 가장 많습니다 */
+  var ORG_DB_FALLBACK = 'org';
 
   var R, cfg = null, cur = null;
 
@@ -151,19 +157,23 @@
     /* ── 머리칸 — 회사·단체 ──
        오퍼스클램의 채용정보는 사업자·단체 회원만 올릴 수 있습니다.
        그러므로 모든 공고에는 반드시 등록된 단체가 하나 있습니다.
-       단추는 언제나 「회사 / 단체정보 상세보기」 하나입니다.
 
-       ★ org_id 가 담겨 있으면 음악단체DB의 그 단체 화면으로 바로 갑니다.
-       ★ 아직 org_id 가 없는 자료(지금의 가라데이터 45건)는 음악단체DB
-         목록으로 보내고 단체명을 검색어로 실어 줍니다. 막다른 길은
-         만들지 않되, 없는 것을 있는 것처럼 꾸미지도 않습니다.
+       ★ 가는 곳은 org_db(어느 DB) + org_id(몇 번) 이 정합니다 —
+         음악단체·공연장·음악학교·관련기관재단 가운데 하나입니다.
+       ★ 번호까지 있으면 그 단체 화면으로 바로 가고, 아직 번호가
+         없는 자료는 그 DB의 목록으로 보내고 단체명을 검색어로
+         실어 줍니다. 막다른 길은 만들지 않되, 없는 것을 있는 것처럼
+         꾸미지도 않습니다.
+       ★ 단추에 어느 DB로 가는지 적어 둡니다 — 누르기 전에 어디로
+         가는지 알 수 있어야 합니다.
 
-       ☞ 남은 일 — 채용등록 화면(job-write.html)에서 등록 회원의 단체를
-         음악단체DB에서 골라 org_id 로 담아야 합니다. 그것이 채용정보와
-         단체DB를 잇는 고리입니다. */
+       ☞ 남은 일 — 채용등록 화면(job-write.html)에서 등록 회원이
+         자기 단체를 네 DB 가운데서 골라 org_db·org_id 로 담아야
+         합니다. 그것이 채용정보와 DB를 잇는 고리입니다. */
+    var db = ORG_DBS[o.org_db] || ORG_DBS[ORG_DB_FALLBACK];
     var orgHref = has(o.org_id)
-      ? (ORG_VIEW + '?id=' + encodeURIComponent(o.org_id))
-      : (ORG_LIST + '?kw=' + encodeURIComponent(o.org_name || ''));
+      ? (db.view + '?id=' + encodeURIComponent(o.org_id))
+      : (db.list + '?kw=' + encodeURIComponent(o.org_name || ''));
 
     var head = '<div class="rv-orgbox">'
       + '<table class="rv-tbl rv-tbl--org"><tbody>'
@@ -175,7 +185,9 @@
       + '</div>'
       + '<div class="rv-orgfoot">'
       +   '<a class="rv-orglink" href="' + orgHref + '">'
-      +   '회사 / 단체정보 상세보기 <span aria-hidden="true">→</span></a>'
+      +   '회사 / 단체정보 상세보기'
+      +   '<span class="rv-orgdb">' + esc(db.label) + '</span>'
+      +   '<span aria-hidden="true">→</span></a>'
       + '</div>';
 
     /* ── 채용정보 ── */
