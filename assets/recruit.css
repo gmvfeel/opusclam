@@ -1062,7 +1062,13 @@ html[data-theme="dark"] .rw-f textarea { background: #141414; border-color: #444
   display: flex; align-items: center; flex-wrap: wrap;
   gap: 10px; min-width: 0; width: 100%;
 }
-.rw-inline > input, .rw-inline > select, .rw-inline > textarea {
+/* ★ 앞에 .rw-f 를 하나 더 붙여 무게를 올립니다.
+   기본 규칙이 「.rw-f input[type="text"]」 인데 속성 선택자가 무게를
+   더해, 클래스 하나로만 건 규칙(.rw-inline > input)이 밀렸습니다.
+   그래서 칸이 「폭 100%」 를 요구하며 옆의 단추를 밖으로 밀어냈습니다. */
+.rw-f .rw-inline > input,
+.rw-f .rw-inline > select,
+.rw-f .rw-inline > textarea {
   /* 120px 을 밑돌면 줄을 바꿔 내려갑니다 — 눌러 찌그러지지 않게 */
   flex: 1 1 120px; width: auto; min-width: 0;
 }
@@ -1329,11 +1335,11 @@ html[data-theme="dark"] .rw-draftbar { background: #262013; border-color: #4a3d1
    이름이 달라(#rwOrgZip) 규칙이 걸리지 않았습니다. 그러면 .rw-f input 의
    「flex: none; width: 100%」 가 살아나 칸이 줄어들지 못하고 단추를
    밖으로 밀어냅니다. 자리로 걸어 두면 어느 화면에 붙여도 듣습니다. */
-.rw-addr-top > input {
+.rw-f .rw-addr-top > input {
   flex: 0 0 132px; width: 132px;
   background: #f6f6f9; cursor: default;
 }
-html[data-theme="dark"] .rw-addr-top > input { background: #1a1a1a; }
+html[data-theme="dark"] .rw-f .rw-addr-top > input { background: #1a1a1a; }
 .rw-find--addr {
   flex: 0 0 auto; margin-top: 0;
   height: 38px; padding: 0 18px; font-size: 12.5px;   /* 우편번호 칸과 같은 키 */
@@ -1342,7 +1348,7 @@ html[data-theme="dark"] .rw-addr-top > input { background: #1a1a1a; }
 @media (max-width: 560px) {
   /* 좁으면 단추를 아래로 내려 온전한 폭을 씁니다 */
   .rw-addr-top { flex-wrap: wrap; }
-  .rw-addr-top > input { flex: 1 1 120px; width: auto; }
+  .rw-f .rw-addr-top > input { flex: 1 1 120px; width: auto; }
   .rw-find--addr { flex: 1 1 100%; }
 }
 
@@ -1406,8 +1412,8 @@ html[data-theme="dark"] .rw-pv-foot { background: #1a1a1a; }
 .rw-org { display: flex; flex-direction: column; gap: 7px; }
 .rw-org-top { display: flex; gap: 8px; align-items: stretch; }
 /* 여기도 이름표가 아니라 자리로 겁니다 (위와 같은 까닭) */
-.rw-org-top > select { flex: 0 0 170px; width: 170px; }
-.rw-org-top > input[type="text"] { flex: 1 1 auto; width: auto; min-width: 0; }
+.rw-f .rw-org-top > select { flex: 0 0 170px; width: 170px; }
+.rw-f .rw-org-top > input[type="text"] { flex: 1 1 auto; width: auto; min-width: 0; }
 .rw-find--org {
   flex: 0 0 auto; margin-top: 0;
   height: 38px; padding: 0 16px; font-size: 12.5px; white-space: nowrap;
@@ -1420,7 +1426,7 @@ html[data-theme="dark"] .rw-pv-foot { background: #1a1a1a; }
 
 @media (max-width: 860px) {
   .rw-org-top { flex-wrap: wrap; }
-  .rw-org-top > select { flex: 1 1 140px; width: auto; }
+  .rw-f .rw-org-top > select { flex: 1 1 140px; width: auto; }
   .rw-find--org { flex: 1 1 100%; }
 }
 
@@ -1463,7 +1469,7 @@ html[data-theme="dark"] .rw-photo-box { background: #1a1a1a; border-color: #3a3a
 .rw-audlist { display: flex; flex-direction: column; gap: 7px; }
 .rw-audlist[hidden] { display: none; }
 .rw-audrow { display: flex; gap: 8px; align-items: stretch; }
-.rw-audrow > input { flex: 1 1 auto; width: auto; min-width: 0; }
+.rw-f .rw-audrow > input { flex: 1 1 auto; width: auto; min-width: 0; }
 .rw-audrow .aud-del {
   position: static; flex: 0 0 auto;
   height: 38px; padding: 0 12px;

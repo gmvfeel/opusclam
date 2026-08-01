@@ -756,6 +756,7 @@
         .filter(function (x) { return x; })
         .forEach(addAud);
     }
+    ensureAud();
     setRadio('rw-gender', o.gender || '무관');
     if (el('#rwAgeAny')) el('#rwAgeAny').checked = (o.age_any !== false);
     setVal('#rwAgeMin', o.age_min); setVal('#rwAgeMax', o.age_max);
@@ -1116,6 +1117,14 @@
     if (box) box.insertAdjacentHTML('beforeend', audRow(v));
   }
 
+  /* 「있음」 일 때 적을 줄이 적어도 하나는 있게 합니다.
+     이미 있으면 아무것도 하지 않습니다(빈 줄이 쌓이지 않게). */
+  function ensureAud() {
+    if (radio('rw-aud') !== '있음') return;
+    if (els('#rwAudList .rw-audrow').length) return;
+    addAud('');
+  }
+
   function readAud() {
     return els('#rwAudList .aud-p')
       .map(function (x) { return String(x.value || '').trim(); })
@@ -1139,7 +1148,10 @@
     var list = el('#rwAudList'), addb = el('#rwAudAdd');
     if (list) list.hidden = !aud;
     if (addb) addb.hidden = !aud;
-    if (aud && list && !els('#rwAudList .rw-audrow').length) addAud('');
+    /* 「있음」 인데 적을 줄이 없으면 하나 만들어 줍니다.
+       ★ 줄을 만드는 곳은 여기 한 곳뿐입니다. 여러 곳에서 만들면
+         눌린 횟수만큼 빈 줄이 늘어납니다. */
+    ensureAud();
 
     /* 상시모집·채용시까지면 마감일을 잠급니다 — 두 값이 어긋나면
        목록의 마감순 정렬이 뒤죽박죽이 됩니다. */
