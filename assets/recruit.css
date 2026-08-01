@@ -1505,3 +1505,65 @@ html[data-theme="dark"] .rv-note-txt p b { color: #b9b4e0; }
 @media (max-width: 560px) {
   .rv-note-in { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
+
+/* 인쇄 단추는 왼쪽에 떨어뜨려 둡니다 —
+   「고치기·게시하기」 와 성격이 달라 나란히 두면 헷갈립니다 */
+.rw-pv-print { margin-right: auto; }
+
+/* ============================================================
+   인쇄 / PDF 저장
+
+   ★ display:none 으로 감추지 않고 visibility 로 감춥니다.
+     미리보기 창은 <main> 안에 있어서, 바깥을 display:none 하면
+     그 안의 창까지 함께 사라집니다. visibility 는 자리만 비우고
+     자손에서 다시 보이게 되돌릴 수 있습니다.
+
+   ★ 몸(body)에 rw-print 가 붙어 있을 때만 듣습니다.
+     미리보기를 닫은 채 Ctrl+P 를 누르면 화면 그대로 인쇄됩니다.
+   ============================================================ */
+@page { margin: 14mm; }
+
+@media print {
+  body.rw-print { overflow: visible !important; }
+  body.rw-print * { visibility: hidden !important; }
+  body.rw-print .rw-pv,
+  body.rw-print .rw-pv * { visibility: visible !important; }
+
+  /* 창을 종이 위로 펼칩니다 — 떠 있는 모양·그림자·둥글기를 없애고 */
+  body.rw-print .rw-pv {
+    position: absolute !important;
+    inset: auto !important; left: 0 !important; top: 0 !important;
+    width: 100% !important; height: auto !important;
+  }
+  body.rw-print .rw-pv-dim,
+  body.rw-print .rw-pv-head,
+  body.rw-print .rw-pv-foot { display: none !important; }
+
+  body.rw-print .rw-pv-win {
+    position: static !important; transform: none !important;
+    width: 100% !important; max-height: none !important;
+    border-radius: 0 !important; box-shadow: none !important;
+    background: #fff !important;
+  }
+  body.rw-print .rw-pv-body {
+    max-height: none !important; overflow: visible !important;
+    padding: 0 !important; border: 0 !important;
+  }
+
+  /* 종이에서는 옅은 회색 바탕이 잉크만 먹습니다 */
+  body.rw-print .rv-orgbox,
+  body.rw-print .rv-mask,
+  body.rw-print .rv-tbl th { background: transparent !important; }
+  /* 표 선은 남깁니다 — 인쇄물에서 칸이 갈라 보여야 읽힙니다 */
+  body.rw-print .rv-tbl,
+  body.rw-print .rv-tbl th,
+  body.rw-print .rv-tbl td { border-color: #bbb !important; }
+
+  /* 묶음이 종이 사이에서 잘리지 않게 */
+  body.rw-print .rv-sec,
+  body.rw-print .rw-pv-body table { break-inside: avoid; page-break-inside: avoid; }
+  body.rw-print .rv-group { break-after: avoid; page-break-after: avoid; }
+
+  /* 링크 밑줄·색은 종이에서 뜻이 없습니다 */
+  body.rw-print .rv-lk { color: #000 !important; text-decoration: none !important; }
+}

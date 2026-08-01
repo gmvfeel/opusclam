@@ -921,6 +921,43 @@
     document.body.classList.remove('rw-noscroll');
   }
 
+  /* ── 인쇄 / PDF 저장 ──────────────────────────────────────
+     ★ PDF 만드는 라이브러리를 받아 오지 않습니다.
+       브라우저 인쇄 창의 「대상 → PDF로 저장」 이 같은 일을 합니다.
+       값이 0이고, 글자가 이미지가 아니라 진짜 글자로 남아
+       찾기·복사도 됩니다.
+
+     하는 일은 셋입니다.
+       ① 인쇄할 때만 미리보기 속만 남기고 나머지를 감춥니다(CSS)
+       ② 파일 이름이 되는 화면 제목을 공고·이력 제목으로 바꿉니다
+       ③ 인쇄가 끝나면 되돌립니다
+
+     ★ beforeprint 로 걸어 두면 Ctrl+P 로 눌러도 같이 듣습니다. */
+  var titleBackup = null;
+
+  function bindPrint() {
+    window.addEventListener('beforeprint', function () {
+      var wrap = el('#rwPv');
+      if (!wrap || wrap.hidden) return;      /* 미리보기가 닫혀 있으면 손대지 않습니다 */
+      document.body.classList.add('rw-print');
+    });
+    window.addEventListener('afterprint', function () {
+      document.body.classList.remove('rw-print');
+      if (titleBackup != null) { document.title = titleBackup; titleBackup = null; }
+    });
+  }
+
+  function printPreview() {
+    var wrap = el('#rwPv');
+    if (!wrap || wrap.hidden) return;
+    /* 저장할 때 파일 이름이 되는 자리입니다 —
+       「인재정보등록」 보다 제목이 담긴 이름이 나중에 찾기 쉽습니다. */
+    if (titleBackup == null) titleBackup = document.title;
+    var head = (MODE === 'job') ? '채용정보' : '인재정보';
+    document.title = head + ' — ' + (val('#rwTitle') || 'OPUSCLAM');
+    window.print();
+  }
+
   /* ── 고칠 때 불러오기 ─────────────────────────────────────*/
   async function loadForEdit(id) {
     try {
@@ -1045,6 +1082,9 @@
       var b = el(id);
       if (b) b.addEventListener('click', closePreview);
     });
+    var pr1 = el('#rwPvPrint');
+    if (pr1) pr1.addEventListener('click', printPreview);
+    bindPrint();
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') closePreview();
     });
@@ -1293,6 +1333,9 @@
     ['#rwPvClose', '#rwPvEdit', '#rwPvDim'].forEach(function (x) {
       var b = el(x); if (b) b.addEventListener('click', closePreview);
     });
+    var pr2 = el('#rwPvPrint');
+    if (pr2) pr2.addEventListener('click', printPreview);
+    bindPrint();
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePreview(); });
 
     /* 무관·오디션·상시모집 잠금 */
