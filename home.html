@@ -772,19 +772,19 @@
 <!-- ===== quick icons ===== -->
 <section class="quick">
   <div class="wrap">
-    <a class="qa" href="#">
+    <a class="qa" href="/recruit/guide.html">
       <span class="qi"><i class="qi-ic m1"></i></span>
       <span class="qi-en">Recruit</span>
-      <span class="qi-ko">리크루트</span>
+      <span class="qi-ko">리쿠르트</span>
       <span class="qi-desc">국내외 채용·인재 정보를<br>한곳에서 제공</span>
     </a>
-    <a class="qa" href="#">
+    <a class="qa" href="/spot/concours.html">
       <span class="qi"><i class="qi-ic m2"></i></span>
       <span class="qi-en">Concours Info</span>
       <span class="qi-ko">콩쿨정보</span>
       <span class="qi-desc">국내 콩쿨 및 해외 유명<br>콩쿨 정보를 상세히 제공</span>
     </a>
-    <a class="qa" href="#">
+    <a class="qa" href="/spot/concert.html">
       <span class="qi"><i class="qi-ic m3"></i></span>
       <span class="qi-en">Concert Info</span>
       <span class="qi-ko">공연정보</span>
@@ -846,7 +846,7 @@
       </div>
 
       <div class="col-block">
-        <div class="sec-head"><div class="t"><span class="en-s">Concours</span><span class="ko">콩쿨정보</span></div><a class="more en" href="#">VIEW MORE +</a></div>
+        <div class="sec-head"><div class="t"><span class="en-s">Concours</span><span class="ko">콩쿨정보</span></div><a class="more en" href="/spot/concours.html">VIEW MORE +</a></div>
         <div class="split" id="card-concours-lead">
           <div class="thumb ph"></div>
           <div class="body">
@@ -953,7 +953,7 @@
         <div class="tk-ic" style="background:rgba(255,255,255,.2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-6.8-4.3-8.6-8.2C1.9 8.9 3.8 5.5 7.1 5.5c1.9 0 3.3 1.1 4.9 3 1.6-1.9 3-3 4.9-3 3.3 0 5.2 3.4 3.7 6.8-1.8 3.9-8.6 8.2-8.6 8.2z"/><circle cx="10.1" cy="14.4" r="1.35" fill="currentColor" stroke="none"/><circle cx="14.4" cy="13.3" r="1.35" fill="currentColor" stroke="none"/><path d="M11.45 14.4V10.1M15.75 13.3V9"/><path d="M11.45 10.1c1.4-.5 2.9-.8 4.3-1.1"/></svg></div>
       </a>
 
-      <div class="sec-head"><div class="t"><span class="en-s">Funding</span><span class="ko">지원금 / 정책자금정보</span></div><a class="more en" href="#">VIEW MORE +</a></div>
+      <div class="sec-head"><div class="t"><span class="en-s">Funding</span><span class="ko">지원금 / 정책자금정보</span></div><a class="more en" href="/spot/funding.html">VIEW MORE +</a></div>
       <ul class="fund" id="funding-list">
         <li><a href="#">문화예술교육형 사회적기업 육성 지원사업</a><span class="dt">~22.03.31</span></li>
         <li><a href="#">2012년 강원문화예술진흥사업</a><span class="dt">~22.03.31</span></li>
@@ -1002,19 +1002,24 @@
 <!-- ===== lower triple ===== -->
 <section class="lower">
   <div class="wrap">
-    <!-- recruit -->
+    <!-- recruit — 채용정보(구인) · 인재정보(구직)
+         · 자료는 스크립트가 받아 채웁니다 (loadRecruit)
+         · 탭을 누르면 그 갈래로 다시 받습니다
+         · 「구직」 은 인재정보 공개용 뷰를 읽습니다. 그 뷰는 채용 회원과
+           본인에게만 줄을 내주므로, 손님에게는 안내 한 줄이 보입니다. -->
     <div>
-      <div class="tabs"><button class="on">구인</button><button>구직</button></div>
-      <div class="recruit-lead">
-        <h4 class="disp">바로크합주단</h4><span class="badge">NEW</span>
-        <p>안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다…</p>
+      <div class="sec-head">
+        <div class="t"><span class="en-s">Recruit</span><span class="ko">리쿠르트</span></div>
+        <a class="more en" id="recruit-more" href="/recruit/job.html">VIEW MORE +</a>
       </div>
-      <ul class="list">
-        <li><a href="#">바로크주단 — 다카오는 2020년, 민간 오케스트라로…</a><span class="dt">~21.12.09</span></li>
-        <li><a href="#">작곡전공자 — 입시생은 매주실 전공자분 구합니다. 5개월정도…</a><span class="dt">~21.12.09</span></li>
-        <li><a href="#">서울현드영상불 — 바슨/클라리넷 주자 구합니다.</a><span class="dt">~21.12.09</span></li>
-        <li><a href="#">서울현드영상불 — 바슨/클라리넷 주자 구합니다.</a><span class="dt">~21.12.09</span></li>
-      </ul>
+      <div class="tabs" id="recruit-tabs">
+        <button class="on" data-kind="job">구인</button><button data-kind="talent">구직</button>
+      </div>
+      <div class="recruit-lead" id="recruit-lead">
+        <h4 class="disp">불러오는 중…</h4>
+        <p></p>
+      </div>
+      <ul class="list" id="recruit-list"></ul>
     </div>
 
     <!-- utility/score -->
@@ -2295,6 +2300,124 @@ if('serviceWorker' in navigator){
     }catch(e){ console.error('ticker 로드 실패:', e); }
   }
 
+  /* ── 리쿠르트 미리보기 ────────────────────────────────────
+     구인(채용정보)과 구직(인재정보)을 탭으로 갈아 보여 줍니다.
+
+     ★ 두 갈래가 읽는 곳이 다릅니다
+       구인 → recruit_jobs           (누구나 볼 수 있습니다)
+       구직 → recruit_talents_public (채용 회원과 본인에게만 줄이 나옵니다)
+     그래서 구직이 0건이면 「없다」 가 아니라 「볼 수 없다」 일 수 있습니다.
+     그 둘을 갈라 알려 줍니다 — 「없습니다」 라고만 하면 거짓이 됩니다.
+
+     ★ 마감일 표시 — 상시모집·채용시까지는 마감이 없습니다.
+       그런 공고에 날짜를 비워 두면 「빠뜨린 것」 처럼 보이므로 말로 적습니다. */
+  let recruitKind = 'job';
+
+  function recruitWhen(r){
+    if(recruitKind !== 'job') return fmtDate(r.created_at);
+    if(r.apply_always)      return '상시모집';
+    if(r.apply_until_hired) return '채용시까지';
+    if(!r.apply_to)         return '';
+    return '~' + fmtDate(r.apply_to);
+  }
+
+  function recruitTitle(r){
+    if(recruitKind === 'job'){
+      const org = (r.org_name || '').trim();
+      return org ? (org + ' — ' + (r.title || '')) : (r.title || '');
+    }
+    /* 구직은 이름이 가려져 옵니다(조**) */
+    const who = (r.name_masked || '').trim();
+    return who ? (who + ' — ' + (r.title || '')) : (r.title || '');
+  }
+
+  async function loadRecruit(kind){
+    recruitKind = kind || 'job';
+    const lead = document.getElementById('recruit-lead');
+    const list = document.getElementById('recruit-list');
+    const more = document.getElementById('recruit-more');
+    if(!lead || !list) return;
+
+    const isJob = (recruitKind === 'job');
+    if(more) more.href = isJob ? '/recruit/job.html' : '/recruit/talent.html';
+
+    const h = lead.querySelector('h4');
+    const p = lead.querySelector('p');
+    const badge = lead.querySelector('.badge');
+    if(h) h.textContent = '불러오는 중…';
+    if(p) p.textContent = '';
+    if(badge) badge.remove();
+    list.innerHTML = '';
+
+    const table = isJob ? 'recruit_jobs' : 'recruit_talents_public';
+    const cols  = isJob
+      ? 'id,title,org_name,body,duty,apply_to,apply_always,apply_until_hired,created_at'
+      : 'id,title,name_masked,body,career,created_at';
+    const view  = isJob ? '/recruit/job-view.html' : '/recruit/talent-view.html';
+    const filter = isJob ? '&hidden=eq.false' : '';
+
+    try{
+      const rows = await sbGet(table + '?select=' + cols + filter
+        + '&order=created_at.desc&limit=5');
+
+      if(!Array.isArray(rows) || !rows.length){
+        if(h) h.textContent = isJob
+          ? '등록된 채용정보가 아직 없습니다'
+          : '인재정보는 채용 회원만 볼 수 있습니다';
+        if(p) p.textContent = isJob
+          ? '단체·학교 회원이 올린 공고가 여기에 보입니다.'
+          : '음악관계자·단체·기업 또는 음악학교 회원으로 로그인하시면 보입니다.';
+        return;
+      }
+
+      /* 맨 앞 한 건은 크게 */
+      const r0 = rows[0];
+      if(h){
+        h.textContent = isJob ? (r0.org_name || r0.title || '') : (r0.name_masked || '');
+        h.style.cursor = 'pointer';
+        h.onclick = function(){ location.href = view + '?id=' + encodeURIComponent(r0.id); };
+      }
+      if(p){
+        const txt = (isJob ? (r0.duty || r0.body) : (r0.career || r0.body)) || r0.title || '';
+        p.textContent = String(txt).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 110);
+      }
+      /* 사흘 안에 올라온 것에만 NEW */
+      const fresh = r0.created_at &&
+        (Date.now() - new Date(r0.created_at).getTime()) < 3 * 864e5;
+      if(fresh && h){
+        const b = document.createElement('span');
+        b.className = 'badge'; b.textContent = 'NEW';
+        h.insertAdjacentElement('afterend', b);
+      }
+
+      /* 나머지는 목록으로 */
+      rows.slice(1).forEach(function(r){
+        const li = document.createElement('li');
+        const a  = document.createElement('a');
+        a.href = view + '?id=' + encodeURIComponent(r.id);
+        a.textContent = recruitTitle(r);
+        const dt = document.createElement('span');
+        dt.className = 'dt'; dt.textContent = recruitWhen(r);
+        li.appendChild(a); li.appendChild(dt);
+        list.appendChild(li);
+      });
+    }catch(e){
+      console.error('리쿠르트 로드 실패:', e);
+      if(h) h.textContent = '불러오지 못했습니다';
+    }
+  }
+
+  function bindRecruitTabs(){
+    const wrap = document.getElementById('recruit-tabs');
+    if(!wrap) return;
+    wrap.addEventListener('click', function(e){
+      const b = e.target.closest('button[data-kind]');
+      if(!b) return;
+      wrap.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); });
+      loadRecruit(b.getAttribute('data-kind'));
+    });
+  }
+
   function init(){
     loadHeroSlides();
     loadTicker();
@@ -2314,6 +2437,8 @@ if('serviceWorker' in navigator){
     loadFeature('card-concours-lead', 'concours_lead');
     loadArtists();
     loadConcertPR();
+    bindRecruitTabs();
+    loadRecruit('job');
   }
 
   if(document.readyState === 'loading'){
