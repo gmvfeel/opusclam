@@ -104,6 +104,11 @@ function isMusicSchool(row) {
 function eduByClass(row) {
   return !!(row._p31 && P31_EDU.test(row._p31));
 }
+
+/* 분류가 <b>음악·예술</b> 교육기관이라고 말해 주는가 */
+function musEduByClass(row) {
+  return !!(row._p31 && P31_MUSEDU.test(row._p31));
+}
 function looksArmed(row) {
   if (DENY_NAMES.has(row.name_ko) || (row.name_en && DENY_NAMES.has(row.name_en))) return true;
   /* 소개문까지 봅니다 — 군사 조직을 <b>찾아내는</b> 쪽은 넓게 보는 편이 안전합니다.
@@ -118,6 +123,12 @@ function looksArmed(row) {
    P31 을 보면 정확히 가려낼 수 있습니다. */
 const P31_MIL = /military|paramilitar|armed (forces|group|organisation|organization)|militia|\barmy\b|\bnavy\b|air force|police|gendarmerie|law enforcement|intelligence agency|terrorist|insurgent|guerrilla|rebel|guard (unit|regiment)|regiment|battalion|brigade|division \(military\)|special forces|secret service|군사|경찰|무장|정보기관|준군사/i;
 const P31_EDU = /school|university|college|conservator|academy|educational|higher education|institute of (music|art|technology|higher)|gymnasium|lyc[eé]e|institution of higher|학교|대학|교육기관|음악원/i;
+
+/* ★ 「교육기관」 만으로는 좁혀지지 않습니다.
+   Westminster School · Lycée Henri-IV · Reed College 도 교육기관이라
+   그대로 통과했습니다(구분이 「기타」 로 들어온 100곳이 그것입니다).
+   음악·예술 교육기관인지까지 봐야 합니다. */
+const P31_MUSEDU = /conservator|conservatoire|conservatori|music (school|academy|college|university|institute|conservatory)|school of music|academy of music|college of music|higher school of music|musikhochschule|musikschule|musikgymnasium|art school|school of (the )?arts?|academy of (the )?arts?|performing arts|fine arts school|음악학교|음악원|음악대학|예술학교|예술고|예술대학|예술종합/i;
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const val = (b, k) => (b[k] && b[k].value) ? b[k].value : '';
@@ -260,10 +271,15 @@ function keep(r) {
   //    Hashemiyoun · 농촌척후대 · La Piedrita · scytheman 이 그렇게 들어왔습니다.
   //
   //    증거는 둘 가운데 하나면 됩니다.
-  //      · 이름에 음악·교육 낱말이 있다        (isMusicSchool)
-  //      · 분류(P31)가 교육기관이라고 말한다   (eduByClass)
-  //    고유명뿐인 명문 음악원은 두 번째로 지켜집니다.
-  if (!isMusicSchool(r) && !eduByClass(r)) return false;
+  //      · 이름에 음악·교육 낱말이 있다              (isMusicSchool)
+  //      · 분류(P31)가 <b>음악·예술</b> 교육기관이다  (musEduByClass)
+  //    고유명뿐인 명문 음악원(Juilliard·Mozarteum)은 두 번째로 지켜집니다.
+  //
+  //    ★ 「교육기관」 까지만 보면 안 됩니다.
+  //      Westminster School · Lycée Henri-IV · Reed College 도 교육기관이라
+  //      그대로 통과했습니다. 유명 음악가가 다녔다는 이유로 위키데이터에
+  //      이어져 있을 뿐, 음악학교는 아닙니다.
+  if (!isMusicSchool(r) && !musEduByClass(r)) return false;
 
   // ④ 그다음 충실도 컷오프
   return bioOK(r) || substanceCount(r) >= 2;
@@ -401,6 +417,10 @@ async function main() {
   const armed    = all.filter(r => looksArmed(r) && !isMusicSchool(r));
   /* ★ 학교라는 증거가 없어 제외되는 것들 — 예전에는 이 갈래를 남겼습니다 */
   const noProof  = all.filter(r => !isMusicSchool(r) && !eduByClass(r));
+  /* 학교이긴 하지만 음악·예술 학교가 아니어서 제외되는 것들 —
+     Westminster School · Lycée Henri-IV 같은 일반 학교입니다.
+     혹시 아까운 것이 섞였는지 눈으로 볼 수 있게 따로 찍습니다. */
+  const eduNotMus = all.filter(r => !isMusicSchool(r) && eduByClass(r) && !musEduByClass(r));
   const kept     = all.filter(keep);
 
   console.log('■ 걸러낸 내역');
@@ -411,8 +431,11 @@ async function main() {
   if (armed.length) console.log('    예:', armed.slice(0, 5).map(r => r.name_ko).join(' / '));
   console.log('  · 학교라는 증거 없음(제외):', noProof.length, '건  ← 이름에 음악·교육 낱말이 없고 분류도 교육기관이 아님');
   if (noProof.length) console.log('    예:', noProof.slice(0, 8).map(r => r.name_ko || r.name_en).join(' / '));
-  console.log('  · 분류로 지켜진 고유명 학교:',
-    all.filter(r => !isMusicSchool(r) && eduByClass(r)).length,
+  console.log('  · 일반 학교(음악학교 아님, 제외):', eduNotMus.length,
+    '건  ← 유명 음악가가 다녔을 뿐인 일반 학교');
+  if (eduNotMus.length) console.log('    예:', eduNotMus.slice(0, 8).map(r => r.name_ko || r.name_en).join(' / '));
+  console.log('  · 분류로 지켜진 고유명 음악학교:',
+    all.filter(r => !isMusicSchool(r) && musEduByClass(r)).length,
     '건  ← Juilliard·Mozarteum 처럼 이름만으로는 알 수 없는 명문');
   console.log('■ 최종 통과:', kept.length, '곳 (전체', all.length, ')');
 

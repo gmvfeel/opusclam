@@ -107,12 +107,45 @@ async function verifyClasses() {
 //   1단계 · 목록만 가볍게 받습니다
 //   2단계 · 150개씩 묶어 상세를 받습니다 (VALUES 로 범위가 좁아 빠릅니다)
 
-function listQuery(clsQid) {
+/* ★ 목록을 나눠 받습니다.
+
+   예전에는 `LIMIT 4000` 이었습니다. 그런데 실제 로그에 「목록 4000건」 이
+   정확히 찍혔습니다 — 딱 맞는 숫자는 <b>잘렸다는 신호</b>입니다.
+   음반사는 위키데이터에 수만 개가 있으니, 4001번째부터는 아예 보지 못하고
+   버려지고 있었습니다. 늘 같은 앞부분만 훑으니 「신규 저장 0」 이 되는 것도
+   당연했습니다.
+
+   ORDER BY 를 두어 나눠 받을 때 순서가 흔들리지 않게 합니다.
+   (순서가 없으면 같은 항목을 두 번 받거나 빠뜨릴 수 있습니다) */
+const LIST_PAGE = 5000;                                        // 한 번에 받을 개수
+const LIST_MAX  = parseInt(process.env.LIST_MAX || '0', 10);   // 0 이면 제한 없음
+
+function listQuery(clsQid, offset) {
   return `
 SELECT ?item WHERE {
   ?item wdt:P31 wd:${clsQid} .
 }
-LIMIT 4000`;
+ORDER BY ?item
+LIMIT ${LIST_PAGE} OFFSET ${offset}`;
+}
+
+/* 한 분류의 번호를 끝까지 받습니다 */
+async function listAll(cls) {
+  const out = [];
+  for (let off = 0; ; off += LIST_PAGE) {
+    const rows = await sparql(listQuery(cls.qid, off));
+    const ids = rows.map(b => qidOf(val(b, 'item'))).filter(Boolean);
+    out.push(...ids);
+    if (ids.length < LIST_PAGE) break;          // 마지막 쪽입니다
+    if (LIST_MAX && out.length >= LIST_MAX) {   // 시험할 때 줄여 보고 싶으면 LIST_MAX 로
+      console.log('    (LIST_MAX ' + LIST_MAX + ' 에서 멈춥니다)');
+      break;
+    }
+    console.log('    · 목록 ' + out.length + '건까지 받았습니다');
+    await sleep(700);
+  }
+  /* 같은 번호가 두 번 오는 일을 막습니다 */
+  return [...new Set(out)];
 }
 
 function detailQuery(qids) {
@@ -145,13 +178,13 @@ GROUP BY ?item ?nameKo ?nameEn ?inception ?countryKo ?countryEn ?cityKo ?cityEn
 async function collectClass(cls) {
   let qids = [];
   try {
-    const rows = await sparql(listQuery(cls.qid));
-    qids = rows.map(b => qidOf(val(b, 'item'))).filter(Boolean);
+    qids = await listAll(cls);
   } catch (e) {
     console.log('  · ' + cls.type + ' 목록 조회 실패 ·', String(e.message).slice(0, 70));
     return [];
   }
-  console.log('  · ' + cls.type + ' · 목록 ' + qids.length + '건 · 상세 조회 시작');
+  console.log('  · ' + cls.type + ' · 목록 ' + qids.length + '건 · 상세 조회 시작 ('
+    + Math.ceil(qids.length / 150) + '묶음)');
 
   const out = [];
   let failed = 0;
@@ -163,6 +196,10 @@ async function collectClass(cls) {
     } catch (e) {
       failed += batch.length;
       if (isStop(e)) break;                  // 자료원이 막혔으면 남은 묶음을 헛돌지 않습니다
+    }
+    const done = Math.min(i + 150, qids.length);
+    if (done % 3000 === 0 || done === qids.length) {
+      console.log('    · 상세 ' + done + '/' + qids.length);
     }
     await sleep(700);
   }
