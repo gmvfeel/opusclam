@@ -422,6 +422,38 @@ async function main() {
   for (const r of existing) { if (r.wikidata_id) byWid.set(r.wikidata_id, r); if (r.name_ko) nameSet.add(norm(r.name_ko)); if (typeof r.sort_no === 'number' && r.sort_no > maxSort) maxSort = r.sort_no; }
   console.log('■ 기존 schools:', existing.length, '행');
 
+  /* ── ★ 스스로 점검 — 「이미 들어와 있지만 지금 규칙으로는 걸러질 항목」 ──
+
+     왜 필요한가
+       걸러내기 규칙을 고쳐도 <b>이미 들어간 것은 그대로 남습니다.</b>
+       Al-Badar · 베이징 특경대 가 차단 목록에 있는데도 DB에 남아 있던 것이
+       그 예입니다. 규칙은 새로 들어오는 것만 막기 때문입니다.
+
+       그래서 수집할 때마다 기존 항목도 같은 규칙으로 훑어 보고,
+       걸러질 것들을 로그에 남깁니다. 파트너님은 그 번호로 어드민에서
+       지우고 차단하시면 됩니다.
+
+     ★ 스스로 지우지는 않습니다.
+       규칙이 잘못되었을 때 자료가 조용히 사라지는 것이 더 위험합니다.
+       사람이 보고 판단하도록 알려 주기만 합니다. */
+  const suspect = existing.filter((r) => {
+    const row = { name_ko: r.name_ko, name_en: r.name_en, description: r.description, _p31: '' };
+    /* 분류(P31)는 기존 항목에 없으므로 이름만으로 봅니다 —
+       이름에 음악·교육 낱말이 하나도 없고, 군사 낱말이 보이는 것만 뽑습니다.
+       (분류를 모르니 조심스럽게, 확실한 것만 알립니다) */
+    return looksArmed(row) && !isMusicSchool(row);
+  });
+  if (suspect.length) {
+    console.log('■ ★ 이미 들어와 있지만 지금 규칙으로는 걸러질 항목:', suspect.length, '건');
+    console.log('    어드민에서 「삭제 + 차단」 해 주십시오. 스크립트는 지우지 않습니다.');
+    suspect.slice(0, 20).forEach((r) =>
+      console.log('    · id=' + r.id + '  ' + (r.name_ko || r.name_en || '') +
+                  (r.wikidata_id ? '  [' + r.wikidata_id + ']' : '  [번호없음]')));
+    if (suspect.length > 20) console.log('    … 그 밖 ' + (suspect.length - 20) + '건');
+  } else {
+    console.log('■ 기존 항목 점검 — 걸러질 것 없음');
+  }
+
   const toIns = []; let updated = 0, skipped = 0, dupName = 0;
   let blockedOut = 0;
   for (const row of kept) {
