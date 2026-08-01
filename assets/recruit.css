@@ -1394,9 +1394,8 @@ html[data-theme="dark"] .rw-pv-head { background: #1a1a1a; }
 }
 html[data-theme="dark"] .rw-pv-foot { background: #1a1a1a; }
 
-/* 미리보기 안의 가림막 안내 — 실제 가림막이 아니라 설명입니다 */
-.rv-mask--note { background: #f7f7fa; border-style: dashed; }
-.rv-mask--note .rv-mask-over { text-align: left; align-items: flex-start; }
+/* 미리보기 안의 가림막 안내는 이 파일 아래쪽
+   「미리보기의 가림막 안내」 에서 정합니다 (한 곳에서만). */
 
 @media (max-width: 700px) {
   .rw-pv-win { top: 12px; max-height: calc(100vh - 24px); }
@@ -1480,3 +1479,29 @@ html[data-theme="dark"] .rw-photo-box { background: #1a1a1a; border-color: #3a3a
   margin: 0; height: 32px; padding: 0 14px; font-size: 12.5px;
 }
 .rw-add--sm[hidden] { display: none; }
+
+/* ── 미리보기의 가림막 안내 ───────────────────────────────
+   실제 화면에서는 사진이 「연락처 열람」 뒤에만 그려지므로,
+   미리보기에 이 자리를 두어야 올린 사진을 확인할 수 있습니다. */
+.rv-mask--note {
+  background: #f7f7fa; border-style: dashed;
+}
+html[data-theme="dark"] .rv-mask--note { background: #191919; }
+.rv-note-in {
+  display: flex; align-items: center; gap: 18px;
+  padding: 18px 20px;
+}
+.rv-note-photo { flex: 0 0 auto; width: 92px; }
+.rv-note-photo img {
+  width: 92px; height: auto; display: block;
+  border-radius: 5px; border: 1px solid var(--line-2);
+}
+.rv-note-txt { flex: 1 1 auto; min-width: 0; }
+.rv-note-txt p { margin: 0; font-size: 13px; line-height: 1.65; color: var(--text-2); }
+.rv-note-txt p b { color: var(--rv-deep); font-weight: 700; }
+html[data-theme="dark"] .rv-note-txt p b { color: #b9b4e0; }
+.rv-note-add { margin-top: 7px !important; font-size: 12px; color: var(--text-3); }
+
+@media (max-width: 560px) {
+  .rv-note-in { flex-direction: column; align-items: flex-start; gap: 12px; }
+}

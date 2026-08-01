@@ -542,7 +542,7 @@
       + '<h1 class="rv-title">' + esc(o.title || '(제목을 아직 적지 않았습니다)') + '</h1>'
       + '<div class="rv-who">' + esc(who)
       +   '<span>' + esc(g) + (age ? ' / ' + esc(age) + '세' : '') + '</span></div>'
-      + (opt.preview ? previewMaskNote() : maskBlock(opt.viewer || { user: null }))
+      + (opt.preview ? previewMaskNote(o) : maskBlock(opt.viewer || { user: null }))
       + '<h2 class="rv-group">인재상세정보</h2>'
       + wishBlock(o)
       + schoolsBlock(o)
@@ -561,11 +561,25 @@
     return n.charAt(0) + Array(n.length).join('*');
   }
 
-  function previewMaskNote() {
+  /* 미리보기의 가림막 자리 —
+     ★ 사진을 여기에 보여 줍니다.
+       사진은 실제 화면에서는 「연락처 열람」 을 누른 뒤에만 그려지므로,
+       미리보기에 그 자리를 두지 않으면 <b>올린 사진을 확인할 곳이
+       없습니다.</b> 미리보기는 내가 올린 것을 확인하는 자리이니
+       보여 드리고, 남에게는 언제 보이는지 함께 알려 줍니다. */
+  function previewMaskNote(o) {
+    var photo = has(o && o.photo_url)
+      ? '<div class="rv-note-photo"><img src="' + esc(o.photo_url) + '" alt="올리신 사진"></div>'
+      : '';
     return '<div class="rv-mask rv-mask--note">'
-      + '<div class="rv-mask-over" style="position:static;background:none">'
-      +   '<p>이름과 연락처는 <b>채용하는 단체·학교 회원이 열람할 때만</b> 보입니다. '
-      +   '다른 분들에게는 이 자리가 가려집니다.</p>'
+      + '<div class="rv-note-in">'
+      +   photo
+      +   '<div class="rv-note-txt">'
+      +     '<p>이름 · 연락처' + (photo ? ' · 사진' : '')
+      +     ' 은 <b>채용하는 단체·학교 회원이 열람할 때만</b> 보입니다. '
+      +     '다른 분들에게는 이 자리가 가려집니다.</p>'
+      +     (photo ? '' : '<p class="rv-note-add">사진을 올리시면 뽑는 쪽이 훨씬 잘 봅니다.</p>')
+      +   '</div>'
       + '</div></div>';
   }
 
