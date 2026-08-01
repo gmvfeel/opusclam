@@ -2,11 +2,16 @@
      · 이 파일 한 곳만 고치면 모든 리쿠르트 화면에 반영됩니다
      · 지금 보고 있는 화면 표시(active)는 assets/include.js 가 주소를 보고 자동으로 붙입니다
      · 쓰는 법 — 화면에서 메뉴가 놓일 자리에 이 한 줄만 두시면 됩니다
-         <div id="oc-subnav" data-src="/partials/subnav-recruit.html"></div> -->
+         <div id="oc-subnav" data-src="/partials/subnav-recruit.html"></div>
+
+     ★ 서비스안내를 첫 자리에 둡니다.
+       리쿠르트 대메뉴를 누르면 이 화면이 먼저 뜨므로, 알약 순서도
+       그것과 같아야 「지금 어디에 있나」 가 헷갈리지 않습니다.
+       (다른 대메뉴들이 각자 메인을 두는 것과 같은 짜임입니다) -->
 <nav class="pdb-subnav" aria-label="리쿠르트 하위 메뉴">
+  <a href="/recruit/guide.html">서비스안내</a>
   <a href="/recruit/job.html">채용정보</a>
   <a href="/recruit/talent.html">인재정보</a>
   <a href="/recruit/job-write.html">채용등록</a>
   <a href="/recruit/talent-write.html">인재등록</a>
-  <a href="/recruit/guide.html">서비스안내</a>
 </nav>

@@ -1567,3 +1567,211 @@ html[data-theme="dark"] .rv-note-txt p b { color: #b9b4e0; }
   /* 링크 밑줄·색은 종이에서 뜻이 없습니다 */
   body.rw-print .rv-lk { color: #000 !important; text-decoration: none !important; }
 }
+
+/* ============================================================
+   리쿠르트 서비스안내 — recruit/guide.html
+   리쿠르트 섹션의 대문입니다. 시안이 없어 지금까지 쓴 짜임
+   (카드·표·묶음 제목·짙은 단추)을 그대로 씁니다 —
+   대문만 다른 결이면 들어와서 낯설어집니다.
+   ============================================================ */
+.rg-wrap { max-width: 1000px; margin: 44px auto 0; }
+
+/* ── 소개 ─────────────────────────────────────────────────*/
+.rg-intro {
+  padding: 30px 34px;
+  background: #fbfaf7; border: 1px solid var(--line); border-radius: 12px;
+}
+html[data-theme="dark"] .rg-intro { background: #1a1a1a; border-color: #333; }
+.rg-intro h2 {
+  font-family: var(--display);
+  font-size: 22px; font-weight: 700; letter-spacing: -.015em;
+  color: var(--ink); margin: 0 0 14px;
+}
+.rg-intro p { margin: 0 0 12px; font-size: 14px; line-height: 1.85; color: var(--text-2); }
+.rg-intro p:last-child { margin-bottom: 0; }
+.rg-intro b { color: var(--rv-deep); font-weight: 700; }
+html[data-theme="dark"] .rg-intro b { color: #b9b4e0; }
+
+/* ── 묶음 제목 ────────────────────────────────────────────*/
+.rg-h {
+  font-family: var(--display);
+  font-size: 21px; font-weight: 700; letter-spacing: -.015em;
+  color: var(--ink); line-height: 1.3;
+  margin: 44px 0 16px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--rv-deep);
+}
+.rg-sub { margin: -6px 0 16px; font-size: 13px; color: var(--text-3); }
+.rg-note-s {
+  margin: 12px 0 0; font-size: 12.5px; line-height: 1.7; color: var(--text-3);
+}
+.rg-note-s b { color: var(--text-2); }
+
+/* ── 네 가지 서비스 카드 ──────────────────────────────────*/
+.rg-cards {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
+}
+.rg-card {
+  display: flex; flex-direction: column;
+  padding: 24px 26px 20px;
+  border: 1px solid var(--line-2); border-radius: 12px;
+  background: var(--paper);
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.rg-card:hover {
+  border-color: var(--rv-deep);
+  box-shadow: 0 8px 22px -12px rgba(30, 24, 60, .3);
+  transform: translateY(-2px);
+}
+.rg-card-t {
+  font-family: var(--display);
+  font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 10px;
+}
+.rg-card p {
+  margin: 0 0 14px; font-size: 13.5px; line-height: 1.75; color: var(--text-2);
+  flex: 1 1 auto;
+}
+.rg-card-who {
+  font-size: 11.5px; font-weight: 700; color: var(--rv-deep);
+  background: #edecf5; border-radius: 3px; padding: 4px 9px;
+  align-self: flex-start; margin-bottom: 12px;
+}
+html[data-theme="dark"] .rg-card-who { background: #2a2740; color: #b9b4e0; }
+.rg-card-go {
+  font-size: 13px; font-weight: 700; color: var(--rv-deep);
+}
+.rg-card-go em { font-style: normal; margin-left: 4px; }
+html[data-theme="dark"] .rg-card-go, html[data-theme="dark"] .rg-card-t { color: #cfc9e8; }
+
+/* ── 권한 표 ──────────────────────────────────────────────*/
+.rg-tablewrap { overflow-x: auto; }
+.rg-tbl { min-width: 660px; font-size: 13px; }
+.rg-tbl thead th {
+  background: #f7f7fa; font-size: 12.5px; font-weight: 700;
+  color: var(--text-2); white-space: nowrap; width: auto; text-align: center;
+}
+html[data-theme="dark"] .rg-tbl thead th { background: #1c1c1c; }
+.rg-tbl td { text-align: center; padding: 12px 10px; }
+.rg-tbl td.rg-who { text-align: left; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.rg-tbl td.y { color: var(--rv-deep); font-weight: 700; }
+.rg-tbl td.n { color: var(--text-3); }
+html[data-theme="dark"] .rg-tbl td.y { color: #b9b4e0; }
+
+/* ── 두 갈래 흐름 ─────────────────────────────────────────*/
+.rg-flows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.rg-flow {
+  padding: 26px 28px 24px;
+  border: 3px solid #514a6b; border-radius: 12px; background: #fdfbf7;
+  box-shadow: 0 3px 14px -4px rgba(30, 24, 60, .16);
+  display: flex; flex-direction: column;
+}
+/* 채용 쪽은 인재정보 화면과 같은 연한 녹색으로 갈라 둡니다 */
+.rg-flow:last-child { background: #f2f9f3; border-color: #4a6152; }
+html[data-theme="dark"] .rg-flow { background: #1e1e1e; border-color: #7a7295; }
+html[data-theme="dark"] .rg-flow:last-child { background: #17201a; border-color: #5e7c68; }
+
+.rg-flow h3 {
+  font-family: var(--display);
+  font-size: 17px; font-weight: 700; color: var(--ink);
+  margin: 0 0 18px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-2);
+  line-height: 1.45;
+}
+.rg-flow-tag {
+  display: inline-block; margin-right: 8px;
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  color: #fff; background: var(--rv-deep); border-radius: 3px; padding: 3px 8px;
+  vertical-align: 2px;
+}
+
+/* 걸음 — 번호를 동그라미로 */
+.rg-steps { list-style: none; margin: 0; padding: 0; counter-reset: rg; flex: 1 1 auto; }
+.rg-steps > li {
+  position: relative; counter-increment: rg;
+  padding: 0 0 18px 38px;
+}
+.rg-steps > li:last-child { padding-bottom: 8px; }
+.rg-steps > li::before {
+  content: counter(rg);
+  position: absolute; left: 0; top: 0;
+  width: 25px; height: 25px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--rv-deep); color: #fff;
+  font-family: var(--display); font-size: 12.5px; font-weight: 700;
+}
+/* 걸음 사이를 잇는 세로 실선 — 순서가 있다는 것이 눈에 보입니다 */
+.rg-steps > li:not(:last-child)::after {
+  content: ''; position: absolute; left: 12px; top: 29px; bottom: 6px;
+  width: 1px; background: var(--line-2);
+}
+.rg-steps > li > b {
+  display: block; font-size: 14px; font-weight: 700; color: var(--ink);
+  line-height: 1.5; padding-top: 3px;
+}
+.rg-steps > li > p {
+  margin: 6px 0 0; font-size: 13px; line-height: 1.75; color: var(--text-2);
+}
+.rg-steps b b, .rg-steps p b { color: var(--rv-deep); }
+html[data-theme="dark"] .rg-steps p b { color: #b9b4e0; }
+.rg-btn { align-self: flex-start; margin-top: 14px; }
+
+/* ── 연락처를 다루는 방식 ─────────────────────────────────*/
+.rg-privacy {
+  padding: 26px 30px;
+  background: #f8f7fc; border: 1px solid var(--rv-deep); border-radius: 12px;
+}
+html[data-theme="dark"] .rg-privacy { background: #1c1a26; border-color: #6a6494; }
+.rg-privacy p { margin: 0 0 14px; font-size: 13.5px; line-height: 1.85; color: var(--text-2); }
+.rg-privacy b { color: var(--rv-deep); font-weight: 700; }
+html[data-theme="dark"] .rg-privacy b { color: #b9b4e0; }
+.rg-privacy ul { margin: 0; padding-left: 20px; }
+.rg-privacy li { margin: 7px 0; font-size: 13px; line-height: 1.75; color: var(--text-2); }
+
+/* ── 자주 묻는 것 — 브라우저가 여닫으므로 스크립트가 없습니다 ── */
+.rg-faq { border-top: 1px solid var(--line); }
+.rg-faq details { border-bottom: 1px solid var(--line); }
+.rg-faq summary {
+  padding: 16px 34px 16px 2px; cursor: pointer; position: relative;
+  font-size: 14px; font-weight: 600; color: var(--ink);
+  list-style: none;
+}
+.rg-faq summary::-webkit-details-marker { display: none; }
+.rg-faq summary::after {
+  content: ''; position: absolute; right: 8px; top: 50%;
+  width: 8px; height: 8px; margin-top: -6px;
+  border-right: 2px solid var(--text-3); border-bottom: 2px solid var(--text-3);
+  transform: rotate(45deg); transition: transform .18s ease;
+}
+.rg-faq details[open] summary { color: var(--rv-deep); }
+.rg-faq details[open] summary::after { transform: rotate(-135deg); margin-top: -2px; }
+.rg-faq summary:hover { color: var(--rv-deep); }
+.rg-faq details > p {
+  margin: 0; padding: 0 2px 18px;
+  font-size: 13.5px; line-height: 1.8; color: var(--text-2);
+}
+.rg-faq details > p b { color: var(--rv-deep); }
+html[data-theme="dark"] .rg-faq details[open] summary,
+html[data-theme="dark"] .rg-faq details > p b { color: #b9b4e0; }
+
+/* ── 문의 ─────────────────────────────────────────────────*/
+.rg-contact {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  margin: 40px 0 0; padding: 24px 28px;
+  background: #f7f7fa; border-radius: 12px;
+}
+html[data-theme="dark"] .rg-contact { background: #1a1a1a; }
+.rg-contact > div { flex: 1 1 260px; }
+.rg-contact b {
+  display: block; font-family: var(--display);
+  font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 5px;
+}
+.rg-contact p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--text-3); }
+
+/* ── 좁은 화면 ────────────────────────────────────────────*/
+@media (max-width: 900px) {
+  .rg-cards, .rg-flows { grid-template-columns: minmax(0, 1fr); }
+  .rg-intro { padding: 24px 22px; }
+  .rg-intro h2 { font-size: 19px; }
+  .rg-flow { padding: 22px 20px 20px; }
+  .rg-privacy { padding: 22px 20px; }
+  .rg-contact { padding: 20px 20px; }
+}

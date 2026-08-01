@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>리쿠르트 서비스안내 · OPUSCLAM.COM</title>
+<meta name="description" content="오퍼스클램 리쿠르트 — 순수음악 분야의 채용정보와 인재정보를 잇는 서비스입니다. 이용 방법과 회원 종류별 권한을 안내합니다.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<link rel="stylesheet" href="/assets/recruit.css">
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave"></div>
+    <div class="scene scene-hire on">
+      <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+        <g fill="url(#dg)"></g>
+      </svg>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><span class="on">리쿠르트</span>
+    </nav>
+
+    <div id="oc-subnav" data-src="/partials/subnav-recruit.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM RECRUIT SERVICE</div>
+          <h1 class="pdb-title">리쿠르트</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">순수음악 분야의 사람과 자리를 잇습니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="board rc-wrap">
+ <div class="rg-wrap">
+
+  <!-- ── 서비스 소개 ────────────────────────────────────────── -->
+  <section class="rg-intro">
+    <h2>오퍼스클램 리쿠르트</h2>
+    <p>
+      오케스트라 단원, 합창단 성부, 입시·전공 레슨, 연주단체 행정, 음악잡지 기자 —
+      순수음악 분야의 자리는 종류가 많지만 그 정보가 한곳에 모인 적은 드물었습니다.
+      전공한 사람은 어디서 뽑는지 알기 어려웠고, 뽑는 쪽은 마땅한 사람을 찾기 어려웠습니다.
+    </p>
+    <p>
+      리쿠르트는 그 둘을 잇는 자리입니다.
+      <b>채용정보</b>에는 단체·학교가 올린 공고가 모이고,
+      <b>인재정보</b>에는 전공자·일반 회원이 올린 이력이 모입니다.
+      오퍼스클램의 다른 자료 — 음악단체DB · 공연장DB · 음악학교DB · 인물DB —
+      와 서로 이어져 있어, 공고에서 그 단체를 열어 보고
+      이력에서 그 학교로 건너갈 수 있습니다.
+    </p>
+  </section>
+
+  <!-- ── 네 가지 서비스 ─────────────────────────────────────── -->
+  <h2 class="rg-h">네 가지 서비스</h2>
+  <div class="rg-cards">
+
+    <a class="rg-card" href="/recruit/job.html">
+      <div class="rg-card-t">채용정보</div>
+      <p>단체·학교가 올린 공고를 봅니다. 직종·지역·근무형태·급여로 걸러 찾고,
+        마감이 가까운 것부터 볼 수 있습니다.</p>
+      <span class="rg-card-who">누구나</span>
+      <span class="rg-card-go">보러 가기 <em aria-hidden="true">→</em></span>
+    </a>
+
+    <a class="rg-card" href="/recruit/talent.html">
+      <div class="rg-card-t">인재정보</div>
+      <p>구직 중인 전공자·일반 회원의 이력을 봅니다. 이름과 연락처는
+        채용하는 회원이 열람할 때만 열립니다.</p>
+      <span class="rg-card-who">누구나 (연락처는 채용 회원만)</span>
+      <span class="rg-card-go">보러 가기 <em aria-hidden="true">→</em></span>
+    </a>
+
+    <a class="rg-card" href="/recruit/job-write.html">
+      <div class="rg-card-t">채용등록</div>
+      <p>공고를 올립니다. 단체를 DB에서 골라 이어 두면 공고에서 그 단체
+        화면으로 바로 갈 수 있습니다.</p>
+      <span class="rg-card-who">음악관계자·단체·기업 · 음악학교</span>
+      <span class="rg-card-go">올리러 가기 <em aria-hidden="true">→</em></span>
+    </a>
+
+    <a class="rg-card" href="/recruit/talent-write.html">
+      <div class="rg-card-t">인재등록</div>
+      <p>내 이력을 올립니다. 학력을 음악학교DB와 이어 두면 그 학교의
+        출신 인물로도 함께 보입니다.</p>
+      <span class="rg-card-who">전공자 · 일반</span>
+      <span class="rg-card-go">올리러 가기 <em aria-hidden="true">→</em></span>
+    </a>
+
+  </div>
+
+  <!-- ── 회원 종류별로 할 수 있는 일 ────────────────────────── -->
+  <h2 class="rg-h">회원 종류별로 할 수 있는 일</h2>
+  <p class="rg-sub">회원 종류는 가입할 때 고르신 것입니다.
+    마이페이지에서 확인하실 수 있습니다.</p>
+
+  <div class="rg-tablewrap">
+    <table class="rv-tbl rg-tbl">
+      <thead>
+        <tr>
+          <th>회원 종류</th>
+          <th>채용정보 보기</th>
+          <th>인재정보 보기</th>
+          <th>채용등록</th>
+          <th>인재등록</th>
+          <th>연락처 열람</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rg-who">전공자</td>
+          <td class="y">가능</td><td class="y">가능</td>
+          <td class="n">–</td><td class="y">가능</td><td class="n">–</td>
+        </tr>
+        <tr>
+          <td class="rg-who">일반</td>
+          <td class="y">가능</td><td class="y">가능</td>
+          <td class="n">–</td><td class="y">가능</td><td class="n">–</td>
+        </tr>
+        <tr>
+          <td class="rg-who">음악관계자 · 단체 · 기업</td>
+          <td class="y">가능</td><td class="y">가능</td>
+          <td class="y">가능</td><td class="n">–</td><td class="y">가능</td>
+        </tr>
+        <tr>
+          <td class="rg-who">음악학교</td>
+          <td class="y">가능</td><td class="y">가능</td>
+          <td class="y">가능</td><td class="n">–</td><td class="y">가능</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="rg-note-s">공고와 이력을 <b>보는 것</b>은 로그인하지 않아도 됩니다.
+    올리거나 연락처를 여는 것은 로그인이 필요합니다.</p>
+
+  <!-- ── 이렇게 쓰십니다 ────────────────────────────────────── -->
+  <h2 class="rg-h">이렇게 쓰십니다</h2>
+
+  <div class="rg-flows">
+
+    <!-- 구직 -->
+    <section class="rg-flow">
+      <h3><span class="rg-flow-tag">전공자 · 일반</span> 자리를 찾으시는 분</h3>
+      <ol class="rg-steps">
+        <li>
+          <b>인재정보를 올립니다</b>
+          <p>희망분야·희망지역·희망급여와 학력·경력·자기소개서를 적습니다.
+            적다가 <b>임시저장</b>해 두고 나중에 이어 적을 수 있고,
+            올리기 전에 <b>미리보기</b>로 남에게 어떻게 보이는지 확인합니다.
+            사진은 올리셔도 되고 안 올리셔도 됩니다.</p>
+        </li>
+        <li>
+          <b>학력을 음악학교DB와 이어 둡니다</b>
+          <p>학교명을 적고 「음악학교DB에서 찾기」 를 누르시면 그 학교와 이어집니다.
+            이어 두면 그 학교를 보는 사람에게도 함께 보이므로 눈에 띌 기회가 늘어납니다.
+            DB에 없는 해외 학교는 이름만 적으셔도 됩니다.</p>
+        </li>
+        <li>
+          <b>채용정보에서 찾습니다</b>
+          <p>왼쪽에서 직종·지역·근무형태·급여를 골라 걸러 봅니다.
+            <b>마감순</b>으로 두면 급한 것부터 보입니다.
+            공고를 열면 오른쪽에 다른 공고가 함께 나와 이어서 볼 수 있습니다.</p>
+        </li>
+        <li>
+          <b>공고에 적힌 접수방법으로 지원합니다</b>
+          <p>공고마다 접수방법(이메일·직접방문·전화·팩스·홈페이지)과
+            담당자 문의처가 적혀 있습니다. 접수기간과 조건은 바뀔 수 있으니
+            지원 전에 문의처로 다시 확인해 주십시오.</p>
+        </li>
+      </ol>
+      <a class="rv-btn rv-btn--go rg-btn" href="/recruit/talent-write.html">인재정보 올리기</a>
+    </section>
+
+    <!-- 채용 -->
+    <section class="rg-flow">
+      <h3><span class="rg-flow-tag">단체 · 기업 · 학교</span> 사람을 찾으시는 분</h3>
+      <ol class="rg-steps">
+        <li>
+          <b>채용정보를 올립니다</b>
+          <p>모집직종·근무조건·자격요건·접수방법을 적습니다.
+            오디션 지정곡은 여러 곡을 한 줄에 하나씩 늘려 적을 수 있습니다.
+            여기도 <b>임시저장</b>과 <b>미리보기</b>가 있습니다.</p>
+        </li>
+        <li>
+          <b>단체를 DB에서 골라 이어 둡니다</b>
+          <p>음악단체DB · 공연장DB · 음악학교DB · 관련기관·재단DB 가운데서 고르시면,
+            분야·웹사이트·주소가 저절로 채워지고 공고에서 그 단체 화면으로
+            바로 갈 수 있게 됩니다. 지원하는 분이 「어디에 지원하는지」 를
+            아는 것은 중요합니다.</p>
+        </li>
+        <li>
+          <b>인재정보에서 찾습니다</b>
+          <p>직종·지역·근무형태·성별로 걸러 봅니다.
+            목록에서는 이름이 <b>조**</b> 처럼 가려져 있습니다.</p>
+        </li>
+        <li>
+          <b>연락처를 열람합니다</b>
+          <p>인재 상세에서 「연락처 열람」 을 누르시면 이름·휴대폰·이메일·주소가 열립니다.
+            <b>채용 목적으로만</b> 써 주십시오 — 열람 기록이 남습니다.</p>
+        </li>
+      </ol>
+      <a class="rv-btn rv-btn--go rg-btn" href="/recruit/job-write.html">채용정보 올리기</a>
+    </section>
+
+  </div>
+
+  <!-- ── 연락처를 다루는 방식 ───────────────────────────────── -->
+  <h2 class="rg-h">연락처를 다루는 방식</h2>
+  <div class="rg-privacy">
+    <p>
+      인재정보의 <b>이름과 연락처는 목록·상세 화면으로 아예 전해지지 않습니다.</b>
+      가려서 보여 주는 것이 아니라, 그 값이 담기지 않은 자료만 화면에 옵니다.
+      가림막을 벗기는 것은 서버가 회원 종류를 확인한 뒤에만 하는 일이므로,
+      화면을 뜯어 보아도 나오지 않습니다.
+    </p>
+    <ul>
+      <li>목록·상세에서는 이름이 <b>조**</b> 처럼 첫 글자만 보입니다</li>
+      <li>사진도 연락처와 함께 열람한 회원에게만 보입니다</li>
+      <li>연락처를 여는 것은 <b>음악관계자·단체·기업</b>과 <b>음악학교</b> 회원, 그리고 본인입니다</li>
+      <li>열람 기록이 남습니다. 채용 목적 외로 쓰거나 다른 곳에 옮기는 것은 법으로 금지되어 있습니다</li>
+      <li>인재정보는 <b>「목록에 보이기」 를 꺼</b> 두면 목록에서 사라집니다. 지우실 수도 있습니다</li>
+    </ul>
+  </div>
+
+  <!-- ── 자주 묻는 것 ───────────────────────────────────────── -->
+  <h2 class="rg-h">자주 묻는 것</h2>
+  <div class="rg-faq">
+
+    <details>
+      <summary>인재정보를 여러 개 올릴 수 있습니까?</summary>
+      <p>올릴 수 있습니다. 연주용과 강사용처럼 목적이 다른 이력을 따로 두시는 편이
+        보는 쪽에도 분명합니다. 인재등록 화면 오른쪽에 <b>내가 등록한 인재정보</b>가
+        보이므로 거기서 골라 고치실 수 있습니다.</p>
+    </details>
+
+    <details>
+      <summary>올린 뒤에 고칠 수 있습니까?</summary>
+      <p>고칠 수 있습니다. 등록 화면 오른쪽의 내 목록에서 「고치기」 를 누르시면
+        적으셨던 내용이 그대로 불러와집니다.</p>
+    </details>
+
+    <details>
+      <summary>임시저장은 얼마나 남습니까?</summary>
+      <p>지우시거나 게시하실 때까지 남습니다. 갈래마다 하나씩(인재·채용 각각)
+        보관되고, 다른 기기에서 접속하셔도 이어서 적을 수 있습니다.
+        게시하시면 임시저장은 저절로 지워집니다.</p>
+    </details>
+
+    <details>
+      <summary>사진은 누구에게 보입니까?</summary>
+      <p>이름·연락처와 함께 <b>열람한 회원에게만</b> 보입니다. 목록과 상세에서는
+        가려집니다. 올리기 전에 미리보기로 확인하실 수 있습니다.</p>
+    </details>
+
+    <details>
+      <summary>마감된 공고는 어떻게 됩니까?</summary>
+      <p>목록에 남지만 접수기간 자리에 「마감」 으로 표시됩니다.
+        상시모집·채용시까지인 공고는 마감일이 없습니다.
+        마감이 이레 안쪽인 공고는 <b>D-7</b> 처럼 눈에 띄게 알려 드립니다.</p>
+    </details>
+
+    <details>
+      <summary>등록한 내용이 지워질 수 있습니까?</summary>
+      <p>게시판 성격에 맞지 않거나 다른 목적으로 쓰인 것으로 판단되는 경우,
+        미리 알리지 않고 지워질 수 있습니다. 등록 화면의 동의 항목에 적어 두었습니다.</p>
+    </details>
+
+  </div>
+
+  <!-- ── 문의 ───────────────────────────────────────────────── -->
+  <div class="rg-contact">
+    <div>
+      <b>더 궁금한 것이 있으십니까?</b>
+      <p>서비스 이용·회원 종류·자료 정정에 관해 물어보실 수 있습니다.</p>
+    </div>
+    <a class="rv-mail" href="mailto:cser@wixon.co.kr?subject=%5B%EC%98%A4%ED%8D%BC%EC%8A%A4%ED%81%B4%EB%9E%A8%5D%20%EB%A6%AC%EC%BF%A0%EB%A3%B8%ED%8A%B8%20%EB%AC%B8%EC%9D%98">메일문의하기</a>
+  </div>
+
+ </div>
+</main>
+
+<div id="oc-footer"></div>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
