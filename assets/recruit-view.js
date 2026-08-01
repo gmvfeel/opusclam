@@ -142,11 +142,19 @@
       ? ' <b class="rc-dday">D-' + dday + '</b>' : '';
     var closed = (dday != null && dday < 0 && !o.apply_always && !o.apply_until_hired);
 
-    /* ── 머리칸 — 회사·단체 ── */
-    var orgLink = has(o.org_id)
-      ? '<a class="rv-orglink" href="' + ORG_VIEW + '?id=' + encodeURIComponent(o.org_id) + '">'
-        + '회사 / 단체정보 상세보기 <span aria-hidden="true">→</span></a>'
-      : '';
+    /* ── 머리칸 — 회사·단체 ──
+       상세보기 단추는 <b>언제나</b> 보입니다.
+       org_id 가 담긴 공고는 단체DB로 가고, 없으면 그 단체의 다른
+       채용정보로 갑니다. 앞서는 org_id 가 있을 때만 그렸더니
+       샘플 45건이 모두 비어 있어 단추가 아예 보이지 않았습니다. */
+    var orgLink = '';
+    if (has(o.org_id)) {
+      orgLink = '<a class="rv-orglink" href="' + ORG_VIEW + '?id=' + encodeURIComponent(o.org_id) + '">'
+        + '회사 / 단체정보 상세보기 <span aria-hidden="true">→</span></a>';
+    } else if (has(o.org_name)) {
+      orgLink = '<a class="rv-orglink" href="' + cfg.listPage + '?kw=' + encodeURIComponent(o.org_name) + '">'
+        + '이 단체의 다른 채용정보 <span aria-hidden="true">→</span></a>';
+    }
 
     var head = '<div class="rv-orgbox">'
       + '<table class="rv-tbl rv-tbl--org"><tbody>'
@@ -155,8 +163,8 @@
       +   row('홈페이지', homeCell(o))
       +   row('주소', esc(o.org_addr || ''))
       + '</tbody></table>'
-      + orgLink
-      + '</div>';
+      + '</div>'
+      + (orgLink ? '<div class="rv-orgfoot">' + orgLink + '</div>' : '');
 
     /* ── 채용정보 ── */
     var sec1 = ''
@@ -164,7 +172,7 @@
         ? '<section class="rv-sec"><h2>담당업무</h2><div class="rv-body">' + nl(o.duty) + '</div></section>'
         : '')
       + '<section class="rv-sec"><h2>모집요강 및 응시자격</h2>'
-      +   '<table class="rv-tbl"><tbody>'
+      +   '<table class="rv-tbl rv-tbl--wrap2"><tbody>'
       +     row('모집직종', jobCell(o))
       +     row('고용형태', arrCell(o.emp_types))
       +     row('모집인원', has(o.headcount) ? esc(o.headcount) + ' 명' : '')
