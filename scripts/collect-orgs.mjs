@@ -17,10 +17,24 @@ const CLASSES = [
   { anchor: 'Q131186', type: '합창단' },
 ];
 
-function buildQuery(anchor) {
+/* ① 번호만 받는 가벼운 질의 */
+function buildIdQuery(anchor) {
+  return `
+SELECT DISTINCT ?item WHERE { ?item wdt:P31/wdt:P279* wd:${anchor} . }`;
+}
+
+/* ② 번호를 못박고 상세를 받는 질의 (원래 질의와 같은 칸을 돌려줍니다) */
+function buildDetailQuery(qids) {
+  return buildQuery(null, qids);
+}
+
+function buildQuery(anchor, qids) {
+  const scope = qids
+    ? 'VALUES ?item { ' + qids.map(q => 'wd:' + q).join(' ') + ' }'
+    : '?item wdt:P31/wdt:P279* wd:' + anchor + ' .';
   return `
 SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inception ?conductorKo ?conductorEn ?venueKo ?venueEn ?image ?website ?koArticle ?enArticle WHERE {
-  ?item wdt:P31/wdt:P279* wd:${anchor} .
+  ${scope}
   OPTIONAL { ?item rdfs:label ?nameKo. FILTER(LANG(?nameKo)="ko") }
   OPTIONAL { ?item rdfs:label ?nameEn. FILTER(LANG(?nameEn)="en") }
   OPTIONAL { ?item wdt:P571 ?inception. }
@@ -40,8 +54,7 @@ SELECT ?item ?nameKo ?nameEn ?country ?countryKo ?countryEn ?cityKo ?cityEn ?inc
   OPTIONAL { ?item wdt:P856 ?website. }
   OPTIONAL { ?koArticle schema:about ?item; schema:isPartOf <https://ko.wikipedia.org/>. }
   OPTIONAL { ?enArticle schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>. }
-}
-LIMIT 4000`;
+}`;
 }
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -50,17 +63,77 @@ const qidOf = (u) => u ? u.split('/').pop() : '';
 const norm = (s) => (s || '').toLowerCase().replace(/\s+/g, '').trim();
 
 async function sparql(query, tries = 3) {
-  const url = 'https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(query);
+  const url = 'https://query.wikidata.org/sparql';
   for (let i = 0; i < tries; i++) {
     try {
-      const res = await fetch(url, { headers: { Accept: 'application/sparql-results+json', 'User-Agent': UA } });
+      /* ★ POST 로 보냅니다 — 질의가 길면 주소에 담기가 위험합니다 */
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/sparql-results+json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': UA,
+        },
+        body: 'format=json&query=' + encodeURIComponent(query),
+      });
       if (res.status === 429 || res.status >= 500) { await sleep(3000 * (i + 1)); continue; }
       if (!res.ok) throw new Error('SPARQL ' + res.status);
-      return (await res.json()).results.bindings;
+
+      /* ★ 바로 json() 하지 않고 글로 먼저 읽습니다.
+         위키데이터는 60초 제한에 걸리면 결과를 끊고 그 뒤에 오류 문구를
+         덧붙입니다. 그러면 json() 이 「JSON 뒤에 엉뚱한 글자」 라고만 하고
+         무슨 일이 있었는지 알려 주지 않습니다. */
+      const text = await res.text();
+      try {
+        return JSON.parse(text).results.bindings;
+      } catch (pe) {
+        const tail = text.slice(-300).replace(/\s+/g, ' ');
+        const timedOut = /timeout|TimeoutException|QueryTimeout/i.test(text.slice(-2000));
+        const msg = 'SPARQL 응답을 읽지 못했습니다'
+          + (timedOut ? ' (위키데이터 시간 초과로 결과가 끊겼습니다)' : '')
+          + ' · 길이 ' + text.length + ' · 끝부분: ' + tail;
+        if (timedOut && i < tries - 1) { console.log('    ' + msg); await sleep(5000 * (i + 1)); continue; }
+        throw new Error(msg);
+      }
     } catch (e) { if (i === tries - 1) throw e; await sleep(3000 * (i + 1)); }
   }
   return [];
 }
+
+/* ★ 두 단계로 나눠 받습니다 — 이것이 이번 실패의 해결입니다.
+
+   예전에는 「분류 전체 + OPTIONAL 열 덩이」 를 한 번에 물어봤습니다.
+   OPTIONAL 이 곱해지며 결과가 3MB를 넘고, 위키데이터의 60초 제한에 걸려
+   결과가 끊겼습니다. 재시도해도 같은 자리에서 또 끊깁니다 —
+   우연이 아니라 질의가 무거운 것이 원인이기 때문입니다.
+
+   ① 먼저 <b>번호(QID)만</b> 받습니다. 가볍고 빠릅니다.
+   ② 그 번호를 CHUNK 개씩 묶어 상세를 받습니다.
+      VALUES ?item { wd:Q1 wd:Q2 … } 로 대상을 못박으면
+      위키데이터가 훑을 범위가 작아져 시간 초과가 나지 않습니다.
+
+   이 방식은 이미 인물DB·음악학교 수집기가 보조 질의에 쓰던 것입니다. */
+const CHUNK_QID = 120;
+
+async function fetchClassRows(anchor, idQuery, detailQuery) {
+  const ids = await sparql(idQuery(anchor));
+  const qids = [...new Set(ids.map(b => qidOf(val(b, 'item'))))].filter(Boolean);
+  console.log('    → 대상', qids.length, '건 · ' +
+    Math.ceil(qids.length / CHUNK_QID) + '묶음으로 나눠 받습니다');
+
+  const out = [];
+  for (let i = 0; i < qids.length; i += CHUNK_QID) {
+    const slice = qids.slice(i, i + CHUNK_QID);
+    out.push(...await sparql(detailQuery(slice)));
+    const done = Math.min(i + CHUNK_QID, qids.length);
+    if (done % (CHUNK_QID * 5) === 0 || done === qids.length) {
+      console.log('    · ' + done + '/' + qids.length);
+    }
+    await sleep(400);
+  }
+  return out;
+}
+
 async function wikiExtract(url) {
   if (!url || url.indexOf('ko.wikipedia.org') < 0) return '';
   const title = (url.split('/wiki/')[1] || '');
@@ -208,7 +281,7 @@ async function main() {
   const collected = new Map();
   for (const c of CLASSES) {
     console.log('  · 위키데이터 조회:', c.type);
-    const rows = await sparql(buildQuery(c.anchor));
+    const rows = await fetchClassRows(c.anchor, buildIdQuery, buildDetailQuery);
     console.log('    → 원시 결과', rows.length, '행');
     for (const b of rows) mergeById(collected, toRow(b, c.type));
     await sleep(1500);
