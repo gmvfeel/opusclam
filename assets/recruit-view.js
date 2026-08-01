@@ -28,13 +28,16 @@
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var HDR = { apikey: KEY, Authorization: 'Bearer ' + KEY };
 
-  /* 단체DB 경로 —
-     ★ 확인이 필요합니다. 실제 경로가 다르면 이 두 줄만 고치십시오.
+  /* 음악단체DB 경로 — DATABASE › 음악단체DB
        ORG_VIEW · 그 단체의 상세 화면 (org_id 로 바로 갑니다)
-       ORG_LIST · 단체DB 목록      (org_id 가 아직 없는 옛 자료는
-                                    이름으로 찾아 갑니다) */
-  var ORG_VIEW = '/db/group-view.html';
-  var ORG_LIST = '/db/group.html';
+       ORG_LIST · 음악단체DB 목록
+
+     ★ ORG_VIEW 는 확인된 경로입니다(/db/org-view.html?id=…).
+       ORG_LIST 는 이 프로젝트의 이름 짓는 버릇대로 맞춘 것입니다 —
+       job.html ↔ job-view.html, talent.html ↔ talent-view.html 처럼
+       목록은 -view 를 뗀 이름입니다. 다르면 이 한 줄만 고치십시오. */
+  var ORG_VIEW = '/db/org-view.html';
+  var ORG_LIST = '/db/org.html';
 
   var R, cfg = null, cur = null;
 
@@ -148,11 +151,16 @@
     /* ── 머리칸 — 회사·단체 ──
        오퍼스클램의 채용정보는 사업자·단체 회원만 올릴 수 있습니다.
        그러므로 모든 공고에는 반드시 등록된 단체가 하나 있습니다.
-       단추는 언제나 「회사 / 단체정보 상세보기」 하나입니다 —
-       단체DB의 그 단체 화면으로 갑니다.
+       단추는 언제나 「회사 / 단체정보 상세보기」 하나입니다.
 
-       ★ org_id 가 담겨 있으면 그것으로 바로 가고, 아직 이어지지
-         않은 옛 자료는 단체DB에서 이름으로 찾아 갑니다. */
+       ★ org_id 가 담겨 있으면 음악단체DB의 그 단체 화면으로 바로 갑니다.
+       ★ 아직 org_id 가 없는 자료(지금의 가라데이터 45건)는 음악단체DB
+         목록으로 보내고 단체명을 검색어로 실어 줍니다. 막다른 길은
+         만들지 않되, 없는 것을 있는 것처럼 꾸미지도 않습니다.
+
+       ☞ 남은 일 — 채용등록 화면(job-write.html)에서 등록 회원의 단체를
+         음악단체DB에서 골라 org_id 로 담아야 합니다. 그것이 채용정보와
+         단체DB를 잇는 고리입니다. */
     var orgHref = has(o.org_id)
       ? (ORG_VIEW + '?id=' + encodeURIComponent(o.org_id))
       : (ORG_LIST + '?kw=' + encodeURIComponent(o.org_name || ''));
