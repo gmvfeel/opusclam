@@ -1309,11 +1309,30 @@ html[data-theme="dark"] .rw-draftbar { background: #262013; border-color: #4a3d1
   font-size: 11.5px; font-weight: 600; color: var(--text-3);
 }
 
-/* 우편번호 줄 — 칸은 짧게, 단추는 그 옆에 */
-.rw-inline--zip > input { flex: 0 0 130px; }
-.rw-find--addr { margin-top: 0; height: 40px; padding: 0 16px; font-size: 12.5px; }
-.rw-inline--zip #rwZip { background: #f6f6f9; cursor: default; }
-html[data-theme="dark"] .rw-inline--zip #rwZip { background: #1a1a1a; }
+/* ── 주소 세 칸 ───────────────────────────────────────────
+   우편번호+검색단추 · 주소 · 상세주소를 한 덩이로 묶고
+   사이를 8px 로 좁힙니다.
+
+   ★ 앞서는 세 칸을 각각 별개의 줄로 두고 보이지 않는 이름표를
+     넣었습니다. 안 보이면서 자리는 차지해(visibility: hidden)
+     줄마다 여백이 겹겹이 쌓였습니다. */
+.rw-addr { display: flex; flex-direction: column; gap: 8px; }
+.rw-addr-top { display: flex; gap: 8px; align-items: stretch; }
+.rw-addr-top #rwZip {
+  flex: 0 0 132px; width: 132px;
+  background: #f6f6f9; cursor: default;
+}
+html[data-theme="dark"] .rw-addr-top #rwZip { background: #1a1a1a; }
+.rw-find--addr {
+  flex: 0 0 auto; margin-top: 0;
+  height: 40px; padding: 0 18px; font-size: 12.5px;
+}
+@media (max-width: 480px) {
+  /* 아주 좁으면 단추를 아래로 내려 온전한 폭을 씁니다 */
+  .rw-addr-top { flex-wrap: wrap; }
+  .rw-addr-top #rwZip { flex: 1 1 120px; width: auto; }
+  .rw-find--addr { flex: 1 1 100%; }
+}
 
 /* ── 미리보기 창 ──────────────────────────────────────────*/
 body.rw-noscroll { overflow: hidden; }
@@ -1366,5 +1385,4 @@ html[data-theme="dark"] .rw-pv-foot { background: #1a1a1a; }
   .rw-pv-body { padding: 20px 18px; }
   .rw-pv-foot { flex-direction: column-reverse; }
   .rw-pv-foot .rv-btn { width: 100%; }
-  .rw-inline--zip > input { flex: 1 1 110px; }
 }

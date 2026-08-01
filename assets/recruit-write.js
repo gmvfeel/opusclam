@@ -39,7 +39,18 @@
   function el(s, root) { return (root || document).querySelector(s); }
   function els(s, root) { return [].slice.call((root || document).querySelectorAll(s)); }
   function val(s) { var x = el(s); return x ? String(x.value || '').trim() : ''; }
-  function setVal(s, v) { var x = el(s); if (x) x.value = (v == null ? '' : v); }
+  /* 값을 코드로 넣을 때는 <b>알림도 함께</b> 보냅니다.
+     ★ 브라우저는 사람이 손으로 적을 때만 input 알림을 보냅니다.
+       그래서 「내 정보 불러오기」 나 임시저장 되돌리기로 채운 값은
+       오른쪽 작성 도우미가 알아채지 못했습니다.
+       여기서 한 번 알려 주면, 앞으로 어떤 코드가 값을 넣어도
+       도우미가 저절로 따라옵니다. */
+  function setVal(s, v) {
+    var x = el(s);
+    if (!x) return;
+    x.value = (v == null ? '' : v);
+    x.dispatchEvent(new Event('input', { bubbles: true }));
+  }
   function num(v) { var n = parseInt(String(v).replace(/[^0-9]/g, ''), 10); return isNaN(n) ? null : n; }
   function esc(v) {
     return String(v == null ? '' : v)
@@ -52,10 +63,17 @@
   }
   function setRadio(name, v) {
     els('input[name="' + name + '"]').forEach(function (x) { x.checked = (x.value === v); });
+    ping();
   }
   function setChecks(name, arr) {
     var a = arr || [];
     els('input[name="' + name + '"]').forEach(function (x) { x.checked = a.indexOf(x.value) >= 0; });
+    ping();
+  }
+  /* 체크·라디오는 값을 바꿔도 알림이 없으므로 직접 알려 줍니다 */
+  function ping() {
+    var f = el('#rwForm');
+    if (f) f.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   /* ── 알림 줄 ──────────────────────────────────────────────
@@ -238,6 +256,7 @@
       var a2 = firstOf(m, PICK.addr2);
       if (a2) setVal('#rwAddr2', a2);
 
+      drawChecks();
       if (got.length) say('회원정보에서 ' + got.join(' · ') + ' 을 가져왔습니다. 확인하고 고쳐 주십시오.', 'ok');
       else say('회원정보에 가져올 것이 없었습니다. 직접 적어 주십시오.', 'warn');
     } catch (e) {

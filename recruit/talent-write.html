@@ -156,21 +156,23 @@
       <!-- 주소 — assets/addr.js 가 맡습니다.
            표시(data-addr-search)만 붙이면 저절로 듣습니다.
            회원가입·채용등록·단체등록도 같은 표시를 붙여 쓰면
-           네 화면의 주소가 언제나 같은 꼴로 담깁니다. -->
+           네 화면의 주소가 언제나 같은 꼴로 담깁니다.
+
+           ★ 세 칸을 <b>한 덩이</b>로 묶습니다.
+             앞서는 줄마다 따로 두고 보이지 않는 이름표를 넣었더니,
+             안 보이면서 자리는 차지해 여백이 겹겹이 쌓였습니다. -->
       <div class="rw-f rw-f--full"><span>주소</span>
-        <span class="rw-inline rw-inline--zip">
-          <input type="text" id="rwZip" maxlength="10" placeholder="우편번호" readonly>
-          <button type="button" class="rw-find rw-find--addr"
-                  data-addr-search
-                  data-zip="#rwZip" data-addr1="#rwAddr1" data-addr2="#rwAddr2">주소검색</button>
-        </span>
+        <div class="rw-addr">
+          <div class="rw-addr-top">
+            <input type="text" id="rwZip" maxlength="10" placeholder="우편번호" readonly>
+            <button type="button" class="rw-find rw-find--addr"
+                    data-addr-search
+                    data-zip="#rwZip" data-addr1="#rwAddr1" data-addr2="#rwAddr2">주소검색</button>
+          </div>
+          <input type="text" id="rwAddr1" maxlength="160" placeholder="주소검색을 누르시면 채워집니다">
+          <input type="text" id="rwAddr2" maxlength="160" placeholder="나머지 주소를 적어 주십시오">
+        </div>
       </div>
-      <label class="rw-f rw-f--full"><span class="rw-ghost">주소</span>
-        <input type="text" id="rwAddr1" maxlength="160" placeholder="주소검색을 누르시면 채워집니다">
-      </label>
-      <label class="rw-f rw-f--full"><span class="rw-ghost">상세주소</span>
-        <input type="text" id="rwAddr2" maxlength="160" placeholder="나머지 주소를 적어 주십시오">
-      </label>
     </div>
 
     <!-- ── 기타정보 ─────────────────────────────────────────── -->
