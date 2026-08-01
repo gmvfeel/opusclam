@@ -58,6 +58,9 @@
 
 <main class="board rc-wrap">
  <div class="rw-layout">
+
+  <!-- ── 왼쪽 · 적는 칸 ────────────────────────────────────── -->
+  <div class="rw-main">
   <div class="rw-doc" id="rwForm">
 
     <h1 class="rv-title" id="rwHead">인재정보등록</h1>
@@ -216,8 +219,49 @@
       <a class="rv-btn rv-btn--list" href="/recruit/talent.html">취소</a>
     </div>
 
-  </div>
- </div>
+  </div><!-- /rw-doc -->
+  </div><!-- /rw-main -->
+
+  <!-- ── 오른쪽 · 작성 도우미 ──────────────────────────────────
+       폼이 길어 「무엇이 남았는지」 와 「어디서 저장하는지」 를
+       잃기 쉽습니다. 그 둘을 곁에 붙여 둡니다.
+
+       ★ 붙어 따라오는 자리는 --rw-aside-top 이 정합니다.
+         assets/recruit-write.js 가 키를 재어 넣습니다 —
+         화면에 들어가면 위쪽에, 화면보다 길면 아래쪽 끝이 보이는
+         자리에. 인재정보 목록의 찾는 칸과 같은 방식입니다. -->
+  <aside class="rw-aside" id="rwAside">
+
+    <div class="rw-aside-box">
+      <h2 class="rv-aside-h">작성 도우미</h2>
+
+      <div class="rw-prog">
+        <div class="rw-prog-bar"><i id="rwProgBar"></i></div>
+        <div class="rw-prog-txt" id="rwProgTxt">꼭 채울 것 0 / 8</div>
+      </div>
+
+      <!-- 꼭 채울 것 — 채우면 하나씩 켜집니다.
+           아직 못 채운 줄을 누르면 그 칸으로 데려갑니다. -->
+      <ul class="rw-check" id="rwCheck"></ul>
+
+      <!-- 권장 — 없어도 담기지만, 있으면 뽑는 쪽이 훨씬 잘 봅니다 -->
+      <ul class="rw-check rw-check--soft" id="rwCheckSoft"></ul>
+
+      <div class="rw-aside-btns">
+        <button type="button" class="rv-btn rv-btn--go rv-btn--sm" id="rwSave2">작성완료</button>
+        <a class="rv-btn rv-btn--list rv-btn--sm" href="/recruit/talent.html">취소</a>
+      </div>
+    </div>
+
+    <!-- 내가 등록한 인재정보 — 있으면 여기서 바로 고치러 갑니다 -->
+    <div class="rw-aside-box" id="rwMineBox" hidden>
+      <h2 class="rv-aside-h">내가 등록한 인재정보</h2>
+      <div id="rwMine" class="rw-mine"></div>
+    </div>
+
+  </aside>
+
+ </div><!-- /rw-layout -->
 </main>
 
 <div id="oc-footer"></div>

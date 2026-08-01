@@ -947,7 +947,9 @@ html[data-theme="dark"] .rv-talent .rv-aside-box { background: #17201a; border-c
      읽는 화면은 곁에 목록을 두면 쓸모가 있지만, 적는 화면에서
      곁의 목록은 손을 옮기게 만드는 방해입니다.
    ============================================================ */
-.rw-layout { margin-top: 44px; max-width: 900px; }
+/* .rw-layout 의 짜임은 이 파일 <b>아래쪽</b>의 「등록 화면 두 칸 짜임」
+   에서 정합니다. 여기에 한 칸(900px)으로 두었던 것을 걷어냈습니다 —
+   같은 것을 두 곳에서 정하면 어느 쪽이 이겼는지 헤매게 됩니다. */
 .rw-doc {
   background: var(--paper);
   border: 3px solid #514a6b; border-radius: 12px;
@@ -1150,4 +1152,119 @@ html[data-theme="dark"] .rw-agree { background: #1a1a1a; }
   .rw-f--name { grid-column: span 2; }
   .rw-school { padding: 14px 16px 52px; }
   .rw-del { top: auto; bottom: 14px; right: 14px; }
+}
+
+/* ── 등록 화면 두 칸 짜임 ─────────────────────────────────
+   왼쪽 적는 칸, 오른쪽 작성 도우미.
+   상세 화면(750 + 460)과 같은 결이라 리쿠르트 전체가 하나로 보입니다.
+
+   ★ 가로를 1315px 한 칸으로 늘리지 않은 까닭 —
+     입력칸이 그만큼 길어지면 이름과 값 사이가 멀어져
+     눈이 되돌아올 자리를 잃습니다. 적는 칸의 읽기 좋은 폭은
+     대개 700~900px 입니다. 그래서 남는 자리는 <b>도우미</b>로
+     채워 전체 폭을 쓰되 글줄은 짧게 지킵니다. */
+.rw-layout {
+  --rc-top: 120px;
+  margin-top: 44px; max-width: none;
+  display: grid; grid-template-columns: minmax(0, 1fr) 460px;
+  gap: 26px; align-items: start;
+}
+.rw-main { min-width: 0; }
+
+.rw-aside {
+  position: sticky; top: var(--rw-aside-top, var(--rc-top));
+  min-width: 0; display: flex; flex-direction: column; gap: 14px;
+  --rv-deep: #33305a;
+  --rv-deep-h: #262346;
+}
+.rw-aside.is-locked { opacity: .45; pointer-events: none; }
+.rw-aside-box {
+  background: #fdfbf7; border: 3px solid #514a6b; border-radius: 12px;
+  padding: 22px 22px 20px;
+  box-shadow: 0 3px 14px -4px rgba(30, 24, 60, .16);
+}
+html[data-theme="dark"] .rw-aside-box {
+  background: #1e1e1e; border-color: #7a7295;
+  box-shadow: 0 3px 16px -4px rgba(0, 0, 0, .5);
+}
+
+/* ── 진행률 ───────────────────────────────────────────────*/
+.rw-prog { margin: 16px 0 14px; }
+.rw-prog-bar {
+  height: 8px; border-radius: 999px; background: #e6e2ee; overflow: hidden;
+}
+html[data-theme="dark"] .rw-prog-bar { background: #333; }
+.rw-prog-bar i {
+  display: block; height: 100%; width: 0;
+  background: var(--rv-deep); border-radius: 999px;
+  transition: width .25s ease;
+}
+.rw-prog-txt {
+  margin-top: 8px; font-size: 12px; font-weight: 600; color: var(--text-3);
+}
+
+/* ── 채울 것 목록 ─────────────────────────────────────────*/
+.rw-check { list-style: none; margin: 0; padding: 0; }
+.rw-check li { margin: 0; }
+.rw-check button {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 7px 0; border: 0; background: none; cursor: pointer;
+  font-family: inherit; font-size: 13px; text-align: left;
+  color: var(--text-2);
+}
+.rw-check button:hover { color: var(--rv-deep); }
+.rw-check button i {
+  flex: 0 0 auto; width: 17px; height: 17px; border-radius: 50%;
+  border: 1.5px solid #cfc9de; position: relative;
+}
+/* 채운 것 — 동그라미에 표시가 들어옵니다 */
+.rw-check li.is-on button { color: var(--text-3); }
+.rw-check li.is-on button span { text-decoration: line-through; }
+.rw-check li.is-on button i { background: var(--rv-deep); border-color: var(--rv-deep); }
+.rw-check li.is-on button i::after {
+  content: ''; position: absolute; left: 4px; top: 6px;
+  width: 6px; height: 3px; border-left: 1.5px solid #fff; border-bottom: 1.5px solid #fff;
+  transform: rotate(-45deg);
+}
+
+.rw-check--soft { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.rw-check-h {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  color: var(--text-3); padding-bottom: 4px;
+}
+.rw-check--soft button { font-size: 12.5px; }
+
+.rw-aside-btns {
+  display: flex; gap: 8px; margin-top: 18px;
+  padding-top: 16px; border-top: 1px solid var(--line);
+}
+.rw-aside-btns .rv-btn { flex: 1 1 0; }
+
+/* ── 내가 등록한 인재정보 ─────────────────────────────────*/
+.rw-mine { margin-top: 12px; }
+.rw-mine-row { padding: 11px 0; border-top: 1px solid var(--line); }
+.rw-mine-row:first-child { border-top: 0; padding-top: 4px; }
+.rw-mine-t {
+  display: block; font-size: 13px; font-weight: 600; line-height: 1.45;
+  color: var(--text);
+}
+.rw-mine-t:hover { color: var(--rv-deep); text-decoration: underline; }
+.rw-mine-m {
+  display: flex; align-items: center; gap: 10px; margin-top: 5px;
+  font-size: 11.5px; color: var(--text-3);
+}
+.rw-mine-m a { color: var(--rv-deep); font-weight: 600; }
+.rw-mine-m a:hover { text-decoration: underline; }
+.rw-mine-m em { font-style: normal; font-weight: 700; }
+.rw-off { color: #8a8a95; }
+.rw-now { color: #c0392b; }
+.rw-mine-row.is-now { background: #f7f6fa; border-radius: 6px; padding-left: 10px; padding-right: 10px; }
+html[data-theme="dark"] .rw-mine-row.is-now { background: #232131; }
+
+/* ── 좁은 화면 ────────────────────────────────────────────*/
+@media (max-width: 1300px) {
+  /* 위아래로 풉니다 — 도우미가 먼저 오면 적는 칸이 밀려나므로
+     도우미를 아래로 보냅니다. */
+  .rw-layout { grid-template-columns: minmax(0, 1fr); }
+  .rw-aside { position: static; order: 2; }
 }

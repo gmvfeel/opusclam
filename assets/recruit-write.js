@@ -245,18 +245,127 @@
     }
   }
 
+  /* ============================================================
+     작성 도우미 — 오른쪽 칸
+     ============================================================ */
+
+  /* 꼭 채울 것 — need() 와 <b>같은 목록</b>입니다.
+     두 곳에 따로 적으면 한쪽만 고쳐져 「도우미는 다 켜졌는데
+     저장하면 빠졌다고 하는」 어긋남이 생깁니다.
+     그래서 이 표 하나를 need() 도 함께 씁니다. */
+  var MUST = [
+    { sel: '#rwTitle',     label: '제목',      ok: function () { return !!val('#rwTitle'); } },
+    { sel: '#rwCat1',      label: '희망분야',  ok: function () { return !!val('#rwCat1'); } },
+    { sel: '#rwR1',        label: '근무지역',  ok: function () { return !!val('#rwR1'); } },
+    { sel: '#rwName',      label: '이름',      ok: function () { return !!val('#rwName'); } },
+    { sel: '#rwBy',        label: '생년월일',  ok: function () { return !!val('#rwBy'); } },
+    { sel: '#rwGenderBox', label: '성별',      ok: function () { return !!radio('rw-gender'); } },
+    { sel: '#rwPhone',     label: '휴대폰',    ok: function () { return !!val('#rwPhone'); } },
+    { sel: '#rwAgree',     label: '약관 동의', ok: function () { var x = el('#rwAgree'); return !!(x && x.checked); } },
+  ];
+
+  /* 권장 — 없어도 담기지만, 있으면 뽑는 쪽이 훨씬 잘 봅니다 */
+  var SOFT = [
+    { sel: '#rwSchools', label: '학력 한 곳 이상', ok: function () { return readSchools().length > 0; } },
+    { sel: '#rwCareer',  label: '경력사항',        ok: function () { return !!val('#rwCareer'); } },
+    { sel: '#rwBody',    label: '자기소개서',      ok: function () { return !!val('#rwBody'); } },
+    { sel: '#rwPayType', label: '희망급여',        ok: function () { return !!val('#rwPayType'); } },
+  ];
+
+  function drawChecks() {
+    var line = function (it) {
+      var on = false;
+      try { on = !!it.ok(); } catch (e) { on = false; }
+      return '<li class="' + (on ? 'is-on' : '') + '">'
+        + '<button type="button" data-go="' + it.sel + '">'
+        + '<i aria-hidden="true"></i><span>' + esc(it.label) + '</span></button></li>';
+    };
+
+    var must = el('#rwCheck');
+    if (must) must.innerHTML = MUST.map(line).join('');
+    var soft = el('#rwCheckSoft');
+    if (soft) soft.innerHTML = '<li class="rw-check-h">권장</li>' + SOFT.map(line).join('');
+
+    var done = MUST.filter(function (it) { try { return !!it.ok(); } catch (e) { return false; } }).length;
+    var bar = el('#rwProgBar');
+    if (bar) bar.style.width = Math.round(done / MUST.length * 100) + '%';
+    var txt = el('#rwProgTxt');
+    if (txt) txt.textContent = '꼭 채울 것 ' + done + ' / ' + MUST.length;
+  }
+
+  /* 못 채운 줄을 누르면 그 칸으로 데려갑니다 */
+  function bindChecks() {
+    ['#rwCheck', '#rwCheckSoft'].forEach(function (id) {
+      var box = el(id);
+      if (!box) return;
+      box.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-go]');
+        if (!b) return;
+        var t = el(b.getAttribute('data-go'));
+        if (!t) return;
+        t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        try { t.focus({ preventScroll: true }); } catch (err) {}
+      });
+    });
+  }
+
+  /* ── 내가 등록한 인재정보 ─────────────────────────────────
+     여러 개를 둘 수 있으므로(연주용·강사용 따로) 목록으로 보입니다.
+     고치러 가는 길과 보러 가는 길을 함께 둡니다. */
+  async function drawMine() {
+    if (!me || !me.user) return;
+    var box = el('#rwMine'), wrap = el('#rwMineBox');
+    if (!box || !wrap) return;
+    try {
+      var r = await C.from('recruit_talents')
+        .select('id,title,is_open,created_at')
+        .eq('member_id', me.user.id)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (r.error) throw r.error;
+      var rows = r.data || [];
+      if (!rows.length) { wrap.hidden = true; return; }
+
+      box.innerHTML = rows.map(function (o) {
+        var on = String(o.id) === String(editId);
+        var d = String(o.created_at || '').slice(2, 10).replace(/-/g, '.');
+        return '<div class="rw-mine-row' + (on ? ' is-now' : '') + '">'
+          + '<a class="rw-mine-t" href="' + cfg.viewPage + '?id=' + encodeURIComponent(o.id) + '">'
+          +   esc(o.title || '(제목 없음)') + '</a>'
+          + '<div class="rw-mine-m">'
+          +   '<span>' + esc(d) + '</span>'
+          +   (o.is_open === false ? '<em class="rw-off">숨김</em>' : '')
+          +   (on ? '<em class="rw-now">지금 고치는 중</em>'
+                  : '<a href="' + location.pathname + '?id=' + encodeURIComponent(o.id) + '">고치기</a>')
+          + '</div></div>';
+      }).join('');
+      wrap.hidden = false;
+    } catch (e) {
+      wrap.hidden = true;
+    }
+  }
+
+  /* ── 오른쪽 칸이 붙는 자리 ────────────────────────────────
+     인재정보 목록의 찾는 칸과 같은 방식입니다 —
+     화면에 들어가면 위쪽에, 화면보다 길면 아래쪽 끝이 보이는 자리에.
+     그러지 않으면 도우미의 아래쪽(작성완료 단추)에 손이 닿지 않습니다. */
+  var GAP = 24;
+  function measureAside() {
+    var box = el('#rwAside');
+    if (!box) return;
+    var host = el('.rw-layout') || document.body;
+    var rcTop = parseFloat(getComputedStyle(host).getPropertyValue('--rc-top')) || 120;
+    var h = Math.round(box.getBoundingClientRect().height);
+    var room = window.innerHeight - rcTop - GAP;
+    var top = (h <= room) ? rcTop : (window.innerHeight - h - GAP);
+    document.documentElement.style.setProperty('--rw-aside-top', Math.round(top) + 'px');
+  }
+
   /* ── 빠진 것 짚기 ─────────────────────────────────────────*/
   function need() {
-    var bad = [];
-    if (!val('#rwTitle')) bad.push(['#rwTitle', '제목']);
-    if (!val('#rwCat1')) bad.push(['#rwCat1', '희망분야']);
-    if (!val('#rwR1')) bad.push(['#rwR1', '근무지역']);
-    if (!val('#rwName')) bad.push(['#rwName', '이름']);
-    if (!val('#rwBy')) bad.push(['#rwBy', '생년월일']);
-    if (!radio('rw-gender')) bad.push(['#rwGenderBox', '성별']);
-    if (!val('#rwPhone')) bad.push(['#rwPhone', '휴대폰']);
-    if (!el('#rwAgree').checked) bad.push(['#rwAgree', '약관 동의']);
-    return bad;
+    return MUST.filter(function (it) {
+      try { return !it.ok(); } catch (e) { return true; }
+    }).map(function (it) { return [it.sel, it.label]; });
   }
 
   /* ── 담기 ─────────────────────────────────────────────────*/
@@ -389,6 +498,13 @@
     if (g) { g.disabled = !on; if (!on) g.value = ''; }
   }
 
+  /* 적어도 담기지 않을 때 — 폼과 도우미를 함께 잠급니다.
+     한쪽만 잠그면 「도우미의 작성완료」 를 눌러 보게 됩니다. */
+  function lock() {
+    var f = el('#rwForm'); if (f) f.classList.add('is-locked');
+    var a = el('#rwAside'); if (a) a.classList.add('is-locked');
+  }
+
   /* ── 시작 ─────────────────────────────────────────────────*/
   async function initTalent(options) {
     cfg = Object.assign({ listPage: '/recruit/talent.html', viewPage: '/recruit/talent-view.html' }, options || {});
@@ -420,6 +536,12 @@
     toggleDis();
     addSchool();
 
+    /* 도우미를 먼저 켭니다 — 로그인하지 않은 분에게도 「무엇을 적게
+       되는지」 는 보이는 편이 낫습니다. 잠기면 흐려지기만 합니다. */
+    drawChecks();
+    bindChecks();
+    measureAside();
+
     /* 로그인·권한 미리 보기 */
     var s = await C.auth.getSession();
     var u = s.data && s.data.session && s.data.session.user;
@@ -427,7 +549,7 @@
       say('인재정보를 올리시려면 먼저 로그인해 주십시오. '
         + '<a class="rw-lk" href="' + LOGIN_PAGE + '?next='
         + encodeURIComponent(location.pathname + location.search) + '">로그인하기</a>', 'warn');
-      var f = el('#rwForm'); if (f) f.classList.add('is-locked');
+      lock();
       return;
     }
     var mr = await C.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle();
@@ -436,7 +558,7 @@
     if (!(m.member_type === 'major' || m.member_type === 'general' || m.is_admin)) {
       say('인재정보는 <b>전공자</b> 또는 <b>일반</b> 회원만 올릴 수 있습니다. '
         + '단체·기업·학교 회원은 <a class="rw-lk" href="/recruit/job-write.html">채용정보</a>를 올려 주십시오.', 'warn');
-      var f2 = el('#rwForm'); if (f2) f2.classList.add('is-locked');
+      lock();
       return;
     }
 
@@ -449,8 +571,34 @@
     if (pull) pull.addEventListener('click', pullMe);
     var addBtn = el('#rwAddSchool');
     if (addBtn) addBtn.addEventListener('click', function () { addSchool(); });
-    var saveBtn = el('#rwSave');
-    if (saveBtn) saveBtn.addEventListener('click', save);
+    ['#rwSave', '#rwSave2'].forEach(function (id) {
+      var b = el(id);
+      if (b) b.addEventListener('click', save);
+    });
+
+    /* 작성 도우미 — 무엇이든 적거나 고를 때마다 다시 셉니다.
+       한 곳(#rwForm)에서 받아 두면 나중에 칸이 늘어도 그대로 듣습니다. */
+    drawChecks();
+    bindChecks();
+    var form = el('#rwForm');
+    if (form) {
+      form.addEventListener('input', drawChecks);
+      form.addEventListener('change', drawChecks);
+      form.addEventListener('click', function (e) {
+        /* 학교 지우기·추가는 click 으로 일어나므로 조금 뒤에 셉니다 */
+        if (e.target.closest('.sc-del, #rwAddSchool')) setTimeout(drawChecks, 0);
+      });
+    }
+    drawMine();
+
+    measureAside();
+    setTimeout(measureAside, 300);
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(measureAside);
+      var ab = el('#rwAside');
+      if (ab) ro.observe(ab);
+    }
+    window.addEventListener('resize', measureAside);
     els('input[name="rw-dis"]').forEach(function (x) { x.addEventListener('change', toggleDis); });
     var same = el('#rwTelSame');
     if (same) same.addEventListener('change', function () {
