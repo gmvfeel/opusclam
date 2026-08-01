@@ -67,18 +67,47 @@ const DENY_NAMES = new Set([
   '홍위병', 'Red Guards', "People's Guard (Libya)",
   'United Constitutional Patriots', 'Counterterrorist Intelligence Center',
   'South African Institute for Maritime Research', '베이징 특경대',
-  'Mullah Dadullah Front', "Maquis de l'Ain et du Haut-Jura"
+  'Mullah Dadullah Front', "Maquis de l'Ain et du Haut-Jura",
+  /* 2026-08-01 화면에서 발견해 지운 것들 (차단 목록에도 함께 넣었습니다) */
+  '아프가니스탄 해방 이슬람 연맹', 'Islamic Union for the Liberation of Afghanistan',
+  'Hashemiyoun', 'Mahidi', 'Maquis du Limousin', "Maquis de l'Oisans",
+  '농촌척후대', '공화수호동맹', 'Republican Defence League',
+  '샤비하', 'Shabiha', '기병대', 'Kiheitai', 'La Piedrita',
+  '육원대', 'Rikuentai', 'scytheman', 'Scytheman',
+  'Revolutionary Council of Islamic Unity of Afghanistan',
+  'Niger Delta Avengers'
 ]);
 
+/* ★ 이름만 봅니다 — 위키백과 소개문은 보지 않습니다.
+
+   왜 바꿨나 (실제로 뚫렸던 구멍입니다)
+     소개문을 함께 보다가 민병대가 음악학교로 판정되었습니다.
+       「martial <b>arts</b>」  → MUS_WORD 의 \barts?\b 에 걸립니다
+       「training <b>centre</b>」 → EDU_WORD 의 centre 에 걸립니다
+     둘이 모두 걸리면 isMusicSchool 이 참이 되고,
+     그러면 아래 keep() 에서 <b>군사 조직 걸러내기가 통째로 무력화</b>됩니다.
+     그래서 기병대·Maquis·Niger Delta Avengers 가 학교DB에 들어왔습니다.
+
+   소개문은 자유로운 글이라 어떤 낱말이든 나옵니다. 판정에는 쓸 수 없습니다. */
 function isMusicSchool(row) {
-  const blob = [row.name_ko, row.name_en, row.description].filter(Boolean).join(' ');
+  const name = [row.name_ko, row.name_en].filter(Boolean).join(' ');
   if (KEEP_NAMES.has(row.name_ko)) return true;
-  if (SOLO_EDU.test(blob)) return true;
-  if (MUS_WORD.test(blob) && EDU_WORD.test(blob)) return true;
+  if (SOLO_EDU.test(name)) return true;
+  if (MUS_WORD.test(name) && EDU_WORD.test(name)) return true;
   return false;
+}
+
+/* 분류(P31)가 교육기관이라고 말해 주는가 —
+   이름이 고유명뿐인 명문 음악원(Juilliard·Mozarteum·Sibelius Academy)을
+   지키는 근거입니다. 이번 수집에서 1885건 가운데 1871건이 분류를 갖고
+   있었으니(99%) 믿을 만한 근거입니다. */
+function eduByClass(row) {
+  return !!(row._p31 && P31_EDU.test(row._p31));
 }
 function looksArmed(row) {
   if (DENY_NAMES.has(row.name_ko) || (row.name_en && DENY_NAMES.has(row.name_en))) return true;
+  /* 소개문까지 봅니다 — 군사 조직을 <b>찾아내는</b> 쪽은 넓게 보는 편이 안전합니다.
+     (남기는 쪽은 위 isMusicSchool 처럼 좁게 봐야 합니다) */
   const blob = [row.name_ko, row.name_en, row.description].filter(Boolean).join(' ');
   return ARMED_WORD.test(blob);
 }
@@ -216,17 +245,27 @@ function substanceCount(r) {
 }
 const bioOK = (r) => (r.description || '').trim().length >= 150;
 function keep(r) {
-  // 분류(P31)가 군사·경찰이면 제외 — 교육기관 분류가 함께 있으면 남깁니다
-  //   (군악학교는 P31 에 music school 이 함께 기록돼 있습니다)
+  // ① 분류(P31)가 군사·경찰이면 제외 — 교육기관 분류가 함께 있으면 남깁니다
+  //    (군악학교는 P31 에 music school 이 함께 기록돼 있습니다)
   if (r._p31 && P31_MIL.test(r._p31) && !P31_EDU.test(r._p31)) return false;
-  // 군사·정치 조직만 제외합니다.
-  //   "학교임을 증명하지 못하면 제외" 방식은 쓰지 않습니다.
-  //   Juilliard School · Sibelius Academy · Peabody Institute · Mozarteum 처럼
-  //   고유명만으로 된 명문 음악원이 전부 걸리기 때문입니다.
-  //   음악교육 신호가 있으면 군사 낱말이 있어도 남깁니다
-  //   (United States Armed Forces School of Music 같은 군악학교).
+
+  // ② 군사·정치 조직 제외.
+  //    음악교육 신호가 <b>이름에</b> 있으면 군사 낱말이 있어도 남깁니다
+  //    (United States Armed Forces School of Music 같은 군악학교).
   if (looksArmed(r) && !isMusicSchool(r)) return false;
-  // 그다음 충실도 컷오프
+
+  // ③ ★ 학교라는 증거가 하나도 없으면 제외합니다.
+  //    예전에는 「군사 조직만 제외」 였습니다. 그러면 이름도 분류도
+  //    학교와 무관한 것들이 충실도만으로 통과했습니다 —
+  //    Hashemiyoun · 농촌척후대 · La Piedrita · scytheman 이 그렇게 들어왔습니다.
+  //
+  //    증거는 둘 가운데 하나면 됩니다.
+  //      · 이름에 음악·교육 낱말이 있다        (isMusicSchool)
+  //      · 분류(P31)가 교육기관이라고 말한다   (eduByClass)
+  //    고유명뿐인 명문 음악원은 두 번째로 지켜집니다.
+  if (!isMusicSchool(r) && !eduByClass(r)) return false;
+
+  // ④ 그다음 충실도 컷오프
   return bioOK(r) || substanceCount(r) >= 2;
 }
 function richness(r) {
@@ -360,7 +399,8 @@ async function main() {
 
   const byP31Mil = all.filter(r => r._p31 && P31_MIL.test(r._p31) && !P31_EDU.test(r._p31));
   const armed    = all.filter(r => looksArmed(r) && !isMusicSchool(r));
-  const noSignal = all.filter(r => !looksArmed(r) && !isMusicSchool(r));
+  /* ★ 학교라는 증거가 없어 제외되는 것들 — 예전에는 이 갈래를 남겼습니다 */
+  const noProof  = all.filter(r => !isMusicSchool(r) && !eduByClass(r));
   const kept     = all.filter(keep);
 
   console.log('■ 걸러낸 내역');
@@ -369,8 +409,11 @@ async function main() {
     console.log('    · ' + r.name_ko + '  [' + r._p31.slice(0, 50) + ']'));
   console.log('  · 이름이 군사·정치 조직:', armed.length, '건  ← 이름 기준 (P31 없는 항목 대비)');
   if (armed.length) console.log('    예:', armed.slice(0, 5).map(r => r.name_ko).join(' / '));
-  console.log('  · 음악 낱말 없지만 남긴 항목:', noSignal.length, '건 (Juilliard·Mozarteum 처럼 고유명일 수 있어 남깁니다)');
-  if (noSignal.length) console.log('    예:', noSignal.slice(0, 5).map(r => r.name_ko).join(' / '));
+  console.log('  · 학교라는 증거 없음(제외):', noProof.length, '건  ← 이름에 음악·교육 낱말이 없고 분류도 교육기관이 아님');
+  if (noProof.length) console.log('    예:', noProof.slice(0, 8).map(r => r.name_ko || r.name_en).join(' / '));
+  console.log('  · 분류로 지켜진 고유명 학교:',
+    all.filter(r => !isMusicSchool(r) && eduByClass(r)).length,
+    '건  ← Juilliard·Mozarteum 처럼 이름만으로는 알 수 없는 명문');
   console.log('■ 최종 통과:', kept.length, '곳 (전체', all.length, ')');
 
   const existing = await sbGetAll('schools', 'id,wikidata_id,name_ko,name_en,category,location,founded,alumni,logo_url,link_home,link_wiki,description,sort_no');
