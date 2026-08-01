@@ -80,10 +80,19 @@
    <div class="rv-aside-box">
     <h2 class="rv-aside-h">다른 채용정보</h2>
 
+    <!-- 직종구분 — 이 화면에는 왼쪽 찾는 칸이 없으므로
+         갈래를 바꾸는 길이 이 풀다운 하나입니다.
+         엔진(assets/recruit-list.js)이 #rcCat 을 보고 채웁니다 —
+         목록 화면과 같은 코드라 따로 만들 것이 없습니다. -->
+    <div class="rv-aside-tool">
+      <select id="rcCat" aria-label="직종구분"></select>
+    </div>
+
     <div class="pdb-tablewrap">
       <table class="pdb-table rc-table rc-table--mini">
         <thead>
           <tr>
+            <th class="c-no">No</th>
             <th class="c-title">채용제목</th>
             <th class="c-when">마감</th>
           </tr>

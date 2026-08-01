@@ -372,8 +372,10 @@
   /* ── 간추린 한 줄 — 상세 화면 오른쪽의 좁은 목록 ──────────
      460px 남짓한 자리에는 다섯 칸이 들어가지 않습니다.
      제목을 살리고 업체명·지역을 아래 작은 줄로 접어 넣습니다.
-     번호·조회수는 뺍니다 — 좁은 자리에서 값보다 자리를 더 먹습니다. */
-  function miniRow(o) {
+     조회수는 뺍니다 — 좁은 자리에서 값보다 자리를 더 먹습니다.
+     번호는 남깁니다. 몇 번째 것을 보고 있는지 알 수 있어야
+     목록과 상세를 오가며 자리를 잃지 않습니다. */
+  function miniRow(o, no) {
     var vp = cfg.viewPage + '?id=' + encodeURIComponent(o.id);
     var sub = [];
     if (cfg.kind === 'job') {
@@ -399,6 +401,7 @@
     }
 
     return '<tr>'
+      + '<td class="c-no">' + no + '</td>'
       + '<td class="c-title">'
       +   '<a href="' + vp + '">' + esc(o.title || '') + '</a>'
       +   (sub.length ? '<span class="rc-sub">' + sub.map(esc).join(' · ') + '</span>' : '')
@@ -431,7 +434,7 @@
     cur = page || 1;
     var list = el('#rcList');
     if (!list) return;
-    var span = cfg.mini ? 2 : 5;   /* 표 칸 수 */
+    var span = cfg.mini ? 3 : 5;   /* 표 칸 수 */
     list.innerHTML = '<tr><td colspan="' + span + '" class="rc-loading">불러오는 중…</td></tr>';
 
     var rows;
@@ -465,7 +468,7 @@
     /* 번호는 전체 건수에서 거꾸로 셉니다 (큰 번호가 최신) */
     var base = total - (cur - 1) * cfg.pageSize;
     list.innerHTML = rows.map(function (o, i) {
-      if (cfg.mini) return miniRow(o);
+      if (cfg.mini) return miniRow(o, base - i);
       return (cfg.kind === 'job') ? jobRow(o, base - i) : talentRow(o, base - i);
     }).join('');
 
