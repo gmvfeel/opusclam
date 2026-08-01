@@ -1893,3 +1893,39 @@ html[data-theme="dark"] .rs-num--talent { background: #17201a; border-color: #5e
   .rs-num b { font-size: 32px; }
   .rs-chart { height: 170px; }
 }
+
+/* 권한표 — 「본인 것만」 처럼 부분만 되는 것 */
+.rg-tbl td.p { color: #a4681f; font-weight: 700; }
+html[data-theme="dark"] .rg-tbl td.p { color: #d9a45c; }
+
+/* ── 볼 수 없다고 알려 주는 자리 ──────────────────────────
+   ★ 「0건」 만 보이면 고장으로 오해합니다.
+     막는 것은 서버(뷰)이고, 화면은 <b>까닭과 다음 걸음</b>을 알려 줍니다. */
+.rc-gate {
+  padding: 46px 20px !important; text-align: center;
+}
+.rc-gate p {
+  margin: 0 0 16px; font-size: 13.5px; line-height: 1.75; color: var(--text-2);
+}
+.rc-gate p b { color: var(--rv-deep); font-weight: 700; }
+html[data-theme="dark"] .rc-gate p b { color: #b9b4e0; }
+.rc-gate-btn {
+  display: inline-flex; align-items: center; height: 38px; padding: 0 20px;
+  border-radius: 5px; background: var(--rv-deep); color: #fff;
+  font-size: 13.5px; font-weight: 600;
+}
+.rc-gate-btn:hover { background: var(--rv-deep-h); }
+
+.rv-gate {
+  padding: 64px 24px; text-align: center;
+}
+.rv-gate h2 {
+  font-family: var(--display);
+  font-size: 20px; font-weight: 700; color: var(--ink); margin: 0 0 12px;
+}
+.rv-gate p {
+  margin: 0 0 22px; font-size: 13.5px; line-height: 1.8; color: var(--text-2);
+}
+.rv-gate p b { color: var(--rv-deep); font-weight: 700; }
+html[data-theme="dark"] .rv-gate p b { color: #b9b4e0; }
+.rv-gate .rv-btn { margin: 0 4px; }

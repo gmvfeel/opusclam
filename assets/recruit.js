@@ -304,6 +304,69 @@
     return Math.ceil((end - new Date()) / 86400000);
   }
 
+  /* ============================================================
+     보는 사람 확인 — 여기 한 곳에 둡니다
+
+     ★ 왜 여기인가
+       recruit.js 는 리쿠르트의 모든 화면이 부르는 공용 모듈입니다.
+       목록 엔진과 상세 엔진이 같은 규칙으로 판단해야 하므로,
+       두 곳에 따로 적지 않고 여기 하나만 둡니다.
+
+     ★ 왜 필요한가
+       인재정보는 <b>채용하는 회원과 본인</b>만 봅니다.
+       그 판단을 서버(뷰)가 하는데, 서버는 요청에 실린 토큰으로
+       「누구인지」 를 압니다. 익명 열쇠로만 물어보면 서버는
+       언제나 손님으로 보아 한 줄도 내주지 않습니다.
+       그래서 로그인한 분의 토큰을 실어 보내야 합니다.
+     ============================================================ */
+  var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  var _sb = null, _viewer = null, _viewerPromise = null;
+
+  function client() {
+    if (!_sb && window.supabase) _sb = window.supabase.createClient(SB, KEY);
+    return _sb;
+  }
+
+  /* 지금 보는 사람 — 한 번만 물어보고 그 뒤에는 기억해 둡니다 */
+  function viewer() {
+    if (_viewer) return Promise.resolve(_viewer);
+    if (_viewerPromise) return _viewerPromise;
+
+    _viewerPromise = (async function () {
+      var out = { user: null, token: '', type: '', admin: false, canSeeTalents: false };
+      var c = client();
+      if (!c) { _viewer = out; return out; }
+      try {
+        var r = await c.auth.getSession();
+        var ss = r.data && r.data.session;
+        if (!ss || !ss.user) { _viewer = out; return out; }
+        out.user = ss.user;
+        out.token = ss.access_token || '';
+        var mr = await c.from('members').select('member_type,is_admin').eq('id', ss.user.id).maybeSingle();
+        var m = mr.data || {};
+        out.type = m.member_type || '';
+        out.admin = !!m.is_admin;
+        /* 인재정보를 볼 수 있는 회원 — 뽑는 쪽입니다.
+           전공자·일반 회원은 자기 것만 보입니다(서버가 가립니다). */
+        out.canSeeTalents = (out.type === 'industry' || out.type === 'school' || out.admin);
+      } catch (e) { /* 못 물어봐도 손님으로 둡니다 */ }
+      _viewer = out;
+      return out;
+    })();
+
+    return _viewerPromise;
+  }
+
+  /* 자료를 물어볼 때 붙일 머리글.
+     로그인했으면 그분의 토큰을, 아니면 익명 열쇠를 씁니다. */
+  async function headers(extra) {
+    var v = await viewer();
+    var t = v.token || KEY;
+    return Object.assign({ apikey: KEY, Authorization: 'Bearer ' + t }, extra || {});
+  }
+
   window.OCRecruit = {
     /* 자료 */
     JOBS: JOBS, REGIONS: REGIONS,
@@ -319,6 +382,9 @@
     fillRegion1: fillRegion1, fillRegion2: fillRegion2,
     bindPair: bindPair,
     fillChecks: fillChecks, fillRadios: fillRadios, checked: checked,
+    /* 보는 사람 */
+    SB: SB, KEY: KEY,
+    client: client, viewer: viewer, headers: headers,
     /* 보여 주기 */
     jobLabel: jobLabel, regionLabel: regionLabel,
     payLabel: payLabel, applyLabel: applyLabel, applyLines: applyLines,

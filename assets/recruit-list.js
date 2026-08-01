@@ -25,9 +25,13 @@
   'use strict';
 
   var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
-  var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var HDR = { apikey: KEY, Authorization: 'Bearer ' + KEY };
-  var R;                       /* OCRecruit — 분류 자료 */
+  var R;                       /* OCRecruit — 분류 자료 · 보는 사람 확인 */
+
+  /* ★ 익명 열쇠만 실어 보내면 서버는 언제나 손님으로 봅니다.
+     인재정보 뷰는 「채용 회원과 본인」 에게만 줄을 내주므로,
+     로그인한 분의 토큰을 실어야 제 것이 보입니다.
+     머리글 만드는 일은 공용 모듈(recruit.js)이 맡습니다. */
+  function HDRS(extra) { return R.headers(extra); }
 
   var cfg = null, cur = 1, total = 0;
   /* 지금 걸러 보고 있는 조건 */
@@ -99,7 +103,7 @@
     p.push('offset=' + from);
 
     var res = await fetch(SB + '/rest/v1/' + cfg.table + '?' + p.join('&'),
-      { headers: Object.assign({ Prefer: 'count=exact' }, HDR) });
+      { headers: await HDRS({ Prefer: 'count=exact' }) });
     if (!res.ok) throw new Error('HTTP ' + res.status);
 
     /* 전체 건수는 머리글에 실려 옵니다 */
@@ -429,6 +433,37 @@
     box.innerHTML = h;
   }
 
+  /* ── 볼 수 있는 사람인지 ──────────────────────────────────
+     인재정보는 <b>채용하는 회원과 본인</b>만 봅니다.
+     막는 것은 서버(뷰)이고, 여기서는 <b>까닭을 알려 주는 일</b>만
+     합니다. 그러지 않으면 「0건」 만 보여 고장으로 오해합니다. */
+  async function gateTalent(span) {
+    var list = el('#rcList');
+    if (cfg.kind !== 'talent') return true;
+    var v = await R.viewer();
+    if (v.canSeeTalents) return true;
+
+    var msg, act;
+    if (!v.user) {
+      msg = '인재정보는 회원만 볼 수 있습니다.';
+      act = '<a class="rc-gate-btn" href="/account/login.html?next='
+          + encodeURIComponent(location.pathname + location.search) + '">로그인하기</a>';
+    } else {
+      msg = '인재정보 열람은 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원에게 열려 있습니다.'
+          + '<br>전공자·일반 회원께는 <b>본인이 등록한 인재정보</b>만 보입니다.';
+      act = '<a class="rc-gate-btn" href="/recruit/guide.html">회원 종류 안내</a>';
+    }
+    if (list) {
+      list.innerHTML = '<tr><td colspan="' + span + '" class="rc-gate">'
+        + '<p>' + msg + '</p>' + act + '</td></tr>';
+    }
+    var cnt = el('#rcCount');
+    if (cnt) cnt.innerHTML = '채용 회원 전용';
+    var pager = el('#rcPager');
+    if (pager) pager.innerHTML = '';
+    return false;
+  }
+
   /* ── 그리기 ───────────────────────────────────────────────*/
   async function go(page) {
     cur = page || 1;
@@ -436,6 +471,8 @@
     if (!list) return;
     var span = cfg.mini ? 3 : 5;   /* 표 칸 수 */
     list.innerHTML = '<tr><td colspan="' + span + '" class="rc-loading">불러오는 중…</td></tr>';
+
+    if (!(await gateTalent(span))) return;
 
     var rows;
     try {

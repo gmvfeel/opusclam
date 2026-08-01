@@ -26,7 +26,35 @@
 
   var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var HDR = { apikey: KEY, Authorization: 'Bearer ' + KEY };
+  /* ★ 익명 열쇠만 실어 보내면 서버는 언제나 손님으로 봅니다.
+     머리글 만드는 일은 공용 모듈(recruit.js)이 맡습니다. */
+  function HDRS(extra) { return R.headers(extra); }
+
+  /* ── 어느 DB의 단체인가 ───────────────────────────────────
+     채용정보를 올리는 회원의 성격에 따라 그 단체가 담긴 DB가 다릅니다.
+     그래서 공고에 org_db(어느 DB) + org_id(몇 번) 을 짝으로 담습니다.
+
+     ★ 목록 경로는 파트너님이 확인해 주신 것입니다.
+       상세 경로는 org-view.html 이 확인되었고, 나머지 셋은 같은
+       이름 짓는 버릇(-view 를 붙이는)으로 맞추었습니다.
+       다르면 이 표의 view 한 줄만 고치십시오. */
+  var ORG_DBS = {
+    org:        { label: '음악단체DB',      list: '/db/org.html',        view: '/db/org-view.html' },
+    venue:      { label: '공연장DB',        list: '/db/venue.html',      view: '/db/venue-view.html' },
+    school:     { label: '음악학교DB',      list: '/db/school.html',     view: '/db/school-view.html' },
+    foundation: { label: '관련기관·재단DB', list: '/db/foundation.html', view: '/db/foundation-view.html' },
+  };
+  /* 어느 DB인지 담겨 있지 않을 때 기댈 곳 — 채용은 음악단체가 가장 많습니다 */
+  var ORG_DB_FALLBACK = 'org';
+
+  /* 로그인 화면 경로 —
+     ★ 확인이 필요합니다. 실제 경로가 다르면 이 한 줄만 고치십시오. */
+  var LOGIN_PAGE = '/account/login.html';
+
+  var R, cfg = null, cur = null;
+  /* 보는 사람 확인은 공용 모듈(recruit.js)이 맡습니다 —
+     목록 엔진과 같은 규칙으로 판단해야 하므로 한 곳에만 둡니다. */
+  function viewer() { return R.viewer(); }
 
   /* ── 어느 DB의 단체인가 ───────────────────────────────────
      채용정보를 올리는 회원의 성격에 따라 그 단체가 담긴 DB가 다릅니다.
@@ -633,13 +661,15 @@
 
     try {
       var res = await fetch(SB + '/rest/v1/' + cfg.table
-        + '?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1', { headers: HDR });
+        + '?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1',
+        { headers: await HDRS() });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       var rows = await res.json();
       if (!rows || !rows.length) {
-        if (box) box.innerHTML = '<div class="rv-empty">찾으시는 정보가 없습니다. '
-          + '지워졌거나 주소가 잘못되었을 수 있습니다.<br>'
-          + '<a class="rv-lk" href="' + cfg.listPage + '">목록으로 돌아가기</a></div>';
+        /* ★ 인재정보는 「없다」 와 「볼 수 없다」 를 갈라 알려 줍니다.
+           채용 회원이 아니면 서버가 줄을 내주지 않으므로 0건이 옵니다.
+           그것을 「없습니다」 라고 하면 거짓이 됩니다. */
+        if (box) box.innerHTML = await notFoundHtml();
         return;
       }
       draw(rows[0]);
@@ -654,15 +684,39 @@
     }
   }
 
+  async function notFoundHtml() {
+    if (cfg.kind === 'talent') {
+      var v = await viewer();
+      if (!v.canSeeTalents) {
+        return '<div class="rv-gate">'
+          + '<h2>채용 회원 전용</h2>'
+          + (v.user
+            ? '<p>인재정보 열람은 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원에게 '
+              + '열려 있습니다.<br>전공자·일반 회원께는 <b>본인이 등록한 인재정보</b>만 보입니다.</p>'
+              + '<a class="rv-btn rv-btn--go" href="/recruit/guide.html">회원 종류 안내</a>'
+            : '<p>인재정보는 회원만 볼 수 있습니다.</p>'
+              + '<a class="rv-btn rv-btn--go" href="' + LOGIN_PAGE + '?next='
+              + encodeURIComponent(location.pathname + location.search) + '">로그인하기</a>')
+          + '<a class="rv-btn rv-btn--list" href="' + cfg.listPage + '">목록</a>'
+          + '</div>';
+      }
+    }
+    return '<div class="rv-empty">찾으시는 정보가 없습니다. '
+      + '지워졌거나 주소가 잘못되었을 수 있습니다.<br>'
+      + '<a class="rv-lk" href="' + cfg.listPage + '">목록으로 돌아가기</a></div>';
+  }
+
   /* 조회수 — 이미 있는 함수를 부릅니다(recruit_job_hit / recruit_talent_hit).
      실패해도 화면에는 알리지 않습니다. 읽는 일을 방해할 까닭이 없습니다. */
-  function bump(id) {
+  async function bump(id) {
     if (!cfg.hitFn) return;
-    fetch(SB + '/rest/v1/rpc/' + cfg.hitFn, {
-      method: 'POST',
-      headers: Object.assign({ 'Content-Type': 'application/json' }, HDR),
-      body: JSON.stringify({ p_id: Number(id) }),
-    }).catch(function () {});
+    try {
+      await fetch(SB + '/rest/v1/rpc/' + cfg.hitFn, {
+        method: 'POST',
+        headers: await HDRS({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ p_id: Number(id) }),
+      });
+    } catch (e) { /* 조회수는 못 올려도 읽는 일을 방해하지 않습니다 */ }
   }
 
   /* ── 오른쪽 목록 — 누르면 왼쪽만 바꿉니다 ────────────────
