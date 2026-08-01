@@ -448,6 +448,31 @@
     if (h > 0) document.documentElement.style.setProperty('--rc-sticky-h', h + 'px');
   }
 
+  /* ── 왼쪽 찾는 칸이 붙는 자리 재기 ────────────────────────
+     찾는 칸은 화면보다 긴 때가 많습니다. 그때 위쪽(--rc-top)에
+     못박아 두면 아래쪽 「선택조건으로 검색」 단추가 화면 밖으로
+     밀려나 <b>영영 손이 닿지 않습니다.</b>
+
+     그래서 키를 재어
+       · 화면에 들어가면 → 위쪽 --rc-top 에 붙입니다
+       · 화면보다 길면  → 아래쪽 끝이 보이는 자리에 붙입니다
+                          (붙는 값이 음수가 되어, 목록을 내리면
+                           찾는 칸이 조금 올라간 뒤 그 자리에 섭니다)
+
+     ★ 재는 값은 --rc-side-top 하나뿐입니다. recruit.css 의
+       .rc-finder 가 그 값을 씁니다. 두 곳을 고칠 일이 없습니다. */
+  var GAP = 24;                     /* 화면 아래쪽에 남기는 여백 */
+  function measureSide() {
+    var box = el('.rc-finder');
+    if (!box) return;
+    var css = getComputedStyle(document.querySelector('.rc-layout') || document.body);
+    var rcTop = parseFloat(css.getPropertyValue('--rc-top')) || 120;
+    var h = Math.round(box.getBoundingClientRect().height);
+    var room = window.innerHeight - rcTop - GAP;
+    var top = (h <= room) ? rcTop : (window.innerHeight - h - GAP);
+    document.documentElement.style.setProperty('--rc-side-top', Math.round(top) + 'px');
+  }
+
   /* ── 시작 ─────────────────────────────────────────────────*/
   function init(options) {
     cfg = Object.assign({ kind: 'job', pageSize: 15 }, options || {});
@@ -473,14 +498,20 @@
 
     /* 높이를 재어 표 머리가 도구줄 아래에 붙게 합니다.
        글꼴이 늦게 오면 높이가 바뀌므로 조금 뒤에 한 번 더 잽니다. */
-    measureSticky();
-    setTimeout(measureSticky, 300);
+    function measureAll() { measureSticky(); measureSide(); }
+    measureAll();
+    setTimeout(measureAll, 300);
     if (window.ResizeObserver) {
-      var ro = new ResizeObserver(measureSticky);
+      var ro = new ResizeObserver(measureAll);
       var head = el('.rc-sticky');
       if (head) ro.observe(head);
+      var side = el('.rc-finder');
+      if (side) ro.observe(side);
+      /* 창 높이가 바뀌면 붙는 자리도 달라집니다 —
+         ResizeObserver 는 창 높이를 보지 못하므로 따로 듣습니다. */
+      window.addEventListener('resize', measureSide);
     } else {
-      window.addEventListener('resize', measureSticky);
+      window.addEventListener('resize', measureAll);
     }
   }
 

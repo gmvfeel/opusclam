@@ -97,32 +97,55 @@
 /* ── 찾는 칸 ──────────────────────────────────────────────
    잡코리아 등록 화면처럼, 칸마다 따로 떨어진 카드로 두고
    제목을 가운데 크게 놓습니다. 어디를 채우는 자리인지 한눈에 보입니다. */
+/* ── 인재정보 화면의 찾는 칸 — 연한 녹색 ─────────────────────
+   채용정보(베이지)와 인재정보(녹색)를 색으로 갈라 둡니다.
+   두 화면의 짜임이 똑같아 어느 쪽을 보고 있는지 얼른 알기 어려웠습니다.
+
+   ★ 쓰는 법 — 화면의 .rc-layout 에 rc-talent 를 함께 붙입니다.
+     페이지마다 색을 복붙하지 않고 이 한 곳만 고치면 됩니다.
+     (미술 쪽 오퍼스파인에도 색만 바꿔 그대로 쓸 수 있습니다) */
+.rc-talent .rc-panel {
+  background: #f2f9f3;
+  /* 테두리도 아주 살짝 녹색 쪽으로 — 보라 테두리를 그대로 두면
+     녹색 바탕과 겨루어 어수선해 보입니다. */
+  border-color: #4a6152;
+  box-shadow: 0 3px 14px -4px rgba(24, 60, 38, .16);
+}
+/* 칸 사이 옅은 선도 녹색 쪽으로 맞춥니다 (베이지 톤이면 겉돕니다) */
+.rc-talent .rc-fld { border-top-color: #e2efe5; }
+.rc-talent .rc-panel-h { border-bottom-color: #d7e6db; }
+
+html[data-theme="dark"] .rc-talent .rc-panel {
+  background: #17201a;
+  border-color: #5e7c68;
+  box-shadow: 0 3px 16px -4px rgba(0, 0, 0, .5);
+}
+html[data-theme="dark"] .rc-talent .rc-fld { border-top-color: #2b382f; }
+html[data-theme="dark"] .rc-talent .rc-panel-h { border-bottom-color: #2b382f; }
+
 .rc-finder {
   display: flex; flex-direction: column; gap: 14px;
-  /* 붙어 따라오기 — 오른쪽 도구줄과 같은 자리에 붙습니다 */
-  position: sticky; top: var(--rc-top);
-  /* 화면보다 길면 스스로 굴러가게 둡니다.
-     그러지 않으면 아래쪽 「선택조건으로 검색」 단추에 손이 닿지 않습니다.
-     ★ overflow 를 <b>자기 자신</b>에 거는 것은 괜찮습니다 —
-       sticky 가 듣지 않는 것은 「감싼 곳」 에 overflow 가 있을 때입니다. */
-  max-height: calc(100vh - var(--rc-top) - 24px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
+
+  /* ── 붙어 따라오기 ────────────────────────────────────────
+     붙는 자리는 --rc-side-top 이 정합니다.
+
+     ★ 왜 --rc-top 을 바로 쓰지 않나
+       찾는 칸은 화면보다 깁니다. 위쪽(120px)에 못박아 두면
+       아래쪽 「선택조건으로 검색」 단추가 화면 밖으로 밀려나
+       <b>영영 손이 닿지 않습니다.</b> 안쪽에 굴림대를 두는 방법도
+       있었지만 보기에 좋지 않아 걷어냈습니다.
+
+       그래서 assets/recruit-list.js 가 찾는 칸의 키를 재어,
+         · 화면에 들어가면 → 위쪽 120px 에 붙이고
+         · 화면보다 길면  → 아래쪽 끝이 보이는 자리에 붙입니다
+       어느 쪽이든 목록을 내리는 동안 찾는 칸은 제자리에 머물고,
+       단추에는 언제나 손이 닿습니다. */
+  position: sticky;
+  top: var(--rc-side-top, var(--rc-top));
+
   /* 칸의 옅은 그림자가 잘리지 않게 안여백을 조금 둡니다 */
   padding: 4px 8px 10px;
-  scrollbar-width: thin;
-  scrollbar-color: #cfc9de transparent;
 }
-/* 굴림대 — 얇고 옅게. 크롬·사파리 */
-.rc-finder::-webkit-scrollbar { width: 8px; }
-.rc-finder::-webkit-scrollbar-track { background: transparent; }
-.rc-finder::-webkit-scrollbar-thumb {
-  background: #cfc9de; border-radius: 4px;
-  border: 2px solid transparent; background-clip: content-box;
-}
-.rc-finder::-webkit-scrollbar-thumb:hover { background-color: #b3aac9; background-clip: content-box; }
-html[data-theme="dark"] .rc-finder { scrollbar-color: #4a4a4a transparent; }
-html[data-theme="dark"] .rc-finder::-webkit-scrollbar-thumb { background-color: #4a4a4a; }
 
 .rc-panel {
   /* 아주 옅은 베이지 — 목록(흰 바탕)과 갈라 보이게 하되
@@ -438,7 +461,6 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
      스스로 굴러가는 칸이 화면 전체를 잡아먹기 때문입니다. */
   .rc-finder {
     position: static;
-    max-height: none; overflow: visible;
     padding: 0;
   }
   .rc-sticky { position: static; padding-bottom: 0; }
