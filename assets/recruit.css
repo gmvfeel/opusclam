@@ -5,6 +5,21 @@
    base.css · board.css 의 색과 자를 그대로 물려받습니다.
    ============================================================ */
 
+/* ── 리쿠르트 공통 색 ─────────────────────────────────────
+   ★ 여기 <b>한 곳</b>에서만 정합니다.
+
+   앞서는 .rv-layout · .rw-doc · .rw-aside · .rw-pv-body 네 곳에
+   같은 값을 따로 적어 두었습니다. 그러다 미리보기 창의 아래
+   단추줄(.rw-pv-foot)이 그 네 곳의 안쪽이 아니어서 값을 찾지 못해,
+   단추 배경이 사라지고 흰 글씨만 남아 「글자가 안 보이는」 일이
+   생겼습니다.
+
+   :root 에 두면 화면 어디에 새 칸을 만들어도 값이 따라갑니다. */
+:root {
+  --rv-deep: #33305a;      /* 단추·강조에 쓰는 짙은 남보라 */
+  --rv-deep-h: #262346;    /* 그 위에 손을 올렸을 때 */
+}
+
 /* 가로는 .board 에 맡깁니다 — 다른 페이지와 같은 폭(내용 1312px)이 되게.
    여기서 max-width 를 따로 정하면 나중에 .board 를 고칠 때 리쿠르트만 어긋납니다. */
 .rc-wrap { /* max-width·padding 은 .board 가 정합니다 */ }
@@ -549,10 +564,6 @@ html[data-theme="dark"] .scene-hire line { stroke: #9a9a9a; }
    ============================================================ */
 .rv-layout {
   --rc-top: 120px;
-  /* 단추·강조에 쓰는 짙은 색 — 보라는 옅어 단추의 경계가 흐렸습니다.
-     한 곳에 모아 두어 나중에 색을 바꿀 때 여기만 고치면 됩니다. */
-  --rv-deep: #33305a;
-  --rv-deep-h: #262346;
   margin-top: 44px;
   display: grid;
   /* 왼쪽 750px 고정 — 글줄이 너무 길면 눈이 돌아오는 자리를 잃습니다.
@@ -955,9 +966,6 @@ html[data-theme="dark"] .rv-talent .rv-aside-box { background: #17201a; border-c
   border: 3px solid #514a6b; border-radius: 12px;
   padding: 32px 36px 30px;
   box-shadow: 0 3px 14px -4px rgba(30, 24, 60, .16);
-  /* 단추·강조에 쓰는 짙은 색 — 상세 화면과 같은 값입니다 */
-  --rv-deep: #33305a;
-  --rv-deep-h: #262346;
 }
 html[data-theme="dark"] .rw-doc { border-color: #7a7295; }
 /* 로그인하지 않았거나 권한이 없을 때 — 적어도 담기지 않으므로
@@ -1174,8 +1182,6 @@ html[data-theme="dark"] .rw-agree { background: #1a1a1a; }
 .rw-aside {
   position: sticky; top: var(--rw-aside-top, var(--rc-top));
   min-width: 0; display: flex; flex-direction: column; gap: 14px;
-  --rv-deep: #33305a;
-  --rv-deep-h: #262346;
 }
 .rw-aside.is-locked { opacity: .45; pointer-events: none; }
 .rw-aside-box {
@@ -1343,8 +1349,6 @@ html[data-theme="dark"] .rw-pv-head { background: #1a1a1a; }
   flex: 1 1 auto; overflow-y: auto;
   border: 0; border-radius: 0; box-shadow: none;
   padding: 28px 30px;
-  --rv-deep: #33305a;
-  --rv-deep-h: #262346;
 }
 .rw-pv-foot {
   display: flex; justify-content: flex-end; gap: 10px;
