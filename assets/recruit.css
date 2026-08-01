@@ -1586,6 +1586,20 @@ html[data-theme="dark"] .rg-intro { background: #1a1a1a; border-color: #333; }
   font-family: var(--display);
   font-size: 22px; font-weight: 700; letter-spacing: -.015em;
   color: var(--ink); margin: 0 0 14px;
+  line-height: 1.35;
+}
+/* 영문 서비스 이름 — 히어로의 눈썹 글씨와 같은 결로 작게 둡니다 */
+.rg-intro-en {
+  display: inline-block; margin-left: 10px; vertical-align: 2px;
+  font-family: var(--display);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .16em;
+  color: var(--violet-2); text-transform: uppercase;
+}
+/* 보기로 드는 자리들 — 본문보다 조금 크고 짙게 두어 눈이 먼저 닿습니다 */
+.rg-intro-lead {
+  font-size: 15px !important; font-weight: 500;
+  color: var(--text) !important; line-height: 1.7 !important;
+  margin-bottom: 14px !important;
 }
 .rg-intro p { margin: 0 0 12px; font-size: 14px; line-height: 1.85; color: var(--text-2); }
 .rg-intro p:last-child { margin-bottom: 0; }
