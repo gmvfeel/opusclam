@@ -138,6 +138,43 @@
       html += '</div></div>';
     });
     box.innerHTML = html;
+    syncCat();
+  }
+
+  /* ── 직종별 풀다운 ────────────────────────────────────────
+     왼쪽 직종구분 체크 상자와 <b>같은 상태(q.jobs)를 함께 씁니다.</b>
+     따로 두면 두 곳에 서로 다른 값이 걸려 어느 쪽이 이겼는지
+     알 수 없게 됩니다. 그래서 풀다운은 「대분류를 한 번에 고르는
+     빠른 길」 로만 두고, 고른 결과는 언제나 왼쪽에 그대로 비칩니다.
+
+     고른 것들이 한 대분류에만 들어 있으면 그 대분류를 가리키고,
+     여러 대분류가 섞이면 「전체」 로 돌립니다(왼쪽이 더 정밀하므로). */
+  function syncCat() {
+    var sel = el('#rcCat');
+    if (!sel) return;
+    var cats = {};
+    (q.jobs || []).forEach(function (v) { cats[v.split('|')[0]] = 1; });
+    var keys = Object.keys(cats);
+    sel.value = (keys.length === 1) ? keys[0] : '';
+  }
+
+  function bindCat() {
+    var sel = el('#rcCat');
+    if (!sel) return;
+    R.fill(sel, Object.keys(R.JOBS), '전체');
+    sel.value = '';
+    sel.addEventListener('change', function () {
+      var c1 = sel.value;
+      if (!c1) {
+        q.jobs = [];
+      } else {
+        /* 그 대분류의 소분류를 통째로 켭니다 — 다른 대분류는 풉니다.
+           풀다운은 「이 갈래만 보겠다」 는 뜻이기 때문입니다. */
+        q.jobs = (R.JOBS[c1] || []).map(function (c2) { return c1 + '|' + c2; });
+      }
+      drawJobTable();
+      go(1);
+    });
   }
 
   function bindJobTable() {
@@ -413,6 +450,7 @@
     R = window.OCRecruit;
     if (!R) { console.error('assets/recruit.js 를 먼저 불러야 합니다.'); return; }
 
+    bindCat();
     drawJobTable();
     bindJobTable();
     drawSearch();

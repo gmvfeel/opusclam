@@ -35,7 +35,15 @@
    이 한 값만 고치면 왼쪽 찾는 칸·오른쪽 도구줄·표 머리가 함께 움직입니다. */
 .rc-layout { --rc-top: 120px; }
 
-.rc-side { position: sticky; top: var(--rc-top); }
+/* 왼쪽 칸 — 스스로 붙지 않고, 안쪽 .rc-finder 가 붙습니다.
+
+   ★ 왜 바꿨나 (중요합니다)
+     grid 칸 자체에 sticky 를 걸면, 그 칸이 <b>줄에서 가장 긴 칸</b>일 때
+     움직일 여유가 없어 붙어 따라오기가 아예 듣지 않습니다.
+     sticky 는 「감싼 자리 안에서」 만 미끄러지는데, 가장 긴 칸은
+     감싼 자리와 키가 똑같아 미끄러질 틈이 없기 때문입니다.
+     목록이 짧거나 비어 있으면 왼쪽이 곧 가장 긴 칸이 됩니다. */
+.rc-side { align-self: stretch; min-width: 0; }
 
 /* 오른쪽 도구줄 + 건수줄 — 함께 붙어 따라옵니다 */
 .rc-sticky {
@@ -89,7 +97,32 @@
 /* ── 찾는 칸 ──────────────────────────────────────────────
    잡코리아 등록 화면처럼, 칸마다 따로 떨어진 카드로 두고
    제목을 가운데 크게 놓습니다. 어디를 채우는 자리인지 한눈에 보입니다. */
-.rc-finder { display: flex; flex-direction: column; gap: 14px; }
+.rc-finder {
+  display: flex; flex-direction: column; gap: 14px;
+  /* 붙어 따라오기 — 오른쪽 도구줄과 같은 자리에 붙습니다 */
+  position: sticky; top: var(--rc-top);
+  /* 화면보다 길면 스스로 굴러가게 둡니다.
+     그러지 않으면 아래쪽 「선택조건으로 검색」 단추에 손이 닿지 않습니다.
+     ★ overflow 를 <b>자기 자신</b>에 거는 것은 괜찮습니다 —
+       sticky 가 듣지 않는 것은 「감싼 곳」 에 overflow 가 있을 때입니다. */
+  max-height: calc(100vh - var(--rc-top) - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* 칸의 옅은 그림자가 잘리지 않게 안여백을 조금 둡니다 */
+  padding: 4px 8px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #cfc9de transparent;
+}
+/* 굴림대 — 얇고 옅게. 크롬·사파리 */
+.rc-finder::-webkit-scrollbar { width: 8px; }
+.rc-finder::-webkit-scrollbar-track { background: transparent; }
+.rc-finder::-webkit-scrollbar-thumb {
+  background: #cfc9de; border-radius: 4px;
+  border: 2px solid transparent; background-clip: content-box;
+}
+.rc-finder::-webkit-scrollbar-thumb:hover { background-color: #b3aac9; background-clip: content-box; }
+html[data-theme="dark"] .rc-finder { scrollbar-color: #4a4a4a transparent; }
+html[data-theme="dark"] .rc-finder::-webkit-scrollbar-thumb { background-color: #4a4a4a; }
 
 .rc-panel {
   /* 아주 옅은 베이지 — 목록(흰 바탕)과 갈라 보이게 하되
@@ -401,6 +434,13 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
      표 머리도 함께 풉니다. */
   .rc-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .rc-side { position: static; }
+  /* 위아래로 놓이면 왼쪽 칸도 붙어 따라오기를 끕니다 —
+     스스로 굴러가는 칸이 화면 전체를 잡아먹기 때문입니다. */
+  .rc-finder {
+    position: static;
+    max-height: none; overflow: visible;
+    padding: 0;
+  }
   .rc-sticky { position: static; padding-bottom: 0; }
   /* 붙어 따라오지 않으므로 덮개도 끕니다 —
      position:static 이면 덮개가 엉뚱한 곳에 자리 잡습니다. */
