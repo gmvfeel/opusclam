@@ -41,6 +41,29 @@
 .rc-sticky {
   position: sticky; top: var(--rc-top); z-index: 24;
   background: var(--paper);
+  /* 아래 여백을 <b>안여백</b>으로 둡니다 — 바깥여백(margin)이면 배경이
+     칠해지지 않아 그 틈으로 목록이 지나가는 것이 보입니다.
+     안여백이면 배경이 덮고, 높이를 재는 값(--rc-sticky-h)에도 들어가
+     표 머리가 바로 아래에 딱 맞게 붙습니다. */
+  padding-bottom: 14px;
+}
+
+/* 헤더와 도구줄 사이의 빈 띠를 덮습니다 ─────────────────────
+   도구줄은 --rc-top(120px) 자리에 붙지만 헤더는 그보다 낮으므로
+   그 사이에 아무 배경도 없는 띠가 남아, 스크롤하면 그 틈으로
+   목록이 지나가는 것이 보였습니다.
+
+   ★ 흐름에서 빠지는 가짜 칸(absolute)이라 짜임을 건드리지 않습니다.
+   ★ 헤더(.site-header)는 z-index 60 이고 이 칸은 24 이므로
+     헤더를 가리지 않고 그 아래만 덮습니다.
+   ★ 높이 40px 은 목록 위 여백(.rc-layout margin-top 44px) 안에
+     들어가므로, 맨 위에서는 흰 바탕과 겹쳐 보이지 않습니다. */
+.rc-sticky::before {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: 100%;
+  height: 40px;
+  background: var(--paper);
+  pointer-events: none;
 }
 
 /* 표 머리 — 도구줄 <b>아래에</b> 붙습니다.
@@ -281,8 +304,11 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
    .pdb-toolbar · .pdb-meta · .pdb-table 은 style.css 의 공용 스타일이므로
    여기서는 <b>칸 폭과 리쿠르트에만 있는 것</b>만 정합니다. */
 .rc-toolbar { margin-top: 0; padding-top: 2px; }
-/* 붙어 따라올 때 위쪽이 잘려 보이지 않게 */
-.rc-sticky .pdb-meta { margin-bottom: 14px; }
+/* 건수줄 — 아래 회색 선을 지웁니다.
+   표 머리에 이미 굵은 선이 있어 두 줄이 겹쳐 보였습니다.
+   아래 여백은 .rc-sticky 의 padding-bottom 이 맡습니다
+   (바깥여백이면 배경이 칠해지지 않아 틈이 생깁니다). */
+.rc-sticky .pdb-meta { margin-bottom: 0; border-bottom: 0; }
 
 .rc-table { table-layout: fixed; }
 .rc-table th.c-no,   .rc-table td.c-no   { width: 52px;  text-align: center; }
@@ -372,7 +398,11 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
      표 머리도 함께 풉니다. */
   .rc-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .rc-side { position: static; }
-  .rc-sticky { position: static; }
+  .rc-sticky { position: static; padding-bottom: 0; }
+  /* 붙어 따라오지 않으므로 덮개도 끕니다 —
+     position:static 이면 덮개가 엉뚱한 곳에 자리 잡습니다. */
+  .rc-sticky::before { display: none; }
+  .rc-sticky .pdb-meta { margin-bottom: 14px; }
   .rc-table thead th { position: static; }
   .rc-finder { flex-direction: row; gap: 14px; }
   .rc-finder .rc-panel { flex: 1; min-width: 0; }
