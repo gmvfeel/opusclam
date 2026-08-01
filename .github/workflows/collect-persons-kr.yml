@@ -3,7 +3,7 @@ name: Collect persons KR (weekly)
 on:
   schedule:
     # 목 · 금 · 토 05:00 KST · 사흘 연속 예약 (학술 수집과 시각을 달리 둡니다)
-    - cron: '0 20 * * 3,4,5'
+    - cron: '43 20 * * 3,4,5'   # KST 매주 목·금·토 05:43
   workflow_dispatch:
     inputs:
       dry:
@@ -11,10 +11,17 @@ on:
         type: boolean
         default: false
 
+# ★ persons 표를 함께 쓰는 것들을 한 대기줄로 묶습니다.
+#   예약 실행이 제각각 늦게 시작해도 순서를 지켜 하나씩 돕니다 —
+#   같은 사람 줄을 서로 덮어쓰거나 Wikidata 를 동시에 두드리는 것을 막습니다.
+concurrency:
+  group: oc-persons
+  cancel-in-progress: false
+
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,4 +32,36 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           PERSONS_DRY: ${{ inputs.dry && '1' || '' }}
-        run: node scripts/collect-persons-kr.mjs
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+          try2 node scripts/collect-persons-kr.mjs
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #  ★ 왜 필요한가 — 예약 실행이 실패해도 눌러 보지 않으면 모릅니다.
+  #    공연장 수집이 며칠 멈춰 있던 것을 아무도 몰랐던 일이 그 예입니다.
+  #  실패하면 이슈를 만들고, 같은 이슈가 이미 열려 있으면 댓글만 답니다.
+  #  ※ Settings → Actions → General → Workflow permissions 를
+  #    「Read and write permissions」 로 두셔야 이슈를 만들 수 있습니다.
+  oc-notify-failure:
+    needs: collect
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi

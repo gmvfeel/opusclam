@@ -3,12 +3,18 @@ name: Collect venues (weekly)
 # 매주 월요일 새벽 3시(한국시간)에 자동 실행 + 언제든 수동 실행 가능
 on:
   schedule:
-    - cron: '0 18 * * 0'   # 일요일 18:00 UTC = 월요일 03:00 KST
+    - cron: '7 17 * * 0'   # KST 매주 월 02:07
   workflow_dispatch: {}
+
+# 수동 실행과 예약 실행이 겹치지 않게 합니다.
+concurrency:
+  group: oc-collect-venues
+  cancel-in-progress: false
 
 jobs:
   collect:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,4 +28,36 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: node scripts/collect-venues.mjs
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+          try2 node scripts/collect-venues.mjs
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #  ★ 왜 필요한가 — 예약 실행이 실패해도 눌러 보지 않으면 모릅니다.
+  #    공연장 수집이 며칠 멈춰 있던 것을 아무도 몰랐던 일이 그 예입니다.
+  #  실패하면 이슈를 만들고, 같은 이슈가 이미 열려 있으면 댓글만 답니다.
+  #  ※ Settings → Actions → General → Workflow permissions 를
+  #    「Read and write permissions」 로 두셔야 이슈를 만들 수 있습니다.
+  oc-notify-failure:
+    needs: collect
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi

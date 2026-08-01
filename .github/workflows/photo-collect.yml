@@ -16,16 +16,19 @@ on:
         default: '300'
   schedule:
     # 매주 월요일 새벽 5시(KST) = 일요일 20:00 UTC
-    - cron: '0 20 * * 0'
+    - cron: '17 4 * * 1'   # KST 매주 월 13:17
 
+# ★ persons 표를 함께 쓰는 것들을 한 대기줄로 묶습니다.
+#   예약 실행이 제각각 늦게 시작해도 순서를 지켜 하나씩 돕니다 —
+#   같은 사람 줄을 서로 덮어쓰거나 Wikidata 를 동시에 두드리는 것을 막습니다.
 concurrency:
-  group: photo-collect
+  group: oc-persons
   cancel-in-progress: false
 
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -43,6 +46,7 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
           # 수동 실행이면 입력값을, 자동 실행이면 기본값을 씁니다
           TYPE="${{ github.event.inputs.type }}"
           LIMIT="${{ github.event.inputs.limit }}"
@@ -50,11 +54,41 @@ jobs:
           if [ -z "$TYPE" ]; then
             # 주 1회 자동 실행 — 인물과 학교를 조금씩
             echo "── 자동 실행 : 인물 200건 ──"
-            node seed/photo-collect.mjs --type=person --limit=200
+            try2 node seed/photo-collect.mjs --type=person --limit=200
             echo ""
             echo "── 자동 실행 : 학교 100건 ──"
-            node seed/photo-collect.mjs --type=school --limit=100
+            try2 node seed/photo-collect.mjs --type=school --limit=100
           else
             echo "── 수동 실행 : $TYPE $LIMIT 건 ──"
-            node seed/photo-collect.mjs --type="$TYPE" --limit="$LIMIT"
+            try2 node seed/photo-collect.mjs --type="$TYPE" --limit="$LIMIT"
+          fi
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #  ★ 왜 필요한가 — 예약 실행이 실패해도 눌러 보지 않으면 모릅니다.
+  #    공연장 수집이 며칠 멈춰 있던 것을 아무도 몰랐던 일이 그 예입니다.
+  #  실패하면 이슈를 만들고, 같은 이슈가 이미 열려 있으면 댓글만 답니다.
+  #  ※ Settings → Actions → General → Workflow permissions 를
+  #    「Read and write permissions」 로 두셔야 이슈를 만들 수 있습니다.
+  oc-notify-failure:
+    needs: collect
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
           fi
