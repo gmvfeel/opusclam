@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인재정보등록 · 리쿠르트 · OPUSCLAM.COM</title>
+<meta name="robots" content="noindex">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<link rel="stylesheet" href="/assets/recruit.css">
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave"></div>
+    <div class="scene scene-hire on">
+      <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+        <g fill="url(#dg)"></g>
+      </svg>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/recruit/job.html">리쿠르트</a><span>/</span><span class="on">인재등록</span>
+    </nav>
+
+    <div id="oc-subnav" data-src="/partials/subnav-recruit.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM RECRUIT SERVICE</div>
+          <h1 class="pdb-title">인재등록</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">이름과 연락처는 채용하는 단체·학교 회원에게만 열립니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="board rc-wrap">
+ <div class="rw-layout">
+  <div class="rw-doc" id="rwForm">
+
+    <h1 class="rv-title" id="rwHead">인재정보등록</h1>
+
+    <!-- 알림 줄 — 빠진 것과 잘못된 것을 여기에 남깁니다.
+         창(alert)을 띄우지 않습니다 — 어느 칸이 문제인지 알 수 없고
+         닫으면 사라져 다시 볼 수 없기 때문입니다. -->
+    <div class="rw-msg" id="rwMsg" role="status" hidden></div>
+
+    <!-- ── 희망근무조건 ─────────────────────────────────────── -->
+    <h2 class="rv-group">희망근무조건 <em class="rw-req">* 꼭 채워 주십시오</em></h2>
+
+    <div class="rw-grid">
+      <label class="rw-f rw-f--full"><span>제목 <b>*</b></span>
+        <input type="text" id="rwTitle" maxlength="120"
+               placeholder="예 — 성실함과 책임감을 앞에 두겠습니다">
+      </label>
+
+      <label class="rw-f"><span>희망분야 <b>*</b></span>
+        <select id="rwCat1"></select>
+      </label>
+      <label class="rw-f"><span class="rw-ghost">희망분야</span>
+        <select id="rwCat2"></select>
+      </label>
+      <label class="rw-f rw-f--full"><span>기타사항</span>
+        <input type="text" id="rwJobEtc" maxlength="80" placeholder="위 분류에 없으면 적어 주십시오">
+      </label>
+
+      <label class="rw-f"><span>희망급여</span>
+        <select id="rwPayType"></select>
+      </label>
+      <label class="rw-f"><span class="rw-ghost">금액</span>
+        <span class="rw-inline">
+          <input type="text" id="rwPayAmount" maxlength="30" placeholder="예 — 2400만원">
+          <label class="rc-check"><input type="checkbox" id="rwPayDaily"><span>당일지급</span></label>
+        </span>
+      </label>
+
+      <label class="rw-f"><span>근무지역 <b>*</b></span>
+        <select id="rwR1"></select>
+      </label>
+      <label class="rw-f"><span class="rw-ghost">근무지역</span>
+        <select id="rwR2"></select>
+      </label>
+
+      <div class="rw-f rw-f--full"><span>근무형태</span>
+        <div id="rwEmp" class="rc-checks"></div>
+      </div>
+      <div class="rw-f rw-f--full"><span>현재상태</span>
+        <div id="rwStatus" class="rc-checks"></div>
+      </div>
+    </div>
+
+    <!-- ── 기본정보 ─────────────────────────────────────────── -->
+    <h2 class="rv-group">기본정보
+      <button type="button" class="rw-pull" id="rwPull">내 정보 불러오기</button>
+    </h2>
+
+    <div class="rw-grid">
+      <label class="rw-f"><span>이름 <b>*</b></span>
+        <input type="text" id="rwName" maxlength="40">
+      </label>
+      <div class="rw-f"><span>성별 <b>*</b></span>
+        <div id="rwGenderBox" class="rc-checks"></div>
+      </div>
+
+      <div class="rw-f rw-f--full"><span>생년월일 <b>*</b></span>
+        <span class="rw-inline rw-inline--3">
+          <select id="rwBy"></select>
+          <select id="rwBm"></select>
+          <select id="rwBd"></select>
+        </span>
+      </div>
+
+      <label class="rw-f"><span>휴대폰 <b>*</b></span>
+        <input type="tel" id="rwPhone" maxlength="20" placeholder="010-0000-0000">
+      </label>
+      <label class="rw-f"><span>전화번호</span>
+        <span class="rw-inline">
+          <input type="tel" id="rwTel" maxlength="20" placeholder="02-000-0000">
+          <label class="rc-check"><input type="checkbox" id="rwTelSame"><span>휴대폰과 동일</span></label>
+        </span>
+      </label>
+
+      <label class="rw-f rw-f--full"><span>이메일</span>
+        <input type="email" id="rwEmail" maxlength="120" placeholder="name@example.com">
+      </label>
+
+      <label class="rw-f rw-f--full"><span>주소</span>
+        <input type="text" id="rwAddr1" maxlength="160" placeholder="시·군·구까지">
+      </label>
+      <label class="rw-f rw-f--full"><span class="rw-ghost">상세주소</span>
+        <input type="text" id="rwAddr2" maxlength="160" placeholder="나머지 주소">
+      </label>
+    </div>
+
+    <!-- ── 기타정보 ─────────────────────────────────────────── -->
+    <h2 class="rv-group">기타정보</h2>
+
+    <div class="rw-grid">
+      <div class="rw-f"><span>보훈대상</span>
+        <div id="rwVet" class="rc-checks"></div>
+      </div>
+      <div class="rw-f"><span>장애여부</span>
+        <span class="rw-inline">
+          <span id="rwDis" class="rc-checks"></span>
+          <select id="rwDisGrade"></select>
+        </span>
+      </div>
+      <div class="rw-f rw-f--full"><span>병역사항</span>
+        <span class="rw-inline">
+          <span id="rwMil" class="rc-checks"></span>
+          <select id="rwMilFrom"></select>
+          <em>~</em>
+          <select id="rwMilTo"></select>
+        </span>
+      </div>
+    </div>
+
+    <!-- ── 학력사항 / 경력사항 ──────────────────────────────── -->
+    <h2 class="rv-group">학력사항 / 경력사항</h2>
+
+    <!-- 학교는 음악학교DB에서 골라 담습니다.
+         그래야 「인재 → 출신학교 → 그 학교의 입시요강 → 그 학교 출신
+         다른 인물」 로 이어집니다. DB에 없는 해외 학교는 이름만
+         적어도 담깁니다 — 막다른 길을 만들지 않으려고요. -->
+    <p class="rw-hint">학교명을 적고 <b>「음악학교DB에서 찾기」</b>를 누르면 그 학교와 이어집니다.
+      이어지면 파트너님의 인재정보가 그 학교의 출신 인물로도 함께 보입니다.
+      DB에 없는 학교는 이름만 적어도 됩니다.</p>
+
+    <div id="rwSchools" class="rw-schools"></div>
+    <button type="button" class="rw-add" id="rwAddSchool">+ 학교추가</button>
+
+    <label class="rw-f rw-f--full rw-f--area"><span>경력사항</span>
+      <textarea id="rwCareer" rows="8"
+        placeholder="한 줄에 하나씩 적어 주십시오.&#10;예 — 2019 서울시립교향악단 임시단원&#10;    2021 실내악 앙상블 정기연주 참여"></textarea>
+    </label>
+
+    <!-- ── 자기소개서 ───────────────────────────────────────── -->
+    <h2 class="rv-group">자기소개서</h2>
+    <label class="rw-f rw-f--full rw-f--area"><span class="rw-ghost">내용</span>
+      <textarea id="rwBody" rows="14" placeholder="내용을 적어 주십시오. 줄바꿈은 그대로 남습니다."></textarea>
+    </label>
+
+    <!-- ── 공개·동의 ────────────────────────────────────────── -->
+    <div class="rw-agree">
+      <label class="rc-check"><input type="checkbox" id="rwOpen" checked><span>이 인재정보를 목록에 보입니다</span></label>
+      <p>등록하신 내용이 게시판 성격에 맞지 않거나 다른 데 쓰인 것으로 판단되는 경우,
+        미리 알리지 않고 지워질 수 있습니다. 이름과 연락처는 채용하는 단체·학교 회원이
+        열람할 때만 보이며 열람 기록이 남습니다.</p>
+      <label class="rc-check"><input type="checkbox" id="rwAgree"><span><b>위 내용에 동의합니다 *</b></span></label>
+    </div>
+
+    <div class="rv-btns">
+      <button type="button" class="rv-btn rv-btn--go" id="rwSave">작성완료</button>
+      <a class="rv-btn rv-btn--list" href="/recruit/talent.html">취소</a>
+    </div>
+
+  </div>
+ </div>
+</main>
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/recruit.js"></script>
+<script src="/assets/recruit-write.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    OCRecruitWrite.initTalent({
+      listPage: '/recruit/talent.html',
+      viewPage: '/recruit/talent-view.html',
+    });
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

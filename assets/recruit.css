@@ -939,3 +939,193 @@ html[data-theme="dark"] .rv-talent .rv-aside-box { background: #17201a; border-c
   .rv-contact { flex-direction: column; }
   .rv-schools { display: block; overflow-x: auto; white-space: nowrap; }
 }
+
+/* ============================================================
+   리쿠르트 등록 화면 — 인재등록 · (뒤에 채용등록도 함께 씁니다)
+
+   ★ 등록 화면은 <b>한 칸</b>입니다.
+     읽는 화면은 곁에 목록을 두면 쓸모가 있지만, 적는 화면에서
+     곁의 목록은 손을 옮기게 만드는 방해입니다.
+   ============================================================ */
+.rw-layout { margin-top: 44px; max-width: 900px; }
+.rw-doc {
+  background: var(--paper);
+  border: 3px solid #514a6b; border-radius: 12px;
+  padding: 32px 36px 30px;
+  box-shadow: 0 3px 14px -4px rgba(30, 24, 60, .16);
+  /* 단추·강조에 쓰는 짙은 색 — 상세 화면과 같은 값입니다 */
+  --rv-deep: #33305a;
+  --rv-deep-h: #262346;
+}
+html[data-theme="dark"] .rw-doc { border-color: #7a7295; }
+/* 로그인하지 않았거나 권한이 없을 때 — 적어도 담기지 않으므로
+   미리 흐리게 하여 헛수고를 막습니다 */
+.rw-doc.is-locked .rw-grid,
+.rw-doc.is-locked .rw-schools,
+.rw-doc.is-locked .rw-add,
+.rw-doc.is-locked .rw-agree,
+.rw-doc.is-locked .rv-btns { opacity: .4; pointer-events: none; }
+
+.rw-req { font-size: 12px; font-weight: 600; color: #c0392b; font-style: normal; margin-left: 8px; }
+
+/* ── 알림 줄 ──────────────────────────────────────────────*/
+.rw-msg {
+  margin: 0 0 20px; padding: 13px 16px; border-radius: 6px;
+  font-size: 13px; line-height: 1.6;
+  background: #f4f4f7; border: 1px solid var(--line); color: var(--text-2);
+}
+.rw-msg--warn { background: #fdf3f2; border-color: #f0c8c2; color: #a03428; }
+.rw-msg--ok   { background: #f1f8f3; border-color: #c6e0cd; color: #2d6b43; }
+html[data-theme="dark"] .rw-msg { background: #1b1b1b; border-color: #333; }
+.rw-lk { font-weight: 700; text-decoration: underline; }
+
+/* ── 칸 짜임 — 한 줄에 둘 ─────────────────────────────────*/
+.rw-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 18px; margin-bottom: 8px;
+}
+.rw-f {
+  display: flex; flex-direction: column; align-items: stretch; gap: 7px;
+  min-width: 0; padding: 11px 0;
+}
+.rw-f--full { grid-column: 1 / -1; }
+.rw-f > span {
+  flex: 0 0 auto;
+  font-size: 12.5px; font-weight: 700; color: var(--text-2);
+}
+.rw-f > span b { color: #c0392b; margin-left: 2px; }
+/* 자리만 차지하는 이름 — 지역 2차처럼 위 칸에 딸린 것에 씁니다 */
+.rw-ghost { visibility: hidden; }
+
+/* ★ flex: 1 을 쓰지 않습니다 — .rw-f 는 세로로 쌓는 칸이라
+   flex-basis: 0% 가 세로 크기에 작용해 입력칸이 납작해집니다. */
+.rw-f input[type="text"], .rw-f input[type="tel"], .rw-f input[type="email"],
+.rw-f select, .rw-f textarea {
+  flex: none; width: 100%; min-width: 0;
+  padding: 0 11px; height: 40px;
+  border: 1px solid #d4d0dd; border-radius: 4px;
+  background: #fff; color: var(--text);
+  font-family: inherit; font-size: 13.5px;
+  transition: border-color .16s ease;
+}
+.rw-f select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  padding-right: 30px; cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23888' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center;
+}
+.rw-f textarea {
+  height: auto; padding: 11px; line-height: 1.7; resize: vertical;
+}
+.rw-f input:hover, .rw-f select:hover, .rw-f textarea:hover { border-color: #cfc9de; }
+.rw-f input:focus, .rw-f select:focus, .rw-f textarea:focus {
+  outline: none; border-color: var(--rv-deep);
+  box-shadow: 0 0 0 3px rgba(51, 48, 90, .12);
+}
+.rw-f input:disabled, .rw-f select:disabled { background: #f2f2f5; color: var(--text-3); cursor: not-allowed; }
+html[data-theme="dark"] .rw-f input, html[data-theme="dark"] .rw-f select,
+html[data-theme="dark"] .rw-f textarea { background: #141414; border-color: #444; }
+
+/* 한 줄에 여럿 나란히 (금액+당일지급, 생년월일 셋 …) */
+.rw-inline { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rw-inline > * { min-width: 0; }
+.rw-inline--3 > select { flex: 1 1 0; }
+.rw-inline em { font-style: normal; color: var(--text-3); }
+.rw-inline .rc-checks { flex: 0 0 auto; }
+
+/* 내 정보 불러오기 */
+.rw-pull {
+  margin-left: 12px; height: 30px; padding: 0 13px;
+  border: 1px solid var(--rv-deep); border-radius: 999px;
+  background: var(--paper); color: var(--rv-deep);
+  font-family: var(--sans); font-size: 12px; font-weight: 600; cursor: pointer;
+  vertical-align: 3px;
+}
+.rw-pull:hover { background: var(--rv-deep); color: #fff; }
+
+.rw-hint {
+  margin: -6px 0 16px; padding: 12px 14px;
+  background: #f7f7fa; border-radius: 6px;
+  font-size: 12.5px; line-height: 1.7; color: var(--text-3);
+}
+.rw-hint b { color: var(--rv-deep); }
+html[data-theme="dark"] .rw-hint { background: #1a1a1a; }
+
+/* ── 학교 줄 ──────────────────────────────────────────────*/
+.rw-schools { display: flex; flex-direction: column; gap: 12px; }
+.rw-school {
+  position: relative;
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: 14px 92px 14px 16px; background: #fbfbfd;
+}
+html[data-theme="dark"] .rw-school { background: #191919; border-color: #333; }
+.rw-school-grid {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px 14px;
+}
+.rw-school .rw-f { padding: 6px 0; gap: 5px; }
+.rw-school .rw-f > span { font-size: 11.5px; }
+.rw-school .rw-f input, .rw-school .rw-f select { height: 36px; font-size: 13px; }
+.rw-f--name { grid-column: span 2; }
+
+.rw-find {
+  margin-top: 6px; height: 28px; padding: 0 11px;
+  border: 1px solid var(--line-2); border-radius: 4px;
+  background: var(--paper); color: var(--text-2);
+  font-family: var(--sans); font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.rw-find:hover { border-color: var(--rv-deep); color: var(--rv-deep); }
+.sc-linked {
+  display: inline-block; margin-top: 6px; margin-left: 8px;
+  font-size: 11px; font-weight: 700; color: #2d6b43;
+  background: #e8f4ec; border-radius: 3px; padding: 3px 8px;
+}
+.sc-results {
+  margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;
+  padding-top: 10px; border-top: 1px dashed var(--line);
+}
+.sc-pick {
+  height: 30px; padding: 0 12px; cursor: pointer;
+  border: 1px solid var(--rv-deep); border-radius: 999px;
+  background: var(--paper); color: var(--rv-deep);
+  font-family: var(--sans); font-size: 12px; font-weight: 600;
+}
+.sc-pick:hover { background: var(--rv-deep); color: #fff; }
+.sc-hint { margin: 0; font-size: 12px; line-height: 1.6; color: var(--text-3); }
+
+.rw-del {
+  position: absolute; top: 14px; right: 14px;
+  height: 28px; padding: 0 11px; cursor: pointer;
+  border: 1px solid var(--line-2); border-radius: 4px;
+  background: var(--paper); color: var(--text-3);
+  font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+}
+.rw-del:hover { border-color: #c0392b; color: #c0392b; }
+
+.rw-add {
+  margin: 12px 0 26px; height: 38px; padding: 0 18px; cursor: pointer;
+  border: 1px dashed var(--line-2); border-radius: 6px;
+  background: var(--paper); color: var(--text-2);
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+}
+.rw-add:hover { border-color: var(--rv-deep); color: var(--rv-deep); }
+
+/* ── 공개·동의 ────────────────────────────────────────────*/
+.rw-agree {
+  margin-top: 26px; padding: 18px 20px;
+  background: #f7f7fa; border-radius: 8px;
+}
+html[data-theme="dark"] .rw-agree { background: #1a1a1a; }
+.rw-agree p { margin: 12px 0; font-size: 12.5px; line-height: 1.7; color: var(--text-3); }
+.rw-agree .rc-check b { color: var(--rv-deep); }
+
+/* ── 좁은 화면 ────────────────────────────────────────────*/
+@media (max-width: 900px) {
+  .rw-doc { padding: 24px 22px 24px; }
+  .rw-grid { grid-template-columns: minmax(0, 1fr); }
+  .rw-ghost { display: none; }
+  .rw-school-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rw-f--name { grid-column: span 2; }
+  .rw-school { padding: 14px 16px 52px; }
+  .rw-del { top: auto; bottom: 14px; right: 14px; }
+  .rw-inline { flex-wrap: wrap; }
+}
