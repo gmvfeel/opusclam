@@ -251,6 +251,12 @@
     email: ['email', 'mail'],
     addr1: ['addr1', 'address', 'addr', 'address1'],
     addr2: ['addr2', 'address2', 'addr_detail', 'address_detail'],
+    /* 단체 쪽 — 회원 종류마다 담는 칸 이름이 다릅니다.
+       단체·기업은 company, 음악학교는 school_name 을 씁니다. */
+    orgName:  ['company', 'org_name', 'organization', 'school_name', 'name'],
+    orgField: ['field1', 'field', 'category', 'genre', 'type', 'sector', 'kind'],
+    orgHome:  ['link_home', 'homepage', 'website', 'url', 'home', 'site'],
+    orgAddr:  ['address', 'addr', 'addr1', 'location', 'loc_address'],
   };
   function firstOf(obj, keys) {
     for (var i = 0; i < keys.length; i++) {
@@ -506,6 +512,65 @@
         say('사진을 올리지 못했습니다. 사진 없이도 등록하실 수 있습니다.<br>' + esc(m), 'warn');
       }
     }
+  }
+
+  /* ── 단체정보 불러오기 ────────────────────────────────────
+     두 곳에서 가져옵니다.
+
+       ㉮ 내 회원정보 — 회원가입 때 적은 단체명·분야·홈페이지·주소
+       ㉯ DB에서 고른 단체 — 그 단체 화면에 담긴 정보
+
+     ★ 이미 적어 두신 칸은 <b>건드리지 않습니다.</b>
+       불러오기가 손으로 고친 것을 덮어써 버리면, 무엇이 내가 적은
+       것인지 알 수 없게 됩니다.
+
+     ★ 칸 이름을 확실히 알 수 없는 표(members·orgs·venues…)에서는
+       있을 만한 이름을 차례로 살펴 <b>찾은 것만</b> 채웁니다.
+       없으면 그냥 둡니다. */
+  function putIfEmpty(sel, v, label, got) {
+    if (!v || val(sel)) return;
+    setVal(sel, v);
+    got.push(label);
+  }
+
+  async function pullOrg() {
+    if (!me || !me.user) { say('로그인이 필요합니다.', 'warn'); return; }
+    try {
+      var r = await C.from('members').select('*').eq('id', me.user.id).maybeSingle();
+      var m = r.data || {};
+      var got = [];
+      putIfEmpty('#rwOrgName', firstOf(m, PICK.orgName), '단체명', got);
+      putIfEmpty('#rwOrgField', firstOf(m, PICK.orgField), '분야', got);
+      putIfEmpty('#rwOrgHome', firstOf(m, PICK.orgHome), '웹사이트', got);
+      putIfEmpty('#rwOrgAddr1', firstOf(m, PICK.orgAddr), '주소', got);
+      /* 담당자도 함께 — 대개 등록하는 사람이 담당자입니다 */
+      putIfEmpty('#rwCName', firstOf(m, PICK.name), '담당자명', got);
+      putIfEmpty('#rwCEmail', firstOf(m, PICK.email) || (me.user.email || ''), '이메일', got);
+      putIfEmpty('#rwCPhone', firstOf(m, PICK.phone), '전화번호', got);
+
+      drawChecks();
+      if (got.length) say('회원정보에서 ' + got.join(' · ') + ' 을 가져왔습니다. 확인하고 고쳐 주십시오.', 'ok');
+      else say('회원정보에서 새로 가져올 것이 없었습니다. (이미 적으신 칸은 덮어쓰지 않습니다)', 'warn');
+    } catch (e) {
+      say('회원정보를 읽지 못했습니다. 직접 적어 주십시오.', 'warn');
+    }
+  }
+
+  /* DB에서 고른 단체의 정보로 채웁니다 —
+     단체명은 이미 고를 때 들어갔으므로 나머지만 봅니다. */
+  async function pullOrgRow(key, id) {
+    var db = ORG_DBS[key];
+    if (!db || !id) return;
+    try {
+      var r = await C.from(db.table).select('*').eq('id', id).maybeSingle();
+      if (r.error || !r.data) return;
+      var o = r.data, got = [];
+      putIfEmpty('#rwOrgField', firstOf(o, PICK.orgField), '분야', got);
+      putIfEmpty('#rwOrgHome', firstOf(o, PICK.orgHome), '웹사이트', got);
+      putIfEmpty('#rwOrgAddr1', firstOf(o, PICK.orgAddr), '주소', got);
+      drawChecks();
+      if (got.length) say(db.label + ' 에서 ' + got.join(' · ') + ' 을 가져왔습니다.', 'ok');
+    } catch (e) { /* 못 가져와도 등록에는 지장이 없습니다 */ }
   }
 
   /* ── 빠진 것 짚기 ─────────────────────────────────────────*/
@@ -1238,6 +1303,10 @@
       x.addEventListener('change', function () { toggleJob(); drawChecks(); });
     });
 
+    /* 내 단체정보 불러오기 */
+    var opull = el('#rwOrgPull');
+    if (opull) opull.addEventListener('click', pullOrg);
+
     /* 오디션 곡 늘리고 줄이기 */
     var audAdd = el('#rwAudAdd');
     if (audAdd) audAdd.addEventListener('click', function () { addAud(''); drawChecks(); });
@@ -1259,11 +1328,16 @@
     if (res) res.addEventListener('click', function (e) {
       var pick = e.target.closest('.sc-pick');
       if (!pick) return;
+      var pid = pick.getAttribute('data-id') || '';
       setVal('#rwOrgName', pick.getAttribute('data-name') || '');
-      setVal('#rwOrgId', pick.getAttribute('data-id') || '');
+      /* ★ 순서가 중요합니다 — 이름을 넣으면 「손으로 고쳤다」 로 보아
+         연결이 풀리므로, 번호는 <b>그 뒤에</b> 넣습니다. */
+      setVal('#rwOrgId', pid);
       markOrgLinked(true);
       res.hidden = true; res.innerHTML = '';
       drawChecks();
+      /* 고른 단체의 분야·웹사이트·주소를 이어서 채웁니다 */
+      pullOrgRow(val('#rwOrgDb') || 'org', pid);
     });
     var onm = el('#rwOrgName');
     if (onm) onm.addEventListener('input', function () {
