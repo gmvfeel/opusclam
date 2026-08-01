@@ -19,16 +19,75 @@
     }
   }
 
+  /* ── 주소에서 이름 뽑기 (GNB·하위 메뉴가 함께 씁니다) ────────
+     한 곳에 두어야 두 메뉴가 같은 규칙으로 켜집니다. */
+
+  /* 파일 이름 그대로 — job-write.html → job-write */
+  function fileOf(path) {
+    var f = String(path || '').split('#')[0].split('?')[0].split('/').pop() || 'index.html';
+    return f.replace(/\.html$/, '') || 'index';
+  }
+
+  /* 줄인 이름 — 상세·글쓰기를 그 짝의 목록으로 봅니다 */
+  function baseOf(path) {
+    var raw = fileOf(path);
+    /* 정보SPOT 상세·글쓰기는 「전체」로 둡니다.
+       ★ 줄이기 전에 봐야 합니다 — 줄인 뒤에는 spot 이 되어
+         이 조건이 영영 걸리지 않습니다(예전엔 죽은 줄이었습니다). */
+    if (raw === 'spot-view' || raw === 'spot-write') return 'index';
+    var f = raw.replace(/-view$|-write$/, '') || 'index';
+    /* 입시요강과 입시커뮤니티는 「입시」 하나로 묶습니다 */
+    if (f === 'admission-community') f = 'admission';
+    return f;
+  }
+
+  /* 폴더 — /recruit/job.html → /recruit/ */
+  function dirOf(path) {
+    var q = String(path || '').split('#')[0].split('?')[0];
+    var i = q.lastIndexOf('/');
+    return i >= 0 ? q.slice(0, i + 1) : '/';
+  }
+
+  /* ── 위쪽 큰 메뉴와 드롭다운·전체메뉴 표시 ────────────────
+     ★ 예전에는 「주소에 링크가 들어 있으면」 켰습니다(indexOf).
+       그러면 상세·글쓰기 화면(job-view·org-view)에서 위쪽 큰 메뉴에
+       표시가 붙지 않았습니다. 링크 글자가 주소에 없기 때문입니다.
+
+     그래서 둘로 나누어 봅니다.
+       · 위쪽 큰 메뉴 → <b>폴더</b>가 같으면 켠다
+         (/recruit/ 밑이면 어느 화면이든 「리쿠르트」 가 켜집니다)
+       · 드롭다운·전체메뉴 → <b>파일 이름</b>이 같으면 켠다
+         (없으면 줄인 이름으로 한 번 더 — org-view 는 음악단체DB)
+
+     ★ 폴더 규칙을 드롭다운에 쓰면 안 됩니다 —
+       DATABASE 는 일곱 개가 모두 /db/ 밑이라 일곱 개가 다 켜집니다. */
   function markActiveMenu() {
     try {
       var p = location.pathname;
-      var links = document.querySelectorAll('.site-header a[href], .fullmenu a[href]');
-      links.forEach(function (a) {
-        var h = a.getAttribute('href');
-        if (h && h.length > 1 && h.charAt(0) === '/' && p.indexOf(h) > -1) {
-          a.classList.add('active');
-        }
+      var raw = fileOf(p), base = baseOf(p), dir = dirOf(p);
+
+      /* ① 위쪽 큰 메뉴 — 폴더로 */
+      var tops = document.querySelectorAll('.site-header nav.main > .nav-item > a[href]');
+      [].forEach.call(tops, function (a) {
+        var h = a.getAttribute('href') || '';
+        if (h.charAt(0) !== '/') return;              /* '#' 이나 외부 주소는 건너뜁니다 */
+        if (dir !== '/' && dirOf(h) === dir) a.classList.add('active');
       });
+
+      /* ② 드롭다운·전체메뉴 — 파일 이름으로 */
+      var links = [].slice.call(document.querySelectorAll(
+        '.site-header .dropdown a[href], .fullmenu a[href]'));
+      var hit = links.filter(function (a) {
+        var h = a.getAttribute('href') || '';
+        return h.charAt(0) === '/' && fileOf(h) === raw;
+      });
+      if (!hit.length) {
+        hit = links.filter(function (a) {
+          var h = a.getAttribute('href') || '';
+          return h.charAt(0) === '/' && fileOf(h) === base;
+        });
+      }
+      hit.forEach(function (a) { a.classList.add('active'); });
     } catch (e) {}
   }
 
@@ -46,25 +105,9 @@
     var nav = document.querySelector('.pdb-subnav');
     if (!nav) return;
 
-    /* 주소에서 화면 이름만 뽑는다 (줄이지 않은 그대로) */
-    function rawOf(path) {
-      var f = String(path || '').split('#')[0].split('?')[0].split('/').pop() || 'index.html';
-      return f.replace(/\.html$/, '') || 'index';
-    }
-
-    /* 줄인 이름 — 상세·글쓰기를 그 짝의 목록으로 본다 */
-    function baseOf(path) {
-      var raw = rawOf(path);
-      /* 정보SPOT — 상세·글쓰기 화면은 「전체」로 둔다
-         ★ 줄이기 전에 봐야 한다. 줄인 뒤에는 이미 spot 이 되어
-           이 조건이 영영 걸리지 않는다(예전에는 그래서 죽은 줄이었다). */
-      if (raw === 'spot-view' || raw === 'spot-write') return 'index';
-      var f = raw.replace(/-view$|-write$/, '') || 'index';
-      /* 입시요강과 입시커뮤니티는 「입시」 하나로 묶는다 */
-      if (f === 'admission-community') f = 'admission';
-      /* 음원·동영상은 시대별 화면이 따로 있으므로 각자 자기 메뉴가 켜진다. */
-      return f;
-    }
+    /* 이름 뽑는 일은 위쪽 도우미(fileOf·baseOf)와 함께 씁니다 —
+       같은 규칙을 두 곳에 적으면 한쪽만 고쳐집니다. */
+    var rawOf = fileOf;
 
     /* ★ 두 번에 걸쳐 찾는다.
          ① 주소가 <b>똑같은</b> 메뉴 — 있으면 그것만 켠다
