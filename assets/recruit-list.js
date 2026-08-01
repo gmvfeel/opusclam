@@ -38,6 +38,9 @@
     r1: '', r2: '',
     /* 고른 근무형태들 — 여러 개를 함께 고를 수 있습니다 */
     emps: [], days: '', pay: '',
+    /* 성별 — 인재정보 화면에만 있습니다. 빈 값이 「전체」 입니다.
+       화면에 성별 칸이 없으면 이 값은 끝까지 빈 채로 남습니다. */
+    gender: '',
     kw: '', tab: '', sort: 'created_at.desc',
   };
 
@@ -79,6 +82,9 @@
     }
 
     if (q.days) p.push('work_days=eq.' + encodeURIComponent(q.days));
+
+    /* 성별 — 인재정보에만 있는 칸입니다 */
+    if (q.gender) p.push('gender=eq.' + encodeURIComponent(q.gender));
 
     if (q.kw) {
       var k = encodeURIComponent('%' + q.kw + '%');
@@ -188,17 +194,27 @@
       q.days = (el('#rcDays') || {}).value || '';
       q.pay = (el('#rcPay') || {}).value || '';
       q.emps = R.checked('#rcEmp', 'rc-emp');
+      q.gender = readGender();
       go(1);
     });
     if (reset) reset.addEventListener('click', function () {
       q = { jobs: [], r1: '', r2: '', emps: [], days: '',
-            pay: '', kw: q.kw, tab: q.tab, sort: q.sort };
+            pay: '', gender: '', kw: q.kw, tab: q.tab, sort: q.sort };
       ['#rcR1', '#rcR2', '#rcDays', '#rcPay']
         .forEach(function (sel) { var x = el(sel); if (x) x.value = ''; });
       [].forEach.call(document.querySelectorAll('input[name="rc-emp"]'),
         function (x) { x.checked = false; });
+      /* 성별은 「전체」(빈 값)로 되돌립니다 */
+      var g0 = document.querySelector('input[name="rc-gender"][value=""]');
+      if (g0) g0.checked = true;
       drawJobTable(); go(1);
     });
+  }
+
+  /* 성별 — 화면에 그 칸이 없으면(채용정보) 언제나 빈 값입니다 */
+  function readGender() {
+    var g = document.querySelector('input[name="rc-gender"]:checked');
+    return g ? (g.value || '') : '';
   }
 
   /* ── 도구줄 — 검색창 · 구분 · 정렬 · 글자크기 ────────────
@@ -207,7 +223,15 @@
     /* 정렬 */
     var sort = el('#rcSort');
     if (sort) {
-      R.fill(sort, R.SORTS, null);
+      /* 「마감순」 은 접수마감일(apply_to)로 줄을 세웁니다.
+         그 칸은 채용정보에만 있으므로, 인재정보에서는 뺍니다 —
+         두면 고르는 순간 서버가 「없는 칸」 이라며 400 을 돌려줍니다. */
+      var sorts = R.SORTS.filter(function (s) {
+        if (cfg.kind === 'job') return true;
+        var v = String((s && s.value != null) ? s.value : s);
+        return v.indexOf('apply_') < 0;
+      });
+      R.fill(sort, sorts, null);
       sort.value = q.sort;
       sort.addEventListener('change', function () { q.sort = sort.value; go(1); });
     }

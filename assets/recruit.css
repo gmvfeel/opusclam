@@ -194,7 +194,10 @@ html[data-theme="dark"] .rc-jobrow + .rc-jobrow { border-top-color: #2c2c2c; }
    지금 짜임은 「지역 1차 · 지역 2차」 가 첫 줄이므로 둘 다 뺍니다.
    하나만 빼면 같은 줄인데 한쪽에만 선이 그려져 어긋나 보입니다. */
 .rc-fld { border-top: 1px solid #f0ebe0; }
-.rc-fld:nth-child(1), .rc-fld:nth-child(2) { border-top: 0; }
+/* 첫 칸은 한 줄을 다 쓰는 근무형태이고, 그 다음 두 칸이 「지역 1차·2차」로
+   한 줄에 놓입니다. 그래서 앞의 <b>세 칸</b>에서 선을 뺍니다.
+   (예전에는 두 칸만 뺐는데, 지역 2차 쪽에만 선이 그려져 어긋나 보였습니다) */
+.rc-fld:nth-child(-n+3) { border-top: 0; }
 html[data-theme="dark"] .rc-fld { border-top-color: #2c2c2c; }
 
 /* 자리만 차지하고 보이지 않는 라벨 — 지역 2차 위에 씁니다.

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인재정보 · 리쿠르트 · OPUSCLAM.COM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<link rel="stylesheet" href="/assets/recruit.css">
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave"></div>
+    <div class="scene scene-hire on">
+      <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+        <g fill="url(#dg)"></g>
+      </svg>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/recruit/job.html">리쿠르트</a><span>/</span><span class="on">인재정보</span>
+    </nav>
+
+    <!-- 리쿠르트 하위 메뉴 — partials/subnav-recruit.html 한 곳에서 관리합니다 -->
+    <div id="oc-subnav" data-src="/partials/subnav-recruit.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM RECRUIT SERVICE</div>
+          <h1 class="pdb-title">인재정보</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">연주자·행정직·강사를 구하고 계신 단체와 학교를 위한 인재 정보입니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="board rc-wrap">
+ <div class="rc-layout">
+
+  <!-- ── 왼쪽 · 찾는 칸 ──────────────────────────────────── -->
+  <aside class="rc-side">
+  <div class="rc-finder">
+
+  <!-- ── 직종구분 ────────────────────────────────────────── -->
+  <section class="rc-panel">
+    <h2 class="rc-panel-h">직종구분</h2>
+    <div id="rcJobs" class="rc-jobs"></div>
+  </section>
+
+  <!-- ── 상세검색 ────────────────────────────────────────── -->
+  <section class="rc-panel" id="rcSearch">
+    <h2 class="rc-panel-h">상세검색</h2>
+    <div class="rc-form">
+      <!-- 희망 근무형태 — 여러 개를 함께 고를 수 있습니다.
+           「정규직이든 계약직이든 상관없다」 는 경우가 많아 체크 상자로 둡니다. -->
+      <div class="rc-fld rc-fld--wide">
+        <label>희망 근무형태</label>
+        <div id="rcEmp" class="rc-checks"></div>
+      </div>
+      <!-- 지역 — 1차·2차를 <b>폼과 똑같은 칸</b>에 하나씩 놓습니다.
+           따로 감싸서 나누면 여백 셈이 달라져 풀다운 폭이 어긋납니다.
+           2차 쪽 라벨은 자리만 차지하게 두어 위아래가 가지런합니다. -->
+      <div class="rc-fld">
+        <label for="rcR1">희망지역</label>
+        <select id="rcR1" aria-label="1차지역"></select>
+      </div>
+      <div class="rc-fld">
+        <label class="rc-lbl-ghost" aria-hidden="true">희망지역</label>
+        <select id="rcR2" aria-label="2차지역"></select>
+      </div>
+      <!-- 기간·급여는 고르는 글자가 짧아 한 줄에 둘씩 놓습니다.
+           키워드는 오른쪽 도구줄로 옮겼습니다 (중복을 없애려고) -->
+      <div class="rc-fld">
+        <label for="rcDays">기간</label>
+        <select id="rcDays" aria-label="근무요일"></select>
+      </div>
+      <div class="rc-fld">
+        <label for="rcPay">희망급여</label>
+        <select id="rcPay" aria-label="희망급여"></select>
+      </div>
+      <!-- 성별 — 인재정보에만 있는 칸입니다.
+           고르는 값이 셋뿐이라 풀다운보다 라디오가 빠릅니다.
+           한 줄을 다 쓰게 두어 마지막 줄이 반쪽만 차는 것을 막습니다.
+           엔진(assets/recruit-list.js)이 name="rc-gender" 로 읽습니다. -->
+      <div class="rc-fld rc-fld--wide">
+        <label>성별</label>
+        <div class="rc-checks">
+          <label class="rc-check"><input type="radio" name="rc-gender" value="" checked><span>전체</span></label>
+          <label class="rc-check"><input type="radio" name="rc-gender" value="남"><span>남</span></label>
+          <label class="rc-check"><input type="radio" name="rc-gender" value="여"><span>여</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="rc-actions">
+      <button type="button" id="rcGo" class="rc-btn rc-btn--go">
+        선택조건으로 검색
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+      <button type="button" id="rcReset" class="rc-btn">초기화</button>
+    </div>
+  </section>
+
+  </div><!-- /rc-finder -->
+  </aside>
+
+  <!-- ── 오른쪽 · 목록 ───────────────────────────────────── -->
+  <div class="rc-main-col">
+
+  <!-- ── 붙어 따라오는 덩어리 — 도구줄과 건수줄 ──────────
+       목록을 내려도 검색·정렬·등록과 표 머리가 화면에 남습니다.
+       높이는 assets/recruit-list.js 가 재어 표 머리의 top 에 넣습니다. -->
+  <div class="rc-sticky">
+
+  <!-- ── 도구줄 — 채용정보 화면과 같은 짜임 ─────────────── -->
+  <div class="pdb-toolbar rc-toolbar">
+    <div class="pdb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="rcKw" placeholder="자기소개 · 전공 · 경력으로 검색">
+      <button class="pdb-searchbtn" type="button" id="rcSearchBtn">검색</button>
+    </div>
+    <div class="pdb-selects">
+      <select id="rcSort" aria-label="정렬"></select>
+    </div>
+    <!-- 등록 단추 — 전공자·일반 회원이 자기 정보를 올립니다.
+         단체·기업·학교 회원은 채용정보를 올리는 쪽이므로 보이지 않습니다.
+         평소에는 감춰 두고 스크립트가 회원 종류를 보고 켭니다. -->
+    <a class="pdb-reg" id="rcWrite" href="/recruit/talent-write.html" hidden>
+      <span class="plus">+</span> 인재정보등록
+    </a>
+  </div>
+
+  <!-- ── 건수·글자크기 ───────────────────────────────────── -->
+  <div class="pdb-meta">
+    <div class="pdb-count" id="rcCount">불러오는 중…</div>
+    <div class="pdb-meta-right">
+      <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+        <span class="fs-label">글자크기</span>
+        <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+        <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+        <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /rc-sticky -->
+
+  <!-- ── 표 ──────────────────────────────────────────────────
+       칸은 채용정보와 <b>같은 클래스</b>를 씁니다(c-no·c-org·c-title·c-when·c-hit).
+       엔진의 talentRow() 가 같은 자리에 이름·자기소개·등록일·조회수를 넣으므로
+       칸 폭을 정하는 CSS 를 두 번 쓰지 않아도 됩니다. -->
+  <div class="pdb-tablewrap">
+    <table class="pdb-table rc-table">
+      <thead>
+        <tr>
+          <th class="c-no">No</th>
+          <th class="c-org">이름</th>
+          <th class="c-title">자기소개</th>
+          <th class="c-when">등록일</th>
+          <th class="c-hit">조회수</th>
+        </tr>
+      </thead>
+      <tbody id="rcList"></tbody>
+    </table>
+  </div>
+
+  <!-- ── 페이지 넘김 ─────────────────────────────────────── -->
+  <div class="rc-foot">
+    <div id="rcPager" class="rc-pager"></div>
+  </div>
+
+  </div><!-- /rc-main-col -->
+ </div><!-- /rc-layout -->
+</main>
+
+<!-- 광고 배너와 푸터는 assets/app.js 가 여기에 넣습니다 -->
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+
+<script src="/assets/recruit.js"></script>
+<script src="/assets/recruit-list.js"></script>
+<script>
+  /* 인재정보 목록 — 엔진은 채용정보와 함께 씁니다(assets/recruit-list.js)
+
+     ★ 표가 아니라 <b>뷰</b>(recruit_talents_public)를 읽습니다.
+       그 뷰에는 연락처와 실명이 아예 담기지 않습니다. 목록에서 실수로
+       흘러나갈 길을 만들지 않으려고 표를 직접 읽지 않습니다. */
+  document.addEventListener('DOMContentLoaded', function () {
+    OCRecruitList.init({
+      kind: 'talent',
+      table: 'recruit_talents_public',
+      viewPage: '/recruit/talent-view.html',
+      writePage: '/recruit/talent-write.html',
+      pageSize: 15,
+    });
+
+    /* 「인재정보등록」 단추는 전공자·일반 회원에게만 보입니다.
+       서버에서도 막고 있지만(권한 규칙), 할 수 없는 단추를 보여 주는 것은
+       누른 뒤에 거절당하는 것보다 불친절합니다. */
+    (function () {
+      var btn = document.getElementById('rcWrite');
+      if (!btn) return;
+      if (!window.supabase) return;
+      var c = window.supabase.createClient(
+        'https://ptdxzxkgddvkusamkiol.supabase.co',
+        'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu');
+      c.auth.getSession().then(function (r) {
+        var u = r.data && r.data.session && r.data.session.user;
+        if (!u) return;
+        c.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle()
+         .then(function (mr) {
+           var m = mr.data || {};
+           if (m.member_type === 'major' || m.member_type === 'general' || m.is_admin) {
+             btn.removeAttribute('hidden');
+           }
+         });
+      });
+    })();
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
