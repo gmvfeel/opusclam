@@ -1775,3 +1775,107 @@ html[data-theme="dark"] .rg-contact { background: #1a1a1a; }
   .rg-privacy { padding: 22px 20px; }
   .rg-contact { padding: 20px 20px; }
 }
+
+/* ── 등록 현황 (서비스안내) ───────────────────────────────
+   막대는 높이를 백분율로 준 <span> 입니다.
+   그림 라이브러리를 받아 오지 않으므로 값이 0 이고,
+   어두운 모드로 바뀌어도 색이 저절로 따라옵니다. */
+.rs-nums {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
+  margin-bottom: 22px;
+}
+.rs-num {
+  padding: 22px 24px 18px; border-radius: 12px;
+  border: 1px solid var(--line-2); background: var(--paper);
+}
+.rs-num--job    { border-color: var(--rv-deep); background: #f8f7fc; }
+.rs-num--talent { border-color: #4a6152;        background: #f2f9f3; }
+html[data-theme="dark"] .rs-num--job    { background: #1c1a26; border-color: #6a6494; }
+html[data-theme="dark"] .rs-num--talent { background: #17201a; border-color: #5e7c68; }
+
+.rs-num-t {
+  display: block; font-size: 12.5px; font-weight: 700; color: var(--text-3);
+  margin-bottom: 4px;
+}
+.rs-num b {
+  font-family: var(--display);
+  font-size: 38px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1;
+  color: var(--ink);
+}
+.rs-num-u { font-size: 14px; font-weight: 600; color: var(--text-3); margin-left: 3px; }
+.rs-num-sub {
+  margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line);
+  font-size: 12.5px; color: var(--text-3);
+}
+.rs-num-sub em { font-style: normal; font-weight: 700; color: var(--text-2); }
+
+/* ── 이름표와 일별·월별 고르기 ────────────────────────────*/
+.rs-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.rs-legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-2); }
+.rs-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.rs-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.rs-dot--job    { background: var(--rv-deep); }
+.rs-dot--talent { background: #4a8060; }
+
+.rs-tabs { display: flex; gap: 6px; }
+.rs-tabs button {
+  height: 30px; padding: 0 14px; cursor: pointer;
+  border: 1px solid var(--line-2); border-radius: 999px;
+  background: var(--paper); color: var(--text-2);
+  font-family: inherit; font-size: 12.5px; font-weight: 600;
+}
+.rs-tabs button:hover { border-color: var(--rv-deep); color: var(--rv-deep); }
+.rs-tabs button.on {
+  background: var(--rv-deep); border-color: var(--rv-deep); color: #fff;
+}
+
+/* ── 막대 ─────────────────────────────────────────────────*/
+.rs-chart {
+  display: flex; align-items: flex-end; gap: 6px;
+  height: 190px; padding: 14px 14px 0;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--paper);
+  /* 좁은 화면에서는 옆으로 밀어 봅니다 — 막대를 찌그러뜨리는 것보다 낫습니다 */
+  overflow-x: auto;
+}
+.rs-col {
+  flex: 1 1 0; min-width: 34px;
+  display: flex; flex-direction: column; align-items: center;
+  height: 100%;
+}
+.rs-bars {
+  flex: 1 1 auto; width: 100%;
+  display: flex; align-items: flex-end; justify-content: center; gap: 3px;
+}
+.rs-bar {
+  width: 11px; min-height: 2px; border-radius: 3px 3px 0 0;
+  display: block; position: relative;
+  transition: opacity .16s ease;
+}
+.rs-bar--job    { background: var(--rv-deep); }
+.rs-bar--talent { background: #4a8060; }
+.rs-col:hover .rs-bar { opacity: .78; }
+/* 값을 막대 위에 작게 — 0 인 막대에는 붙이지 않습니다(data-v 가 있을 때만) */
+.rs-bar[data-v]::after {
+  content: attr(data-v);
+  position: absolute; left: 50%; top: -15px; transform: translateX(-50%);
+  font-size: 10px; font-weight: 700; color: var(--text-3); white-space: nowrap;
+}
+.rs-col > em {
+  flex: 0 0 auto; padding: 7px 0 9px;
+  font-style: normal; font-size: 10.5px; color: var(--text-3); white-space: nowrap;
+}
+.rs-empty {
+  margin: 0; padding: 56px 20px; text-align: center;
+  border: 1px solid var(--line); border-radius: 10px;
+  font-size: 13.5px; color: var(--text-3);
+}
+
+@media (max-width: 900px) {
+  .rs-nums { grid-template-columns: minmax(0, 1fr); }
+  .rs-num b { font-size: 32px; }
+  .rs-chart { height: 170px; }
+}

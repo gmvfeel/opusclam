@@ -115,6 +115,49 @@
 
   </div>
 
+  <!-- ── 등록 현황 ──────────────────────────────────────────────
+       숫자와 막대는 assets/recruit-stats.js 가 서버 함수(recruit_stats)를
+       한 번 불러 채웁니다. 못 불러오면 이 묶음만 조용히 감춰지고
+       나머지 안내는 그대로 보입니다. -->
+  <h2 class="rg-h" id="rsHead">등록 현황</h2>
+  <div id="rsBox" hidden>
+
+    <div class="rs-nums">
+      <div class="rs-num rs-num--job">
+        <span class="rs-num-t">채용정보</span>
+        <b id="rsJobTotal">0</b>
+        <span class="rs-num-u">건</span>
+        <div class="rs-num-sub">
+          오늘 <em id="rsJobToday">0</em> · 이달 <em id="rsJobMonth">0</em>
+        </div>
+      </div>
+      <div class="rs-num rs-num--talent">
+        <span class="rs-num-t">인재정보</span>
+        <b id="rsTalentTotal">0</b>
+        <span class="rs-num-u">건</span>
+        <div class="rs-num-sub">
+          오늘 <em id="rsTalentToday">0</em> · 이달 <em id="rsTalentMonth">0</em>
+        </div>
+      </div>
+    </div>
+
+    <div class="rs-head">
+      <div class="rs-legend">
+        <span><i class="rs-dot rs-dot--job"></i>채용정보</span>
+        <span><i class="rs-dot rs-dot--talent"></i>인재정보</span>
+      </div>
+      <div class="rs-tabs" id="rsTabs" role="tablist">
+        <button type="button" data-mode="daily" class="on">일별</button>
+        <button type="button" data-mode="monthly">월별</button>
+      </div>
+    </div>
+
+    <div id="rsChart"></div>
+    <p class="rg-note-s">일별은 최근 2주, 월별은 최근 1년입니다.
+      막대에 손을 올리시면 그날의 건수가 보입니다.</p>
+
+  </div>
+
   <!-- ── 회원 종류별로 할 수 있는 일 ────────────────────────── -->
   <h2 class="rg-h">회원 종류별로 할 수 있는 일</h2>
   <p class="rg-sub">회원 종류는 가입할 때 고르신 것입니다.
@@ -159,8 +202,8 @@
   <p class="rg-note-s">공고와 이력을 <b>보는 것</b>은 로그인하지 않아도 됩니다.
     올리거나 연락처를 여는 것은 로그인이 필요합니다.</p>
 
-  <!-- ── 이렇게 쓰십니다 ────────────────────────────────────── -->
-  <h2 class="rg-h">이렇게 쓰십니다</h2>
+  <!-- ── 이렇게 이용하세요 ──────────────────────────────────── -->
+  <h2 class="rg-h">이렇게 이용하세요</h2>
 
   <div class="rg-flows">
 
@@ -306,6 +349,7 @@
 </main>
 
 <div id="oc-footer"></div>
+<script src="/assets/recruit-stats.js" defer></script>
 <script src="/assets/app.js" defer></script>
 </body>
 </html>
