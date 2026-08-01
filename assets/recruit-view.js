@@ -45,7 +45,48 @@
   /* 어느 DB인지 담겨 있지 않을 때 기댈 곳 — 채용은 음악단체가 가장 많습니다 */
   var ORG_DB_FALLBACK = 'org';
 
+  /* 로그인 화면 경로 —
+     ★ 확인이 필요합니다. 실제 경로가 다르면 이 한 줄만 고치십시오. */
+  var LOGIN_PAGE = '/account/login.html';
+
   var R, cfg = null, cur = null;
+  var viewerCache = null;      /* 보고 있는 회원 — 한 번만 물어봅니다 */
+
+  /* ── 로그인한 회원 확인 ────────────────────────────────────
+     ★ 연락처를 여는 함수(recruit_talent_contact)는 <b>서버가</b>
+       권한을 판단합니다. 그러려면 익명 열쇠가 아니라 그 회원의
+       세션 토큰으로 불러야 하므로 supabase-js 를 씁니다. */
+  function sb() {
+    if (!window.__ocSb && window.supabase) {
+      window.__ocSb = window.supabase.createClient(SB, KEY);
+    }
+    return window.__ocSb || null;
+  }
+
+  async function viewer() {
+    if (viewerCache !== null) return viewerCache;
+    var c = sb();
+    if (!c) { viewerCache = { user: null }; return viewerCache; }
+    try {
+      var r = await c.auth.getSession();
+      var u = r.data && r.data.session && r.data.session.user;
+      if (!u) { viewerCache = { user: null }; return viewerCache; }
+      var mr = await c.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle();
+      var m = mr.data || {};
+      viewerCache = {
+        user: u,
+        type: m.member_type || '',
+        admin: !!m.is_admin,
+        /* 연락처를 볼 수 있는 회원 — 채용하는 쪽입니다.
+           서버에서도 같은 규칙으로 막고 있으므로, 여기서는
+           「눌러 보고 거절당하는」 일을 줄이려고 미리 봅니다. */
+        canSee: (m.member_type === 'industry' || m.member_type === 'school' || !!m.is_admin),
+      };
+    } catch (e) {
+      viewerCache = { user: null };
+    }
+    return viewerCache;
+  }
 
   function esc(v) {
     return String(v == null ? '' : v)
@@ -143,9 +184,16 @@
       + esc(u) + '</a>';
   }
 
-  /* ── 상세 그리기 ──────────────────────────────────────────*/
+  /* ── 상세 그리기 ──────────────────────────────────────────
+     채용과 인재는 담은 것이 아주 달라 그리는 함수를 나눕니다.
+     칸·제목·단추·붙어 따라오기는 CSS 로 함께 씁니다. */
   function draw(o) {
     cur = o;
+    if (cfg.kind === 'talent') return drawTalent(o);
+    return drawJob(o);
+  }
+
+  function drawJob(o) {
     var box = el('#rvDoc');
     if (!box) return;
 
@@ -275,6 +323,221 @@
 
     markCurrent(o.id);
     document.title = (o.title || '채용정보') + ' · 리쿠르트 · OPUSCLAM.COM';
+  }
+
+  /* ============================================================
+     인재 상세
+     ============================================================ */
+
+  /* 음악학교DB 경로 — 출신학교를 눌러 그 학교로 건너갑니다.
+     인재 → 출신학교 → 그 학교의 입시요강 → 그 학교 출신 다른 인물
+     로 이어지는 고리의 첫 칸입니다. */
+  var SCHOOL_VIEW = '/db/school-view.html';
+  var SCHOOL_LIST = '/db/school.html';
+
+  /* ── 구직사항 ─────────────────────────────────────────────*/
+  function wishBlock(o) {
+    return '<section class="rv-sec"><h2>구직사항</h2>'
+      + '<table class="rv-tbl"><tbody>'
+      +   row('희망분야', jobCell(o))
+      +   row('희망급여', payCell(o))
+      +   row('근무지역', regionCell(o))
+      +   row('근무형태', arrCell(o.emp_types))
+      +   row('현재상태', esc(o.now_status || ''))
+      + '</tbody></table></section>';
+  }
+
+  /* ── 학력사항 / 경력사항 ──────────────────────────────────
+     schools 는 학교 하나를 한 덩이로 담은 목록입니다.
+       { country, name, school_id, degree, major, from, to }
+     school_id 가 있으면 음악학교DB의 그 학교로 이어집니다.
+     없으면 이름으로 음악학교DB를 찾아 갑니다 — 막다른 길은 없습니다. */
+  function schoolsBlock(o) {
+    var list = o.schools;
+    if (typeof list === 'string') { try { list = JSON.parse(list); } catch (e) { list = null; } }
+    if (!Array.isArray(list)) list = [];
+
+    var rows = list.map(function (s) {
+      s = s || {};
+      var nameHtml = esc(s.name || '');
+      if (has(s.name)) {
+        var href = has(s.school_id)
+          ? (SCHOOL_VIEW + '?id=' + encodeURIComponent(s.school_id))
+          : (SCHOOL_LIST + '?kw=' + encodeURIComponent(s.name));
+        nameHtml = '<a class="rv-lk" href="' + href + '">' + esc(s.name) + '</a>';
+      }
+      var span = (has(s.from) || has(s.to))
+        ? (esc(s.from || '') + ' - ' + esc(s.to || '')) : '';
+      return '<tr>'
+        + '<td>' + (has(s.country) ? esc(s.country) : '-') + '</td>'
+        + '<td class="sc-name">' + (nameHtml || '-') + '</td>'
+        + '<td>' + (has(s.degree) ? esc(s.degree) : '-') + '</td>'
+        + '<td>' + (has(s.major) ? esc(s.major) : '-') + '</td>'
+        + '<td class="sc-when">' + (span || '-') + '</td>'
+        + '</tr>';
+    }).join('');
+
+    var schoolTbl = rows
+      ? '<table class="rv-tbl rv-schools"><thead><tr>'
+        + '<th>국가</th><th>학교명</th><th>학위</th><th>학과</th><th>재학기간</th>'
+        + '</tr></thead><tbody>' + rows + '</tbody></table>'
+      : '<p class="rv-none">등록된 학력이 없습니다.</p>';
+
+    return '<section class="rv-sec"><h2>학력사항 / 경력사항</h2>'
+      + schoolTbl
+      + (has(o.career)
+        ? '<div class="rv-body rv-career">' + nl(o.career) + '</div>'
+        : '')
+      + '</section>';
+  }
+
+  /* ── 기타정보 ─────────────────────────────────────────────*/
+  function etcBlock(o) {
+    var dis = o.disability;
+    if (has(dis) && has(o.disability_grade)) dis = dis + ' (' + o.disability_grade + ')';
+    var mil = o.military;
+    if (has(mil) && (has(o.military_from) || has(o.military_to))) {
+      mil = mil + ' (' + (o.military_from || '') + ' - ' + (o.military_to || '') + ')';
+    }
+    var body = row('보훈대상여부', esc(o.veteran || ''))
+             + row('장애여부', esc(dis || ''))
+             + row('병역사항', esc(mil || ''));
+    if (!body) return '';
+    return '<section class="rv-sec"><h2>기타정보</h2>'
+      + '<table class="rv-tbl"><tbody>' + body + '</tbody></table></section>';
+  }
+
+  /* ── 연락처 가림막 ────────────────────────────────────────
+     ★ 이 화면은 표가 아니라 <b>뷰</b>(recruit_talents_public)를 읽습니다.
+       그 뷰에는 실명·연락처가 아예 담기지 않습니다. 그래서 화면에서
+       가리는 것이 아니라 <b>처음부터 오지 않습니다.</b>
+       가림막을 벗기는 것은 서버 함수(recruit_talent_contact)뿐이고,
+       그 함수가 회원 종류를 보고 판단합니다.
+
+     그러므로 이 가림막은 「잠금장치」 가 아니라 「안내판」 입니다.
+     장치는 서버에 있습니다. */
+  function maskBlock(v) {
+    var msg, btn;
+    if (!v.user) {
+      msg = '이 인재의 연락처와 이름은 회원만 확인할 수 있습니다.';
+      btn = '<a class="rv-btn rv-btn--go rv-btn--sm" href="' + LOGIN_PAGE + '?next='
+          + encodeURIComponent(location.pathname + location.search) + '">로그인하고 열람하기</a>';
+    } else if (!v.canSee) {
+      /* 단추를 두지 않습니다 — 이 회원이 지금 할 수 있는 일이 없습니다.
+         눌러도 아무 일이 없는 단추는 없는 것보다 못합니다. */
+      msg = '연락처 열람은 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원에게 열려 있습니다.';
+      btn = '';
+    } else {
+      msg = '채용을 위해 이 인재의 이름과 연락처를 확인하실 수 있습니다.';
+      btn = '<button type="button" class="rv-btn rv-btn--go rv-btn--sm" id="rvReveal">연락처 열람</button>';
+    }
+
+    return '<div class="rv-mask" id="rvMask">'
+      /* 뒤에 깔리는 것 — 실제 값이 아니라 자리를 알려 주는 모양뿐입니다 */
+      + '<div class="rv-mask-back" aria-hidden="true">'
+      +   '<div class="rv-mask-photo"></div>'
+      +   '<div class="rv-mask-lines">'
+      +     '<span></span><span></span><span></span><span></span>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="rv-mask-over">'
+      +   '<p>' + msg + '</p>' + btn
+      + '</div>'
+      + '</div>';
+  }
+
+  /* 연락처 이름표 — 함수가 돌려주는 키를 우리 말로 바꿉니다.
+     모르는 키가 와도 그냥 건너뜁니다(함수가 바뀌어도 깨지지 않게). */
+  var CONTACT_LABELS = {
+    name: '이름', gender: '성별', birth_year: '출생년',
+    phone: '휴대폰', tel: '전화번호', email: '이메일',
+    addr1: '주소', addr2: '상세주소',
+  };
+
+  async function reveal(id) {
+    var box = el('#rvMask');
+    var c = sb();
+    if (!box || !c) return;
+    box.classList.add('is-loading');
+
+    try {
+      var r = await c.rpc('recruit_talent_contact', { p_id: Number(id) });
+      if (r.error) throw r.error;
+      var d = r.data;
+      if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) {} }
+      if (!d || typeof d !== 'object') throw new Error('empty');
+
+      var rows = '';
+      Object.keys(CONTACT_LABELS).forEach(function (k) {
+        if (!has(d[k])) return;
+        var v = (k === 'email')
+          ? '<a class="rv-lk" href="mailto:' + esc(d[k]) + '">' + esc(d[k]) + '</a>'
+          : (k === 'phone' || k === 'tel')
+            ? '<a class="rv-lk" href="tel:' + esc(String(d[k]).replace(/[^0-9+]/g, '')) + '">' + esc(d[k]) + '</a>'
+            : esc(d[k]);
+        rows += row(CONTACT_LABELS[k], v);
+      });
+      if (!rows) throw new Error('empty');
+
+      var photo = has(d.photo_url)
+        ? '<div class="rv-contact-photo"><img src="' + esc(d.photo_url) + '" alt=""></div>' : '';
+
+      box.classList.remove('is-loading');
+      box.outerHTML = '<div class="rv-contact">'
+        + photo
+        + '<div class="rv-contact-body">'
+        +   '<h3>연락처</h3>'
+        +   '<table class="rv-tbl"><tbody>' + rows + '</tbody></table>'
+        +   '<p class="rv-contact-note">채용 목적 외로 쓰거나 다른 곳에 옮기는 것은 '
+        +   '개인정보보호법으로 금지되어 있습니다.</p>'
+        + '</div></div>';
+    } catch (e) {
+      box.classList.remove('is-loading');
+      var over = box.querySelector('.rv-mask-over');
+      if (over) {
+        over.innerHTML = '<p>연락처를 열지 못했습니다. 권한이 없거나 잠시 문제가 생겼을 수 있습니다.</p>'
+          + '<a class="rv-btn rv-btn--list rv-btn--sm" href="mailto:cser@wixon.co.kr">문의하기</a>';
+      }
+    }
+  }
+
+  async function drawTalent(o) {
+    var box = el('#rvDoc');
+    if (!box) return;
+
+    var v = await viewer();
+
+    box.innerHTML = ''
+      + '<h1 class="rv-title">' + esc(o.title || '') + '</h1>'
+      /* 누구인지 — 뷰가 가려 준 이름과 성별·나이 */
+      + '<div class="rv-who">' + esc(o.name_masked || '')
+      +   '<span>' + esc(String(o.gender || '').replace('남성', '남').replace('여성', '여'))
+      +   (o.age ? ' / ' + esc(o.age) + '세' : '') + '</span></div>'
+      + maskBlock(v)
+      + '<h2 class="rv-group">인재상세정보</h2>'
+      + wishBlock(o)
+      + schoolsBlock(o)
+      + etcBlock(o)
+      + (has(o.body)
+        ? '<section class="rv-sec"><h2>자기소개서</h2>'
+          + '<div class="rv-body rv-body--long">' + nl(o.body) + '</div></section>'
+        : '')
+      + '<div class="rv-btns">'
+      +   '<a class="rv-btn rv-btn--list" href="' + cfg.listPage + '">목록</a>'
+      + '</div>'
+      + '<div class="rv-note">'
+      +   '<p>등록된 내용은 본인이 직접 올린 것입니다. 이름과 연락처는 '
+      +   '채용을 위해 열람한 회원에게만 보이며, 열람 기록이 남습니다.</p>'
+      +   '<a class="rv-mail" href="mailto:cser@wixon.co.kr?subject='
+      +   encodeURIComponent('[오퍼스클램] 인재정보 문의 — ' + (o.title || ''))
+      +   '">메일문의하기</a>'
+      + '</div>';
+
+    var b = el('#rvReveal');
+    if (b) b.addEventListener('click', function () { reveal(o.id); });
+
+    markCurrent(o.id);
+    document.title = (o.title || '인재정보') + ' · 리쿠르트 · OPUSCLAM.COM';
   }
 
   /* 오른쪽 목록에서 지금 보고 있는 줄을 눈에 띄게 합니다 */
