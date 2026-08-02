@@ -1782,23 +1782,30 @@ html[data-theme="dark"] .rg-privacy b { color: #b9b4e0; }
 .rg-faq { border-top: 1px solid var(--line); }
 .rg-faq details { border-bottom: 1px solid var(--line); }
 .rg-faq summary {
-  padding: 16px 34px 16px 2px; cursor: pointer; position: relative;
-  font-size: 14px; font-weight: 600; color: var(--ink);
+  /* 묻는 줄은 이 묶음의 제목 노릇을 하므로 본문보다 커야 눈에 먼저 닿습니다.
+     14 → 16px · 줄 높이도 함께 올려 누르는 자리를 넉넉하게 둡니다. */
+  padding: 18px 34px 18px 2px; cursor: pointer; position: relative;
+  font-size: 16px; font-weight: 700; color: var(--ink);
+  line-height: 1.5;
   list-style: none;
 }
 .rg-faq summary::-webkit-details-marker { display: none; }
 .rg-faq summary::after {
   content: ''; position: absolute; right: 8px; top: 50%;
-  width: 8px; height: 8px; margin-top: -6px;
+  width: 9px; height: 9px; margin-top: -7px;
   border-right: 2px solid var(--text-3); border-bottom: 2px solid var(--text-3);
   transform: rotate(45deg); transition: transform .18s ease;
 }
 .rg-faq details[open] summary { color: var(--rv-deep); }
 .rg-faq details[open] summary::after { transform: rotate(-135deg); margin-top: -2px; }
+/* 열린 답의 위쪽에 옅은 선을 두어 물음과 답이 갈립니다 */
+.rg-faq details[open] summary { border-bottom: 1px solid var(--line); }
 .rg-faq summary:hover { color: var(--rv-deep); }
 .rg-faq details > p {
-  margin: 0; padding: 0 2px 18px;
-  font-size: 13.5px; line-height: 1.8; color: var(--text-2);
+  margin: 0; padding: 0 2px 20px;
+  /* 묻는 줄을 16px 로 올렸으니 답도 한 단 올립니다 —
+     13.5px 그대로 두면 답이 주석처럼 작아 보입니다. */
+  font-size: 14.5px; line-height: 1.8; color: var(--text-2);
 }
 .rg-faq details > p b { color: var(--rv-deep); }
 html[data-theme="dark"] .rg-faq details[open] summary,
