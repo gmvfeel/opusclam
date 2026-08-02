@@ -278,6 +278,7 @@ const COMP_OK = new RegExp([
   'string quartet|chamber|quartet|quintet|trio|sonata|concerto|etude',
   '피아노|바이올린|비올라|첼로|콘트라베이스|하프|오르간|하프시코드|플루트',
   '오보에|클라리넷|바순|호른|트럼펫|트롬본|튜바|타악|성악|작곡|지휘|실내악|현악사중주',
+  '합창|합창제|choral|\\bchoir\\b|중창|관현악|교향악',
   /* 작곡가 이름 (대회 이름에 자주 붙습니다) */
   'chopin|bach|mozart|beethoven|tchaikovsky|tschaikowsky|paganini|liszt|schumann',
   'brahms|sibelius|enescu|busoni|geza anda|casals|rostropovich|menuhin|szeryng',
@@ -291,15 +292,91 @@ const COMP_OK = new RegExp([
   'music competition|music contest|international competition|composition award|음악상',
 ].join('|'), 'i');
 
-/* 대중음악 경연 — 콩쿠르 쪽에서 막을 것들 */
-const COMP_DENY = /eurovision|song contest|talent show|idol|아이돌|오디션|가요|트로트|american idol|x factor|the voice|got talent|beauty pageant|미인|댄스|dance contest|dj |beatbox|rap battle/i;
+/* 대중음악·방송·게임 경연 — 콩쿠르 쪽에서 막을 것들
+
+   ★ 실제로 뚫린 자리를 보고 넓혔습니다.
+     COMP_OK 에 「music competition」 을 통과 낱말로 두었더니
+     클래식과 무관한 대회가 함께 들어왔습니다.
+       SMS Power Music Competition 2005~2023  ← 8비트 세가 게임기 음악 대회 17건
+       Dein Song                              ← 독일 어린이TV 대회
+       New Talent Singing Awards              ← TVB 가요 경연
+       Voice Beyond Horizon                   ← 중국 TV 노래 경연
+       Alemannerock grenzelos                 ← 록밴드 대회
+       Unser Lied für Stockholm               ← 유로비전 독일 예선
+
+   ★ 「music competition」 을 빼지 않은 까닭
+     그 낱말이 유일한 근거인 진짜 콩쿠르가 있습니다 —
+     야나체크·이투르비·몬테카를로·Prix Archambault 처럼 악기 이름이
+     대회 이름에 없는 것들입니다. 통과 낱말을 좁히면 그것들이 함께
+     빠지므로, <b>막는 쪽을 넓히는</b> 편이 낫습니다. */
+const COMP_DENY = new RegExp([
+  /* 대중음악 경연 */
+  'eurovision|song contest|가요제|가요|트로트|american idol|x factor|the voice',
+  'got talent|talent show|idol|아이돌|오디션|karaoke|노래자랑|버스킹|busking',
+  '댄스|dance contest|\\bdj\\b|beatbox|rap battle|beauty pageant|미인',
+  /* 방송 프로그램 */
+  'television|\\bTVB\\b|\\bTV\\b|방송 프로그램|reality (show|series)|game show',
+  /* 게임·전자음악 창작 대회 */
+  'video ?game|8-?bit|chiptune|\\bsega\\b|nintendo|game music|게임',
+  /* 대중음악 밴드 */
+  'rock band|metal band|punk band|indie band|밴드 경연|dansband|댄스밴드',
+  /* 휘파람·에어기타 — 대회이긴 하지만 악기 연주 경연이 아닙니다 */
+  'whistl|휘파람|air guitar|에어기타|human beatbox',
+  /* 대중음악 갈래 */
+  'singer-?songwriter|싱어송라이터|pop singer|world music|월드뮤직',
+  'duelo de mc|mc battle|reality television|리얼리티',
+  /* 이름이 굳어진 대중음악 대회들 */
+  'sanremo giovani|liet international|operaci[oó]n triunfo|slovenska nota',
+  /* 국제 대회의 국내 예선 (본 대회가 아닙니다)
+     ★ 유로비전 예선은 나라마다 이름이 달라 「eurovision」 으로 안 걸립니다.
+       독일 Unser Lied · 스웨덴 Melodifestivalen · 이탈리아 Sanremo 처럼
+       고유한 이름을 쓰므로 잘 알려진 것을 짚어 둡니다. */
+  'national final|preselection|\\bOGAE\\b|국내 예선',
+  'unser lied|melodifestival|festival di sanremo|sanremo music festival',
+  'a dal\\b|dora \\(|eesti laul|selecção nacional|festivali i k[eë]ng[eë]s',
+  'destination eurovision|le grand show|söngvakeppnin|melodi grand prix',
+].join('|'), 'i');
+
+/* ★ 이름 끝에 연도가 붙은 것 — 해마다 따로 등재된 「회차」 입니다.
+
+   SMS Power Music Competition 2005 · 2006 · … · 2023 처럼
+   위키데이터에 회차마다 항목이 있으면 그것이 통째로 들어옵니다.
+   진짜 콩쿠르는 <b>대회 자체</b>가 한 항목으로 등재되므로 이름에
+   연도가 붙지 않습니다(「제9회」 도 같습니다).
+
+   ★ 이름만 봅니다 — 소개문에는 「from 1940-1962」 처럼 연도가
+     자연스럽게 나오므로 함께 보면 진짜 대회가 걸립니다. */
+const COMP_EDITION = /(?:^|\s)(?:19|20)\d{2}\s*$|^제\s*\d+\s*회/;
+
+/* ★ 회차 규칙의 예외 — 악기·부문 이름이 <b>대회 이름에</b> 있으면 남깁니다.
+
+   왜 필요한가 (실제로 걸릴 것을 미리 보았습니다)
+     Basel International Online Violin Competition 2025
+     Music Singapore International Violin and Piano Competition 2024
+   이것들은 진짜 클래식 대회인데 이름에 연도가 붙어 있습니다.
+   회차 규칙만으로는 SMS Power Music Competition 2005 와 구별되지 않습니다.
+   악기 이름이 있으면 「그 악기 대회」 이므로 회차라도 받습니다. */
+const COMP_INSTRUMENT = new RegExp([
+  'piano|violin|viola|cello|contrabass|double bass|harp|organ|harpsichord|flute',
+  'oboe|clarinet|bassoon|horn|trumpet|trombone|tuba|percussion|timpani',
+  'voice|vocal|conducting|conductor|composition|composer|chamber|quartet|quintet',
+  '피아노|바이올린|비올라|첼로|하프|오르간|플루트|성악|작곡|지휘|실내악|관악|현악',
+].join('|'), 'i');
 
 function judge(r) {
   const hay = [r.name_ko, r.name_en, r.business, r.field].filter(Boolean).join(' ');
 
   /* ── 콩쿠르·시상은 여기서 갈라 판단합니다 ── */
   if (r.type && /콩쿠르|시상|경연/.test(String(r.type))) {
-    if (COMP_DENY.test(hay)) return { ok: false, why: '대중음악 경연' };
+    if (COMP_DENY.test(hay)) return { ok: false, why: '대중음악·방송·게임 경연' };
+    /* 회차는 이름만 봅니다. 다만 악기·부문 이름이 있으면 예외로 받습니다 —
+       Basel … Violin Competition 2025 처럼 진짜 대회가 걸리기 때문입니다. */
+    const nm = [r.name_ko, r.name_en].filter(Boolean).join(' ');
+    const isEdition = COMP_EDITION.test(String(r.name_ko || ''))
+                   || COMP_EDITION.test(String(r.name_en || ''));
+    if (isEdition && !COMP_INSTRUMENT.test(nm)) {
+      return { ok: false, why: '경연 — 회차(연도 붙은 항목)' };
+    }
     /* 악기·부문·작곡가 이름 가운데 하나라도 있으면 클래식 경연으로 봅니다.
        널리 알려진 곳(KNOWN_CLASSIC)도 함께 받습니다. */
     const knownC = KNOWN_CLASSIC.test([r.name_ko, r.name_en].filter(Boolean).join(' '));
