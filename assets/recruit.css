@@ -2125,3 +2125,21 @@ html[data-theme="dark"] .ra-agree { background: #1c1a26; border-color: #6a6494; 
   .ra-body { padding: 18px 16px 6px; }
   .ra-foot { padding: 14px 16px; }
 }
+
+/* 받은 지원 단추의 「안 본 것」 숫자 */
+.rv-newdot {
+  display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 5px;
+  background: #c62828; color: #fff; border-radius: 9px;
+  font-size: 11px; font-weight: 800; line-height: 18px; text-align: center;
+}
+
+/* 「선택」 표시 — 「꼭」(rw-req)과 눈으로 갈리게 옅게 둡니다 */
+.rw-opt {
+  font-style: normal; font-size: 11px; font-weight: 700;
+  color: var(--text-3); background: var(--paper-3, #f0eff5);
+  padding: 2px 7px; border-radius: 3px; margin-left: 6px;
+}
+/* 사이트 지원 켜기 — 여러 줄이라 위아래 여백을 넉넉히 */
+.rw-site { align-items: flex-start; gap: 9px; line-height: 1.65; }
+.rw-site input { margin-top: 3px; }
+.rw-site span b { color: var(--rv-deep); }

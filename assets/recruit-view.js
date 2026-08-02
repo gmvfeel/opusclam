@@ -735,11 +735,36 @@
      ★ 확인하는 동안 단추를 감추지 않습니다 —
        느린 회선에서 단추가 사라졌다 나타나면 불안합니다. */
   async function bindApply(o) {
+    var c = sb();
+
+    /* ★ 내가 올린 공고면 「받은 지원」 을 알려 줍니다.
+       자기 공고에는 지원할 수 없으니, 그 자리에 몇 건 왔는지 보여 주는
+       편이 훨씬 쓸모 있습니다. 마이페이지까지 가지 않아도 압니다. */
+    if (c) {
+      try {
+        var cr = await c.rpc('recruit_job_app_count', { p_job: Number(o.id) });
+        var cd = cr.data;
+        if (typeof cd === 'string') cd = JSON.parse(cd);
+        if (cd && cd.ok) {
+          var mine = document.getElementById('rvApply');
+          var box = mine ? mine.parentNode : document.querySelector('.rv-btns');
+          if (mine) mine.remove();          /* 내 공고에는 지원하기가 필요 없습니다 */
+          if (box) {
+            box.insertAdjacentHTML('afterbegin',
+              '<a class="rv-btn rv-btn--go" href="/account/mypage.html#raRecv">'
+              + '받은 지원 ' + (cd.total || 0) + '건'
+              + (cd.unread ? ' <span class="rv-newdot">' + cd.unread + '</span>' : '')
+              + '</a>');
+          }
+          return;                            /* 내 공고이므로 아래 지원 처리는 하지 않습니다 */
+        }
+      } catch (e) { /* 못 물어봐도 지원하기는 그대로 둡니다 */ }
+    }
+
     var btn = document.getElementById('rvApply');
     if (!btn) return;                       /* 마감·이메일 지원 공고에는 단추가 없습니다 */
     btn.addEventListener('click', function () { openApply(o); });
 
-    var c = sb();
     if (!c) return;
     try {
       var ses = await c.auth.getSession();

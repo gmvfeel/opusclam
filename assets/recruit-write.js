@@ -319,7 +319,9 @@
     { sel: '#rwR1',      label: '근무지역',  ok: function () { return !!val('#rwR1'); } },
     { sel: '#rwApply',   label: '접수기간',  ok: function () {
         return !!val('#rwApplyTo') || chk('#rwAlways') || chk('#rwUntilHired'); } },
-    { sel: '#rwMethods', label: '접수방법',  ok: function () { return R.checked('#rwMethods', 'rw-method').length > 0; } },
+    /* ★ 접수방법은 「꼭 채울 것」 에서 뺐습니다 —
+       오퍼스클램 안에서 지원을 받는 것이 기본이 되었으므로,
+       접수방법을 안 적어도 지원 길이 막히지 않습니다. */
     { sel: '#rwCName',   label: '담당자명',  ok: function () { return !!val('#rwCName'); } },
     { sel: '#rwAgree',   label: '약관 동의', ok: function () { return chk('#rwAgree'); } },
   ];
@@ -628,6 +630,8 @@
       apply_always: chk('#rwAlways'),
       apply_until_hired: chk('#rwUntilHired'),
       apply_methods: R.checked('#rwMethods', 'rw-method'),
+      /* 사이트에서 지원을 받을지 — 켜져 있으면 상세 화면에 지원하기가 뜹니다 */
+      accept_site: !el('#rwAcceptSite') || !!el('#rwAcceptSite').checked,
       contact_name: val('#rwCName'),
       contact_email: val('#rwCEmail'),
       contact_phone: val('#rwCPhone'),
@@ -834,6 +838,7 @@
     if (el('#rwAlways')) el('#rwAlways').checked = !!o.apply_always;
     if (el('#rwUntilHired')) el('#rwUntilHired').checked = !!o.apply_until_hired;
     setChecks('rw-method', o.apply_methods);
+    if (el('#rwAcceptSite')) el('#rwAcceptSite').checked = (o.accept_site !== false);
     setVal('#rwCName', o.contact_name); setVal('#rwCEmail', o.contact_email);
     setVal('#rwCPhone', o.contact_phone); setVal('#rwCFax', o.contact_fax);
     toggleJob();

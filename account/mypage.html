@@ -11,6 +11,84 @@
 <style>
   .mp-wrap{max-width:640px;margin:56px auto;padding:0 20px}
   .mp-head{margin-bottom:26px}
+  .mp-head[hidden]{display:none}
+
+  /* ── 리쿠르트 지원 내역 ──────────────────────────────────
+     ★ 이 화면 안에 두는 까닭 — 마이페이지는 style.css 를 쓰지 않고
+       자기 스타일을 갖고 있습니다. 다른 곳에 넣으면 적용되지 않습니다
+       (푸터 붉은색이 메인에서만 안 되던 것과 같은 까닭입니다). */
+  .ra-sum{display:flex;gap:16px;flex-wrap:wrap;padding:0 0 14px;margin-bottom:14px;
+          border-bottom:1px solid var(--line2,#e8e6ef);font-size:13px;color:var(--tx3,#8a8798)}
+  .ra-sum b{color:var(--tx,#2b2740);font-weight:800}
+  .ra-sum-new b{color:#c62828}
+
+  .ra-list{list-style:none;margin:0;padding:0}
+  .ra-it{padding:14px 0;border-bottom:1px solid var(--line,#f0eff5);cursor:pointer;transition:background .12s}
+  .ra-it:last-child{border-bottom:0}
+  .ra-it:hover{background:var(--chip,#faf9fc)}
+  .ra-it--open{background:var(--chip,#faf9fc)}
+  .ra-it-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .ra-it-who{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+  .ra-it-who b{font-size:14.5px;color:var(--tx,#2b2740)}
+  .ra-it-date{flex:0 0 auto;font-size:12px;color:var(--tx3,#8a8798)}
+  .ra-it-job{display:block;margin-top:5px;font-size:13px;color:var(--tx2,#5a5670);
+             text-decoration:none;line-height:1.5}
+  .ra-it-job:hover{text-decoration:underline}
+
+  /* 아직 안 본 것 */
+  .ra-dot{width:7px;height:7px;border-radius:50%;background:#c62828;flex:0 0 auto}
+  .ra-it--new .ra-it-who b{font-weight:800}
+
+  /* 진행 상태 */
+  .ra-st{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:4px;white-space:nowrap}
+  .ra-st--new{background:#efeaf7;color:#5b4b9e}
+  .ra-st--ing{background:#e8f1fb;color:#2b5f9e}
+  .ra-st--ok{background:#e7f5ec;color:#25794a}
+  .ra-st--ok2{background:#25794a;color:#fff}
+  .ra-st--no{background:#f7eaea;color:#a33}
+  .ra-st--cancel{background:#eee;color:#888}
+
+  /* 펼친 속내용 */
+  .ra-it-more{margin-top:14px;padding:14px 16px;border-radius:9px;
+              background:var(--paper,#fff);border:1px solid var(--line2,#e8e6ef);cursor:default}
+  .ra-it-more[hidden]{display:none}
+  .ra-dl{display:grid;grid-template-columns:88px 1fr;gap:6px 12px;margin:0 0 12px}
+  .ra-dl dt{font-size:12px;font-weight:700;color:var(--tx3,#8a8798)}
+  .ra-dl dd{margin:0;font-size:13px;color:var(--tx,#2b2740);word-break:break-all}
+  .ra-row{display:flex;align-items:center;gap:10px;margin:0 0 8px;flex-wrap:wrap}
+  .ra-row-l{font-size:12px;font-weight:700;color:var(--tx3,#8a8798)}
+  .ra-mini{font-size:12.5px;font-weight:700;color:#5b4b9e;text-decoration:underline}
+  .ra-memo{margin:0 0 12px}
+  .ra-memo p{margin:6px 0 0;padding:10px 12px;border-radius:8px;
+             background:var(--chip,#faf9fc);font-size:13px;line-height:1.75;color:var(--tx2,#5a5670)}
+
+  /* 상태 바꾸기 · 메모 */
+  .ra-ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+          padding-top:12px;margin-top:4px;border-top:1px solid var(--line,#f0eff5)}
+  .ra-ctl label{font-size:12px;font-weight:700;color:var(--tx3,#8a8798)}
+  .ra-only{font-weight:400;color:var(--tx3,#8a8798)}
+  .ra-sel{font-family:inherit;font-size:13px;padding:7px 10px;border-radius:7px;
+          border:1px solid var(--line2,#e8e6ef);background:var(--paper,#fff);color:var(--tx,#2b2740)}
+  .ra-ctl--memo{flex-direction:column;align-items:stretch}
+  .ra-memo-in{font-family:inherit;font-size:13px;line-height:1.6;padding:9px 11px;border-radius:8px;
+              border:1px solid var(--line2,#e8e6ef);background:var(--paper,#fff);color:var(--tx,#2b2740);
+              resize:vertical;box-sizing:border-box;width:100%}
+  .ra-mini-btn{align-self:flex-start;height:30px;padding:0 12px;cursor:pointer;
+               font-family:inherit;font-size:12px;font-weight:700;
+               border:1px solid var(--line2,#e8e6ef);border-radius:6px;
+               background:var(--paper,#fff);color:var(--tx2,#5a5670)}
+  .ra-mini-btn:hover{border-color:#5b4b9e;color:#5b4b9e}
+  .ra-cancel{color:#c62828;border-color:#f0d0d0}
+  .ra-cancel:hover{border-color:#c62828;color:#c62828}
+  .ra-ctl-msg{font-size:12px;color:var(--tx3,#8a8798)}
+  .ra-ctl-msg--ok{color:#25794a;font-weight:700}
+  .ra-ctl-msg--warn{color:#c62828;font-weight:700}
+
+  @media(max-width:560px){
+    .ra-dl{grid-template-columns:1fr;gap:2px}
+    .ra-dl dt{margin-top:8px}
+    .ra-it-more{padding:12px 12px}
+  }
   .mp-head .jtag{margin-bottom:14px}
   .mp-head h1{font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--tx)}
   .mp-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 32px;box-shadow:0 6px 18px rgba(40,40,70,.12)}
@@ -63,6 +141,27 @@
       <div class="mp-msg">불러오는 중…</div>
     </div>
 
+    <!-- ── 리쿠르트 지원 내역 ──────────────────────────────────
+         · 받은지원 — 단체·기업·학교 회원에게만 보입니다
+         · 내지원  — 전공자·일반 회원에게만 보입니다
+         자격이 아니면 assets/recruit-apps.js 가 제목까지 함께 감춥니다.
+         빈 칸을 보여 주는 것보다 낫습니다. -->
+    <div class="mp-head" style="margin-top:44px">
+      <span class="jtag">RECEIVED</span>
+      <h1 style="font-size:24px">받은 지원</h1>
+    </div>
+    <div class="mp-card" id="raRecv">
+      <div class="mp-msg">불러오는 중…</div>
+    </div>
+
+    <div class="mp-head" style="margin-top:44px">
+      <span class="jtag">APPLIED</span>
+      <h1 style="font-size:24px">내 지원 내역</h1>
+    </div>
+    <div class="mp-card" id="raSent">
+      <div class="mp-msg">불러오는 중…</div>
+    </div>
+
     <div class="mp-head" style="margin-top:44px">
       <span class="jtag">SAVED</span>
       <h1 style="font-size:24px">내 즐겨찾기 · 킵</h1>
@@ -72,6 +171,7 @@
     </div>
   </div>
 </main>
+<script src="/assets/recruit-apps.js" defer></script>
 <div id="oc-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
@@ -115,7 +215,7 @@
       +  '<li><span class="k">가입일</span><span class="v">'+fmt(m.created_at)+'</span></li>'
       +'</ul>'
       +'<div class="mp-actions">'
-      +  (qual?'<a class="mp-btn primary" href="/db/db-write.html">DB 등록 · 보강 하러 가기</a>':'')
+      +  (qual?'<a class="mp-btn primary" href="/db/write.html">DB 등록 · 보강 하러 가기</a>':'')
       +  (isEmail?'<a class="mp-btn ghost" href="/account/change-password.html">비밀번호 변경</a>':'')
       +  '<button class="mp-btn ghost" id="mpLogout">로그아웃</button>'
       +'</div>'

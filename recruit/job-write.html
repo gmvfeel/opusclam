@@ -234,7 +234,7 @@
     </label>
 
     <!-- ── 접수방법 / 담당자 ────────────────────────────────── -->
-    <h2 class="rv-group">접수방법 / 담당자 <em class="rw-req">* 꼭 채워 주십시오</em></h2>
+    <h2 class="rv-group">지원 · 접수 / 담당자 <em class="rw-req">* 꼭 채워 주십시오</em></h2>
 
     <div class="rw-grid">
       <div class="rw-f rw-f--full" id="rwApply"><span>접수기간 <b>*</b></span>
@@ -247,8 +247,27 @@
         </span>
       </div>
 
-      <div class="rw-f rw-f--full" id="rwMethodsBox"><span>접수방법 <b>*</b></span>
+      <!-- ── 사이트 지원 · 접수방법 ──────────────────────────────
+           ★ 오퍼스클램 안에서 지원을 받는 것이 <b>기본</b>입니다.
+             지원하면 마이페이지의 「받은 지원」 에 쌓이고, 진행 상태를
+             거기서 관리하실 수 있습니다.
+           ★ 접수방법은 「꼭」 에서 <b>선택</b>으로 내렸습니다.
+             오케스트라 오디션처럼 자체 절차로만 받는 곳도 있으므로
+             길을 막지 않되, 아무것도 안 하면 사이트 지원입니다. -->
+      <div class="rw-f rw-f--full" id="rwSiteBox"><span>지원 받는 방법</span>
+        <label class="rc-check rw-site">
+          <input type="checkbox" id="rwAcceptSite" checked>
+          <span><b>오퍼스클램에서 지원 받기</b> — 지원자가 상세 화면에서 바로 지원하고,
+            받은 지원은 <b>마이페이지</b>에 쌓입니다.</span>
+        </label>
+        <p class="rw-hint" id="rwSiteHint">끄시면 지원하기 단추 대신 아래 접수방법 안내가 보입니다.
+          자체 접수 시스템이나 우편으로만 받으실 때 꺼 주십시오.</p>
+      </div>
+
+      <div class="rw-f rw-f--full" id="rwMethodsBox"><span>접수방법 <em class="rw-opt">선택</em></span>
         <div id="rwMethods" class="rc-checks"></div>
+        <p class="rw-hint">사이트 지원과 <b>함께</b> 쓰실 수 있습니다.
+          적으시면 상세 화면에 「추가 안내」 로 보입니다.</p>
       </div>
 
       <label class="rw-f"><span>담당자명 <b>*</b></span>
