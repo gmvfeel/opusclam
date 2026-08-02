@@ -72,6 +72,26 @@ const BOARDS = {
     onlyCategory: ['국내', '해외'],
     perRun: [0, 1], weekly: true,
   },
+
+  /* ★ 세 게시판을 새로 넣습니다.
+     지금까지 자동시드가 다섯 게시판만 다뤄, 현대음악·태교음악·
+     유틸리티는 8~9건에서 멈춰 있었습니다.
+     회차당 0~1글씩 · 주 1회로 두어 천천히 쌓이게 합니다. */
+  modern_music: {
+    table: 'modern_music', commentTable: 'modern_music_comments', fk: 'news_id',
+    body: 'html', authorName: true, likes: true, dislikes: true,
+    perRun: [0, 1], weekly: true,
+  },
+  prenatal_music: {
+    table: 'prenatal_music', commentTable: 'prenatal_music_comments', fk: 'news_id',
+    body: 'html', authorName: true, likes: true, dislikes: true,
+    perRun: [0, 1], weekly: true,
+  },
+  utility: {
+    table: 'utility', commentTable: 'utility_comments', fk: 'news_id',
+    body: 'html', authorName: true, likes: true, dislikes: true,
+    perRun: [0, 1], weekly: true,
+  },
 };
 
 /* 안전장치 */

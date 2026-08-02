@@ -10,6 +10,9 @@
      2차  hottopic-2(12) · admission-2(12) · qna-2(18) = 42
      3차  hottopic-3(12) · admission-3(12) · qna-3(14) = 38
      뉴스 news(6)  ← 만들어 두고 쓰이지 않던 것을 이번에 살렸습니다
+     4차  modern(14) · prenatal(12) · utility(12) = 38
+          ★ 자동시드가 다섯 게시판만 다뤄 현대음악·태교음악이
+            8건에서 멈춰 있었습니다. 게시판 설정도 함께 넣었습니다.
 
    ★ 사진 게시판(gallery)은 아직 넣지 않았습니다.
      requireThumb 설정 때문에 그림 주소가 있어야 올라가는데,
@@ -28,6 +31,9 @@ import { HOTTOPIC3 } from './pool/hottopic-3.mjs';
 import { ADMISSION3 } from './pool/admission-3.mjs';
 import { QNA3 } from './pool/qna-3.mjs';
 import { NEWS } from './pool/news.mjs';
+import { MODERN } from './pool/modern.mjs';
+import { PRENATAL } from './pool/prenatal.mjs';
+import { UTILITY } from './pool/utility.mjs';
 // 사진 준비 뒤: import { GALLERY } from './pool/gallery.mjs';
 
 /* 일반 게시판용 닉네임 풀 (글에 author 가 지정돼 있으면 그것을 씁니다)
@@ -56,6 +62,9 @@ export const POOL = {
     ...ADMISSION3,
     ...QNA3,
     ...NEWS,
+    ...MODERN,
+    ...PRENATAL,
+    ...UTILITY,
     // ...GALLERY,
   ],
 };
