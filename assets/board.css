@@ -700,3 +700,12 @@ html[data-theme="dark"] .con-row:hover{background:#000}
   .sc-table th{width:64px;font-size:.94em}
   .sc-buy{display:block;padding:14px 0}
 }
+
+/* ── 사진·포스터 출처 ─────────────────────────────────────
+   공연사진/영상 글의 맨 아래에 붙는 출처 줄입니다.
+   본문과 같은 크기로 두면 글의 일부처럼 읽히므로 옅고 작게 둡니다.
+   ★ 자동으로 채운 글뿐 아니라 회원이 직접 적어도 같게 보입니다. */
+.bv-body .oc-credit{
+  margin-top:22px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:12px;line-height:1.7;color:var(--text-3)
+}

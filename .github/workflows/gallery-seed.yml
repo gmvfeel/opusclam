@@ -1,0 +1,73 @@
+name: 공연사진 자동 채우기
+
+# ── 무엇을 하나 ──────────────────────────────────────────────
+#  공연사진/영상 게시판에 글을 채웁니다.
+#    ㉮ 우리 공연장DB의 커먼즈 사진  (자유 이용 · 출처를 본문에 적습니다)
+#    ㉯ 정보SPOT 의 공연 포스터      (글쓴이를 오퍼스클램으로 두고 공연 안내로)
+#
+#  ★ 새로 남의 사진을 받아 오지 않습니다. 이미 우리 DB에 있는 것만 씁니다.
+#  ★ keywords 에 oc-seed 표시가 남으므로 나중에 한 줄로 지울 수 있습니다.
+#       delete from gallery where keywords like '%oc-seed%';
+
+on:
+  schedule:
+    - cron: '31 2 * * 1,4'   # KST 매주 월·목 11:31
+  workflow_dispatch:
+    inputs:
+      per_run:
+        description: '한 번에 담을 글 수 (비우면 6)'
+        required: false
+        default: ''
+      dry:
+        description: '시험 실행 (담지 않고 무엇을 담을지만 봅니다)'
+        type: boolean
+        default: false
+
+# 수동 실행과 예약 실행이 겹치지 않게 합니다.
+concurrency:
+  group: oc-gallery-seed
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 공연사진 채우기
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PER_RUN: ${{ github.event.inputs.per_run }}
+          DRY: ${{ github.event.inputs.dry == 'true' && '1' || '' }}
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+          try2 node seed/gallery-seed.mjs
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  oc-notify-failure:
+    needs: seed
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi
