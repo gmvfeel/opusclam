@@ -48,7 +48,9 @@ LIMIT 4000`;
 /* ── 음악교육 기관인지 최종 판정 ──
    위키데이터 클래스 계층이 오염되어 군사·정치 조직이 섞여 들어옵니다.
    이름으로 한 번 더 걸러냅니다. (SQL 정리에서 실제 항목 40건으로 검증한 규칙) */
-const SOLO_EDU = /[ck]on[sz]ervat|conservatoire|conservatori|odeio|odeon|ωδεί|accademia|musikschule|musikhochschule|musikgymnasium|music school|school\s+(of|for)\s+music|singschule|singakadem|muziekschool|zeneiskola|zeneművészeti|kunstschule|kunstakadem|művészetoktatási|음악학교|음악원|음악대학|음악학부|예술고등학교|예술학교|예술중학교|예술대학|예술종합학교|예술종합대학|예술학부|예술학과|군악학교/i;
+/* ★ 한국어는 띄어쓰기를 허용합니다 — P31_MUSEDU 와 같은 까닭입니다.
+   「음악 학교」 처럼 띄어 쓴 표기가 실제로 옵니다. */
+const SOLO_EDU = /[ck]on[sz]ervat|conservatoire|conservatori|odeio|odeon|ωδεί|accademia|musikschule|musikhochschule|musikgymnasium|music school|school\s+(of|for)\s+music|singschule|singakadem|muziekschool|zeneiskola|zeneművészeti|kunstschule|kunstakadem|művészetoktatási|음악\s*학교|음악원|음악\s*대학|음악\s*학부|예술\s*고등\s*학교|예술\s*학교|예술\s*중학교|예술\s*대학|예술\s*종합\s*학교|예술\s*종합\s*대학|예술\s*학부|예술\s*학과|군악\s*학교/i;
 const MUS_WORD = /music|m[uú]sic|musi[qk]|musica|музык|음악|音楽|tonkunst|philharmon|filarm[oó]n|sangeet|choir|choral|carillon|opera|ballet|muziek|muzy|\bzene|\barts?\b|kunst|művészet|beaux-arts|gesang|canto|\bsing\b|dans|dance|song|lied|hymn|gospel|예술|성악|기악|국악|무용|합창|군악|취주악|관악|현악|피아노|바이올린/i;
 const EDU_WORD = /ad[eé]m|school|schule|skola|skolan|skole|h[oö]gskol|institut|escola|escuela|scuola|[eé]cole|liceo|lyc[eé]e|gymnasium|college|universit|faculdade|facultad|faculty|учили|консерватор|школ|학교|대학|학부|학원|trust|settlement|centre|center|centro|iskola|intézmény/i;
 const ARMED_WORD = /\bbrigade|brigades|\bfront\b|\blegion\b|battalion|militia|militie|\barmy\b|armed (group|forces|police)|police (force|academy)|special police|liberation (front|army|movement)|resistance (movement|organisation|organization)|jihad|mujahid|fedayeen|guerrilla|paramilitar|weerstandsbeweging|commando|kommando|\bregiment\b|\brifles?\b|insurgent|defen[cs]e force|defen[cs]e corps|national guard|state guard|state navy|home guard|civil guard|protective forces|security (forces|services)|freikorps|schutzstaffel|\bss\b|gestapo|troikas|detachment|artillery|infantry|cavalry|death squad|self-defen[cs]e|volunteer (force|corps|defense)|dosaaf|counterterror|counter-terror|cadet corps|militant|maquis|intelligence (cent|agenc)|special weapons|tactics unit|\bpatriots\b|maritime research|\bguards?\b|\bforces\b|mobilization|executive command|\bcorps\b|\bpolice\b|tactical unit|\btroops?\b|\bsquad\b|방위|수비대|위병|기계화부대|혁명군|근위|기동부대|특수부대|경찰|타격대|기동대|군무|도독부|의병|독립군|광복군|사령부|병단|헌병|참모|군단|군정|군관|무관학교|육군|해군|공군|수군|대테러|여단|무장|민병|해방전선|반군|친위대|자유군단|의용군|국가방위대/i;
@@ -122,13 +124,25 @@ function looksArmed(row) {
    위키데이터의 하위 클래스 연결이 오염되어 군사·경찰 조직이 딸려 들어오는데,
    P31 을 보면 정확히 가려낼 수 있습니다. */
 const P31_MIL = /military|paramilitar|armed (forces|group|organisation|organization)|militia|\barmy\b|\bnavy\b|air force|police|gendarmerie|law enforcement|intelligence agency|terrorist|insurgent|guerrilla|rebel|guard (unit|regiment)|regiment|battalion|brigade|division \(military\)|special forces|secret service|군사|경찰|무장|정보기관|준군사/i;
-const P31_EDU = /school|university|college|conservator|academy|educational|higher education|institute of (music|art|technology|higher)|gymnasium|lyc[eé]e|institution of higher|학교|대학|교육기관|음악원/i;
+const P31_EDU = /school|university|college|conservator|academy|educational|higher education|institute of (music|art|technology|higher)|gymnasium|lyc[eé]e|institution of higher|학교|대학|교육\s*기관|음악원/i;
 
 /* ★ 「교육기관」 만으로는 좁혀지지 않습니다.
    Westminster School · Lycée Henri-IV · Reed College 도 교육기관이라
    그대로 통과했습니다(구분이 「기타」 로 들어온 100곳이 그것입니다).
    음악·예술 교육기관인지까지 봐야 합니다. */
-const P31_MUSEDU = /conservator|conservatoire|conservatori|music (school|academy|college|university|institute|conservatory)|school of music|academy of music|college of music|higher school of music|musikhochschule|musikschule|musikgymnasium|art school|school of (the )?arts?|academy of (the )?arts?|performing arts|fine arts school|음악학교|음악원|음악대학|예술학교|예술고|예술대학|예술종합/i;
+/* 위키데이터가 한국어 분류를 <b>띄어쓰기와 함께</b> 줍니다.
+
+   실제 로그에서 확인한 것입니다 —
+     콜번 스쿨            [음악 학교 · private not-for-profit educational institution]
+     줄리아드 학교          [음악 학교 · drama school]
+     시벨리우스 아카데미       [음악 학교 · 공립 대학]
+     잘츠부르크 모차르테움 대학교  [대학 · 음악 학교]
+
+   제 규칙에는 「음악학교」(붙여 씀)만 있었습니다. 위키데이터는
+   「음악 학교」(띄어 씀)로 주므로 하나도 걸리지 않았고, 그 결과
+   <b>명문 음악원이 모두 「일반 학교」 로 제외</b>되었습니다.
+   띄어쓰기 하나 때문이었습니다. \\s* 로 있든 없든 받게 합니다. */
+const P31_MUSEDU = /conservator|conservatoire|conservatori|music (school|academy|college|university|institute|conservatory)|school of music|academy of music|college of music|higher school of music|musikhochschule|musikschule|musikgymnasium|art school|school of (the )?arts?|academy of (the )?arts?|performing arts|fine arts school|drama school|dance school|ballet school|choir school|choral school|음악\s*학교|음악\s*원|음악\s*대학|음악\s*학원|예술\s*학교|예술\s*고|예술\s*대학|예술\s*중|예술\s*종합|연극\s*학교|무용\s*학교|합창\s*학교|미술\s*학교/i;
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const val = (b, k) => (b[k] && b[k].value) ? b[k].value : '';
