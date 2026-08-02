@@ -37,6 +37,21 @@ const PER_RUN = parseInt(process.env.PER_RUN || '6', 10);
 const DRY = !!process.env.DRY;
 const MARK = 'oc-seed';
 
+/* ── 공연장 사진을 어디까지 쓸지 ─────────────────────────────
+   HALL_MODE
+     'ko'  한국어 이름이 붙은 곳만  ← 기본값. 글이 자연스럽습니다
+     'kr'  국내 공연장만
+     'all' 모두 (영문 이름도 씀)
+
+   왜 기본을 'ko' 로 두나
+     name_ko 에 영문이 그대로 들어간 곳이 많습니다. 위키데이터에 한국어
+     표기가 없다는 뜻인데, 그런 곳으로 「Plains Theatre 로비에서」 같은
+     글을 만들면 <b>회원이 쓴 글처럼 보이지 않습니다.</b> */
+const HALL_MODE = (process.env.HALL_MODE || 'ko').toLowerCase();
+
+/* 한글이 섞여 있는가 — 한국어 표기가 붙었는지 가리는 잣대입니다 */
+function hasHangul(v) { return /[가-힣]/.test(String(v || '')); }
+
 const H = {
   apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
   'Content-Type': 'application/json',
@@ -151,12 +166,16 @@ function hallPost(v) {
   const seatTxt = String(v.seats || '').trim();
   const seats = seatTxt ? `객석 ${esc(seatTxt)}. ` : '';
 
+  /* ★ 조사 앞을 붙여 씁니다.
+     「통영국제음악당 에 가 봤습니다」 처럼 벌어지면 사람이 쓴 글로 보이지
+     않습니다. 「에」 는 붙여 써야 맞습니다. */
   const title = pick([
     `${name} 다녀왔습니다`,
     `${name} — 사진 한 장`,
     `${name}, 생각보다 좋았습니다`,
     `${name} 로비에서`,
-    `${name} 에 가 봤습니다`,
+    `${name}에 가 봤습니다`,
+    `${name}, 다시 갔습니다`,
   ]);
 
   /* ★ pick 을 한 번만 부릅니다.
@@ -177,6 +196,10 @@ function hallPost(v) {
     thumb_url: v.logo_url,
     author_name: pick(AUTHORS),
     kind: 'hall',
+    /* 앞세울 순서를 정하는 점수 */
+    _score: (dom ? 2 : 0)
+          + (seatTxt ? 1 : 0)
+          + (String(v.description || '').trim() ? 1 : 0),
   };
 }
 
@@ -266,10 +289,35 @@ async function main() {
          · <b>country · city 칸이 없습니다.</b> 두 값을 location 하나에
            「나라 · 도시」 로 합쳐 담습니다 (그래서 42703 오류가 났습니다)
          · seats 는 수가 아니라 「2,505석」 같은 <b>글자</b>입니다 */
-    halls = await sbAll('venues?select=id,name_ko,name_en,type,location,seats,logo_url'
+    halls = await sbAll('venues?select=id,name_ko,name_en,type,location,seats,logo_url,description'
       + '&logo_url=not.is.null&hidden=is.false');
   } catch (e) { console.log('  · 공연장DB 를 읽지 못했습니다 ·', e.message.slice(0, 300)); }
   console.log('■ 사진이 있는 공연장', halls.length, '곳');
+
+  /* ── 어떤 공연장이 있는지 세어 보여 줍니다 ──────────────────
+     글감을 어디까지 쓸지 정하는 근거입니다. 숫자를 보지 않고
+     기준을 정하면, 너무 좁혀 글감이 마르거나 너무 넓혀 어색한 글이
+     섞입니다. */
+  const kn = halls.filter(v => hasHangul(v.name_ko));
+  const kr = halls.filter(v => isDomestic(v));
+  const krKo = halls.filter(v => hasHangul(v.name_ko) && isDomestic(v));
+  const withSeat = halls.filter(v => String(v.seats || '').trim());
+  const withDesc = halls.filter(v => String(v.description || '').trim());
+  const rich = halls.filter(v => hasHangul(v.name_ko)
+    && (String(v.seats || '').trim() || String(v.description || '').trim()));
+  console.log('   ├ 한국어 이름이 붙은 곳 :', kn.length, '곳');
+  console.log('   ├ 국내 공연장           :', kr.length, '곳   (그 가운데 한국어 이름 ' + krKo.length + '곳)');
+  console.log('   ├ 객석 수가 있는 곳     :', withSeat.length, '곳');
+  console.log('   ├ 소개문이 있는 곳      :', withDesc.length, '곳');
+  console.log('   └ 한국어 이름 + 객석·소개문 :', rich.length, '곳   ← 가장 자연스러운 글감');
+  console.log('   지금 기준(HALL_MODE) :', HALL_MODE
+    + (HALL_MODE === 'ko' ? ' — 한국어 이름이 붙은 곳만'
+      : HALL_MODE === 'kr' ? ' — 국내 공연장만' : ' — 모두'));
+
+  /* 기준에 맞는 것만 남깁니다 */
+  if (HALL_MODE === 'ko') halls = kn;
+  else if (HALL_MODE === 'kr') halls = kr;
+  console.log('   → 쓸 공연장', halls.length, '곳');
 
   /* ㉯ 공연 포스터 — 정보SPOT */
   let posters = [];
@@ -302,6 +350,12 @@ async function main() {
   const hallC = cand.filter(c => c.kind === 'hall');
   const postC = cand.filter(c => c.kind === 'poster');
   shuffle(hallC); shuffle(postC);
+
+  /* ★ 충실한 곳과 국내를 앞세웁니다.
+     그러지 않으면 이름만 있는 작은 극장이 먼저 나와 글의 값이 떨어집니다.
+     점수 — 국내 2점 · 객석 수 1점 · 소개문 1점.
+     같은 점수 안에서는 위에서 섞은 순서를 그대로 두어 매번 달라집니다. */
+  hallC.sort((a, b) => b._score - a._score);
   console.log('■ 쓸 수 있는 글감 — 공연장 사진', hallC.length, '· 공연 포스터', postC.length);
 
   const plan = [];
@@ -314,7 +368,8 @@ async function main() {
 
   console.log('■ 담을 글', plan.length, '건');
   for (const p of plan) {
-    console.log('   ' + (p.kind === 'hall' ? '[사진]  ' : '[포스터]') + ' ' + p.category.padEnd(8) + p.title);
+    console.log('   ' + (p.kind === 'hall' ? '[사진]  ' : '[포스터]') + ' '
+      + p.category.padEnd(8) + p.title);
   }
   if (DRY) { console.log('■ 시험 실행이므로 담지 않습니다.'); return; }
 

@@ -22,6 +22,15 @@ on:
         description: '시험 실행 (담지 않고 무엇을 담을지만 봅니다)'
         type: boolean
         default: false
+      hall_mode:
+        description: '공연장 사진을 어디까지 쓸지'
+        required: false
+        type: choice
+        default: 'ko'
+        options:
+          - 'ko'    # 한국어 이름이 붙은 곳만 (권장)
+          - 'kr'    # 국내 공연장만
+          - 'all'   # 모두 (영문 이름도 씀)
 
 # 수동 실행과 예약 실행이 겹치지 않게 합니다.
 concurrency:
@@ -43,6 +52,7 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           PER_RUN: ${{ github.event.inputs.per_run }}
           DRY: ${{ github.event.inputs.dry == 'true' && '1' || '' }}
+          HALL_MODE: ${{ github.event.inputs.hall_mode }}
         run: |
           try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
           try2 node seed/gallery-seed.mjs
