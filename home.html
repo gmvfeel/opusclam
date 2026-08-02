@@ -515,6 +515,17 @@
   .foot-mid a{color:var(--text);font-weight:600}
   .foot-mid a:not(:last-child)::after{content:'\00B7';margin:0 5px;color:var(--line-2);font-weight:400}
   .foot-mid a:hover{color:var(--violet-2)}
+  /* ★ 데이터 무단수집 금지 — 눈에 띄게 붉은색으로.
+
+     ★ 이 화면은 style.css 를 부르지 않고 <b>푸터 CSS 를 자기 안에</b>
+       갖고 있습니다. 그래서 style.css 에만 넣었더니 다른 화면은 되고
+       메인만 안 되는 모양이 되었습니다. 여기에도 같은 값으로 넣습니다.
+       (값이 어긋나면 화면마다 다르게 보이므로 그대로 옮겼습니다) */
+  .foot-mid a.foot-warn{color:#c62828;font-weight:800}
+  .foot-mid a.foot-warn:hover{color:#8e1b1b;text-decoration:underline}
+  .foot-mid a.foot-warn::after{color:var(--line-2);font-weight:400}
+  html[data-theme="dark"] .foot-mid a.foot-warn{color:#ff6b6b}
+  html[data-theme="dark"] .foot-mid a.foot-warn:hover{color:#ff9090}
   .addr{font-size:11.5px;color:var(--text-3);line-height:1.85}
   .foot-bot{display:flex;align-items:center;justify-content:space-between;margin-top:24px;flex-wrap:wrap;gap:14px}
   .fam{background:none;border:0;border-bottom:1px solid var(--line-2);color:var(--text-2);padding:8px 4px;font-size:12.5px;min-width:210px;font-family:var(--sans);cursor:pointer}
