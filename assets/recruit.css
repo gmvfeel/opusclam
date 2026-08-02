@@ -1785,7 +1785,9 @@ html[data-theme="dark"] .rg-privacy b { color: #b9b4e0; }
   /* 묻는 줄은 이 묶음의 제목 노릇을 하므로 본문보다 커야 눈에 먼저 닿습니다.
      14 → 16px · 줄 높이도 함께 올려 누르는 자리를 넉넉하게 둡니다. */
   padding: 18px 34px 18px 2px; cursor: pointer; position: relative;
-  font-size: 16px; font-weight: 700; color: var(--ink);
+  /* 굵기를 빼고 크기만 키웁니다 — 크기로 이미 눈에 띄므로
+     굵게까지 하면 목록이 빽빽해 보입니다. */
+  font-size: 16px; font-weight: 400; color: var(--ink);
   line-height: 1.5;
   list-style: none;
 }
@@ -1802,10 +1804,8 @@ html[data-theme="dark"] .rg-privacy b { color: #b9b4e0; }
 .rg-faq details[open] summary { border-bottom: 1px solid var(--line); }
 .rg-faq summary:hover { color: var(--rv-deep); }
 .rg-faq details > p {
-  margin: 0; padding: 0 2px 20px;
-  /* 묻는 줄을 16px 로 올렸으니 답도 한 단 올립니다 —
-     13.5px 그대로 두면 답이 주석처럼 작아 보입니다. */
-  font-size: 14.5px; line-height: 1.8; color: var(--text-2);
+  margin: 0; padding: 0 2px 18px;
+  font-size: 13.5px; line-height: 1.8; color: var(--text-2);
 }
 .rg-faq details > p b { color: var(--rv-deep); }
 html[data-theme="dark"] .rg-faq details[open] summary,
