@@ -302,7 +302,25 @@
           contentType: file.type || undefined,
         }).then(function (res) {
           if (res.error) {
-            failN++; fails.push(file.name + ': ' + res.error.message);
+            failN++;
+            /* ★ 저장소가 없다는 오류는 사람이 알아볼 말로 바꿔 줍니다.
+
+               왜 필요한가 (실제로 겪은 일입니다)
+                 글쓰기 화면 열여섯 개 가운데 열 개가 <b>없는 저장소</b>를
+                 가리키고 있었습니다. 그 게시판에서는 파일 올리기가 처음부터
+                 되지 않았는데, 화면에는 「Bucket not found」 라고만 떠서
+                 무엇을 고쳐야 하는지 알 수 없었습니다. */
+            var m = String(res.error.message || '');
+            if (/bucket not found|not found/i.test(m)) {
+              m = '저장소 「' + cfg.bucket + '」 가 없습니다. 관리자에게 알려 주십시오.';
+            } else if (/mime|content type/i.test(m)) {
+              m = '이 종류의 파일은 저장소가 받지 않습니다 (' + (file.type || ext) + ')';
+            } else if (/exceeded|too large|size/i.test(m)) {
+              m = '파일이 너무 큽니다 (' + fmtSize(file.size) + ')';
+            } else if (/policy|permission|unauthorized|row-level/i.test(m)) {
+              m = '올릴 권한이 없습니다. 다시 로그인해 보십시오.';
+            }
+            fails.push(file.name + ': ' + m);
             next(i + 1);                       /* ★ 멈추지 않고 다음 파일로 */
             return;
           }
