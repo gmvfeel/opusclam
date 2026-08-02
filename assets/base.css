@@ -92,19 +92,23 @@ html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115d
 .nd{color:var(--text-3);opacity:.45}
 .pdb-table tr.row-focus{animation:rowflash 2.6s ease}
 @keyframes rowflash{0%,18%{background:rgba(124,99,176,.22)}100%{background:transparent}}
-.pdb-table tbody tr:hover td{background:#322152;color:#fff}
-.pdb-table tbody tr:hover td a{color:#fff}
-.pdb-table tbody tr:hover .tag{color:#fff;border-color:rgba(255,255,255,.45)}
-.pdb-table tbody tr:hover .ava{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+/* ★ 빈 결과 줄(.pdb-norow)은 hover 에서 뺍니다.
+   자료 줄이 아니라 <b>안내문</b>이므로 짙어질 까닭이 없습니다.
+   짙어지면 그 위의 단추 글자가 보이지 않습니다. */
+.pdb-table tbody tr:not(.pdb-norow):hover td{background:#322152;color:#fff}
+.pdb-table tbody tr.pdb-norow:hover td{background:transparent;color:inherit;cursor:default}
+.pdb-table tbody tr:not(.pdb-norow):hover td a{color:#fff}
+.pdb-table tbody tr:not(.pdb-norow):hover .tag{color:#fff;border-color:rgba(255,255,255,.45)}
+.pdb-table tbody tr:not(.pdb-norow):hover .ava{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
 .pdb-table .c-era .era-name{display:block;color:var(--text-2)}
 .pdb-table .c-era .era-yr{display:block;font-size:.85em;color:var(--text-3);margin-top:2px}
 .pdb-table .c-link{width:112px}
 .pdb-table .c-link .lk{display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;color:var(--text-3);border:1px solid var(--line);border-radius:7px;margin-right:5px;transition:color .15s ease,border-color .15s ease}
 .pdb-table .c-link .lk svg{width:14px;height:14px}
 .pdb-table .c-link .lk:hover{color:var(--text);border-color:var(--text-3)}
-.pdb-table tbody tr:hover .era-name,
-  .pdb-table tbody tr:hover .era-yr{color:#fff}
-.pdb-table tbody tr:hover .lk{color:#fff;border-color:rgba(255,255,255,.4)}
+.pdb-table tbody tr:not(.pdb-norow):hover .era-name,
+  .pdb-table tbody tr:not(.pdb-norow):hover .era-yr{color:#fff}
+.pdb-table tbody tr:not(.pdb-norow):hover .lk{color:#fff;border-color:rgba(255,255,255,.4)}
 .pdb-table thead th[class]{color:var(--text-2)}
 .pdb-table td,
   .pdb-table td a,
@@ -128,4 +132,4 @@ html[data-theme="dark"] .pdb-bg{opacity:.16}
 .pdb-bg .scene{position:absolute;inset:0;opacity:1}
 .pdb-bg .scene svg{width:100%;height:100%;display:block}
 .pdb-inner{position:relative;z-index:1}
-html[data-theme="dark"] .pdb-table tbody tr:hover td{background:#000}
+html[data-theme="dark"] .pdb-table tbody tr:not(.pdb-norow):hover td{background:#000}

@@ -183,7 +183,16 @@ window.OCList = (function () {
         +   '<ul class="pdb-none-tip">'
         +     '<li>한글 · 영문 · 원어 표기를 바꿔 찾아보십시오. ' + esc(info.tip) + '</li>'
         +     '<li>이름 전체보다 <b>일부만</b> 넣어 보십시오. 그편이 잘 찾아집니다.</li>'
-        +     '<li>왼쪽 조건을 켜 두셨다면 풀고 다시 찾아보십시오.</li>'
+        /* ★ 세 번째 도움말은 <b>실제로 켜 둔 조건이 있을 때만</b> 보여 줍니다.
+
+           예전에는 「왼쪽 조건을 켜 두셨다면 풀고 다시 찾아보십시오」 였습니다.
+           그런데 이 화면에는 왼쪽 조건이 없습니다 — 「국내/외」·「분야」·「정렬」 이
+           검색칸 <b>옆</b>에 있습니다. 리쿠르트 목록과 헷갈려 쓴 문구였고,
+           읽는 사람이 무엇을 가리키는지 알 수 없었습니다.
+           조건을 걸어 두지 않았으면 이 줄을 아예 보여 주지 않습니다. */
+        +     (state.filters
+              ? '<li>검색칸 옆의 <b>국내/외 · 분야</b> 조건을 함께 걸어 두셨습니다. 그것을 풀고 다시 찾아보십시오.</li>'
+              : '')
         +   '</ul>'
 
         /* ── 등록을 권합니다 ── */
@@ -337,7 +346,11 @@ window.OCList = (function () {
           cur = pg; ctx.cur = cur;
           var cnt = document.querySelector('.pdb-count b'); if (cnt) cnt.textContent = (total || 0).toLocaleString();
           if (rows.length === 0) {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="' + ncol + '">' + emptyHtml() + '</td></tr>';
+            /* ★ 줄에 pdb-norow 표시를 붙입니다.
+               표에는 「줄에 마우스를 올리면 짙어지는」 규칙이 있는데,
+               빈 결과 자리에도 그것이 걸려 배경이 짙어지고 그 위에서
+               단추 글자가 보이지 않았습니다. 이 줄만 빼 줍니다. */
+            if (tbody) tbody.innerHTML = '<tr class="pdb-norow"><td colspan="' + ncol + '">' + emptyHtml() + '</td></tr>';
             if (pager) pager.innerHTML = '';
             fixEmptyCta();
           } else {
