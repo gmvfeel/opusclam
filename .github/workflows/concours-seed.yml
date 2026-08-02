@@ -1,0 +1,66 @@
+name: 콩쿨정보 채우기 (수동)
+
+# ── 무엇을 하나 ──────────────────────────────────────────────
+#  정보SPOT 「국내/외콩쿨정보」 에 대회 소개를 담습니다.
+#
+#  ★ 예약이 없습니다 — 손으로만 돌립니다.
+#    자동 수집이 아니라 <b>사람이 쓴 소개</b>를 담는 것이라,
+#    글을 더할 때만 돌리면 됩니다.
+#
+#  ★ 이미 있는 제목은 건너뜁니다. 여러 번 돌려도 겹치지 않습니다.
+#  ★ keywords 에 oc-seed 표시가 남아 나중에 한 줄로 지울 수 있습니다.
+#       delete from spot where section = '콩쿨' and keywords like '%oc-seed%';
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: '시험 실행 (담지 않고 무엇을 담을지만 봅니다)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: oc-concours-seed
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 콩쿨정보 담기
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          DRY: ${{ github.event.inputs.dry == 'true' && '1' || '' }}
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+          try2 node seed/concours-seed.mjs
+
+  oc-notify-failure:
+    needs: seed
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다"
+          fi
