@@ -737,10 +737,28 @@
   async function bindApply(o) {
     var c = sb();
 
-    /* ★ 내가 올린 공고면 「받은 지원」 을 알려 줍니다.
-       자기 공고에는 지원할 수 없으니, 그 자리에 몇 건 왔는지 보여 주는
-       편이 훨씬 쓸모 있습니다. 마이페이지까지 가지 않아도 압니다. */
+    /* ★ 내가 올린 공고인지를 <b>자료로</b> 판단합니다.
+
+       예전에는 서버 함수(recruit_job_app_count)가 「권한이 있느냐」 로
+       답한 것을 그대로 믿었습니다. 그런데 그 함수가 관리자 판단까지
+       함께 하고 있어서, 남의 공고인데도 「내 공고」 로 보이는 일이
+       생겼습니다 — 일반 회원에게 「받은 지원 0건」 이 뜨고 지원을
+       못 하게 된 것이 그 때문입니다.
+
+       공고 자료에 member_id 가 이미 있습니다. 내 아이디와 견주면
+       <b>남의 판단을 기다리지 않고</b> 확실히 압니다.
+       건수는 그다음에 물어봅니다. */
+    var uid = null;
     if (c) {
+      try {
+        var ses0 = await c.auth.getSession();
+        uid = (ses0 && ses0.data && ses0.data.session && ses0.data.session.user)
+          ? ses0.data.session.user.id : null;
+      } catch (e) {}
+    }
+    var isMine = !!(uid && o.member_id && String(o.member_id) === String(uid));
+
+    if (c && isMine) {
       try {
         var cr = await c.rpc('recruit_job_app_count', { p_job: Number(o.id) });
         var cd = cr.data;
@@ -758,17 +776,25 @@
           }
           return;                            /* 내 공고이므로 아래 지원 처리는 하지 않습니다 */
         }
-      } catch (e) { /* 못 물어봐도 지원하기는 그대로 둡니다 */ }
+      } catch (e) { /* 건수를 못 받아도 아래에서 지원하기를 감춥니다 */ }
+      /* ★ 내 공고이면 건수를 못 받았더라도 지원하기는 감춥니다 —
+         자기 공고에 지원하려다 오류를 만나는 것보다 낫습니다. */
+      var mine2 = document.getElementById('rvApply');
+      if (mine2) {
+        mine2.textContent = '내가 올린 공고';
+        mine2.disabled = true;
+        mine2.classList.add('rv-btn--off');
+        mine2.title = '내가 올린 공고에는 지원할 수 없습니다. 받은 지원은 마이페이지에서 보실 수 있습니다.';
+      }
+      return;
     }
 
     var btn = document.getElementById('rvApply');
     if (!btn) return;                       /* 마감·이메일 지원 공고에는 단추가 없습니다 */
     btn.addEventListener('click', function () { openApply(o); });
 
-    if (!c) return;
+    if (!c || !uid) return;                 /* 손님은 눌렀을 때 안내합니다 */
     try {
-      var ses = await c.auth.getSession();
-      if (!(ses && ses.data && ses.data.session)) return;   /* 손님은 눌렀을 때 안내합니다 */
       var r = await c.rpc('recruit_my_application', { p_job: Number(o.id) });
       var d = r.data;
       if (typeof d === 'string') d = JSON.parse(d);
