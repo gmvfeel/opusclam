@@ -37,6 +37,24 @@ set -euo pipefail
 : "${SUPABASE_DB_URL:?SUPABASE_DB_URL 이 없습니다. GitHub Secrets 에 넣어 주십시오.}"
 : "${BACKUP_PASSPHRASE:?BACKUP_PASSPHRASE 가 없습니다. 암호 없이는 백업하지 않습니다 (공개 저장소이므로).}"
 
+# ★ PostgreSQL 17 도구를 앞세웁니다.
+#   실제로 겪은 일 — 워크플로에서 17을 설치했는데도 pg_dump 는 16.14 가
+#   불려 「server version mismatch」 로 막혔습니다. 우분투에 이미 있던 16이
+#   먼저 잡힌 것입니다. 여기서 한 번 더 못박아 둡니다.
+if [ -x /usr/lib/postgresql/17/bin/pg_dump ]; then
+  export PATH="/usr/lib/postgresql/17/bin:${PATH}"
+fi
+
+# ★ 판이 낮으면 여기서 멈춥니다.
+#   pg_dump 는 서버보다 낮으면 스스로 거부합니다(옳은 동작입니다).
+#   그래도 먼저 확인해 <b>무엇이 문제인지 분명한 말로</b> 알려 줍니다.
+PGMAJ="$(pg_dump --version | grep -oE '[0-9]+' | head -1)"
+if [ "${PGMAJ}" -lt 17 ]; then
+  echo "★ pg_dump 판이 ${PGMAJ} 입니다. Supabase 서버(17)보다 낮아 뜰 수 없습니다."
+  echo "  워크플로의 「pg_dump 17 설치」 단계를 확인해 주십시오."
+  exit 1
+fi
+
 STAMP="$(date -u '+%Y%m%d-%H%M')"
 WORK="oc-backup-${STAMP}"
 OUT="backup"

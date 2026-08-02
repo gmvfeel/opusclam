@@ -41,15 +41,47 @@ jobs:
       - uses: actions/checkout@v4
 
       # ★ pg_dump 는 서버보다 <b>같거나 새로운</b> 판이어야 합니다.
-      #   우분투에 딸린 것은 오래되어 Supabase 서버를 못 뜰 수 있으므로
-      #   PostgreSQL 공식 저장소에서 17판을 받습니다.
+      #   Supabase 서버가 17.6 이므로 17 이상이 필요합니다.
+      #
+      #   실제로 겪은 일 — 예전에는 postgresql-client-17 을 설치하라고만
+      #   적어 두었는데 <b>16.14 가 깔렸습니다.</b> 우분투에 이미 있던 16이
+      #   쓰인 것입니다. 설치가 실패해도 다음 줄로 넘어가 버려서,
+      #   덤프를 뜨는 자리에서야 「판이 안 맞는다」 로 막혔습니다.
+      #
+      #   그래서 셋을 고쳤습니다.
+      #     ① 저장소 열쇠와 목록을 확실히 넣습니다
+      #     ② 설치할 때 -qq 를 빼서 <b>무엇이 깔렸는지 로그에 남깁니다</b>
+      #     ③ 깔린 뒤 <b>판을 확인해 17보다 낮으면 여기서 멈춥니다</b>
+      #        (덤프 자리에서 실패하는 것보다 여기서 알려 주는 편이 낫습니다)
       - name: pg_dump 17 설치
         run: |
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo tee /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc > /dev/null
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] \
+            http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+
+          # ★ 17이 여러 판과 함께 깔리면 기본 pg_dump 가 16을 가리킬 수 있습니다.
+          #   17 쪽을 앞세워 확실히 쓰게 합니다.
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+          export PATH="/usr/lib/postgresql/17/bin:$PATH"
+
+          echo "── 깔린 것 확인 ──"
+          which pg_dump psql
           pg_dump --version
+          psql --version
+
+          # ★ 여기서 막아 둡니다 — 낮은 판이면 더 가지 않습니다
+          MAJ=$(pg_dump --version | grep -oE '[0-9]+' | head -1)
+          if [ "${MAJ}" -lt 17 ]; then
+            echo "::error::pg_dump 판이 ${MAJ} 입니다. 서버(17)보다 낮아 백업할 수 없습니다."
+            exit 1
+          fi
+          echo "   → pg_dump ${MAJ} · 서버(17)와 맞습니다"
 
       - name: 백업 뜨기
         env:
