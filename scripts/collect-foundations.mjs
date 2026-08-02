@@ -255,8 +255,68 @@ function toRow(b, type) {
 }
 
 // ── 판정 ─────────────────────────────────────────────────────
+/* ★ 콩쿠르는 잣대를 따로 둡니다.
+
+   왜 필요한가 (실제로 확인한 것입니다)
+     판정 규칙이 음반사를 위해 만들어졌습니다. 「대중음악인가 클래식인가」 를
+     이름·소개의 낱말로 가리는데, <b>콩쿠르에는 그런 낱말이 없습니다.</b>
+       「International Chopin Piano Competition · piano competition in Warsaw」
+     여기에는 classical 도 orchestral 도 없습니다. 그래서 쇼팽·차이콥스키·
+     퀸엘리자베스·반클라이번이 <b>모두</b> 「클래식 근거 없음」 으로 떨어졌습니다.
+     로그의 「433건 중 10건」 이 그 결과입니다.
+
+   콩쿠르에서는 무엇이 근거인가
+     ① 악기·부문 이름 — 피아노·바이올린·첼로·성악·작곡·지휘·오르간 …
+     ② 작곡가 이름 — 쇼팽·바흐·차이콥스키·파가니니 …
+     이 둘 가운데 하나만 있어도 클래식 경연으로 봅니다.
+     대중음악 경연(Eurovision · 아이돌 오디션)은 아래 COMP_DENY 로 막습니다. */
+const COMP_OK = new RegExp([
+  /* 악기·부문 */
+  'piano|violin|viola|cello|contrabass|double bass|harp|organ|harpsichord|flute',
+  'oboe|clarinet|bassoon|horn|trumpet|trombone|tuba|percussion|timpani|guitar',
+  'voice|vocal|singing|song cycle|conducting|conductor|composition|composer',
+  'string quartet|chamber|quartet|quintet|trio|sonata|concerto|etude',
+  '피아노|바이올린|비올라|첼로|콘트라베이스|하프|오르간|하프시코드|플루트',
+  '오보에|클라리넷|바순|호른|트럼펫|트롬본|튜바|타악|성악|작곡|지휘|실내악|현악사중주',
+  /* 작곡가 이름 (대회 이름에 자주 붙습니다) */
+  'chopin|bach|mozart|beethoven|tchaikovsky|tschaikowsky|paganini|liszt|schumann',
+  'brahms|sibelius|enescu|busoni|geza anda|casals|rostropovich|menuhin|szeryng',
+  'queen elisabeth|van cliburn|leeds|geneva|ard |arthur rubinstein|montreal',
+  'takemitsu|messiaen|bartok|bartók|dvo[rř]|smetana|grieg|nielsen|prokofiev',
+  '쇼팽|바흐|모차르트|베토벤|차이콥스키|파가니니|리스트|브람스|시벨리우스',
+  /* 한국어 대회 이름 — 「음악콩쿠르」 처럼 부문 없이 붙는 것이 많습니다.
+     COMP_DENY 가 가요·트로트·아이돌·오디션을 먼저 막으므로,
+     여기서는 「음악 + 경연」 조합을 넓게 받아도 안전합니다. */
+  '음악콩쿠르|음악 콩쿠르|음악경연|음악 경연|음악제|콩쿠르|콩쿨|경연대회',
+  'music competition|music contest|international competition|composition award|음악상',
+].join('|'), 'i');
+
+/* 대중음악 경연 — 콩쿠르 쪽에서 막을 것들 */
+const COMP_DENY = /eurovision|song contest|talent show|idol|아이돌|오디션|가요|트로트|american idol|x factor|the voice|got talent|beauty pageant|미인|댄스|dance contest|dj |beatbox|rap battle/i;
+
 function judge(r) {
   const hay = [r.name_ko, r.name_en, r.business, r.field].filter(Boolean).join(' ');
+
+  /* ── 콩쿠르·시상은 여기서 갈라 판단합니다 ── */
+  if (r.type && /콩쿠르|시상|경연/.test(String(r.type))) {
+    if (COMP_DENY.test(hay)) return { ok: false, why: '대중음악 경연' };
+    /* 악기·부문·작곡가 이름 가운데 하나라도 있으면 클래식 경연으로 봅니다.
+       널리 알려진 곳(KNOWN_CLASSIC)도 함께 받습니다. */
+    const knownC = KNOWN_CLASSIC.test([r.name_ko, r.name_en].filter(Boolean).join(' '));
+    if (!knownC && !COMP_OK.test(hay) && !CLASSIC_OK.test(hay)) {
+      return { ok: false, why: '경연 — 클래식 근거 없음' };
+    }
+    /* ★ 충실도 기준을 음반사보다 낮춥니다.
+       대회는 소재지·설립연도가 위키데이터에 잘 안 적혀 있습니다.
+       그렇다고 쇼팽 콩쿠르를 버릴 까닭은 없습니다. 하나만 있어도 받습니다. */
+    let nc = 0;
+    if (r.location) nc++;
+    if (r.founded) nc++;
+    if (r.link_home) nc++;
+    if (r.business) nc++;
+    if (nc < 1) return { ok: false, why: '경연 — 내용 빈약' };
+    return { ok: true, why: '클래식 경연' };
+  }
 
   // ① 대형 대중음악 그룹은 이름만으로 걸러냅니다
   if (LABEL_DENY.test(hay)) return { ok: false, why: '대중음악 대형사' };
