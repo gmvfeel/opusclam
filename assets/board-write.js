@@ -87,10 +87,14 @@
       + '<button type="button" data-cmd="insertOrderedList" title="번호 목록">1. 목록</button>'
       + '<span class="bf-sep"></span>'
       + '<button type="button" id="f-link" title="링크 넣기">링크</button>'
-      + '<button type="button" id="f-image" title="이미지 넣기">이미지</button>'
+      + '<button type="button" id="f-image" title="사진 · 영상 · 음원 · 파일 넣기">파일넣기</button>'
       + '</div>'
       + '<div class="bf-earea" id="f-body" contenteditable="true" data-ph="내용을 입력하세요."></div>'
-      + '</div><input type="file" id="f-imgfile" accept="image/*" multiple style="display:none"></div>'
+      /* ★ 종류 제한을 두지 않습니다(accept 없음).
+         사진뿐 아니라 영상·음원·악보 PDF 도 올릴 수 있어야 합니다.
+         아이폰 사진(HEIC)처럼 accept="image/*" 에서 걸러지던 것도 이제 됩니다.
+         넣을 때 종류를 보고 사진·영상·음원·내려받기로 갈라 넣습니다. */
+      + '</div><input type="file" id="f-imgfile" multiple style="display:none"></div>'
       + docRows
       + '<div class="bf-row"><label>검색어 <span style="color:var(--text-3);font-weight:400">(선택)</span></label><input type="text" id="f-keywords" placeholder="쉼표(,)로 구분"></div>'
       + '<label class="bf-consent"><span class="bf-consent-t">등록하신 콘텐츠가 성격에 맞지 않거나 비속어 등이 사용된 것으로 판단된 경우, 예고 없이 등록하신 데이터가 삭제될 수 있습니다.<br>데이터 등록이 승인된 경우, 모든 유료서비스에 사용할 수 있는 액티브포인트가 적립됩니다.(등록한 데이터별 100 액티브포인트 제공)</span>'
@@ -114,8 +118,91 @@
     function gate(msg) { var g = $('bwGate'); g.style.display = ''; g.innerHTML = esc(msg) + '<br><br><a class="bf-cancel" href="' + esc(cfg.listPage) + '">목록으로</a>'; }
 
     /* 에디터 */
-    function saveSel() { var s = window.getSelection(); var ed = $('f-body'); if (s && s.rangeCount && ed.contains(s.anchorNode)) savedRange = s.getRangeAt(0); }
-    function restoreSel() { var ed = $('f-body'); ed.focus(); if (savedRange) { var s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange); } }
+    /* ★ 선택 위치를 저장·복원합니다.
+
+       쓰기 전에 <b>아직 살아 있는지 확인</b>하고, 죽었으면 글 맨 끝에 놓습니다.
+       아무 일도 일어나지 않는 것보다 끝에라도 들어가는 편이 낫습니다. */
+    function saveSel() {
+      var s = window.getSelection(); var ed = $('f-body');
+      if (s && s.rangeCount && ed.contains(s.anchorNode)) savedRange = s.getRangeAt(0).cloneRange();
+    }
+
+    /* 저장해 둔 자리가 아직 쓸 수 있는지 — <b>대비용</b>입니다.
+
+       ★ 확인한 사실 — 브라우저는 문서가 바뀌면 기억해 둔 자리의 번호를
+         스스로 맞춰 줍니다. 그래서 「사진을 지웠더니 자리가 망가졌다」 는
+         제 첫 짐작은 <b>틀렸습니다.</b> jsdom 으로 시험해 확인했습니다.
+
+       그래도 이 검사를 두는 까닭은 자리가 <b>정말로</b> 죽는 경우가 있기
+       때문입니다 — 글 전체를 다시 그리거나(고치기 화면을 불러올 때),
+       굵게·색 바꾸기가 문단을 통째로 갈아치울 때입니다.
+       그때는 아무 일도 일어나지 않는 대신 글 맨 끝에 넣습니다. */
+    function selAlive() {
+      var ed = $('f-body');
+      if (!savedRange || !ed) return false;
+      try {
+        var n = savedRange.startContainer;
+        if (!document.contains(n) || !ed.contains(n)) return false;
+        var max = (n.nodeType === 3) ? String(n.nodeValue || '').length : n.childNodes.length;
+        if (savedRange.startOffset > max) return false;
+        var n2 = savedRange.endContainer;
+        if (!ed.contains(n2)) return false;
+        var max2 = (n2.nodeType === 3) ? String(n2.nodeValue || '').length : n2.childNodes.length;
+        if (savedRange.endOffset > max2) return false;
+        return true;
+      } catch (e) { return false; }
+    }
+
+    function restoreSel() {
+      var ed = $('f-body');
+      ed.focus();
+      var s = window.getSelection();
+      if (selAlive()) {
+        try { s.removeAllRanges(); s.addRange(savedRange); return; } catch (e) {}
+      }
+      /* 자리가 사라졌으면 글 맨 끝으로 */
+      savedRange = null;
+      try {
+        var r = document.createRange();
+        r.selectNodeContents(ed); r.collapse(false);
+        s.removeAllRanges(); s.addRange(r);
+        savedRange = r.cloneRange();
+      } catch (e) {}
+    }
+
+    /* ★ 글 안에 무언가를 끼워 넣습니다.
+       execCommand('insertHTML') 은 오래된 기능이라 브라우저마다 다르게 굴고,
+       편집칸에 초점이 없으면 조용히 아무 일도 하지 않습니다.
+       그래서 Range 로 직접 넣고, 안 되면 execCommand 로 한 번 더 시도합니다. */
+    function insertNodes(html) {
+      var ed = $('f-body');
+      restoreSel();
+      var s = window.getSelection();
+      try {
+        if (!s.rangeCount) throw new Error('no range');
+        var r = s.getRangeAt(0);
+        r.deleteContents();
+        var tpl = document.createElement('template');
+        tpl.innerHTML = html;
+        var frag = tpl.content;
+        var last = frag.lastChild;
+        r.insertNode(frag);
+        if (last) {
+          var after = document.createRange();
+          after.setStartAfter(last); after.collapse(true);
+          s.removeAllRanges(); s.addRange(after);
+          savedRange = after.cloneRange();
+        }
+        return true;
+      } catch (e) {
+        try { document.execCommand('insertHTML', false, html); saveSel(); return true; }
+        catch (e2) {
+          /* 마지막 방법 — 글 맨 끝에 붙입니다 */
+          try { ed.insertAdjacentHTML('beforeend', html); saveSel(); return true; } catch (e3) {}
+          return false;
+        }
+      }
+    }
     function exec(cmd, val) { restoreSel(); document.execCommand(cmd, false, val || null); saveSel(); }
     function initEditor() {
       var ed = $('f-body');
@@ -146,28 +233,112 @@
         } catch (e) { resolve(null); }
       });
     }
+    /* 파일 이름에서 확장자를 뽑습니다.
+       이름에 확장자가 없으면(휴대폰에서 바로 올릴 때 그런 일이 있습니다)
+       종류(MIME)에서 짐작합니다. 그러지 않으면 파일 이름 전체가
+       확장자 자리에 들어가 이상한 주소가 됩니다. */
+    function extOf(file) {
+      var n = String(file.name || '');
+      var m = n.match(/\.([A-Za-z0-9]{1,8})$/);
+      if (m) return m[1].toLowerCase();
+      var t = String(file.type || '');
+      var guess = {
+        'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp',
+        'image/avif': 'avif', 'image/heic': 'heic', 'image/heif': 'heif', 'image/svg+xml': 'svg',
+        'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm',
+        'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/mp4': 'm4a', 'audio/flac': 'flac',
+        'application/pdf': 'pdf',
+      }[t];
+      return guess || 'bin';
+    }
+
+    /* 브라우저가 화면에 그려 줄 수 있는 사진인가.
+       HEIC · TIFF 는 올라가기는 하지만 대개 화면에 안 보입니다.
+       그런 것은 사진으로 넣지 않고 내려받기 링크로 넣습니다 —
+       깨진 그림틀을 보여 주는 것보다 낫습니다. */
+    function shownAsImage(file, ext) {
+      var t = String(file.type || '').toLowerCase();
+      if (/^image\/(jpeg|png|gif|webp|avif|svg\+xml|bmp)$/.test(t)) return true;
+      if (!t && /^(jpg|jpeg|png|gif|webp|avif|svg|bmp)$/.test(ext)) return true;
+      return false;
+    }
+
+    function fmtSize(n) {
+      if (!n) return '';
+      if (n < 1024) return n + 'B';
+      if (n < 1024 * 1024) return Math.round(n / 1024) + 'KB';
+      return (n / 1024 / 1024).toFixed(1) + 'MB';
+    }
+
+    /* ★ 파일을 올려 글 안에 넣습니다.
+
+       고친 것 셋
+         ① 종류 제한을 없애고, 사진·영상·음원·그 밖 파일을 갈라 넣습니다
+         ② 하나가 실패해도 <b>나머지를 계속</b> 올립니다
+            (예전에는 첫 실패에서 통째로 멈췄습니다)
+         ③ 실패한 까닭을 그대로 보여 줍니다
+            (저장소가 종류·크기를 막고 있으면 그 말이 나옵니다) */
     function uploadImages(files) {
       if (!files || !files.length) return;
-      $('bwMsg').textContent = '이미지 업로드 중…';
       var arr = [].slice.call(files);
+      var okN = 0, failN = 0, fails = [];
+
       (function next(i) {
-        if (i >= arr.length) { $('bwMsg').textContent = ''; return; }
+        if (i >= arr.length) {
+          var msg = okN ? (okN + '개 올렸습니다.') : '';
+          if (failN) msg += (msg ? ' ' : '') + failN + '개 실패 — ' + fails.slice(0, 2).join(' / ');
+          $('bwMsg').textContent = msg;
+          return;
+        }
         var file = arr[i];
-        var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+        $('bwMsg').textContent = '올리는 중… (' + (i + 1) + '/' + arr.length + ') ' + file.name;
+
+        var ext = extOf(file);
         var base = me.id + '/' + Date.now() + '_' + i;
-        sb.storage.from(cfg.bucket).upload(base + '.' + ext, file, { upsert: false }).then(function (res) {
-          if (res.error) { $('bwMsg').textContent = '이미지 업로드 실패: ' + res.error.message; return; }
-          var url = sb.storage.from(cfg.bucket).getPublicUrl(base + '.' + ext).data.publicUrl;
-          restoreSel();
-          document.execCommand('insertHTML', false, '<img src="' + url + '" alt=""><p><br></p>');
-          saveSel();
+        var path = base + '.' + ext;
+
+        sb.storage.from(cfg.bucket).upload(path, file, {
+          upsert: false,
+          contentType: file.type || undefined,
+        }).then(function (res) {
+          if (res.error) {
+            failN++; fails.push(file.name + ': ' + res.error.message);
+            next(i + 1);                       /* ★ 멈추지 않고 다음 파일로 */
+            return;
+          }
+          var url = sb.storage.from(cfg.bucket).getPublicUrl(path).data.publicUrl;
+          var t = String(file.type || '').toLowerCase();
+          var html;
+
+          if (shownAsImage(file, ext)) {
+            html = '<img src="' + url + '" alt=""><p><br></p>';
+          } else if (/^video\//.test(t) || /^(mp4|mov|webm|m4v)$/.test(ext)) {
+            html = '<video src="' + url + '" controls playsinline style="max-width:100%"></video><p><br></p>';
+          } else if (/^audio\//.test(t) || /^(mp3|wav|m4a|flac|ogg|aac)$/.test(ext)) {
+            html = '<audio src="' + url + '" controls style="width:100%"></audio><p><br></p>';
+          } else {
+            /* 그 밖 — 악보 PDF · 아이폰 HEIC 등은 내려받기 링크로 */
+            html = '<p><a href="' + url + '" target="_blank" rel="noopener noreferrer">'
+                 + esc(file.name) + (file.size ? ' (' + fmtSize(file.size) + ')' : '')
+                 + '</a></p><p><br></p>';
+          }
+
+          if (insertNodes(html)) okN++; else { failN++; fails.push(file.name + ': 글에 넣지 못했습니다'); }
+
+          /* 목록에 보일 작은 그림 — 화면에 그려지는 사진일 때만 만듭니다 */
+          if (!shownAsImage(file, ext)) { next(i + 1); return; }
           makeThumbBlob(file, 640).then(function (blob) {
             if (!blob) { next(i + 1); return; }
-            sb.storage.from(cfg.bucket).upload(base + '_thumb.jpg', blob, { upsert: false, contentType: 'image/jpeg' }).then(function (tr) {
+            sb.storage.from(cfg.bucket).upload(base + '_thumb.jpg', blob, {
+              upsert: false, contentType: 'image/jpeg',
+            }).then(function (tr) {
               if (!tr.error) { thumbMap[url] = sb.storage.from(cfg.bucket).getPublicUrl(base + '_thumb.jpg').data.publicUrl; }
               next(i + 1);
             });
           });
+        }).catch(function (e) {
+          failN++; fails.push(file.name + ': ' + String(e && e.message || e));
+          next(i + 1);
         });
       })(0);
     }
