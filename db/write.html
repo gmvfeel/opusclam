@@ -1267,13 +1267,13 @@ if('serviceWorker' in navigator){
     {l:'소개 · 이력',t:'textarea',k:'description',h:'full'},
     {l:'대표 이미지',t:'image',k:'image_url',h:'half'},{l:'링크 (위키·음원·영상·악보 URL)',t:'text',k:'link_wiki',h:'half',ph:'쉼표로 구분'}]},
    org:{label:'음악단체DB',f:[
-    {l:'단체명 (국문)',t:'text',h:'half'},{l:'단체명 (영문)',t:'text',h:'half'},
+    {l:'단체명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'단체명 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'유형',t:'select',o:['오케스트라','실내악','합창단','오페라단','크로스오버','음악관계사','기타'],h:'half'},
     {l:'소재지',t:'text',h:'half'},{l:'창단',t:'text',h:'half'},{l:'대표 · 지휘자',t:'text',h:'half'},
     {l:'연고 공연장',t:'text',h:'half'},{l:'홈페이지',t:'url',h:'half'},
     {l:'대표 활동 · 공연',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
    venue:{label:'공연장DB',f:[
-    {l:'공연장명 (국문)',t:'text',h:'half'},{l:'공연장명 (영문)',t:'text',h:'half'},
+    {l:'공연장명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'공연장명 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'유형',t:'select',o:['콘서트홀','오페라하우스','다목적홀','실내악홀','야외공연장','복합공연장','기타'],h:'half'},
     {l:'소재지',t:'text',h:'half'},{l:'개관',t:'text',h:'half'},{l:'좌석수',t:'text',h:'half'},
     {l:'운영주체',t:'text',h:'half'},{l:'상주단체',t:'text',h:'half'},
@@ -1287,20 +1287,20 @@ if('serviceWorker' in navigator){
     {l:'로고',t:'image',k:'logo_url',h:'half'},{l:'홈페이지',t:'url',k:'link_home',h:'half'},
     {l:'소개',t:'textarea',k:'description',h:'full'}]},
    modern:{label:'현대음악DB',f:[
-    {l:'작곡가명 (국문)',t:'text',h:'half'},{l:'작곡가명 (영문)',t:'text',h:'half'},
+    {l:'작곡가명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'작곡가명 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'사조·유파',t:'select',o:['표현주의·12음','총렬주의','미니멀리즘','전자음악','우연성·실험','스펙트럴','음향주의','신고전주의','동서 융합','다원주의·포스트모던','기타'],h:'half'},
     {l:'국적',t:'text',h:'half'},{l:'생몰',t:'text',h:'half'},{l:'대표 기법',t:'text',h:'half'},
     {l:'사사 (계보)',t:'text',h:'half'},{l:'활동시기',t:'text',h:'half'},
     {l:'대표작',t:'text',h:'full'},{l:'사진',t:'image',h:'half'},{l:'링크',t:'text',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
    foundation:{label:'관련기관·재단DB',f:[
-    {l:'기관·재단명 (국문)',t:'text',h:'half'},{l:'기관·재단명 (영문)',t:'text',h:'half'},
+    {l:'기관·재단명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'기관·재단명 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'유형',t:'select',o:['재단','협회','공공기관','기획사','음반사','콩쿠르·시상','지원기관','기타'],h:'half'},
     {l:'소재지',t:'text',h:'half'},{l:'설립',t:'text',h:'half'},
     {l:'설립구분',t:'select',o:['공공','민간','민간(기업)'],h:'half'},
     {l:'산하 · 운영',t:'text',h:'half'},{l:'관련 분야',t:'text',h:'half'},
     {l:'주요 사업',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
    academic:{label:'학술DB',f:[
-    {l:'제목 (국문)',t:'text',h:'full'},{l:'제목 (영문)',t:'text',h:'full'},
+    {l:'제목 (국문)',t:'text',k:'title',h:'full'},{l:'제목 (영문)',t:'text',k:'title_en',h:'full'},
     {l:'유형',t:'select',o:['학술논문','학위논문','저널·학술지','연구서','평론','자료','기타'],h:'half'},
     {l:'저자',t:'text',h:'half'},{l:'발행처',t:'text',h:'half'},{l:'발행연도',t:'text',h:'half'},
     {l:'분야',t:'text',h:'half'},{l:'언어',t:'select',o:['국문','영문','독문','기타'],h:'half'},
@@ -1310,17 +1310,22 @@ if('serviceWorker' in navigator){
   function fld(f,rec){
     var full=f.h==='full'?' wr-f-full':'';
     var v=esc(rec&&f.k?(rec[f.k]==null?'':rec[f.k]):(f.v||'')), ph=esc(f.ph||'');
+    /* ★ 입력칸에 「어떤 칸인지」 표시를 붙입니다 (data-k).
+       예전에는 표시가 없어서, 코드가 특정 칸을 찾으려면 「몇 번째 칸」
+       같은 순서에 기대야 했습니다. 칸 순서가 바뀌면 조용히 어긋납니다.
+       표시를 붙여 두면 이름 미리 채우기·검사 같은 일을 안전하게 할 수 있습니다. */
+    var dk = f.k ? ' data-k="'+esc(f.k)+'"' : '';
     var inner;
-    if(f.t==='textarea') inner='<textarea class="wr-in" rows="3" placeholder="'+ph+'">'+v+'</textarea>';
+    if(f.t==='textarea') inner='<textarea class="wr-in"'+dk+' rows="3" placeholder="'+ph+'">'+v+'</textarea>';
     else if(f.t==='select'){
       var cur=rec&&f.k?String(rec[f.k]==null?'':rec[f.k]):'';
-      inner='<select class="wr-in">'+f.o.map(function(o){
+      inner='<select class="wr-in"'+dk+'>'+f.o.map(function(o){
         return '<option'+(o===cur?' selected':'')+'>'+esc(o)+'</option>';
       }).join('')+'</select>';
     }
-    else if(f.t==='image') inner='<div class="wr-upload">클릭 또는 드래그하여 이미지 업로드</div>';
-    else if(f.t==='tags') inner='<input class="wr-in" value="'+v+'" placeholder="쉼표로 구분 (예: 작곡, 오르간)">';
-    else inner='<input type="'+(f.t==='url'?'url':'text')+'" class="wr-in" value="'+v+'" placeholder="'+ph+'">';
+    else if(f.t==='image') inner='<div class="wr-upload"'+dk+'>클릭 또는 드래그하여 이미지 업로드</div>';
+    else if(f.t==='tags') inner='<input class="wr-in"'+dk+' value="'+v+'" placeholder="쉼표로 구분 (예: 작곡, 오르간)">';
+    else inner='<input type="'+(f.t==='url'?'url':'text')+'" class="wr-in"'+dk+' value="'+v+'" placeholder="'+ph+'">';
     return '<div class="wr-f'+full+'"><label class="wr-l">'+esc(f.l)+'</label>'+inner+'</div>';
   }
   var curDb='person', curRec=null;
@@ -1329,6 +1334,31 @@ if('serviceWorker' in navigator){
     var d=F[db]; if(!d) return;
     document.getElementById('wrDbLabel').textContent=d.label;
     document.getElementById('wrFields').innerHTML=d.f.map(function(f){return fld(f,curRec);}).join('');
+    prefillName();
+  }
+
+  /* ★ 주소로 넘어온 이름을 이름 칸에 미리 채웁니다.
+     DB 목록에서 「찾는 것이 없다」 를 만난 분이 그 자리에서 등록하러 올 때,
+     검색했던 낱말이 넘어옵니다(?name=...).
+     같은 것을 다시 적게 하면 한 걸음이 늘고 그만큼 떠나기 쉽습니다.
+
+     ★ 새로 등록할 때만 채웁니다. 보강일 때는 이미 담긴 값이 있으므로
+       그것을 덮어쓰면 안 됩니다. */
+  function prefillName(){
+    if(_mode==='enhance') return;
+    var nm=(_params.get('name')||'').trim();
+    if(!nm) return;
+    var box=document.getElementById('wrFields');
+    if(!box) return;
+    /* 국문 이름 칸을 찾습니다 — DB마다 이름표(라벨)가 달라도
+       칸 이름(data-k)은 name_ko 로 같습니다. 학술DB 는 title 입니다. */
+    var el=box.querySelector('[data-k="name_ko"]') || box.querySelector('[data-k="title"]');
+    if(el && !el.value){
+      el.value=nm;
+      /* 어느 칸이 채워졌는지 눈에 보이게 잠깐 표시합니다 */
+      el.style.borderColor='var(--violet-2)';
+      setTimeout(function(){ el.style.borderColor=''; }, 2200);
+    }
   }
   document.querySelectorAll('.wr-db').forEach(function(b){
     b.addEventListener('click',function(){

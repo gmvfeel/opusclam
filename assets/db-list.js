@@ -120,6 +120,118 @@ window.OCList = (function () {
     var state = { q: '', filters: '', order: cfg.orderDefault || '' };
     var ctx = { cur: 1, esc: esc, ava: ava, nd: nd, wikiThumb: wikiThumb };
 
+    /* ── 찾는 것이 없을 때 보여 줄 자리 ─────────────────────────
+
+       왜 이렇게 하나
+         「요청하신 검색 결과가 없습니다」 로 끝내면 그 사람은 그냥 떠납니다.
+         그런데 <b>자기 이름을 검색했다가 없는 것을 알게 된 순간</b>은
+         등록할 마음이 가장 큰 때입니다. 그때 등록하는 길을 보여 주면
+         자료도 늘고, 등록에 자격이 필요하므로 회원가입으로도 이어집니다.
+
+       ★ 두 가지를 조심했습니다.
+         ① 「자기 이름을 검색한 사람」 과 「그냥 못 찾은 사람」 을
+            구별할 방법이 없습니다. 「본인 정보를 등록하세요」 라고만 하면
+            베토벤을 찾던 사람에게 엉뚱합니다.
+            그래서 <b>양쪽에 다 자연스러운 문구</b>로 적습니다.
+         ② 등록은 <b>자격 회원의 관리자 승인</b>을 거칩니다.
+            그것을 숨기고 「등록하세요」 만 크게 보이면, 가입한 뒤에
+            실망합니다. 문턱을 먼저 정직하게 적습니다.
+
+       ★ 찾기를 돕는 것도 함께 둡니다.
+         없는 것이 아니라 「아직 안 들어온 것」 일 수 있으므로,
+         다른 표기로 찾아보도록 권하고 그 DB의 전체 건수를 보여 줍니다. */
+
+    /* DB마다 부르는 이름과 등록 화면 주소 */
+    var EMPTY_INFO = {
+      persons: { what: '음악인', db: 'person', ask: '찾으시는 분이 목록에 없습니까?',
+                 tip: '(같은 사람이 다른 표기로 담겨 있을 수 있습니다)' },
+      orgs: { what: '음악단체', db: 'org', ask: '찾으시는 단체가 없습니까?',
+              tip: '(「서울시립교향악단」 · 「Seoul Philharmonic」 처럼 표기가 여럿입니다)' },
+      venues: { what: '공연장', db: 'venue', ask: '찾으시는 공연장이 없습니까?',
+                tip: '(「예술의전당 콘서트홀」 처럼 홀 이름까지 넣거나, 반대로 빼고 찾아보십시오)' },
+      schools: { what: '음악학교', db: 'school', ask: '찾으시는 학교가 없습니까?',
+                 tip: '(「예술고등학교」 · 「예고」 처럼 줄임말도 해 보십시오)' },
+      modern_composers: { what: '현대음악 작곡가', db: 'modern', ask: '찾으시는 작곡가가 없습니까?',
+                          tip: '(원어 표기로도 찾아보십시오)' },
+      foundations: { what: '기관·재단', db: 'foundation', ask: '찾으시는 기관이 없습니까?',
+                     tip: '(재단·협회·음반사·콩쿠르 주최를 함께 담고 있습니다)' },
+      academic: { what: '학술 자료', db: 'academic', ask: '찾으시는 자료가 없습니까?',
+                  tip: '(제목 전체보다 낱말 하나로 찾는 편이 잘 됩니다)' },
+    };
+
+    function emptyHtml() {
+      var key = cfg.entity || cfg.table;
+      var info = EMPTY_INFO[key] || { what: '자료', db: 'person', ask: '찾으시는 자료가 없습니까?', tip: '' };
+      var kw = String(state.q || '').trim();
+
+      /* 등록 화면으로 갈 때 검색한 낱말을 함께 넘깁니다 —
+         이름 칸이 미리 채워져 한 걸음이 줄어듭니다. */
+      var wr = '/db/write.html?db=' + encodeURIComponent(info.db) + '&mode=new'
+             + (kw ? '&name=' + encodeURIComponent(kw) : '');
+
+      var head = kw
+        ? '<b>' + esc(kw) + '</b> 로 찾은 결과가 없습니다.'
+        : '조건에 맞는 자료가 없습니다.';
+
+      var totalTxt = (total || 0).toLocaleString();
+
+      return ''
+        + '<div class="pdb-none">'
+        +   '<p class="pdb-none-t">' + head + '</p>'
+
+        /* ── 찾기를 돕습니다 ── */
+        +   '<ul class="pdb-none-tip">'
+        +     '<li>한글 · 영문 · 원어 표기를 바꿔 찾아보십시오. ' + esc(info.tip) + '</li>'
+        +     '<li>이름 전체보다 <b>일부만</b> 넣어 보십시오. 그편이 잘 찾아집니다.</li>'
+        +     '<li>왼쪽 조건을 켜 두셨다면 풀고 다시 찾아보십시오.</li>'
+        +   '</ul>'
+
+        /* ── 등록을 권합니다 ── */
+        +   '<div class="pdb-none-cta">'
+        +     '<p class="pdb-none-ask">' + esc(info.ask) + '</p>'
+        +     '<p class="pdb-none-sub">'
+        +       '오퍼스클램의 ' + esc(info.what) + ' 자료는 지금 <b>' + totalTxt + '건</b>입니다. '
+        +       '없는 것이 아니라 아직 담기지 않은 것일 수 있습니다.<br>'
+        +       '자격을 갖춘 회원은 직접 <b>등록·보강</b>하실 수 있습니다. '
+        +       '<span class="pdb-none-note">등록하신 자료는 관리자 확인을 거쳐 반영됩니다.</span>'
+        +     '</p>'
+        +     '<div class="pdb-none-btns" id="pdbNoneBtns">'
+        +       '<a class="pdb-none-btn" href="' + wr + '">' + esc(info.what) + ' 등록·보강하기</a>'
+        +       '<a class="pdb-none-btn2" href="mailto:cser@wixon.co.kr'
+        +         '?subject=' + encodeURIComponent('[오퍼스클램] 자료 등록 요청')
+        +         '&body=' + encodeURIComponent('찾던 것 — ' + (kw || '(검색어 없음)') + '\n\n'
+        +           '아래에 알려 주시면 확인해 담겠습니다.\n'
+        +           '· 이름(한글/영문) — \n· 무엇인지 — \n· 참고할 수 있는 주소 — \n')
+        +       '">메일로 알려 주기</a>'
+        +     '</div>'
+        +   '</div>'
+        + '</div>';
+    }
+
+    /* 손님에게는 「회원가입하고 등록하기」 로 바꿔 줍니다.
+       ★ 로그인 여부를 확인하는 동안 화면이 비어 보이지 않도록,
+         먼저 그려 두고 확인이 끝나면 단추만 고칩니다. */
+    function fixEmptyCta() {
+      var box = document.getElementById('pdbNoneBtns');
+      if (!box) return;
+      var link = box.querySelector('.pdb-none-btn');
+      if (!link) return;
+      var sb = window.__ocSb;
+      if (!sb || !sb.auth) return;
+      sb.auth.getSession().then(function (r) {
+        var on = !!(r && r.data && r.data.session && r.data.session.user);
+        if (on) return;                     /* 회원이면 그대로 둡니다 */
+        var next = link.getAttribute('href');
+        link.textContent = '회원가입하고 등록하기';
+        link.setAttribute('href', '/account/join.html?next=' + encodeURIComponent(next));
+        var hint = document.createElement('p');
+        hint.className = 'pdb-none-who';
+        hint.innerHTML = '등록·보강은 <b>전공자 · 음악관계자 · 단체 · 음악학교</b> 회원에게 열려 있습니다. '
+          + '가입하실 때 회원 종류를 골라 주십시오.';
+        box.parentNode.insertBefore(hint, box);
+      }).catch(function () {});
+    }
+
     /* 로딩 스켈레톤 (표 헤더 구조를 읽어 자동 생성) */
     function skeletonRows(n) {
       var ths = document.querySelectorAll('.pdb-table thead th');
@@ -225,8 +337,9 @@ window.OCList = (function () {
           cur = pg; ctx.cur = cur;
           var cnt = document.querySelector('.pdb-count b'); if (cnt) cnt.textContent = (total || 0).toLocaleString();
           if (rows.length === 0) {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="' + ncol + '" class="pdb-empty">요청하신 검색 결과가 없습니다.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="' + ncol + '">' + emptyHtml() + '</td></tr>';
             if (pager) pager.innerHTML = '';
+            fixEmptyCta();
           } else {
             /* 이미지 칸이 빈 항목은 모아둔 사진(entity_photos)으로 채운 뒤 그린다.
                cfg.photoFill = { type:'person', col:'image_url' } 형태로 지정하면 동작한다.
