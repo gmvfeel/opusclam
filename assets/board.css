@@ -236,7 +236,36 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
 }
 
 /* 글쓰기 폼 (관리자) */
-.board-form{max-width:820px;margin:0 auto}
+/* ★ 글쓰기 폼 전체를 테두리 두른 한 장에 담습니다.
+   리쿠르트 서비스안내·상세·등록 화면과 같은 값입니다 —
+   3px solid #514a6b · 둥글기 12px. 사이트가 한 결로 보여야 합니다.
+
+   ★ 이 규칙 하나로 글쓰기 화면 열여섯 곳에 모두 반영됩니다.
+     .board-form 은 assets/board-write.js 가 만드는 폼에만 붙으므로
+     목록·상세 화면에는 영향이 없습니다(확인했습니다).
+
+   max-width 를 860px 로 조금 늘렸습니다 — 안쪽 여백 38px 이 양쪽에
+   생기므로, 820px 그대로 두면 글 적는 칸이 그만큼 좁아집니다. */
+.board-form{
+  max-width:860px;margin:0 auto;
+  background:var(--paper);
+  border:3px solid #514a6b;
+  border-radius:12px;
+  padding:34px 38px 36px;
+  box-shadow:0 3px 14px -4px rgba(30,24,60,.16)
+}
+html[data-theme="dark"] .board-form{
+  border-color:#7a7295;
+  box-shadow:0 3px 16px -4px rgba(0,0,0,.5)
+}
+/* 테두리 안쪽이므로 맨 위 제목의 위 여백을 줄입니다 */
+.board-form .bf-formhead{margin-top:0}
+/* 맨 아래 단추 줄이 테두리에 붙지 않게 */
+.board-form .bf-actions{margin-bottom:0}
+
+@media (max-width:900px){
+  .board-form{padding:22px 18px 24px;border-width:2px}
+}
 .bf-row{margin-bottom:20px}
 .bf-row label{display:block;font-family:var(--display);font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:8px}
 .bf-row input[type=text],.bf-row textarea,.bf-row select{width:100%;font-size:15px;color:var(--text);background:var(--paper);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;outline:none;font-family:inherit;transition:border-color .15s ease}
