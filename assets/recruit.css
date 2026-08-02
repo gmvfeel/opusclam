@@ -1574,7 +1574,30 @@ html[data-theme="dark"] .rv-note-txt p b { color: #b9b4e0; }
    (카드·표·묶음 제목·짙은 단추)을 그대로 씁니다 —
    대문만 다른 결이면 들어와서 낯설어집니다.
    ============================================================ */
-.rg-wrap { max-width: 1000px; margin: 44px auto 0; }
+/* ★ 서비스안내 전체를 테두리 두른 한 장에 담습니다.
+   상세 화면(.rv-doc)·등록 화면(.rw-doc)과 같은 테두리·둥글기·그림자를 씁니다.
+   리쿠르트의 대문이니 다른 화면과 같은 격으로 보여야 합니다. */
+.rg-wrap {
+  max-width: 1000px; margin: 44px auto 0;
+  background: var(--paper);
+  border: 3px solid #514a6b;
+  border-radius: 12px;
+  padding: 34px 38px 36px;
+  box-shadow: 0 3px 14px -4px rgba(30, 24, 60, .16);
+}
+html[data-theme="dark"] .rg-wrap {
+  border-color: #7a7295;
+  box-shadow: 0 3px 16px -4px rgba(0, 0, 0, .5);
+}
+/* 테두리 안쪽이므로 첫 묶음의 위 여백을 줄입니다 */
+.rg-wrap > .rg-intro:first-child { margin-top: 0; }
+.rg-wrap > .rg-h:first-of-type { margin-top: 34px; }
+/* 맨 아래 문의 칸은 테두리에 붙지 않게 */
+.rg-wrap > .rg-contact:last-child { margin-bottom: 0; }
+
+@media (max-width: 900px) {
+  .rg-wrap { padding: 24px 20px 26px; border-width: 2px; }
+}
 
 /* ── 소개 ─────────────────────────────────────────────────*/
 .rg-intro {
