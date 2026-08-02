@@ -333,14 +333,33 @@
       +   '</tbody></table>'
       + '</section>';
 
-    /* ── 지원하기 — 이메일이 있을 때만 실제로 눌립니다 ──
-         누를 수 없는 단추를 눌러 보게 하는 것보다,
-         왜 못 누르는지 알려 주는 것이 낫습니다. */
-    var applyBtn = has(o.contact_email)
-      ? '<a class="rv-btn rv-btn--go" href="mailto:' + esc(o.contact_email)
+    /* ── 지원하기 ────────────────────────────────────────────
+
+       ★ 예전에는 <b>이메일이 적힌 공고만</b> 눌릴 수 있었습니다.
+         그래서 이메일을 안 적은 공고는 지원할 길이 없었습니다.
+         이제 오퍼스클램 안에서 지원을 받으므로 <b>모든 공고에</b>
+         지원하기가 살아 있습니다.
+
+       ★ 단체가 자체 절차로만 받고 싶을 때는 accept_site 를 끕니다.
+         그 경우에만 지원하기 대신 접수방법 안내가 보입니다 —
+         길을 막지 않되 기본값은 사이트 지원입니다.
+
+       ★ 마감된 공고는 지원을 받지 않습니다.
+         냈는데 아무도 안 보는 것이 가장 나쁜 결과입니다. */
+    var siteApply = (o.accept_site !== false);
+    var applyBtn;
+    if (closed) {
+      applyBtn = '<span class="rv-btn rv-btn--off" title="접수가 끝난 공고입니다.">접수 마감</span>';
+    } else if (siteApply) {
+      /* 눌렀을 때 창을 엽니다. 이미 지원했는지는 아래에서 확인해 글자를 바꿉니다. */
+      applyBtn = '<button type="button" class="rv-btn rv-btn--go" id="rvApply">지원하기</button>';
+    } else if (has(o.contact_email)) {
+      applyBtn = '<a class="rv-btn rv-btn--go" href="mailto:' + esc(o.contact_email)
         + '?subject=' + encodeURIComponent('[오퍼스클램 리쿠르트] ' + (o.title || '') + ' 지원')
-        + '">지원하기</a>'
-      : '<span class="rv-btn rv-btn--off" title="등록된 이메일이 없습니다. 문의처를 확인해 주십시오.">지원하기</span>';
+        + '">이메일로 지원하기</a>';
+    } else {
+      applyBtn = '<span class="rv-btn rv-btn--off" title="이 공고는 오퍼스클램 안에서 지원을 받지 않습니다. 접수방법을 확인해 주십시오.">접수방법 확인</span>';
+    }
 
     var out = ''
       + '<h1 class="rv-title">' + esc(o.title || '(제목을 아직 적지 않았습니다)') + '</h1>'
@@ -678,6 +697,9 @@
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       bump(id);
+      /* ★ 채용 공고면 지원하기 단추를 잇습니다.
+         그림을 다 그린 뒤에 해야 단추가 이미 있습니다. */
+      if (cfg.kind === 'job') bindApply(rows[0]);
     } catch (e) {
       if (box) box.innerHTML = '<div class="rv-empty">자료를 불러오지 못했습니다. '
         + '잠시 후 다시 시도해 주십시오.</div>';
@@ -704,6 +726,378 @@
     return '<div class="rv-empty">찾으시는 정보가 없습니다. '
       + '지워졌거나 주소가 잘못되었을 수 있습니다.<br>'
       + '<a class="rv-lk" href="' + cfg.listPage + '">목록으로 돌아가기</a></div>';
+  }
+
+  /* ── 지원하기 단추 잇기 ──────────────────────────────────
+     ★ 이미 지원한 공고면 단추 글자를 「지원함」 으로 바꿉니다.
+       눌러 보고 나서 「이미 지원했습니다」 를 보는 것보다,
+       <b>누르기 전에 알려 주는</b> 편이 낫습니다.
+     ★ 확인하는 동안 단추를 감추지 않습니다 —
+       느린 회선에서 단추가 사라졌다 나타나면 불안합니다. */
+  async function bindApply(o) {
+    var btn = document.getElementById('rvApply');
+    if (!btn) return;                       /* 마감·이메일 지원 공고에는 단추가 없습니다 */
+    btn.addEventListener('click', function () { openApply(o); });
+
+    var c = sb();
+    if (!c) return;
+    try {
+      var ses = await c.auth.getSession();
+      if (!(ses && ses.data && ses.data.session)) return;   /* 손님은 눌렀을 때 안내합니다 */
+      var r = await c.rpc('recruit_my_application', { p_job: Number(o.id) });
+      var d = r.data;
+      if (typeof d === 'string') d = JSON.parse(d);
+      if (d && d.applied && d.status !== '지원취소') {
+        btn.textContent = '지원함 · ' + (d.status || '접수');
+        btn.classList.add('rv-btn--off');
+        btn.title = '이미 지원하신 공고입니다. 눌러서 진행 상태를 보실 수 있습니다.';
+      }
+    } catch (e) { /* 못 물어봐도 지원하기는 그대로 눌립니다 */ }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     지원 창
+
+     ★ 무엇을 담는가
+       · 내 인재정보 고르기 — 등록해 둔 것이 있으면 붙입니다
+       · 파일 하나 — 이력서·포트폴리오·연주 영상 링크 대신 파일
+       · 하고 싶은 말
+       · <b>개인정보 동의</b>
+
+     ★ 동의를 반드시 받는 까닭
+       지원하면 이름·연락처가 그 단체에 넘어갑니다. 인재정보 열람과
+       같은 성격이므로, 무엇이 넘어가는지 <b>보여 주고</b> 동의를 받습니다.
+       동의 없이 넘기는 것은 옳지 않고, 나중에 문제가 됩니다.
+
+     ★ 이름·연락처는 지원 시점의 값을 베껴 담습니다.
+       인재정보를 나중에 고치거나 지워도 단체가 받은 지원서는 남아야
+       합니다. 그러지 않으면 단체가 연락할 길을 잃습니다.
+     ══════════════════════════════════════════════════════════ */
+
+  var applyState = { job: null, me: null, talents: [], fileUrl: null, fileName: null, busy: false };
+
+  function applyModalHtml() {
+    return ''
+      + '<div class="ra-dim" id="raDim"></div>'
+      + '<div class="ra-win" role="dialog" aria-modal="true" aria-label="지원하기">'
+      +   '<div class="ra-head">'
+      +     '<b>지원하기</b>'
+      +     '<button type="button" class="ra-x" id="raClose" aria-label="닫기">✕</button>'
+      +   '</div>'
+      +   '<div class="ra-body" id="raBody"></div>'
+      +   '<div class="ra-foot">'
+      +     '<span class="ra-msg" id="raMsg"></span>'
+      +     '<button type="button" class="rv-btn rv-btn--list" id="raCancel">취소</button>'
+      +     '<button type="button" class="rv-btn rv-btn--go" id="raSend">지원서 보내기</button>'
+      +   '</div>'
+      + '</div>';
+  }
+
+  function ensureApplyBox() {
+    var box = document.getElementById('raWrap');
+    if (box) return box;
+    box = document.createElement('div');
+    box.id = 'raWrap';
+    box.className = 'ra-wrap';
+    box.hidden = true;
+    box.innerHTML = applyModalHtml();
+    document.body.appendChild(box);
+    box.addEventListener('click', function (e) {
+      if (e.target.id === 'raDim' || e.target.id === 'raClose' || e.target.id === 'raCancel') closeApply();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !box.hidden) closeApply();
+    });
+    var send = box.querySelector('#raSend');
+    if (send) send.addEventListener('click', submitApply);
+    return box;
+  }
+
+  function closeApply() {
+    var box = document.getElementById('raWrap');
+    if (box) box.hidden = true;
+    document.body.classList.remove('ra-open');
+  }
+
+  function raSay(t, kind) {
+    var el = document.getElementById('raMsg');
+    if (!el) return;
+    el.innerHTML = t || '';
+    el.className = 'ra-msg' + (kind ? ' ra-msg--' + kind : '');
+  }
+
+  /* 내가 등록해 둔 인재정보를 가져옵니다 —
+     붙여 두면 단체가 학력·경력을 함께 볼 수 있어 도움이 됩니다. */
+  async function myTalents() {
+    var c = sb();
+    if (!c || !applyState.me) return [];
+    try {
+      var r = await c.from('recruit_talents')
+        .select('id,title,job_cat1,job_cat2,created_at,is_open,hidden')
+        .eq('member_id', applyState.me.id)
+        .order('created_at', { ascending: false });
+      return (r.data || []).filter(function (x) { return !x.hidden; });
+    } catch (e) { return []; }
+  }
+
+  async function openApply(o) {
+    var box = ensureApplyBox();
+    box.hidden = false;
+    document.body.classList.add('ra-open');
+    var body = document.getElementById('raBody');
+    body.innerHTML = '<p class="ra-load">준비하는 중…</p>';
+    raSay('');
+
+    var c = sb();
+    if (!c) { body.innerHTML = '<p class="ra-warn">지금은 지원할 수 없습니다. 잠시 뒤 다시 시도해 주십시오.</p>'; return; }
+
+    /* 로그인 확인 */
+    var ses = await c.auth.getSession();
+    var u = ses && ses.data && ses.data.session && ses.data.session.user;
+    if (!u) {
+      body.innerHTML = ''
+        + '<div class="ra-gate">'
+        +   '<p><b>지원하려면 로그인이 필요합니다.</b></p>'
+        +   '<p>지원 내역이 마이페이지에 남고, 단체가 보낸 결과를 받아 보실 수 있습니다.</p>'
+        +   '<a class="rv-btn rv-btn--go" href="' + LOGIN_PAGE + '?next='
+        +     encodeURIComponent(location.pathname + location.search) + '">로그인하기</a>'
+        + '</div>';
+      document.getElementById('raSend').hidden = true;
+      return;
+    }
+    applyState.me = u;
+    applyState.job = o;
+    document.getElementById('raSend').hidden = false;
+
+    /* 이미 지원했는지 */
+    var already = null;
+    try {
+      var mr = await c.rpc('recruit_my_application', { p_job: Number(o.id) });
+      already = mr.data || null;
+      if (typeof already === 'string') already = JSON.parse(already);
+    } catch (e) {}
+    if (already && already.applied && already.status !== '지원취소') {
+      body.innerHTML = ''
+        + '<div class="ra-gate">'
+        +   '<p><b>이미 지원하신 공고입니다.</b></p>'
+        +   '<p>지원한 때 — ' + esc(String(already.at || '').slice(0, 10))
+        +     ' · 진행 상태 — <b>' + esc(already.status || '접수') + '</b></p>'
+        +   '<p class="ra-note">한 공고에는 한 번만 지원하실 수 있습니다. '
+        +     '고쳐 내고 싶으시면 마이페이지에서 지원을 취소한 뒤 다시 내십시오.</p>'
+        +   '<a class="rv-btn rv-btn--list" href="/account/mypage.html">마이페이지로</a>'
+        + '</div>';
+      document.getElementById('raSend').hidden = true;
+      return;
+    }
+
+    /* 내 회원 정보와 인재정보를 함께 읽습니다 */
+    var m = {};
+    try {
+      var r = await c.from('members').select('*').eq('id', u.id).maybeSingle();
+      m = r.data || {};
+    } catch (e) {}
+    applyState.talents = await myTalents();
+
+    var org = (o.org_name || '').trim();
+    var nm = (m.name || '').trim();
+    var ph = (m.phone || '').trim();
+    var em = (m.email || u.email || '').trim();
+
+    body.innerHTML = ''
+      /* 어디에 지원하는지 다시 보여 줍니다 — 창만 보고 헷갈리지 않게 */
+      + '<div class="ra-to">'
+      +   '<span class="ra-to-l">지원하는 곳</span>'
+      +   '<b>' + esc(org || '(단체명 없음)') + '</b>'
+      +   '<span class="ra-to-t">' + esc(o.title || '') + '</span>'
+      + '</div>'
+
+      /* 인재정보 붙이기 */
+      + '<div class="ra-f">'
+      +   '<label>내 인재정보 붙이기</label>'
+      +   (applyState.talents.length
+        ? '<select id="raTalent">'
+          + '<option value="">붙이지 않음</option>'
+          + applyState.talents.map(function (t) {
+              return '<option value="' + t.id + '">' + esc(t.title || '(제목 없음)')
+                + (t.job_cat1 ? ' — ' + esc(t.job_cat1) : '')
+                + (t.is_open === false ? ' (목록에 안 보이게 해 둔 것)' : '')
+                + '</option>';
+            }).join('')
+          + '</select>'
+          + '<p class="ra-hint">붙이시면 단체가 학력·경력·자기소개를 함께 봅니다. 훨씬 도움이 됩니다.</p>'
+        : '<p class="ra-hint ra-hint--none">등록해 둔 인재정보가 없습니다. '
+          + '<a href="/recruit/talent-write.html">인재정보를 먼저 올리시면</a> 지원할 때 함께 보낼 수 있습니다. '
+          + '없이도 지원은 됩니다.</p>')
+      + '</div>'
+
+      /* 연락처 — 고칠 수 있게 둡니다 */
+      + '<div class="ra-grid">'
+      +   '<div class="ra-f"><label>이름 <em>*</em></label>'
+      +     '<input type="text" id="raName" maxlength="40" value="' + esc(nm) + '" placeholder="실명"></div>'
+      +   '<div class="ra-f"><label>연락처 <em>*</em></label>'
+      +     '<input type="text" id="raPhone" maxlength="30" value="' + esc(ph) + '" placeholder="010-0000-0000"></div>'
+      + '</div>'
+      + '<div class="ra-f"><label>이메일 <em>*</em></label>'
+      +   '<input type="email" id="raEmail" maxlength="120" value="' + esc(em) + '" placeholder="받을 수 있는 이메일"></div>'
+
+      /* 하고 싶은 말 */
+      + '<div class="ra-f"><label>하고 싶은 말</label>'
+      +   '<textarea id="raMemo" rows="5" maxlength="1500" '
+      +     'placeholder="지원하는 까닭, 연주 경험, 가능한 일정 같은 것을 적어 주십시오."></textarea>'
+      +   '<p class="ra-hint">길게 쓰지 않으셔도 됩니다. 다만 한두 줄이라도 있으면 훨씬 잘 읽힙니다.</p>'
+      + '</div>'
+
+      /* 파일 */
+      + '<div class="ra-f"><label>파일 붙이기</label>'
+      +   '<div class="ra-file">'
+      +     '<button type="button" class="ra-filebtn" id="raFileBtn">파일 선택</button>'
+      +     '<span class="ra-filename" id="raFileName">선택한 파일 없음</span>'
+      +     '<button type="button" class="ra-filedel" id="raFileDel" hidden>지우기</button>'
+      +   '</div>'
+      +   '<input type="file" id="raFile" style="display:none">'
+      +   '<p class="ra-hint">이력서·포트폴리오·연주 녹음 등 하나를 올리실 수 있습니다. 한 파일 100MB 까지.</p>'
+      + '</div>'
+
+      /* 개인정보 동의 — 무엇이 넘어가는지 보여 주고 받습니다 */
+      + '<div class="ra-agree">'
+      +   '<label class="ra-check">'
+      +     '<input type="checkbox" id="raAgree">'
+      +     '<span>아래 정보가 <b>' + esc(org || '이 단체') + '</b> 에 전달되는 것에 동의합니다. <em>*</em></span>'
+      +   '</label>'
+      +   '<ul class="ra-agree-list">'
+      +     '<li>이름 · 연락처 · 이메일</li>'
+      +     '<li>붙이신 인재정보와 파일, 하고 싶은 말</li>'
+      +     '<li>지원한 시각</li>'
+      +   '</ul>'
+      +   '<p class="ra-note">전달된 정보는 <b>채용 목적으로만</b> 쓰여야 합니다. '
+      +     '지원은 마이페이지에서 취소하실 수 있고, 취소하시면 단체 화면에서도 취소로 표시됩니다.</p>'
+      + '</div>';
+
+    bindApplyFile();
+  }
+
+  /* 파일 올리기 — 게시판과 같은 방식으로, 실패한 까닭을 보여 줍니다 */
+  function bindApplyFile() {
+    var btn = document.getElementById('raFileBtn');
+    var inp = document.getElementById('raFile');
+    var nameEl = document.getElementById('raFileName');
+    var delBtn = document.getElementById('raFileDel');
+    if (!btn || !inp) return;
+
+    applyState.fileUrl = null; applyState.fileName = null;
+
+    btn.addEventListener('click', function () { inp.click(); });
+    delBtn.addEventListener('click', function () {
+      applyState.fileUrl = null; applyState.fileName = null;
+      inp.value = ''; nameEl.textContent = '선택한 파일 없음'; delBtn.hidden = true;
+    });
+
+    inp.addEventListener('change', async function () {
+      var f = inp.files && inp.files[0];
+      if (!f) return;
+      var c = sb();
+      if (!c || !applyState.me) return;
+      nameEl.textContent = '올리는 중… ' + f.name;
+
+      /* 이름에 확장자가 없으면 종류에서 짐작합니다 (게시판에서 겪은 문제) */
+      var mm = String(f.name || '').match(/\.([A-Za-z0-9]{1,8})$/);
+      var ext = mm ? mm[1].toLowerCase() : ({
+        'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png',
+        'audio/mpeg': 'mp3', 'video/mp4': 'mp4',
+      }[String(f.type || '')] || 'bin');
+      var path = applyState.me.id + '/app_' + Date.now() + '.' + ext;
+
+      try {
+        var up = await c.storage.from('recruit').upload(path, f, {
+          upsert: false, contentType: f.type || undefined,
+        });
+        if (up.error) throw up.error;
+        applyState.fileUrl = c.storage.from('recruit').getPublicUrl(path).data.publicUrl;
+        applyState.fileName = f.name || ('첨부.' + ext);
+        nameEl.textContent = applyState.fileName;
+        delBtn.hidden = false;
+        raSay('');
+      } catch (e) {
+        var msg = String((e && e.message) || e);
+        if (/bucket not found/i.test(msg)) msg = '저장소가 없습니다. 관리자에게 알려 주십시오.';
+        else if (/exceeded|too large|size/i.test(msg)) msg = '파일이 너무 큽니다 (100MB 까지)';
+        else if (/policy|permission|unauthorized|row-level/i.test(msg)) msg = '올릴 권한이 없습니다. 다시 로그인해 보십시오.';
+        nameEl.textContent = '선택한 파일 없음';
+        raSay('파일을 올리지 못했습니다 — ' + esc(msg), 'warn');
+      }
+    });
+  }
+
+  async function submitApply() {
+    if (applyState.busy) return;
+    var o = applyState.job;
+    var c = sb();
+    if (!o || !c) return;
+
+    var nm = (document.getElementById('raName') || {}).value || '';
+    var ph = (document.getElementById('raPhone') || {}).value || '';
+    var em = (document.getElementById('raEmail') || {}).value || '';
+    var memo = (document.getElementById('raMemo') || {}).value || '';
+    var tid = (document.getElementById('raTalent') || {}).value || '';
+    var ok = (document.getElementById('raAgree') || {}).checked;
+
+    /* 꼭 채워야 하는 것 — 무엇이 빠졌는지 하나씩 알려 줍니다 */
+    if (!String(nm).trim())  { raSay('이름을 적어 주십시오.', 'warn'); return; }
+    if (!String(ph).trim())  { raSay('연락처를 적어 주십시오.', 'warn'); return; }
+    if (!String(em).trim())  { raSay('이메일을 적어 주십시오.', 'warn'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(em).trim())) {
+      raSay('이메일 모양이 맞지 않습니다.', 'warn'); return;
+    }
+    if (!ok) { raSay('개인정보 전달에 동의해 주셔야 지원할 수 있습니다.', 'warn'); return; }
+
+    applyState.busy = true;
+    var send = document.getElementById('raSend');
+    if (send) { send.disabled = true; send.textContent = '보내는 중…'; }
+    raSay('');
+
+    try {
+      var row = {
+        job_id: Number(o.id),
+        applicant_id: applyState.me.id,
+        talent_id: tid ? Number(tid) : null,
+        name: String(nm).trim(),
+        phone: String(ph).trim(),
+        email: String(em).trim(),
+        message: String(memo).trim() || null,
+        file_url: applyState.fileUrl,
+        file_name: applyState.fileName,
+      };
+      var r = await c.from('recruit_applications').insert([row]);
+      if (r.error) throw r.error;
+
+      var body = document.getElementById('raBody');
+      body.innerHTML = ''
+        + '<div class="ra-done">'
+        +   '<p class="ra-done-t">지원서를 보냈습니다.</p>'
+        +   '<p>' + esc((o.org_name || '단체').trim()) + ' 에 전달되었습니다. '
+        +     '진행 상태는 <b>마이페이지</b>에서 보실 수 있습니다.</p>'
+        +   '<p class="ra-note">결과 안내는 단체가 하는 일이므로 시기는 저마다 다릅니다. '
+        +     '급하시면 공고의 문의처로 물어보십시오.</p>'
+        +   '<a class="rv-btn rv-btn--go" href="/account/mypage.html">마이페이지에서 보기</a>'
+        + '</div>';
+      if (send) send.hidden = true;
+      var cn = document.getElementById('raCancel');
+      if (cn) cn.textContent = '닫기';
+
+      /* 화면의 지원하기 단추도 바꿔 둡니다 */
+      var ab = document.getElementById('rvApply');
+      if (ab) { ab.textContent = '지원함'; ab.disabled = true; ab.classList.add('rv-btn--off'); }
+    } catch (e) {
+      var msg = String((e && e.message) || e);
+      if (/duplicate key|recruit_app_once/i.test(msg)) {
+        msg = '이미 지원하신 공고입니다. 마이페이지에서 확인해 주십시오.';
+      } else if (/row-level|policy/i.test(msg)) {
+        msg = '이 공고는 지금 지원을 받지 않습니다. 접수기간과 접수방법을 확인해 주십시오.';
+      }
+      raSay('보내지 못했습니다 — ' + esc(msg), 'warn');
+      if (send) { send.disabled = false; send.textContent = '지원서 보내기'; }
+    }
+    applyState.busy = false;
   }
 
   /* 조회수 — 이미 있는 함수를 부릅니다(recruit_job_hit / recruit_talent_hit).
