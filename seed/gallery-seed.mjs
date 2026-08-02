@@ -54,7 +54,10 @@ async function sbAll(path) {
   for (;;) {
     const r = await fetch(SB_URL + '/rest/v1/' + path
       + (path.includes('?') ? '&' : '?') + 'limit=200&offset=' + from, { headers: H });
-    if (!r.ok) throw new Error('GET ' + r.status + ' ' + (await r.text()).slice(0, 120));
+    /* ★ 오류 글을 넉넉히 보여 줍니다.
+       이번에 120자에서 잘려 「그런 칸이 없습니다(42703)」 뒤의
+       <b>어느 칸인지</b>가 안 보였습니다. 원인 찾는 데 한 걸음이 더 걸렸습니다. */
+    if (!r.ok) throw new Error('GET ' + r.status + ' ' + (await r.text()).slice(0, 400));
     const rows = await r.json();
     if (!rows.length) break;
     out.push(...rows);
@@ -106,9 +109,11 @@ const AUTHORS = [
    ============================================================ */
 
 /* 국내·해외를 가려 게시판 갈래를 정합니다 */
+/* 국내·해외를 가려 게시판 갈래를 정합니다.
+   location 이 「대한민국 · 서울」 꼴이므로 그 한 칸만 봅니다. */
 function isDomestic(v) {
-  const c = String(v.country || '') + ' ' + String(v.location || '');
-  return /대한민국|한국|Korea|서울|부산|대구|인천|광주|대전|울산|경기|강원|충청|전라|경상|제주/i.test(c);
+  const c = String(v.location || '');
+  return /대한민국|한국|Korea|서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주/i.test(c);
 }
 
 /* 공연장 사진 글 — 「가 봤다」 는 이야기로 씁니다.
@@ -139,8 +144,12 @@ function hallPost(v) {
   const name = (v.name_ko || v.name_en || '').trim();
   if (!name || !v.logo_url) return null;
   const dom = isDomestic(v);
-  const where = [v.city, v.country].filter(Boolean).join(' · ');
-  const seats = v.seats ? `객석 ${Number(v.seats).toLocaleString()}석. ` : '';
+  /* location 이 이미 「대한민국 · 서울」 꼴입니다 */
+  const where = String(v.location || '').trim();
+  /* seats 는 「2,505석」 처럼 「석」 이 붙은 글자입니다.
+     수로 바꾸려 하면 NaN 이 되므로 그대로 씁니다. */
+  const seatTxt = String(v.seats || '').trim();
+  const seats = seatTxt ? `객석 ${esc(seatTxt)}. ` : '';
 
   const title = pick([
     `${name} 다녀왔습니다`,
@@ -251,12 +260,15 @@ async function main() {
   /* ㉮ 공연장 사진 — 커먼즈 */
   let halls = [];
   try {
-    /* ★ 칸 이름을 수집기(scripts/collect-venues.mjs)에서 확인했습니다 —
-       공연장 사진은 image_url 이 아니라 <b>logo_url</b> 입니다.
-       짐작으로 두면 조용히 0건이 나옵니다. */
-    halls = await sbAll('venues?select=id,name_ko,name_en,country,city,location,seats,logo_url'
+    /* ★ 칸 이름을 수집기(scripts/collect-venues.mjs)의 담는 행에서 확인했습니다.
+       두 번 틀렸던 자리입니다 —
+         · 사진은 image_url 이 아니라 <b>logo_url</b>
+         · <b>country · city 칸이 없습니다.</b> 두 값을 location 하나에
+           「나라 · 도시」 로 합쳐 담습니다 (그래서 42703 오류가 났습니다)
+         · seats 는 수가 아니라 「2,505석」 같은 <b>글자</b>입니다 */
+    halls = await sbAll('venues?select=id,name_ko,name_en,type,location,seats,logo_url'
       + '&logo_url=not.is.null&hidden=is.false');
-  } catch (e) { console.log('  · 공연장DB 를 읽지 못했습니다 ·', e.message.slice(0, 60)); }
+  } catch (e) { console.log('  · 공연장DB 를 읽지 못했습니다 ·', e.message.slice(0, 300)); }
   console.log('■ 사진이 있는 공연장', halls.length, '곳');
 
   /* ㉯ 공연 포스터 — 정보SPOT */
@@ -268,7 +280,7 @@ async function main() {
       + '&section=eq.' + encodeURIComponent('공연정보')
       + '&thumb_url=not.is.null&hidden=is.false'
       + '&order=date_from.desc.nullslast');
-  } catch (e) { console.log('  · 정보SPOT 을 읽지 못했습니다 ·', e.message.slice(0, 60)); }
+  } catch (e) { console.log('  · 정보SPOT 을 읽지 못했습니다 ·', e.message.slice(0, 300)); }
   console.log('■ 포스터가 있는 공연', posters.length, '건');
 
   /* 글감을 만듭니다 — 이미 쓴 사진·제목은 건너뜁니다 */
