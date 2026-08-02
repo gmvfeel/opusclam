@@ -336,11 +336,26 @@
   var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
 
-  var _sb = null, _viewer = null, _viewerPromise = null;
+  var _viewer = null, _viewerPromise = null;
 
+  /* ★ 접속 객체(Supabase client)는 <b>화면 전체에 하나만</b> 둡니다.
+
+     왜 그래야 하나 (실제로 겪은 일입니다)
+       여러 곳에서 따로 만들었더니 콘솔에 이 경고가 떴습니다 —
+         「Multiple GoTrueClient instances detected in the same browser
+           context … may produce undefined behavior」
+       같은 저장 열쇠를 여러 객체가 다투면, <b>세션은 읽히는데 실제
+       질의에는 토큰이 안 실리는</b> 일이 생깁니다. 그러면 권한 규칙이
+       회원 줄을 막고, RLS 는 오류가 아니라 <b>빈 결과</b>를 돌려주므로
+       코드가 「자격 없음」 으로 잘못 읽습니다.
+       → 정상 회원인데 채용등록이 잠겼던 것이 이 문제였습니다.
+
+     window.__ocSb 한 자리에 담아 모두가 그것을 씁니다. */
   function client() {
-    if (!_sb && window.supabase) _sb = window.supabase.createClient(SB, KEY);
-    return _sb;
+    if (!window.__ocSb && window.supabase && window.supabase.createClient) {
+      window.__ocSb = window.supabase.createClient(SB, KEY);
+    }
+    return window.__ocSb || null;
   }
 
   /* 지금 보는 사람 — 한 번만 물어보고 그 뒤에는 기억해 둡니다 */

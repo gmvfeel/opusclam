@@ -116,7 +116,8 @@
     if(!links.login.length && !links.join.length) return; // 헤더가 없는 페이지
     loadSupabase(function(){
       if(!(window.supabase && window.supabase.createClient)) return;
-      var sb=window.supabase.createClient(SB_URL, SB_KEY);
+      if(!window.__ocSb) window.__ocSb=window.supabase.createClient(SB_URL, SB_KEY);
+      var sb=window.__ocSb;
       sb.auth.getSession().then(function(r){
         var session=(r.data && r.data.session)?r.data.session:null;
         if(!session){ setLoggedOut(links); return; }

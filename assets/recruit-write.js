@@ -997,7 +997,10 @@
     cfg = Object.assign({ listPage: '/recruit/talent.html', viewPage: '/recruit/talent-view.html' }, options || {});
     R = window.OCRecruit;
     if (!R || !window.supabase) { console.error('recruit.js · supabase-js 를 먼저 불러야 합니다.'); return; }
-    C = window.supabase.createClient(SB, KEY);
+    /* ★ 새로 만들지 않고 공용 창구를 씁니다 —
+       접속 객체가 여러 개면 세션 토큰이 질의에 안 실릴 수 있습니다. */
+    C = R.client();
+    if (!C) { console.error('supabase 접속 객체를 만들지 못했습니다.'); return; }
 
     /* 분류 채우기 */
     R.bindPair('#rwCat1', '#rwCat2', 'job', '직종선택', '희망분야');
@@ -1285,7 +1288,10 @@
     DRAFT_KIND = 'job';
     R = window.OCRecruit;
     if (!R || !window.supabase) { console.error('recruit.js · supabase-js 를 먼저 불러야 합니다.'); return; }
-    C = window.supabase.createClient(SB, KEY);
+    /* ★ 새로 만들지 않고 공용 창구를 씁니다 —
+       접속 객체가 여러 개면 세션 토큰이 질의에 안 실릴 수 있습니다. */
+    C = R.client();
+    if (!C) { console.error('supabase 접속 객체를 만들지 못했습니다.'); return; }
 
     /* 분류 채우기 */
     R.bindPair('#rwCat1', '#rwCat2', 'job', '1차직종선택', '2차직종선택');

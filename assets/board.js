@@ -937,7 +937,8 @@ window.OCBoard = (function () {
               if (!confirm('이 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
               del.disabled = true;
               loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2').then(function () {
-                var c = window.supabase.createClient(SB_URL, SB_KEY);
+                if (!window.__ocSb) window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY);
+                var c = window.__ocSb;
                 c.from(cfg.table).delete().eq('id', o.id).then(function (res) {
                   if (res.error) { alert('삭제 실패: ' + res.error.message); del.disabled = false; return; }
                   location.href = cfg.listPage;
@@ -1004,7 +1005,8 @@ window.OCBoard = (function () {
         if (!text) { input.focus(); return; }
         submit.disabled = true;
         loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2').then(function () {
-          var c = window.supabase.createClient(SB_URL, SB_KEY);
+          if (!window.__ocSb) window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY);
+          var c = window.__ocSb;
           c.auth.getUser().then(function (res) {
             var user = res && res.data && res.data.user;
             if (!user) { alert('로그인이 필요합니다.'); submit.disabled = false; return; }
@@ -1036,7 +1038,7 @@ window.OCBoard = (function () {
     }
     function ensureClient() {
       return loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2').then(function () {
-        if (!client) client = window.supabase.createClient(SB_URL, SB_KEY);
+        if (!client) { if (!window.__ocSb) window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY); client = window.__ocSb; }
         return client.auth.getUser().then(function (r) { uid = r && r.data && r.data.user && r.data.user.id; return uid; });
       });
     }

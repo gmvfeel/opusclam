@@ -63,7 +63,8 @@
         catch (e) { return false; }
       }
       function needSupabase() { return (window.supabase && window.supabase.createClient) ? Promise.resolve() : loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'); }
-      function getClient() { if (!client) client = window.supabase.createClient(SB_URL, SB_KEY); return client; }
+      /* 접속 객체는 화면 전체에 하나만 (window.__ocSb) */
+      function getClient() { if (!client) { if (!window.__ocSb) window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY); client = window.__ocSb; } return client; }
       function askLogin() { if (confirm('로그인이 필요한 기능입니다. 로그인 페이지로 이동할까요?')) location.href = '/account/login.html'; }
 
       // 클릭 → 저장/해제

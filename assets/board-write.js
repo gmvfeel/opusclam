@@ -111,7 +111,13 @@
     if (!mount) { console.error('board-write: mount 없음'); return; }
     mount.innerHTML = formHtml(cfg);
 
-    var sb = window.supabase.createClient(SB_URL, SB_KEY);
+    /* ★ 접속 객체는 화면 전체에 하나만 둡니다 (window.__ocSb).
+       여러 개 만들면 콘솔에 「Multiple GoTrueClient instances」 경고가 뜨고,
+       같은 저장 열쇠를 다투다 <b>세션 토큰이 질의에 안 실리는</b> 일이 생깁니다.
+       그때 권한 규칙이 자료를 막고, RLS 는 오류가 아니라 빈 결과를 주므로
+       코드가 「권한 없음」 으로 잘못 읽습니다. */
+    if (!window.__ocSb) window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY);
+    var sb = window.__ocSb;
     var editId = new URLSearchParams(location.search).get('id');
     var me = null, thumbMap = {}, savedRange = null, logoUrl = null, fileUrl = null, fileName = null;
 

@@ -32,7 +32,11 @@
         console.error('[auth] supabase-js가 로드되지 않았습니다.');
         return null;
       }
-      _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      /* ★ 화면 전체에 하나만 둡니다 (window.__ocSb).
+         여러 개 만들면 「Multiple GoTrueClient instances」 경고가 뜨고
+         세션 토큰이 질의에 안 실리는 일이 생깁니다. */
+      if(!window.__ocSb) window.__ocSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      _sb = window.__ocSb;
     }
     return _sb;
   }
