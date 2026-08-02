@@ -65,6 +65,16 @@ const LABEL_DENY = /universal music group|warner music group|sony music entertai
 
 // ── 공통 유틸 ────────────────────────────────────────────────
 const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
+
+/* ★ 이름을 견주기 위한 자 — 소문자로 바꾸고 공백을 없앱니다.
+   음악단체·공연장·음악학교 수집기가 쓰는 것과 <b>같은 방식</b>입니다.
+
+   왜 필요한가
+     이 수집기는 위키데이터 번호로만 중복을 보았습니다. 그런데
+     「EBS」 와 「Ebs」 는 <b>서로 다른 위키데이터 항목</b>이라 둘 다 통과해
+     화면에 같은 곳이 두 번 보이게 됩니다. 위키데이터에는 같은 회사가
+     표기만 달리 등재된 경우가 흔합니다. */
+const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, '').trim();
 const clean = (s) => isEmpty(s) ? null : String(s).replace(/\s+/g, ' ').trim();
 const val = (b, k) => (b[k] && b[k].value) ? String(b[k].value) : '';
 const qidOf = (uri) => String(uri || '').split('/').pop();
@@ -393,19 +403,45 @@ async function main() {
   const byQid = new Map();
   for (const h of have) if (h.wikidata_id) byQid.set(String(h.wikidata_id), h);
   const manual = await sbGetAll('foundations', 'id', '&wikidata_id=is.null');
+
+  /* 이미 있는 이름을 모아 둡니다 — 사람이 넣은 것까지 함께 봅니다.
+     번호가 없어도 이름이 같으면 두 번 담을 까닭이 없습니다. */
+  const haveNames = await sbGetAll('foundations', 'id,name_ko,name_en');
+  const nameSet = new Set();
+  for (const h of haveNames) {
+    if (h.name_ko) nameSet.add(norm(h.name_ko));
+    if (h.name_en) nameSet.add(norm(h.name_en));
+  }
   const blocked = await loadBlocked();
   console.log('■ 기존 · 수집분', have.length, '건 · 사람이 넣은 것', manual.length, '건(건드리지 않습니다)');
 
-  const fresh = [], patch = [];
+  const fresh = [], patch = [], dupNames = [];
   let blockedOut = 0;
   for (const r of rows) {
     // 어드민에서 '삭제 + 차단' 한 항목은 다시 담지 않습니다.
     if (r.wikidata_id && blocked.has(String(r.wikidata_id))) { blockedOut++; continue; }
     const old = byQid.get(r.wikidata_id);
-    if (!old) { fresh.push(r); continue; }
-    const p = {};
-    for (const c of FILL_COLS) if (isEmpty(old[c]) && !isEmpty(r[c])) p[c] = r[c];
-    if (Object.keys(p).length) patch.push({ id: old.id, p });
+    if (old) {
+      const p = {};
+      for (const c of FILL_COLS) if (isEmpty(old[c]) && !isEmpty(r[c])) p[c] = r[c];
+      if (Object.keys(p).length) patch.push({ id: old.id, p });
+      continue;
+    }
+    /* ★ 번호는 새것인데 이름이 이미 있는 경우 —
+       「EBS」 와 「Ebs」 처럼 표기만 다른 같은 곳입니다. 담지 않습니다.
+       무엇을 건너뛰었는지 로그에 남겨 사람이 확인할 수 있게 합니다. */
+    const key = norm(r.name_ko) || norm(r.name_en);
+    if (key && nameSet.has(key)) {
+      dupNames.push(r.name_ko || r.name_en);
+      continue;
+    }
+    if (key) nameSet.add(key);
+    fresh.push(r);
+  }
+  if (dupNames.length) {
+    console.log('■ 이름이 이미 있어 건너뜀', dupNames.length, '건'
+      + (dupNames.length > 12 ? ' (앞 12건만 적습니다)' : ''));
+    console.log('   ' + dupNames.slice(0, 12).join(' · '));
   }
 
   if (DRY) {
