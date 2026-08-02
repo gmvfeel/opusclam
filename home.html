@@ -1615,7 +1615,12 @@ if('serviceWorker' in navigator){
   const FEED = {
     notice_lead:  { t:'news',            v:'/community/news-view.html',              o:'is_pinned.desc,created_at.desc' },
     hot_topic:    { t:'hottopic',        v:'/community/hottopic-view.html',          o:'is_pinned.desc,like_count.desc,created_at.desc' },
-    gallery:      { t:'gallery',         v:'/community/gallery-view.html',           o:'is_pinned.desc,created_at.desc', img:true },
+    /* ★ pool 을 적으면 그만큼 받아 <b>그중 하나를 무작위로</b> 고릅니다.
+       공연사진은 어느 글이 먼저 보여도 좋은 자리이므로, 열 때마다 달라지면
+       메인이 살아 있는 느낌이 됩니다.
+       고정하고 싶은 글이 있으면 features 표에 등록하면 그것이 먼저 나옵니다
+       (loadFeature 가 features 를 먼저 봅니다). */
+    gallery:      { t:'gallery',         v:'/community/gallery-view.html',           o:'is_pinned.desc,created_at.desc', img:true, pool:12 },
     self_picture: { t:'gallery',         v:'/community/gallery-view.html',           o:'created_at.desc', img:true, cat:'SELF PICTURE' },
     admission:    { t:'admission',       v:'/community/admission-view.html',         o:'is_pinned.desc,created_at.desc' },
   };
@@ -1633,13 +1638,23 @@ if('serviceWorker' in navigator){
   async function feedOne(slot){
     const f = FEED[slot];
     if(!f) return null;
-    let q = f.t + '?select=id,title,body,thumb_url,created_at&order=' + f.o + '&limit=1';
+    /* pool 을 적은 자리는 그만큼 받아 그중 하나를 무작위로 고릅니다.
+       적지 않은 자리는 예전처럼 맨 앞 하나만 받습니다 — 공지·핫토픽처럼
+       「가장 새것·가장 많이 본 것」 이 먼저 보여야 하는 자리입니다. */
+    const take = f.pool || 1;
+    let q = f.t + '?select=id,title,body,thumb_url,created_at,is_pinned&order=' + f.o + '&limit=' + take;
     if(f.cat) q += '&category=eq.' + encodeURIComponent(f.cat);
     if(f.img) q += '&thumb_url=not.is.null';
     try{
       const rows = await sbGet(q);
       if(!Array.isArray(rows) || !rows.length) return null;
-      const r = rows[0];
+      /* ★ 고정한 글(is_pinned)이 있으면 그것을 지킵니다 —
+         무작위로 골라 버리면 고정한 뜻이 없어집니다. */
+      const pinned = rows.filter(x => x.is_pinned);
+      const pickFrom = pinned.length ? pinned : rows;
+      const r = (take > 1)
+        ? pickFrom[Math.floor(Math.random() * pickFrom.length)]
+        : rows[0];
       return {
         title: r.title || '',
         summary: toSummary(r.body, 150),
