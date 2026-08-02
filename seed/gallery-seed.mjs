@@ -52,6 +52,50 @@ const HALL_MODE = (process.env.HALL_MODE || 'ko').toLowerCase();
 /* 한글이 섞여 있는가 — 한국어 표기가 붙었는지 가리는 잣대입니다 */
 function hasHangul(v) { return /[가-힣]/.test(String(v || '')); }
 
+/* ── 클래식 공연장이 아닌 곳을 걸러냅니다 ───────────────────
+
+   왜 필요한가
+     공연장DB 의 갈래(type)는 「콘서트홀」·「오페라하우스」 둘뿐입니다.
+     위키데이터에서 그 두 분류로 받아 왔기 때문인데, 실제로는
+     경기장·시상식장·야외 대중음악 극장까지 그 분류에 섞여 있습니다.
+     그래서 <b>갈래로는 갈라지지 않고 이름·소개문을 함께 봐야</b> 합니다.
+
+   실제로 섞여 들어온 예
+     메르세데스-벤츠 아레나(베를린 실내경기장) · 코닥 극장(아카데미 시상식장)
+     깁슨 앰피시어터(대중음악 야외극장) · 카지노 드 파리
+
+   ★ 이름으로만 보면 「코닥 극장」·「할리우드 볼」 이 안 걸립니다.
+     그래서 소개문까지 함께 봅니다. */
+const NOT_CLASSIC_HALL = new RegExp([
+  /* 경기장·체육 시설 */
+  '아레나|\\barena\\b|경기장|스타디움|stadium|체육관|indoor arena|sports (arena|hall|venue)',
+  '\\bdome\\b|돔구장|multi-?purpose (arena|stadium)',
+  /* 야외 대중음악 극장 */
+  '앰피시어터|amphithea|야외극장|open-?air (arena|amphi)',
+  /* 영화·시상식·유흥
+     ★ 「영화」 만으로 막으면 안 됩니다 — 부산 「영화의전당」 은 이름에
+       영화가 들어가지만 클래식 공연도 하는 복합 공연장입니다.
+       그래서 「영화관」 이라는 <b>시설 이름</b>과 multiplex 만 봅니다. */
+  '영화관|multiplex|movie (theater|theatre|palace)|시상식|award (ceremony|show)',
+  'academy awards|oscars|카지노|casino|나이트클럽|nightclub|디스코',
+  /* 회의·전시 */
+  '컨벤션|convention (center|centre)|전시장|exhibition (hall|centre|center)|엑스포|expo',
+  /* 대중음악 전용 */
+  'rock venue|pop (music )?venue|대중음악 전용|music hall for popular',
+].join('|'), 'i');
+
+/* 클래식 공연장인지 — 이름과 소개문을 함께 봅니다.
+   막는 쪽은 넓게, 남기는 쪽은 좁게 (음악학교 판정에서 배운 것과 같습니다).
+   다만 「오페라·필하모닉·교향악」 같은 <b>확실한 근거</b>가 있으면
+   막는 낱말이 있어도 남깁니다 — 할리우드 볼(LA 필하모닉 여름 공연장)처럼요. */
+const SURELY_CLASSIC = /오페라|opera|필하모닉|philharmon|교향|symphon|콘서트홀|concert hall|음악당|무지크|musikverein|conservator|실내악|chamber music|리사이틀|recital|아트센터|arts cent|예술의전당|문화회관|문화예술회관|국립극장|왕립극장|royal (opera|theat)|전당$|전당 /i;
+
+function classicHall(v) {
+  const hay = [v.name_ko, v.name_en, v.description].filter(Boolean).join(' ');
+  if (SURELY_CLASSIC.test(hay)) return true;
+  return !NOT_CLASSIC_HALL.test(hay);
+}
+
 const H = {
   apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
   'Content-Type': 'application/json',
@@ -305,11 +349,14 @@ async function main() {
   const withDesc = halls.filter(v => String(v.description || '').trim());
   const rich = halls.filter(v => hasHangul(v.name_ko)
     && (String(v.seats || '').trim() || String(v.description || '').trim()));
+  const notCl = halls.filter(v => !classicHall(v));
   console.log('   ├ 한국어 이름이 붙은 곳 :', kn.length, '곳');
   console.log('   ├ 국내 공연장           :', kr.length, '곳   (그 가운데 한국어 이름 ' + krKo.length + '곳)');
   console.log('   ├ 객석 수가 있는 곳     :', withSeat.length, '곳');
   console.log('   ├ 소개문이 있는 곳      :', withDesc.length, '곳');
-  console.log('   └ 한국어 이름 + 객석·소개문 :', rich.length, '곳   ← 가장 자연스러운 글감');
+  console.log('   ├ 한국어 이름 + 객석·소개문 :', rich.length, '곳   ← 가장 자연스러운 글감');
+  console.log('   └ 클래식 공연장이 아님(제외):', notCl.length, '곳   ← 경기장·시상식장·야외 대중음악 극장 등');
+  if (notCl.length) console.log('      예:', notCl.slice(0, 6).map(v => v.name_ko).join(' · '));
   console.log('   지금 기준(HALL_MODE) :', HALL_MODE
     + (HALL_MODE === 'ko' ? ' — 한국어 이름이 붙은 곳만'
       : HALL_MODE === 'kr' ? ' — 국내 공연장만' : ' — 모두'));
@@ -317,7 +364,9 @@ async function main() {
   /* 기준에 맞는 것만 남깁니다 */
   if (HALL_MODE === 'ko') halls = kn;
   else if (HALL_MODE === 'kr') halls = kr;
-  console.log('   → 쓸 공연장', halls.length, '곳');
+  /* ★ 클래식 공연장이 아닌 곳은 어느 기준에서도 뺍니다 */
+  halls = halls.filter(classicHall);
+  console.log('   → 쓸 공연장', halls.length, '곳 (클래식 공연장만)');
 
   /* ㉯ 공연 포스터 — 정보SPOT */
   let posters = [];
