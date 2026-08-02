@@ -279,7 +279,15 @@ function keep(r) {
   //      Westminster School · Lycée Henri-IV · Reed College 도 교육기관이라
   //      그대로 통과했습니다. 유명 음악가가 다녔다는 이유로 위키데이터에
   //      이어져 있을 뿐, 음악학교는 아닙니다.
-  if (!isMusicSchool(r) && !musEduByClass(r)) return false;
+  //    ★ 안전장치 — <b>이미 DB에 있는 항목</b>은 이 조건으로 빼지 않습니다.
+  //      로그를 보니 줄리아드·모차르테움·시벨리우스·콜번이 이 조건에
+  //      걸려 「일반 학교」 로 제외되었습니다. 위키데이터의 분류(P31)가
+  //      「private university」 처럼 음악 낱말을 담고 있지 않기 때문입니다.
+  //      규칙을 정확히 고치려면 어떤 분류가 오는지 먼저 봐야 하는데,
+  //      그동안 명문 음악원이 보강받지 못하는 것은 손해가 큽니다.
+  //      <b>새로 들어오는 것만</b> 이 조건으로 막고, 이미 있는 것은
+  //      통과시켜 빈칸이 계속 채워지게 합니다.
+  if (!isMusicSchool(r) && !musEduByClass(r) && !r._known) return false;
 
   // ④ 그다음 충실도 컷오프
   return bioOK(r) || substanceCount(r) >= 2;
@@ -413,6 +421,22 @@ async function main() {
   console.log('  분류 확보', Object.keys(p31).length, '/', all.length, '건');
   all.forEach(r => { r._p31 = p31[r.wikidata_id] || ''; });
 
+  /* ★ 기존 목록을 <b>걸러내기보다 먼저</b> 읽습니다.
+     아래 안전장치(_known)가 이 목록을 봐야 하기 때문입니다.
+     예전에는 걸러낸 뒤에 읽어서, 안전장치가 늘 비어 있는 목록을
+     보게 되어 아무 일도 하지 못했습니다. */
+  const existing = await sbGetAll('schools', 'id,wikidata_id,name_ko,name_en,category,location,founded,alumni,logo_url,link_home,link_wiki,description,sort_no');
+  const blocked = await loadBlocked();
+  const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
+  for (const r of existing) { if (r.wikidata_id) byWid.set(r.wikidata_id, r); if (r.name_ko) nameSet.add(norm(r.name_ko)); if (typeof r.sort_no === 'number' && r.sort_no > maxSort) maxSort = r.sort_no; }
+  console.log('■ 기존 schools:', existing.length, '행');
+
+  /* 이미 DB에 있는 항목에 표시를 붙입니다 — 안전장치가 씁니다 */
+  const knownQids = new Set(existing.map(h => String(h.wikidata_id || '')).filter(Boolean));
+  all.forEach(r => { r._known = !!(r.wikidata_id && knownQids.has(String(r.wikidata_id))); });
+  console.log('  · 그 가운데 이번 수집에도 나온 것:',
+    all.filter(r => r._known).length, '곳  ← 이 항목들은 규칙에 걸려도 보강을 이어 갑니다');
+
   const byP31Mil = all.filter(r => r._p31 && P31_MIL.test(r._p31) && !P31_EDU.test(r._p31));
   const armed    = all.filter(r => looksArmed(r) && !isMusicSchool(r));
   /* ★ 학교라는 증거가 없어 제외되는 것들 — 예전에는 이 갈래를 남겼습니다 */
@@ -433,17 +457,30 @@ async function main() {
   if (noProof.length) console.log('    예:', noProof.slice(0, 8).map(r => r.name_ko || r.name_en).join(' / '));
   console.log('  · 일반 학교(음악학교 아님, 제외):', eduNotMus.length,
     '건  ← 유명 음악가가 다녔을 뿐인 일반 학교');
-  if (eduNotMus.length) console.log('    예:', eduNotMus.slice(0, 8).map(r => r.name_ko || r.name_en).join(' / '));
+  /* ★ 분류(P31)를 함께 찍습니다.
+     이름만 찍었더니 줄리아드·모차르테움·시벨리우스가 이 목록에 들어와
+     있는 것이 보였는데, <b>어느 낱말 때문에 걸렸는지</b>를 알 수 없어
+     고칠 수가 없었습니다. 분류를 함께 보아야 규칙을 정확히 손봅니다. */
+  if (eduNotMus.length) {
+    console.log('    ↓ 분류(P31)를 함께 봅니다 — 앞 15곳');
+    eduNotMus.slice(0, 15).forEach(r =>
+      console.log('      · ' + String(r.name_ko || r.name_en || '').slice(0, 30).padEnd(32)
+        + '[' + String(r._p31 || '(분류 없음)').slice(0, 90) + ']'));
+  }
+
+  /* 같은 까닭으로 「학교 증거 없음」 도 분류를 함께 봅니다 —
+     560건이면 지나치게 많아 무엇이 걸리는지 확인해야 합니다. */
+  if (noProof.length) {
+    console.log('    ↓ 「학교 증거 없음」 의 분류 — 앞 10곳');
+    noProof.slice(0, 10).forEach(r =>
+      console.log('      · ' + String(r.name_ko || r.name_en || '').slice(0, 30).padEnd(32)
+        + '[' + String(r._p31 || '(분류 없음)').slice(0, 90) + ']'));
+  }
   console.log('  · 분류로 지켜진 고유명 음악학교:',
     all.filter(r => !isMusicSchool(r) && musEduByClass(r)).length,
     '건  ← Juilliard·Mozarteum 처럼 이름만으로는 알 수 없는 명문');
   console.log('■ 최종 통과:', kept.length, '곳 (전체', all.length, ')');
 
-  const existing = await sbGetAll('schools', 'id,wikidata_id,name_ko,name_en,category,location,founded,alumni,logo_url,link_home,link_wiki,description,sort_no');
-  const blocked = await loadBlocked();
-  const byWid = new Map(); const nameSet = new Set(); let maxSort = 0;
-  for (const r of existing) { if (r.wikidata_id) byWid.set(r.wikidata_id, r); if (r.name_ko) nameSet.add(norm(r.name_ko)); if (typeof r.sort_no === 'number' && r.sort_no > maxSort) maxSort = r.sort_no; }
-  console.log('■ 기존 schools:', existing.length, '행');
 
   /* ── ★ 스스로 점검 — 「이미 들어와 있지만 지금 규칙으로는 걸러질 항목」 ──
 
