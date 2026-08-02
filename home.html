@@ -1615,12 +1615,20 @@ if('serviceWorker' in navigator){
   const FEED = {
     notice_lead:  { t:'news',            v:'/community/news-view.html',              o:'is_pinned.desc,created_at.desc' },
     hot_topic:    { t:'hottopic',        v:'/community/hottopic-view.html',          o:'is_pinned.desc,like_count.desc,created_at.desc' },
-    /* ★ pool 을 적으면 그만큼 받아 <b>그중 하나를 무작위로</b> 고릅니다.
-       공연사진은 어느 글이 먼저 보여도 좋은 자리이므로, 열 때마다 달라지면
-       메인이 살아 있는 느낌이 됩니다.
-       고정하고 싶은 글이 있으면 features 표에 등록하면 그것이 먼저 나옵니다
-       (loadFeature 가 features 를 먼저 봅니다). */
-    gallery:      { t:'gallery',         v:'/community/gallery-view.html',           o:'is_pinned.desc,created_at.desc', img:true, pool:12 },
+    /* ★ 공연사진은 열 때마다 <b>무작위로</b> 바뀝니다.
+         pool   — 몇 건 가운데서 고를지
+         random — 「고정」 을 무시하고 언제나 무작위로 고를지
+
+       왜 고정을 무시하나
+         게시판에서 글을 고정(is_pinned)하거나 features 표에 등록해 두면
+         메인에 <b>늘 같은 글만</b> 나옵니다. 공지·핫토픽은 그래야 맞지만
+         공연사진은 어느 글이 보여도 좋은 자리이니, 메인에서는 고정과
+         상관없이 돌아가게 합니다.
+         (게시판 목록에서는 고정이 그대로 지켜집니다 — 메인만 다릅니다)
+
+       ★ 나중에 「이 사진을 메인에 걸고 싶다」 하시면 random 을 빼면
+         features·고정이 다시 먼저 나옵니다. */
+    gallery:      { t:'gallery',         v:'/community/gallery-view.html',           o:'created_at.desc', img:true, pool:12, random:true },
     self_picture: { t:'gallery',         v:'/community/gallery-view.html',           o:'created_at.desc', img:true, cat:'SELF PICTURE' },
     admission:    { t:'admission',       v:'/community/admission-view.html',         o:'is_pinned.desc,created_at.desc' },
   };
@@ -1648,13 +1656,16 @@ if('serviceWorker' in navigator){
     try{
       const rows = await sbGet(q);
       if(!Array.isArray(rows) || !rows.length) return null;
-      /* ★ 고정한 글(is_pinned)이 있으면 그것을 지킵니다 —
-         무작위로 골라 버리면 고정한 뜻이 없어집니다. */
-      const pinned = rows.filter(x => x.is_pinned);
-      const pickFrom = pinned.length ? pinned : rows;
+      /* random 을 켠 자리는 고정을 보지 않고 받은 것 가운데서 고릅니다.
+         켜지 않은 자리는 고정한 글을 먼저 지킵니다(공지·핫토픽 등). */
+      let pickFrom = rows;
+      if (!f.random) {
+        const pinned = rows.filter(x => x.is_pinned);
+        if (pinned.length) pickFrom = pinned;
+      }
       const r = (take > 1)
         ? pickFrom[Math.floor(Math.random() * pickFrom.length)]
-        : rows[0];
+        : pickFrom[0];
       return {
         title: r.title || '',
         summary: toSummary(r.body, 150),
@@ -1942,7 +1953,13 @@ if('serviceWorker' in navigator){
     const card = document.getElementById(cardId);
     if(!card) return;
     try{
-      let rows = await sbGet('features?slot=eq.' + slot + '&select=title,summary,image_url,link,posted_on&order=sort_order.asc,created_at.desc&limit=1');
+      /* ★ random 을 켠 자리는 features 표도 보지 않습니다.
+         features 에 한 줄 등록해 두면 메인에 늘 그 글만 나오므로,
+         「무작위로 바뀌게」 라는 뜻과 어긋납니다. */
+      const fd = FEED[slot];
+      let rows = (fd && fd.random)
+        ? []
+        : await sbGet('features?slot=eq.' + slot + '&select=title,summary,image_url,link,posted_on&order=sort_order.asc,created_at.desc&limit=1');
       /* features 가 비어 있으면 게시판에서 가져온다 */
       if(!Array.isArray(rows) || !rows.length){
         let auto = null;
