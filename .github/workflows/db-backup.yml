@@ -1,0 +1,98 @@
+name: DB 백업 (매일)
+
+# ── 무엇을 하나 ──────────────────────────────────────────────
+#  Supabase 자료를 매일 떠서 <b>암호를 걸어</b> 보관합니다.
+#
+#  ★ 왜 필요한가
+#    무료 플랜에는 백업이 없습니다. 지금은 자료가 사라지면
+#    되돌릴 방법이 아예 없습니다. 인물·학교·공연장은 수집기가 다시
+#    받아 오지만, <b>회원 · 채용 · 지원 · 차단 목록 · 커뮤니티 글</b>은
+#    되돌릴 수 없습니다.
+#
+#  ★ 왜 암호를 거는가
+#    이 저장소는 공개입니다. Actions 가 남기는 파일은 저장소를 볼 수
+#    있는 사람이면 내려받을 수 있습니다. 암호 없이 두면 회원 이메일·
+#    전화번호·비밀번호 해시가 그대로 공개됩니다.
+#    그래서 암호가 없으면 스크립트가 아예 멈춥니다.
+#
+#  ★ 미리 넣어 두셔야 하는 것 (Settings → Secrets → Actions)
+#    SUPABASE_DB_URL     Supabase → Connect → <b>Session pooler</b> 주소
+#                        (Direct connection 은 IPv6 라 여기서 안 됩니다)
+#    BACKUP_PASSPHRASE   백업을 열 암호 — <b>따로 적어 두십시오.</b>
+#                        잃으면 백업도 못 씁니다.
+#
+#  ★ 90일치가 남습니다. 더 오래 두시려면 받아서 따로 보관하십시오.
+
+on:
+  schedule:
+    # 매일 01:37 KST — 다른 워크플로와 겹치지 않는 시각
+    - cron: '37 16 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: oc-db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # ★ pg_dump 는 서버보다 <b>같거나 새로운</b> 판이어야 합니다.
+      #   우분투에 딸린 것은 오래되어 Supabase 서버를 못 뜰 수 있으므로
+      #   PostgreSQL 공식 저장소에서 17판을 받습니다.
+      - name: pg_dump 17 설치
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
+
+      - name: 백업 뜨기
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 60초 뒤 다시 시도합니다"; sleep 60; done; return 1; }
+          try2 bash scripts/db-backup.sh
+
+      # ★ 암호 걸린 파일만 올립니다.
+      #   scripts/db-backup.sh 가 암호 걸리지 않은 것은 스스로 지웁니다.
+      - name: 보관하기
+        uses: actions/upload-artifact@v4
+        with:
+          name: opusclam-db-backup
+          path: backup/*.gpg
+          retention-days: 90
+          if-no-files-found: error      # 파일이 없으면 실패로 알려 줍니다
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #   ★ 백업은 <b>실패해도 아무 일이 없어 보입니다.</b> 그래서 알림이
+  #     다른 워크플로보다 더 중요합니다. 몇 달 뒤에 「백업이 없다」 를
+  #     알게 되는 것이 가장 나쁩니다.
+  oc-notify-failure:
+    needs: backup
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[백업 실패] $WF"
+          B=$(printf 'DB 백업이 실패했습니다. <b>자료를 되돌릴 방법이 없는 상태</b>이니 빨리 확인해 주십시오.\n\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n자주 있는 까닭\n1. SUPABASE_DB_URL 이 Session pooler 주소가 아님 (Direct 는 IPv6 라 안 됩니다)\n2. DB 비밀번호가 바뀌었음\n3. BACKUP_PASSPHRASE 가 비어 있음' "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다"
+          fi
