@@ -1802,9 +1802,18 @@ html[data-theme="dark"] .rg-privacy b { color: #b9b4e0; }
 .rg-faq details[open] summary::after { transform: rotate(-135deg); margin-top: -2px; }
 /* 열린 답의 위쪽에 옅은 선을 두어 물음과 답이 갈립니다 */
 .rg-faq details[open] summary { border-bottom: 1px solid var(--line); }
+/* 열린 답은 옅은 바탕에 왼쪽 안여백을 두어 「펼쳐진 칸」 으로 보입니다 —
+   물음 줄과 눈으로 갈리고, 답이 어디까지인지도 분명해집니다. */
+.rg-faq details[open] > p {
+  padding-left: 16px; padding-right: 16px;
+  background: #faf9fc; border-radius: 0 0 8px 8px;
+}
+html[data-theme="dark"] .rg-faq details[open] > p { background: #1b1a22; }
 .rg-faq summary:hover { color: var(--rv-deep); }
 .rg-faq details > p {
-  margin: 0; padding: 0 2px 18px;
+  /* ★ 위 여백이 0 이라 답이 물음에 붙어 보였습니다.
+     열린 자리도 좁았으니 위 18px · 아래 24px 로 넓힙니다. */
+  margin: 0; padding: 18px 2px 24px;
   font-size: 13.5px; line-height: 1.8; color: var(--text-2);
 }
 .rg-faq details > p b { color: var(--rv-deep); }
