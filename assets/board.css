@@ -247,7 +247,9 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
    max-width 를 860px 로 조금 늘렸습니다 — 안쪽 여백 38px 이 양쪽에
    생기므로, 820px 그대로 두면 글 적는 칸이 그만큼 좁아집니다. */
 .board-form{
-  max-width:860px;margin:0 auto;
+  /* ★ 위 큰 글씨(히어로)와 테두리가 붙어 보이므로 위 여백을 둡니다.
+     44px 은 리쿠르트 서비스안내(.rg-wrap)의 위 여백과 같은 값입니다. */
+  max-width:860px;margin:44px auto 0;
   background:var(--paper);
   border:3px solid #514a6b;
   border-radius:12px;
@@ -264,7 +266,7 @@ html[data-theme="dark"] .board-form{
 .board-form .bf-actions{margin-bottom:0}
 
 @media (max-width:900px){
-  .board-form{padding:22px 18px 24px;border-width:2px}
+  .board-form{margin-top:28px;padding:22px 18px 24px;border-width:2px}
 }
 .bf-row{margin-bottom:20px}
 .bf-row label{display:block;font-family:var(--display);font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:8px}
