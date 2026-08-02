@@ -99,7 +99,7 @@
       var r = await c.auth.getSession();
       var u = r.data && r.data.session && r.data.session.user;
       if (!u) { viewerCache = { user: null }; return viewerCache; }
-      var mr = await c.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle();
+      var mr = await c.from('members').select('*').eq('id', u.id).maybeSingle();
       var m = mr.data || {};
       viewerCache = {
         user: u,
@@ -108,7 +108,7 @@
         /* 연락처를 볼 수 있는 회원 — 채용하는 쪽입니다.
            서버에서도 같은 규칙으로 막고 있으므로, 여기서는
            「눌러 보고 거절당하는」 일을 줄이려고 미리 봅니다. */
-        canSee: (m.member_type === 'industry' || m.member_type === 'school' || !!m.is_admin),
+        canSee: (R.HIRING.indexOf(m.member_type) >= 0 || !!m.is_admin),
       };
     } catch (e) {
       viewerCache = { user: null };

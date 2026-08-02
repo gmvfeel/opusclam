@@ -319,6 +319,20 @@
        언제나 손님으로 보아 한 줄도 내주지 않습니다.
        그래서 로그인한 분의 토큰을 실어 보내야 합니다.
      ============================================================ */
+  /* ★ 채용하는 쪽 회원 종류 — 한 곳에 두고 모든 화면이 함께 씁니다.
+
+     회원 종류는 다섯입니다 (assets/auth.js 의 TYPE 이 정답입니다)
+       major    전공자
+       industry 음악관계자
+       org      단체·기업     ← 이것이 빠져 있어 채용등록이 막혔습니다
+       school   음악학교
+       general  일반
+
+     채용정보를 올리고 인재 연락처를 여는 것은 <b>뽑는 쪽</b>입니다.
+     같은 목록을 네 파일에 따로 적어 두었더니 한 곳이 빠졌고,
+     그것이 정확히 채용의 주체(단체·기업)였습니다. */
+  var HIRING = ['industry', 'org', 'school'];
+
   var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
 
@@ -344,13 +358,17 @@
         if (!ss || !ss.user) { _viewer = out; return out; }
         out.user = ss.user;
         out.token = ss.access_token || '';
-        var mr = await c.from('members').select('member_type,is_admin').eq('id', ss.user.id).maybeSingle();
+        var mr = await c.from('members').select('*').eq('id', ss.user.id).maybeSingle();
         var m = mr.data || {};
         out.type = m.member_type || '';
         out.admin = !!m.is_admin;
         /* 인재정보를 볼 수 있는 회원 — 뽑는 쪽입니다.
            전공자·일반 회원은 자기 것만 보입니다(서버가 가립니다). */
-        out.canSeeTalents = (out.type === 'industry' || out.type === 'school' || out.admin);
+        /* ★ 채용하는 쪽은 <b>넷</b>입니다 — org(단체·기업)가 빠져 있었습니다.
+           회원 종류는 major(전공자) · industry(음악관계자) · org(단체·기업) ·
+           school(음악학교) · general(일반) 다섯입니다(assets/auth.js 기준).
+           채용을 올리는 주체가 바로 단체·기업인데 그것이 막혀 있었습니다. */
+        out.canSeeTalents = HIRING.indexOf(out.type) >= 0 || out.admin;
       } catch (e) { /* 못 물어봐도 손님으로 둡니다 */ }
       _viewer = out;
       return out;
@@ -383,7 +401,7 @@
     bindPair: bindPair,
     fillChecks: fillChecks, fillRadios: fillRadios, checked: checked,
     /* 보는 사람 */
-    SB: SB, KEY: KEY,
+    SB: SB, KEY: KEY, HIRING: HIRING,
     client: client, viewer: viewer, headers: headers,
     /* 보여 주기 */
     jobLabel: jobLabel, regionLabel: regionLabel,

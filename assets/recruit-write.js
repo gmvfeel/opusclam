@@ -1039,12 +1039,26 @@
       lock();
       return;
     }
-    var mr = await C.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle();
+    var mr = await C.from('members').select('*').eq('id', u.id).maybeSingle();
+    /* 채용등록과 같은 까닭으로 못 읽은 것을 따로 알려 줍니다 */
+    if (mr.error) {
+      console.error('members 읽기 실패:', mr.error);
+      say('회원 정보를 읽지 못했습니다. 다시 로그인해 보시고, 그래도 안 되면 알려 주십시오.<br>'
+        + '<span style="font-size:12px;color:#888">' + esc(String(mr.error.message || '')) + '</span>', 'warn');
+      lock();
+      return;
+    }
     var m = mr.data || {};
     me = { user: u, type: m.member_type || '', admin: !!m.is_admin };
+    if (!m.member_type) {
+      say('회원 종류가 정해지지 않은 계정입니다. 관리자에게 알려 주십시오.', 'warn');
+      lock();
+      return;
+    }
     if (!(m.member_type === 'major' || m.member_type === 'general' || m.is_admin)) {
       say('인재정보는 <b>전공자</b> 또는 <b>일반</b> 회원만 올릴 수 있습니다. '
-        + '단체·기업·학교 회원은 <a class="rw-lk" href="/recruit/job-write.html">채용정보</a>를 올려 주십시오.', 'warn');
+        + '단체·기업·학교 회원은 <a class="rw-lk" href="/recruit/job-write.html">채용정보</a>를 올려 주십시오.<br>'
+        + '<span style="font-size:12px;color:#888">지금 회원 종류 — ' + esc(m.member_type) + '</span>', 'warn');
       lock();
       return;
     }
@@ -1308,12 +1322,28 @@
       lock();
       return;
     }
-    var mr = await C.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle();
+    var mr = await C.from('members').select('*').eq('id', u.id).maybeSingle();
+    /* ★ 회원 줄을 못 읽었으면 그 사실을 <b>따로</b> 알려 줍니다.
+       예전에는 못 읽은 것과 「자격이 없는 것」 을 같은 문구로 보여
+       주어, 정상 회원이 「나는 자격이 없나」 로 오해했습니다. */
+    if (mr.error) {
+      console.error('members 읽기 실패:', mr.error);
+      say('회원 정보를 읽지 못했습니다. 다시 로그인해 보시고, 그래도 안 되면 알려 주십시오.<br>'
+        + '<span style="font-size:12px;color:#888">' + esc(String(mr.error.message || '')) + '</span>', 'warn');
+      lock();
+      return;
+    }
     var m = mr.data || {};
     me = { user: u, type: m.member_type || '', admin: !!m.is_admin };
-    if (!(m.member_type === 'industry' || m.member_type === 'school' || m.is_admin)) {
+    if (!m.member_type) {
+      say('회원 종류가 정해지지 않은 계정입니다. 관리자에게 알려 주십시오.', 'warn');
+      lock();
+      return;
+    }
+    if (!(R.HIRING.indexOf(m.member_type) >= 0 || m.is_admin)) {
       say('채용정보는 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원만 올릴 수 있습니다. '
-        + '전공자·일반 회원은 <a class="rw-lk" href="/recruit/talent-write.html">인재정보</a>를 올려 주십시오.', 'warn');
+        + '전공자·일반 회원은 <a class="rw-lk" href="/recruit/talent-write.html">인재정보</a>를 올려 주십시오.<br>'
+        + '<span style="font-size:12px;color:#888">지금 회원 종류 — ' + esc(m.member_type) + '</span>', 'warn');
       lock();
       return;
     }
