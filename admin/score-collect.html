@@ -106,6 +106,11 @@
   <div class="bar">
     <span class="who" id="who">확인 중…</span>
     <label class="chk">작곡가 <input type="number" id="nComp" value="100" min="1" max="2000"> 명</label>
+    <label class="chk" title="한 작곡가에서 이만큼만 담습니다 — 베토벤·바흐에 쏠리지 않게 합니다">
+      1인당 <input type="number" id="perComp" value="0" min="0" max="500"> 건
+      <span style="color:#8a8ca0;font-size:11.5px">(0 = 제한 없음)</span></label>
+    <label class="chk" title="국내 클래식 자료는 우리가 아니면 아무도 정리하지 않는 부분입니다">
+      <input type="checkbox" id="krOnly"> <b style="color:#e08a3c">국내 작곡가만</b></label>
     <button class="go" id="run" disabled>악보 찾기</button>
     <button class="stop" id="halt" disabled>멈추기</button>
     <button id="save" disabled>고른 것 담기</button>
@@ -194,12 +199,30 @@
        붙이는 것을 잊지 않습니다 — sort_no 는 같은 값이 수십 명씩
        있어서, 그것만으로 나눠 받으면 어떤 줄은 두 번 오고 어떤 줄은
        아예 오지 않습니다. */
-  async function loadComposers(n){
+  /* ── 국내 작곡가인가 ─────────────────────────────────────
+     ★ nationality 로 봅니다. 국내 수집기는 「대한민국」 으로 넣지만,
+       위키데이터에서 온 인물은 한국어 라벨이라 「한국」 처럼 들어올 수
+       있습니다. 둘 다 잡습니다.
+     ★ 이름이 한글이라고 국내로 보면 안 됩니다 — 우리가 한글 이름을
+       채워 넣은 외국 작곡가가 3,000명 넘게 있습니다. */
+  function isKR(p){
+    var nat = String(p.nationality || '');
+    return /대한민국|^한국$|^한국\b|남한|Korea/i.test(nat);
+  }
+
+  async function loadComposers(n, krOnly){
     var out = [], from = 0;
+    /* 국내만 볼 때는 훨씬 많이 훑어야 합니다 — 국내 인물은 sort_no 가
+       낮아서 뒤쪽에 몰려 있습니다. */
+    var need = krOnly ? 200000 : n * 3;
     for(;;){
-      var r = await sb.from('persons')
-        .select('id,name_ko,name_en,wikidata_id,life,field,sort_no,era_name,image_url')
-        .not('wikidata_id','is',null)
+      var q = sb.from('persons')
+        .select('id,name_ko,name_en,wikidata_id,life,field,sort_no,era_name,image_url,nationality')
+        .not('wikidata_id','is',null);
+      /* ★ 국내만 볼 때는 <b>DB 에서 걸러</b> 받아 옵니다.
+         9,348명을 다 받아 와 걸러내면 오래 걸리고 헛일이 많습니다. */
+      if (krOnly) q = q.or('nationality.ilike.%대한민국%,nationality.ilike.%한국%,nationality.ilike.%Korea%');
+      var r = await q
         .order('sort_no',{ ascending:false }).order('id',{ ascending:true })
         .range(from, from + 199);
       if (r.error) throw new Error('인물DB: ' + r.error.message);
@@ -207,9 +230,10 @@
       if (!d.length) break;
       out = out.concat(d);
       from += d.length;
-      if (out.length >= n * 3) break;   /* 넉넉히 받아 두고 걸러 냅니다 */
-      if (from > 20000) break;
+      if (out.length >= need) break;
+      if (from > 200000) break;
     }
+    if (krOnly) out = out.filter(isKR);       /* 한 번 더 확인합니다 */
     /* ★ 작곡 쪽 인물을 먼저 봅니다 — 연주자·지휘자는 IMSLP 에 작품이
        거의 없어서 헛질의가 됩니다. */
     var pri = out.filter(function(p){ return /작곡/.test(String(p.field||'')); });
@@ -347,10 +371,19 @@
     $('body').innerHTML = '<tr><td colspan="4" class="empty">찾는 중…</td></tr>';
     try {
       var n = Math.max(1, Math.min(2000, parseInt($('nComp').value, 10) || 100));
-      log('■ 인물DB 에서 작곡가 ' + n + '명을 뽑습니다 (널리 알려진 순)');
-      comps = await loadComposers(n);
+      var per = Math.max(0, Math.min(500, parseInt($('perComp').value, 10) || 0));
+      var krOnly = $('krOnly').checked;
+      log('■ 인물DB 에서 작곡가 ' + n + '명을 뽑습니다 (널리 알려진 순)'
+        + (krOnly ? ' · <b>국내만</b>'.replace(/<[^>]+>/g,'') : ''));
+      comps = await loadComposers(n, krOnly);
       log('  ' + comps.length + '명 · 작곡 분야 '
         + comps.filter(function(c){ return /작곡/.test(String(c.field||'')); }).length + '명');
+      if (krOnly && !comps.length){
+        log('  국내 작곡가를 찾지 못했습니다.');
+        log('  인물DB 의 국적(nationality)이 비어 있을 수 있습니다 —');
+        log('  국내 인물 수집기(kr-collect)로 담은 인물에는 「대한민국」 이 들어 있습니다.');
+      }
+      if (per) log('  한 작곡가에서 최대 ' + per + '건까지만 담습니다');
       if (!comps.length){ log('작곡가를 찾지 못했습니다.'); progHide(); $('run').disabled=false; return; }
 
       log('■ 이미 담긴 악보를 확인합니다');
@@ -362,6 +395,11 @@
 
       log('■ 위키데이터에서 IMSLP 악보를 찾습니다 (20명씩)');
       var found = 0, dup = 0;
+      /* ★ 작곡가마다 몇 건을 담았는지 셉니다.
+         베토벤·바흐는 IMSLP 에 수백 건이 있어서, 제한이 없으면 목록이
+         그 몇 사람으로 채워집니다. <b>여러 작곡가의 대표작</b>이 먼저
+         있는 편이 목록으로서 쓸모가 큽니다. */
+      var perCount = {};
       for (var i = 0; i < comps.length; i += 20){
         if (stopFlag){ log('⏸ 멈췄습니다 (' + i + '/' + comps.length + ')'); break; }
         var part = comps.slice(i, i + 20);
@@ -371,9 +409,26 @@
         } catch (e){
           log('  ✗ 묶음 실패 — 건너뜁니다: ' + String(e.message||e).slice(0,70));
         }
+        /* ★ 어느 작품을 남길까 — <b>한글 이름이 있는 것</b>을 먼저,
+           그다음 작품번호가 있는 것, 그다음 나머지.
+           1인당 제한이 걸려 있을 때 무엇이 살아남는지가 중요합니다. */
+        if (per){
+          got.sort(function(a, b){
+            var ak = a.ko ? 0 : 1, bk = b.ko ? 0 : 1;
+            if (ak !== bk) return ak - bk;
+            var ac = a.cat ? 0 : 1, bc = b.cat ? 0 : 1;
+            if (ac !== bc) return ac - bc;
+            return String(a.en || a.imslp).localeCompare(String(b.en || b.imslp));
+          });
+        }
         got.forEach(function(w){
           var c = byQ[w.composerQ];
           if (!c) return;                       /* 우리 인물DB 에 없는 작곡가 */
+          if (per){
+            var cnt = perCount[w.composerQ] || 0;
+            if (cnt >= per) return;             /* 이 작곡가는 이미 채웠습니다 */
+            perCount[w.composerQ] = cnt + 1;
+          }
           var link = IMSLP_BASE + w.imslp.replace(/ /g, '_');
           var isDup = !!have[imslpKey(w.imslp)];
           if (isDup) dup++;
@@ -402,7 +457,9 @@
         await new Promise(function(r){ setTimeout(r, 500); });   /* 위키데이터에 숨 돌릴 틈 */
       }
       progHide();
-      log('✅ 끝 — 작품 ' + rows.length + '건'
+      var uniq = {};
+      rows.forEach(function(r){ uniq[r.person_id] = 1; });
+      log('✅ 끝 — 작품 ' + rows.length + '건 · 작곡가 ' + Object.keys(uniq).length + '명'
         + ' · 한글 이름 ' + rows.filter(function(r){ return r._titleKo; }).length
         + ' · 이미 담긴 것 ' + dup);
       if (!rows.length){
