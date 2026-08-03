@@ -149,7 +149,10 @@ async function main() {
      널리 알려진 인물부터(sort_no 내림차순) 채웁니다. */
   console.log('■ 대상 조회');
   const all = await sbGetAll('persons', 'id,name_ko,name_en,description,link_wiki,wikidata_id,sort_no',
-    '&wikidata_id=not.is.null&order=sort_no.desc.nullslast');
+    '&wikidata_id=not.is.null&order=sort_no.desc.nullslast,id.asc'
+    /* ★ id 를 뒤에 붙여 순서를 확정합니다. sort_no 는 같은 값이 수십 명씩
+       있어서, 그것만으로 정렬하면 페이지 경계에서 어떤 줄은 두 번 오고
+       어떤 줄은 아예 오지 않습니다. */);
   const empty = all.filter(p => !(p.description && String(p.description).trim()));
   const targets = empty.slice(0, DAILY_LIMIT);
   console.log('   위키데이터 번호가 있는 인물 : ' + all.length + '명');

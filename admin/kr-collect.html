@@ -304,7 +304,22 @@
   async function loadAll(table, cols){
     var out = [], from = 0, size = 1000;
     while (true){
-      var r = await sb.from(table).select(cols).range(from, from + size - 1);
+      /* ★ 나눠받기에는 <b>순서를 확정해</b> 주어야 합니다.
+
+         왜 필요한가 (2026-08-03 실제로 겪은 일입니다)
+           range 로 페이지를 나눠 받는데 정렬이 없거나 값이 겹치면,
+           데이터베이스는 <b>매 페이지마다 다른 순서</b>로 줄 수 있습니다.
+           그러면 어떤 줄은 두 번 오고 어떤 줄은 아예 오지 않습니다.
+
+           인물 9,346명인데 sort_no 최대가 273이라 <b>같은 값이 수십 명씩</b>
+           있었습니다. 그래서 같은 인물이 두 번 담기고, 삭제할 때
+             ON CONFLICT DO UPDATE command cannot affect row a second time
+           오류가 났습니다 — 같은 위키데이터 번호를 두 번 보낸 것입니다.
+
+         id 는 겹치지 않으므로, 뒤에 붙이면 순서가 확정됩니다. */
+      var r = await sb.from(table).select(cols)
+        .order('id', { ascending:true })
+        .range(from, from + size - 1);
       if (r.error) throw new Error(table + ' 조회 실패: ' + r.error.message);
       var d = r.data || [];
       out = out.concat(d);

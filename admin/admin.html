@@ -668,7 +668,22 @@
          이 화면만 빠져 있었습니다) */
       mgData=[]; var from=0, PAGE=1000;
       while(true){
-        var r=await sb.from('persons').select('id,wikidata_id,name_ko,name_en,field,description,works,sort_no,wd_occupation,wd_genre').order('sort_no',{ascending:false}).range(from,from+PAGE-1);
+      /* ★ 나눠받기에는 <b>순서를 확정해</b> 주어야 합니다.
+
+         왜 필요한가 (2026-08-03 실제로 겪은 일입니다)
+           range 로 페이지를 나눠 받는데 정렬이 없거나 값이 겹치면,
+           데이터베이스는 <b>매 페이지마다 다른 순서</b>로 줄 수 있습니다.
+           그러면 어떤 줄은 두 번 오고 어떤 줄은 아예 오지 않습니다.
+
+           인물 9,346명인데 sort_no 최대가 273이라 <b>같은 값이 수십 명씩</b>
+           있었습니다. 그래서 같은 인물이 두 번 담기고, 삭제할 때
+             ON CONFLICT DO UPDATE command cannot affect row a second time
+           오류가 났습니다 — 같은 위키데이터 번호를 두 번 보낸 것입니다.
+
+         id 는 겹치지 않으므로, 뒤에 붙이면 순서가 확정됩니다. */
+        var r=await sb.from('persons').select('id,wikidata_id,name_ko,name_en,field,description,works,sort_no,wd_occupation,wd_genre')
+          .order('sort_no',{ascending:false}).order('id',{ascending:true})
+          .range(from,from+PAGE-1);
         if(r.error){ document.getElementById('mgBody').innerHTML='<tr><td colspan="4">오류: '+mgEsc(r.error.message)+'</td></tr>'; return; }
         var d=r.data||[];
         d.forEach(function(p){ var x=mgSuspect(p); p._sus=x.flag; p._reason=x.reason; p._score=x.score; p._noBasis=x.noBasis; mgData.push(p); });
@@ -1147,7 +1162,10 @@
       try{
         var blAll=[], blFrom=0;
         for(;;){
-          var blp=await sb.from('blocklist').select('wikidata_id').range(blFrom, blFrom+999);
+          /* ★ 정렬이 없으면 순서가 보장되지 않습니다 — 차단 목록을 놓치면
+             지운 인물이 다시 들어옵니다. 기본키로 순서를 확정합니다. */
+          var blp=await sb.from('blocklist').select('wikidata_id')
+            .order('wikidata_id',{ascending:true}).range(blFrom, blFrom+999);
           if(blp.error) break;
           var bld=blp.data||[]; if(!bld.length) break;
           blAll=blAll.concat(bld); blFrom+=bld.length;
@@ -1297,7 +1315,8 @@
       var rows=[], rf=0;
       for(;;){
         var rp=await sb.from('persons').select('id,wikidata_id,mbid,works')
-          .order('sort_no',{ascending:false}).range(rf, rf+999);
+          .order('sort_no',{ascending:false}).order('id',{ascending:true})
+          .range(rf, rf+999);
         if(rp.error){ log('❌ 조회 실패: '+rp.error.message); progHide(); setBtns(false); return; }
         var rd=rp.data||[]; if(!rd.length) break;
         rows=rows.concat(rd); rf+=rd.length;
@@ -1354,7 +1373,8 @@
       var rows2=[], rf2=0;
       for(;;){
         var rp2=await sb.from('persons').select('id,wikidata_id,description')
-          .order('sort_no',{ascending:false}).range(rf2, rf2+999);
+          .order('sort_no',{ascending:false}).order('id',{ascending:true})
+          .range(rf2, rf2+999);
         if(rp2.error){ log('❌ 조회 실패: '+rp2.error.message); progHide(); setBtns(false); return; }
         var rd2=rp2.data||[]; if(!rd2.length) break;
         rows2=rows2.concat(rd2); rf2+=rd2.length;
