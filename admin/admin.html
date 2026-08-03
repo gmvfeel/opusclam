@@ -902,6 +902,65 @@
         got+=Math.min(CH2,qids.length-i); progSet(Math.round(got/(qids.length||1)*100)); log('상세정보 '+got+'/'+qids.length);
       }
       persons.forEach(function(pp){ delete pp._loc; });
+
+      /* ★ 이미 있는 인물의 <b>손으로 채운 값을 지키기</b> ─────────────
+         왜 필요한가 (실제로 겪은 일입니다)
+
+           아래 upsert 는 onConflict:'wikidata_id' 이므로, 같은 위키데이터
+           번호를 가진 인물이 이미 있으면 <b>그 칸을 덮어씁니다.</b>
+           그런데 위에서 만든 객체에는 works · school · instrument ·
+           image_url 이 <b>빈 문자열</b>로 들어 있습니다. 위키데이터에 값이
+           없으면 빈 채로 남으므로, 기존 값이 <b>지워집니다.</b>
+
+           그리고 위키데이터에 한국어 표기가 없는 인물은 name_ko 가
+           영문으로 되돌아갑니다. 손으로 채운 한글 이름 10명이 실제로
+           영문으로 되돌아갔고, 마누엘 로젠탈의 분야도 지휘에서 작곡으로
+           바뀌었습니다.
+
+         어떻게 막는가
+           ⑴ <b>빈 문자열 칸은 아예 보내지 않습니다.</b> 보내지 않으면
+             upsert 가 그 칸을 건드리지 않습니다.
+           ⑵ 이미 있는 인물이고 그 칸에 <b>값이 있으면</b> 보내지 않습니다.
+             빈 칸만 채우는 것이 이 수집기의 본래 목적입니다.
+
+         ※ nationality · life · era_name · era_yr · mbid · sort_no 는
+           위키데이터가 근거이므로 그대로 갱신합니다. */
+      var KEEP = ['name_ko','name_en','field','works','school','instrument','image_url'];
+      try {
+        var qidList = persons.map(function(p){ return p.wikidata_id; }).filter(Boolean);
+        var have = {};
+        for (var qi = 0; qi < qidList.length; qi += 200) {
+          var part = qidList.slice(qi, qi + 200);
+          var er = await sb.from('persons')
+            .select('wikidata_id,name_ko,name_en,field,works,school,instrument,image_url')
+            .in('wikidata_id', part);
+          if (er.error) throw er.error;
+          (er.data || []).forEach(function(row){ have[row.wikidata_id] = row; });
+        }
+        var kept = 0;
+        persons.forEach(function(p){
+          var ex = have[p.wikidata_id];
+          KEEP.forEach(function(k){
+            var mine = p[k];
+            /* 내가 보낼 값이 비었으면 보내지 않습니다 */
+            if (mine === '' || mine === null || mine === undefined) { delete p[k]; return; }
+            /* 이미 있는 인물이고 그 칸에 값이 있으면 보내지 않습니다 */
+            if (ex && ex[k] !== null && ex[k] !== undefined && String(ex[k]).trim() !== '') {
+              delete p[k]; kept++;
+            }
+          });
+        });
+        log('이미 채워진 칸 ' + kept + '개는 그대로 지킵니다(덮어쓰지 않습니다).');
+      } catch (e) {
+        /* 못 물어봤으면 <b>덮어쓰지 않는 쪽</b>으로 기울입니다 —
+           빈 문자열만이라도 걷어 내고 보냅니다. */
+        log('⚠ 기존 값 확인에 실패했습니다(' + (e.message || e) + '). '
+          + '빈 값은 보내지 않고 계속합니다.');
+        persons.forEach(function(p){
+          KEEP.forEach(function(k){ if (p[k] === '' ) delete p[k]; });
+        });
+      }
+
       log('정리 완료: '+persons.length+'명 → 저장(업서트) 중…'); progShow('DB에 저장 중…',false); progSet(0);
       var CH=100, done=0;
       for(var k=0;k<persons.length;k+=CH){
