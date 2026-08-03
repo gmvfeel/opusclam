@@ -85,6 +85,9 @@
   .acts .chk{color:#c9a7e8;border-color:rgba(201,167,232,.45)}
   .acts .yes{background:rgba(111,207,143,.14);border-color:rgba(111,207,143,.45);color:var(--ok)}
   .acts .nope{background:rgba(224,133,133,.14);border-color:rgba(224,133,133,.45);color:var(--no)}
+  .acts .del,button.del{background:rgba(224,133,133,.2);border-color:rgba(224,133,133,.6);color:#f0a0a0}
+  button.del:hover{background:rgba(224,133,133,.32);border-color:#e08585;color:#fff}
+  .it-pick{margin-right:2px;transform:scale(1.15);cursor:pointer}
   .acts button{height:34px;padding:0 14px;font-size:12.5px}
   .empty{padding:50px;text-align:center;color:var(--tx3);background:var(--card);
          border:1px solid var(--line);border-radius:13px}
@@ -114,6 +117,9 @@
   <div class="bar">
     <button class="go" id="load">불러오기</button>
     <button id="checkAll">보이는 것 모두 자동 검사</button>
+    <label class="chk"><input type="checkbox" id="allPick"> 모두 고르기</label>
+    <button id="bulkOk" disabled>고른 것 공개</button>
+    <button class="del" id="bulkDel" disabled>고른 것 <b>지우기</b></button>
     <span class="cnt" id="cnt"></span>
   </div>
 
@@ -289,6 +295,7 @@
       }
       return '<div class="item" data-i="' + i + '">'
         + '<div class="it-top">'
+        +   '<input type="checkbox" class="it-pick" value="' + i + '">'
         +   '<span class="it-t">' + esc(r.title_ko || r.title || '(제목 없음)')
         +     (r.title_ko && r.title ? '<span class="en">' + esc(r.title) + '</span>' : '')
         +   '</span>'
@@ -321,9 +328,12 @@
               ? '<button class="yes" data-act="ok" data-i="' + i + '">공개하기</button>' : '')
         +   (state !== 'rejected'
               ? '<button class="nope" data-act="no" data-i="' + i + '">되돌리기</button>' : '')
+        +   '<button class="del" data-act="del" data-i="' + i + '">지우기</button>'
         + '</div>'
         + '</div>';
     }).join('');
+    if ($('allPick')) $('allPick').checked = false;
+    syncPick();
   }
 
   /* ── 한 건 자동 검사 ──────────────────────────────────────
@@ -425,9 +435,108 @@
     }
   }
 
+  /* ── 지우기 ───────────────────────────────────────────────
+     ★ 게시판 줄과 <b>저장소 파일을 함께</b> 지웁니다.
+       줄만 지우면 파일이 저장소에 남아 용량을 먹고, 주소를 아는 사람은
+       계속 받을 수 있습니다(비공개라 임시 주소가 필요하지만, 관리자가
+       만들어 줄 수 있으므로 완전히 없애는 편이 맞습니다).
+
+     ★ 되돌릴 수 없습니다. 그래서 두 번 묻습니다. */
+  async function removeRows(idxList){
+    var list = idxList.slice().sort(function(a,b){ return b - a; });   /* 뒤에서부터 */
+    var ok = 0, bad = 0, fileGone = 0;
+    for (var k = 0; k < list.length; k++){
+      var i = list[k], r = rows[i];
+      if (!r) continue;
+      try {
+        /* ① 저장소 파일부터 지웁니다.
+           줄을 먼저 지우면 주소를 잃어서 파일을 찾을 수 없습니다. */
+        if (r.file_url && window.OCScoreDL){
+          var pth = window.OCScoreDL.pathOf(r.file_url);
+          if (pth){
+            var rm = await sb.storage.from('scores').remove([pth]);
+            if (!rm.error) fileGone++;
+            else log('  ⚠ 파일을 못 지웠습니다: ' + (rm.error.message || '') + ' — ' + pth);
+          }
+        }
+        /* ② 게시판 줄 */
+        var del = await sb.from('spot').delete().eq('id', r.id);
+        if (del.error) throw new Error(del.error.message);
+        rows.splice(i, 1);
+        ok++;
+      } catch (e){
+        bad++;
+        log('  ✗ ' + (r.title_ko || r.title) + ' — ' + (e.message || e));
+      }
+    }
+    log('■ 지움 ' + ok + (bad ? ' · 실패 ' + bad : '') + ' · 파일 ' + fileGone + '개 삭제');
+    render();
+    await counts();
+  }
+
+  function pickedIdx(){
+    return Array.prototype.slice.call(document.querySelectorAll('.it-pick:checked'))
+      .map(function(c){ return parseInt(c.value, 10); });
+  }
+  function syncPick(){
+    var n = pickedIdx().length;
+    $('bulkDel').disabled = !n;
+    $('bulkOk').disabled = !n || state === 'approved';
+    $('bulkDel').innerHTML = n ? ('고른 ' + n + '개 <b>지우기</b>') : '고른 것 <b>지우기</b>';
+    $('bulkOk').textContent = n ? ('고른 ' + n + '개 공개') : '고른 것 공개';
+  }
+
+  async function bulkDelete(){
+    var list = pickedIdx();
+    if (!list.length) return;
+    var names = list.slice(0, 5).map(function(i){
+      return '· ' + (rows[i].title_ko || rows[i].title || '(제목 없음)');
+    }).join('\n');
+    if (!confirm(list.length + '개를 지웁니다.\n\n' + names
+      + (list.length > 5 ? '\n… 그 밖 ' + (list.length - 5) + '개' : '')
+      + '\n\n게시판 줄과 저장소 파일을 함께 지웁니다.\n'
+      + '되돌릴 수 없습니다. 진행할까요?')) return;
+    /* ★ 한 번 더 묻습니다 — 되돌릴 수 없는 일이기 때문입니다 */
+    if (!confirm('정말 지울까요?\n\n' + list.length + '개가 영구히 사라집니다.')) return;
+    $('bulkDel').disabled = true;
+    log('■ ' + list.length + '개 지우기');
+    await removeRows(list);
+    syncPick();
+  }
+
+  async function bulkApprove(){
+    var list = pickedIdx();
+    if (!list.length) return;
+    if (!confirm(list.length + '개를 공개합니다.\n\n'
+      + '저작권 근거가 비어 있는 것이 있어도 그대로 공개됩니다.\n진행할까요?')) return;
+    $('bulkOk').disabled = true;
+    log('■ ' + list.length + '개 공개');
+    var ok = 0, bad = 0;
+    var ids = list.map(function(i){ return rows[i].id; });
+    try {
+      var res = await sb.from('spot').update({
+        review_status:'approved', hidden:false, reviewed_at:new Date().toISOString()
+      }).in('id', ids);
+      if (res.error) throw new Error(res.error.message);
+      ok = ids.length;
+      rows = rows.filter(function(r){ return ids.indexOf(r.id) < 0; });
+    } catch (e){ bad = ids.length; log('  ✗ ' + (e.message || e)); }
+    log('■ 공개 ' + ok + (bad ? ' · 실패 ' + bad : ''));
+    render();
+    await counts();
+    syncPick();
+  }
+
   /* ── 이어 주기 ────────────────────────────────────────── */
   $('load').addEventListener('click', run);
   $('checkAll').addEventListener('click', checkAll);
+  $('bulkDel').addEventListener('click', bulkDelete);
+  $('bulkOk').addEventListener('click', bulkApprove);
+  $('allPick').addEventListener('change', function(){
+    var on = $('allPick').checked;
+    document.querySelectorAll('.it-pick').forEach(function(c){ c.checked = on; });
+    syncPick();
+  });
   $('tabs').addEventListener('click', function(e){
     var b = e.target.closest('.tab');
     if (!b) return;
@@ -437,6 +546,9 @@
     rows = [];
     $('list').innerHTML = '<div class="empty">「불러오기」를 누르십시오.</div>';
     $('cnt').textContent = '';
+  });
+  $('list').addEventListener('change', function(e){
+    if (e.target && e.target.classList.contains('it-pick')) syncPick();
   });
   $('list').addEventListener('click', function(e){
     var b = e.target.closest('button[data-act]');
@@ -457,6 +569,13 @@
       decide(i, true);
     } else if (act === 'no'){
       decide(i, false);
+    } else if (act === 'del'){
+      var r = rows[i];
+      if (!r) return;
+      var nm = r.title_ko || r.title || '(제목 없음)';
+      if (!confirm('「' + nm + '」 을 지웁니다.\n\n'
+        + '게시판 줄과 저장소 파일을 함께 지웁니다.\n되돌릴 수 없습니다. 진행할까요?')) return;
+      removeRows([i]).then(syncPick);
     }
   });
 
