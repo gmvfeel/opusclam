@@ -48,15 +48,20 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;')
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
+  /* ★ 시각은 recruit.js 의 공용 함수를 씁니다 — 한 곳에서만 정합니다.
+     (마이페이지에도 assets/recruit.js 가 함께 실립니다)
+
+     예전에는 ISO 문자열을 그대로 잘라 썼습니다(s.slice(11,16)).
+     그러면 UTC 값이 나와 한국 시간과 9시간 어긋납니다 —
+     오전 11시 11분에 낸 지원이 「02:11」 로 보였습니다.
+     날짜도 새벽(한국 시간 0~9시)에는 하루 밀렸습니다. */
   function fmt(d) {
-    if (!d) return '';
-    var s = String(d);
-    return s.slice(2, 4) + '.' + s.slice(5, 7) + '.' + s.slice(8, 10);
+    var R = window.OCRecruit;
+    return R && R.stampShort ? R.stampShort(d) : '';
   }
   function fmtFull(d) {
-    if (!d) return '';
-    var s = String(d);
-    return s.slice(0, 10) + ' ' + s.slice(11, 16);
+    var R = window.OCRecruit;
+    return R && R.stampFull ? R.stampFull(d) : '';
   }
 
   /* 진행 상태 — 한 곳에서 정합니다 */

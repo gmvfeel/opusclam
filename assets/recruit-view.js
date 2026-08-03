@@ -970,7 +970,7 @@
       body.innerHTML = ''
         + '<div class="ra-gate">'
         +   '<p><b>이미 지원하신 공고입니다.</b></p>'
-        +   '<p>지원한 때 — ' + esc(String(already.at || '').slice(0, 10))
+        +   '<p>지원한 때 — ' + esc(R.stampFull(already.at))
         +     ' · 진행 상태 — <b>' + esc(already.status || '접수') + '</b></p>'
         +   '<p class="ra-note">한 공고에는 한 번만 지원하실 수 있습니다. '
         +     '고쳐 내고 싶으시면 마이페이지에서 지원을 취소한 뒤 다시 내십시오.</p>'

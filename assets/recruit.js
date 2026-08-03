@@ -296,6 +296,56 @@
     return '상시모집';
   }
 
+  /* ── 시각 표시 ────────────────────────────────────────────
+     ★ 시각이 담긴 칸(created_at 같은 timestamptz)은 <b>반드시 Date 로 읽어야</b>
+       합니다. ISO 문자열을 그대로 잘라 쓰면 UTC 값이 그대로 나와
+       한국 시간과 <b>9시간</b> 어긋납니다.
+
+       실제로 겪은 일 — 오전 11시 11분에 낸 지원이 「02:11」 로 보였습니다.
+       11:11 에서 정확히 9시간을 뺀 값입니다.
+
+       <b>날짜도 함께 틀립니다.</b> 한국 시간 0시~9시 사이에 한 일은
+       UTC 로는 <b>전날</b>이므로, 목록의 날짜가 하루 밀리고
+       「오늘등록」 건수도 잘못 셉니다.
+
+     ※ 날짜만 담는 칸(date_from · date_to 같은 date)은 시간대가 없으므로
+       잘라 쓰는 것이 맞습니다. 두 가지를 섞지 마십시오.
+       — 이 파일의 applyLines · applyLabel · daysLeft 는 date 칸이라
+         일부러 잘라 씁니다. ────────────────────────────────── */
+  function toDate(v) {
+    if (!v) return null;
+    var s = String(v);
+    /* 마이크로초 6자리를 3자리로 줄입니다 — 일부 브라우저가 6자리를 못 읽습니다 */
+    s = s.replace(/(\.\d{3})\d+/, '$1');
+    var d = new Date(s);
+    if (isNaN(d.getTime())) d = new Date(s.replace(' ', 'T'));
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function p2(n) { return (n < 10 ? '0' : '') + n; }
+  /* 26.08.03 — 목록의 좁은 칸 */
+  function stampShort(v) {
+    var d = toDate(v); if (!d) return '';
+    return p2(d.getFullYear() % 100) + '.' + p2(d.getMonth() + 1) + '.' + p2(d.getDate());
+  }
+  /* 2026-08-03 */
+  function stampDate(v) {
+    var d = toDate(v); if (!d) return '';
+    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+  }
+  /* 2026-08-03 11:11 */
+  function stampFull(v) {
+    var d = toDate(v); if (!d) return '';
+    return stampDate(v) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+  }
+  /* 보는 분이 있는 곳 기준으로 오늘인가 */
+  function isToday(v) {
+    var d = toDate(v); if (!d) return false;
+    var n = new Date();
+    return d.getFullYear() === n.getFullYear()
+        && d.getMonth()    === n.getMonth()
+        && d.getDate()     === n.getDate();
+  }
+
   /* 마감이 얼마 남았는지 — 급한 것을 알아보게 */
   function daysLeft(to) {
     if (!to) return null;
@@ -522,5 +572,8 @@
     jobLabel: jobLabel, regionLabel: regionLabel,
     payLabel: payLabel, applyLabel: applyLabel, applyLines: applyLines,
     daysLeft: daysLeft,
+    /* 시각 표시 — timestamptz 칸은 반드시 이것을 쓰십시오 */
+    toDate: toDate, stampShort: stampShort, stampDate: stampDate,
+    stampFull: stampFull, isToday: isToday,
   };
 })();

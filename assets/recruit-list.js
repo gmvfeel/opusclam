@@ -492,9 +492,12 @@
 
     var cnt = el('#rcCount');
     if (cnt) {
-      var today = new Date().toISOString().slice(0, 10);
+      /* ★ 「오늘」 은 보는 분이 있는 곳의 오늘입니다.
+         예전에는 new Date().toISOString().slice(0,10) 으로 <b>UTC 의 오늘</b>과
+         견주었습니다. 그러면 한국 시간 0시~9시에 올린 것이 「어제」 로 세어져
+         오전에는 오늘등록 건수가 실제보다 적게 나왔습니다. */
       var todayN = (rows || []).filter(function (o) {
-        return String(o.created_at || '').slice(0, 10) === today; }).length;
+        return R.isToday(o.created_at); }).length;
       cnt.innerHTML = '전체 <b>' + total.toLocaleString() + '</b>건'
         + (todayN ? '  <span>[오늘등록 ' + todayN + '건]</span>' : '');
     }
