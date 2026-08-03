@@ -50,7 +50,7 @@
   .disp{font-family:var(--display)}
 
   /* ---------- placeholders ---------- */
-  /* 악보·자료 목록 — 여섯 줄이 되면서 세로로 길어져서 줄 간격을 좁혔습니다.
+  /* 유틸리티·자료 목록 — 여섯 줄이 되면서 세로로 길어져서 줄 간격을 좁혔습니다.
      style.css 는 건드리지 않고 이 페이지에서만 적용합니다. */
   #scores-list li{padding:7px 0;gap:8px}
   #scores-list li .icon{width:24px;height:24px;border-radius:5px}
@@ -1035,7 +1035,7 @@
 
     <!-- utility/score -->
     <div>
-      <div class="sec-head"><div class="t"><span class="en-s">Utility / Score</span><span class="ko">악보·자료</span></div><a class="more en" href="/community/utility.html">VIEW MORE +</a></div>
+      <div class="sec-head"><div class="t"><span class="en-s">Utility / Data</span><span class="ko">유틸리티·자료</span></div><a class="more en" href="/community/utility.html">VIEW MORE +</a></div>
       <ul class="dl" id="scores-list">
         <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">Waves Complete 2016.12.97</a></li>
         <li><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><a href="#">MAGIX Vegas DVD Architect 7.0.0 Build 38</a></li>
@@ -1550,9 +1550,9 @@ if('serviceWorker' in navigator){
     }catch(e){ console.error('funding 로드 실패:', e); }
   }
 
-  // 악보·자료 — 아이콘 + 제목
+  // 유틸리티·자료 — 아이콘 + 제목
   const DL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>';
-  /* 악보·자료 — 전용 표가 비어 있으면 유틸리티 게시판에서 가져온다
+  /* 유틸리티·자료 — 전용 표가 비어 있으면 유틸리티 게시판에서 가져온다
      내려받을 파일이 붙어 있는지(file_url)도 함께 확인합니다 */
   async function feedScores(){
     try{
