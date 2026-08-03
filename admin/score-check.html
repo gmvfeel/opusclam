@@ -345,24 +345,8 @@
 
   /* 편성 — 파일 이름이나 폴더 이름에 든 낱말로 짐작합니다.
      게시판의 편성 갈래와 <b>같은 말</b>을 씁니다(음원영상과도 같습니다). */
-  var INSTR_HINT = [
-    [/symphon|sinfoni|교향/i,                'Symphony'],
-    [/concerto|konzert|협주/i,               'Concerto'],
-    [/quartet|quintet|sextet|septet|octet|trio|duo|chamber|kammer|실내/i, 'Chamber'],
-    [/piano|klavier|clavier|clavecin|keyboard|harpsichord|cembalo|pianoforte|피아노|건반/i, 'Piano'],
-    [/organ|orgel|오르간/i,                  'Organ'],
-    [/violin|viola|cello|violoncello|contrabass|bass\b|string|streich|guitar|gitarre|lute|laute|harp\b|harfe|바이올린|첼로|현악|기타|하프/i, 'Strings'],
-    [/flute|fl.te|oboe|clarinet|klarinett|bassoon|fagott|saxophon|recorder|blockfl|wind[\s_-]?band|목관|리코더/i, 'Wind'],
-    [/trumpet|trompet|horn|trombone|posaune|tuba|brass|금관/i, 'Brass'],
-    [/timpani|percussion|schlagzeug|타악/i,   'Percussion'],
-    [/mass|messe|requiem|magnificat|oratori|passion|미사|레퀴엠/i, 'Oratorio/Mass'],
-    [/chor|choir|choral|cantata|kantate|motet|합창|칸타타/i, 'Choral'],
-    [/lied|song|aria|gesang|vocal|성악|가곡/i, 'Vocal'],
-    [/oper(a|n)?\b|오페라/i,                  'Opera'],
-    [/orchestr|orkest|관현악/i,               'Orchestral'],
-    [/ensemble|앙상블/i,                      'Ensemble'],
-    [/electron|전자/i,                        'Electronic']
-  ];
+  /* ★ 편성 짐작은 assets/score-guard.js 로 옮겼습니다 —
+     IMSLP 수집 화면(score-collect.html)과 <b>같은 규칙</b>을 써야 합니다. */
 
   /* 이름에서 걷어 낼 것 — 출판사·저장소 표시·연도·번호 같은 군더더기 */
   var STRIP = /\b(imslp|petrucci|pmlp\d*|scan|scanned|complete|full[\s_-]?score|score|part[s]?|edition|urtext|reprint|public[\s_-]?domain|cc[\s_-]?by(?:[\s_-]?sa)?|breitkopf|h[a?ä]rtel|peters|henle|b[a?ä]renreiter|schirmer|ricordi|durand|kalmus|dover|schott|universal|boosey|novello|augener|litolff|\d{4})\b/gi;
@@ -390,11 +374,8 @@
   }
 
   function guessInstr(pathText){
-    var s = String(pathText || '');
-    for (var i = 0; i < INSTR_HINT.length; i++){
-      if (INSTR_HINT[i][0].test(s)) return INSTR_HINT[i][1];
-    }
-    return '';
+    return (window.OCScoreGuard && window.OCScoreGuard.guessInstr)
+      ? window.OCScoreGuard.guessInstr(pathText) : '';
   }
 
   /* 인물DB 에서 찾은 작곡가의 <b>본 이름</b>을 되찾습니다.

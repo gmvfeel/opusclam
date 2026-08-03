@@ -228,10 +228,46 @@
     return res;
   }
 
+  /* ── 편성 짐작 ─────────────────────────────────────────────
+     파일 이름·폴더 이름·작품명에 든 낱말로 편성을 짐작합니다.
+     게시판의 편성 갈래와 <b>같은 말</b>을 씁니다(음원영상과도 같습니다).
+
+     ★ 왜 여기로 옮겼나
+       admin/score-check.html(내 악보 올리기)과
+       admin/score-collect.html(IMSLP 에서 모으기)이 <b>같은 규칙</b>을
+       써야 합니다. 두 곳에 복사해 두면 한 곳만 고치는 일이 생깁니다. */
+  var INSTR_HINT = [
+    [/symphon|sinfoni|교향/i,                'Symphony'],
+    [/concerto|konzert|협주/i,               'Concerto'],
+    [/quartet|quintet|sextet|septet|octet|trio|duo|chamber|kammer|실내/i, 'Chamber'],
+    [/piano|klavier|clavier|clavecin|keyboard|harpsichord|cembalo|pianoforte|피아노|건반/i, 'Piano'],
+    [/organ|orgel|오르간/i,                  'Organ'],
+    [/violin|viola|cello|violoncello|contrabass|bass\b|string|streich|guitar|gitarre|lute|laute|harp\b|harfe|바이올린|첼로|현악|기타|하프/i, 'Strings'],
+    [/flute|fl.te|oboe|clarinet|klarinett|bassoon|fagott|saxophon|recorder|blockfl|wind[\s_-]?band|목관|리코더/i, 'Wind'],
+    [/trumpet|trompet|horn|trombone|posaune|tuba|brass|금관/i, 'Brass'],
+    [/timpani|percussion|schlagzeug|타악/i,   'Percussion'],
+    [/\bmass(es)?\b|missa|messe|requiem|magnificat|oratori|passion|te deum|stabat mater|vespers|psalm|미사|레퀴엠|수난곡/i, 'Oratorio/Mass'],
+    [/chor|choir|choral|cantata|kantate|motet|합창|칸타타/i, 'Choral'],
+    [/lied|song|aria|gesang|vocal|성악|가곡/i, 'Vocal'],
+    [/oper(a|n)?\b|오페라/i,                  'Opera'],
+    [/orchestr|orkest|관현악/i,               'Orchestral'],
+    [/ensemble|앙상블/i,                      'Ensemble'],
+    [/electron|전자/i,                        'Electronic']
+  ];
+
+  function guessInstr(pathText){
+    var s = String(pathText || '');
+    for (var i = 0; i < INSTR_HINT.length; i++){
+      if (INSTR_HINT[i][0].test(s)) return INSTR_HINT[i][1];
+    }
+    return '';
+  }
+
   var LABEL = { ok:'올려도 됨', maybe:'올려도 될 듯', wa:'확인 필요', no:'올리면 안 됨' };
 
   window.OCScoreGuard = {
     setComposers: setComposers,
+    guessInstr: guessInstr,
     check: check,
     checkUrl: checkUrl,
     judge: judge,          /* 이미 뽑아 둔 글자로 판정만 하고 싶을 때 */
