@@ -149,6 +149,13 @@
             {"value":"현대음악이전","label":"현대음악이전"},
             {"value":"현대음악","label":"현대음악"}],
       cardStyle:true, koField:'title_ko',   /* 한국어 표기가 있으면 앞세웁니다 */
+      /* ★ 목록에 <b>작곡가와 작품번호</b>를 함께 보여 줍니다.
+         악보는 「인벤션과 신포니아」 만 있으면 누구 작품인지 알 수 없어서
+         목록을 훑는 뜻이 없어집니다. 작곡가가 가장 먼저 보여야 합니다. */
+      metaFields:[
+        { col:'score_composer' },
+        { col:'score_opus' }
+      ],
       writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
       commentsTable:'spot_comments'
     });

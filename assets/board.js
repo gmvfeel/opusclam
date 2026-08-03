@@ -322,6 +322,18 @@ window.OCBoard = (function () {
         ? imgTag(rec.thumb_url, 200)
         : '<i class="bc-noimg">' + esc(String(rec.title || '?').trim().charAt(0)) + '</i>';
       var meta = [];
+      /* ★ 게시판마다 목록에 더 보여 줄 것을 정할 수 있게 합니다.
+         악보는 <b>작곡가</b>가 없으면 누구 작품인지 알 수 없어서
+         목록으로서 쓸모가 크게 떨어집니다.
+
+         쓰는 법 — score.html 의 설정에
+           metaFields:[ { col:'score_composer' }, { col:'score_opus' } ]
+         적지 않은 게시판은 예전 그대로입니다. */
+      (cfg.metaFields || []).forEach(function (mf) {
+        var v = rec[mf.col];
+        if (v === null || v === undefined || String(v).trim() === '') return;
+        meta.push((mf.label ? esc(mf.label) + ' : ' : '') + esc(v));
+      });
       if (rec.source || rec.channel_name) meta.push('출처 : ' + esc(rec.source || rec.channel_name));
       if (rec.created_at) meta.push('등록일 : ' + fmtDate(rec.created_at));
       meta.push('VIEW : ' + (rec.view_count || 0));
