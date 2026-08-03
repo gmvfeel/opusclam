@@ -1,0 +1,101 @@
+name: 인물DB 한국어 소개문 보강 (매일)
+
+# ★ 왜 이 워크플로가 필요한가
+#   2026-08-03 확인 — 인물 9,348명 가운데 7,599명(81%)이 소개가 없습니다.
+#   소개가 없으면 상세 화면이 이름과 생몰년만 남은 빈 껍데기가 됩니다.
+#
+#   이 일을 하는 기능이 admin/admin.html 의 「한국어 위키 소개 보강」 에
+#   있었지만 두 가지 문제가 있었습니다 —
+#     ① 브라우저 창을 열어 두어야 돌고, 닫으면 끊깁니다
+#     ② limit(3000) 이 실제로는 200명만 가져왔습니다
+#        (Supabase 는 한 번에 돌려주는 줄 수에 상한이 있습니다)
+#   그래서 7,599명 가운데 200명만 대상으로 돌고 있었습니다.
+#
+# ★ 저작권 — 한국어 위키백과는 CC BY-SA 입니다.
+#   그래서 문서 앞머리(요약)만 가져오고, 500자에서 끊고, 출처 주소를
+#   link_wiki 에 함께 담습니다. 전문을 옮기지 않는 것이 중요합니다.
+#
+# ★ 시각을 KST 16:23 으로 둔 까닭
+#   persons 표를 쓰는 것들과 겹치지 않게 벌려 두었습니다 —
+#     collect-persons-kr   KST 목·금·토 05:43
+#     enrich-persons       KST 매일     12:13
+#     photo-collect        KST 매주 월  13:17
+#     hangulize-persons    KST 매일     14:07   (한글 이름)
+#     link-persons         KST 매주 월  15:23
+#   같은 oc-persons 대기줄이라 겹쳐도 순서를 지켜 하나씩 돌지만,
+#   시작 시각을 벌려 두면 기다리는 시간이 줄어듭니다.
+#
+# ★ 하루 1,200명씩 나눠 도는 까닭
+#   위키데이터에 문서 제목을 묻고(150명씩) 위키백과에 요약을 묻습니다
+#   (20명씩). 한 번에 다 하면 자료원에 부담이 크고 실행이 길어집니다.
+#   나눠 돌면 이레쯤 뒤에 채워지고, 그 뒤에는 새로 들어온 인물만
+#   처리하므로 몇 분 안에 끝납니다.
+
+on:
+  schedule:
+    - cron: '23 7 * * *'     # KST 매일 16:23
+  workflow_dispatch:
+    inputs:
+      daily_limit:
+        description: '이번 실행에서 처리할 인물 수 (기본 1200)'
+        required: false
+        default: '1200'
+      dry_run:
+        description: '미리보기만 하고 저장하지 않음 (1 을 넣으면 미리보기)'
+        required: false
+        default: '0'
+
+# ★ persons 표를 쓰는 것들을 한 대기줄로 묶습니다.
+#   예약이 제각각 늦게 시작해도 순서를 지켜 하나씩 돕니다 —
+#   같은 사람 줄을 서로 덮어쓰거나 위키데이터를 동시에 두드리는 것을 막습니다.
+concurrency:
+  group: oc-persons
+  cancel-in-progress: false
+
+jobs:
+  describe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 한국어 소개문 보강
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          DAILY_LIMIT: ${{ github.event.inputs.daily_limit || '1200' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || '0' }}
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+          try2 node scripts/describe-persons.mjs
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #  예약 실행이 실패해도 눌러 보지 않으면 모릅니다.
+  #  실패하면 이슈를 만들고, 같은 이슈가 이미 열려 있으면 댓글만 답니다.
+  #  ※ Settings → Actions → General → Workflow permissions 를
+  #    「Read and write permissions」 로 두셔야 이슈를 만들 수 있습니다.
+  oc-notify-failure:
+    needs: describe
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi

@@ -156,6 +156,17 @@
   #review .rv-btn.del{color:#9a9cb0;border-color:rgba(255,255,255,.2);font-size:12px;padding:6px 12px}
   #review .rv-empty{color:#9a9cb0;padding:40px;text-align:center}
   /* ===== 회원 관리 강화: 검색 + 상세 모달 ===== */
+  /* ── 대시보드 카드 묶음 제목 ─────────────────────────────
+     자동으로 도는 일과 손으로 하는 일을 눈으로 갈라 보이게 합니다. */
+  .dash-h{font-size:17px;font-weight:800;color:#e8e8f2;margin:34px 0 4px;letter-spacing:-.01em}
+  .dash-h:first-of-type{margin-top:8px}
+  .dash-h--auto{color:#9a9cb0}
+  .dash-sub{font-size:12.5px;line-height:1.7;color:#9a9cb0;margin:0 0 16px;max-width:760px}
+  .dash-sub b{color:#c9c9dd}
+  .cards--auto{opacity:.72}
+  .cards--auto:hover{opacity:1}
+  .tag--auto{background:rgba(111,207,143,.14)!important;color:#6fcf8f!important;
+             border-color:rgba(111,207,143,.4)!important}
   #members .mem-search{width:100%;max-width:340px;padding:10px 14px;margin-bottom:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#e2e2ee;font-size:13px;font-family:inherit;outline:none}
   #members .mem-search::placeholder{color:#7a7a92}
   #members .mem-btn.detail{color:#9db8e0;border-color:rgba(157,184,224,.5)}
@@ -201,44 +212,69 @@
       <div class="dash-types" id="dashTypes">
         <span>전공자<b data-ty="major">-</b></span><span>음악관계자<b data-ty="industry">-</b></span><span>단체·기업<b data-ty="org">-</b></span><span>음악학교<b data-ty="school">-</b></span><span>일반<b data-ty="general">-</b></span>
       </div>
+      <!-- ★ 카드를 세 묶음으로 갈랐습니다.
+
+           왜 갈랐나 — 자동화(GitHub Actions)가 자리를 잡으면서, 손으로
+           눌러야 하는 것과 이미 저절로 도는 것이 뒤섞여 있었습니다.
+           같은 일을 손으로 또 누르면 헛일이고, 자동이 멈춘 것을 모르고
+           지나칠 수도 있습니다.
+
+             ① 손으로 하는 일   — 사람이 판단해야 하므로 자동화할 수 없습니다
+             ② 정제 · 점검 도구 — 자동화에 없는 기능이 들어 있습니다
+             ③ 자동으로 도는 일 — 눌러도 되지만 <b>누를 필요가 없습니다</b>
+
+           ③ 은 지우지 않고 남겨 둡니다. 자동이 왜 안 돌았는지 확인할 때,
+           또는 급히 지금 돌려야 할 때 쓸 길이 됩니다. -->
+
+      <h2 class="dash-h">손으로 하는 일</h2>
+      <p class="dash-sub">사람이 판단해야 하는 일입니다. 자동화할 수 없습니다.</p>
       <div class="cards">
-        <div class="card clickable" id="cardHero"><h3>콘텐츠 · 광고 관리</h3><p>메인 히어로 슬라이드(상단 큰 배너)의 문구·이미지·링크를 수정합니다.</p><span class="go">관리하기 →</span></div>
-        <div class="card clickable" id="cardCollect"><h3>데이터 수집</h3><p>위키데이터에서 클래식 작곡가 정보를 자동으로 가져와 인물DB에 채웁니다.</p><span class="go">수집하기 →</span></div>
-        <div class="card clickable" id="cardManage"><h3>DB 관리 · 정제</h3><p>음악과 무관한 의심 인물(비음악 키워드·유명 비음악인)을 자동 표시하고, 확인 후 삭제합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card clickable" id="cardMembers"><span class="cbadge" id="badgeMembers"></span><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card clickable" id="cardReview"><span class="cbadge" id="badgeReview"></span><h3>제출 검수</h3><p>자격 회원이 등록·보강 제출한 내용을 확인하고, 승인 시 실제 DB에 반영합니다.</p><span class="go">검수하기 →</span></div>
-        <div class="card clickable" id="cardRel"><h3>관계 관리 · 네트워킹</h3><p>인물의 사사관계·소속·출신학교를 직접 추가·삭제합니다. 위키데이터에 없는 국내 인물 관계를 채웁니다.</p><span class="go">관리하기 →</span></div>
-        <div class="card"><h3>DB 관리</h3><p>인물·단체·공연장 등 7개 데이터베이스의 항목을 직접 추가·수정합니다.</p><span class="soon">준비 중</span></div>
-
-        <a class="card clickable tool" href="link-build.html">
-          <span class="tag">데이터 도구</span>
-          <h3>관계 자동 연결</h3>
-          <p>위키데이터에서 사사관계 · 소속 단체 · 출신학교를 가져와 연결합니다.</p>
-          <span class="when">인물DB에 새 인물이 추가된 뒤 실행하세요. 여러 번 돌려도 안전합니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-
-        <a class="card clickable tool" href="db-audit.html">
-          <span class="tag">데이터 도구</span>
-          <h3>데이터 점검 · 보강</h3>
-          <p>저명도 · 장르 · 직업 수집, 한국어 소개문 · 영문 원문 · 초상 이미지 확보, 노이즈 검토.</p>
-          <span class="when">인물DB가 늘어난 뒤 실행하세요. 각 기능에 미리보기가 있습니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-
-        <a class="card clickable tool" href="kr-collect.html">
-          <span class="tag">데이터 도구</span>
-          <h3>국내 인물 수집</h3>
-          <p>한국어 위키백과 분류에서 국내 클래식 음악가를 찾아 인물DB에 담습니다.</p>
-          <span class="when">자주 쓰지 않습니다. 위키백과에 새 문서가 쌓였을 때만 돌리면 됩니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-
+        <div class="card clickable" id="cardHero"><h3>콘텐츠 · 광고 관리</h3><p>메인 히어로 슬라이드(상단 큰 배너)의 문구·이미지·링크를 수정합니다.</p><span class="go">관리하기 →</span></div>
+        <div class="card clickable" id="cardManage"><h3>DB 관리 · 정제</h3><p>음악과 무관한 의심 인물을 점수로 표시합니다. 확인 후 체크하여 삭제하세요.</p><span class="when">자동화에 없는 일입니다 — 지울지 말지는 사람이 정합니다.</span><span class="go">관리하기 →</span></div>
+        <div class="card clickable" id="cardRel"><h3>관계 관리 · 네트워킹</h3><p>인물의 사사관계·소속·출신학교를 직접 추가·삭제합니다.</p><span class="when">위키데이터에 <b>없는</b> 국내 인물 관계를 채웁니다. 자동이 못 하는 일입니다.</span><span class="go">관리하기 →</span></div>
         <a class="card clickable tool" href="media.html">
           <span class="tag">정보SPOT</span>
           <h3>음원·동영상 검토</h3>
           <p>유튜브에서 자동으로 담긴 영상을 확인해 내보냅니다. 내보낸 것만 정보SPOT 화면에 나옵니다.</p>
-          <span class="when">수집기가 돈 뒤에 들어와 훑어 주세요. 점수 높은 것부터 놓입니다.</span>
+          <span class="when">수집은 자동(매일 07:47)이고, <b>고르는 일은 사람 몫</b>입니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+      </div>
+
+      <h2 class="dash-h">정제 · 점검 도구</h2>
+      <p class="dash-sub">자동화에 없는 기능이 들어 있습니다. 필요할 때 쓰십시오.</p>
+      <div class="cards">
+        <a class="card clickable tool" href="db-audit.html">
+          <span class="tag">데이터 도구</span>
+          <h3>데이터 점검 · 보강</h3>
+          <p>저명도 · 장르 · 직업 수집, 한국어 소개문 · 영문 원문 · 초상 이미지 확보, 노이즈 검토.</p>
+          <span class="when"><b>군사·경찰 걸러내기 · 분류 조회 · 삭제 SQL 만들기</b>는 자동화에 없습니다. 소개문·초상은 자동으로도 돕니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+        <div class="card"><h3>DB 관리</h3><p>인물·단체·공연장 등 7개 데이터베이스의 항목을 직접 추가·수정합니다.</p><span class="when">위 「데이터 점검 · 보강」 과 겹치는 부분이 많아, 정말 필요한 것만 뒤에 만듭니다.</span><span class="soon">준비 중</span></div>
+      </div>
+
+      <h2 class="dash-h dash-h--auto">자동으로 도는 일</h2>
+      <p class="dash-sub">아래는 <b>GitHub Actions 가 예약대로 저절로</b> 합니다.
+        평소에는 <b>누를 필요가 없습니다.</b> 자동이 멈춘 것 같을 때, 또는
+        급히 지금 돌려야 할 때만 쓰십시오.
+        (급할 때는 GitHub → Actions → 해당 워크플로 → Run workflow 로도 됩니다)</p>
+      <div class="cards cards--auto">
+        <div class="card clickable" id="cardCollect"><span class="tag tag--auto">자동</span><h3>데이터 수집</h3><p>위키데이터에서 분야별로 인물을 가져옵니다.</p><span class="when"><b>collect-persons-kr</b> 이 매주 목·금·토 05:43 에 한국어 위키 기준으로 돕니다. 이 화면은 <b>위키데이터 분야 전체</b>를 훑으므로 목적이 조금 다릅니다 — 인물 수를 크게 늘릴 때만 쓰십시오.</span><span class="go">수집하기 →</span></div>
+        <a class="card clickable tool" href="link-build.html">
+          <span class="tag tag--auto">자동</span>
+          <h3>관계 자동 연결</h3>
+          <p>위키데이터에서 사사관계 · 소속 단체 · 출신학교를 가져와 연결합니다.</p>
+          <span class="when"><b>link-persons</b> 가 매주 월 15:23, <b>link-resolve-orphans</b> 가 매월 05:17 에 같은 일을 합니다. 자동 쪽이 <b>fellow_of 분리</b>와 <b>이름만 있던 관계 승격</b>까지 더 합니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+        <a class="card clickable tool" href="kr-collect.html">
+          <span class="tag tag--auto">자동</span>
+          <h3>국내 인물 수집</h3>
+          <p>한국어 위키백과 분류에서 국내 클래식 음악가를 찾아 인물DB에 담습니다.</p>
+          <span class="when">수집은 <b>collect-persons-kr</b> 이 매주 목·금·토 05:43 에, 한글 이름 보강은 <b>hangulize-persons</b> 가 매일 14:07 에 합니다.</span>
           <span class="go">도구 열기 →</span>
         </a>
       </div>
