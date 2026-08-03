@@ -91,6 +91,14 @@
   }
   .mp-head .jtag{margin-bottom:14px}
   .mp-head h1{font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--tx)}
+  /* ── 영역 안내 문구 ──────────────────────────────────────
+     ★ 반드시 .mp-head <b>안에</b> 둡니다.
+       제목과 카드 사이에 새 요소를 끼우면 assets/recruit-apps.js 의
+       hide() 가 box.previousElementSibling 으로 제목을 찾는데,
+       그것이 안내문이 되어 <b>제목 감추기가 깨집니다.</b>
+       (자격이 아닌 회원에게 제목만 남아 고장처럼 보이게 됩니다) */
+  .mp-note{margin:12px 0 0;font-size:13px;line-height:1.85;color:var(--tx3)}
+  .mp-note b{color:var(--tx2);font-weight:700}
   .mp-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 32px;box-shadow:0 6px 18px rgba(40,40,70,.12)}
   .mp-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
   .mp-badge{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;border:1px solid var(--line2);color:var(--tx2)}
@@ -149,6 +157,15 @@
     <div class="mp-head" style="margin-top:44px">
       <span class="jtag">RECEIVED</span>
       <h1 style="font-size:24px">받은 지원</h1>
+      <p class="mp-note">
+        올리신 채용공고에 들어온 지원입니다. 지원서를 열어 보시고 진행 상태를
+        <b>접수 · 검토중 · 서류합격 · 최종합격 · 불합격</b> 가운데서 고르실 수 있습니다.
+        바꾸시면 지원자의 마이페이지에 <b>곧바로 반영</b>됩니다.
+        메모는 지원자에게 보이지 않습니다.<br>
+        다만 <b>알림 메일이나 문자는 가지 않습니다.</b> 지원자가 마이페이지를 열어야
+        보이므로, 합격·불합격 같은 결과는 공고에 적어 두신 연락처로
+        <b>직접 알려 주시는 편이 좋습니다.</b>
+      </p>
     </div>
     <div class="mp-card" id="raRecv">
       <div class="mp-msg">불러오는 중…</div>
@@ -157,6 +174,14 @@
     <div class="mp-head" style="margin-top:44px">
       <span class="jtag">APPLIED</span>
       <h1 style="font-size:24px">내 지원 내역</h1>
+      <p class="mp-note">
+        지원하신 채용공고와 진행 상태입니다. 지원하신 단체·기업이 상태를 바꾸면
+        이곳에서 <b>바로 확인</b>하실 수 있습니다.<br>
+        상태가 바뀌어도 <b>따로 알림이 오지는 않으니</b> 이 페이지에서 살펴봐 주십시오.
+        결과 안내는 단체마다 시기가 다르고, 연락도 단체가 직접 하는 일입니다.
+        급하시면 공고의 문의처로 물어보십시오.
+        지원은 <b>최종합격 전까지</b> 취소하고 다시 내실 수 있습니다.
+      </p>
     </div>
     <div class="mp-card" id="raSent">
       <div class="mp-msg">불러오는 중…</div>
