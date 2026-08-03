@@ -10,6 +10,7 @@
      인터넷으로 보내지 않고, 브라우저 안에서만 열어 글자를 읽습니다. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="/assets/score-guard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
   :root{ --bg:#0e0f16; --card:#161826; --line:rgba(255,255,255,.10);
@@ -83,6 +84,22 @@
   td.sz{width:78px;white-space:nowrap;color:var(--tx3);text-align:right}
   .empty{padding:44px;text-align:center;color:var(--tx3)}
   code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px;font-size:12px}
+  td.c,th.c{width:36px}
+  th.in{min-width:300px}
+  .th-h{font-weight:400;color:var(--tx3);font-size:11px}
+  td.in input{width:100%;margin-bottom:4px;font-family:inherit;font-size:12px;
+              height:28px;padding:0 8px;border-radius:6px;
+              border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--tx)}
+  td.in input:focus{outline:none;border-color:var(--ac)}
+  td.in select{width:100%;font-family:inherit;font-size:12px;height:28px;padding:0 6px;
+               border-radius:6px;border:1px solid var(--line);
+               background:rgba(255,255,255,.04);color:var(--tx)}
+  td.in .p{font-size:11px;color:var(--tx3);margin-top:3px}
+  .up-bar{padding:12px 14px;border-radius:11px;background:rgba(224,138,60,.07);
+          border:1px solid rgba(224,138,60,.28)}
+  .up-who{font-size:12.5px;color:var(--tx2)} .up-who b{color:var(--tx)}
+  tr.done{opacity:.5} tr.done td.in input,tr.done td.in select{display:none}
+  tr.fail td.jd{color:var(--no)}
   @media(max-width:800px){ td.sz,th.sz{display:none} .wrap{padding:18px 14px 60px} }
 </style>
 </head>
@@ -120,6 +137,20 @@
     <span class="cnt" id="cnt"></span>
   </div>
 
+  <!-- ★ 올리기 줄 — 검사한 것을 그대로 게시판에 올립니다.
+       검사에서 이미 알아낸 것(작곡가·저작권 근거·페이지 수·파일 크기)을
+       그대로 쓰므로 손으로 다시 적지 않아도 됩니다. -->
+  <div class="bar up-bar" id="upBar" style="display:none">
+    <span class="up-who" id="upWho">확인 중…</span>
+    <label class="chk" title="올려도 됨·올려도 될 듯만 고릅니다">
+      <input type="checkbox" id="pickSafe" checked> 안전한 것만 고르기</label>
+    <label class="chk" title="관리자가 올리는 것이므로 바로 공개할 수 있습니다">
+      <input type="checkbox" id="goPublic" checked> 바로 공개하기</label>
+    <button class="go" id="upload" disabled>고른 것 올리기</button>
+    <button class="stop" id="upHalt" disabled>멈추기</button>
+    <span class="cnt" id="upCnt"></span>
+  </div>
+
   <div class="sum" id="sum" style="display:none">
     <div class="s1 ok"><div class="n" id="nOk">0</div><div class="l">올려도 됨 (자유 저장소 확인)</div></div>
     <div class="s1 mb"><div class="n" id="nMb">0</div><div class="l">올려도 될 듯 (판본 확인)</div></div>
@@ -135,12 +166,14 @@
   <div class="tw">
     <table>
       <thead><tr>
+        <th class="c"><input type="checkbox" id="all" title="모두 고르기"></th>
         <th class="jd">판정</th>
         <th>파일</th>
+        <th class="in">제목 · 작곡가 · 편성 <span class="th-h">(고칠 수 있습니다)</span></th>
         <th class="sz">크기</th>
         <th class="rs">근거</th>
       </tr></thead>
-      <tbody id="body"><tr><td colspan="4" class="empty">아직 검사하지 않았습니다.</td></tr></tbody>
+      <tbody id="body"><tr><td colspan="6" class="empty">아직 검사하지 않았습니다.</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -234,7 +267,7 @@
     log('■ 인물DB 에서 이름·사망연도를 받습니다');
     var out = [], from = 0;
     for(;;){
-      var url = SB_URL + '/rest/v1/persons?select=name_ko,name_en,life&order=id.asc';
+      var url = SB_URL + '/rest/v1/persons?select=id,name_ko,name_en,life&order=id.asc';
       var r = await fetch(url, { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
                                            Range: from + '-' + (from + 999) } });
       if (!r.ok) throw new Error('인물DB 조회 실패 ' + r.status);
@@ -252,16 +285,27 @@
       if (key.length < 3) return;
       if (!(key in idx) || (death && (!idx[key] || death < idx[key]))) idx[key] = death;
     }
+    /* ★ 사망연도만이 아니라 <b>사람이 읽는 이름과 인물DB 번호</b>도
+       함께 담습니다. 올릴 때 작곡가 칸을 채우고 person_id 로 이어 주려면
+       필요합니다. 그것이 있으면 뒤에 「이 작곡가의 악보」 가 됩니다. */
+    function addName(key, nm, id){
+      key = String(key || '').toLowerCase().replace(/[^a-z가-힣]/g, '');
+      if (key.length < 3) return;
+      if (!(key in COMP_NAME)) { COMP_NAME[key] = nm; COMP_ID[key] = id || null; }
+    }
     out.forEach(function(p){
       var death = null;
       var m = String(p.life || '').match(/(\d{3,4})\s*$/);           /* 「1907 – 2015」 의 뒤 연도 */
       if (m) death = parseInt(m[1], 10);
       /* 생존 중이면 life 가 「1959–」 처럼 끝납니다 → 사망연도 없음 */
       if (/[–-]\s*$/.test(String(p.life || ''))) death = null;
+      var shown = p.name_ko || p.name_en;
       [p.name_ko, p.name_en].forEach(function(nm){
         if (!nm) return;
-        add(nm, death);
-        String(nm).split(/[\s,·]+/).forEach(function(w){ if (w.length >= 4) add(w, death); });
+        add(nm, death); addName(nm, shown, p.id);
+        String(nm).split(/[\s,·]+/).forEach(function(w){
+          if (w.length >= 4) { add(w, death); addName(w, shown, p.id); }
+        });
       });
     });
     persons = idx;
@@ -288,6 +332,229 @@
   /* ══ PDF 한 개 검사 ════════════════════════════════════════ */
 
 
+  /* ══ 파일 이름에서 정보를 뽑습니다 ═════════════════════════
+
+     ★ 왜 이렇게까지 하나
+       7GB 를 하나씩 제목 적고 올리면 며칠이 걸립니다. 그런데 검사할 때
+       이미 <b>작곡가를 인물DB 와 대조</b>했고, 저작권 근거도 판정으로
+       나와 있습니다. 그것을 그대로 쓰면 손으로 적을 것이 거의 없습니다.
+
+     ★ 자동으로 뽑은 값은 <b>표에서 고칠 수 있게</b> 두었습니다.
+       기계가 뽑은 제목이 어색할 때가 있으므로, 올리기 전에 눈으로
+       보고 손볼 수 있어야 합니다. */
+
+  /* 편성 — 파일 이름이나 폴더 이름에 든 낱말로 짐작합니다.
+     게시판의 편성 갈래와 <b>같은 말</b>을 씁니다(음원영상과도 같습니다). */
+  var INSTR_HINT = [
+    [/symphon|sinfoni|교향/i,                'Symphony'],
+    [/concerto|konzert|협주/i,               'Concerto'],
+    [/quartet|quintet|sextet|septet|octet|trio|duo|chamber|kammer|실내/i, 'Chamber'],
+    [/piano|klavier|clavier|clavecin|keyboard|harpsichord|cembalo|pianoforte|피아노|건반/i, 'Piano'],
+    [/organ|orgel|오르간/i,                  'Organ'],
+    [/violin|viola|cello|violoncello|contrabass|bass\b|string|streich|guitar|gitarre|lute|laute|harp\b|harfe|바이올린|첼로|현악|기타|하프/i, 'Strings'],
+    [/flute|fl.te|oboe|clarinet|klarinett|bassoon|fagott|saxophon|recorder|blockfl|wind[\s_-]?band|목관|리코더/i, 'Wind'],
+    [/trumpet|trompet|horn|trombone|posaune|tuba|brass|금관/i, 'Brass'],
+    [/timpani|percussion|schlagzeug|타악/i,   'Percussion'],
+    [/mass|messe|requiem|magnificat|oratori|passion|미사|레퀴엠/i, 'Oratorio/Mass'],
+    [/chor|choir|choral|cantata|kantate|motet|합창|칸타타/i, 'Choral'],
+    [/lied|song|aria|gesang|vocal|성악|가곡/i, 'Vocal'],
+    [/oper(a|n)?\b|오페라/i,                  'Opera'],
+    [/orchestr|orkest|관현악/i,               'Orchestral'],
+    [/ensemble|앙상블/i,                      'Ensemble'],
+    [/electron|전자/i,                        'Electronic']
+  ];
+
+  /* 이름에서 걷어 낼 것 — 출판사·저장소 표시·연도·번호 같은 군더더기 */
+  var STRIP = /\b(imslp|petrucci|pmlp\d*|scan|scanned|complete|full[\s_-]?score|score|part[s]?|edition|urtext|reprint|public[\s_-]?domain|cc[\s_-]?by(?:[\s_-]?sa)?|breitkopf|h[a?ä]rtel|peters|henle|b[a?ä]renreiter|schirmer|ricordi|durand|kalmus|dover|schott|universal|boosey|novello|augener|litolff|\d{4})\b/gi;
+
+  function titleFromName(name){
+    var t = String(name || '').replace(/\.pdf$/i, '');
+    t = t.replace(/[_\-]+/g, ' ');
+    t = t.replace(STRIP, ' ');
+    t = t.replace(/[#()\[\]]/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    /* 앞뒤에 남은 구두점을 떼어 냅니다 */
+    t = t.replace(/^[\s.,;·]+|[\s.,;·]+$/g, '');
+    return t;
+  }
+
+  /* 작곡가 이름을 제목에서 떼어 냅니다 — 「베토벤 월광 소나타」 가 아니라
+     제목은 「월광 소나타」 여야 목록이 깔끔합니다. */
+  function splitComposer(title, compKey){
+    if (!compKey) return { title: title, composer: '' };
+    var re = new RegExp('\\b' + compKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\w*\\b', 'i');
+    var m = title.match(re);
+    if (!m) return { title: title, composer: '' };
+    var rest = title.replace(re, ' ').replace(/\s{2,}/g, ' ')
+                    .replace(/^[\s.,;·]+|[\s.,;·]+$/g, '');
+    return { title: rest || title, composer: m[0] };
+  }
+
+  function guessInstr(pathText){
+    var s = String(pathText || '');
+    for (var i = 0; i < INSTR_HINT.length; i++){
+      if (INSTR_HINT[i][0].test(s)) return INSTR_HINT[i][1];
+    }
+    return '';
+  }
+
+  /* 인물DB 에서 찾은 작곡가의 <b>본 이름</b>을 되찾습니다.
+     색인에는 납작하게 눌린 낱말만 있으므로, 원래 표기를 따로 둡니다. */
+  var COMP_NAME = {};   /* 납작키 → 사람이 읽는 이름 */
+  var COMP_ID   = {};   /* 납작키 → persons.id  ★ 인물DB 와 이어 줍니다 */
+
+  function autoFill(r){
+    var base = r.name || '';
+    var t0 = titleFromName(base);
+    var comp = null;
+    if (window.OCScoreGuard && COMP_NAME){
+      /* 검사할 때 쓴 것과 같은 방법으로 찾습니다 */
+      var flat = (r.path || base).toLowerCase().replace(/[^a-z가-힣]+/g, ' ');
+      var ws = flat.split(' ').filter(function(w){ return w.length >= 4; });
+      ws.sort(function(a,b){ return b.length - a.length; });
+      for (var i = 0; i < ws.length; i++){
+        if (ws[i] in COMP_NAME){ comp = ws[i]; break; }
+      }
+    }
+    var sp = splitComposer(t0, comp);
+    r._title    = sp.title || t0 || base.replace(/\.pdf$/i, '');
+    r._composer = comp ? (COMP_NAME[comp] || sp.composer) : sp.composer;
+    r._personId = comp ? (COMP_ID[comp] || null) : null;
+    r._instr    = guessInstr(r.path || base);
+    /* 저작권 근거 — 판정 근거를 그대로 씁니다. 태그는 걷어 냅니다. */
+    r._basis  = (r.reasons || []).join(' / ').replace(/<[^>]+>/g, '');
+    r._source = (r.text || '').slice(0, 160);
+  }
+
+  /* ══ 로그인 · 올리기 ═══════════════════════════════════════ */
+  var SB2 = null, ME = null, upStop = false;
+
+  async function initUpload(){
+    if (!window.supabase || !window.supabase.createClient){
+      $('upWho').innerHTML = '★ Supabase 라이브러리를 불러오지 못해 올릴 수 없습니다.';
+      return;
+    }
+    SB2 = window.supabase.createClient(SB_URL, SB_KEY);
+    try {
+      var g = await SB2.auth.getUser();
+      var u = g && g.data && g.data.user;
+      if (!u){
+        $('upWho').innerHTML = '★ <b>로그인하지 않았습니다.</b> '
+          + '<a href="/account/login.html" style="color:#e08a3c">로그인</a> 뒤에 올릴 수 있습니다.';
+        return;
+      }
+      var m = await SB2.from('members').select('id,name,is_admin').eq('id', u.id).single();
+      ME = (m && m.data) ? m.data : { id: u.id, name: (u.email || '').split('@')[0] };
+      $('upWho').innerHTML = '올리는 사람 <b>' + esc(ME.name || '-') + '</b>'
+        + (ME.is_admin ? ' · 관리자' : '');
+      if (!ME.is_admin){
+        $('goPublic').checked = false;
+        $('goPublic').disabled = true;
+        $('goPublic').closest('label').title = '관리자만 바로 공개할 수 있습니다';
+      }
+      syncUp();
+    } catch (e){
+      $('upWho').innerHTML = '★ 로그인 확인에 실패했습니다: ' + esc(String(e.message || e).slice(0,60));
+    }
+  }
+
+  function picked(){
+    return Array.prototype.slice.call(document.querySelectorAll('.pick:checked'))
+      .map(function(c){ return parseInt(c.value, 10); });
+  }
+  function syncUp(){
+    var n = picked().length;
+    $('upCnt').innerHTML = n ? ('고른 것 <b>' + n + '</b>개') : '';
+    $('upload').disabled = !n || !ME;
+  }
+
+  async function uploadOne(i){
+    var r = rows[i];
+    var row = document.querySelector('tr[data-i="' + i + '"]');
+    var title = (row && row.querySelector('.i-title')) ? row.querySelector('.i-title').value.trim() : r._title;
+    var comp  = (row && row.querySelector('.i-comp'))  ? row.querySelector('.i-comp').value.trim()  : r._composer;
+    var instr = (row && row.querySelector('.i-instr')) ? row.querySelector('.i-instr').value        : r._instr;
+    if (!title) throw new Error('제목이 비어 있습니다');
+
+    /* ① 저장소에 올립니다 — 경로는 board-write.js 와 같은 모양으로 둡니다.
+       「회원id/file_시각_이름」 이어야 정책이 허용합니다. */
+    var safe = (r.name || 'score.pdf').replace(/[^\w.\-\uAC00-\uD7A3]/g, '_');
+    var path = ME.id + '/file_' + Date.now() + '_' + safe;
+    var up = await SB2.storage.from('scores').upload(path, files[i], { upsert: false });
+    if (up.error) throw new Error('저장소: ' + up.error.message);
+    var url = SB2.storage.from('scores').getPublicUrl(path).data.publicUrl;
+
+    /* ② 게시판에 담습니다 */
+    var pub = $('goPublic').checked && ME.is_admin;
+    var rec = {
+      section: '악보',
+      title: title,
+      body: '<p>' + esc(title) + (comp ? ' — ' + esc(comp) : '') + '</p>',
+      category: instr || null,
+      file_url: url,
+      file_name: r.name,
+      score_composer: comp || null,
+      person_id: r._personId || null,
+      score_pages: r.pages || null,
+      score_size: r.size || null,
+      copyright_basis: r._basis || null,
+      copyright_source: r._source || null,
+      /* ★ 관리자가 「바로 공개」 를 켠 경우에만 approved 로 둡니다.
+         그러지 않으면 pending 으로 들어가 검수 화면을 거칩니다. */
+      review_status: pub ? 'approved' : 'pending',
+      reviewed_at: pub ? new Date().toISOString() : null,
+      hidden: false,
+      author_id: ME.id,
+      author_name: ME.name || null
+    };
+    var ins = await SB2.from('spot').insert(rec);
+    if (ins.error){
+      /* 담기지 못했으면 올린 파일을 되돌려 지웁니다 —
+         주인 없는 파일이 저장소에 쌓이지 않게 합니다. */
+      try { await SB2.storage.from('scores').remove([path]); } catch(e){}
+      throw new Error('게시판: ' + ins.error.message);
+    }
+    r._uploaded = true;
+  }
+
+  async function uploadPicked(){
+    var list = picked().filter(function(i){ return !rows[i]._uploaded; });
+    if (!list.length){ alert('올릴 것을 먼저 고르십시오.'); return; }
+    var pub = $('goPublic').checked && ME.is_admin;
+    var tot = list.reduce(function(a,i){ return a + (rows[i].size || 0); }, 0);
+    if (!confirm(list.length + '개를 올립니다.  (' + kb(tot) + ')\n\n'
+      + (pub ? '★ 바로 공개됩니다 — 목록에 즉시 나옵니다.\n'
+             : '확인 대기로 들어갑니다 — 악보 검수에서 공개하셔야 보입니다.\n')
+      + '\nSupabase 무료 저장소는 1GB 입니다. 용량을 살펴 주십시오.\n\n진행할까요?')) return;
+
+    upStop = false;
+    $('upload').disabled = true; $('upHalt').disabled = false;
+    log('■ ' + list.length + '개 올리기' + (pub ? ' (바로 공개)' : ' (확인 대기)'));
+    var ok = 0, bad = 0;
+    for (var k = 0; k < list.length; k++){
+      if (upStop){ log('⏸ 멈췄습니다 (' + k + '/' + list.length + ')'); break; }
+      var i = list[k];
+      try {
+        await uploadOne(i);
+        ok++;
+        var tr = document.querySelector('tr[data-i="' + i + '"]');
+        if (tr){ tr.classList.add('done'); var c = tr.querySelector('.pick'); if (c) c.checked = false; }
+      } catch (e){
+        bad++;
+        rows[i]._upErr = String(e.message || e);
+        var tr2 = document.querySelector('tr[data-i="' + i + '"]');
+        if (tr2) tr2.classList.add('fail');
+        log('  ✗ ' + rows[i].name + ' — ' + rows[i]._upErr);
+      }
+      prog(Math.round((k+1)/list.length*100), (k+1) + '/' + list.length + '  올림 ' + ok);
+    }
+    progHide();
+    log('✅ 끝 — 올림 ' + ok + (bad ? ' · 실패 ' + bad : ''));
+    if (ok && pub) log('   정보SPOT → 각 분야별 악보 에서 보실 수 있습니다.');
+    if (ok && !pub) log('   관리자 → 악보 검수 「확인 대기」 에서 공개해 주십시오.');
+    $('upload').disabled = false; $('upHalt').disabled = true;
+    syncUp();
+  }
+
   /* ══ 실행 ══════════════════════════════════════════════════ */
   async function run(){
     if (running) return;
@@ -305,6 +572,7 @@
       for (var i = 0; i < files.length; i++){
         if (stopFlag){ log('⏸ 멈췄습니다 (' + i + '/' + files.length + ')'); break; }
         var r = await checkOne(files[i]);
+        autoFill(r);          /* 제목·작곡가·편성을 미리 채워 둡니다 */
         rows.push(r);
         if (i % 5 === 0 || i === files.length - 1){
           prog(Math.round((i + 1) / files.length * 100),
@@ -325,6 +593,7 @@
       if (mb) log('     출판사 판본이면 그 조판에 저작권이 있습니다.');
       if (wa) log('   ★ 「확인 필요」 는 반드시 눈으로 보셔야 합니다.');
       $('csv').disabled = !rows.length;
+      if (rows.length){ $('upBar').style.display = 'flex'; initUpload(); }
     } catch (e){
       log('✗ 중단: ' + (e.message || e));
     }
@@ -354,19 +623,50 @@
     /* 위험한 것을 위로 놓습니다 */
     var order = { no:0, wa:1, maybe:2, ok:3 };
     var sorted = list.slice().sort(function(a,b){ return order[a.judge] - order[b.judge]; });
+    var CATS = ['','Symphony','Orchestral','Concerto','Chamber','Ensemble','Piano','Strings',
+                'Wind','Brass','Percussion','Organ','Vocal','Choral','Oratorio/Mass','Opera',
+                'Electronic','기타'];
+    /* ★ 안전한 것만 미리 고릅니다 — 「올려도 됨」·「올려도 될 듯」.
+       「올리면 안 됨」 을 실수로 함께 올리는 일을 막습니다. */
+    var safeOnly = $('pickSafe') ? $('pickSafe').checked : true;
     $('body').innerHTML = sorted.slice(0, 600).map(function(r){
+      var i = rows.indexOf(r);
       var dir = r.path !== r.name ? r.path.slice(0, r.path.length - r.name.length) : '';
-      return '<tr>'
+      var safe = (r.judge === 'ok' || r.judge === 'maybe');
+      var pre = safeOnly ? safe : false;
+      return '<tr data-i="' + i + '"' + (r._uploaded ? ' class="done"' : '') + '>'
+        + '<td class="c">'
+        +   (r._uploaded ? '✓'
+              : '<input type="checkbox" class="pick" value="' + i + '"'
+                + (pre ? ' checked' : '') + (r.judge === 'no' ? ' title="올리면 안 됩니다"' : '') + '>')
+        + '</td>'
         + '<td class="jd ' + r.judge + '">' + LB[r.judge] + '</td>'
         + '<td class="fn">' + esc(r.name)
         +   (dir ? '<span class="pt">' + esc(dir) + '</span>' : '') + '</td>'
+        + '<td class="in">'
+        +   (r._uploaded
+              ? '<span class="p">올렸습니다</span>'
+              : '<input class="i-title" value="' + esc(r._title || '') + '" placeholder="제목">'
+                + '<input class="i-comp" value="' + esc(r._composer || '') + '" placeholder="작곡가">'
+                + '<select class="i-instr">'
+                + CATS.map(function(c){
+                    return '<option value="' + esc(c) + '"'
+                      + (c === (r._instr || '') ? ' selected' : '') + '>'
+                      + (c ? esc(c) : '(편성 없음)') + '</option>';
+                  }).join('')
+                + '</select>'
+                + (r._personId ? '<div class="p">인물DB 연결됨</div>' : '')
+                + (r._upErr ? '<div class="p" style="color:#e08585">★ ' + esc(r._upErr) + '</div>' : ''))
+        + '</td>'
         + '<td class="sz">' + kb(r.size) + '</td>'
         + '<td class="rs">' + r.reasons.join('<br>') + '</td>'
         + '</tr>';
     }).join('')
       + (sorted.length > 600
-         ? '<tr><td colspan="4" class="empty">…앞 600개만 보여 줍니다. 전체는 CSV 로 내보내십시오.</td></tr>'
+         ? '<tr><td colspan="6" class="empty">…앞 600개만 보여 줍니다. 전체는 CSV 로 내보내십시오.</td></tr>'
          : '');
+    if ($('all')) $('all').checked = false;
+    syncUp();
   }
 
   function toCsv(){
@@ -462,6 +762,17 @@
   $('halt').addEventListener('click', function(){ stopFlag = true; });
   $('csv').addEventListener('click', toCsv);
   $('onlyBad').addEventListener('change', render);
+  $('pickSafe').addEventListener('change', render);
+  $('upload').addEventListener('click', uploadPicked);
+  $('upHalt').addEventListener('click', function(){ upStop = true; });
+  $('all').addEventListener('change', function(){
+    var on = $('all').checked;
+    document.querySelectorAll('.pick').forEach(function(c){ c.checked = on; });
+    syncUp();
+  });
+  $('body').addEventListener('change', function(e){
+    if (e.target && e.target.classList.contains('pick')) syncUp();
+  });
 
   /* pdf.js 준비 */
   if (!window.OCScoreGuard){
