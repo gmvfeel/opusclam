@@ -160,6 +160,18 @@
         +   '<textarea class="ra-memo-in" rows="2" data-id="' + esc(a.id) + '" '
         +     'placeholder="면접 일정, 참고할 점 등">' + esc(a.org_memo || '') + '</textarea>'
         +   '<button type="button" class="ra-mini-btn" data-memo="' + esc(a.id) + '">메모 저장</button>'
+        + '</div>'
+        /* ★ 숨기기 — <b>지우는 것이 아닙니다.</b>
+           지원서는 지원자의 자료입니다. 업체가 지우면 지원자의
+           「내 지원 내역」 에서 기록이 말없이 사라져, 나중에 다툼이
+           생기면 양쪽 다 근거가 없습니다.
+           그래서 <b>업체의 목록에서만</b> 감추고 되돌릴 수 있게 합니다. */
+        + '<div class="ra-ctl">'
+        +   (a.org_hidden
+            ? '<button type="button" class="ra-mini-btn" data-unhide="' + esc(a.id) + '">다시 보이기</button>'
+              + '<span class="ra-ctl-msg">지금은 목록에서 감춰져 있습니다.</span>'
+            : '<button type="button" class="ra-mini-btn ra-hide-btn" data-hide="' + esc(a.id) + '">목록에서 숨기기</button>'
+              + '<span class="ra-ctl-msg">지원자에게는 그대로 남습니다. 언제든 되돌릴 수 있습니다.</span>')
         + '</div>';
     } else if (a.status !== '지원취소' && a.status !== '최종합격') {
       out += '<div class="ra-ctl">'
@@ -195,20 +207,39 @@
       return;
     }
 
-    if (!rows.length) {
+    /* ★ 숨긴 것을 갈라 놓습니다.
+       업체가 지운 것이 아니므로 자료는 그대로 있고, 목록에서만 빠집니다.
+       되돌릴 수 있게 「숨긴 지원」 묶음을 아래에 따로 둡니다. */
+    var live = rows.filter(function (a) { return !a.org_hidden; });
+    var hid  = rows.filter(function (a) { return !!a.org_hidden; });
+
+    /* 다시 그릴 수 있게 해 둡니다 — 숨기거나 되돌린 뒤에 부릅니다 */
+    box.__reload = function () { drawRecv(box, me); };
+
+    if (!live.length && !hid.length) {
       box.innerHTML = '<div class="mp-msg">아직 받은 지원이 없습니다.<br><br>'
         + '<a class="mp-btn ghost" href="/recruit/job.html">내 공고 보기</a> '
         + '<a class="mp-btn primary" href="/recruit/job-write.html">채용정보 올리기</a></div>';
       return;
     }
 
-    var unread = rows.filter(function (a) { return !a.read_at && a.status !== '지원취소'; }).length;
+    var unread = live.filter(function (a) { return !a.read_at && a.status !== '지원취소'; }).length;
     box.innerHTML = ''
       + '<div class="ra-sum">'
-      +   '<span>모두 <b>' + rows.length + '</b>건</span>'
+      +   '<span>모두 <b>' + live.length + '</b>건</span>'
       +   (unread ? '<span class="ra-sum-new">아직 안 본 것 <b>' + unread + '</b>건</span>' : '')
       + '</div>'
-      + '<ul class="ra-list">' + rows.map(recvItem).join('') + '</ul>';
+      + (live.length
+        ? '<ul class="ra-list">' + live.map(recvItem).join('') + '</ul>'
+        : '<div class="mp-msg">보이는 지원이 없습니다. 아래에서 숨긴 지원을 펼쳐 보십시오.</div>')
+      + (hid.length
+        ? '<div class="ra-hid">'
+          + '<button type="button" class="ra-hid-tog" data-hidtog>'
+          +   '숨긴 지원 <b>' + hid.length + '</b>건 보기'
+          + '</button>'
+          + '<ul class="ra-list ra-list--hid" hidden>' + hid.map(recvItem).join('') + '</ul>'
+          + '</div>'
+        : '');
 
     bindList(box, rows, true);
   }
@@ -257,8 +288,27 @@
      목록 잇기 — 펼치기 · 상태 바꾸기 · 메모 · 취소
      ══════════════════════════════════════════════════════════ */
   function bindList(box, rows, forOrg) {
-    var byId = {};
-    rows.forEach(function (a) { byId[String(a.id)] = a; });
+    /* ★ 처리기는 box 에 <b>한 번만</b> 붙입니다.
+
+       box.innerHTML 을 다시 채우면 안의 요소는 새로 만들어지지만,
+       box <b>자신</b>에 붙여 둔 처리기는 그대로 남습니다.
+       숨기기·되돌리기 뒤에 목록을 다시 그리므로, 막지 않으면 처리기가
+       겹쳐 붙어 한 번 누른 것이 두 번·세 번 실행됩니다.
+
+       그래서 자료는 box 에 얹어 두고, 처리기는 그것을 꺼내 씁니다. */
+    box.__rows = rows;
+    box.__forOrg = forOrg;
+    if (box.__bound) return;
+    box.__bound = true;
+
+    function cur() { return box.__rows || []; }
+    function byIdOf(id) {
+      var r = cur();
+      for (var i = 0; i < r.length; i++) {
+        if (String(r[i].id) === String(id)) return r[i];
+      }
+      return null;
+    }
 
     /* 펼치기 — 제목이나 이름을 누르면 속내용이 열립니다.
        ★ 단체가 처음 열 때 「읽었다」 로 표시합니다. 그래야 안 본 것을
@@ -269,16 +319,16 @@
       var li = e.target.closest('.ra-it');
       if (!li) return;
       var id = li.getAttribute('data-id');
-      var a = byId[id];
+      var a = byIdOf(id);
       if (!a) return;
       var more = li.querySelector('.ra-it-more');
       if (!more) return;
 
       if (more.hidden) {
-        if (!more.innerHTML) more.innerHTML = detailHtml(a, forOrg);
+        if (!more.innerHTML) more.innerHTML = detailHtml(a, box.__forOrg);
         more.hidden = false;
         li.classList.add('ra-it--open');
-        if (forOrg && !a.read_at) {
+        if (box.__forOrg && !a.read_at) {
           try {
             var c = sb();
             await c.from('recruit_applications').update({ read_at: new Date().toISOString() }).eq('id', a.id);
@@ -286,7 +336,7 @@
             li.classList.remove('ra-it--new');
             var dot = li.querySelector('.ra-dot');
             if (dot) dot.remove();
-            refreshUnread(box, rows);
+            refreshUnread(box, cur());
           } catch (err) { /* 표시를 못 남겨도 보는 데는 지장이 없습니다 */ }
         }
       } else {
@@ -308,7 +358,7 @@
         var c = sb();
         var r = await c.from('recruit_applications').update({ status: val }).eq('id', id);
         if (r.error) throw r.error;
-        if (byId[id]) byId[id].status = val;
+        var _hit = byIdOf(id); if (_hit) _hit.status = val;
         /* 목록의 상태 표시도 함께 바꿉니다 */
         var li = box.querySelector('.ra-it[data-id="' + id + '"]');
         var st = li && li.querySelector('.ra-st');
@@ -324,8 +374,49 @@
       sel.disabled = false;
     });
 
-    /* 메모 저장 · 지원 취소 */
+    /* 메모 저장 · 지원 취소 · 숨기기 · 되돌리기 · 숨긴 묶음 펼치기 */
     box.addEventListener('click', async function (e) {
+      /* ── 숨긴 묶음 펼치기·접기 ─────────────────────────── */
+      var tg = e.target.closest('[data-hidtog]');
+      if (tg) {
+        var ul = box.querySelector('.ra-list--hid');
+        if (ul) {
+          var willShow = ul.hidden;
+          ul.hidden = !willShow;
+          tg.innerHTML = (willShow ? '숨긴 지원 접기' : '숨긴 지원 <b>'
+            + ul.querySelectorAll('.ra-it').length + '</b>건 보기');
+        }
+        return;
+      }
+
+      /* ── 숨기기 · 되돌리기 ─────────────────────────────── */
+      var hb = e.target.closest('[data-hide],[data-unhide]');
+      if (hb) {
+        var toHide = hb.hasAttribute('data-hide');
+        var hid2 = hb.getAttribute(toHide ? 'data-hide' : 'data-unhide');
+        var hmsg = hb.parentNode.querySelector('.ra-ctl-msg');
+        hb.disabled = true;
+        hb.textContent = toHide ? '숨기는 중…' : '되돌리는 중…';
+        try {
+          var c3 = sb();
+          var r3 = await c3.from('recruit_applications')
+            .update({ org_hidden: toHide }).eq('id', hid2);
+          if (r3.error) throw r3.error;
+          /* 목록을 다시 그립니다 — 항목을 손으로 옮기는 것보다 확실합니다 */
+          if (typeof box.__reload === 'function') { box.__reload(); return; }
+          hb.textContent = toHide ? '목록에서 숨기기' : '다시 보이기';
+          hb.disabled = false;
+        } catch (err) {
+          hb.disabled = false;
+          hb.textContent = toHide ? '목록에서 숨기기' : '다시 보이기';
+          if (hmsg) {
+            hmsg.textContent = '하지 못했습니다 — ' + String(err.message || err).slice(0, 60);
+            hmsg.className = 'ra-ctl-msg ra-ctl-msg--warn';
+          }
+        }
+        return;
+      }
+
       var mb = e.target.closest('[data-memo]');
       if (mb) {
         var id = mb.getAttribute('data-memo');
@@ -368,7 +459,12 @@
   }
 
   function refreshUnread(box, rows) {
-    var n = rows.filter(function (a) { return !a.read_at && a.status !== '지원취소'; }).length;
+    /* ★ 숨긴 것은 빼고 셉니다 — 위의 「모두 ○건」 과 같은 잣대여야
+       합니다. 다르면 목록에 없는 건이 「안 본 것」 으로 남아
+       빨간 숫자가 사라지지 않습니다. */
+    var n = rows.filter(function (a) {
+      return !a.read_at && a.status !== '지원취소' && !a.org_hidden;
+    }).length;
     var el2 = box.querySelector('.ra-sum-new');
     if (!el2) return;
     if (!n) el2.remove();

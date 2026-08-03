@@ -84,6 +84,19 @@
   .ra-ctl-msg--ok{color:#25794a;font-weight:700}
   .ra-ctl-msg--warn{color:#c62828;font-weight:700}
 
+  /* ── 받은 지원 숨기기 ────────────────────────────────────
+     지우는 것이 아니라 업체의 목록에서만 감추는 것이므로,
+     되돌릴 수 있다는 것이 눈에 보여야 합니다. */
+  .ra-hide-btn:hover{border-color:#8a8798;color:#5f5c70}
+  .ra-hid{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line2,#e8e6ef)}
+  .ra-hid-tog{font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+              height:32px;padding:0 14px;border-radius:8px;
+              border:1px solid var(--line2,#e8e6ef);background:transparent;
+              color:var(--tx3,#8a8798)}
+  .ra-hid-tog:hover{border-color:#5b4b9e;color:#5b4b9e}
+  .ra-list--hid{margin-top:14px;opacity:.72}
+  .ra-list--hid[hidden]{display:none}
+
   @media(max-width:560px){
     .ra-dl{grid-template-columns:1fr;gap:2px}
     .ra-dl dt{margin-top:8px}
@@ -164,7 +177,10 @@
         메모는 지원자에게 보이지 않습니다.<br>
         다만 <b>알림 메일이나 문자는 가지 않습니다.</b> 지원자가 마이페이지를 열어야
         보이므로, 합격·불합격 같은 결과는 공고에 적어 두신 연락처로
-        <b>직접 알려 주시는 편이 좋습니다.</b>
+        <b>직접 알려 주시는 편이 좋습니다.</b><br>
+        다 처리한 지원은 <b>목록에서 숨길</b> 수 있습니다. 지우는 것이 아니라
+        이 목록에서만 감추는 것이므로, 지원자의 기록은 그대로 남고
+        <b>「숨긴 지원 보기」</b>로 언제든 되돌리실 수 있습니다.
       </p>
     </div>
     <div class="mp-card" id="raRecv">
