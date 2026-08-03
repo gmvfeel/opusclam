@@ -145,9 +145,15 @@
       if (r.error) throw new Error(table + ' 조회 실패: ' + r.error.message);
       var d = r.data || [];
       out = out.concat(d);
-      if (d.length < size) break;
-      from += size;
-      if (from > 80000) break;
+      /* ★ 나눠받기 — <b>받은 만큼</b> 다음 자리를 옮깁니다.
+         Supabase 는 한 번에 돌려주는 줄 수에 상한이 있어(이 프로젝트는 200줄)
+         1000줄을 달라고 해도 200줄만 옵니다. 「요청한 수보다 적으면 끝」 으로
+         판단하면 <b>첫 묶음에서 멈춥니다.</b>
+         같은 loadAll 이 네 파일에 복사돼 있었고 네 곳 다 이 버그였습니다 —
+         admin.html · db-audit.html · kr-collect.html · 이 파일. */
+      if (!d.length) break;
+      from += d.length;
+      if (from > 200000) break;
     }
     if (L) L.log('  ' + table + ' ' + out.length + '건 로드');
     return out;

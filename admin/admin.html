@@ -938,7 +938,20 @@
         await new Promise(function(r){setTimeout(r,500);});
       }
       log('받은 인물: '+persons.length+'명');
-      try{ var bl=await sb.from('blocklist').select('wikidata_id').limit(5000);
+      /* ★ 차단 목록도 나눠 받습니다.
+         limit(5000) 은 5000개를 준다는 뜻이 아니고 상한(200줄)이 먼저
+         걸립니다. 차단 목록이 지금 200개라 <b>딱 경계</b>에 있습니다.
+         하나만 늘어도 걸러내기가 새어 나가, 지운 인물이 다시 들어옵니다. */
+      try{
+        var blAll=[], blFrom=0;
+        for(;;){
+          var blp=await sb.from('blocklist').select('wikidata_id').range(blFrom, blFrom+999);
+          if(blp.error) break;
+          var bld=blp.data||[]; if(!bld.length) break;
+          blAll=blAll.concat(bld); blFrom+=bld.length;
+          if(blFrom>100000) break;
+        }
+        var bl={ data: blAll, error: null };
         if(bl && !bl.error && bl.data && bl.data.length){ var blset={}; bl.data.forEach(function(x){blset[x.wikidata_id]=1;});
           var before=persons.length; persons=persons.filter(function(p){return !blset[p.wikidata_id];});
           if(before!==persons.length) log('차단 목록 제외: '+(before-persons.length)+'명'); } }catch(e){}
@@ -1075,9 +1088,21 @@
     }
     async function mbEnrich(){
       setBtns(true); logbox.textContent='보강 대상 조회 중…'; progShow('MusicBrainz 보강',true);
-      var r=await sb.from('persons').select('id,wikidata_id,mbid,works').order('sort_no',{ascending:false}).limit(2000);
-      if(r.error){ log('❌ 조회 실패: '+r.error.message); progHide(); setBtns(false); return; }
-      var persons=(r.data||[]).filter(function(p){return (!p.works||!String(p.works).trim());});
+      /* ★ limit(2000) 은 <b>2000명을 준다는 뜻이 아닙니다.</b>
+         Supabase 는 한 번에 돌려주는 줄 수에 상한이 있어(이 프로젝트는 200줄)
+         2000을 달라고 해도 200줄만 옵니다. 그래서 예전에는 9,348명 가운데
+         <b>200명만</b> 보고 있었습니다. 나눠 받아 끝까지 훑습니다. */
+      var rows=[], rf=0;
+      for(;;){
+        var rp=await sb.from('persons').select('id,wikidata_id,mbid,works')
+          .order('sort_no',{ascending:false}).range(rf, rf+999);
+        if(rp.error){ log('❌ 조회 실패: '+rp.error.message); progHide(); setBtns(false); return; }
+        var rd=rp.data||[]; if(!rd.length) break;
+        rows=rows.concat(rd); rf+=rd.length;
+        logbox.textContent='보강 대상 조회 중… ('+rows.length+'명)';
+        if(rf>200000) break;
+      }
+      var persons=rows.filter(function(p){return (!p.works||!String(p.works).trim());});
       if(!persons.length){ log('보강 대상(빈 대표활동)이 없습니다.'); progHide(); setBtns(false); return; }
       log('빈 대표활동: '+persons.length+'명');
       var mbmap={};
@@ -1122,9 +1147,19 @@
     }
     async function wikiEnrich(){
       setBtns(true); logbox.textContent='소개 보강 대상 조회 중…'; progShow('한국어 위키 소개 보강',true);
-      var r=await sb.from('persons').select('id,wikidata_id,description').order('sort_no',{ascending:false}).limit(3000);
-      if(r.error){ log('❌ 조회 실패: '+r.error.message); progHide(); setBtns(false); return; }
-      var persons=(r.data||[]).filter(function(p){return p.wikidata_id && (!p.description||!String(p.description).trim());});
+      /* ★ limit(3000) 도 같은 문제였습니다 — 200줄만 왔습니다.
+         소개가 없는 인물이 7,599명인데 200명만 대상으로 돌고 있었습니다. */
+      var rows2=[], rf2=0;
+      for(;;){
+        var rp2=await sb.from('persons').select('id,wikidata_id,description')
+          .order('sort_no',{ascending:false}).range(rf2, rf2+999);
+        if(rp2.error){ log('❌ 조회 실패: '+rp2.error.message); progHide(); setBtns(false); return; }
+        var rd2=rp2.data||[]; if(!rd2.length) break;
+        rows2=rows2.concat(rd2); rf2+=rd2.length;
+        logbox.textContent='소개 보강 대상 조회 중… ('+rows2.length+'명)';
+        if(rf2>200000) break;
+      }
+      var persons=rows2.filter(function(p){return p.wikidata_id && (!p.description||!String(p.description).trim());});
       if(!persons.length){ log('보강 대상(빈 소개)이 없습니다.'); progHide(); setBtns(false); return; }
       log('빈 소개: '+persons.length+'명 → 한국어 위키 문서명 조회');
       var titleMap={};
