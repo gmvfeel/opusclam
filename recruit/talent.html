@@ -225,25 +225,27 @@
       pageSize: 15,
     });
 
-    /* 「인재정보등록」 단추는 전공자·일반 회원에게만 보입니다.
-       서버에서도 막고 있지만(권한 규칙), 할 수 없는 단추를 보여 주는 것은
-       누른 뒤에 거절당하는 것보다 불친절합니다. */
+    /* 「인재정보등록」 단추는 <b>승인된 전공자</b> 회원에게만 보입니다.
+       서버에서도 막고 있습니다(oc_is_seeker).
+
+       ★ 이 자리에 있던 것을 고쳤습니다 —
+         ⑴ 접속 객체를 따로 만들고 있었습니다 → window.__ocSb 하나만 씁니다
+         ⑵ select('칸이름') → select('*') (없는 칸을 적으면 질의가 죽습니다)
+         ⑶ 일반 회원도 보이게 되어 있었습니다 → 전공자만으로 좁혔습니다
+            (회원 종류 목록은 recruit.js 의 roleOf() 한 곳에만 둡니다) */
     (function () {
       var btn = document.getElementById('rcWrite');
       if (!btn) return;
-      if (!window.supabase) return;
-      var c = window.supabase.createClient(
-        'https://ptdxzxkgddvkusamkiol.supabase.co',
-        'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu');
+      var R = window.OCRecruit;
+      if (!R) return;
+      var c = R.client();
+      if (!c) return;
       c.auth.getSession().then(function (r) {
         var u = r.data && r.data.session && r.data.session.user;
         if (!u) return;
-        c.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle()
+        c.from('members').select('*').eq('id', u.id).maybeSingle()
          .then(function (mr) {
-           var m = mr.data || {};
-           if (m.member_type === 'major' || m.member_type === 'general' || m.is_admin) {
-             btn.removeAttribute('hidden');
-           }
+           if (R.roleOf(mr.data || {}).seeker) btn.removeAttribute('hidden');
          });
       });
     })();

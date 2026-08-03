@@ -202,25 +202,31 @@
       pageSize: 15,
     });
 
-    /* 「채용정보등록」 단추는 단체·기업·학교 회원에게만 보입니다.
-       서버에서도 막고 있지만(권한 규칙), 할 수 없는 단추를 보여 주는 것은
-       누른 뒤에 거절당하는 것보다 불친절합니다. */
+    /* 「채용정보등록」 단추는 <b>승인된</b> 음악관계자·단체·기업·음악학교
+       회원에게만 보입니다. 서버에서도 막고 있지만(oc_is_hiring), 할 수 없는
+       단추를 보여 주는 것은 누른 뒤에 거절당하는 것보다 불친절합니다.
+
+       ★ 이 자리에 있던 세 가지를 고쳤습니다 —
+         ⑴ 접속 객체를 따로 만들고 있었습니다. 여러 개가 같은 저장 열쇠를
+            다투면 세션 토큰이 질의에 안 실립니다 → window.__ocSb 하나만 씁니다
+         ⑵ select('member_type,is_admin') 로 칸을 지정했습니다. 없는 칸을
+            적으면 질의 전체가 죽어 「자격 없음」 으로 오독됩니다 → select('*')
+         ⑶ <b>org(단체·기업)가 빠져 있었습니다.</b> 채용의 주체인 단체·기업
+            회원에게 이 단추가 아예 보이지 않았습니다
+            → 회원 종류 목록은 recruit.js 의 roleOf() 한 곳에만 둡니다 */
     (function () {
       var btn = document.getElementById('rcWrite');
       if (!btn) return;
-      if (!window.supabase) return;
-      var c = window.supabase.createClient(
-        'https://ptdxzxkgddvkusamkiol.supabase.co',
-        'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu');
+      var R = window.OCRecruit;
+      if (!R) return;
+      var c = R.client();
+      if (!c) return;
       c.auth.getSession().then(function (r) {
         var u = r.data && r.data.session && r.data.session.user;
         if (!u) return;
-        c.from('members').select('member_type,is_admin').eq('id', u.id).maybeSingle()
+        c.from('members').select('*').eq('id', u.id).maybeSingle()
          .then(function (mr) {
-           var m = mr.data || {};
-           if (m.member_type === 'industry' || m.member_type === 'school' || m.is_admin) {
-             btn.removeAttribute('hidden');
-           }
+           if (R.roleOf(mr.data || {}).hiring) btn.removeAttribute('hidden');
          });
       });
     })();

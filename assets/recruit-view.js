@@ -101,14 +101,21 @@
       if (!u) { viewerCache = { user: null }; return viewerCache; }
       var mr = await c.from('members').select('*').eq('id', u.id).maybeSingle();
       var m = mr.data || {};
+      var role = R.roleOf(m);
       viewerCache = {
         user: u,
-        type: m.member_type || '',
-        admin: !!m.is_admin,
-        /* 연락처를 볼 수 있는 회원 — 채용하는 쪽입니다.
-           서버에서도 같은 규칙으로 막고 있으므로, 여기서는
-           「눌러 보고 거절당하는」 일을 줄이려고 미리 봅니다. */
-        canSee: (R.HIRING.indexOf(m.member_type) >= 0 || !!m.is_admin),
+        type: role.type,
+        status: role.status,
+        admin: role.admin,
+        role: role,
+        /* 연락처를 볼 수 있는 회원 — 채용하는 쪽이고 <b>승인</b>을 받은 분입니다.
+           서버에서도 같은 규칙으로 막고 있으므로(oc_is_hiring),
+           여기서는 「눌러 보고 거절당하는」 일을 줄이려고 미리 봅니다.
+
+           ★ 회원 종류 목록을 여기 적지 않습니다 — recruit.js 의 roleOf() 가
+             압니다. 예전에 이 자리에 손으로 적었다가 빠뜨렸습니다. */
+        canSee: role.hiring,
+        canSeeTalents: role.hiring
       };
     } catch (e) {
       viewerCache = { user: null };
@@ -493,8 +500,13 @@
           + encodeURIComponent(location.pathname + location.search) + '">로그인하고 열람하기</a>';
     } else if (!v.canSee) {
       /* 단추를 두지 않습니다 — 이 회원이 지금 할 수 있는 일이 없습니다.
-         눌러도 아무 일이 없는 단추는 없는 것보다 못합니다. */
-      msg = '연락처 열람은 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원에게 열려 있습니다.';
+         눌러도 아무 일이 없는 단추는 없는 것보다 못합니다.
+
+         ★ 다만 「회원 종류가 아니라서」 와 「승인을 기다려서」 는 갈라
+           알려 줍니다. 단체 회원이 「단체 회원에게 열려 있습니다」 를
+           읽으면 자기 회원 종류를 의심하게 됩니다. */
+      var g = R.gateMsg(v.role || R.roleOf(null), 'hiring');
+      msg = (g.why === 'type' ? '연락처 열람은 ' : '') + g.msg;
       btn = '';
     } else {
       msg = '채용을 위해 이 인재의 이름과 연락처를 확인하실 수 있습니다.';
@@ -710,11 +722,16 @@
     if (cfg.kind === 'talent') {
       var v = await viewer();
       if (!v.canSeeTalents) {
+        var g = R.gateMsg(v.role || R.roleOf(null), 'hiring');
+        var head = (!v.user || g.why === 'type') ? '채용 회원 전용' : '자격 확인 중';
         return '<div class="rv-gate">'
-          + '<h2>채용 회원 전용</h2>'
+          + '<h2>' + head + '</h2>'
           + (v.user
-            ? '<p>인재정보 열람은 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원에게 '
-              + '열려 있습니다.<br>전공자·일반 회원께는 <b>본인이 등록한 인재정보</b>만 보입니다.</p>'
+            ? '<p>' + (g.why === 'type' ? '인재정보 열람은 ' : '') + g.msg
+              + (g.why === 'type'
+                ? '<br>전공자·일반 회원께는 <b>본인이 등록한 인재정보</b>만 보입니다.'
+                : '')
+              + '</p>'
               + '<a class="rv-btn rv-btn--go" href="/recruit/guide.html">회원 종류 안내</a>'
             : '<p>인재정보는 회원만 볼 수 있습니다.</p>'
               + '<a class="rv-btn rv-btn--go" href="' + LOGIN_PAGE + '?next='
@@ -791,6 +808,28 @@
 
     var btn = document.getElementById('rvApply');
     if (!btn) return;                       /* 마감·이메일 지원 공고에는 단추가 없습니다 */
+
+    /* ★ 지원은 <b>개인 회원(전공자·일반)</b>의 일입니다.
+       뽑는 쪽(음악관계자·단체·기업·음악학교)은 지원하지 않습니다.
+       서버 쪽 짝은 oc_is_individual() 이고, 여기서는 누르고 나서
+       거절당하는 대신 <b>누르기 전에</b> 알려 줍니다.
+
+       ★ 회원 종류를 여기 적지 않습니다 — recruit.js 의 roleOf() 가 압니다. */
+    if (uid) {
+      var vw = await viewer();
+      var vr = (vw && vw.role) || R.roleOf(null);
+      if (!vr.individual) {
+        var ga = R.gateMsg(vr, 'individual');
+        btn.textContent = (ga.why === 'waiting') ? '승인 대기 중' : '지원 불가';
+        btn.disabled = true;
+        btn.classList.add('rv-btn--off');
+        btn.title = (ga.why === 'type')
+          ? '채용정보를 올리시는 회원(음악관계자·단체·기업·음악학교)은 공고에 지원하실 수 없습니다. 인재정보를 열람해 주십시오.'
+          : String(ga.msg).replace(/<[^>]+>/g, '');
+        return;
+      }
+    }
+
     btn.addEventListener('click', function () { openApply(o); });
 
     if (!c || !uid) return;                 /* 손님은 눌렀을 때 안내합니다 */

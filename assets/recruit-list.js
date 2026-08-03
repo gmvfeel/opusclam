@@ -449,8 +449,15 @@
       act = '<a class="rc-gate-btn" href="/account/login.html?next='
           + encodeURIComponent(location.pathname + location.search) + '">로그인하기</a>';
     } else {
-      msg = '인재정보 열람은 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원에게 열려 있습니다.'
-          + '<br>전공자·일반 회원께는 <b>본인이 등록한 인재정보</b>만 보입니다.';
+      /* ★ 「회원 종류가 아니라서」 와 「승인을 기다려서」 를 갈라 알려 줍니다.
+         단체 회원이 「단체 회원에게 열려 있습니다」 를 읽으면
+         자기 회원 종류를 의심하게 됩니다. */
+      var g = R.gateMsg(v.role || R.roleOf(null), 'hiring');
+      msg = (g.why === 'type' ? '인재정보 열람은 ' : '') + g.msg
+          + (g.why === 'type'
+            ? '<br>전공자·일반 회원께는 <b>본인이 등록한 인재정보</b>만 보입니다.'
+            : '')
+          + (g.note ? '<br><span style="font-size:12px;color:#888">' + g.note + '</span>' : '');
       act = '<a class="rc-gate-btn" href="/recruit/guide.html">회원 종류 안내</a>';
     }
     if (list) {

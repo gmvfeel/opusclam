@@ -398,10 +398,18 @@
       var r = await c.from('members').select('*').eq('id', u.id).maybeSingle();
       m = r.data || {};
     } catch (e) {}
-    var t = m.member_type || '';
-    var admin = !!m.is_admin;
-    var hiring = (t === 'industry' || t === 'org' || t === 'school' || admin);
-    var seeker = (t === 'major' || t === 'general' || admin);
+    /* ★ 회원 종류 목록을 여기 적지 않습니다 — recruit.js 의 roleOf() 가 압니다.
+       예전에 이 자리에 손으로 적어 두었습니다. 목록을 여러 곳에 적으면
+       반드시 한 곳을 빠뜨립니다(org 를 네 곳에서 빠뜨렸습니다).
+
+       ★ 승인을 묻지 않는 판정(…Type)을 씁니다.
+         이곳은 <b>자기 자료를 보는 곳</b>이므로, 심사 중이거나 반려된
+         회원도 이미 주고받은 지원은 볼 수 있어야 합니다. */
+    var role = (window.OCRecruit && window.OCRecruit.roleOf)
+      ? window.OCRecruit.roleOf(m)
+      : { hiringType: false, individualType: false };
+    var hiring = !!role.hiringType;     /* 받은 지원 — 공고를 올리는 쪽 */
+    var seeker = !!role.individualType; /* 내 지원 — 지원하는 쪽(전공자·일반) */
 
     if (recvBox) { if (hiring) drawRecv(recvBox, u); else hide(recvBox); }
     if (sentBox) { if (seeker) drawSent(sentBox, u); else hide(sentBox); }

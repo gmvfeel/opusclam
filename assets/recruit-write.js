@@ -712,25 +712,20 @@
       /* 권한 규칙에 막힌 것과 그 밖의 문제를 갈라 알려 줍니다 —
          「알 수 없는 오류」 는 아무 도움이 되지 않습니다. */
       if (/row-level security|permission|policy/i.test(m)) {
-        /* ★ 「회원 종류가 아니라서」 와 「서버 규칙이 잘못 세워져서」 는
-           같은 오류로 옵니다. 그래서 <b>지금 회원 종류</b>를 함께 보여 줍니다.
+        /* ★ 「회원 종류가 아니라서」 와 「승인을 기다려서」 와 「서버 규칙이
+           잘못 세워져서」 는 모두 같은 오류로 옵니다. 그래서 까닭을
+           갈라 보여 줍니다.
 
            실제로 겪은 일 — 단체·기업(org) 회원인데 서버 규칙에 org 가
-           빠져 있어 막혔습니다. 그때 이 문구만 보고는 「내 회원 종류가
-           잘못된 건가」 로 오해하게 됩니다. 값을 보여 주면 바로 압니다. */
-        var who = (me && me.type) ? me.type : '(알 수 없음)';
-        var okType = (MODE === 'job')
-          ? ['industry', 'org', 'school'].indexOf(who) >= 0
-          : ['major', 'general'].indexOf(who) >= 0;
+           빠져 있어 막혔습니다. 그때 「회원 종류가 아닙니다」 만 보고는
+           자기 회원 종류를 의심하게 됩니다. */
+        var g3 = R.gateMsg((me && me.role) || R.roleOf(null), MODE === 'job' ? 'hiring' : 'seeker');
         say(
-          (MODE === 'job'
-            ? '채용정보를 담지 못했습니다. 채용정보는 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원이 올릴 수 있습니다.'
-            : '인재정보를 담지 못했습니다. 인재정보는 <b>전공자·일반 회원</b>이 올릴 수 있습니다.')
-          + '<br><span style="font-size:12px;color:#888">지금 회원 종류 — <b>' + esc(who) + '</b>'
-          + (okType
-            ? ' · 회원 종류는 맞습니다. <b>서버 권한 설정 문제</b>일 수 있으니 관리자에게 알려 주십시오.'
-            : '')
-          + '</span>', 'warn');
+          (MODE === 'job' ? '채용정보를 담지 못했습니다. ' : '인재정보를 담지 못했습니다. ')
+          + (g3.why === 'type' ? (MODE === 'job' ? '채용정보는 ' : '인재정보는 ') : '')
+          + g3.msg
+          + (g3.note ? '<br><span style="font-size:12px;color:#888">' + g3.note + '</span>' : ''),
+          'warn');
       } else {
         say('담지 못했습니다. 잠시 후 다시 시도해 주십시오.<br>' + esc(m), 'warn');
       }
@@ -1073,16 +1068,23 @@
       return;
     }
     var m = mr.data || {};
-    me = { user: u, type: m.member_type || '', admin: !!m.is_admin };
+    var role = R.roleOf(m);
+    me = { user: u, type: role.type, admin: role.admin, status: role.status, role: role };
     if (!m.member_type) {
       say('회원 종류가 정해지지 않은 계정입니다. 관리자에게 알려 주십시오.', 'warn');
       lock();
       return;
     }
-    if (!(m.member_type === 'major' || m.member_type === 'general' || m.is_admin)) {
-      say('인재정보는 <b>전공자</b> 또는 <b>일반</b> 회원만 올릴 수 있습니다. '
-        + '단체·기업·학교 회원은 <a class="rw-lk" href="/recruit/job-write.html">채용정보</a>를 올려 주십시오.<br>'
-        + '<span style="font-size:12px;color:#888">지금 회원 종류 — ' + esc(m.member_type) + '</span>', 'warn');
+    /* ★ 인재정보는 <b>전공자</b> 회원만 올립니다(승인을 받은 뒤에).
+       서버 쪽 짝은 oc_is_seeker() 입니다.
+       회원 종류 목록은 recruit.js 의 SEEKER 한 곳에만 있습니다. */
+    if (!role.seeker) {
+      var g = R.gateMsg(role, 'seeker');
+      say((g.why === 'type' ? '인재정보는 ' : '') + g.msg
+        + (g.why === 'type'
+          ? ' 단체·기업·학교 회원은 <a class="rw-lk" href="/recruit/job-write.html">채용정보</a>를 올려 주십시오.'
+          : '')
+        + (g.note ? '<br><span style="font-size:12px;color:#888">' + g.note + '</span>' : ''), 'warn');
       lock();
       return;
     }
@@ -1361,16 +1363,23 @@
       return;
     }
     var m = mr.data || {};
-    me = { user: u, type: m.member_type || '', admin: !!m.is_admin };
+    var role2 = R.roleOf(m);
+    me = { user: u, type: role2.type, admin: role2.admin, status: role2.status, role: role2 };
     if (!m.member_type) {
       say('회원 종류가 정해지지 않은 계정입니다. 관리자에게 알려 주십시오.', 'warn');
       lock();
       return;
     }
-    if (!(R.HIRING.indexOf(m.member_type) >= 0 || m.is_admin)) {
-      say('채용정보는 <b>음악관계자·단체·기업</b> 또는 <b>음악학교</b> 회원만 올릴 수 있습니다. '
-        + '전공자·일반 회원은 <a class="rw-lk" href="/recruit/talent-write.html">인재정보</a>를 올려 주십시오.<br>'
-        + '<span style="font-size:12px;color:#888">지금 회원 종류 — ' + esc(m.member_type) + '</span>', 'warn');
+    /* ★ 승인(status)까지 봅니다 — 서버 쪽 짝은 oc_is_hiring() 입니다.
+       예전에는 회원 종류만 보아서, 심사에서 반려된 계정이 공고를
+       올릴 수 있었습니다. */
+    if (!role2.hiring) {
+      var g2 = R.gateMsg(role2, 'hiring');
+      say((g2.why === 'type' ? '채용정보는 ' : '') + g2.msg
+        + (g2.why === 'type'
+          ? ' 전공자·일반 회원은 <a class="rw-lk" href="/recruit/talent-write.html">인재정보</a>를 올려 주십시오.'
+          : '')
+        + (g2.note ? '<br><span style="font-size:12px;color:#888">' + g2.note + '</span>' : ''), 'warn');
       lock();
       return;
     }

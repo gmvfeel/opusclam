@@ -333,6 +333,102 @@
      그것이 정확히 채용의 주체(단체·기업)였습니다. */
   var HIRING = ['industry', 'org', 'school'];
 
+  /* ★ 하는 일이 다르면 자격도 다릅니다 — 서버 함수와 짝을 맞춥니다.
+
+       HIRING      공고 등록 · 인재 열람   oc_is_hiring()
+       SEEKER      인재정보 등록           oc_is_seeker()
+       INDIVIDUAL  공고 지원               oc_is_individual()
+
+     예전에는 「전공자·일반」 하나로 인재정보 등록과 공고 지원을
+     함께 뜻했습니다. 그래서 인재정보를 전공자만으로 좁히려 하면
+     일반 회원의 지원까지 함께 막히는 자리에 있었습니다.
+
+     ★ 이 세 줄이 유일한 목록입니다. 다른 파일에 다시 적지 마십시오.
+       그렇게 적었다가 org(단체·기업)를 네 곳에서 빠뜨렸습니다. */
+  var SEEKER     = ['major'];
+  var INDIVIDUAL = ['major', 'general'];
+
+  /* ★ 승인(status)까지 함께 봅니다.
+
+     예전에는 회원 종류만 보았습니다. 그래서 심사에서 반려된 계정이
+     공고를 올릴 수 있었고, 가입 화면의 「자격 심사 후 권한 부여」 라는
+     안내와 실제가 어긋났습니다.
+
+     일반(general) 회원은 가입할 때 곧바로 approved 가 되므로
+     (assets/auth.js) 따로 기다리지 않습니다. */
+  function roleOf(m) {
+    m = m || {};
+    var type  = m.member_type || '';
+    var st    = m.status || '';
+    var admin = !!m.is_admin;
+    var ok    = admin || st === 'approved';
+    function can(list) { return admin || (list.indexOf(type) >= 0 && ok); }
+    return {
+      type: type, status: st, admin: admin, approved: ok,
+      hiring:     can(HIRING),
+      seeker:     can(SEEKER),
+      individual: can(INDIVIDUAL),
+      /* ★ 승인을 <b>묻지 않는</b> 판정 — 「자기 자료를 보는 일」 에 씁니다.
+         승인은 새로 올리는 일에 걸립니다. 반려된 단체가 이미 받은
+         지원을 못 보게 되면 지나칩니다(마이페이지가 그 경우입니다). */
+      hiringType:     admin || HIRING.indexOf(type) >= 0,
+      seekerType:     admin || SEEKER.indexOf(type) >= 0,
+      individualType: admin || INDIVIDUAL.indexOf(type) >= 0,
+      /* 「종류는 맞는데 아직 승인이 아닌」 상태를 따로 알 수 있게 */
+      waiting:  !admin && st === 'pending',
+      refused:  !admin && st === 'rejected',
+      quit:     !admin && st === 'withdrawn'
+    };
+  }
+
+  /* ★ 막힌 까닭을 한 곳에서 만듭니다.
+
+     회원 종류가 아닌 것과 승인을 기다리는 것은 <b>다른 일</b>입니다.
+     그런데 같은 문구를 보여 주면, 단체 회원이 「단체 회원에게 열려
+     있습니다」 를 읽고 자기 회원 종류를 의심하게 됩니다.
+
+     need — 'hiring' | 'seeker' | 'individual' */
+  function gateMsg(role, need) {
+    var WHO = {
+      hiring:     '<b>음악관계자 · 단체 · 기업</b> 또는 <b>음악학교</b>',
+      seeker:     '<b>전공자</b>',
+      individual: '<b>전공자</b> 또는 <b>일반</b>'
+    };
+    var LIST = { hiring: HIRING, seeker: SEEKER, individual: INDIVIDUAL };
+    var list = LIST[need] || [];
+    var typeOk = list.indexOf(role.type) >= 0;
+
+    if (!typeOk) {
+      return {
+        why: 'type',
+        msg: WHO[need] + ' 회원에게 열려 있습니다.',
+        note: role.type ? '지금 회원 종류 — ' + role.type : ''
+      };
+    }
+    if (role.waiting) {
+      return {
+        why: 'waiting',
+        msg: '<b>자격 심사 중</b>입니다. 관리자 승인이 끝나면 바로 이용하실 수 있습니다.',
+        note: '회원 종류는 맞습니다 — ' + role.type + ' · 승인 대기'
+      };
+    }
+    if (role.refused) {
+      return {
+        why: 'refused',
+        msg: '가입 자격 심사에서 <b>반려</b>된 계정입니다. 문의해 주시면 다시 살펴보겠습니다.',
+        note: role.type + ' · 반려'
+      };
+    }
+    if (role.quit) {
+      return { why: 'quit', msg: '탈퇴 처리된 계정입니다.', note: '' };
+    }
+    return {
+      why: 'unknown',
+      msg: WHO[need] + ' 회원에게 열려 있습니다.',
+      note: '회원 종류는 맞습니다. <b>서버 권한 설정 문제</b>일 수 있으니 관리자에게 알려 주십시오.'
+    };
+  }
+
   var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
 
@@ -364,7 +460,8 @@
     if (_viewerPromise) return _viewerPromise;
 
     _viewerPromise = (async function () {
-      var out = { user: null, token: '', type: '', admin: false, canSeeTalents: false };
+      var out = { user: null, token: '', type: '', status: '', admin: false,
+                  role: roleOf(null), canSeeTalents: false };
       var c = client();
       if (!c) { _viewer = out; return out; }
       try {
@@ -377,13 +474,15 @@
         var m = mr.data || {};
         out.type = m.member_type || '';
         out.admin = !!m.is_admin;
-        /* 인재정보를 볼 수 있는 회원 — 뽑는 쪽입니다.
-           전공자·일반 회원은 자기 것만 보입니다(서버가 가립니다). */
-        /* ★ 채용하는 쪽은 <b>넷</b>입니다 — org(단체·기업)가 빠져 있었습니다.
-           회원 종류는 major(전공자) · industry(음악관계자) · org(단체·기업) ·
-           school(음악학교) · general(일반) 다섯입니다(assets/auth.js 기준).
-           채용을 올리는 주체가 바로 단체·기업인데 그것이 막혀 있었습니다. */
-        out.canSeeTalents = HIRING.indexOf(out.type) >= 0 || out.admin;
+        out.status = m.status || '';
+        out.role = roleOf(m);
+        /* 인재정보를 볼 수 있는 회원 — 뽑는 쪽이고, <b>승인</b>을 받은 분입니다.
+           전공자·일반 회원은 자기 것만 보입니다(서버가 가립니다).
+
+           ★ 회원 종류 목록을 여기 적지 않습니다 — roleOf() 가 압니다.
+             예전에 이 자리에 손으로 적었다가 org(단체·기업)를 빠뜨렸습니다.
+             서버 쪽 짝은 oc_is_hiring() 입니다. */
+        out.canSeeTalents = out.role.hiring;
       } catch (e) { /* 못 물어봐도 손님으로 둡니다 */ }
       _viewer = out;
       return out;
@@ -416,7 +515,8 @@
     bindPair: bindPair,
     fillChecks: fillChecks, fillRadios: fillRadios, checked: checked,
     /* 보는 사람 */
-    SB: SB, KEY: KEY, HIRING: HIRING,
+    SB: SB, KEY: KEY, HIRING: HIRING, SEEKER: SEEKER, INDIVIDUAL: INDIVIDUAL,
+    roleOf: roleOf, gateMsg: gateMsg,
     client: client, viewer: viewer, headers: headers,
     /* 보여 주기 */
     jobLabel: jobLabel, regionLabel: regionLabel,
