@@ -470,7 +470,7 @@
          유명 비음악인 + 5점
          음악 낱말     − 2점
          분야(field)가 음악이면 − 3점
-         합이 <b>2점 이상</b>이면 의심으로 표시합니다.
+         합이 <b>3점 이상</b>이면 의심으로 표시합니다.
 
        ★ 표시는 표시일 뿐입니다. 지우는 것은 파트너님이 눈으로 보고
          결정하십니다. 자동으로 지우지 않습니다. */
@@ -492,49 +492,149 @@
       '알토','테너','바리톤','바스','베이스','가곡','오페라','교향곡','협주곡','실내악','현악사중주',
       '음악학자','음악학','음악사','음악평론','음악교육','음악원','음악대학','음대','콘서바토리',
       '관현악','교향악단','오케스트라','합창단','합창','실내악단','독주회','리사이틀','음악감독',
-      '클래식','고전음악','현대음악','국악','작품번호','피아노','바이올린','첼로','비올라','오르간','하프시코드'
+      '클래식','고전음악','현대음악','국악','작품번호','피아노','바이올린','첼로','비올라','오르간','하프시코드',
+      /* 이론·직역 낱말 — 아리스토크세노스(고대 음악이론가)가 「철학자」 때문에
+         걸렸습니다. 「음악이론가」 가 목록에 없어서였습니다. */
+      '음악이론','음악이론가','이론가','악장','칸토르','편곡가','반주자','악보','대위법',
+      '화성학','솔페주','음향학','음악감독','예술감독','악단','교향악단','필하모닉','앙상블'
+    ];
+    /* ★ 위키데이터가 준 <b>직업(P106)</b>과 <b>장르(P136)</b> — 가장 믿을 만한 근거입니다.
+       persons.field 는 우리가 직업에서 짐작해 만든 값이라, <b>잘못 들어온
+       인물은 field 도 잘못돼 있습니다.</b> 그것으로 점수를 깎으면
+       「음악학으로 분류됐으니 음악인」 이라는 순환 논리가 됩니다.
+       그래서 field 로는 <b>점수를 매기지 않고</b> 참고만 합니다.
+
+       이 값들은 enrich-persons 가 매일 채웁니다(wd_occupation · wd_genre). */
+    var MG_OCC_BAD=[
+      'novelist','writer','author','poet','playwright','essayist','translator',
+      'politician','statesman','diplomat','president','minister','mayor','senator',
+      'physician','surgeon','psychiatrist','dentist','veterinarian','nurse',
+      'painter','sculptor','architect','photographer','illustrator','designer',
+      'actor','actress','film director','television presenter','comedian','model',
+      'journalist','editor','publisher','critic of literature',
+      'philosopher','theologian','mathematician','physicist','chemist','biologist',
+      'economist','historian','sociologist','psychologist','linguist','archaeologist',
+      'lawyer','judge','jurist','businessperson','entrepreneur','banker','engineer',
+      'athlete','footballer','chess player','cyclist','boxer','swimmer',
+      'military officer','soldier','police officer','priest','pastor','rabbi','imam',
+      'rapper','disc jockey','youtuber','influencer','chef','magician'
+    ];
+    var MG_OCC_GOOD=[
+      'composer','conductor','musician','pianist','violinist','violist','cellist',
+      'double bassist','organist','harpsichordist','harpist','guitarist','lutenist',
+      'flautist','flutist','oboist','clarinetist','bassoonist','saxophonist',
+      'trumpeter','horn player','trombonist','tubist','percussionist','timpanist',
+      /* ★ 'singer' 는 <b>넣지 않습니다.</b> 대중가수도 singer 입니다.
+         클래식 성악가는 opera singer · soprano · tenor 처럼 갈라져 있고,
+         그것으로도 안 잡히면 wd_genre 의 opera · classical music 이나
+         소개문의 「성악가」·「소프라노」 가 대신 지켜 줍니다.
+         'singer' 를 넣었더니 「가수·유아음악 강사·난타강사」 인 인물이
+         −4점을 받아 빠져나갔습니다. */
+      'opera singer','classical singer','lieder singer','concert singer',
+      'soprano','mezzo-soprano','contralto','alto',
+      'tenor','baritone','bass','countertenor','chorister','choirmaster',
+      'musicologist','music theorist','music historian','music critic','music teacher',
+      'music educator','music director','orchestrator','arranger','music publisher',
+      'concertmaster','répétiteur','accompanist','kapellmeister','cantor','organ builder'
+    ];
+    /* 클래식 장르가 있으면 겸업으로 보고 지킵니다 —
+       예) 소설도 쓰고 작곡도 한 사람은 지워서는 안 됩니다. */
+    var MG_GENRE_CLASSICAL=[
+      'classical music','art music','opera','operetta','oratorio','chamber music',
+      'symphony','concerto','sonata','baroque music','renaissance music',
+      'romantic music','contemporary classical music','choral music','sacred music',
+      'church music','lieder','art song','ballet','early music','serialism',
+      'twelve-tone technique','minimal music','electroacoustic music'
     ];
     var MG_FIELD_MUSIC=['작곡','연주','지휘','성악','음악학','음악교육'];
     var MG_FAMOUS=['아인슈타인','einstein','클린턴','clinton','톰 크루즈','tom cruise','트럼프','trump','오바마','obama','푸틴','putin','만델라','mandela','간디','gandhi','링컨','lincoln','케네디','kennedy','처칠','churchill','나폴레옹','napoleon','괴테','goethe','펠레','pel\u00e9','조던','jordan','히틀러','hitler'];
     function mgEsc(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
     function mgSuspect(p){
-      var text=((p.description||'')+' '+(p.works||'')+' '+(p.field||'')).toLowerCase();
-      var name=((p.name_ko||'')+' '+(p.name_en||'')).toLowerCase();
-      var score=0, bad=[], good=[];
+      /* ★ 점수 매기는 순서 — <b>믿을 만한 근거를 무겁게</b> 봅니다.
 
-      /* 유명 비음악인 — 이름으로 걸립니다. 가장 확실한 신호입니다 */
-      for(var i=0;i<MG_FAMOUS.length;i++){
-        if(name.indexOf(MG_FAMOUS[i])>=0){ score+=5; bad.push('유명 비음악인'); break; }
+           위키데이터 직업(비음악)   + 4점  (여러 개면 여러 번)
+           위키데이터 직업(음악)     − 4점
+           위키데이터 장르가 클래식  − 5점  (겸업 보호)
+           유명 비음악인 이름        + 5점
+           소개문 비음악 낱말        + 2점
+           소개문 음악 낱말          − 1점  (약하게 — 소개문에는 「음악」 이 흔히 섞입니다)
+           persons.field             <b>점수 없음</b> (믿을 수 없는 근거)
+
+         합이 3점 이상이면 의심으로 표시합니다.
+
+         ★ 왜 field 로 점수를 깎지 않는가
+           알레산드로 바리코(소설가)의 field 는 「음악학」, 테오도어 빌로트
+           (외과의사)의 field 는 「연주」 로 되어 있습니다. field 가 잘못
+           들어왔기 때문에 이 사람들이 인물DB 에 있는 것인데, 그 값으로
+           점수를 깎으면 <b>영원히 걸러지지 않습니다.</b>
+           실제로 그렇게 두었더니 9,346명 가운데 의심이 <b>0명</b>이었습니다. */
+      var occ  = String(p.wd_occupation || '').toLowerCase();
+      var gen  = String(p.wd_genre || '').toLowerCase();
+      var text = ((p.description || '') + ' ' + (p.works || '')).toLowerCase();
+      var name = ((p.name_ko || '') + ' ' + (p.name_en || '')).toLowerCase();
+      var score = 0, bad = [], good = [];
+
+      /* 유명 비음악인 — 이름으로 걸립니다 */
+      for (var i=0; i<MG_FAMOUS.length; i++){
+        if (name.indexOf(MG_FAMOUS[i]) >= 0){ score += 5; bad.push('유명 비음악인'); break; }
       }
-      /* 비음악 낱말 — 여러 개면 여러 번 셉니다. 보여 줄 것은 세 개까지 */
-      var hitBad=[];
-      for(var j=0;j<MG_NONMUSIC.length;j++){
-        if(text.indexOf(MG_NONMUSIC[j].toLowerCase())>=0){ score+=2; hitBad.push(MG_NONMUSIC[j]); }
+
+      /* 위키데이터 직업 — 가장 믿을 만한 근거 */
+      var hitOccBad = [];
+      for (var a=0; a<MG_OCC_BAD.length; a++){
+        if (occ.indexOf(MG_OCC_BAD[a]) >= 0){ score += 4; hitOccBad.push(MG_OCC_BAD[a]); }
       }
-      if(hitBad.length) bad.push('비음악: '+hitBad.slice(0,3).join('·')+(hitBad.length>3?' 외 '+(hitBad.length-3):''));
+      if (hitOccBad.length) bad.push('직업: ' + hitOccBad.slice(0,3).join('·')
+        + (hitOccBad.length>3 ? ' 외 '+(hitOccBad.length-3) : ''));
 
-      /* 음악 낱말 — 있으면 점수를 깎습니다 */
-      var hitGood=[];
-      for(var k=0;k<MG_MUSIC.length;k++){
-        if(text.indexOf(MG_MUSIC[k].toLowerCase())>=0){ score-=2; hitGood.push(MG_MUSIC[k]); }
+      var hitOccGood = [];
+      for (var b2=0; b2<MG_OCC_GOOD.length; b2++){
+        if (occ.indexOf(MG_OCC_GOOD[b2]) >= 0){ score -= 4; hitOccGood.push(MG_OCC_GOOD[b2]); }
       }
-      if(hitGood.length) good.push('음악: '+hitGood.slice(0,3).join('·')+(hitGood.length>3?' 외 '+(hitGood.length-3):''));
+      if (hitOccGood.length) good.push('직업: ' + hitOccGood.slice(0,3).join('·')
+        + (hitOccGood.length>3 ? ' 외 '+(hitOccGood.length-3) : ''));
 
-      /* 분야가 음악이면 더 깎습니다 */
-      if(p.field && MG_FIELD_MUSIC.indexOf(String(p.field).trim())>=0){ score-=3; good.push('분야 '+p.field); }
+      /* 클래식 장르가 있으면 겸업으로 보고 지킵니다 */
+      var hitGen = [];
+      for (var c=0; c<MG_GENRE_CLASSICAL.length; c++){
+        if (gen.indexOf(MG_GENRE_CLASSICAL[c]) >= 0){ hitGen.push(MG_GENRE_CLASSICAL[c]); }
+      }
+      if (hitGen.length){ score -= 5; good.push('장르: ' + hitGen.slice(0,2).join('·')); }
 
-      /* ★ 소개가 아예 없으면 판단할 근거가 없습니다.
-         비음악 낱말도 없으니 점수가 0이 되어 의심에 걸리지 않습니다.
-         「소개 없음」 을 따로 표시해, 나중에 그것만 골라 볼 수 있게 합니다. */
-      var empty = !(p.description && String(p.description).trim());
+      /* 소개문 — 근거가 약하므로 가볍게 봅니다 */
+      var hitBad = [];
+      for (var d=0; d<MG_NONMUSIC.length; d++){
+        if (text.indexOf(MG_NONMUSIC[d].toLowerCase()) >= 0){ score += 2; hitBad.push(MG_NONMUSIC[d]); }
+      }
+      if (hitBad.length) bad.push('소개: ' + hitBad.slice(0,3).join('·')
+        + (hitBad.length>3 ? ' 외 '+(hitBad.length-3) : ''));
 
-      var flag = score>=2;
-      var why=[];
-      if(flag) why=why.concat(bad);
-      if(good.length) why.push('↓ '+good.join(' · '));
-      if(empty) why.push('소개 없음');
-      return { flag:flag, score:score, empty:empty,
-               reason:(flag?('의심 '+score+'점 — '):'')+why.join(' / ') };
+      var hitGood = [];
+      for (var e=0; e<MG_MUSIC.length; e++){
+        if (text.indexOf(MG_MUSIC[e].toLowerCase()) >= 0){ score -= 1; hitGood.push(MG_MUSIC[e]); }
+      }
+      if (hitGood.length) good.push('소개: ' + hitGood.slice(0,3).join('·')
+        + (hitGood.length>3 ? ' 외 '+(hitGood.length-3) : ''));
+
+      /* ★ 판단할 근거가 <b>아예 없는</b> 인물을 따로 셉니다.
+         직업도 장르도 소개도 없으면 점수가 0이 되어 의심에 걸리지
+         않습니다. 그것은 「깨끗하다」 는 뜻이 아니라 「모른다」 는 뜻입니다.
+         섞어 두면 「의심 0명」 을 보고 다 깨끗한 줄로 오해합니다. */
+      var noBasis = !occ && !gen && !String(p.description || '').trim();
+
+      /* ★ 문턱을 3점으로 둡니다.
+         2점이면 아리스토크세노스(고대 음악이론가)처럼 「철학자 겸 음악
+         이론가」 인 사람이 걸립니다. <b>잘못 지우는 것보다 남기는 것이
+         안전하므로</b> 경계는 통과시키는 쪽으로 둡니다.
+         의심 목록이 너무 길면 사람이 다 볼 수 없기도 합니다. */
+      var flag = score >= 3;
+      var why = [];
+      if (flag) why = why.concat(bad);
+      else if (bad.length) why.push('↑ ' + bad.join(' · '));
+      if (good.length) why.push('↓ ' + good.join(' · '));
+      if (noBasis) why.push('판단 근거 없음(직업·장르·소개 모두 비어 있음)');
+      return { flag: flag, score: score, noBasis: noBasis,
+               reason: (flag ? ('의심 ' + score + '점 — ') : '') + why.join(' / ') };
     }
     async function loadManage(){
       document.getElementById('mgBody').innerHTML='<tr><td colspan="4" class="loading">전체 불러오는 중…</td></tr>';
@@ -552,10 +652,10 @@
          이 화면만 빠져 있었습니다) */
       mgData=[]; var from=0, PAGE=1000;
       while(true){
-        var r=await sb.from('persons').select('id,wikidata_id,name_ko,name_en,field,description,works,sort_no').order('sort_no',{ascending:false}).range(from,from+PAGE-1);
+        var r=await sb.from('persons').select('id,wikidata_id,name_ko,name_en,field,description,works,sort_no,wd_occupation,wd_genre').order('sort_no',{ascending:false}).range(from,from+PAGE-1);
         if(r.error){ document.getElementById('mgBody').innerHTML='<tr><td colspan="4">오류: '+mgEsc(r.error.message)+'</td></tr>'; return; }
         var d=r.data||[];
-        d.forEach(function(p){ var x=mgSuspect(p); p._sus=x.flag; p._reason=x.reason; p._score=x.score; p._empty=x.empty; mgData.push(p); });
+        d.forEach(function(p){ var x=mgSuspect(p); p._sus=x.flag; p._reason=x.reason; p._score=x.score; p._noBasis=x.noBasis; mgData.push(p); });
         document.getElementById('mgBody').innerHTML='<tr><td colspan="4" class="loading">전체 불러오는 중… ('+mgData.length+'명)</td></tr>';
         if(!d.length) break;
         from += d.length;
@@ -571,11 +671,22 @@
         if(q){ var n=((p.name_ko||'')+' '+(p.name_en||'')).toLowerCase(); if(n.indexOf(q)<0) return false; }
         return true;
       });
+      /* ★ 「의심 인물만 보기」 일 때는 <b>점수 높은 순</b>으로 놓습니다.
+         확실한 것부터 보시면 판단이 빠르고, 애매한 것은 뒤에 남습니다.
+         평소(전체 보기)에는 원래 순서(sort_no)를 지킵니다. */
+      if(susOnly) rows.sort(function(x,y){ return (y._score||0)-(x._score||0); });
       var susCount=0; mgData.forEach(function(p){if(p._sus)susCount++;});
       var PER=100, totalPages=Math.max(1,Math.ceil(rows.length/PER));
       if(mgPage>=totalPages) mgPage=0;
       var pageRows=rows.slice(mgPage*PER, mgPage*PER+PER);
-      document.getElementById('mgCount').textContent='전체 '+mgData.length+' · 의심 '+susCount+' · 검색결과 '+rows.length;
+      /* ★ 「판단 근거 없음」 을 따로 보여 줍니다.
+         직업·장르·소개가 모두 비어 있으면 점수가 0이 되어 의심에 걸리지
+         않습니다. 그것은 깨끗하다는 뜻이 아니라 <b>모른다</b> 는 뜻입니다.
+         섞어 두면 「의심 0명」 을 보고 다 깨끗한 줄로 오해합니다. */
+      var noBasisCount = mgData.filter(function(p){ return p._noBasis; }).length;
+      document.getElementById('mgCount').textContent =
+        '전체 ' + mgData.length + ' · 의심 ' + susCount
+        + ' · 판단 근거 없음 ' + noBasisCount + ' · 검색결과 ' + rows.length;
       var html=pageRows.map(function(p){
         var desc=mgEsc((p.description||'').slice(0,200));
         var flag=p._sus?'<span class="mg-flag">\u26a0\ufe0f '+mgEsc(p._reason)+'</span>':'';
