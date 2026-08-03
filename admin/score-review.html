@@ -216,7 +216,9 @@
         .select('id,title,title_ko,title_en,category,era,body,file_url,file_name,'
               + 'score_composer,score_opus,score_instr,score_pages,score_size,'
               + 'copyright_basis,copyright_source,review_status,reviewed_at,'
-              + 'home_url,member_id,created_at,hidden')
+              /* ★ 홈페이지 주소는 board-write.js 가 <b>link_url</b> 에 담습니다.
+                 home_url 로 적었더니 「column spot.home_url does not exist」 가 났습니다. */
+              + 'link_url,author_id,author_name,created_at,hidden')
         .eq('section','악보').eq('review_status', state)
         .order('created_at',{ ascending:false }).order('id',{ ascending:true })
         .range(from, from + 199);
@@ -301,7 +303,8 @@
         +   kv('판본 · 출처', r.copyright_source, true)
         +   kv('파일', r.file_name ? (r.file_name + ' · ' + kb(r.score_size || (v && v.size))) : null, true)
         +   kv('올린 때', dt(r.created_at))
-        +   kv('원본 주소', r.home_url)
+        +   kv('원본 주소', r.link_url)
+        +   kv('올린 사람', r.author_name)
         + '</div>'
         + (v ? '<div class="why"><span class="h">자동 검사 결과</span>'
               + v.reasons.join('<br>')
