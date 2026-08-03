@@ -25,6 +25,57 @@ window.OCBoard = (function () {
 
   function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
+  /* ★ 회원만 내려받는 첨부파일 ─────────────────────────────────
+     악보 게시판은 파일을 <b>회원에게만</b> 줍니다. 저장소를 비공개로
+     잠갔으므로, 주소를 그대로 링크하면 동작하지 않습니다.
+     assets/score-dl.js 가 로그인을 확인하고 <b>임시 주소</b>를 만들어
+     줍니다(5분 뒤 스스로 죽습니다).
+
+     ★ 다른 게시판은 그대로입니다 — memberOnlyFile 이 켜진 게시판에서만
+       이 길로 갑니다. 공연정보·관련사이트 등은 예전처럼 바로 링크합니다.
+
+     ★ 판단은 <b>section</b> 으로 합니다. spot-view.html 은 정보SPOT 의
+       모든 갈래가 함께 쓰는 화면이라, 설정 한 줄로는 갈라지지 않습니다. */
+  function isMemberOnlyFile(cfg, rec){
+    if (cfg && cfg.memberOnlyFile === true) return true;
+    if (rec && rec.section === '악보') return true;
+    return false;
+  }
+  /* 회원만 내려받는 파일은 <a href> 대신 단추로 그립니다 —
+     누른 뒤에 임시 주소를 만들어야 하기 때문입니다. */
+  function fileAnchor(cfg, rec, cls, inner){
+    if (!rec || !rec.file_url) return '';
+    if (isMemberOnlyFile(cfg, rec)){
+      return '<a class="' + cls + ' oc-mfile" href="#" role="button"'
+        + ' data-mfile="' + esc(rec.file_url) + '"'
+        + ' data-mname="' + esc(rec.file_name || '') + '"'
+        + ' data-mid="' + esc(rec.id || '') + '"'
+        + ' title="회원만 내려받을 수 있습니다">' + inner + '</a>';
+    }
+    return '<a class="' + cls + '" href="' + esc(rec.file_url) + '"'
+      + ' target="_blank" rel="noopener">' + inner + '</a>';
+  }
+  /* 누르면 score-dl.js 로 넘깁니다. 화면마다 붙이지 않고 문서 하나에
+     한 번만 붙입니다(중복 방지). */
+  if (!window.__ocMFileBound){
+    window.__ocMFileBound = true;
+    document.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('.oc-mfile') : null;
+      if (!a) return;
+      e.preventDefault();
+      var url = a.getAttribute('data-mfile');
+      var nm  = a.getAttribute('data-mname');
+      var id  = a.getAttribute('data-mid');
+      if (!window.OCScoreDL){
+        alert('내려받기 도구(assets/score-dl.js)를 불러오지 못했습니다.');
+        return;
+      }
+      window.OCScoreDL.download(url, nm).then(function (ok) {
+        if (ok && id) window.OCScoreDL.countUp(id);
+      });
+    });
+  }
+
   /* ── 그림을 알맞은 크기로 ────────────────────────────────
 
      큰 그림을 잘게 줄이면 계단이 생겨 지글거립니다.
@@ -452,7 +503,7 @@ window.OCBoard = (function () {
             ? '<img loading="lazy"' + ONERR + ' src="' + esc(rec.thumb_url) + '" alt="">'
             : textLogo(nameForLogo)));
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
-      var dl = rec.file_url ? '<a class="doc-dl" href="' + esc(rec.file_url) + '" target="_blank" rel="noopener">원문</a>' : '';
+      var dl = fileAnchor(cfg, rec, 'doc-dl', '원문');
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur;
       var badges = (rec.region || rec.category)
         ? '<span class="doc-cat">'
@@ -711,9 +762,10 @@ window.OCBoard = (function () {
         var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
         /* 첨부파일이 있으면 본문 위에 내려받기 줄을 둔다 (자료실 성격 게시판용).
            file_url 컬럼이 없거나 비어 있는 게시판에는 아무 영향이 없다. */
-        var dl = o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener">'
-          + '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>'
-          + '<span>' + esc(o.file_name || '첨부파일 내려받기') + '</span></a>' : '';
+        var dl = fileAnchor(cfg, o, 'bv-docdl',
+            '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>'
+          + '<span>' + esc(o.file_name
+              || (isMemberOnlyFile(cfg, o) ? '악보 내려받기 (회원)' : '첨부파일 내려받기')) + '</span>');
         /* extraLinks 로 정의한 링크들 — 값이 있는 것만 버튼으로 보여준다 */
         var xlinks = '';
         if (cfg.extraLinks && cfg.extraLinks.length) {
@@ -800,7 +852,10 @@ window.OCBoard = (function () {
             + (o.school_id ? '<a class="bv-schoollink" href="' + (cfg.schoolViewPath || '/school-view.html') + '?id=' + encodeURIComponent(o.school_id) + '"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-5h6v5"/></svg><span>이 학교 정보 보기</span></a>' : '')
             + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
             + '</div></div>'
-            + (o.file_url ? '<a class="bv-docdl" href="' + esc(o.file_url) + '" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span>' + esc(o.file_name || '첨부파일 보기') + '</span></a>' : '')
+            + fileAnchor(cfg, o, 'bv-docdl',
+                '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>'
+              + '<span>' + esc(o.file_name
+                  || (isMemberOnlyFile(cfg, o) ? '악보 내려받기 (회원)' : '첨부파일 보기')) + '</span>')
             + (player || (o.thumb_url
                 ? '<figure class="bv-docphoto"><img src="' + esc(o.thumb_url) + '" alt="" loading="lazy"'
                   /* 사진이 안 열리면 사진 자리(설명까지)를 통째로 없앱니다 —

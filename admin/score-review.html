@@ -10,6 +10,7 @@
      admin/score-check.html 도 같은 것을 씁니다 — 한 곳만 고치면 둘에 반영됩니다. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="/assets/score-guard.js"></script>
+<script src="/assets/score-dl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -333,7 +334,20 @@
     if (!r || !r.file_url || !window.OCScoreGuard) return;
     if (!quiet) log('■ 검사: ' + (r.title_ko || r.title));
     try {
-      var v = await window.OCScoreGuard.checkUrl(r.file_url, r.file_name || r.title || '');
+      /* ★ 비공개 버킷이라 공개 주소로는 받을 수 없습니다.
+         임시 주소를 만들어 그것으로 받습니다. */
+      var src = r.file_url;
+      if (window.OCScoreDL){
+        try {
+          var c = window.__ocSb || sb;
+          var pth = window.OCScoreDL.pathOf(r.file_url);
+          if (pth){
+            var sg = await c.storage.from('scores').createSignedUrl(pth, 300);
+            if (!sg.error && sg.data && sg.data.signedUrl) src = sg.data.signedUrl;
+          }
+        } catch (e) {}
+      }
+      var v = await window.OCScoreGuard.checkUrl(src, r.file_name || r.title || '');
       r._verdict = v;
       if (!quiet) log('  → ' + window.OCScoreGuard.LABEL[v.judge]
         + ' · ' + v.reasons[0].replace(/<[^>]+>/g, ''));
@@ -431,7 +445,11 @@
     var act = b.dataset.act;
     if (act === 'open'){
       var r = rows[i];
-      if (r && r.file_url) window.open(r.file_url, '_blank', 'noopener');
+      /* ★ scores 버킷이 비공개이므로 주소를 그대로 열면 열리지 않습니다.
+         score-dl.js 가 로그인을 확인하고 임시 주소를 만들어 줍니다. */
+      if (!r || !r.file_url) return;
+      if (window.OCScoreDL) window.OCScoreDL.open(r.file_url);
+      else alert('내려받기 도구(assets/score-dl.js)를 불러오지 못했습니다.');
     } else if (act === 'check'){
       b.disabled = true;
       checkOne(i).then(function(){ render(); });
