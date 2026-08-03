@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>차단 목록 검토 · OPUSCLAM ADMIN</title>
+
+<!-- ★ 음악인 판정은 공용 엔진을 씁니다.
+     같은 판정을 admin.html 도 씁니다. 두 곳에 복사해 두면 한 곳을
+     고쳐도 나머지가 남으므로 밖으로 냈습니다. -->
+<script src="/assets/suspect.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root{ --bg:#0e0f16; --card:#161826; --line:rgba(255,255,255,.10);
+         --tx:#e6e6f0; --tx2:#b9b9cc; --tx3:#8a8ca0; --ac:#e08a3c;
+         --ok:#6fcf8f; --no:#e08585; --wa:#e0b352; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+       font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+       font-size:14px;line-height:1.6}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 20px 80px}
+  a.back{display:inline-block;color:var(--tx3);text-decoration:none;font-size:13px;margin-bottom:18px}
+  a.back:hover{color:var(--ac)}
+  h1{font-size:24px;font-weight:800;margin:0 0 8px;letter-spacing:-.02em}
+  .hi{color:var(--tx2);font-size:13px;line-height:1.8;margin:0 0 6px;max-width:900px}
+  .hi b{color:var(--tx)}
+  .hi2{color:var(--tx3);font-size:12.5px;line-height:1.75;margin:0 0 20px;max-width:900px}
+  .hi2 b{color:var(--tx2)}
+
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+  button{font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+         height:38px;padding:0 18px;border-radius:9px;border:1px solid var(--line);
+         background:rgba(255,255,255,.05);color:var(--tx)}
+  button:hover{border-color:var(--ac);color:var(--ac)}
+  button:disabled{opacity:.45;cursor:default}
+  button.go{background:var(--ac);border-color:var(--ac);color:#1a1206}
+  button.go:hover{filter:brightness(1.08);color:#1a1206}
+  button.un{background:rgba(111,207,143,.14);border-color:rgba(111,207,143,.45);color:var(--ok)}
+  .cnt{font-size:12.5px;color:var(--tx3)}
+  .cnt b{color:var(--tx)}
+  label.chk{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--tx2);cursor:pointer}
+
+  .prog{height:6px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;margin:10px 0 4px;display:none}
+  .prog.on{display:block}
+  .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7a5cc4,var(--ac));transition:width .3s}
+  .plabel{font-size:12px;color:var(--tx3);margin-bottom:14px;display:none}
+  .plabel.on{display:block}
+
+  .log{background:#0b0c12;border:1px solid var(--line);border-radius:10px;
+       padding:12px 14px;font-family:ui-monospace,Menlo,monospace;font-size:12px;
+       line-height:1.75;color:#9fb3c8;max-height:190px;overflow:auto;white-space:pre-wrap;margin-bottom:18px}
+
+  .tw{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 12px;text-align:left;font-size:13px;vertical-align:top;
+        border-bottom:1px solid rgba(255,255,255,.055)}
+  th{background:rgba(255,255,255,.035);font-size:12px;font-weight:700;color:var(--tx3);
+     position:sticky;top:0;white-space:nowrap}
+  tbody tr:hover{background:rgba(255,255,255,.03)}
+  td.c{width:38px}
+  td.nm{font-weight:700;white-space:nowrap}
+  td.nm .en{display:block;font-weight:400;font-size:11.5px;color:var(--tx3)}
+  td.sc{width:96px;white-space:nowrap;font-weight:800}
+  .sc.bad{color:var(--no)} .sc.good{color:var(--ok)} .sc.non{color:var(--tx3)}
+  td.oc{font-size:12px;color:var(--tx2);max-width:300px}
+  td.rs{font-size:12px;color:var(--tx3)}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;
+         border:1px solid;margin-left:6px}
+  .badge.keep{color:var(--ok);border-color:rgba(111,207,143,.45)}
+  .badge.none{color:var(--wa);border-color:rgba(224,179,82,.45)}
+  .empty{padding:44px;text-align:center;color:var(--tx3)}
+  .wdlink{color:#9db8e0;text-decoration:none;font-size:11.5px}
+  .wdlink:hover{text-decoration:underline}
+  @media(max-width:760px){
+    td.oc,th.oc{display:none}
+    .wrap{padding:18px 14px 60px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/admin/admin.html">← 대시보드</a>
+
+  <h1>차단 목록 검토</h1>
+  <p class="hi">차단 목록(<code>blocklist</code>)에 든 위키데이터 번호를 <b>위키데이터에서 직접 조회</b>해
+    이름·직업·장르를 보여 줍니다. 그리고 인물DB 걸러내기와 <b>같은 판정</b>으로 점수를 매깁니다.
+    <b>점수가 낮을수록(음수) 음악인 증거가 뚜렷하다는 뜻</b>이므로, 목록 맨 위가 <b>잘못 차단된 후보</b>입니다.</p>
+  <p class="hi2">왜 필요한가 — 차단 목록에 들어간 사람은 인물DB 에서 사라지므로 <b>이름조차 알 수 없습니다.</b>
+    그런데 박영근(서양 고전 클래식 음악 교육인)처럼 <b>클래식 음악인이 잘못 지워진 일</b>이 있었습니다.
+    예전 판정이 소개문의 낱말 하나만 보고 걸러냈기 때문입니다.
+    차단을 풀면 그분은 다음 수집(매주 목·금·토)에서 소개문·사진과 함께 다시 들어옵니다.</p>
+
+  <div class="bar">
+    <button class="go" id="load">차단 목록 불러오기</button>
+    <label class="chk"><input type="checkbox" id="onlyKeep" checked> 잘못 차단된 후보만 보기</label>
+    <span class="cnt" id="cnt"></span>
+    <button class="un" id="unblock" disabled>선택한 번호를 차단 해제</button>
+  </div>
+
+  <div class="prog" id="prog"><i id="progBar"></i></div>
+  <div class="plabel" id="progLabel"></div>
+  <div class="log" id="log">「차단 목록 불러오기」를 누르십시오.</div>
+
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th class="c"><input type="checkbox" id="all"></th>
+        <th>이름</th>
+        <th class="sc">점수</th>
+        <th class="oc">위키데이터 직업 · 장르</th>
+        <th class="rs">판정 근거</th>
+      </tr></thead>
+      <tbody id="body"><tr><td colspan="5" class="empty">아직 불러오지 않았습니다.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* ★ 바깥 CDN 에서 오는 것을 못 불러오는 경우가 있습니다.
+     그때 아무 안내도 없이 화면이 멈추면 「왜 안 되지」 하고 헤매게 됩니다.
+     무엇이 없는지 화면에 적어 둡니다. */
+  if (!window.supabase || !window.supabase.createClient){
+    document.getElementById('log').textContent =
+      '✗ Supabase 라이브러리를 불러오지 못했습니다.\n'
+      + '  인터넷 연결이나 광고 차단 확장을 확인해 주십시오.\n'
+      + '  (cdn.jsdelivr.net 이 막히면 이 화면이 동작하지 않습니다)';
+    document.getElementById('load').disabled = true;
+    return;
+  }
+  if (!window.OCSuspect){
+    document.getElementById('log').textContent =
+      '✗ 판정 엔진(assets/suspect.js)을 불러오지 못했습니다.\n'
+      + '  그 파일이 assets 폴더에 있는지 확인해 주십시오.\n'
+      + '  판정 없이 목록만 보는 것은 뜻이 없으므로 멈춥니다.';
+    document.getElementById('load').disabled = true;
+    return;
+  }
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+  var $ = function(id){ return document.getElementById(id); };
+  var rows = [];          /* {qid, name_ko, name_en, occ, gen, desc, score, flag, noBasis, reason} */
+
+  function esc(v){
+    return String(v == null ? '' : v)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function log(m){
+    var el = $('log');
+    el.textContent += (el.textContent ? '\n' : '') + m;
+    el.scrollTop = el.scrollHeight;
+  }
+  function clearLog(){ $('log').textContent = ''; }
+  function prog(pct, label){
+    $('prog').classList.add('on'); $('progLabel').classList.add('on');
+    $('progBar').style.width = Math.max(0, Math.min(100, pct)) + '%';
+    if (label != null) $('progLabel').textContent = label;
+  }
+  function progHide(){ $('prog').classList.remove('on'); $('progLabel').classList.remove('on'); }
+
+  /* ── 차단 목록 읽기 ───────────────────────────────────────
+     ★ 정렬을 붙여 나눠 받습니다. 정렬이 없으면 페이지마다 순서가
+       흔들려 목록의 일부를 놓칩니다(700개로 시험했더니 221개를
+       놓쳤습니다). 놓친 번호는 화면에 나오지 않습니다. */
+  async function loadBlocklist(){
+    var out = [], from = 0;
+    for(;;){
+      var r = await sb.from('blocklist').select('wikidata_id')
+        .order('wikidata_id', { ascending:true })
+        .range(from, from + 999);
+      if (r.error) throw new Error('차단 목록 조회 실패: ' + r.error.message);
+      var d = r.data || [];
+      if (!d.length) break;
+      out = out.concat(d);
+      from += d.length;
+      log('  차단 목록 ' + out.length + '개 읽음');
+      if (from > 100000) break;
+    }
+    return out.map(function(x){ return String(x.wikidata_id || '').trim(); })
+              .filter(Boolean);
+  }
+
+  /* ── 위키데이터에서 이름·직업·장르 받기 ─────────────────────
+     wbgetentities 는 한 번에 50개까지 받습니다.
+     ★ 위키데이터는 잘못된 요청에도 HTTP 200 을 주고 본문에 error 를
+       담습니다. 그래서 error 를 <b>반드시</b> 살펴야 합니다 —
+       그러지 않으면 조용히 0건이 되어 「다 괜찮다」 고 오해합니다. */
+  async function fetchWd(qids){
+    var url = 'https://www.wikidata.org/w/api.php'
+      + '?action=wbgetentities&format=json&origin=*'
+      + '&props=labels%7Cclaims'
+      + '&languages=ko%7Cen'
+      + '&ids=' + qids.join('%7C');
+    var res = await fetch(url);
+    if (!res.ok) throw new Error('위키데이터 HTTP ' + res.status);
+    var j = await res.json();
+    if (j && j.error){
+      throw new Error('위키데이터가 거절했습니다 — '
+        + (j.error.code || '') + ' ' + (j.error.info || ''));
+    }
+    return (j && j.entities) || {};
+  }
+
+  /* 직업(P106) · 장르(P136) 의 <b>항목 번호</b>를 모읍니다.
+     번호만으로는 무슨 직업인지 알 수 없으므로 뒤에서 이름을 받습니다. */
+  function claimQids(ent, prop){
+    var out = [];
+    var cl = ent && ent.claims && ent.claims[prop];
+    if (!cl) return out;
+    for (var i = 0; i < cl.length; i++){
+      var v = cl[i] && cl[i].mainsnak && cl[i].mainsnak.datavalue
+            && cl[i].mainsnak.datavalue.value;
+      if (v && v.id) out.push(v.id);
+    }
+    return out;
+  }
+
+  /* 직업·장르 번호의 <b>영어 이름</b>을 받습니다.
+     판정 목록이 영어(composer · novelist …)로 되어 있기 때문입니다. */
+  async function fetchLabels(qids){
+    var map = {};
+    for (var i = 0; i < qids.length; i += 50){
+      var part = qids.slice(i, i + 50);
+      var url = 'https://www.wikidata.org/w/api.php'
+        + '?action=wbgetentities&format=json&origin=*'
+        + '&props=labels&languages=en&ids=' + part.join('%7C');
+      var res = await fetch(url);
+      if (!res.ok) continue;
+      var j = await res.json();
+      if (j && j.error) continue;
+      var ents = (j && j.entities) || {};
+      for (var k in ents){
+        var lb = ents[k] && ents[k].labels && ents[k].labels.en;
+        if (lb && lb.value) map[k] = lb.value;
+      }
+      await new Promise(function(r){ setTimeout(r, 150); });
+    }
+    return map;
+  }
+
+  async function run(){
+    $('load').disabled = true;
+    clearLog(); rows = [];
+    $('body').innerHTML = '<tr><td colspan="5" class="empty">불러오는 중…</td></tr>';
+    try {
+      log('■ 차단 목록 읽기');
+      var qids = await loadBlocklist();
+      if (!qids.length){
+        log('차단 목록이 비어 있습니다.');
+        $('body').innerHTML = '<tr><td colspan="5" class="empty">차단 목록이 비어 있습니다.</td></tr>';
+        progHide(); $('load').disabled = false; return;
+      }
+      log('  모두 ' + qids.length + '개');
+
+      log('■ 위키데이터에서 이름·직업·장르 조회 (50개씩)');
+      var ents = {}, occSet = {};
+      for (var i = 0; i < qids.length; i += 50){
+        var part = qids.slice(i, i + 50);
+        try {
+          var got = await fetchWd(part);
+          for (var k in got) ents[k] = got[k];
+        } catch (e){
+          log('  ✗ ' + (e.message || e));
+          log('    이 묶음은 건너뜁니다.');
+        }
+        prog(Math.round(Math.min(i + 50, qids.length) / qids.length * 70),
+             '위키데이터 조회 ' + Math.min(i + 50, qids.length) + '/' + qids.length);
+        await new Promise(function(r){ setTimeout(r, 180); });
+      }
+      log('  받은 항목 ' + Object.keys(ents).length + '개');
+
+      /* 직업·장르 번호를 모읍니다 */
+      var need = {};
+      for (var q in ents){
+        claimQids(ents[q], 'P106').forEach(function(x){ need[x] = 1; });
+        claimQids(ents[q], 'P136').forEach(function(x){ need[x] = 1; });
+      }
+      var needList = Object.keys(need);
+      log('■ 직업·장르 이름 조회 (' + needList.length + '개)');
+      prog(75, '직업·장르 이름 조회');
+      var labels = await fetchLabels(needList);
+      log('  이름을 받은 것 ' + Object.keys(labels).length + '개');
+
+      /* 판정 */
+      log('■ 판정');
+      prog(90, '판정 중');
+      for (var n = 0; n < qids.length; n++){
+        var qid = qids[n];
+        var e = ents[qid];
+        var nameKo = '', nameEn = '', occ = '', gen = '';
+        if (e){
+          if (e.labels && e.labels.ko) nameKo = e.labels.ko.value;
+          if (e.labels && e.labels.en) nameEn = e.labels.en.value;
+          occ = claimQids(e, 'P106').map(function(x){ return labels[x] || x; }).join(', ');
+          gen = claimQids(e, 'P136').map(function(x){ return labels[x] || x; }).join(', ');
+        }
+        var r = window.OCSuspect
+          ? window.OCSuspect.score({ name_ko:nameKo, name_en:nameEn,
+              wd_occupation:occ, wd_genre:gen, description:'', works:'', field:'' })
+          : { flag:false, score:0, noBasis:true, reason:'판정 엔진을 불러오지 못했습니다' };
+        rows.push({ qid:qid, name_ko:nameKo, name_en:nameEn, occ:occ, gen:gen,
+                    score:r.score, flag:r.flag, noBasis:r.noBasis, reason:r.reason,
+                    missing: !e });
+      }
+
+      /* ★ 점수가 <b>낮은 것부터</b> 놓습니다 — 음악인 증거가 뚜렷한
+         쪽이 위로 옵니다. 그것이 곧 잘못 차단된 후보입니다. */
+      rows.sort(function(a,b){ return a.score - b.score; });
+
+      prog(100, '완료');
+      var keep = rows.filter(function(r){ return r.score < 0; }).length;
+      var nb   = rows.filter(function(r){ return r.noBasis; }).length;
+      log('✅ 완료 — 모두 ' + rows.length + '개');
+      log('   음악인 증거가 있는 번호(점수 음수) : ' + keep + '개  ← 잘못 차단된 후보');
+      log('   판단 근거가 없는 번호              : ' + nb + '개');
+      log('   위키데이터에서 못 찾은 번호        : '
+        + rows.filter(function(r){ return r.missing; }).length + '개');
+      render();
+    } catch (e){
+      log('✗ 중단: ' + (e.message || e));
+      $('body').innerHTML = '<tr><td colspan="5" class="empty">오류: ' + esc(e.message || e) + '</td></tr>';
+    }
+    progHide();
+    $('load').disabled = false;
+  }
+
+  function render(){
+    var onlyKeep = $('onlyKeep').checked;
+    var list = rows.filter(function(r){ return onlyKeep ? (r.score < 0) : true; });
+
+    $('cnt').innerHTML = '모두 <b>' + rows.length + '</b>개 · 잘못 차단된 후보 <b>'
+      + rows.filter(function(r){ return r.score < 0; }).length + '</b>개 · 판단 근거 없음 <b>'
+      + rows.filter(function(r){ return r.noBasis; }).length + '</b>개 · 보이는 것 <b>'
+      + list.length + '</b>개';
+
+    if (!list.length){
+      $('body').innerHTML = '<tr><td colspan="5" class="empty">해당하는 번호가 없습니다.</td></tr>';
+      $('all').checked = false; $('unblock').disabled = true; return;
+    }
+
+    $('body').innerHTML = list.map(function(r){
+      var cls = r.score < 0 ? 'good' : (r.flag ? 'bad' : 'non');
+      var txt = r.score < 0 ? ('음악 ' + (-r.score) + '점')
+              : (r.flag ? ('비음악 ' + r.score + '점') : (r.score + '점'));
+      var badge = r.score < 0 ? '<span class="badge keep">풀 후보</span>'
+                : (r.noBasis ? '<span class="badge none">근거 없음</span>' : '');
+      var nm = r.name_ko || r.name_en || (r.missing ? '(위키데이터에 없음)' : '(이름 없음)');
+      return '<tr>'
+        + '<td class="c"><input type="checkbox" class="cb" value="' + esc(r.qid) + '"></td>'
+        + '<td class="nm">' + esc(nm) + badge
+        +   (r.name_en && r.name_ko ? '<span class="en">' + esc(r.name_en) + '</span>' : '')
+        +   '<span class="en"><a class="wdlink" target="_blank" rel="noopener"'
+        +   ' href="https://www.wikidata.org/wiki/' + esc(r.qid) + '">' + esc(r.qid) + ' ↗</a></span>'
+        + '</td>'
+        + '<td class="sc ' + cls + '">' + esc(txt) + '</td>'
+        + '<td class="oc">' + esc(r.occ || '(직업 없음)')
+        +   (r.gen ? '<br><span style="color:#8a8ca0">장르: ' + esc(r.gen) + '</span>' : '') + '</td>'
+        + '<td class="rs">' + esc(r.reason || '') + '</td>'
+        + '</tr>';
+    }).join('');
+    $('all').checked = false;
+    $('unblock').disabled = true;
+  }
+
+  function syncBtn(){
+    $('unblock').disabled = !document.querySelectorAll('.cb:checked').length;
+  }
+
+  async function unblock(){
+    var picked = Array.prototype.slice.call(document.querySelectorAll('.cb:checked'))
+      .map(function(c){ return c.value; });
+    if (!picked.length){ alert('풀 번호를 먼저 체크하십시오.'); return; }
+    if (!confirm(picked.length + '개를 차단 목록에서 풉니다.\n\n'
+      + '이 번호의 인물은 다음 수집(매주 목·금·토 05:43)에서\n'
+      + '소개문·사진과 함께 다시 들어옵니다.\n\n진행할까요?')) return;
+
+    $('unblock').disabled = true;
+    try {
+      var r = await sb.from('blocklist').delete().in('wikidata_id', picked);
+      if (r.error) throw new Error(r.error.message);
+      /* person_block 에도 남아 있으면 함께 풉니다 —
+         그러지 않으면 kr-composer 가 계속 걸러냅니다. */
+      try { await sb.from('person_block').delete().in('wikidata_id', picked); } catch (e) {}
+      log('✅ ' + picked.length + '개를 차단 목록에서 풀었습니다.');
+      rows = rows.filter(function(x){ return picked.indexOf(x.qid) < 0; });
+      render();
+      alert(picked.length + '개를 풀었습니다.\n다음 수집에서 다시 들어옵니다.');
+    } catch (e){
+      alert('차단 해제에 실패했습니다: ' + (e.message || e));
+      $('unblock').disabled = false;
+    }
+  }
+
+  $('load').addEventListener('click', run);
+  $('onlyKeep').addEventListener('change', render);
+  $('unblock').addEventListener('click', unblock);
+  $('all').addEventListener('change', function(){
+    var on = $('all').checked;
+    document.querySelectorAll('.cb').forEach(function(c){ c.checked = on; });
+    syncBtn();
+  });
+  document.getElementById('body').addEventListener('change', function(e){
+    if (e.target && e.target.classList.contains('cb')) syncBtn();
+  });
+})();
+</script>
+</body>
+</html>
