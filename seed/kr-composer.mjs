@@ -368,10 +368,54 @@ async function main() {
       }
     }
     if (blockName.size || blockQid.size) {
-      console.log(`  다시 담지 않을 사람 : ${blockName.size}명`);
+      console.log(`  person_block 에서 : ${blockName.size}명 · 번호 ${blockQid.size}개`);
     }
   } catch (e) {
-    console.log('  (다시 담지 않을 사람 목록을 읽지 못했습니다 — 표가 아직 없을 수 있습니다)');
+    console.log('  (person_block 을 읽지 못했습니다 — 표가 아직 없을 수 있습니다)');
+  }
+
+  /* ★ blocklist 도 함께 읽습니다.
+
+     왜 필요한가 (2026-08-03 확인)
+       차단 목록을 담는 표가 <b>둘</b>이었습니다.
+         blocklist     어드민의 「삭제 + 차단」 이 남기는 곳.
+                       수집기 여섯 개가 이것을 읽습니다.
+         person_block  이 파일 하나만 읽던 곳.
+       그래서 어드민에서 지운 인물이 <b>이 수집기를 돌릴 때 되돌아왔습니다.</b>
+       실제로 blocklist 201개 가운데 195개가 person_block 에 없었습니다.
+
+     둘을 다 읽으면 어느 쪽에 적혀 있어도 걸러집니다.
+     (표를 합치는 것보다 안전합니다 — 기존 흐름을 건드리지 않습니다) */
+  try {
+    let bfrom = 0;
+    let added = 0;
+    for (;;) {
+      /* ★ 정렬을 붙입니다. 정렬이 없으면 페이지마다 순서가 흔들려
+         목록의 일부를 놓칩니다. 놓친 번호는 걸러지지 않으므로
+         그 인물이 다시 들어옵니다 — 실제로 그 일이 났습니다. */
+      const res = await fetch(
+        `${SB_URL}/rest/v1/blocklist?select=wikidata_id&order=wikidata_id.asc`,
+        { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
+                     Range: `${bfrom}-${bfrom + 999}` } });
+      if (!res.ok) throw new Error('GET ' + res.status);
+      const batch = await res.json();
+      if (!batch.length) break;
+      for (const b of batch) {
+        if (b && b.wikidata_id) {
+          const q = String(b.wikidata_id).trim();
+          if (q && !blockQid.has(q)) { blockQid.add(q); added++; }
+        }
+      }
+      bfrom += batch.length;
+      if (bfrom > 100000) break;
+    }
+    console.log(`  blocklist 에서 : 번호 ${added}개 더함 (모두 ${blockQid.size}개)`);
+  } catch (e) {
+    /* ★ 못 읽었으면 멈춥니다. 차단 목록을 모르는 채로 담으면
+       지운 인물이 되돌아옵니다. 담지 않는 것이 낫습니다. */
+    console.error('✗ blocklist 를 읽지 못했습니다 — 담지 않고 멈춥니다: '
+      + String(e.message || e).slice(0, 120));
+    process.exit(1);
   }
   console.log('');
 
