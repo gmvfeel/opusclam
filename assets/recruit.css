@@ -5,6 +5,39 @@
    base.css · board.css 의 색과 자를 그대로 물려받습니다.
    ============================================================ */
 
+/* ── hidden 속성을 되살립니다 ─────────────────────────────────
+   ★ 왜 필요한가 (실제로 겪은 일입니다)
+
+     지원서를 보낸 뒤 하단의 「지원서 보내기」 단추가 사라지지 않고
+     <b>「보내는 중…」 에 멈춘 것처럼</b> 남아 있었습니다.
+     코드는 send.hidden = true 로 분명히 감추고 있었습니다.
+
+     까닭 — hidden 속성이 요소를 감추는 것은 브라우저 기본 스타일
+     (display:none)인데, 우리가 클래스에 display 를 적으면 <b>그것이
+     기본 스타일을 이깁니다.</b>
+       .rv-btn  { display: inline-flex }   ← 지원 창 단추
+       .pdb-reg { display: inline-flex }   ← 「채용정보등록」 단추
+     그래서 hidden 을 붙여도 그대로 보였습니다.
+
+   ★ 이것은 한 곳의 문제가 아니었습니다.
+     저장소를 훑어 보니 같은 고장이 <b>여섯 자리</b>에 있었고,
+     보호 규칙은 다섯 클래스에만 자리마다 땜질돼 있었습니다
+     (.hb-inspanels · .ra-wrap · .rw-add--sm · .rw-audlist · .rw-pv).
+     목록을 여러 곳에 적으면 반드시 한 곳을 빠뜨립니다 — CSS 도 같습니다.
+
+     고쳐진 자리 —
+       recruit/job.html · talent.html   #rcWrite (.pdb-reg)
+         → 자격 없는 분과 <b>손님에게도</b> 등록 단추가 보이고 있었습니다
+       job-write.html · talent-write.html  #rwDraftBar (.rw-draftbar)
+       job-write.html  #rwOrgLinked (.sc-linked) · #rwOrgRes (.sc-results)
+       지원 창의 #raSend (.rv-btn)
+
+   ★ !important 를 쓰는 까닭 — .pdb-toolbar .pdb-reg 처럼 특정성이
+     더 높은 규칙이 있어서, 없으면 여전히 집니다.
+
+   ★ 되돌리려면 아래 한 줄만 지우면 됩니다. */
+[hidden] { display: none !important; }
+
 /* ── 리쿠르트 공통 색 ─────────────────────────────────────
    ★ 여기 <b>한 곳</b>에서만 정합니다.
 
