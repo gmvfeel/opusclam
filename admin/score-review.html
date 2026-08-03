@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>악보 검수 · OPUSCLAM ADMIN</title>
+
+<!-- ★ 저작권 판별은 공용 엔진을 씁니다.
+     admin/score-check.html 도 같은 것을 씁니다 — 한 곳만 고치면 둘에 반영됩니다. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="/assets/score-guard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root{ --bg:#0e0f16; --card:#161826; --line:rgba(255,255,255,.10);
+         --tx:#e6e6f0; --tx2:#b9b9cc; --tx3:#8a8ca0; --ac:#e08a3c;
+         --ok:#6fcf8f; --no:#e08585; --wa:#e0b352; --mb:#8fd0a8; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+       font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+       font-size:14px;line-height:1.6}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 20px 90px}
+  a.back{display:inline-block;color:var(--tx3);text-decoration:none;font-size:13px;margin-bottom:18px}
+  a.back:hover{color:var(--ac)}
+  h1{font-size:24px;font-weight:800;margin:0 0 8px;letter-spacing:-.02em}
+  .hi{color:var(--tx2);font-size:13px;line-height:1.8;margin:0 0 6px;max-width:900px}
+  .hi b{color:var(--tx)}
+  .hi2{color:var(--tx3);font-size:12.5px;line-height:1.75;margin:0 0 18px;max-width:900px}
+  .hi2 b{color:var(--tx2)}
+
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;height:36px;padding:0 16px;
+       border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--tx2)}
+  .tab.on{background:var(--ac);border-color:var(--ac);color:#1a1206}
+  .tab .c{margin-left:6px;font-size:11.5px;opacity:.85}
+
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  button{font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+         height:38px;padding:0 18px;border-radius:9px;border:1px solid var(--line);
+         background:rgba(255,255,255,.05);color:var(--tx)}
+  button:hover{border-color:var(--ac);color:var(--ac)}
+  button:disabled{opacity:.45;cursor:default}
+  button.go{background:var(--ac);border-color:var(--ac);color:#1a1206}
+  button.go:hover{filter:brightness(1.08);color:#1a1206}
+  .cnt{font-size:12.5px;color:var(--tx3)} .cnt b{color:var(--tx)}
+
+  .prog{height:6px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;margin:8px 0 4px;display:none}
+  .prog.on{display:block}
+  .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7a5cc4,var(--ac));transition:width .2s}
+  .plabel{font-size:12px;color:var(--tx3);margin-bottom:12px;display:none}
+  .plabel.on{display:block}
+  .log{background:#0b0c12;border:1px solid var(--line);border-radius:10px;
+       padding:11px 13px;font-family:ui-monospace,Menlo,monospace;font-size:12px;
+       line-height:1.7;color:#9fb3c8;max-height:130px;overflow:auto;white-space:pre-wrap;margin-bottom:16px}
+
+  .item{background:var(--card);border:1px solid var(--line);border-radius:13px;
+        padding:16px 18px;margin-bottom:12px}
+  .it-top{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:10px}
+  .it-t{font-size:15.5px;font-weight:800;letter-spacing:-.01em}
+  .it-t .en{font-size:12px;font-weight:400;color:var(--tx3);margin-left:7px}
+  .chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--line);color:var(--tx3)}
+  .chip.cat{border-color:rgba(224,138,60,.4);color:var(--ac)}
+  .verdict{font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:20px;border:1px solid;margin-left:auto}
+  .verdict.ok{color:var(--ok);border-color:rgba(111,207,143,.45)}
+  .verdict.maybe{color:var(--mb);border-color:rgba(143,208,168,.45)}
+  .verdict.wa{color:var(--wa);border-color:rgba(224,179,82,.45)}
+  .verdict.no{color:var(--no);border-color:rgba(224,133,133,.5)}
+  .verdict.none{color:var(--tx3)}
+
+  .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px 18px;margin-bottom:10px}
+  .kv div{font-size:12.5px;line-height:1.7;color:var(--tx2);border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:5px}
+  .kv .k{color:var(--tx3);font-size:11.5px;display:block}
+  .kv .v{color:var(--tx)}
+  .kv .miss{color:var(--no);font-weight:700}
+
+  .why{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;
+       padding:10px 12px;font-size:12px;line-height:1.8;color:var(--tx2);margin-bottom:11px}
+  .why b{color:var(--tx)}
+  .why .h{font-size:11.5px;font-weight:700;color:var(--tx3);display:block;margin-bottom:4px}
+
+  .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .acts .pdf{color:#9db8e0;border-color:rgba(157,184,224,.45)}
+  .acts .chk{color:#c9a7e8;border-color:rgba(201,167,232,.45)}
+  .acts .yes{background:rgba(111,207,143,.14);border-color:rgba(111,207,143,.45);color:var(--ok)}
+  .acts .nope{background:rgba(224,133,133,.14);border-color:rgba(224,133,133,.45);color:var(--no)}
+  .acts button{height:34px;padding:0 14px;font-size:12.5px}
+  .empty{padding:50px;text-align:center;color:var(--tx3);background:var(--card);
+         border:1px solid var(--line);border-radius:13px}
+  @media(max-width:700px){ .wrap{padding:18px 14px 60px} .verdict{margin-left:0} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/admin/admin.html">← 대시보드</a>
+
+  <h1>악보 검수</h1>
+  <p class="hi">회원이 올린 악보를 확인해 <b>공개하거나 되돌립니다.</b>
+    승인한 것만 「정보SPOT · 각 분야별 악보」 목록에 나옵니다.</p>
+  <p class="hi2">★ 왜 검수를 거치는가 — 저작권을 침해한 자료를 올려 두고 방치하면
+    <b>운영자가 책임을 집니다.</b> 저작권법의 면책은 검수 체계와 즉시 삭제 절차를
+    갖춰야 적용됩니다.<br>
+    ★ <b>「저작권 자동 검사」</b> 를 누르면 그 PDF 를 받아 출판사·판권 표시를 찾아 줍니다.
+    판정은 <b>사람의 판단을 돕는 것</b>이고 법률 자문이 아닙니다 —
+    「확인 필요」 와 「올려도 될 듯」 은 <b>PDF 를 직접 열어</b> 보십시오.</p>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-s="pending">확인 대기<span class="c" id="cPending"></span></button>
+    <button class="tab" data-s="approved">공개됨<span class="c" id="cApproved"></span></button>
+    <button class="tab" data-s="rejected">되돌림<span class="c" id="cRejected"></span></button>
+  </div>
+
+  <div class="bar">
+    <button class="go" id="load">불러오기</button>
+    <button id="checkAll">보이는 것 모두 자동 검사</button>
+    <span class="cnt" id="cnt"></span>
+  </div>
+
+  <div class="prog" id="prog"><i id="progBar"></i></div>
+  <div class="plabel" id="progLabel"></div>
+  <div class="log" id="log">「불러오기」를 누르십시오.</div>
+
+  <div id="list"><div class="empty">아직 불러오지 않았습니다.</div></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  if (!window.supabase || !window.supabase.createClient){
+    $('log').textContent = '✗ Supabase 라이브러리를 불러오지 못했습니다.\n'
+      + '  인터넷 연결이나 광고 차단 확장을 확인해 주십시오.';
+    $('load').disabled = true; return;
+  }
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+  var state = 'pending';
+  var rows = [];
+  var guardReady = !!(window.OCScoreGuard && window.pdfjsLib);
+  if (window.pdfjsLib){
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  function esc(v){
+    return String(v == null ? '' : v)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function log(m){ var e=$('log'); e.textContent += (e.textContent?'\n':'')+m; e.scrollTop=e.scrollHeight; }
+  function clearLog(){ $('log').textContent=''; }
+  function prog(p,l){ $('prog').classList.add('on'); $('progLabel').classList.add('on');
+    $('progBar').style.width=Math.max(0,Math.min(100,p))+'%'; if(l!=null) $('progLabel').textContent=l; }
+  function progHide(){ $('prog').classList.remove('on'); $('progLabel').classList.remove('on'); }
+  function kb(n){ if(!n) return '-';
+    if(n<1024*1024) return (n/1024).toFixed(0)+' KB'; return (n/1024/1024).toFixed(1)+' MB'; }
+  function dt(s){ if(!s) return '-';
+    var d=new Date(s);
+    return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'
+         + String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')
+         + ':'+String(d.getMinutes()).padStart(2,'0');
+  }
+
+  /* ── 작곡가 사망연도를 판별 엔진에 넘깁니다 ─────────────────
+     ★ 정렬을 붙여 나눠 받습니다. 정렬이 없으면 페이지마다 순서가
+       흔들려 목록의 일부를 놓칩니다. */
+  var composersLoaded = false;
+  async function loadComposers(){
+    if (composersLoaded || !window.OCScoreGuard) return;
+    log('■ 인물DB 에서 작곡가 사망연도를 받습니다');
+    var out = [], from = 0;
+    for(;;){
+      var r = await fetch(SB_URL + '/rest/v1/persons?select=name_ko,name_en,life&order=id.asc',
+        { headers:{ apikey:SB_KEY, Authorization:'Bearer '+SB_KEY,
+                    Range: from+'-'+(from+999) } });
+      if (!r.ok) { log('  ⚠ 받지 못했습니다 — 작곡가 대조 없이 이어갑니다.'); return; }
+      var d = await r.json();
+      if (!d.length) break;
+      out = out.concat(d); from += d.length;
+      if (from > 200000) break;
+    }
+    var idx = {};
+    function add(k, death){
+      k = String(k||'').toLowerCase().replace(/[^a-z가-힣]/g,'');
+      if (k.length < 3) return;
+      if (!(k in idx) || (death && (!idx[k] || death < idx[k]))) idx[k] = death;
+    }
+    out.forEach(function(p){
+      var death = null;
+      var m = String(p.life||'').match(/(\d{3,4})\s*$/);
+      if (m) death = parseInt(m[1],10);
+      if (/[–-]\s*$/.test(String(p.life||''))) death = null;   /* 생존 중 */
+      [p.name_ko, p.name_en].forEach(function(nm){
+        if (!nm) return;
+        add(nm, death);
+        String(nm).split(/[\s,·]+/).forEach(function(w){ if (w.length>=4) add(w, death); });
+      });
+    });
+    window.OCScoreGuard.setComposers(idx);
+    composersLoaded = true;
+    log('  이름 색인 ' + Object.keys(idx).length + '개');
+  }
+
+  /* ── 목록 읽기 ────────────────────────────────────────────
+     ★ 정렬에 id 를 붙입니다 — created_at 이 같은 줄이 있으면
+       페이지 경계에서 순서가 흔들려 어떤 줄은 두 번, 어떤 줄은
+       아예 오지 않습니다. */
+  async function loadList(){
+    var out = [], from = 0;
+    for(;;){
+      var r = await sb.from('spot')
+        .select('id,title,title_ko,title_en,category,era,body,file_url,file_name,'
+              + 'score_composer,score_opus,score_instr,score_pages,score_size,'
+              + 'copyright_basis,copyright_source,review_status,reviewed_at,'
+              + 'home_url,member_id,created_at,hidden')
+        .eq('section','악보').eq('review_status', state)
+        .order('created_at',{ ascending:false }).order('id',{ ascending:true })
+        .range(from, from + 199);
+      if (r.error) throw new Error(r.error.message);
+      var d = r.data || [];
+      if (!d.length) break;
+      out = out.concat(d); from += d.length;
+      if (from > 20000) break;
+    }
+    return out;
+  }
+
+  async function counts(){
+    var out = {};
+    for (var i = 0; i < 3; i++){
+      var st = ['pending','approved','rejected'][i];
+      try {
+        var r = await sb.from('spot').select('id', { count:'exact', head:true })
+          .eq('section','악보').eq('review_status', st);
+        out[st] = r.count || 0;
+      } catch(e){ out[st] = 0; }
+    }
+    $('cPending').textContent  = out.pending  ? ' ' + out.pending  : '';
+    $('cApproved').textContent = out.approved ? ' ' + out.approved : '';
+    $('cRejected').textContent = out.rejected ? ' ' + out.rejected : '';
+  }
+
+  async function run(){
+    $('load').disabled = true; clearLog();
+    $('list').innerHTML = '<div class="empty">불러오는 중…</div>';
+    try {
+      await loadComposers();
+      log('■ ' + ({pending:'확인 대기',approved:'공개됨',rejected:'되돌림'}[state]) + ' 목록');
+      rows = await loadList();
+      log('  ' + rows.length + '건');
+      await counts();
+      render();
+    } catch (e){
+      log('✗ ' + (e.message || e));
+      $('list').innerHTML = '<div class="empty">오류: ' + esc(e.message||e) + '</div>';
+    }
+    $('load').disabled = false;
+  }
+
+  function render(){
+    $('cnt').innerHTML = '보이는 것 <b>' + rows.length + '</b>건';
+    if (!rows.length){
+      $('list').innerHTML = '<div class="empty">'
+        + (state === 'pending' ? '확인을 기다리는 악보가 없습니다.' : '해당하는 악보가 없습니다.')
+        + '</div>';
+      return;
+    }
+    var G = window.OCScoreGuard;
+    $('list').innerHTML = rows.map(function(r, i){
+      var v = r._verdict;
+      var vcls = v ? v.judge : 'none';
+      var vtxt = v ? (G ? G.LABEL[v.judge] : v.judge) : '검사 안 함';
+      /* ★ 저작권 근거가 비어 있으면 <b>붉게</b> 보여 줍니다.
+         이 두 칸은 등록 화면에서 필수로 두었지만, 예전에 올라온 줄이나
+         손으로 넣은 줄은 비어 있을 수 있습니다. 비었으면 되돌리십시오. */
+      function kv(k, val, must){
+        var empty = !val || !String(val).trim();
+        return '<div><span class="k">' + esc(k) + '</span>'
+          + '<span class="v' + (empty && must ? ' miss' : '') + '">'
+          + (empty ? (must ? '★ 비어 있습니다 — 되돌리십시오' : '-') : esc(val))
+          + '</span></div>';
+      }
+      return '<div class="item" data-i="' + i + '">'
+        + '<div class="it-top">'
+        +   '<span class="it-t">' + esc(r.title_ko || r.title || '(제목 없음)')
+        +     (r.title_ko && r.title ? '<span class="en">' + esc(r.title) + '</span>' : '')
+        +   '</span>'
+        +   (r.category ? '<span class="chip cat">' + esc(r.category) + '</span>' : '')
+        +   (r.era ? '<span class="chip">' + esc(r.era) + '</span>' : '')
+        +   '<span class="verdict ' + vcls + '">' + esc(vtxt) + '</span>'
+        + '</div>'
+        + '<div class="kv">'
+        +   kv('작곡가', r.score_composer)
+        +   kv('작품번호', r.score_opus)
+        +   kv('편성 상세', r.score_instr)
+        +   kv('저작권 근거', r.copyright_basis, true)
+        +   kv('판본 · 출처', r.copyright_source, true)
+        +   kv('파일', r.file_name ? (r.file_name + ' · ' + kb(r.score_size || (v && v.size))) : null, true)
+        +   kv('올린 때', dt(r.created_at))
+        +   kv('원본 주소', r.home_url)
+        + '</div>'
+        + (v ? '<div class="why"><span class="h">자동 검사 결과</span>'
+              + v.reasons.join('<br>')
+              + (v.pages ? '<br><span style="color:#8a8ca0">' + v.pages + '쪽</span>' : '')
+              + '</div>' : '')
+        + '<div class="acts">'
+        +   (r.file_url
+              ? '<button class="pdf" data-act="open" data-i="' + i + '">PDF 열어 보기</button>'
+              : '<button class="pdf" disabled>파일이 없습니다</button>')
+        +   (guardReady && r.file_url
+              ? '<button class="chk" data-act="check" data-i="' + i + '">저작권 자동 검사</button>' : '')
+        +   (state !== 'approved'
+              ? '<button class="yes" data-act="ok" data-i="' + i + '">공개하기</button>' : '')
+        +   (state !== 'rejected'
+              ? '<button class="nope" data-act="no" data-i="' + i + '">되돌리기</button>' : '')
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  /* ── 한 건 자동 검사 ──────────────────────────────────────
+     저장소에서 PDF 를 받아 브라우저 안에서만 읽습니다.
+     다른 곳으로 보내지 않습니다. */
+  async function checkOne(i, quiet){
+    var r = rows[i];
+    if (!r || !r.file_url || !window.OCScoreGuard) return;
+    if (!quiet) log('■ 검사: ' + (r.title_ko || r.title));
+    try {
+      var v = await window.OCScoreGuard.checkUrl(r.file_url, r.file_name || r.title || '');
+      r._verdict = v;
+      if (!quiet) log('  → ' + window.OCScoreGuard.LABEL[v.judge]
+        + ' · ' + v.reasons[0].replace(/<[^>]+>/g, ''));
+    } catch (e){
+      r._verdict = { judge:'wa', reasons:['검사에 실패했습니다: '
+        + String(e.message||e).slice(0,70)], pages:0 };
+      if (!quiet) log('  ✗ ' + (e.message || e));
+    }
+  }
+
+  async function checkAll(){
+    if (!rows.length) return;
+    $('checkAll').disabled = true;
+    var todo = rows.filter(function(r){ return r.file_url; });
+    log('■ ' + todo.length + '건 자동 검사');
+    for (var i = 0; i < rows.length; i++){
+      if (!rows[i].file_url) continue;
+      await checkOne(i, true);
+      prog(Math.round((i+1)/rows.length*100), (i+1) + '/' + rows.length);
+      render();
+      await new Promise(function(x){ setTimeout(x, 0); });
+    }
+    var G = window.OCScoreGuard;
+    var c = { ok:0, maybe:0, wa:0, no:0 };
+    rows.forEach(function(r){ if (r._verdict) c[r._verdict.judge]++; });
+    log('✅ 끝 — 올려도 됨 ' + c.ok + ' · 올려도 될 듯 ' + c.maybe
+      + ' · 확인 필요 ' + c.wa + ' · 올리면 안 됨 ' + c.no);
+    if (c.no) log('   ★ 「올리면 안 됨」 은 되돌리십시오.');
+    if (c.maybe || c.wa) log('   ★ 「올려도 될 듯」·「확인 필요」 는 PDF 를 직접 열어 보십시오.');
+    progHide();
+    $('checkAll').disabled = false;
+  }
+
+  /* ── 공개 / 되돌리기 ──────────────────────────────────────
+     ★ 되돌릴 때 hidden 도 함께 켭니다. review_status 만 바꾸면
+       다른 화면이 hidden 만 보고 그릴 때 새어 나갈 수 있습니다.
+       두 겹으로 막습니다. */
+  async function decide(i, ok){
+    var r = rows[i];
+    if (!r) return;
+    var name = r.title_ko || r.title || '(제목 없음)';
+    if (!ok){
+      if (!confirm('「' + name + '」 을 되돌립니다.\n\n'
+        + '목록에서 사라지고 「되돌림」 칸으로 옮겨집니다.\n'
+        + '파일은 저장소에 남으므로, 저작권을 침해한 자료라면\n'
+        + 'Supabase Storage 에서 <b>파일도 지워</b> 주십시오.'.replace(/<[^>]+>/g,'')
+        + '\n\n진행할까요?')) return;
+    } else {
+      var miss = [];
+      if (!r.copyright_basis || !String(r.copyright_basis).trim()) miss.push('저작권 근거');
+      if (!r.copyright_source || !String(r.copyright_source).trim()) miss.push('판본 · 출처');
+      if (!r.file_url) miss.push('악보 파일');
+      if (miss.length){
+        if (!confirm('「' + name + '」 은 ' + miss.join(' · ') + ' 가 비어 있습니다.\n\n'
+          + '그래도 공개할까요? (권하지 않습니다)')) return;
+      }
+      if (r._verdict && r._verdict.judge === 'no'){
+        if (!confirm('자동 검사가 「올리면 안 됨」 으로 보았습니다.\n\n'
+          + r._verdict.reasons.join('\n').replace(/<[^>]+>/g,'')
+          + '\n\n그래도 공개할까요? (권하지 않습니다)')) return;
+      }
+    }
+    try {
+      var patch = ok
+        ? { review_status:'approved', hidden:false, reviewed_at:new Date().toISOString() }
+        : { review_status:'rejected', hidden:true,  reviewed_at:new Date().toISOString() };
+      var res = await sb.from('spot').update(patch).eq('id', r.id);
+      if (res.error) throw new Error(res.error.message);
+      log((ok ? '✅ 공개: ' : '↩ 되돌림: ') + name);
+      rows.splice(i, 1);
+      render();
+      await counts();
+    } catch (e){
+      alert('바꾸지 못했습니다: ' + (e.message || e));
+    }
+  }
+
+  /* ── 이어 주기 ────────────────────────────────────────── */
+  $('load').addEventListener('click', run);
+  $('checkAll').addEventListener('click', checkAll);
+  $('tabs').addEventListener('click', function(e){
+    var b = e.target.closest('.tab');
+    if (!b) return;
+    document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    state = b.dataset.s;
+    rows = [];
+    $('list').innerHTML = '<div class="empty">「불러오기」를 누르십시오.</div>';
+    $('cnt').textContent = '';
+  });
+  $('list').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-act]');
+    if (!b) return;
+    var i = parseInt(b.dataset.i, 10);
+    var act = b.dataset.act;
+    if (act === 'open'){
+      var r = rows[i];
+      if (r && r.file_url) window.open(r.file_url, '_blank', 'noopener');
+    } else if (act === 'check'){
+      b.disabled = true;
+      checkOne(i).then(function(){ render(); });
+    } else if (act === 'ok'){
+      decide(i, true);
+    } else if (act === 'no'){
+      decide(i, false);
+    }
+  });
+
+  if (!guardReady){
+    log('⚠ 저작권 자동 검사를 쓸 수 없습니다.');
+    log('  pdf.js 또는 assets/score-guard.js 를 불러오지 못했습니다.');
+    log('  검수 자체는 됩니다 — PDF 를 직접 열어 보십시오.');
+    $('checkAll').disabled = true;
+  }
+})();
+</script>
+</body>
+</html>

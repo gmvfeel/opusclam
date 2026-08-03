@@ -9,6 +9,7 @@
 <!-- ★ PDF 를 읽는 도구입니다. 파일은 <b>이 브라우저 밖으로 나가지 않습니다.</b>
      인터넷으로 보내지 않고, 브라우저 안에서만 열어 글자를 읽습니다. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="/assets/score-guard.js"></script>
 
 <style>
   :root{ --bg:#0e0f16; --card:#161826; --line:rgba(255,255,255,.10);
@@ -158,49 +159,43 @@
 
   /* 현대 출판사 — 지금도 새 판을 내는 곳입니다. 판본 저작권이 살아 있을
      가능성이 큽니다. (베토벤 악보라도 이 판을 스캔하면 침해입니다) */
-  var PUB_MODERN = [
-    'g. henle','henle verlag','henle',
-    'edition peters','c.f. peters','peters edition',
-    'bärenreiter','baerenreiter','barenreiter',
-    'wiener urtext','universal edition','universal-edition',
-    'boosey','hawkes','schott music','schott mainz',
-    'g. schirmer','schirmer','hal leonard','alfred music','alfred publishing',
-    'ricordi','durand','salabert','leduc','eschig','billaudot',
-    'carus-verlag','carus verlag','sikorski','chester music','novello',
-    'faber music','oxford university press','stainer & bell','bosworth',
-    'edition wilhelm hansen','musikverlag','breitkopf urtext','urtext edition',
-    /* 국내 */ '음악춘추','세광음악출판사','태림스코어','현대음악출판사','아름출판사'
-  ];
+  /* ★ 저작권 판별은 <b>assets/score-guard.js</b> 로 옮겼습니다.
+
+     왜 옮겼나 — 같은 판별을 쓰는 곳이 둘입니다.
+       이 화면(내 컴퓨터 악보 훑기) · admin/score-review.html(회원 악보 검수)
+     두 곳에 복사해 두면 한 곳을 고쳐도 나머지가 남습니다.
+     출판사 목록을 늘리거나 기준을 손보실 때는 score-guard.js 만
+     고치면 두 화면에 함께 반영됩니다. */
+  async function checkOne(file){
+    if (!window.OCScoreGuard){
+      return { name:file.name, path:file.webkitRelativePath || file.name,
+               size:file.size, judge:'wa',
+               reasons:['판별 엔진(assets/score-guard.js)을 불러오지 못했습니다'], text:'' };
+    }
+    return await window.OCScoreGuard.check(file, file.webkitRelativePath || file.name);
+  }
 
   /* 예전 출판사·전집 — 19세기 판은 대개 퍼블릭 도메인입니다.
      이름이 보이면 「확인 필요」 로만 둡니다. */
-  var PUB_OLD = [
-    'breitkopf','härtel','haertel','litolff','augener','schlesinger',
-    'kalmus','dover','edwin f. kalmus','luck','broude'
-  ];
+
 
   /* IMSLP · 자유 저장소 표시 — 가장 <b>강한</b> 안전 신호입니다.
      IMSLP 는 파일마다 저작권 상태를 검증해 표시해 둡니다. */
-  var FREE_MARK = [
-    'imslp','petrucci music library','petrucci',
-    'creative commons','public domain','mutopia','cpdl',
-    'choral public domain library','openscore','musescore',
-    'gemeinfrei','domaine public'
-  ];
+
 
   /* 판권 문구 — 연도를 함께 봅니다 */
-  var RE_COPY = /(?:©|\(c\)|copyright)\s*(?:by\s*)?((?:19|20)\d{2})/gi;
+
   /* 「All rights reserved」 는 강한 위험 신호입니다 */
-  var RE_ARR  = /all\s+rights\s+reserved|무단\s*(전재|복제)|저작권자?\s*동의/i;
+
   /* 대여 악보 표시 — 절대 올릴 수 없습니다 */
-  var RE_HIRE = /performance\s+material.*hire|rental\s+(?:score|material)|대여\s*악보/i;
+
 
   /* ★ 판권 연도의 기준
      한국은 저작자 사망 후 70년입니다. 지금이 2026년이므로 <b>1956년 이전
      사망</b>이면 곡 자체는 자유입니다. 판본(조판)은 별개이지만, 판권
      표시가 1930년 이후면 그 판은 아직 보호될 수 있다고 봅니다. */
-  var YEAR_SAFE_DEATH = 2026 - 70;   /* 1956 */
-  var YEAR_COPY_RISK  = 1930;
+   /* 1956 */
+
 
   /* ══ 화면 도우미 ═══════════════════════════════════════════ */
   var $ = function(id){ return document.getElementById(id); };
@@ -270,6 +265,9 @@
       });
     });
     persons = idx;
+    /* ★ 공용 판별 엔진에 넘겨 줍니다 — 넘기지 않으면 작곡가 대조를
+       하지 않고 「확인 필요」 가 크게 늘어납니다. */
+    if (window.OCScoreGuard) window.OCScoreGuard.setComposers(idx);
     log('  이름 색인 ' + Object.keys(idx).length + '개');
     return idx;
   }
@@ -288,123 +286,7 @@
   }
 
   /* ══ PDF 한 개 검사 ════════════════════════════════════════ */
-  async function checkOne(file){
-    var res = { name: file.name, path: file.webkitRelativePath || file.name,
-                size: file.size, judge: 'wa', reasons: [], text: '' };
-    var pdf = null;
-    try {
-      var buf = await file.arrayBuffer();
-      pdf = await window.pdfjsLib.getDocument({ data: buf, disableAutoFetch: true }).promise;
 
-      /* ① 메타데이터 */
-      var meta = null;
-      try { meta = await pdf.getMetadata(); } catch(e){}
-      var metaTxt = '';
-      if (meta && meta.info){
-        ['Title','Author','Subject','Keywords','Creator','Producer'].forEach(function(k){
-          if (meta.info[k]) metaTxt += ' ' + meta.info[k];
-        });
-      }
-
-      /* ② 앞 두 장의 글자 — 표지와 첫 악보 장에 표시가 있습니다.
-         ★ 전체를 읽지 않는 것은 <b>일부러</b>입니다. 7GB 를 다 읽으면
-           몇 시간이 걸립니다. 판권 표시는 거의 앞머리에 있습니다. */
-      var pageTxt = '';
-      var n = Math.min(2, pdf.numPages);
-      for (var p = 1; p <= n; p++){
-        try {
-          var page = await pdf.getPage(p);
-          var tc = await page.getTextContent();
-          pageTxt += ' ' + tc.items.map(function(x){ return x.str; }).join(' ');
-          page.cleanup();
-        } catch(e){}
-      }
-      /* 마지막 장 하단에 IMSLP 표시가 찍히는 경우가 많습니다 */
-      if (pdf.numPages > 2){
-        try {
-          var last = await pdf.getPage(pdf.numPages);
-          var lc = await last.getTextContent();
-          pageTxt += ' ' + lc.items.map(function(x){ return x.str; }).join(' ');
-          last.cleanup();
-        } catch(e){}
-      }
-
-      var all = (metaTxt + ' ' + pageTxt).replace(/\s+/g, ' ');
-      res.text = all.slice(0, 400);
-      var low = all.toLowerCase();
-      /* ★ 글자를 읽었는지 판단하는 기준.
-         악보 표지는 제목·작곡가만 있어 짧을 수 있습니다. 25자로 둡니다 —
-         40자로 두었더니 짧은 표지를 「그림 스캔」 으로 오판했습니다. */
-      var hasText = all.replace(/\s/g, '').length > 25;
-
-      /* ③ 자유 저장소 표시 — 가장 강한 안전 신호 */
-      var free = FREE_MARK.filter(function(k){ return low.indexOf(k) >= 0; });
-
-      /* ④ 위험 신호 */
-      var modern = PUB_MODERN.filter(function(k){ return low.indexOf(k) >= 0; });
-      var old    = PUB_OLD.filter(function(k){ return low.indexOf(k) >= 0; });
-      var years = [], m2;
-      RE_COPY.lastIndex = 0;
-      while ((m2 = RE_COPY.exec(all)) !== null){ years.push(parseInt(m2[1], 10)); }
-      var maxYear = years.length ? Math.max.apply(null, years) : null;
-      var arr  = RE_ARR.test(all);
-      var hire = RE_HIRE.test(all);
-
-      /* ⑤ 작곡가 사망연도 */
-      var comp = findComposer(res.path);
-
-      /* ══ 판정 ══════════════════════════════════════════════
-         순서가 중요합니다 — <b>위험을 먼저</b> 봅니다.
-         안전 신호가 있어도 대여 악보 표시가 있으면 올릴 수 없습니다. */
-      if (hire){
-        res.judge = 'no';
-        res.reasons.push('대여 악보 표시 — 판매·배포가 금지된 자료입니다');
-      } else if (maxYear && maxYear >= YEAR_COPY_RISK){
-        res.judge = 'no';
-        res.reasons.push('판권 표시 © ' + maxYear + ' — ' + YEAR_COPY_RISK + '년 이후입니다');
-        if (modern.length) res.reasons.push('출판사: ' + modern.slice(0,2).join(', '));
-      } else if (modern.length && !free.length){
-        res.judge = 'no';
-        res.reasons.push('현대 출판사 판본으로 보입니다: ' + modern.slice(0,2).join(', '));
-        res.reasons.push('작곡가가 퍼블릭 도메인이어도 <b>이 판본의 조판</b>에 저작권이 있습니다');
-      } else if (arr && !free.length){
-        res.judge = 'no';
-        res.reasons.push('무단전재 금지 문구가 있습니다');
-      } else if (free.length){
-        res.judge = 'ok';
-        res.reasons.push('자유 저장소 표시: ' + free.slice(0,2).join(', '));
-        if (comp && comp.death) res.reasons.push('작곡가 사망 ' + comp.death + '년');
-      } else if (comp && comp.death && comp.death <= YEAR_SAFE_DEATH && !old.length && hasText){
-        /* ★ 「올려도 됨」 이 아니라 <b>「올려도 될 듯」</b> 으로 둡니다.
-           글자를 읽었는데 출판사 이름이 없으면 대개 개인 조판이거나
-           오래된 판입니다. 그러나 <b>확신할 수 없습니다</b> —
-             · 표지가 잘려 출판사 이름이 없는 스캔
-             · 하단 표시가 <b>그림으로만</b> 있어 글자로 안 잡히는 경우
-           작곡가가 퍼블릭 도메인이어도 <b>판본의 조판</b>에는 저작권이
-           따로 있으므로, 한 번 눈으로 보시는 편이 안전합니다. */
-        res.judge = 'maybe';
-        res.reasons.push('작곡가 사망 ' + comp.death + '년 (사후 70년 지남)');
-        res.reasons.push('출판사·판권 표시를 찾지 못했습니다 — <b>판본을 한 번 확인해 주십시오</b>');
-      } else {
-        res.judge = 'wa';
-        if (!hasText) res.reasons.push('글자를 읽지 못했습니다 — 그림으로만 된 스캔입니다');
-        if (old.length) res.reasons.push('예전 출판사 이름: ' + old.slice(0,2).join(', ')
-          + ' (19세기 판이면 자유일 수 있습니다)');
-        if (comp && comp.death && comp.death > YEAR_SAFE_DEATH)
-          res.reasons.push('작곡가 사망 ' + comp.death + '년 — <b>사후 70년이 안 지났습니다</b>');
-        if (comp && !comp.death) res.reasons.push('작곡가가 생존 중이거나 사망연도를 모릅니다');
-        if (!comp) res.reasons.push('파일명에서 작곡가를 찾지 못했습니다');
-        if (maxYear) res.reasons.push('판권 표시 © ' + maxYear);
-        if (!res.reasons.length) res.reasons.push('판단할 단서가 없습니다');
-      }
-    } catch (e){
-      res.judge = 'wa';
-      res.reasons.push('PDF 를 열지 못했습니다: ' + String(e.message || e).slice(0, 80));
-    } finally {
-      if (pdf){ try { await pdf.destroy(); } catch(e){} }
-    }
-    return res;
-  }
 
   /* ══ 실행 ══════════════════════════════════════════════════ */
   async function run(){
@@ -582,7 +464,11 @@
   $('onlyBad').addEventListener('change', render);
 
   /* pdf.js 준비 */
-  if (!window.pdfjsLib){
+  if (!window.OCScoreGuard){
+    $('log').textContent = '✗ 판별 엔진(assets/score-guard.js)을 불러오지 못했습니다.\n'
+      + '  그 파일이 assets 폴더에 있는지 확인해 주십시오.';
+    $('pickDir').disabled = true; $('pickFile').disabled = true;
+  } else if (!window.pdfjsLib){
     $('log').textContent = '✗ PDF 읽기 도구(pdf.js)를 불러오지 못했습니다.\n'
       + '  인터넷 연결이나 광고 차단 확장을 확인해 주십시오.\n'
       + '  (cdnjs.cloudflare.com 이 막히면 이 화면이 동작하지 않습니다)';
