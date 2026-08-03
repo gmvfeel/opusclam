@@ -121,6 +121,40 @@
   .pv-schoollink:hover .pv-schoolgo{background:var(--violet-2);color:#fff;border-color:var(--violet-2)}
   .pv-schoollink:hover{color:var(--violet-2);border-color:var(--violet-2)}
   .pv-sec{margin-top:46px}
+  /* ── 작품 목록 · 수상 (assets/works.js) ─────────────────────
+     ★ 이 화면 안에 두는 까닭 — person-view.html 은 자기 스타일을
+       갖고 있습니다. 다른 파일에 넣으면 적용되지 않습니다. */
+  .wk-sum{margin:0 0 20px;font-size:13px;line-height:1.7;color:var(--tx3,#8a8798)}
+  .wk-sum b{color:var(--tx,#2b2740)}
+  .wk-g{margin-bottom:26px}
+  .wk-ghead{display:flex;align-items:center;gap:9px;margin-bottom:10px;
+            padding-bottom:8px;border-bottom:1px solid var(--line,#f0eff5)}
+  .wk-ghead b{font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:var(--tx,#2b2740)}
+  .wk-cnt{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:20px;
+          background:var(--line,#f0eff5);color:var(--tx3,#8a8798)}
+  .wk-list{list-style:none;margin:0;padding:0}
+  .wk-list[hidden]{display:none}
+  .wk-it{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;
+         padding:7px 0;border-bottom:1px solid rgba(0,0,0,.035);font-size:13.5px;line-height:1.6}
+  .wk-t{color:var(--tx,#2b2740);font-weight:600}
+  .wk-orig{font-size:12px;color:var(--tx3,#8a8798)}
+  .wk-m{font-size:12px;color:var(--tx2,#5f5c70);white-space:nowrap}
+  .wk-n{flex:1 1 100%;font-size:11.5px;color:var(--tx3,#8a8798)}
+  .wk-btn{margin-top:10px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+          height:32px;padding:0 14px;border-radius:8px;background:transparent;
+          border:1px solid var(--line2,#e8e6ef);color:var(--tx3,#8a8798)}
+  .wk-btn:hover{border-color:#5b4b9e;color:#5b4b9e}
+  .wk-aw{list-style:none;margin:0;padding:0}
+  .wk-aw li{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;
+            padding:8px 0;border-bottom:1px solid rgba(0,0,0,.035);font-size:13.5px;line-height:1.6}
+  .wk-ay{flex:0 0 auto;width:52px;font-family:var(--display,inherit);font-size:12.5px;
+         font-weight:700;color:var(--tx3,#8a8798)}
+  .wk-at{color:var(--tx,#2b2740)}
+  .wk-ao{font-size:12px;color:var(--tx3,#8a8798)}
+  @media(max-width:560px){
+    .wk-it,.wk-aw li{font-size:13px}
+    .wk-m{white-space:normal}
+  }
   .pv-sechead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
   .pv-h{font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--text);padding-left:12px;border-left:3px solid var(--violet-2);line-height:1.15;margin:0 0 18px}
   .pv-sechead .pv-h{margin:0}
@@ -490,6 +524,21 @@
           </dl>
         </section>
       </div>
+
+      <!-- ★ 작품 목록 · 수상 — assets/works.js 가 채웁니다.
+           위의 「대표작」 은 한 줄 요약(persons.works)이고, 여기는
+           person_works 표의 <b>전체 목록</b>입니다. 100곡이 넘는 인물이
+           있어(아놀드 쿡 124곡) 분야별로 묶고 접어 둡니다.
+           자료가 없으면 works.js 가 이 영역을 통째로 감춥니다. -->
+      <section class="pv-sec">
+        <div class="pv-sechead"><h2 class="pv-h">작품 목록 <span class="pv-h-en">Catalogue</span></h2><span class="pv-auto">분야별 · 연도순</span></div>
+        <div id="pvWorks"></div>
+      </section>
+
+      <section class="pv-sec">
+        <div class="pv-sechead"><h2 class="pv-h">수상 · 서훈 <span class="pv-h-en">Awards</span></h2></div>
+        <div id="pvAwards"></div>
+      </section>
 
       <section class="pv-sec">
         <div class="pv-sechead"><h2 class="pv-h">사진 · 갤러리</h2><span class="pv-auto">자동 수집 영역</span></div>
@@ -1304,6 +1353,7 @@ if('serviceWorker' in navigator){
 })();
 </script>
 <script src="/assets/photos.js"></script>
+<script src="/assets/works.js"></script>
 <script>
 /* 인물 뷰: ?id 로 Supabase에서 해당 인물 로드 (id 없으면 기존 샘플 유지) */
 (function(){
@@ -1324,6 +1374,9 @@ if('serviceWorker' in navigator){
    .then(function(a){
      if(!a||!a.length) return;
      var p=a[0];
+     /* ★ 작품 목록 · 수상 — person_works · person_awards 를 읽어 그립니다.
+        자료가 없으면 works.js 가 두 영역을 통째로 감춥니다. */
+     if(window.OCWorks) OCWorks.mount({ personId:p.id, worksBox:'#pvWorks', awardsBox:'#pvAwards' });
      var nm=(p.name_ko||'').trim();
      var por=document.querySelector('.pv-portrait span'); if(por) por.textContent=nm?nm[0]:'?';
      /* 초상: DB에 저장된 이미지를 먼저 사용 (위키 실시간 이미지는 악보·무덤이 섞일 수 있음) */
