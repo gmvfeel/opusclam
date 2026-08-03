@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>악보 등록 · OPUSCLAM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+</head>
+<body data-header="overlay">
+<style>
+  /* ★ 저작권 안내 — 올리기 전에 <b>반드시</b> 보이는 자리에 둡니다.
+     저작권은 「몰랐다」 가 통하지 않으므로, 접어 두지 않고 펼쳐 둡니다. */
+  .score-warn{margin:14px 0 0;padding:16px 18px;border-radius:12px;
+              background:rgba(224,138,60,.08);border:1px solid rgba(224,138,60,.32)}
+  .score-warn .w-t{font-size:13.5px;font-weight:800;color:#b4651f;margin-bottom:10px}
+  .score-warn ul{margin:0;padding:0;list-style:none}
+  .score-warn li{font-size:12.5px;line-height:1.85;color:var(--tx2,#5f5c70);
+                 padding:7px 0;border-top:1px solid rgba(224,138,60,.18)}
+  .score-warn li:first-child{border-top:0;padding-top:0}
+  .score-warn li b{color:var(--tx,#2b2740)}
+  .score-warn li > b:first-child{display:block;margin-bottom:2px}
+  .score-warn li span{display:block}
+  .score-warn .w-tip{margin:10px 0 0;font-size:12px;color:var(--tx3,#8a8798);line-height:1.75}
+  .score-warn .w-tip b{color:var(--tx2,#5f5c70)}
+  @media (prefers-color-scheme: dark){
+    .score-warn{background:rgba(224,138,60,.11);border-color:rgba(224,138,60,.36)}
+    .score-warn .w-t{color:#e0a35c}
+    .score-warn li{color:#b9b9cc;border-color:rgba(224,138,60,.22)}
+    .score-warn li b{color:#e8e8f2}
+    .score-warn .w-tip{color:#8a8ca0} .score-warn .w-tip b{color:#b9b9cc}
+  }
+</style>
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-spot on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">등록</span>
+    </nav>
+
+    <!-- 정보SPOT 하위 메뉴 — partials/subnav-spot.html 한 곳에서 관리합니다 -->
+    <div id="oc-subnav" data-src="/partials/subnav-spot.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM INFORMATION SERVICE</div>
+          <h1 class="pdb-title">악보 등록</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">편성별 악보를 올립니다. <b>올리신 자료는 확인을 거친 뒤에 보입니다.</b></p>
+      <div class="score-warn">
+        <div class="w-t">올리기 전에 꼭 읽어 주십시오</div>
+        <ul>
+          <li><b>올려도 되는 것</b>
+            <span>IMSLP · Mutopia · CPDL 같은 자유 저장소에서 받은 자료 ·
+                  작곡가 사후 70년이 지난 옛 판본 · 직접 조판하거나 편곡한 것 · 본인의 작품</span></li>
+          <li><b>올릴 수 없는 것</b>
+            <span>헨레(Henle) · 페터스(Peters) · 베렌라이터(Bärenreiter) 같은
+                  <b>출판사 판본을 스캔한 것.</b>
+                  작곡가가 퍼블릭 도메인이어도 <b>그 판본의 조판에는 저작권이 따로 있습니다.</b>
+                  대여 악보(hire), 판권(©) 표시가 남아 있는 자료도 올릴 수 없습니다.</span></li>
+          <li><b>왜 이렇게 하는가</b>
+            <span>저작권을 침해한 자료를 올려 두면 <b>올린 분과 운영자가 함께 책임</b>을 집니다.
+                  그래서 확인을 거치고, 문제가 발견되면 바로 내립니다.</span></li>
+        </ul>
+        <p class="w-tip">판단이 서지 않으시면 관리자에게 알려 주십시오 —
+          <b>악보 PDF 저작권 검사</b> 도구로 함께 확인할 수 있습니다.</p>
+      </div>
+    </header>
+  </div>
+</section>
+
+<main class="board">
+  <div id="bw-root"></div>
+</main>
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/board-write.js"></script>
+<script>
+  /* 정보SPOT 등록 — 갈래(section)는 이 화면이 정해서 넣습니다(fixed).
+     그래서 등록하는 분은 갈래를 고를 필요가 없습니다. */
+  OCBoardWrite.init({
+    table:'spot', listPage:'score.html', viewPage:'spot-view.html', bucket:'scores',
+    /* ★ review_status 를 pending 으로 <b>고정</b>합니다.
+       회원이 스스로 approved 로 올릴 수 없습니다 — 그래야 검수가 뜻이 있습니다.
+       관리자가 확인한 뒤 approved 로 바꾸면 목록에 나옵니다. */
+    fixed:{ section:'악보', review_status:'pending' },
+    formTitle:'악보 등록',
+    /* 편성 — 음원영상과 <b>같은 갈래</b>를 씁니다.
+       두 곳이 같은 말을 쓰면 뒤에 「이 편성의 음원과 악보」 를 함께 보여 줄 수 있습니다. */
+    categories:[
+      {"value":"Symphony"}, {"value":"Orchestral"}, {"value":"Concerto"},
+      {"value":"Chamber"}, {"value":"Ensemble"}, {"value":"Piano"},
+      {"value":"Strings"}, {"value":"Wind"}, {"value":"Brass"},
+      {"value":"Percussion"}, {"value":"Organ"}, {"value":"Vocal"},
+      {"value":"Choral"}, {"value":"Oratorio/Mass"}, {"value":"Opera"},
+      {"value":"Electronic"}, {"value":"기타"}
+    ],
+    docFields:{
+      homeLabel:'원본 주소', homeHint:'(IMSLP 등에서 받으셨다면 그 쪽 주소를 적어 주십시오)',
+      homePlaceholder:'https://imslp.org/wiki/...',
+      fileLabel:'악보 파일', fileHint:'(PDF · 최대 50MB) ★ 이 칸에 악보를 올립니다',
+      extra:[
+        { col:'score_composer', label:'작곡가', hint:'(예: 루트비히 판 베토벤)',
+          placeholder:'루트비히 판 베토벤' },
+        { col:'score_opus', label:'작품번호', hint:'(예: op. 27 no. 2 · BWV 846, 선택)',
+          placeholder:'op. 27 no. 2' },
+        { col:'score_instr', label:'편성 상세', hint:'(예: 피아노 독주 · 플루트와 피아노, 선택)',
+          placeholder:'피아노 독주' },
+        /* ★ 저작권 근거 — 이 두 칸이 이 화면의 <b>핵심</b>입니다.
+           무엇을 근거로 올려도 된다고 보셨는지 적어 두면,
+           뒤에 문제가 생겼을 때 어디서 왔는지 따라갈 수 있습니다.
+           적지 않으면 검수에서 되돌립니다. */
+        { col:'copyright_basis', label:'저작권 근거 ★필수',
+          hint:'(예: IMSLP 퍼블릭 도메인 · 작곡가 1827년 사망 · 직접 조판)',
+          placeholder:'IMSLP 퍼블릭 도메인 (작곡가 1827년 사망)' },
+        { col:'copyright_source', label:'판본 · 출처 ★필수',
+          hint:'(어느 판본인지 · 어디서 받으셨는지)',
+          placeholder:'IMSLP #12345 · Breitkopf 1862년 전집판' }
+      ]
+    }
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

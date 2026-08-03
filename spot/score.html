@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>각 분야별 악보 · OPUSCLAM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<style>
+  /* ★ 이 화면만 쓰는 안내 문구입니다.
+     저작권은 「몰랐다」 가 통하지 않는 자리이므로, 올리기 전에
+     무엇이 되고 무엇이 안 되는지 <b>목록 화면에서부터</b> 보이게 둡니다. */
+  .score-note{margin:10px 0 0;padding:12px 14px;border-radius:10px;
+              background:rgba(224,138,60,.07);border:1px solid rgba(224,138,60,.25);
+              font-size:12.5px;line-height:1.85;color:var(--tx2,#5f5c70)}
+  .score-note b{color:var(--tx,#2b2740)}
+  @media (prefers-color-scheme: dark){
+    .score-note{background:rgba(224,138,60,.10);border-color:rgba(224,138,60,.3);color:#b9b9cc}
+    .score-note b{color:#e8e8f2}
+  }
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-spot on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">각 분야별 악보</span>
+    </nav>
+
+    <!-- 정보SPOT 하위 메뉴 — partials/subnav-spot.html 한 곳에서 관리합니다 -->
+    <div id="oc-subnav" data-src="/partials/subnav-spot.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OPUSCLAM INFORMATION SERVICE</div>
+          <h1 class="pdb-title">각 분야별 악보</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">편성별로 악보를 모았습니다. <b>저작권이 풀린 자료만</b> 올립니다 — 회원이 올린 것은 확인을 거친 뒤에 보입니다.</p>
+      <p class="pdb-note score-note">
+        <b>올릴 수 있는 것</b> · IMSLP·Mutopia·CPDL 같은 자유 저장소 자료 · 작곡가 사후 70년이 지난 옛 판본 · 직접 조판하거나 편곡한 것<br>
+        <b>올릴 수 없는 것</b> · 헨레·페터스·베렌라이터 같은 <b>출판사 판본을 스캔한 것</b> ─ 작곡가가 퍼블릭 도메인이어도 그 판본의 조판에는 저작권이 따로 있습니다 · 대여 악보 · 판권 표시가 남아 있는 자료
+      </p>
+    </header>
+  </div>
+</section>
+
+<main class="board">
+  <div class="board-bar pdb-toolbar">
+    <div class="board-search pdb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" placeholder="곡명·작곡가 검색" aria-label="검색">
+      <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
+    </div>
+    <div class="pdb-selects">
+      <select class="board-erasel" aria-label="시대"></select>
+      <select class="board-catsel" aria-label="편성"></select>
+      <select class="board-sort" aria-label="정렬">
+        <option value="created_at">최신순</option>
+        <option value="download_count">많이 받은 순</option>
+        <option value="view_count">많이 본 순</option>
+      </select>
+    </div>
+    <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+      <span class="fs-label">글자크기</span>
+      <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+      <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+      <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+    </div>
+  </div>
+
+  <div class="board-count pdb-count">전체 <b>0</b>건</div>
+  <div class="board-list"></div>
+
+  <div class="board-foot">
+    <div class="board-pager"></div>
+    <div class="board-actions"></div>
+  </div>
+</main>
+
+<section class="bigban">
+  <div class="wrap">
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+  </div>
+</section>
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/board.js"></script>
+<script>
+  /* 정보SPOT 은 표 하나(spot)에 여섯 갈래를 담고 section 으로 나눕니다.
+     이 화면은 「악보」 갈래만 봅니다 — where 한 줄로 정합니다.
+     목록의 모양·검색·페이지 넘김은 모두 공용 엔진(assets/board.js)이 합니다. */
+  document.addEventListener('DOMContentLoaded', function(){
+    OCBoard.list({
+      table:'spot', pageSize:20,
+      viewPage:'spot-view.html', writePage:'spot-write-score.html',
+      /* ★ 승인된 것만 보여 줍니다.
+         회원이 올린 악보는 review_status='pending' 으로 들어가고,
+         관리자가 approved 로 바꿔야 여기 나옵니다.
+         저작권법의 면책은 검수 체계를 갖춰야 적용되므로,
+         올려 두고 그냥 공개하지 않습니다. */
+      where:'&section=eq.' + encodeURIComponent('악보')
+          + '&hidden=is.false&review_status=eq.approved',
+      searchCols:['title','title_en','title_ko','body','keywords',
+                  'score_composer','score_opus','score_instr'],
+      categories:[{"value":"","label":"편성선택"}],   /* 아래에서 자료가 있는 편성만 채웁니다 */
+      eras:[{"value":"","label":"시대 전체"},
+            {"value":"현대음악이전","label":"현대음악이전"},
+            {"value":"현대음악","label":"현대음악"}],
+      cardStyle:true, koField:'title_ko',   /* 한국어 표기가 있으면 앞세웁니다 */
+      writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
+      commentsTable:'spot_comments'
+    });
+  });
+
+  /* 「편성」 고르는 칸을 채웁니다.
+
+     열여섯 갈래를 모두 늘어놓고, 자료가 있는 것에만 건수를 붙입니다.
+     처음에는 자료 있는 것만 보이게 했는데, 그러면 타악(Percussion)처럼
+     아직 자료가 없는 갈래가 목록에서 사라져 무엇을 담을 수 있는지 알기 어렵습니다.
+     순서는 큰 편성 → 작은 편성 → 악기별 → 성악 → 특수 로 두었고,
+     「기타」 는 언제나 맨 뒤입니다. */
+  (function(){
+    var ORDER = ['Symphony','Orchestral','Concerto','Chamber','Ensemble',
+                 'Piano','Strings','Wind','Brass','Percussion','Organ',
+                 'Vocal','Choral','Oratorio/Mass','Opera','Electronic','기타'];
+    var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/spot';
+    var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+    /* 편성 목록을 세기 위해 category 만 받습니다.
+       한 번에 몰아 받지 않고 나눠 받습니다 — 「한 번에 받을 수 있는 양」 을
+       낮추어도 편성이 빠지지 않게 하려는 것입니다. */
+    var q = '?select=category&section=eq.' + encodeURIComponent('악보')
+          + '&hidden=is.false&review_status=eq.approved'
+          + '&category=not.is.null&order=category.asc';
+    var H2 = { apikey:K, Authorization:'Bearer ' + K };
+    var SIZE = 150;
+    function part(off, acc) {
+      return fetch(U + q + '&offset=' + off + '&limit=' + SIZE, { headers:H2 })
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .then(function(rows){
+          rows = rows || [];
+          acc = acc.concat(rows);
+          if (rows.length >= SIZE && off + SIZE < 3000) return part(off + SIZE, acc);
+          return acc;
+        });
+    }
+    part(0, [])
+      .then(function(rows){
+        var seen = {};
+        (rows || []).forEach(function(x){ if (x.category) seen[x.category] = (seen[x.category] || 0) + 1; });
+        var sel = document.querySelector('.board-catsel');
+        if (!sel) return;
+        /* 목록에 없는 갈래가 자료에 있으면 뒤에 붙입니다 (규칙을 늘렸을 때를 위해) */
+        var extra = Object.keys(seen).filter(function(k){ return ORDER.indexOf(k) < 0; }).sort();
+        ORDER.slice(0, -1).concat(extra, ['기타']).forEach(function(n){
+          var o = document.createElement('option');
+          o.value = n;
+          o.textContent = seen[n] ? (n + ' (' + seen[n] + ')') : n;
+          sel.appendChild(o);
+        });
+      }).catch(function(){});
+  })();
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
