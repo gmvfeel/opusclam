@@ -144,6 +144,26 @@
           height:32px;padding:0 14px;border-radius:8px;background:transparent;
           border:1px solid var(--line2,#e8e6ef);color:var(--tx3,#8a8798)}
   .wk-btn:hover{border-color:#5b4b9e;color:#5b4b9e}
+  /* ── 이 작곡가의 악보 ─────────────────────────────────── */
+  .sc-list{list-style:none;margin:0;padding:0}
+  .sc-list[hidden]{display:none}
+  .sc-it{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;
+         padding:9px 0;border-bottom:1px solid rgba(0,0,0,.035);font-size:13.5px;line-height:1.6}
+  .sc-t{color:var(--tx,#2b2740);font-weight:600;text-decoration:none}
+  .sc-t:hover{color:#5b4b9e;text-decoration:underline}
+  .sc-orig{font-size:12px;color:var(--tx3,#8a8798)}
+  .sc-m{font-size:12px;color:var(--tx2,#5f5c70);white-space:nowrap}
+  .sc-a{margin-left:auto}
+  .sc-dl,.sc-out{font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;
+        height:28px;padding:0 11px;border-radius:7px;text-decoration:none;
+        display:inline-flex;align-items:center;gap:5px;
+        border:1px solid var(--line2,#e8e6ef);background:transparent;color:var(--tx2,#5f5c70)}
+  .sc-dl:hover,.sc-out:hover{border-color:#5b4b9e;color:#5b4b9e}
+  .sc-dl i{font-style:normal;font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:20px;
+           background:rgba(91,75,158,.12);color:#5b4b9e}
+  .sc-more{color:#5b4b9e;text-decoration:none;font-weight:700}
+  .sc-more:hover{text-decoration:underline}
+  @media(max-width:560px){ .sc-a{margin-left:0;flex:1 1 100%} }
   .wk-aw{list-style:none;margin:0;padding:0}
   .wk-aw li{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;
             padding:8px 0;border-bottom:1px solid rgba(0,0,0,.035);font-size:13.5px;line-height:1.6}
@@ -1353,6 +1373,7 @@ if('serviceWorker' in navigator){
 })();
 </script>
 <script src="/assets/photos.js"></script>
+<script src="/assets/score-dl.js"></script>
 <script src="/assets/works.js"></script>
 <script>
 /* 인물 뷰: ?id 로 Supabase에서 해당 인물 로드 (id 없으면 기존 샘플 유지) */
@@ -1376,7 +1397,11 @@ if('serviceWorker' in navigator){
      var p=a[0];
      /* ★ 작품 목록 · 수상 — person_works · person_awards 를 읽어 그립니다.
         자료가 없으면 works.js 가 두 영역을 통째로 감춥니다. */
-     if(window.OCWorks) OCWorks.mount({ personId:p.id, worksBox:'#pvWorks', awardsBox:'#pvAwards' });
+     if(window.OCWorks) OCWorks.mount({
+       personId:p.id, worksBox:'#pvWorks', awardsBox:'#pvAwards',
+       /* ★ 악보 자료 칸도 함께 채웁니다 — 「이 작곡가의 악보」 가 됩니다 */
+       scoresBox:'#pvScores', personName:(p.name_ko || p.name_en || '')
+     });
      var nm=(p.name_ko||'').trim();
      var por=document.querySelector('.pv-portrait span'); if(por) por.textContent=nm?nm[0]:'?';
      /* 초상: DB에 저장된 이미지를 먼저 사용 (위키 실시간 이미지는 악보·무덤이 섞일 수 있음) */
@@ -1468,9 +1493,11 @@ if('serviceWorker' in navigator){
        var sbox=document.getElementById('pvScores');
        var hide=function(el){ if(!el) return; var sec=el.closest('.pv-sec'); if(sec) sec.style.display='none'; };
 
-       /* 악보 자료는 아직 우리 쪽에 없습니다. 칸을 비워 두면 빈 자리만 남으므로 숨깁니다.
-          인물 쪽 링크 단추에 IMSLP 검색이 이미 있어 악보는 그쪽으로 갈 수 있습니다. */
-       hide(sbox);
+       /* ★ 악보 자료는 이제 <b>우리 쪽에 있습니다.</b>
+          정보SPOT 의 악보 게시판에 담을 때 person_id 를 함께 넣어 두었으므로,
+          assets/works.js 가 그것을 읽어 이 칸을 채웁니다.
+          자료가 없는 인물은 works.js 가 이 칸을 통째로 숨깁니다.
+          (예전에는 우리 쪽에 악보가 없어서 늘 숨겼습니다) */
 
        if(!vbox){ return; }
 

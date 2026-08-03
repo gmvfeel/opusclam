@@ -219,22 +219,48 @@
 
   /* ── 이미 담긴 IMSLP 주소를 모읍니다 ─────────────────────────
      같은 악보를 두 번 담지 않으려면 이것이 있어야 합니다. */
+  /* ── 이미 담긴 것을 모읍니다 ───────────────────────────────
+     ★ 주소와 <b>IMSLP 번호</b> 둘로 봅니다.
+       주소는 밑줄·괄호·마지막 슬래시 같은 작은 차이로 달라질 수 있어서,
+       그것만 보면 같은 악보를 두 번 담게 됩니다.
+       copyright_source 에 「IMSLP: 번호」 를 적어 두었으므로
+       그 번호로 견주면 어긋나지 않습니다.
+
+     ★ 나눠받기는 <b>받은 만큼</b> 나아갑니다. Supabase 는 한 번에 주는
+       줄 수에 상한이 있어서(이 프로젝트는 200줄), 「요청한 수보다 적게
+       왔으면 끝」 으로 판단하면 첫 묶음에서 멈춥니다. */
+  function imslpKey(v){
+    /* 「Piano_Sonata_No.14,_Op.27_No.2_(Beethoven,_Ludwig_van)」 처럼
+       밑줄·공백·대소문자만 다른 것을 같은 것으로 봅니다. */
+    return String(v || '')
+      .replace(/^https?:\/\/(?:www\.)?imslp\.org\/wiki\//i, '')
+      .replace(/^IMSLP:\s*/i, '')
+      .replace(/\/+$/, '')
+      .replace(/[_\s]+/g, ' ')
+      .trim().toLowerCase();
+  }
+
   async function loadHave(){
     var out = {}, from = 0;
     for(;;){
-      var r = await sb.from('spot').select('link_url')
+      var r = await sb.from('spot').select('link_url,copyright_source')
         .eq('section','악보')
         .order('id',{ ascending:true })
         .range(from, from + 199);
-      if (r.error) break;
+      if (r.error){ log('  ⚠ 이미 담긴 것을 다 읽지 못했습니다: ' + r.error.message); break; }
       var d = r.data || [];
       if (!d.length) break;
       d.forEach(function(x){
-        var u = String(x.link_url || '').trim();
-        if (u) out[u.replace(/\/+$/,'')] = 1;
+        var k1 = imslpKey(x.link_url);
+        if (k1) out[k1] = 1;
+        var src = String(x.copyright_source || '');
+        if (/^IMSLP:/i.test(src)){
+          var k2 = imslpKey(src);
+          if (k2) out[k2] = 1;
+        }
       });
       from += d.length;
-      if (from > 50000) break;
+      if (from > 200000) break;
     }
     return out;
   }
@@ -315,7 +341,7 @@
           var c = byQ[w.composerQ];
           if (!c) return;                       /* 우리 인물DB 에 없는 작곡가 */
           var link = IMSLP_BASE + w.imslp.replace(/ /g, '_');
-          var isDup = !!have[link.replace(/\/+$/,'')];
+          var isDup = !!have[imslpKey(w.imslp)];
           if (isDup) dup++;
           var title = w.en || w.ko || w.imslp.replace(/_/g,' ');
           rows.push({
@@ -426,7 +452,9 @@
     if (!list.length) return;
     var dupN = list.filter(function(i){ return rows[i].dup; }).length;
     if (!confirm(list.length + '건을 담습니다.\n'
-      + (dupN ? '\n★ 그 가운데 ' + dupN + '건은 이미 담긴 것입니다 — 두 번 담기게 됩니다.\n' : '')
+      + (dupN ? '\n★ 그 가운데 ' + dupN + '건은 <이미 담긴 것>입니다.\n'
+              + '  그대로 담으면 같은 악보가 두 줄이 됩니다.\n'
+              + '  되돌리려면 악보 검수에서 지우셔야 합니다.\n' : '')
       + '\n파일은 담지 않고 IMSLP 링크만 담습니다.\n'
       + '바로 공개되어 목록에 나옵니다.\n\n진행할까요?')) return;
 
@@ -468,7 +496,7 @@
         var ins = await sb.from('spot').insert(rec);
         if (ins.error) throw new Error(ins.error.message);
         r._saved = true;
-        have[r.link.replace(/\/+$/,'')] = 1;
+        have[imslpKey(r.imslp)] = 1;   /* 이어서 담을 때 또 담지 않도록 */
         ok++;
         if (tr){ tr.classList.add('done'); var c = tr.querySelector('.pick'); if (c) c.checked = false; }
       } catch (e){
@@ -489,7 +517,16 @@
   $('onlyKo').addEventListener('change', render);
   $('all').addEventListener('change', function(){
     var on = $('all').checked;
-    document.querySelectorAll('.pick').forEach(function(c){ c.checked = on; });
+    /* ★ 「모두 고르기」 는 <b>이미 담긴 것을 건너뜁니다.</b>
+       예전에는 함께 켜져서, 눌러 담으면 같은 악보가 두 줄이 됐습니다.
+       정말 다시 담고 싶으시면 그 줄의 네모를 손으로 켜시면 됩니다. */
+    var skipped = 0;
+    document.querySelectorAll('.pick').forEach(function(c){
+      var r = rows[parseInt(c.value, 10)];
+      if (on && r && r.dup){ c.checked = false; skipped++; return; }
+      c.checked = on;
+    });
+    if (on && skipped) log('  이미 담긴 ' + skipped + '건은 고르지 않았습니다.');
     syncPick();
   });
   $('body').addEventListener('change', function(e){

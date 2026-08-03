@@ -23,7 +23,9 @@
      OCWorks.mount({
        personId : 123,
        worksBox : '#pvWorks',    // 작품을 그릴 자리
-       awardsBox: '#pvAwards'    // 수상을 그릴 자리 (없으면 생략)
+       awardsBox: '#pvAwards',   // 수상을 그릴 자리 (없으면 생략)
+       scoresBox: '#pvScores',   // 악보를 그릴 자리 (없으면 생략)
+       personName: '루트비히 판 베토벤'  // 「더 보기」 링크에 쓸 이름
      });
    ============================================================ */
 (function () {
@@ -163,6 +165,97 @@
     }).join('') + '</ul>';
   }
 
+  /* ── 이 작곡가의 악보 ─────────────────────────────────────
+     ★ 왜 인물 상세에 놓는가
+       악보 게시판(정보SPOT)에 담을 때 person_id 를 함께 넣어 두었습니다.
+       그래서 「베토벤」 을 보다가 <b>그 자리에서</b> 악보로 갈 수 있습니다.
+       사람은 작곡가를 먼저 떠올리고 악보를 찾습니다 — 게시판을 따로
+       찾아 들어가 이름으로 검색하는 것보다 훨씬 자연스럽습니다.
+
+     ★ 승인된 것만 보여 줍니다 (review_status='approved').
+     ★ 파일이 있는 것은 <b>회원만</b> 내려받습니다 — score-dl.js 가
+       로그인을 확인하고 임시 주소를 만듭니다.
+       IMSLP 링크만 있는 것은 누구나 갈 수 있습니다. */
+  function scoreRow(r) {
+    var meta = [];
+    if (r.score_opus)  meta.push(esc(r.score_opus));
+    if (r.category)    meta.push(esc(r.category));
+    if (r.score_pages) meta.push(esc(r.score_pages) + '쪽');
+
+    /* 내려받기 · 보기 단추 — 우리 파일이면 회원만, IMSLP 면 바로 */
+    var act = '';
+    if (r.file_url) {
+      act = '<button type="button" class="sc-dl" data-url="' + esc(r.file_url) + '"'
+          + ' data-name="' + esc(r.file_name || '') + '" data-id="' + esc(r.id) + '">'
+          + '내려받기 <i>회원</i></button>';
+    } else if (r.link_url) {
+      act = '<a class="sc-out" href="' + esc(r.link_url) + '" target="_blank" rel="noopener">'
+          + 'IMSLP 에서 보기 ↗</a>';
+    }
+    var vp = '/spot/spot-view.html?id=' + encodeURIComponent(r.id);
+    return ''
+      + '<li class="sc-it">'
+      +   '<a class="sc-t" href="' + vp + '">' + esc(r.title_ko || r.title) + '</a>'
+      +   (r.title_ko && r.title && r.title_ko !== r.title
+          ? '<span class="sc-orig">' + esc(r.title) + '</span>' : '')
+      +   (meta.length ? '<span class="sc-m">' + meta.join(' · ') + '</span>' : '')
+      +   (act ? '<span class="sc-a">' + act + '</span>' : '')
+      + '</li>';
+  }
+
+  function drawScores(box, rows, name) {
+    if (!rows.length) { hideSection(box); return; }
+    /* 편성별로 묶지 않습니다 — 인물 상세의 악보는 대개 몇 건에서 수십 건이라
+       그냥 늘어놓는 편이 읽기 좋습니다. 많으면 접어 둡니다. */
+    var FIRST = 6;
+    var head = rows.slice(0, FIRST);
+    var rest = rows.slice(FIRST);
+    box.innerHTML = ''
+      + '<p class="wk-sum">모두 <b>' + rows.length + '</b>건'
+      +   (name ? ' · <a class="sc-more" href="/spot/score.html?q='
+            + encodeURIComponent(name) + '">악보 게시판에서 더 보기 →</a>' : '')
+      + '</p>'
+      + '<ul class="sc-list">' + head.map(scoreRow).join('') + '</ul>'
+      + (rest.length
+        ? '<ul class="sc-list sc-more-list" hidden>' + rest.map(scoreRow).join('') + '</ul>'
+          + '<button type="button" class="wk-btn" data-scmore>'
+          + '나머지 ' + rest.length + '건 더 보기</button>'
+        : '');
+
+    if (!box.dataset.bound) {
+      box.dataset.bound = '1';
+      box.addEventListener('click', function (e) {
+        /* 더 보기 */
+        var b = e.target.closest('[data-scmore]');
+        if (b) {
+          var more = box.querySelector('.sc-more-list');
+          if (!more) return;
+          if (more.hidden) { more.hidden = false; b.textContent = '접기'; }
+          else {
+            more.hidden = true;
+            b.textContent = '나머지 ' + more.querySelectorAll('.sc-it').length + '건 더 보기';
+          }
+          return;
+        }
+        /* 내려받기 — 회원만 */
+        var d = e.target.closest('.sc-dl');
+        if (d) {
+          e.preventDefault();
+          if (!window.OCScoreDL) {
+            alert('내려받기 도구(assets/score-dl.js)를 불러오지 못했습니다.');
+            return;
+          }
+          var url = d.getAttribute('data-url');
+          var nm  = d.getAttribute('data-name');
+          var id  = d.getAttribute('data-id');
+          window.OCScoreDL.download(url, nm).then(function (ok) {
+            if (ok && id) window.OCScoreDL.countUp(id);
+          });
+        }
+      });
+    }
+  }
+
   var OCWorks = {
     mount: async function (cfg) {
       cfg = cfg || {};
@@ -184,8 +277,25 @@
           + '&order=year.asc&limit=500');
       } catch (e) { console.error('수상을 불러오지 못했습니다:', e); }
 
+      /* 이 작곡가의 악보 — 정보SPOT 의 악보 게시판에서 가져옵니다.
+         ★ 승인된 것 · 숨기지 않은 것만. 그리고 정렬에 id 를 붙입니다 —
+           created_at 이 같은 줄이 있으면 순서가 흔들립니다. */
+      var S = [];
+      if (cfg.scoresBox) {
+        try {
+          S = await get('spot?select=id,title,title_ko,category,score_opus,score_pages,'
+            + 'file_url,file_name,link_url&section=eq.' + encodeURIComponent('악보')
+            + '&review_status=eq.approved&hidden=is.false'
+            + '&person_id=eq.' + encodeURIComponent(pid)
+            + '&order=created_at.desc,id.asc&limit=200');
+        } catch (e) { console.error('악보를 불러오지 못했습니다:', e); }
+      }
+
       if (wb) drawWorks(wb, W || []);
       drawAwards(ab, A || []);
+      if (cfg.scoresBox) {
+        drawScores(document.querySelector(cfg.scoresBox), S || [], cfg.personName || '');
+      }
     }
   };
 
