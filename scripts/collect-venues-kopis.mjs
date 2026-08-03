@@ -18,6 +18,28 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const norm = (s) => (s || '').toLowerCase().replace(/\s+/g, '').replace(/[()（）]/g, '').trim();
 
 // --- 아주 단순한 XML 파서 (KOPIS 응답 구조가 단순) ---
+// ★ 나눠받기에는 <b>순서를 확정해</b> 주어야 합니다.
+//
+//   왜 필요한가 (2026-08-03 실제로 겪은 일입니다)
+//     Range 로 페이지를 나눠 받는데 정렬이 없으면, 데이터베이스는
+//     <b>매 페이지마다 다른 순서</b>로 줄 수 있습니다. 그러면 어떤 줄은
+//     두 번 오고 어떤 줄은 아예 오지 않습니다.
+//
+//     어드민 화면에서 인물 9,346명을 그렇게 받다가 같은 인물이 두 번
+//     담겼고, 삭제할 때 같은 위키데이터 번호를 두 번 보내
+//       ON CONFLICT DO UPDATE command cannot affect row a second time
+//     오류가 났습니다. 300명으로 재현해 보니 <b>돌릴 때마</b> 중복 5~8줄,
+//     누락 5~8명이 생겼습니다.
+//
+//     수집기들은 「이미 담긴 항목 목록」 을 이렇게 받아 중복을 피합니다.
+//     목록이 새면 <b>이미 있는 것을 또 담거나, 있는 것을 못 알아봅니다.</b>
+//
+//   기본키는 겹치지 않으므로 정렬에 붙이면 순서가 확정됩니다.
+//   blocklist 는 기본키가 wikidata_id 이고, 나머지는 id 입니다.
+function orderFor(table) {
+  return '&order=' + (table === 'blocklist' ? 'wikidata_id' : 'id') + '.asc';
+}
+
 function blocks(xml, tag) {
   const re = new RegExp('<' + tag + '>([\\s\\S]*?)</' + tag + '>', 'g');
   const out = []; let m; while ((m = re.exec(xml))) out.push(m[1]); return out;
@@ -85,7 +107,7 @@ const H = { apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY, 'Conten
 async function sbGetAll(table, select) {
   const out = []; const STEP = 1000; let from = 0;
   while (true) {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select, { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + orderFor(table), { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
     const batch = await r.json(); out.push(...batch);
     if (batch.length < STEP) break; from += STEP;

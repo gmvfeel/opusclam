@@ -21,6 +21,28 @@ const CLASS_KW = ['classical','contemporary classical','20th-century classical',
 const POPFILM_KW = ['film score','film music','soundtrack','video game','anime','pop music','k-pop','synth-pop','rock music','punk','metal','hip hop','hip-hop','rap','trap','jazz','blues','r&b','soul music','funk','disco','reggae','electronic music','edm','techno','house music','trance','country music','folk music','singer-songwriter','musical theatre','trot','ballad',
   '대중가요','민중가요','트로트','가요','영화음악','드라마','오에스티','ost','아이돌','밴드','록','재즈','힙합','발라드','뮤지컬'];
 
+// ★ 나눠받기에는 <b>순서를 확정해</b> 주어야 합니다.
+//
+//   왜 필요한가 (2026-08-03 실제로 겪은 일입니다)
+//     Range 로 페이지를 나눠 받는데 정렬이 없으면, 데이터베이스는
+//     <b>매 페이지마다 다른 순서</b>로 줄 수 있습니다. 그러면 어떤 줄은
+//     두 번 오고 어떤 줄은 아예 오지 않습니다.
+//
+//     어드민 화면에서 인물 9,346명을 그렇게 받다가 같은 인물이 두 번
+//     담겼고, 삭제할 때 같은 위키데이터 번호를 두 번 보내
+//       ON CONFLICT DO UPDATE command cannot affect row a second time
+//     오류가 났습니다. 300명으로 재현해 보니 <b>돌릴 때마</b> 중복 5~8줄,
+//     누락 5~8명이 생겼습니다.
+//
+//     수집기들은 「이미 담긴 항목 목록」 을 이렇게 받아 중복을 피합니다.
+//     목록이 새면 <b>이미 있는 것을 또 담거나, 있는 것을 못 알아봅니다.</b>
+//
+//   기본키는 겹치지 않으므로 정렬에 붙이면 순서가 확정됩니다.
+//   blocklist 는 기본키가 wikidata_id 이고, 나머지는 id 입니다.
+function orderFor(table) {
+  return '&order=' + (table === 'blocklist' ? 'wikidata_id' : 'id') + '.asc';
+}
+
 function baseQuery(constraint) {
   return `
 SELECT ?item
@@ -276,7 +298,7 @@ const strip = (r) => { const o = { ...r }; Object.keys(o).forEach(k => { if (k[0
 async function sbGetAll(table, select) {
   const out = []; const STEP = 1000; let from = 0;
   while (true) {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select,
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + orderFor(table),
       { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
     const batch = await r.json(); out.push(...batch);
