@@ -97,7 +97,12 @@
 
 
 
-  @media(max-width:768px){.util{display:none}}</style>
+  @media(max-width:768px){.util{display:none}}  /* ★ 악보 아이콘 — 건수를 곁들입니다. 다른 링크 아이콘과 달리
+     자료가 있을 때만 보이므로, 눈에 띄게 색을 줍니다. */
+  .pdb-table .lk-score{color:#5b4b9e;position:relative}
+  .pdb-table .lk-score b{font-size:10px;font-weight:800;margin-left:1px;vertical-align:top}
+  .pdb-table .lk-score:hover{color:#3d3270}
+</style>
 </head>
 <body>
 
@@ -227,6 +232,15 @@
           <optgroup label="미분류">
             <option>그외</option>
           </optgroup>
+        </select>
+        <!-- ★ 악보 걸러내기 — persons.score_count 를 봅니다.
+             그 값은 악보를 담거나 지울 때 방아쇠가 그 자리에서 다시 셉니다.
+             목록이 열릴 때마다 세지 않으므로 느려지지 않습니다. -->
+        <select aria-label="악보">
+          <option>악보 전체</option>
+          <option>악보 있음</option>
+          <option>악보 5건 이상</option>
+          <option>악보 없음</option>
         </select>
         <select aria-label="정렬">
           <optgroup label="기본">
@@ -994,6 +1008,8 @@ if('serviceWorker' in navigator){
   var I_WIKI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>';
   var I_AUDIO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>';
   var I_VIDEO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>';
+  /* 악보 아이콘 — 오선지를 뜻하는 가로줄 셋 */
+  var I_SCORE='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h9"/><circle cx="18" cy="17" r="2.2" fill="currentColor" stroke="none"/></svg>';
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   var NATCODE={'대한민국':'KOR','한국':'KOR','독일':'GER','오스트리아':'AUT','이탈리아':'ITA','프랑스':'FRA','러시아':'RUS','영국':'GBR','미국':'USA','체코':'CZE','폴란드':'POL','헝가리':'HUN','일본':'JPN','중국':'CHN','스페인':'ESP','핀란드':'FIN','노르웨이':'NOR','스웨덴':'SWE','덴마크':'DEN','네덜란드':'NED','벨기에':'BEL','스위스':'SUI','포르투갈':'POR','그리스':'GRE','루마니아':'ROU','우크라이나':'UKR','아일랜드':'IRL','캐나다':'CAN','브라질':'BRA','아르헨티나':'ARG','멕시코':'MEX','호주':'AUS','오스트레일리아':'AUS','튀르키예':'TUR','터키':'TUR','에스토니아':'EST','라트비아':'LAT','리투아니아':'LTU','불가리아':'BUL','슬로바키아':'SVK','슬로베니아':'SLO','크로아티아':'CRO','세르비아':'SRB','아이슬란드':'ISL','이스라엘':'ISR','인도':'IND'};
   function natCode(n){if(!n)return '';n=String(n).trim();if(NATCODE[n])return NATCODE[n];for(var k in NATCODE){if(n.indexOf(k)>=0)return NATCODE[k];}return '';}
@@ -1008,7 +1024,15 @@ if('serviceWorker' in navigator){
     var lk='<span class="c-link">'
       +'<a href="'+esc(p.link_wiki||'#')+'" class="lk" title="위키">'+I_WIKI+'</a>'
       +'<a href="'+esc(p.link_audio||'#')+'" class="lk" title="음원">'+I_AUDIO+'</a>'
-      +'<a href="'+esc(p.link_video||'#')+'" class="lk" title="영상">'+I_VIDEO+'</a></span>';
+      +'<a href="'+esc(p.link_video||'#')+'" class="lk" title="영상">'+I_VIDEO+'</a>'
+      /* ★ 악보가 있으면 건수를 보여 주고 눌러서 갈 수 있게 합니다.
+         없으면 아무것도 넣지 않습니다 — 빈 자리가 남으면 어수선합니다. */
+      +((p.score_count>0)
+        ? '<a href="/spot/score.html?q='+encodeURIComponent(p.name_ko||p.name_en||'')
+          +'" class="lk lk-score" title="악보 '+esc(p.score_count)+'건">'+I_SCORE
+          +'<b>'+esc(p.score_count)+'</b></a>'
+        : '')
+      +'</span>';
     return '<tr data-id="'+esc(p.id)+'">'
       +'<td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ava(p.name_ko))+'</span></td>'
@@ -1025,6 +1049,14 @@ if('serviceWorker' in navigator){
   }
   function buildFilters(sels){
     var region=sels[0]?sels[0].value:'', field=sels[1]?sels[1].value:'';
+    /* ★ 악보 걸러내기 — 상자를 하나 더했으므로 <b>정렬은 sels[3]</b> 으로
+       밀렸습니다. buildOrder 도 함께 고쳐야 합니다(안 고치면 정렬이
+       악보 상자를 읽어 늘 기본값이 됩니다). */
+    var sc = sels[2] ? sels[2].value : '';
+    var scParam = '';
+    if (sc === '악보 있음')          scParam = '&score_count=gt.0';
+    else if (sc === '악보 5건 이상') scParam = '&score_count=gte.5';
+    else if (sc === '악보 없음')     scParam = '&score_count=eq.0';
     var regionParam='';
     if(region==='국내') regionParam='&nationality=eq.'+encodeURIComponent('대한민국');
     else if(region==='국외') regionParam='&nationality=neq.'+encodeURIComponent('대한민국');
@@ -1033,10 +1065,11 @@ if('serviceWorker' in navigator){
     var GROUPS={'작곡·지휘·이론 전체':{c:'field',v:['작곡','편곡','지휘','음악학','음악교육','평론']},'연주 전체':{c:'field',v:['연주']},'건반 전체':{c:'instrument',v:['피아노','오르간','하프시코드','아코디언','건반악기']},'현악 전체':{c:'instrument',v:['바이올린','비올라','첼로','콘트라베이스','하프','기타','류트','비올족']},'목관 전체':{c:'instrument',v:['플루트','오보에','클라리넷','바순','색소폰','리코더']},'금관 전체':{c:'instrument',v:['호른','트럼펫','트롬본','튜바']}};
     var fieldParam='';
     if(field&&field!=='전체 분야'){ if(GROUPS[field]){ var g=GROUPS[field]; fieldParam='&'+g.c+'=in.('+g.v.map(function(x){return encodeURIComponent(x);}).join(',')+')'; } else if(ROLES.indexOf(field)>=0){ fieldParam='&field=eq.'+encodeURIComponent(field); } else { fieldParam='&instrument=eq.'+encodeURIComponent(field); } }
-    return regionParam+fieldParam;
+    return regionParam+fieldParam+scParam;
   }
   function buildOrder(sels){
-    var sort=sels[2]?sels[2].value:'';
+    /* ★ 악보 상자가 sels[2] 로 들어왔으므로 정렬은 sels[3] 입니다 */
+    var sort=sels[3]?sels[3].value:'';
     /* 기본은 정보 충실도순 — 사진·소개문·생몰 등이 채워진 항목이 앞에 옵니다 */
     var ord='quality.desc,sort_no.desc';
     if(sort.indexOf('충실도')>=0)          ord='quality.desc,sort_no.desc';
@@ -1050,6 +1083,7 @@ if('serviceWorker' in navigator){
     else if(sort.indexOf('출생 늦은순')>=0)  ord='life.desc.nullslast';
     else if(sort.indexOf('사조')>=0)        ord='era_yr.asc.nullslast';
     else if(sort.indexOf('국적순')>=0)      ord='nationality.asc.nullslast';
+    else if(sort.indexOf('악보')>=0)        ord='score_count.desc,quality.desc';
     else if(sort.indexOf('분야순')>=0)      ord='field.asc.nullslast';
     else if(sort.indexOf('소속순')>=0)      ord='affiliation.asc.nullslast';
     else if(sort.indexOf('출신학교순')>=0)   ord='school.asc.nullslast';
@@ -1059,6 +1093,9 @@ if('serviceWorker' in navigator){
   document.addEventListener('DOMContentLoaded',function(){
     OCList.init({
       table:'persons', pageSize:30, orderDefault:'quality.desc,sort_no.desc',
+      /* ★ score_count 를 함께 받아야 목록에 악보 표시를 그릴 수 있습니다.
+         db-list.js 는 select 를 적지 않으면 * 를 씁니다 — 적혀 있으면
+         거기에 넣어야 합니다. */
       searchCols:['name_ko','name_en','school','description','description_en'], entity:'persons',
       buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow,
       /* 이미지 칸이 빈 항목은 모아둔 사진으로 채운다 (기존 값이 있으면 그대로) */
