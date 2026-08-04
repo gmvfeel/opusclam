@@ -369,6 +369,34 @@
     setTimeout(function () { t.remove(); }, 2600);
   }
 
+  /* ── 오늘 첫 로그인이면 활동점수를 줍니다 ─────────────────────
+     ★ 왜 여기서도 부르나 (2026-08-04)
+       assets/auth.js 에 넣었는데, <b>메인은 그 파일을 싣지 않습니다.</b>
+       그래서 메인만 들어온 회원은 점수가 오르지 않았습니다.
+
+       이 파일은 게시판·메인이 모두 싣고, Supabase 객체도 스스로
+       챙기므로 여기서 부르는 편이 확실합니다.
+
+     ★ 하루 한 번만 오릅니다 — point_rules 의 per_day=1 이 막으므로
+       두 곳에서 불러도 두 번 오르지 않습니다.
+     ★ 한 화면에서 두 번 부르지 않게 표시를 남깁니다. */
+  (function dailyPoint(){
+    if (window.__ocLoginPointDone) return;
+    window.__ocLoginPointDone = true;
+    setTimeout(async function(){
+      try {
+        var m = await me();
+        if (!m) return;                  /* 로그인 안 함 */
+        var c = await sb();
+        if (!c || !c.rpc) return;
+        var q = c.rpc('oc_daily_login');
+        if (q && q.then) q.then(function(){}, function(e){
+          console.warn('[interests] 로그인 포인트를 주지 못했습니다:', e && e.message);
+        });
+      } catch (e) { /* 화면은 그대로 돕니다 */ }
+    }, 1500);   /* 화면이 다 뜬 뒤에 — 첫 그림이 늦어지지 않게 */
+  })();
+
   window.OCInterests = {
     all: all, find: find, labelOf: labelOf, bigLabel: BIG_LABEL,
     me: me, list: list, has: has,

@@ -65,6 +65,22 @@
       if(r.error) return { ok:false, msg:'아이디 또는 비밀번호를 확인해 주세요.' };
       var me = await c.from('members').select('status').eq('id', r.data.user.id).single();
       if(me && me.data && me.data.status === 'withdrawn'){ await c.auth.signOut(); return { ok:false, msg:'탈퇴한 계정입니다. 재가입하시거나 고객센터로 문의해 주세요.' }; }
+
+      /* ★ 오늘 첫 로그인이면 <b>활동점수</b>를 줍니다. (2026-08-04)
+
+         왜 화면에서 부르나
+           로그인은 <b>트리거로 잡을 수 없습니다</b> — auth 쪽 일이라
+           우리 표에 아무 줄도 담기지 않습니다. 그래서 여기서 부릅니다.
+
+         ★ 하루 한 번만 오릅니다 — point_rules 의 per_day=1 이 막으므로
+           여러 번 불러도 괜찮습니다.
+         ★ <b>기다리지 않습니다.</b> 점수 주기가 늦어도 로그인은 끝나야
+           합니다. 실패해도 로그인을 막지 않습니다.
+         ★ 연속 7일이면 100점을 더 줍니다(서버가 셉니다). */
+      try {
+        c.rpc('oc_daily_login').then(function(){}, function(){});
+      } catch (e) { /* 함수가 아직 없어도 로그인은 됩니다 */ }
+
       return { ok:true };
     },
 
@@ -372,4 +388,46 @@
     });
   }
   if(document.readyState !== 'loading') check(); else document.addEventListener('DOMContentLoaded', check);
+  /* ── 소셜 로그인·이미 로그인된 채 들어온 경우 ─────────────────
+     ★ 소셜 로그인은 화면이 <b>다른 곳을 다녀와서</b> 돌아옵니다.
+       그때는 위의 login() 을 지나지 않으므로 점수가 안 오릅니다.
+     ★ 그래서 화면이 열릴 때 로그인해 있으면 한 번 부릅니다.
+       하루 한 번만 오르므로 여러 화면을 돌아다녀도 괜찮습니다.
+     ★ 한 화면에서 두 번 부르지 않게 표시를 남깁니다. */
+  (function ocLoginPoint(){
+    if (window.__ocLoginPointDone) return;
+    window.__ocLoginPointDone = true;   /* oc-login-point */
+
+    /* ★ sb() 대신 <b>window.__ocSb</b> 를 봅니다.
+       sb() 는 supabase-js 가 없으면 콘솔에 오류를 적고 null 을 돌려주고,
+       아직 아무도 부르지 않은 화면에서는 객체를 <b>새로 만들게</b> 되어
+       「GoTrueClient 가 여러 개」 경고가 날 수 있습니다.
+       이미 만들어진 것이 있을 때만 씁니다.
+
+     ★ <b>여러 번 다시 봅니다.</b>
+       한 번만 보면 그때 아직 __ocSb 가 없는 화면(메인 등)에서는
+       그냥 지나갑니다 — 화면마다 Supabase 를 만드는 때가 다릅니다.
+       0.8초마다 최대 12번(약 10초) 살펴보고, 찾으면 한 번 부르고 그칩니다. */
+    var tries = 0;
+    var timer = setInterval(function(){
+      tries++;
+      var c = window.__ocSb;
+      if (!c || !c.auth || !c.rpc) {
+        if (tries >= 12) clearInterval(timer);
+        return;
+      }
+      clearInterval(timer);
+      c.auth.getSession().then(function(g){
+        if (!(g && g.data && g.data.session)) return;
+        var q = c.rpc('oc_daily_login');
+        /* ★ 오류를 <b>조용히 먹지 않습니다.</b> 앞서 try/catch 로
+           감싸 두었더니 왜 안 되는지 알 수 없었습니다.
+           콘솔에만 적고 화면은 그대로 둡니다. */
+        if (q && q.then) q.then(function(){}, function(e){
+          console.warn('[auth] 로그인 포인트를 주지 못했습니다:', e && e.message);
+        });
+      }, function(){});
+    }, 800);
+  })();
+
 })();
