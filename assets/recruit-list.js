@@ -471,6 +471,60 @@
     return false;
   }
 
+  /* ── 목록 자리 되돌리기 ────────────────────────────────────
+     상세를 보다가 「목록」 을 누르면 <b>보던 그 공고 자리로</b>
+     돌아가게 합니다. 첫 쪽으로 튕기면 다시 찾아 들어가야 합니다.
+
+     ★ board.js 와 <b>같은 방식</b>으로 둡니다 — 열쇠 모양도 같게
+       맞춰(ocbd-back:…) assets/pv.js 가 함께 알아보게 합니다.
+       그래야 상세 화면에서 링크에 focus 를 붙여 줍니다. */
+  var SKEY = 'ocbd-back:recruit-' + (function () {
+    try { return (cfg && cfg.kind) || 'job'; } catch (e) { return 'job'; }
+  })();
+
+  function saveSpot(id) {
+    try {
+      sessionStorage.setItem('ocbd-back:recruit-' + ((cfg && cfg.kind) || 'job'),
+        JSON.stringify({ id: String(id), page: cur }));
+    } catch (e) {}
+  }
+  function readSpot(id) {
+    try {
+      var v = JSON.parse(sessionStorage.getItem(
+        'ocbd-back:recruit-' + ((cfg && cfg.kind) || 'job')) || 'null');
+      if (v && String(v.id) === String(id)) return v;
+    } catch (e) {}
+    return null;
+  }
+
+  /* 공고를 누르는 순간 어느 쪽에 있었는지 담아 둡니다 */
+  function bindSaveSpot() {
+    var list = el('#rcList');
+    if (!list || list.dataset.spotBound) return;
+    list.dataset.spotBound = '1';
+    list.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href*="?id="]') : null;
+      if (!a) return;
+      var m = (a.getAttribute('href') || '').match(/[?&]id=([^&]+)/);
+      if (m) saveSpot(decodeURIComponent(m[1]));
+    });
+  }
+
+  /* 돌아왔을 때 그 자리를 알려 줍니다 */
+  function focusItem(focusId) {
+    if (!focusId) return;
+    var list = el('#rcList');
+    if (!list) return;
+    var a = list.querySelector('a[href*="id=' + focusId + '&"], a[href$="id=' + focusId + '"]');
+    if (!a) return;
+    /* 표 구조이므로 줄(tr)에 표시를 붙입니다 */
+    var box = (a.closest && a.closest('tr')) || a;
+    box.classList.add('board-focus');
+    try { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    catch (e) { try { box.scrollIntoView(); } catch (e2) {} }
+    setTimeout(function () { box.classList.remove('board-focus'); }, 4500);
+  }
+
   /* ── 그리기 ───────────────────────────────────────────────*/
   async function go(page) {
     cur = page || 1;
@@ -526,7 +580,27 @@
       if (nowId) window.OCRecruitView.markCurrent(nowId);
     }
 
+    /* ★ 줄을 누를 때 어느 쪽이었는지 담아 둡니다 (한 번만 이어 붙습니다) */
+    bindSaveSpot();
+
+    /* ★ 상세에서 돌아왔으면 그 자리를 알려 줍니다.
+       반드시 <b>그린 뒤에</b> 불러야 합니다 — 줄이 없으면 못 찾습니다. */
+    (function () {
+      var f = new URLSearchParams(location.search).get('focus');
+      if (f) focusItem(f);
+    })();
+
     drawPager();
+  }
+
+  /* ★ 상세에서 돌아왔을 때 <b>그 쪽으로</b> 엽니다.
+     주소에 focus 가 있으면 담아 둔 쪽 번호를 꺼냅니다. 이것이 없으면
+     표시할 줄이 첫 쪽에 없어 아무 일도 일어나지 않습니다. */
+  function startPage() {
+    var f = new URLSearchParams(location.search).get('focus');
+    if (!f) return 1;
+    var sp = readSpot(f);
+    return (sp && sp.page) ? sp.page : 1;
   }
 
   /* ── 붙어 따라오기 높이 재기 ──────────────────────────────
@@ -630,7 +704,7 @@
       if (top) top.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
-    go(1);
+    go(startPage());   /* ★ 상세에서 돌아왔으면 그 쪽으로 엽니다 */
 
     /* 높이를 재어 표 머리가 도구줄 아래에 붙게 합니다.
        글꼴이 늦게 오면 높이가 바뀌므로 조금 뒤에 한 번 더 잽니다. */

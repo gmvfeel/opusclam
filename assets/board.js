@@ -630,11 +630,19 @@ window.OCBoard = (function () {
            기사형 .board-article · 피처드 .board-feat
          상자를 못 찾으면 링크에만 표시가 붙어, 입시요강처럼 문서형인 곳에서는
          로고 그림 한 칸만 밝아져 어색해집니다. (2026-07-29 확인) */
-      var box = (a.closest && a.closest('.doc-row, .board-item, .board-row, .board-article, .board-feat, li')) || a;
+      /* ★ 카드형(.board-card)이 빠져 있었습니다.
+         악보·음원영상은 <a class="board-card"> 하나가 곧 한 줄이라
+         감싸는 상자가 없습니다. 그래서 표시가 붙지 않았습니다.
+         자기 자신에게 붙도록 목록에 더합니다. (2026-08-04 확인) */
+      var box = (a.classList && a.classList.contains('board-card')) ? a
+              : ((a.closest && a.closest('.board-card, .doc-row, .board-item, .board-row, .board-article, .board-feat, li')) || a);
       box.classList.add('board-focus');
       try { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
       catch (e) { try { box.scrollIntoView(); } catch (e2) {} }
-      setTimeout(function () { box.classList.remove('board-focus'); }, 2600);
+      /* ★ 표시를 <b>4.5초</b> 두었습니다.
+         2.6초는 화면이 부드럽게 굴러가는 동안 절반이 지나가서,
+         닿았을 때 이미 옅어져 있었습니다. */
+      setTimeout(function () { box.classList.remove('board-focus'); }, 4500);
     }
 
     function loadPage(pg) {

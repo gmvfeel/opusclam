@@ -155,6 +155,22 @@
       + '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + v + '</td></tr>';
   }
 
+  /* ── 목록으로 돌아가는 주소 ────────────────────────────────
+     ★ 보던 공고 자리로 돌아가게 <b>focus 를 붙입니다.</b>
+       그러지 않으면 목록 첫 쪽으로 튕겨서, 스무 줄을 넘기며 다시
+       찾아 들어가야 합니다.
+
+     ★ 어느 쪽이었는지는 recruit-list.js 가 <b>누를 때</b> 담아 둡니다
+       (sessionStorage · ocbd-back:recruit-…). 우리는 글 번호만 넘기면
+       목록 쪽이 그것을 꺼내 그 쪽을 엽니다. */
+  function listHref() {
+    var base = (cfg && cfg.listPage) || '/recruit/job.html';
+    var id = new URLSearchParams(location.search).get('id');
+    if (!id) return base;
+    return base + (base.indexOf('?') >= 0 ? '&' : '?')
+      + 'focus=' + encodeURIComponent(id);
+  }
+
   /* ── 걸러진 목록으로 가는 링크 ─────────────────────────────
      오퍼스클램은 모든 것이 서로 이어져야 합니다.
      직종·지역을 누르면 그 조건으로 걸러진 목록으로 갑니다.
@@ -384,7 +400,7 @@
        아직 담기지 않았으므로 지원할 곳도, 돌아갈 목록도 없습니다. */
     if (!opt.preview) {
       out += '<div class="rv-btns">' + applyBtn
-        + '<a class="rv-btn rv-btn--list" href="' + cfg.listPage + '">목록</a></div>'
+        + '<a class="rv-btn rv-btn--list" href="' + listHref() + '">목록</a></div>'
         + '<div class="rv-note">'
         +   '<p>등록된 내용은 채용 주체가 직접 올린 것입니다. 채용 조건과 일정은 바뀔 수 있으니 '
         +   '지원 전에 문의처로 다시 확인해 주십시오.</p>'
@@ -650,7 +666,7 @@
 
     box.innerHTML = talentHtml(o, { viewer: v })
       + '<div class="rv-btns">'
-      +   '<a class="rv-btn rv-btn--list" href="' + cfg.listPage + '">목록</a>'
+      +   '<a class="rv-btn rv-btn--list" href="' + listHref() + '">목록</a>'
       + '</div>'
       + '<div class="rv-note">'
       +   '<p>등록된 내용은 본인이 직접 올린 것입니다. 이름과 연락처는 '
@@ -736,13 +752,13 @@
             : '<p>인재정보는 회원만 볼 수 있습니다.</p>'
               + '<a class="rv-btn rv-btn--go" href="' + LOGIN_PAGE + '?next='
               + encodeURIComponent(location.pathname + location.search) + '">로그인하기</a>')
-          + '<a class="rv-btn rv-btn--list" href="' + cfg.listPage + '">목록</a>'
+          + '<a class="rv-btn rv-btn--list" href="' + listHref() + '">목록</a>'
           + '</div>';
       }
     }
     return '<div class="rv-empty">찾으시는 정보가 없습니다. '
       + '지워졌거나 주소가 잘못되었을 수 있습니다.<br>'
-      + '<a class="rv-lk" href="' + cfg.listPage + '">목록으로 돌아가기</a></div>';
+      + '<a class="rv-lk" href="' + listHref() + '">목록으로 돌아가기</a></div>';
   }
 
   /* ── 지원하기 단추 잇기 ──────────────────────────────────
@@ -1250,7 +1266,7 @@
     if (!id) {
       var box = el('#rvDoc');
       if (box) box.innerHTML = '<div class="rv-empty">어느 정보를 보시려는지 알 수 없습니다.<br>'
-        + '<a class="rv-lk" href="' + cfg.listPage + '">목록으로 돌아가기</a></div>';
+        + '<a class="rv-lk" href="' + listHref() + '">목록으로 돌아가기</a></div>';
       return;
     }
 

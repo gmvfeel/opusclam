@@ -2176,3 +2176,15 @@ html[data-theme="dark"] .ra-agree { background: #1c1a26; border-color: #6a6494; 
 .rw-site { align-items: flex-start; gap: 9px; line-height: 1.65; }
 .rw-site input { margin-top: 3px; }
 .rw-site span b { color: var(--rv-deep); }
+
+/* ── 목록으로 돌아왔을 때 보던 줄 표시 ─────────────────────────
+   ★ 상세에서 「목록」 을 누르면 그 공고 자리로 돌아옵니다.
+     어느 줄이었는지 알려 주지 않으면 스무 줄 가운데 찾기 어렵습니다.
+   ★ board.css 와 같은 이름(.board-focus)을 쓰되, 리쿠르트 목록은
+     표(tr)이므로 여기에 따로 둡니다 — board.css 를 싣지 않습니다.
+   ★ 4.5초 — 화면이 부드럽게 굴러가 닿을 때까지 남아 있어야 합니다. */
+tr.board-focus > td{animation:rcflash 4.5s ease}
+@keyframes rcflash{
+  0%,18%{background:rgba(124,99,176,.16)}
+  100%{background:transparent}
+}

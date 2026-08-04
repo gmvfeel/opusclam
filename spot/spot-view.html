@@ -186,9 +186,19 @@
       }, 100);
     })();
 
+    /* ★ 목록 링크를 갈래에 맞게 바꿉니다.
+       ★ 그때 <b>focus 를 잃지 않게</b> 조심합니다 —
+         assets/pv.js 가 먼저 「?focus=글번호」 를 붙여 두는데, 여기서
+         주소를 통째로 갈아 끼우면 그것이 사라져서 목록 첫 쪽으로
+         돌아가 버립니다. 그래서 물음표 뒤를 <b>옮겨 붙입니다.</b> */
     ['.pv-tolist-m', '.pv-listtab'].forEach(function(sel){
       var el = document.querySelector(sel);
-      if (el) el.setAttribute('href', '/spot/' + info.list);
+      if (el){
+        /* 예전 주소에 붙어 있던 물음표 뒤(focus·p)를 그대로 옮깁니다 */
+        var old = el.getAttribute('href') || '';
+        var qs = old.indexOf('?') >= 0 ? old.slice(old.indexOf('?')) : '';
+        el.setAttribute('href', '/spot/' + info.list + qs);
+      }
     });
     document.title = info.name + ' · OPUSCLAM';
 
