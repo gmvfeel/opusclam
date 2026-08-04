@@ -102,6 +102,39 @@
     var label=name+"님"+(typeLabel?" ("+typeLabel+")":"");
     links.login.forEach(function(a){ a.textContent=label; a.setAttribute("href","/account/mypage.html"); a.onclick=null; });
     links.join.forEach(function(a){ a.textContent="로그아웃"; a.setAttribute("href","#"); a.onclick=function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); }; });
+
+    /* ★ <b>이너스페이스</b>를 끼워 넣습니다 (2026-08-04)
+
+       메인은 이 파일이 헤더를 그립니다 — assets/auth.js 의 .authlink 와
+       <b>다른 길</b>입니다. 그래서 auth.js 에만 넣었더니 마이페이지에서는
+       나오고 <b>메인에서는 안 나왔습니다.</b>
+
+     ★ 이름과 로그아웃 <b>사이</b>에 놓습니다 — 「내 것」 끼리 모여 있게요.
+     ★ 두 번 넣지 않게 표시를 봅니다. */
+    links.login.forEach(function(a){
+      if (!a.parentNode) return;
+      if (a.parentNode.querySelector('[data-oc-inner]')) return;
+      var b = document.createElement('a');
+      b.href = '#';
+      b.setAttribute('data-oc-inner', '1');
+      b.textContent = '이너스페이스';
+      /* 이름 링크 바로 뒤에 놓습니다 */
+      a.parentNode.insertBefore(b, a.nextSibling);
+      /* 사이 띄우기 — 헤더마다 짜임이 달라 글자로 둡니다 */
+      a.parentNode.insertBefore(document.createTextNode(' '), b);
+    });
+    needInnerSpaceJs();
+  }
+
+  /* ── INNER SPACE 를 필요할 때만 싣습니다 ─────────────────────
+     ★ 로그인한 사람에게만 필요합니다. 한 번만 싣습니다. */
+  function needInnerSpaceJs(){
+    if (window.__ocInnerJs) return;
+    window.__ocInnerJs = true;
+    var sc = document.createElement("script");
+    sc.src = "/assets/inner-space.js";
+    sc.onerror = function(){ /* 못 받아도 화면은 그대로 돕니다 */ };
+    document.head.appendChild(sc);
   }
   function showPendingBanner(){
     if(document.getElementById("oc-pending-bar")) return;

@@ -93,6 +93,9 @@
 
 <main class="iv-wrap">
   <a class="iv-back" href="/account/mypage.html">← 마이페이지</a>
+  <!-- ★ 이 화면의 헤더에는 로그아웃 링크가 없어 inner-space.js 가 자리를
+       못 찾습니다. 그래서 여기에 직접 놓습니다. -->
+  <a class="iv-back" href="#" data-oc-inner="1" style="margin-left:14px">이너스페이스 ↗</a>
 
   <div class="iv-head">
     <span class="tag">MY INTEREST</span>
@@ -129,6 +132,7 @@
 <script src="/assets/include.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
+<script src="/assets/inner-space.js"></script>
 <script src="/assets/interests.js"></script>
 
 <script>

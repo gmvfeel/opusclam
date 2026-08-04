@@ -403,4 +403,50 @@
   } catch (e) {}
 
   window.OCInner = { open: open, close: close };
+
+  /* ── 헤더에 「이너스페이스」 가 없으면 스스로 놓습니다 ─────────
+     ★ 왜 필요한가 (2026-08-04 · 마이페이지에서 안 나와 알았습니다)
+
+       헤더를 그리는 길이 <b>두 갈래</b>입니다 —
+         assets/app.js   메인·게시판 (.hdr-auth 링크를 갈아 끼움)
+         assets/auth.js  회원 화면 (.authlink 를 채움)
+       그 위에 partials 를 <b>나중에</b> 끼우는 화면도 있어서, 어느 한
+       곳에 넣으면 다른 쪽에서 빠집니다.
+
+     ★ 그래서 이 파일이 <b>스스로</b> 살펴 놓습니다. 이미 있으면
+       아무 일도 하지 않으므로 두 번 생기지 않습니다.
+     ★ 로그아웃 링크 <b>앞</b>에 놓습니다 — 「내 것」 끼리 모여 있게요. */
+  function selfMount() {
+    if (document.querySelector('[data-oc-inner]')) return true;
+
+    /* 로그아웃 링크를 찾습니다 — 그것이 있으면 로그인한 화면입니다 */
+    var outs = [].slice.call(document.querySelectorAll('a')).filter(function (a) {
+      var t = (a.textContent || '').replace(/\s/g, '');
+      return t === '로그아웃';
+    });
+    if (!outs.length) return false;
+
+    outs.forEach(function (a) {
+      if (!a.parentNode) return;
+      if (a.parentNode.querySelector('[data-oc-inner]')) return;
+      var b = document.createElement('a');
+      b.href = '#';
+      b.setAttribute('data-oc-inner', '1');
+      b.textContent = '이너스페이스';
+      a.parentNode.insertBefore(b, a);
+      a.parentNode.insertBefore(document.createTextNode(' '), a);
+    });
+    return true;
+  }
+
+  /* ★ 헤더는 <b>뒤늦게</b> 그려집니다(로그인 확인 뒤). 그래서 한 번만
+     보면 놓칩니다. 0.6초마다 최대 10번 살펴보고, 놓으면 그칩니다. */
+  (function watchHeader() {
+    if (selfMount()) return;
+    var n = 0;
+    var t = setInterval(function () {
+      n++;
+      if (selfMount() || n > 10) clearInterval(t);
+    }, 600);
+  })();
 })();

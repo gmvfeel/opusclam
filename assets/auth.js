@@ -349,7 +349,8 @@
 /* ── INNER SPACE 를 필요할 때만 싣습니다 ───────────────────────
    ★ 로그인한 사람에게만 필요합니다. 비로그인 화면에서는 헛되게 받아
      오지 않습니다.
-   ★ 한 번만 싣습니다. */
+   ★ 한 번만 싣습니다.
+ */
 function needInnerSpace() {
   if (window.__ocInnerJs) return;
   window.__ocInnerJs = true;
