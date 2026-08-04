@@ -305,9 +305,20 @@ window.OCList = (function () {
        ============================================================ */
     function fillPhotos(rows, opt) {
       var col = opt.col || 'image_url';
+      /* ★ idCol 을 주면 <b>그 칸에 담긴 번호</b>로 사진을 찾습니다.
+
+         왜 필요한가 — 현대음악DB 는 사진을 따로 모아 두지 않았습니다
+         (entity_photos 에 person·org·school·venue 만 있습니다).
+         그런데 그 작곡가의 80%가 인물DB 에도 있습니다. 그래서
+         person_id 로 이어 두고 <b>인물의 사진</b>을 씁니다.
+
+         쓰는 법 —
+           photoFill:{ type:'person', col:'image_url', idCol:'person_id' }
+         적지 않으면 예전처럼 자기 id 로 찾습니다. */
+      var idCol = opt.idCol || 'id';
       var need = rows.filter(function (r) {
-        return r && r.id && !String(r[col] || '').trim();
-      }).map(function (r) { return r.id; });
+        return r && r[idCol] && !String(r[col] || '').trim();
+      }).map(function (r) { return r[idCol]; });
       if (!need.length) return Promise.resolve();
 
       var url = SB_URL + '/rest/v1/entity_photo_main'
@@ -323,9 +334,9 @@ window.OCList = (function () {
           var by = {};
           list.forEach(function (x) { by[x.entity_id] = x.thumb || x.src; });
           rows.forEach(function (r) {
-            if (!r || !r.id) return;
+            if (!r || !r[idCol]) return;
             if (String(r[col] || '').trim()) return;
-            var u = by[r.id];
+            var u = by[r[idCol]];
             /* ★ 목록 그림은 보이는 크기(38px)의 두 배로만 받습니다.
                예전에는 160px 로 받았는데, 그림 한 장이 크면 목록을
                굴릴 때 버벅거렸습니다. 공용 규칙(assets/thumb.js)을
