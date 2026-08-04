@@ -383,6 +383,19 @@
   var COMP_NAME = {};   /* 납작키 → 사람이 읽는 이름 */
   var COMP_ID   = {};   /* 납작키 → persons.id  ★ 인물DB 와 이어 줍니다 */
 
+  /* PDF 에서 읽은 글자에서 <b>자유 저장소 표시만</b> 골라냅니다.
+     그것이 판본·출처로서 뜻이 있는 유일한 정보입니다. */
+  function sourceOf(r){
+    var low = String(r.text || '').toLowerCase();
+    var G = (window.OCScoreGuard && window.OCScoreGuard.lists) ? window.OCScoreGuard.lists : null;
+    var free = G ? G.free.filter(function(k){ return low.indexOf(k) >= 0; }) : [];
+    if (free.length) return free.slice(0, 2).join(' · ');
+    /* 예전 출판사 이름은 판본 단서가 되므로 남깁니다 (Breitkopf 등) */
+    var old = G ? G.old.filter(function(k){ return low.indexOf(k) >= 0; }) : [];
+    if (old.length) return old.slice(0, 2).join(' · ') + ' 판본으로 보임';
+    return '직접 올림 (판본 미확인)';
+  }
+
   function autoFill(r){
     var base = r.name || '';
     var t0 = titleFromName(base);
@@ -403,7 +416,20 @@
     r._instr    = guessInstr(r.path || base);
     /* 저작권 근거 — 판정 근거를 그대로 씁니다. 태그는 걷어 냅니다. */
     r._basis  = (r.reasons || []).join(' / ').replace(/<[^>]+>/g, '');
-    r._source = (r.text || '').slice(0, 160);
+
+    /* ★ 판본·출처 — <b>PDF 에서 읽은 글자를 그대로 넣지 않습니다.</b>
+
+       예전에는 r.text 를 160자 잘라 넣었습니다. 그랬더니 판본이 아니라
+       PDF 를 만든 프로그램 이름과 <b>남의 컴퓨터 경로</b>가 들어갔습니다 —
+         0.11 PDFlib V0.6 (C) Thomas Merz 1997-98
+         C:\Documents and Settings\Trent\My Documents\Scores\Sonata.sib
+       출처로서 뜻이 없고, 개인정보가 섞이고, 게시판 엔진이 select=* 로
+       받아오므로 API 응답에 그대로 나갑니다.
+
+       그래서 <b>자유 저장소 표시만</b> 씁니다 — 그것이 진짜 출처입니다.
+       없으면 「직접 올림 (판본 미확인)」 으로 두고, 아시는 판본이 있으면
+       표에서 손으로 적으실 수 있게 합니다. */
+    r._source = sourceOf(r);
   }
 
   /* ══ 로그인 · 올리기 ═══════════════════════════════════════ */
@@ -478,7 +504,8 @@
       score_pages: r.pages || null,
       score_size: r.size || null,
       copyright_basis: r._basis || null,
-      copyright_source: r._source || null,
+      copyright_source: (row && row.querySelector('.i-src')
+        ? row.querySelector('.i-src').value.trim() : r._source) || null,
       /* ★ 관리자가 「바로 공개」 를 켠 경우에만 approved 로 둡니다.
          그러지 않으면 pending 으로 들어가 검수 화면을 거칩니다. */
       review_status: pub ? 'approved' : 'pending',
@@ -629,6 +656,7 @@
               ? '<span class="p">올렸습니다</span>'
               : '<input class="i-title" value="' + esc(r._title || '') + '" placeholder="제목">'
                 + '<input class="i-comp" value="' + esc(r._composer || '') + '" placeholder="작곡가">'
+                + '<input class="i-src" value="' + esc(r._source || '') + '" placeholder="판본 · 출처 (아시면 적어 주십시오)">'
                 + '<select class="i-instr">'
                 + CATS.map(function(c){
                     return '<option value="' + esc(c) + '"'
