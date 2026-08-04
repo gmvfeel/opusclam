@@ -153,7 +153,8 @@
   function moreLine(total) {
     if (total <= MAX) return '';
     return '<div class="oc-my-more">'
-      + '담은 것 <b>' + total + '개</b> 가운데 <b>' + MAX + '개</b>를 보고 있습니다'
+      + '담은 것 <b>' + total + '개</b> 가운데 <b>앞 ' + MAX + '개</b>를 놓았습니다'
+      + ' · 나머지는 <b>순서를 올리면</b> 나옵니다'
       + ' <a href="/account/interests.html">순서 바꾸기 →</a>'
       + '</div>';
   }
@@ -195,7 +196,9 @@
     var el = document.createElement('div');
     el.className = 'oc-my-bar' + (mode === 'first' ? ' first' : '');
     el.innerHTML = (mode === 'my')
-      ? '<span><b>나의 메인</b> · 관심분야 ' + n + '개로 채웠습니다</span>'
+      /* ★ 「채웠습니다」 가 아니라 「바꿨습니다」 입니다 —
+         원래 칸을 하나씩 갈아 끼우는 방식이므로 그 편이 사실에 맞습니다. */
+      ? '<span><b>나의 메인</b> · 관심분야 ' + n + '개를 앞자리에 놓았습니다</span>'
         + '<span class="btns">'
         + '<a href="/account/interests.html">관심분야 관리</a>'
         + '<button type="button" id="ocFirstMain">First Main</button>'
@@ -260,47 +263,93 @@
     saveOrig();
     if (!boardMain) return;
 
-    /* 담은 순서대로 앞 여섯 개 */
-    var pick = mine.slice(0, MAX).map(function (x) {
+    /* ★ <b>원래 칸을 하나씩 갈아 끼웁니다.</b>
+
+       왜 이렇게 바꿨나 (2026-08-04 · 파트너 제안)
+         예전에는 담은 것<b>만</b> 놓았습니다. 그래서 담은 것이 한두 개면
+         화면이 <b>텅 비어</b> 보였습니다.
+
+         이제는 원래 아홉 칸을 그대로 두고, 담은 갈래가 <b>앞에서부터
+         하나씩</b> 갈아 끼웁니다 —
+           담은 것 0개  →  원래 아홉 칸 그대로
+           담은 것 1개  →  첫 칸만 바뀌고 여덟 칸은 그대로
+           담은 것 6개  →  여섯 칸 바뀌고 세 칸은 그대로
+
+         빈 자리가 안 생기고, <b>담지 않은 갈래도 계속 보여</b>
+         우연한 발견이 있습니다. 광고 자리도 저절로 남습니다.
+
+       ★ 끼우는 순서는 <b>왼쪽 위부터 지그재그</b>입니다 —
+         col-1 첫 칸 → col-2 첫 칸 → col-1 둘째 → col-2 둘째 …
+         사람은 왼쪽 위부터 보므로, 담은 순서가 그 순서와 맞아야 합니다.
+
+       ★ <b>이미 원래 칸에 있는 갈래는 건드리지 않습니다.</b>
+         「핫토픽」 을 담았는데 원래 칸에도 핫토픽이 있으면 두 번 나옵니다.
+         그 자리는 그대로 두고 다음 자리에 끼웁니다. */
+
+    /* ① 원래 칸들을 모으고, 각자 어느 갈래인지 알아냅니다.
+       VIEW MORE 링크의 주소로 찾습니다 — 그것이 그 게시판 주소입니다. */
+    var slots = [];
+    ['.col-1', '.col-2'].forEach(function (sel, ci) {
+      var col = boardMain.querySelector(sel);
+      if (!col) return;
+      [].slice.call(col.querySelectorAll('.col-block')).forEach(function (el, ri) {
+        var a2 = el.querySelector('.sec-head .more');
+        var href = a2 ? (a2.getAttribute('href') || '') : '';
+        var cat = null;
+        for (var k = 0; k < (I.CATS || []).length; k++) {
+          if (I.CATS[k].href === href) { cat = I.CATS[k]; break; }
+        }
+        slots.push({ el: el, col: ci, row: ri, cat: cat });
+      });
+    });
+    if (!slots.length) return;
+
+    /* ② 지그재그로 늘어놓습니다 — col-1[0] · col-2[0] · col-1[1] · col-2[1] … */
+    var order = slots.slice().sort(function (a2, b2) {
+      if (a2.row !== b2.row) return a2.row - b2.row;
+      return a2.col - b2.col;
+    });
+
+    /* ③ 담은 갈래 — 앞 여섯 개, 목록을 가져올 수 있는 것만 */
+    var want = mine.slice(0, MAX).map(function (x) {
       return I.find(x.big, x.key);
-    }).filter(function (c) {
-      /* 목록을 가져올 수 없는 갈래(SELF PR 등)는 건너뜁니다 */
-      return c && c.tb;
+    }).filter(function (c) { return c && c.tb; });
+    if (!want.length) { mountBar('my', mine.length); return; }
+
+    /* ④ 이미 그 갈래가 놓인 자리는 <b>그대로 둡니다</b> */
+    var already = {};
+    order.forEach(function (sl) {
+      if (sl.cat) already[sl.cat.big + '|' + sl.cat.key] = sl;
+    });
+    var todo = want.filter(function (c) {
+      return !already[c.big + '|' + c.key];
     });
 
-    if (!pick.length) return;           /* 담은 것이 다 링크뿐이면 그대로 */
-
-    /* 글을 한꺼번에 가져옵니다 — 하나씩 기다리면 느립니다 */
-    var got = await Promise.all(pick.map(fetchRows));
-
-    /* 두 줄기로 나눠 놓습니다 — 원래 메인과 같은 짜임입니다 */
-    var half = Math.ceil(pick.length / 2);
-    var c1 = '', c2 = '';
-    pick.forEach(function (cat, i) {
-      var html = blockHtml(cat, got[i] || []);
-      if (i < half) c1 += html; else c2 += html;
+    /* ⑤ 갈아 끼울 자리 — <b>담은 갈래가 아닌</b> 칸을 앞에서부터 */
+    var free = order.filter(function (sl) {
+      return !sl.cat || !want.some(function (c) {
+        return c.big === sl.cat.big && c.key === sl.cat.key;
+      });
     });
 
-    /* ★ <b>광고 자리를 살려 둡니다.</b>
+    var pairs = [];
+    for (var i = 0; i < todo.length && i < free.length; i++) {
+      pairs.push({ slot: free[i], cat: todo[i] });
+    }
+    if (!pairs.length) { mountBar('my', mine.length); return; }
 
-       왜 (2026-08-04 · 파트너 지적)
-         board-main 을 통째로 갈아 끼우면 그 안에 있던
-           <a class="ad-slot board-ad">
-         까지 사라집니다. 광고는 <b>수익 자리</b>이므로 모드와 무관하게
-         늘 있어야 합니다.
+    /* ⑥ 글을 한꺼번에 가져옵니다 — 하나씩 기다리면 느립니다 */
+    var got = await Promise.all(pairs.map(function (p2) { return fetchRows(p2.cat); }));
 
-       ★ 옛 것을 <b>그대로 옮겨 붙입니다.</b> 새로 만들면 링크·이미지가
-         달라질 수 있으니, 있는 것을 떼어 두었다가 다시 넣습니다.
-       ★ a 태그라 「div」 로 찾으면 못 찾습니다 — 클래스로 찾습니다. */
-    var ad = boardMain.querySelector('.board-ad');
-    var adNode = ad ? ad.cloneNode(true) : null;
-
-    boardMain.innerHTML =
-        '<div class="col-1">' + c1 + '</div>'
-      + '<div class="col-2">' + c2 + '</div>';
-
-    /* 광고를 되돌려 놓습니다 — grid-area:ad 로 제자리를 찾습니다 */
-    if (adNode) boardMain.appendChild(adNode);
+    /* ⑦ 갈아 끼웁니다. <b>그 칸만</b> 바꾸므로 광고·나머지 칸은 그대로 남습니다. */
+    pairs.forEach(function (p2, i) {
+      var box = document.createElement('div');
+      box.innerHTML = blockHtml(p2.cat, got[i] || []);
+      var node = box.firstChild;
+      if (node && p2.slot.el.parentNode) {
+        p2.slot.el.parentNode.replaceChild(node, p2.slot.el);
+      }
+    });
 
     /* 알림 줄과 띠 */
     /* 알림 줄도 격자 밖에 놓습니다 (같은 까닭) */
