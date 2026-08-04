@@ -145,6 +145,14 @@ html[data-theme="dark"] .board-row:hover{background:#000}
    없기 때문입니다(적으면 비회원에게도 새어 나갑니다).
    그래서 단추의 기본 테두리·글꼴을 링크와 같게 맞춰 줍니다. */
 button.bv-link{border:0;cursor:pointer;line-height:inherit}
+/* ★ 악보 → 작곡가로 가는 길. 인물 상세의 「악보 자료」 와 짝입니다. */
+.bv-docperson{margin-top:10px}
+.bv-docperson a{display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+  font-size:13.5px;font-weight:700;color:var(--violet-2,#5b4b9e);
+  border:1px solid rgba(91,75,158,.28);border-radius:999px;padding:7px 14px;
+  transition:background .15s ease,border-color .15s ease}
+.bv-docperson a:hover{background:rgba(91,75,158,.07);border-color:var(--violet-2,#5b4b9e)}
+.bv-docperson a span{font-weight:400;font-size:12px;color:var(--text-2,#5f5c70)}
 button.bv-link i{font-style:normal;font-size:11px;font-weight:700;margin-left:6px;
   padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.22)}
 /* 음원·악보·영상처럼 여러 개의 관련 링크 */

@@ -311,9 +311,13 @@
       drawAwards(ab, A || []);
       if (cfg.scoresBox) {
         (S || []).forEach(function (r) {
-          /* PostgREST 는 이어진 표를 배열로 줍니다. 회원이면 한 줄,
-             비회원이면 빈 배열입니다. */
-          r.has_link = !!(r.score_links && r.score_links.length);
+          /* ★ PostgREST 는 이어진 표를 <b>관계에 따라 다른 모양</b>으로 줍니다.
+             score_links.spot_id 가 기본키라 <b>1:1</b> 이므로 배열이 아니라
+             <b>객체 하나</b>(또는 null)가 옵니다.
+             배열로만 보면 회원인데도 링크 단추가 나오지 않습니다.
+             비회원에게는 정책 때문에 아무것도 오지 않습니다. */
+          var L = r.score_links;
+          r.has_link = Array.isArray(L) ? L.length > 0 : !!L;
         });
         drawScores(document.querySelector(cfg.scoresBox), S || [], cfg.personName || '');
       }

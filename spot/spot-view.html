@@ -203,6 +203,10 @@
       /* 영상이 있으면 사진 대신 플레이어를 놓습니다 */
       videoField:'video_id',
       koField:'title_ko',
+      /* ★ 이어진 인물이 있으면 그 사람에게 가는 길을 놓습니다.
+         악보는 score_composer 와 person_id 를 갖고 있습니다.
+         (다른 갈래에는 그 칸이 비어 있으니 아무 일도 없습니다) */
+      personLink:{ idCol:'person_id', nameCol:'score_composer' },
       extraLinks:[
         { col:'video_url', label:'음원 · 동영상 보기' },
         { col:'source_url', label:'원문 출처' }

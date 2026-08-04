@@ -880,6 +880,29 @@ window.OCBoard = (function () {
                 return '<h1 class="bv-title">' + esc(head) + '</h1>'
                   + (sub ? '<p class="bv-origtitle">' + esc(sub) + '</p>' : '');
               })()
+            /* ★ 이어진 인물이 있으면 <b>그 사람에게 가는 길</b>을 놓습니다.
+
+               악보를 보다가 「이 작곡가는 누구지?」 할 때 바로 갈 수 있어야
+               합니다. 목록 카드는 전체가 링크라 그 안에 또 링크를 넣을 수
+               없으므로, 상세 화면에 둡니다.
+
+               인물 상세에는 이미 「악보 자료」 가 있으니, 이것으로
+               <b>양쪽이 오갈 수 있게</b> 됩니다.
+
+               쓰는 법 — spot-view.html 설정에
+                 personLink:{ idCol:'person_id', nameCol:'score_composer' }
+               적지 않은 게시판은 아무 일도 없습니다. */
+            + (function(){
+                var pl = cfg.personLink;
+                if (!pl) return '';
+                var pid = o[pl.idCol || 'person_id'];
+                if (!pid) return '';
+                var nm = o[pl.nameCol || 'score_composer'] || '';
+                return '<div class="bv-docperson">'
+                  + '<a href="' + esc(pl.base || '/db/person-view.html?id=') + encodeURIComponent(pid) + '">'
+                  + (nm ? esc(nm) : '작곡가')
+                  + ' <span>· 인물DB 에서 보기 \u2192</span></a></div>';
+              })()
             + (o.link_url
                 ? '<div class="bv-dochome">관련홈페이지 <a href="' + esc(o.link_url) + '" target="_blank" rel="noopener">' + esc(o.link_url) + '</a></div>'
                 /* ★ 악보의 바깥 링크는 <b>회원만</b>입니다.

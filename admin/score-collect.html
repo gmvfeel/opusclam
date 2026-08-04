@@ -322,8 +322,16 @@
           var k2 = imslpKey(src);
           if (k2) out[k2] = 1;
         }
-        /* 지금 방식 — score_links 표 */
-        (x.score_links || []).forEach(function(L){
+        /* 지금 방식 — score_links 표
+           ★ PostgREST 는 이어진 표를 <b>관계에 따라 다른 모양</b>으로 줍니다.
+             score_links.spot_id 가 기본키라 <b>1:1</b> 이므로 배열이 아니라
+             <b>객체 하나</b>(또는 null)가 옵니다.
+             그것을 배열로 보고 forEach 를 부르면
+               (x.score_links || []).forEach is not a function
+             오류가 납니다. 둘 다 받도록 감쌉니다. */
+        var LK = x.score_links;
+        var LKs = Array.isArray(LK) ? LK : (LK ? [LK] : []);
+        LKs.forEach(function(L){
           var k3 = imslpKey(L.imslp_ref || L.url);
           if (k3) out[k3] = 1;
         });
