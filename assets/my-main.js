@@ -140,10 +140,22 @@
         }).join('')
       : '<li class="oc-my-none"><span>아직 올라온 것이 없습니다</span></li>';
 
+    /* ★ <b>내 관심분야임을 표시합니다.</b>
+       (2026-08-04 · 파트너 제안)
+
+       표시가 없으면 「어느 것이 내가 고른 것인지」 알 수 없습니다.
+       원래 칸과 섞여 있으니 더 그렇습니다.
+
+     ★ <b>조용하게</b> 둡니다 — 제목 옆에 작은 별 하나입니다.
+       크게 두면 아홉 칸 가운데 몇 개가 도드라져 짜임이 어수선해집니다.
+       그리고 목록 글자를 가려서는 안 됩니다.
+     ★ title 을 붙여 마우스를 올리면 뜻이 나옵니다. */
     return '<div class="col-block oc-my-block">'
       + '<div class="sec-head"><div class="t">'
       +   '<span class="en-s">' + esc(cat.en || '') + '</span>'
       +   '<span class="ko">' + esc(cat.label) + '</span>'
+      +   '<span class="oc-my-tag" title="내 관심분야로 담아 두신 갈래입니다">'
+      +     '<i>★</i>내 관심분야</span>'
       + '</div><a class="more en" href="' + esc(cat.href) + '">VIEW MORE +</a></div>'
       + '<ul class="list" style="margin-top:12px">' + lis + '</ul>'
       + '</div>';

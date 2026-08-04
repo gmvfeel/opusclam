@@ -409,6 +409,28 @@
   .oc-my-bar .btns a:hover,.oc-my-bar .btns button:hover{
     border-color:var(--violet-2,#5b4b9e);color:var(--violet-2,#5b4b9e)}
 
+  /* ★ 내 관심분야 표시 — 제목 옆에 조용히 붙습니다.
+     크게 두면 아홉 칸 가운데 몇 개가 도드라져 어수선해집니다.
+     목록 글자를 가리지 않게 제목 줄에만 둡니다. */
+  .oc-my-tag{display:inline-flex;align-items:center;gap:4px;
+    margin-left:8px;padding:2px 8px;border-radius:999px;
+    font-size:10.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;
+    color:var(--violet-2,#5b4b9e);
+    background:rgba(91,75,158,.09);
+    border:1px solid rgba(91,75,158,.22);
+    cursor:help}
+  .oc-my-tag i{font-style:normal;font-size:10px;color:#e0a83c;line-height:1}
+  /* 어두운 배경(메인 위쪽)에서도 읽히게 */
+  .site-header:not(.solid) ~ * .oc-my-tag{background:rgba(255,255,255,.10)}
+  @media(max-width:620px){
+    /* 좁은 화면에서는 <b>별만</b> 남깁니다 — 제목이 밀리면 안 됩니다 */
+    .oc-my-tag{padding:2px 6px;margin-left:6px}
+    /* ★ 글자를 0 으로 만들어 감춥니다 — display:none 으로 하면
+       별까지 사라집니다. 별은 아래에서 크기를 다시 줍니다. */
+    .oc-my-tag{font-size:0}
+    .oc-my-tag i{font-size:12px}
+  }
+
   /* 담은 것이 여섯 개를 넘을 때 알리는 줄 */
   .oc-my-more{margin:18px 0 0;padding:12px 16px;text-align:center;
     background:var(--paper-2);border:1px dashed var(--line-2);border-radius:10px;
