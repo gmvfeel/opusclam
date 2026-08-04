@@ -95,6 +95,15 @@
   .pv-name{font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:-.015em;line-height:1.05;color:var(--text);margin-top:8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   .pv-name-sub{font-family:var(--serif);font-size:16px;font-weight:400;color:var(--text-3);letter-spacing:0}
   .pv-tags{display:flex;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+  /* ★ 다른 DB 로 가는 길 — 「인물DB 에서 보기 →」 같은 단추.
+     한쪽만 있으면 절반이므로 양쪽 화면에 같은 모양으로 둡니다. */
+  .pv-xlink{display:inline-flex;align-items:center;gap:7px;margin-top:14px;
+    font-size:13.5px;font-weight:700;text-decoration:none;
+    color:var(--violet-2,#5b4b9e);
+    border:1px solid rgba(91,75,158,.28);border-radius:999px;padding:8px 15px;
+    transition:background .15s ease,border-color .15s ease}
+  .pv-xlink:hover{background:rgba(91,75,158,.07);border-color:var(--violet-2,#5b4b9e)}
+  .pv-xlink span{font-weight:400}
   .pv-tags .tag{display:inline-block;font-size:12px;color:var(--text-2);border:1px solid var(--line-2);border-radius:20px;padding:3px 12px}
   .pv-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 28px;margin-top:20px}
   .pv-facts>div{display:flex;gap:12px;font-size:13.5px}
@@ -1311,6 +1320,44 @@ if('serviceWorker' in navigator){
   fetch(URL+'/rest/v1/modern_composers?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})
    .then(function(a){if(!a||!a.length){var _l0=document.getElementById('pv-loading');if(_l0)_l0.classList.add('hide');return;}var x=a[0];var nm=(x.name_ko||'').trim();
      var por=document.querySelector('.pv-portrait span');if(por)por.textContent=(function(n){n=(x.name_ko||'').trim();return n?n[0]:'?';})();
+     /* ★ 대표 사진 — image_url 에 담긴 것을 그립니다.
+        단체·공연장과 같은 문제였습니다 — 목록에는 사진이 보이는데
+        상세로 들어오면 첫 글자만 나왔습니다.
+        ★ Special:FilePath 주소는 원본으로 넘겨주므로 width 를 붙여
+          알맞게 줄여 받습니다. http 는 https 로 올립니다. */
+     (function(){
+       var iu=(x.image_url||'').trim(); if(!iu) return;
+       iu=iu.replace(/^http:\/\//,'https://');
+       if(iu.indexOf('Special:FilePath')>=0 || iu.indexOf('Special:Redirect/file')>=0){
+         if(!/[?&]width=/.test(iu)) iu+=(iu.indexOf('?')>=0?'&':'?')+'width=400';
+       }
+       var box=document.querySelector('.pv-portrait'); if(!box) return;
+       var ini=(x.name_ko||'').trim(); ini=ini?ini[0]:'?';
+       box.innerHTML=''; box.style.overflow='hidden';
+       var im=document.createElement('img');
+       im.src=iu; im.alt=(x.name_ko||''); im.loading='lazy'; im.decoding='async';
+       im.style.cssText='width:100%;height:100%;object-fit:cover';
+       im.onerror=function(){ box.innerHTML='<span>'+ini+'</span>'; };
+       box.appendChild(im);
+     })();
+
+     /* ★ 인물DB 로 가는 길 ─────────────────────────────────
+        person_id 로 이어 두었으므로(357명) 그 사람에게 갈 수 있습니다.
+        인물DB 에는 생몰·국적·출신학교·관계 지도·악보가 함께 있으니,
+        여기서 끊기면 그것을 다 잃습니다.
+
+        ★ 이어지지 않은 사람에게는 단추를 놓지 않습니다 —
+          눌러도 갈 곳이 없으면 오히려 헷갈립니다. */
+     (function(){
+       if(!x.person_id) return;
+       var head=document.querySelector('.pv-tags') || document.querySelector('.pv-facts');
+       if(!head) return;
+       var a=document.createElement('a');
+       a.className='pv-xlink';
+       a.href='/db/person-view.html?id='+encodeURIComponent(x.person_id);
+       a.innerHTML='인물DB 에서 보기 <span>&#8594;</span>';
+       head.parentNode.insertBefore(a, head.nextSibling);
+     })();
      var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(x.name_en){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=x.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
      var tg=document.querySelector('.pv-tags');if(tg){var html=x.school_style?'<span class="tag">'+esc(x.school_style)+'</span>':'';if(x.is_oc)html+='<span class="oc-badge">OC</span>';tg.innerHTML=html;}
      var fc=document.querySelector('.pv-facts');if(fc)fc.innerHTML=fact('사조·유파',esc(x.school_style||''))+fact('국적',esc(x.nationality||'')+(x.nat_code?' <span class="nat-code">('+esc(x.nat_code)+')</span>':''))+fact('생몰',esc(x.life||''))+fact('대표 기법',esc(x.technique||''));

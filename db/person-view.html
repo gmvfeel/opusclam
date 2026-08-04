@@ -95,6 +95,15 @@
   .pv-name{font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:-.015em;line-height:1.05;color:var(--text);margin-top:8px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   .pv-name-sub{font-family:var(--serif);font-size:16px;font-weight:400;color:var(--text-3);letter-spacing:0}
   .pv-tags{display:flex;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+  /* ★ 다른 DB 로 가는 길 — 「인물DB 에서 보기 →」 같은 단추.
+     한쪽만 있으면 절반이므로 양쪽 화면에 같은 모양으로 둡니다. */
+  .pv-xlink{display:inline-flex;align-items:center;gap:7px;margin-top:14px;
+    font-size:13.5px;font-weight:700;text-decoration:none;
+    color:var(--violet-2,#5b4b9e);
+    border:1px solid rgba(91,75,158,.28);border-radius:999px;padding:8px 15px;
+    transition:background .15s ease,border-color .15s ease}
+  .pv-xlink:hover{background:rgba(91,75,158,.07);border-color:var(--violet-2,#5b4b9e)}
+  .pv-xlink span{font-weight:400}
   .pv-tags .tag{display:inline-block;font-size:12px;color:var(--text-2);border:1px solid var(--line-2);border-radius:20px;padding:3px 12px}
   .pv-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 28px;margin-top:20px}
   .pv-facts>div{display:flex;gap:12px;font-size:13.5px}
@@ -1398,6 +1407,33 @@ if('serviceWorker' in navigator){
      var p=a[0];
      /* ★ 작품 목록 · 수상 — person_works · person_awards 를 읽어 그립니다.
         자료가 없으면 works.js 가 두 영역을 통째로 감춥니다. */
+     /* ★ 현대음악DB 로 가는 길 (역방향) ────────────────────────
+        modern_composers.person_id 로 이어 두었으므로, 그 번호로
+        거꾸로 찾아 「현대음악DB 에도 있습니다」 를 보여 줍니다.
+
+        ★ 왜 양쪽에 두는가
+          한쪽만 있으면 절반입니다. 현대음악DB 에서 인물DB 로 갈 수
+          있는데 돌아올 길이 없으면, 사용자는 뒤로 가기를 눌러야 합니다.
+          작곡 기법·사조·유파는 현대음악DB 에만 있으므로 오갈 값이 있습니다. */
+     (function(){
+       /* ★ 이 블록의 이름은 URL·H 입니다 (SB 가 아닙니다) —
+          같은 화면 안에 Supabase 주소를 담은 이름이 두 가지라
+          헷갈리기 쉽습니다. */
+       fetch(URL+'/rest/v1/modern_composers?select=id,name_ko&person_id=eq.'
+             + encodeURIComponent(p.id) + '&limit=1', { headers:H })
+         .then(function(r){ return r.ok ? r.json() : []; })
+         .then(function(rows){
+           if(!rows || !rows.length) return;
+           var head=document.querySelector('.pv-tags') || document.querySelector('.pv-facts');
+           if(!head) return;
+           var a=document.createElement('a');
+           a.className='pv-xlink';
+           a.href='/db/modern-view.html?id='+encodeURIComponent(rows[0].id);
+           a.innerHTML='현대음악DB 에서 보기 <span>&#8594;</span>';
+           head.parentNode.insertBefore(a, head.nextSibling);
+         }).catch(function(){});
+     })();
+
      if(window.OCWorks) OCWorks.mount({
        personId:p.id, worksBox:'#pvWorks', awardsBox:'#pvAwards',
        /* ★ 악보 자료 칸도 함께 채웁니다 — 「이 작곡가의 악보」 가 됩니다 */
