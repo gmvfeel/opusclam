@@ -188,9 +188,11 @@
       act = '<button type="button" class="sc-dl" data-url="' + esc(r.file_url) + '"'
           + ' data-name="' + esc(r.file_name || '') + '" data-id="' + esc(r.id) + '">'
           + '내려받기 <i>회원</i></button>';
-    } else if (r.link_url) {
-      act = '<a class="sc-out" href="' + esc(r.link_url) + '" target="_blank" rel="noopener">'
-          + 'IMSLP 에서 보기 ↗</a>';
+    } else if (r.has_link) {
+      /* ★ 주소를 여기 적지 않습니다 — 적으면 비회원에게도 보입니다.
+         누를 때 score-dl.js 가 회원인지 보고 주소를 받아 옵니다. */
+      act = '<button type="button" class="sc-out" data-link="' + esc(r.id) + '">'
+          + 'IMSLP 에서 보기 <i>회원</i></button>';
     }
     var vp = '/spot/spot-view.html?id=' + encodeURIComponent(r.id);
     return ''
@@ -235,6 +237,17 @@
             more.hidden = true;
             b.textContent = '나머지 ' + more.querySelectorAll('.sc-it').length + '건 더 보기';
           }
+          return;
+        }
+        /* 바깥 링크 — 회원만 */
+        var L = e.target.closest('.sc-out');
+        if (L) {
+          e.preventDefault();
+          if (!window.OCScoreDL) {
+            alert('내려받기 도구(assets/score-dl.js)를 불러오지 못했습니다.');
+            return;
+          }
+          window.OCScoreDL.openLink(L.getAttribute('data-link'));
           return;
         }
         /* 내려받기 — 회원만 */
@@ -283,8 +296,11 @@
       var S = [];
       if (cfg.scoresBox) {
         try {
+          /* ★ link_url 은 묻지 않습니다 — 악보 링크는 score_links 표로
+             옮겼고, 그 표는 회원만 읽습니다. 여기서는 <b>링크가 있는지</b>만
+             score_links 를 세어 확인합니다(비회원은 0으로 나옵니다). */
           S = await get('spot?select=id,title,title_ko,category,score_opus,score_pages,'
-            + 'file_url,file_name,link_url&section=eq.' + encodeURIComponent('악보')
+            + 'file_url,file_name,score_links(spot_id)&section=eq.' + encodeURIComponent('악보')
             + '&review_status=eq.approved&hidden=is.false'
             + '&person_id=eq.' + encodeURIComponent(pid)
             + '&order=created_at.desc,id.asc&limit=200');
@@ -294,6 +310,11 @@
       if (wb) drawWorks(wb, W || []);
       drawAwards(ab, A || []);
       if (cfg.scoresBox) {
+        (S || []).forEach(function (r) {
+          /* PostgREST 는 이어진 표를 배열로 줍니다. 회원이면 한 줄,
+             비회원이면 빈 배열입니다. */
+          r.has_link = !!(r.score_links && r.score_links.length);
+        });
         drawScores(document.querySelector(cfg.scoresBox), S || [], cfg.personName || '');
       }
     }

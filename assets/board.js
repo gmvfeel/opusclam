@@ -60,6 +60,17 @@ window.OCBoard = (function () {
   if (!window.__ocMFileBound){
     window.__ocMFileBound = true;
     document.addEventListener('click', function (e) {
+      /* 악보의 바깥 링크 — 회원만 */
+      var L = e.target && e.target.closest ? e.target.closest('.oc-mlink') : null;
+      if (L){
+        e.preventDefault();
+        if (!window.OCScoreDL){
+          alert('내려받기 도구(assets/score-dl.js)를 불러오지 못했습니다.');
+          return;
+        }
+        window.OCScoreDL.openLink(L.getAttribute('data-mlink'));
+        return;
+      }
       var a = e.target && e.target.closest ? e.target.closest('.oc-mfile') : null;
       if (!a) return;
       e.preventDefault();
@@ -772,6 +783,15 @@ window.OCBoard = (function () {
         var tag = o.category ? '<span class="board-tag">' + esc(o.category) + '</span>' : '';
         var thumb = o.thumb_url ? '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' : '';
         var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
+        /* ★ 악보의 바깥 링크는 <b>회원만</b>입니다.
+           주소를 spot.link_url 에 두면 select=* 로 비회원에게도 새어 나가므로
+           score_links 표로 옮겼고, 그 표는 회원만 읽습니다.
+           여기서는 주소를 적지 않고 <b>단추만</b> 놓습니다 — 누를 때
+           score-dl.js 가 회원인지 보고 주소를 받아 옵니다. */
+        if (!link && isMemberOnlyFile(cfg, o) && !o.file_url){
+          link = '<button type="button" class="bv-link oc-mlink" data-mlink="' + esc(o.id) + '">'
+               + 'IMSLP 에서 보기 \u2197 <i>회원</i></button>';
+        }
         /* 첨부파일이 있으면 본문 위에 내려받기 줄을 둔다 (자료실 성격 게시판용).
            file_url 컬럼이 없거나 비어 있는 게시판에는 아무 영향이 없다. */
         var dl = fileAnchor(cfg, o, 'bv-docdl',
@@ -860,7 +880,18 @@ window.OCBoard = (function () {
                 return '<h1 class="bv-title">' + esc(head) + '</h1>'
                   + (sub ? '<p class="bv-origtitle">' + esc(sub) + '</p>' : '');
               })()
-            + (o.link_url ? '<div class="bv-dochome">관련홈페이지 <a href="' + esc(o.link_url) + '" target="_blank" rel="noopener">' + esc(o.link_url) + '</a></div>' : '')
+            + (o.link_url
+                ? '<div class="bv-dochome">관련홈페이지 <a href="' + esc(o.link_url) + '" target="_blank" rel="noopener">' + esc(o.link_url) + '</a></div>'
+                /* ★ 악보의 바깥 링크는 <b>회원만</b>입니다.
+                   주소를 spot.link_url 에 두면 게시판 엔진이 select=* 로
+                   받아오므로 비회원의 응답에도 새어 나갑니다. 그래서
+                   score_links 표로 옮겼고, 그 표는 회원만 읽습니다.
+                   여기서는 주소를 적지 않고 단추만 놓습니다 — 누를 때
+                   score-dl.js 가 회원인지 보고 주소를 받아 옵니다. */
+                : (isMemberOnlyFile(cfg, o) && !o.file_url
+                    ? '<div class="bv-dochome"><button type="button" class="bv-link oc-mlink"'
+                      + ' data-mlink="' + esc(o.id) + '">IMSLP 에서 보기 \u2197 <i>회원</i></button></div>'
+                    : ''))
             + (o.school_id ? '<a class="bv-schoollink" href="' + (cfg.schoolViewPath || '/school-view.html') + '?id=' + encodeURIComponent(o.school_id) + '"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-5h6v5"/></svg><span>이 학교 정보 보기</span></a>' : '')
             + '<div class="bv-meta"><span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
             + '</div></div>'

@@ -141,6 +141,12 @@ html[data-theme="dark"] .board-row:hover{background:#000}
 }
 .bv-link{display:inline-block;margin-top:26px;font-family:var(--display);font-size:14px;font-weight:700;color:#fff;background:var(--violet-2);border-radius:999px;padding:10px 22px;text-decoration:none;transition:background .15s ease}
 .bv-link:hover{background:var(--ink)}
+/* ★ 회원 전용 링크는 <button> 으로 그립니다 — 주소를 미리 적어 둘 수
+   없기 때문입니다(적으면 비회원에게도 새어 나갑니다).
+   그래서 단추의 기본 테두리·글꼴을 링크와 같게 맞춰 줍니다. */
+button.bv-link{border:0;cursor:pointer;line-height:inherit}
+button.bv-link i{font-style:normal;font-size:11px;font-weight:700;margin-left:6px;
+  padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.22)}
 /* 음원·악보·영상처럼 여러 개의 관련 링크 */
 .bv-xlinks{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px}
 .bv-xlink{display:inline-flex;align-items:center;font-family:var(--display);font-size:13px;font-weight:700;
