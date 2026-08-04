@@ -47,7 +47,7 @@
   .s1{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 15px}
   .s1 .n{font-size:22px;font-weight:800;line-height:1.2}
   .s1 .l{font-size:11.5px;color:var(--tx3);margin-top:3px}
-  .s1.ok .n{color:var(--ok)} .s1.wa .n{color:var(--wa)}
+  .s1.ok .n{color:var(--ok)} .s1.wa .n{color:var(--wa)} .s1.no .n{color:var(--no)}
 
   .prog{height:6px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;margin:8px 0 4px;display:none}
   .prog.on{display:block}
@@ -83,6 +83,13 @@
   .badge.dup{color:var(--wa);border-color:rgba(224,179,82,.45)}
   tr.done{opacity:.45} tr.done td.ti input,tr.done td.ti select{display:none}
   tr.dup{opacity:.55}
+  /* ★ 한국 기준에 걸리는 줄은 눈에 띄게 — 실수로 담으면 안 됩니다 */
+  tr.krbad{background:rgba(224,133,133,.07)}
+  tr.krbad td{border-bottom-color:rgba(224,133,133,.2)}
+  .badge.kr{color:var(--no);border-color:rgba(224,133,133,.55);font-weight:800}
+  .badge.unk{color:var(--tx3);border-color:var(--line)}
+  .krwhy{font-size:11px;color:var(--no);margin-top:4px;line-height:1.6}
+  .krwhy b{color:#f0a0a0}
   .empty{padding:46px;text-align:center;color:var(--tx3)}
   @media(max-width:900px){ td.lk,th.lk{display:none} .wrap{padding:18px 14px 60px} }
 </style>
@@ -115,6 +122,8 @@
     <button class="stop" id="halt" disabled>멈추기</button>
     <button id="save" disabled>고른 것 담기</button>
     <label class="chk"><input type="checkbox" id="onlyKo"> 한글 이름 있는 것만 보기</label>
+    <label class="chk" title="한국은 사후 70년입니다. IMSLP 는 캐나다 기준(사후 50년)이라 국내에서는 아직 보호되는 것이 섞입니다.">
+      <input type="checkbox" id="krSafe" checked> <b style="color:#e08a3c">한국 기준 안전한 것만</b></label>
     <span class="cnt" id="cnt"></span>
   </div>
 
@@ -122,6 +131,7 @@
     <div class="s1"><div class="n" id="nWork">0</div><div class="l">찾은 작품</div></div>
     <div class="s1 ok"><div class="n" id="nKo">0</div><div class="l">한글 이름 있음</div></div>
     <div class="s1 wa"><div class="n" id="nDup">0</div><div class="l">이미 담긴 것</div></div>
+    <div class="s1 no"><div class="n" id="nKr">0</div><div class="l">한국 기준 안 됨</div></div>
     <div class="s1"><div class="n" id="nPick">0</div><div class="l">고른 것</div></div>
   </div>
 
@@ -277,6 +287,41 @@
     if (y < 1900) return '낭만주의';
     if (y < 1945) return '근·현대';
     return '현대';
+  }
+
+  /* ── 한국 저작권 기준으로 안전한가 ─────────────────────────
+     ★ 왜 필요한가 — 이것을 넣지 않아 실수했습니다
+       IMSLP 는 <b>캐나다 저작권법</b> 기준으로 자료를 모읍니다. 캐나다는
+       오랫동안 <b>사후 50년</b>이었습니다. 우리나라는 <b>사후 70년</b>입니다.
+       그래서 IMSLP 에 있어도 <b>한국에서는 아직 보호 기간</b>일 수 있습니다.
+
+         홍난파  1941년 사망  →  2011년에 풀림        ✔
+         윤용하  1965년 사망  →  <b>2035년까지 보호</b>  ★
+         안익태  1965년 사망  →  <b>2035년까지 보호</b>  ★
+
+       「IMSLP 에 있으니 퍼블릭 도메인」 이라고만 보고 담으면 국내에서
+       문제가 됩니다. 그래서 <b>작곡가 사망연도</b>를 함께 봅니다.
+
+     ★ 곡(작곡) 저작권 기준입니다. 판본(조판)은 별개이지만 IMSLP 자료는
+       대개 옛 판본이라 그쪽 위험은 적습니다. */
+  var KR_SAFE_DEATH = new Date().getFullYear() - 70;   /* 2026 → 1956 */
+
+  function deathOf(c){
+    var life = String(c.life || '');
+    /* 「1922 – 1965」 처럼 뒤에 연도가 있으면 그것이 사망연도입니다 */
+    var m = life.match(/(\d{3,4})\s*[–—-]\s*(\d{3,4})\s*$/);
+    if (m) return parseInt(m[2], 10);
+    /* 「1960 –」 처럼 뒤가 비어 있으면 생존 중입니다 */
+    if (/(\d{3,4})\s*[–—-]\s*$/.test(life)) return 'alive';
+    return null;   /* 모릅니다 */
+  }
+
+  function krVerdict(c){
+    var d = deathOf(c);
+    if (d === 'alive') return { ok:false, why:'생존 중입니다 — 저작권이 살아 있습니다' };
+    if (d === null)    return { ok:null,  why:'사망연도를 몰라 판단할 수 없습니다' };
+    if (d <= KR_SAFE_DEATH) return { ok:true, why:'사망 ' + d + '년 · 사후 70년 지남' };
+    return { ok:false, why:'사망 ' + d + '년 — <b>한국에서는 ' + (d + 71) + '년까지 보호</b>' };
   }
 
   /* ── 이미 담긴 것을 모읍니다 ───────────────────────────────
@@ -459,6 +504,7 @@
             comp_en: c.name_en || '',
             life: c.life || '',
             era: eraOf(c),
+            kr: krVerdict(c),
             /* ★ 작곡가 사진을 목록 그림으로 씁니다 — 악보는 표지가 없어서
                첫 글자만 남으면 목록이 심심합니다. */
             thumb: c.image_url || '',
@@ -478,9 +524,13 @@
       progHide();
       var uniq = {};
       rows.forEach(function(r){ uniq[r.person_id] = 1; });
+      var krBadN = rows.filter(function(r){ return r.kr && r.kr.ok === false; }).length;
+      var krUnkN = rows.filter(function(r){ return r.kr && r.kr.ok === null; }).length;
       log('✅ 끝 — 작품 ' + rows.length + '건 · 작곡가 ' + Object.keys(uniq).length + '명'
         + ' · 한글 이름 ' + rows.filter(function(r){ return r._titleKo; }).length
         + ' · 이미 담긴 것 ' + dup);
+      if (krBadN) log('   ★ 한국에서 아직 보호 기간인 것 ' + krBadN + '건 — 걸러 냈습니다');
+      if (krUnkN) log('   △ 사망연도를 모르는 것 ' + krUnkN + '건 — 담기 전에 확인해 주십시오');
       if (!rows.length){
         log('   찾지 못했습니다. 이 작곡가들에게는 위키데이터에 IMSLP 번호가 없습니다.');
         log('   작곡가 수를 늘려 보십시오.');
@@ -495,12 +545,21 @@
 
   function render(){
     var onlyKo = $('onlyKo').checked;
-    var list = onlyKo ? rows.filter(function(r){ return r._titleKo; }) : rows;
+    var krOnlySafe = $('krSafe').checked;
+    var list = rows.filter(function(r){
+      if (onlyKo && !r._titleKo) return false;
+      /* 「한국 기준 안전한 것만」 — 안 되는 것은 <b>목록에서 감춥니다.</b>
+         굳이 담으실 일이 있으면 체크를 끄시면 보입니다. */
+      if (krOnlySafe && r.kr && r.kr.ok === false) return false;
+      return true;
+    });
     var ko  = rows.filter(function(r){ return r._titleKo; }).length;
     var dup = rows.filter(function(r){ return r.dup; }).length;
+    var krN = rows.filter(function(r){ return r.kr && r.kr.ok === false; }).length;
     $('nWork').textContent = rows.length;
     $('nKo').textContent = ko;
     $('nDup').textContent = dup;
+    $('nKr').textContent = krN;
     $('cnt').innerHTML = '보이는 것 <b>' + list.length + '</b>건';
 
     if (!list.length){
@@ -513,12 +572,20 @@
                 'Electronic','기타'];
     $('body').innerHTML = list.slice(0, 600).map(function(r){
       var i = rows.indexOf(r);
-      var cls = r._saved ? ' class="done"' : (r.dup ? ' class="dup"' : '');
+      var krBad = r.kr && r.kr.ok === false;
+      var krUnk = r.kr && r.kr.ok === null;
+      var cls = r._saved ? ' class="done"'
+              : (krBad ? ' class="krbad"' : (r.dup ? ' class="dup"' : ''));
+      /* ★ 한국 기준에 걸리는 것은 <b>체크를 미리 켜지 않습니다.</b>
+         이미 담긴 것도 마찬가지입니다. 실수로 담기는 것을 막습니다. */
+      var pre = !r.dup && !krBad;
       return '<tr data-i="' + i + '"' + cls + '>'
         + '<td class="c">'
         +   (r._saved ? '✓'
-              : (r.dup ? '<input type="checkbox" class="pick" value="' + i + '" title="이미 담긴 것입니다">'
-                       : '<input type="checkbox" class="pick" value="' + i + '" checked>'))
+              : '<input type="checkbox" class="pick" value="' + i + '"'
+                + (pre ? ' checked' : '')
+                + (krBad ? ' title="한국에서는 아직 보호 기간입니다"' : '')
+                + (r.dup ? ' title="이미 담긴 것입니다"' : '') + '>')
         + '</td>'
         + '<td class="cp">' + esc(r.comp_ko)
         +   (r.comp_en && r.comp_en !== r.comp_ko ? '<span class="en">' + esc(r.comp_en) + '</span>' : '')
@@ -539,6 +606,10 @@
                 + '</select>')
         +   (r._titleKo ? '<span class="badge ko">한글</span>' : '')
         +   (r.dup ? '<span class="badge dup">이미 담김</span>' : '')
+        +   (krBad ? '<span class="badge kr">★ 한국 기준 안 됨</span>' : '')
+        +   (krUnk ? '<span class="badge unk">사망연도 모름</span>' : '')
+        +   (r.kr && r.kr.ok !== true
+              ? '<div class="krwhy">' + r.kr.why + '</div>' : '')
         + '</td>'
         + '<td class="lk"><a href="' + esc(r.link) + '" target="_blank" rel="noopener">'
         +   esc(r.imslp.replace(/_/g,' ')) + ' ↗</a></td>'
@@ -567,6 +638,13 @@
     var list = picked();
     if (!list.length) return;
     var dupN = list.filter(function(i){ return rows[i].dup; }).length;
+    var krN2 = list.filter(function(i){ return rows[i].kr && rows[i].kr.ok === false; }).length;
+    if (krN2){
+      if (!confirm('★ 고른 것 가운데 ' + krN2 + '건은 <한국에서 아직 보호 기간>입니다.\n\n'
+        + 'IMSLP 는 캐나다 기준(사후 50년)이고, 우리나라는 사후 70년입니다.\n'
+        + '그대로 담아 공개하면 국내에서 문제가 될 수 있습니다.\n\n'
+        + '정말 담을까요? (권하지 않습니다)')) return;
+    }
     if (!confirm(list.length + '건을 담습니다.\n'
       + (dupN ? '\n★ 그 가운데 ' + dupN + '건은 <이미 담긴 것>입니다.\n'
               + '  그대로 담으면 같은 악보가 두 줄이 됩니다.\n'
@@ -665,6 +743,7 @@
   $('halt').addEventListener('click', function(){ stopFlag = true; });
   $('save').addEventListener('click', save);
   $('onlyKo').addEventListener('change', render);
+  $('krSafe').addEventListener('change', render);
   $('all').addEventListener('change', function(){
     var on = $('all').checked;
     /* ★ 「모두 고르기」 는 <b>이미 담긴 것을 건너뜁니다.</b>
@@ -673,7 +752,9 @@
     var skipped = 0;
     document.querySelectorAll('.pick').forEach(function(c){
       var r = rows[parseInt(c.value, 10)];
-      if (on && r && r.dup){ c.checked = false; skipped++; return; }
+      if (on && r && (r.dup || (r.kr && r.kr.ok === false))){
+        c.checked = false; skipped++; return;
+      }
       c.checked = on;
     });
     if (on && skipped) log('  이미 담긴 ' + skipped + '건은 고르지 않았습니다.');
