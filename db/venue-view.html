@@ -383,15 +383,12 @@
       <a href="../home.html">홈</a><span>/</span><a href="#">Database</a><span>/</span><a href="venue.html">공연장DB</a><span>/</span><span class="on">예술의전당</span>
     </nav>
 
-    <nav class="pdb-subnav" aria-label="DATABASE 하위 메뉴">
-      <a href="person.html">인물 DB</a>
-      <a href="org.html">음악단체 DB</a>
-      <a href="venue.html" class="active">공연장 DB</a>
-      <a href="school.html">음악학교 DB</a>
-      <a href="modern.html">현대음악 DB</a>
-      <a href="foundation.html">관련기관·재단 DB</a>
-      <a href="academic.html">학술 DB</a>
-    </nav>
+    <!-- ★ DATABASE 하위 메뉴 — 공용 파일을 씁니다.
+         상세 화면에도 같은 메뉴가 있어야 「다른 DB 로 건너가기」 가 됩니다.
+         예전에는 화면마다 직접 적혀 있어 「전체」 가 빠지거나 항목 수가
+         달랐습니다. include.js 가 person-view → person 으로 줄여
+         그 알약을 켜 줍니다. -->
+    <div id="oc-subnav" data-src="/partials/subnav-db.html"></div>
 
     <header class="pdb-head">
       <div class="pdb-titlebar">
