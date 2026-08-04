@@ -121,6 +121,72 @@
   /* 소개 — 줄이 길어질 수 있어 목록 밖에 둡니다 */
   .mp-intro{font-size:13px;line-height:1.8;color:var(--text-2);margin:14px 0 0;
     padding:13px 15px;background:var(--paper-2);border-radius:10px;white-space:pre-wrap}
+  /* ── Linked (인맥) ───────────────────────────────────────
+     ★ 사람을 다루는 곳이라 <b>얼굴과 이름</b>을 앞에 둡니다.
+       목록처럼 글자만 늘어놓으면 누가 누구인지 잘 안 들어옵니다. */
+  .lk-find{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .lk-find input{flex:1 1 240px;min-width:0;height:42px;padding:0 14px;
+    border:1px solid var(--line-2);border-radius:9px;background:#fff;
+    font-family:inherit;font-size:14px;color:var(--text)}
+  .lk-find input:focus{outline:none;border-color:var(--violet-2,#5b4b9e);
+    box-shadow:0 0 0 3px rgba(91,75,158,.10)}
+  .lk-find button{flex:0 0 auto;height:42px;padding:0 20px;border-radius:9px;
+    cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:700;
+    border:1px solid var(--ink,#2b2740);background:var(--ink,#2b2740);color:#fff}
+  .lk-find button:hover{filter:brightness(1.14)}
+  .lk-hint{font-size:11.5px;color:var(--text-3);line-height:1.7;margin:-12px 0 20px}
+
+  .lk-sec{margin-bottom:22px}
+  .lk-sec:last-child{margin-bottom:0}
+  .lk-sec h4{font-size:13px;font-weight:800;margin:0 0 11px;
+    display:flex;align-items:center;gap:7px}
+  .lk-sec h4 i{font-style:normal;font-size:11.5px;font-weight:700;
+    padding:2px 8px;border-radius:999px;
+    background:rgba(91,75,158,.10);color:var(--violet-2,#5b4b9e)}
+
+  .lk-list{display:flex;flex-direction:column;gap:8px}
+  .lk-card{display:flex;align-items:center;gap:12px;
+    padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:#fff}
+  .lk-card.wait{background:var(--paper-2)}
+  .lk-ph{flex:0 0 auto;width:44px;height:44px;border-radius:50%;overflow:hidden;
+    background:var(--paper-2);border:1px solid var(--line);
+    display:grid;place-items:center}
+  .lk-ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .lk-ph span{font-family:var(--display);font-size:17px;font-weight:800;color:var(--text-3)}
+  .lk-who{flex:1 1 auto;min-width:0}
+  .lk-who .nm{font-size:14px;font-weight:700;line-height:1.4}
+  .lk-who .nm em{font-style:normal;font-size:11px;font-weight:600;
+    color:var(--text-3);margin-left:6px}
+  .lk-who .sub{font-size:11.5px;color:var(--text-3);margin-top:2px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lk-who .msg{font-size:12px;color:var(--text-2);margin-top:5px;line-height:1.6;
+    padding:7px 10px;background:var(--paper-2);border-radius:8px}
+  .lk-btns{flex:0 0 auto;display:flex;gap:6px}
+  .lk-btns button{height:34px;padding:0 13px;border-radius:8px;cursor:pointer;
+    font-family:inherit;font-size:12.5px;font-weight:700;
+    border:1px solid var(--line-2);background:#fff;color:var(--text-2);
+    transition:border-color .15s,color .15s}
+  .lk-btns button:hover{border-color:var(--violet-2,#5b4b9e);color:var(--violet-2,#5b4b9e)}
+  .lk-btns button.ok{background:var(--ink,#2b2740);border-color:var(--ink,#2b2740);color:#fff}
+  .lk-btns button.ok:hover{filter:brightness(1.14);color:#fff}
+  .lk-btns button.no:hover{border-color:#e08585;color:#e08585}
+
+  .lk-none{padding:26px 20px;text-align:center;color:var(--text-3);
+    font-size:12.5px;line-height:1.8;background:var(--paper-2);
+    border:1px dashed var(--line-2);border-radius:11px}
+  .lk-none b{color:var(--text-2)}
+  .lk-msg{font-size:13px;line-height:1.7;padding:11px 14px;border-radius:9px;
+    margin-bottom:16px;display:none}
+  .lk-msg.on{display:block}
+  .lk-msg.ok{background:rgba(111,207,143,.10);border:1px solid rgba(111,207,143,.4);color:#2f7f4f}
+  .lk-msg.no{background:rgba(224,133,133,.10);border:1px solid rgba(224,133,133,.4);color:#a34a4a}
+
+  @media(max-width:520px){
+    .lk-card{flex-wrap:wrap}
+    .lk-btns{width:100%;margin-top:4px}
+    .lk-btns button{flex:1 1 auto}
+  }
+
   /* ── 내가 올린 것 ────────────────────────────────────────
      ★ 갈래별 셈을 위에 두어 <b>어디에 얼마나</b> 썼는지 한눈에 보이게
        합니다. 그것을 누르면 그 갈래만 걸러 봅니다. */
@@ -272,6 +338,24 @@
          「내가 쓴 글을 고치고 싶은데 어디 있지?」 가 됩니다.
          (2026-08-04 · 시안의 「업데이트 한 컨텐츠 관리」 자리입니다)
        ★ 열 갈래를 훑어 <b>한곳에 모아</b> 보여 줍니다. -->
+<!-- ══ Linked (인맥) ══════════════════════════════════════
+       ★ 시안의 「받은 Linked / 보낸 Linked」 · 「MY OC Linked」 자리입니다.
+       ★ <b>양쪽이 승낙</b>해야 이어집니다 — 한쪽이 마음대로 이으면
+         「팔로우」 가 되고, 원치 않는 사람에게 이어질 수 있습니다.
+       ★ 아이디를 <b>정확히 알 때만</b> 찾습니다 — 이름으로 훑어볼 수 있게
+         두면 회원 명부가 새어 나갑니다. -->
+    <div class="mp-head" style="margin-top:44px;display:none" id="lkHead">
+      <span class="jtag">LINKED</span>
+      <h1 style="font-size:24px">Linked · 인맥</h1>
+      <p class="mp-note">
+        아는 회원과 이어 두시면 서로의 활동을 볼 수 있습니다.
+        <b>양쪽이 승낙</b>해야 이어집니다. 연락처와 주소는 이어진 사이에도 보이지 않습니다.
+      </p>
+    </div>
+    <div class="mp-card" id="lkBody" style="display:none">
+      <div class="mp-msg">불러오는 중…</div>
+    </div>
+
     <div class="mp-head" style="margin-top:44px;display:none" id="myHead">
       <span class="jtag">MY POSTS</span>
       <h1 style="font-size:24px">내가 올린 것</h1>
@@ -424,7 +508,225 @@
     box.innerHTML=html;
     var lo=document.getElementById("mpLogout"); if(lo) lo.addEventListener("click",doLogout);
     drawLevel();
+    drawLinks();
     loadMine(session.user.id);
+  }
+
+  /* ── Linked (인맥) ───────────────────────────────────────────
+     ★ 서버 함수를 씁니다 —
+         oc_find_member(아이디)  아이디를 정확히 맞혔을 때만 한 사람
+         oc_my_links()           이어진 사람 · 받은 요청 · 보낸 요청
+         oc_link_ask(상대, 인사말)
+         oc_link_answer(번호, 승낙여부)
+         oc_link_undo(번호)
+     ★ members 표를 직접 읽지 않습니다 — 그러면 회원 명부가 새어 나갑니다.
+     ★ 함수가 없으면 이 구역을 <b>감춥니다.</b> */
+  var TYPE_SHORT = { industry:'음악관계자', org:'단체·기업', school:'음악학교',
+                     major:'전공자', general:'일반' };
+
+  function lkSay(kind, text){
+    var m = document.getElementById('lkMsg');
+    if (!m) return;
+    m.className = 'lk-msg on ' + kind;
+    m.textContent = text;
+    if (kind === 'ok') setTimeout(function(){ m.className = 'lk-msg'; }, 3600);
+  }
+
+  function lkPhoto(x){
+    var ini = (x.name || '?').trim().charAt(0) || '?';
+    return '<div class="lk-ph">'
+      + (x.photo
+          ? '<img src="' + esc(x.photo) + '" alt=""'
+            + ' onerror="this.parentNode.innerHTML=\'<span>' + esc(ini) + '</span>\'">'
+          : '<span>' + esc(ini) + '</span>')
+      + '</div>';
+  }
+  function lkWho(x, withMsg){
+    var sub = [];
+    if (x.field)  sub.push(x.field);
+    if (x.school) sub.push(x.school);
+    return '<div class="lk-who">'
+      + '<div class="nm">' + esc(x.name || '(이름 없음)')
+      +   '<em>' + esc(TYPE_SHORT[x.type] || x.type || '') + '</em></div>'
+      + (sub.length ? '<div class="sub">' + esc(sub.join(' · ')) + '</div>' : '')
+      + (withMsg && x.msg ? '<div class="msg">' + esc(x.msg) + '</div>' : '')
+      + '</div>';
+  }
+
+  async function drawLinks(){
+    var head = document.getElementById('lkHead');
+    var body = document.getElementById('lkBody');
+    if (!head || !body) return;
+    try {
+      var r = await sb.rpc('oc_my_links');
+      if (r.error) throw new Error(r.error.message);
+      var d = r.data;
+      if (!d || d.ok !== true) throw new Error('빈 값');
+
+      var lk = d.linked || [], rc = d.received || [], sn = d.sent || [];
+
+      body.innerHTML =
+          '<div class="lk-msg" id="lkMsg"></div>'
+        + '<div class="lk-find">'
+        +   '<input type="text" id="lkId" placeholder="상대의 아이디를 정확히 넣어 주십시오"'
+        +     ' autocomplete="off">'
+        +   '<button type="button" id="lkFind">찾기</button>'
+        + '</div>'
+        + '<p class="lk-hint">★ 이름으로는 찾을 수 없습니다 — 회원 명부가 새어 나가지 않게'
+        +   ' <b>아이디를 정확히 아실 때만</b> 찾습니다.</p>'
+        + '<div id="lkFound"></div>'
+
+        /* ① 받은 요청 — 내가 답할 것이니 맨 위에 */
+        + (rc.length
+            ? '<div class="lk-sec"><h4>받은 요청 <i>' + rc.length + '</i></h4>'
+              + '<div class="lk-list">'
+              + rc.map(function(x){
+                  return '<div class="lk-card wait">' + lkPhoto(x) + lkWho(x, true)
+                    + '<span class="lk-btns">'
+                    +   '<button class="ok" data-ans="1" data-lid="' + x.lid + '">승낙</button>'
+                    +   '<button class="no" data-ans="0" data-lid="' + x.lid + '">거절</button>'
+                    + '</span></div>';
+                }).join('')
+              + '</div></div>'
+            : '')
+
+        /* ② 이어진 사람 */
+        + '<div class="lk-sec"><h4>이어진 사람 <i>' + lk.length + '</i></h4>'
+        +   (lk.length
+              ? '<div class="lk-list">'
+                + lk.map(function(x){
+                    return '<div class="lk-card">' + lkPhoto(x) + lkWho(x, false)
+                      + '<span class="lk-btns">'
+                      +   '<button data-undo="' + x.lid + '">끊기</button>'
+                      + '</span></div>';
+                  }).join('')
+                + '</div>'
+              : '<div class="lk-none">아직 이어진 사람이 없습니다.<br>'
+                + '위에서 <b>아이디로 찾아</b> 청해 보십시오.</div>')
+        + '</div>'
+
+        /* ③ 보낸 요청 — 기다리는 것 */
+        + (sn.length
+            ? '<div class="lk-sec"><h4>보낸 요청 <i>' + sn.length + '</i>'
+              + '<span style="font-size:11.5px;font-weight:400;color:var(--text-3)">'
+              + ' 상대가 승낙하면 이어집니다</span></h4>'
+              + '<div class="lk-list">'
+              + sn.map(function(x){
+                  return '<div class="lk-card wait">' + lkPhoto(x) + lkWho(x, false)
+                    + '<span class="lk-btns">'
+                    +   '<button data-undo="' + x.lid + '">거두기</button>'
+                    + '</span></div>';
+                }).join('')
+              + '</div></div>'
+            : '');
+
+      head.style.display = '';
+      body.style.display = '';
+      bindLinks();
+    } catch (e) {
+      head.style.display = 'none';
+      body.style.display = 'none';
+    }
+  }
+
+  function bindLinks(){
+    var find = document.getElementById('lkFind');
+    var input = document.getElementById('lkId');
+    if (find) find.addEventListener('click', doFind);
+    if (input) input.addEventListener('keydown', function(e){
+      if (e.key === 'Enter'){ e.preventDefault(); doFind(); }
+    });
+
+    var body = document.getElementById('lkBody');
+    if (!body) return;
+    body.addEventListener('click', async function(e){
+      var b2 = e.target.closest && e.target.closest('button');
+      if (!b2) return;
+
+      /* 승낙 · 거절 */
+      var lid = b2.getAttribute('data-lid');
+      if (lid){
+        var yes = b2.getAttribute('data-ans') === '1';
+        if (!yes && !confirm('이 요청을 거절합니다. 진행할까요?')) return;
+        b2.disabled = true;
+        var r = await sb.rpc('oc_link_answer', { p_lid: Number(lid), p_ok: yes });
+        if (r.error || !r.data || r.data.ok !== true){
+          lkSay('no', '처리하지 못했습니다. 잠시 뒤에 다시 해 주십시오.');
+          b2.disabled = false; return;
+        }
+        lkSay('ok', yes ? '이어졌습니다.' : '거절했습니다.');
+        drawLinks();
+        return;
+      }
+
+      /* 끊기 · 거두기 */
+      var un = b2.getAttribute('data-undo');
+      if (un){
+        if (!confirm('이 연결을 끊습니다.\n\n상대에게 알리지는 않습니다. 진행할까요?')) return;
+        b2.disabled = true;
+        var r2 = await sb.rpc('oc_link_undo', { p_lid: Number(un) });
+        if (r2.error || !r2.data || r2.data.ok !== true){
+          lkSay('no', '처리하지 못했습니다.');
+          b2.disabled = false; return;
+        }
+        drawLinks();
+      }
+    });
+  }
+
+  async function doFind(){
+    var input = document.getElementById('lkId');
+    var box = document.getElementById('lkFound');
+    if (!input || !box) return;
+    var q = (input.value || '').trim();
+    if (!q){ lkSay('no', '상대의 아이디를 넣어 주십시오.'); input.focus(); return; }
+
+    box.innerHTML = '';
+    var r = await sb.rpc('oc_find_member', { p_username: q });
+    var d = (r && r.data) || {};
+    if (r.error || d.ok !== true){
+      var why = d.why || 'error';
+      lkSay('no',
+        why === 'notfound' ? '그 아이디를 가진 회원이 없습니다. 정확히 넣으셨는지 봐 주십시오.'
+      : why === 'self'     ? '자기 자신에게는 청할 수 없습니다.'
+      : '찾지 못했습니다. 잠시 뒤에 다시 해 주십시오.');
+      return;
+    }
+
+    var already = d.link === 'accepted';
+    var waiting = d.link === 'pending';
+    box.innerHTML = '<div class="lk-sec"><h4>찾았습니다</h4>'
+      + '<div class="lk-list"><div class="lk-card">'
+      +   lkPhoto(d) + lkWho(d, false)
+      +   '<span class="lk-btns">'
+      +     (already ? '<button disabled>이미 이어졌습니다</button>'
+              : waiting ? '<button disabled>기다리는 중입니다</button>'
+              : '<button class="ok" id="lkAsk" data-to="' + esc(d.id) + '">Linked 청하기</button>')
+      +   '</span>'
+      + '</div></div></div>';
+
+    var ask = document.getElementById('lkAsk');
+    if (ask) ask.addEventListener('click', async function(){
+      var msg = prompt('짧은 인사말을 남기실 수 있습니다. (비워 두셔도 됩니다)\n'
+        + '상대만 볼 수 있습니다.', '');
+      if (msg === null) return;   /* 취소 */
+      ask.disabled = true;
+      var r2 = await sb.rpc('oc_link_ask', { p_to: ask.getAttribute('data-to'), p_msg: msg });
+      var d2 = (r2 && r2.data) || {};
+      if (r2.error || d2.ok !== true){
+        lkSay('no',
+          d2.why === 'already' ? '이미 이어진 사이입니다.'
+        : d2.why === 'waiting' ? '이미 청해 두었습니다. 상대의 답을 기다려 주십시오.'
+        : '청하지 못했습니다. 잠시 뒤에 다시 해 주십시오.');
+        ask.disabled = false; return;
+      }
+      lkSay('ok', d2.accepted
+        ? '상대도 청해 두었기에 <b>바로 이어졌습니다.</b>'.replace(/<[^>]+>/g,'')
+        : '청했습니다. 상대가 승낙하면 이어집니다.');
+      input.value = '';
+      box.innerHTML = '';
+      drawLinks();
+    });
   }
 
   /* ── 내가 올린 것 ────────────────────────────────────────────
