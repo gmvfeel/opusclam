@@ -727,8 +727,29 @@
       head.style.display = '';
       body.style.display = '';
     } catch (e) {
-      head.style.display = 'none';
-      body.style.display = 'none';
+      /* ★ 오류를 <b>조용히 먹지 않습니다.</b>
+         (2026-08-04 · 그래프가 안 나와 까닭을 알 수 없었습니다)
+
+         함수가 아직 없으면 구역을 감추는 것이 맞지만, <b>다른 까닭</b>일 수도
+         있습니다. 그것을 구별할 수 있게 —
+           · 「함수가 없다」 는 뜻이면 조용히 감춥니다
+           · 그 밖의 오류는 <b>구역을 보이고 까닭을 적습니다</b>
+         그리고 콘솔에도 남겨 파트너님이 볼 수 있게 합니다. */
+      var msg = String((e && e.message) || e || '');
+      console.warn('[mypage] 활동 통계를 그리지 못했습니다:', msg);
+      var noFn = /does not exist|not found|schema cache|404/i.test(msg);
+      if (noFn) {
+        head.style.display = 'none';
+        body.style.display = 'none';
+      } else {
+        head.style.display = '';
+        body.style.display = '';
+        body.innerHTML = '<div class="st-none">'
+          + '통계를 불러오지 못했습니다.<br>'
+          + '<b>' + esc(msg.slice(0, 90)) + '</b><br>'
+          + '<span style="font-size:11.5px">새로 고쳐 보시고, 계속 그러면 고객센터로 알려 주십시오.</span>'
+          + '</div>';
+      }
     }
   }
 
