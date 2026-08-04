@@ -171,6 +171,18 @@
       + '</div>';
   }
 
+  /* 알림 줄 놓기 — 격자 밖에 둡니다(.wrap 이 격자라 안에 넣으면 밀립니다) */
+  function addMoreLine(total) {
+    var more = moreLine(total);
+    if (!more) return;
+    var sec = document.querySelector('section.board');
+    if (!sec || document.querySelector('.oc-my-more')) return;
+    var dd = document.createElement('div');
+    dd.className = 'oc-my-bar-host';
+    dd.innerHTML = more;
+    sec.parentNode.insertBefore(dd, sec.nextSibling);
+  }
+
   /* ── 관심분야를 담지 않은 회원에게 권합니다 ───────────────── */
   function inviteHtml() {
     return '<div class="oc-my-invite">'
@@ -357,6 +369,46 @@
       return !already[c.big + '|' + c.key] && !fixed[c.big + '|' + c.key];
     });
 
+    /* ★ <b>이미 원래 칸에 있는 갈래에도 표시를 붙입니다.</b>
+       (2026-08-04 · 파트너 지적)
+
+       「각 분야별 악보」 를 담았는데 원래 칸에도 그것이 있어서, 제 코드가
+       「이미 있으니 건드리지 않는다」 고 판단했습니다. 내용은 맞지만
+       <b>표시가 없어</b> 회원 입장에서는 「담았는데 표시가 없네?」 가 됩니다.
+
+       ★ 내용은 그대로 두고 <b>표시만</b> 붙입니다 — 원래 칸에는 대표
+         사진이 있는 경우가 많은데, 그것을 지우면 오히려 심심해집니다. */
+    want.forEach(function (c) {
+      var sl = already[c.big + '|' + c.key];
+      if (!sl || !sl.el) return;
+      var t = sl.el.querySelector('.sec-head .t');
+      if (!t || t.querySelector('.oc-my-tag')) return;
+      var tag = document.createElement('span');
+      tag.className = 'oc-my-tag';
+      tag.title = '내 관심분야로 담아 두신 갈래입니다';
+      tag.innerHTML = '<i>&#9733;</i>내 관심분야';
+      t.appendChild(tag);
+    });
+
+    /* 고정 자리(리쿠르트·유틸리티)에도 담은 것이 있으면 표시합니다 —
+       지금은 목록에서 뺐으므로 걸릴 일이 없지만, 뒤에 되살릴 때를
+       대비해 둡니다. */
+    want.forEach(function (c) {
+      if (!fixed[c.big + '|' + c.key] || !c.href) return;
+      var links = document.querySelectorAll('a.more[href="' + c.href + '"]');
+      for (var i3 = 0; i3 < links.length; i3++) {
+        if (boardMain.contains(links[i3])) continue;
+        var head = links[i3].parentNode;
+        var t2 = head && head.querySelector('.t');
+        if (!t2 || t2.querySelector('.oc-my-tag')) continue;
+        var tag2 = document.createElement('span');
+        tag2.className = 'oc-my-tag';
+        tag2.title = '내 관심분야로 담아 두신 갈래입니다';
+        tag2.innerHTML = '<i>&#9733;</i>내 관심분야';
+        t2.appendChild(tag2);
+      }
+    });
+
     /* ⑤ 갈아 끼울 자리 — <b>담은 갈래가 아닌</b> 칸을 앞에서부터 */
     var free = order.filter(function (sl) {
       return !sl.cat || !want.some(function (c) {
@@ -368,7 +420,9 @@
     for (var i = 0; i < todo.length && i < free.length; i++) {
       pairs.push({ slot: free[i], cat: todo[i] });
     }
-    if (!pairs.length) { mountBar('my', mine.length); return; }
+    /* ★ 갈아 끼울 것이 없어도 <b>띠와 표시는 남겨야</b> 합니다 —
+       담은 것이 다 원래 칸에 있는 경우입니다. */
+    if (!pairs.length) { mountBar('my', mine.length); addMoreLine(mine.length); return; }
 
     /* ⑥ 글을 한꺼번에 가져옵니다 — 하나씩 기다리면 느립니다 */
     var got = await Promise.all(pairs.map(function (p2) { return fetchRows(p2.cat); }));
@@ -384,17 +438,7 @@
     });
 
     /* 알림 줄과 띠 */
-    /* 알림 줄도 격자 밖에 놓습니다 (같은 까닭) */
-    var more = moreLine(mine.length);
-    if (more) {
-      var sec2 = document.querySelector('section.board');
-      if (sec2 && !document.querySelector('.oc-my-more')) {
-        var dd = document.createElement('div');
-        dd.className = 'oc-my-bar-host';
-        dd.innerHTML = more;
-        sec2.parentNode.insertBefore(dd, sec2.nextSibling);
-      }
-    }
+    addMoreLine(mine.length);
     mountBar('my', mine.length);
   }
 
