@@ -97,7 +97,19 @@
            걸러 냅니다. 그러면 null 이든 false 든 다 보입니다.
          ★ hidden 칸이 아예 없는 표(utility 등)에서는 이 조건을 쓰면
            통째로 실패하므로, 그런 표는 아래에서 따로 다룹니다. */
-      if (cat.noHidden) {
+      /* ★ <b>커뮤니티 게시판에는 hidden 칸이 없습니다.</b>
+         (2026-08-04 · 확인 SQL 로 알았습니다 — 아홉 곳 모두 없습니다)
+
+         제가 「있을 것」 이라 짐작해서 조건을 걸었더니, 없는 칸이라
+           column ... does not exist
+         오류로 <b>아홉 게시판이 통째로 비어</b> 보였습니다.
+
+         실제 게시판 목록(assets/board.js)도 hidden 을 쓰지 않습니다 —
+         커뮤니티에 숨기기 기능이 애초에 없습니다.
+
+         ★ 그러니 커뮤니티는 <b>조건을 걸지 않습니다.</b>
+           나중에 숨기기를 넣게 되면 그때 이 자리에 더하면 됩니다. */
+      if (cat.big === 'community' || cat.noHidden) {
         q += '&order=created_at.desc,id.desc';
       } else {
         q += '&hidden=not.is.true&order=created_at.desc,id.desc';
