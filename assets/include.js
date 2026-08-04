@@ -148,6 +148,62 @@
     var url = (slot && slot.getAttribute('data-src')) || '/partials/subnav-community.html';
     inject('oc-subnav', url);
     markSubnav();
+    buildSubnavSelect();
+  }
+
+  /* ── 모바일용 하위 메뉴 풀다운 ─────────────────────────────
+     ★ 왜 필요한가 (2026-08-04 · 파트너 요청)
+       알약이 여덟 개면 좁은 화면에서 <b>네 줄로 늘어집니다.</b>
+       그만큼 본문이 아래로 밀리고, 화면의 절반을 메뉴가 차지합니다.
+
+       그래서 모바일에서는 알약을 감추고 <b>선택 상자 하나</b>로 둡니다.
+       고르면 그 화면으로 갑니다. 자리를 한 줄로 줄일 수 있습니다.
+
+     ★ 알약을 지우지 않고 <b>감춥니다.</b>
+       데스크톱에서는 알약이 한눈에 보이는 편이 낫습니다. 화면 폭에
+       따라 CSS 가 갈라 주므로 자료를 두 번 적을 필요가 없습니다.
+
+     ★ 알약에서 글자와 주소를 그대로 읽어 옵니다.
+       메뉴를 늘리거나 이름을 고칠 때 <b>한 곳(partials)만</b> 고치면
+       풀다운도 함께 바뀝니다. */
+  function buildSubnavSelect() {
+    var nav = document.querySelector('.pdb-subnav');
+    if (!nav) return;
+    if (nav.parentNode.querySelector('.pdb-subnav-sel')) return;   /* 두 번 만들지 않습니다 */
+
+    var links = [].slice.call(nav.querySelectorAll('a[href]'));
+    if (links.length < 3) return;   /* 두어 개면 알약이 낫습니다 */
+
+    var wrap = document.createElement('div');
+    wrap.className = 'pdb-subnav-sel';
+
+    var sel = document.createElement('select');
+    sel.setAttribute('aria-label', '갈래 고르기');
+
+    links.forEach(function (a) {
+      var op = document.createElement('option');
+      op.value = a.getAttribute('href') || '#';
+      op.textContent = (a.textContent || '').trim();
+      if (a.classList.contains('active')) op.selected = true;
+      sel.appendChild(op);
+    });
+
+    /* 지금 화면이 메뉴에 없으면(글쓰기·상세 등) 맨 앞에 알림을 둡니다 —
+       아무것도 골라지지 않은 것처럼 보이면 헷갈립니다. */
+    if (!nav.querySelector('a.active')) {
+      var op0 = document.createElement('option');
+      op0.value = '';
+      op0.textContent = '갈래 고르기';
+      op0.selected = true;
+      sel.insertBefore(op0, sel.firstChild);
+    }
+
+    sel.addEventListener('change', function () {
+      if (sel.value) location.href = sel.value;
+    });
+
+    wrap.appendChild(sel);
+    nav.parentNode.insertBefore(wrap, nav.nextSibling);
   }
 
   // 헤더만 담당(동기 주입). 푸터는 app.js가 그린다.

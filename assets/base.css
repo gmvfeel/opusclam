@@ -169,3 +169,49 @@ html[data-theme="dark"] .pdb-table tbody tr:not(.pdb-norow):hover td{background:
   /* 표 안의 작은 링크 아이콘 — 26px 이라 조금 더 넓힙니다 */
   .pdb-table .c-link .lk{ width:32px;height:32px; }
 }
+
+
+/* ══ 하위 메뉴 — 모바일에서는 풀다운 ══════════════════════════
+   pdb-subnav-sel
+
+   ★ 왜 바꾸나 (2026-08-04 · 파트너 요청)
+     알약이 여덟 개면 좁은 화면에서 <b>네 줄로 늘어집니다.</b>
+     그만큼 본문이 아래로 밀리고, 화면의 절반을 메뉴가 차지합니다.
+     선택 상자 하나로 두면 <b>한 줄</b>이면 됩니다.
+
+   ★ 알약을 지우지 않고 감춥니다 — 데스크톱에서는 한눈에 보이는 편이
+     낫습니다. 화면 폭에 따라 CSS 가 갈라 주므로 자료를 두 번 적을
+     필요가 없습니다. 풀다운은 assets/include.js 가 알약에서 글자와
+     주소를 그대로 읽어 만듭니다.
+
+   ★ 기준을 860px 로 둡니다 — 태블릿 세로에서도 알약이 두 줄이 되므로
+     그때부터 풀다운이 낫습니다. */
+
+/* 기본(데스크톱) — 풀다운은 감춥니다 */
+.pdb-subnav-sel{ display:none; }
+
+@media (max-width: 860px){
+  /* 알약은 감추고 풀다운을 보입니다 */
+  .pdb-subnav{ display:none !important; }
+  .pdb-subnav-sel{ display:block; margin:14px 0 6px; }
+
+  .pdb-subnav-sel select{
+    -webkit-appearance:none; appearance:none;
+    width:100%; box-sizing:border-box;
+    height:46px; padding:0 42px 0 15px;
+    font-family:inherit; font-size:14.5px; font-weight:700;
+    color:var(--text, #2b2740);
+    background:#fff;
+    border:1px solid var(--line-2, #e8e6ef); border-radius:10px;
+    /* 오른쪽 화살표 — 그림 파일 없이 그립니다 */
+    background-image:linear-gradient(45deg, transparent 50%, var(--text-2,#5f5c70) 50%),
+                     linear-gradient(135deg, var(--text-2,#5f5c70) 50%, transparent 50%);
+    background-position:calc(100% - 21px) 20px, calc(100% - 15px) 20px;
+    background-size:6px 6px, 6px 6px;
+    background-repeat:no-repeat;
+  }
+  .pdb-subnav-sel select:focus{
+    outline:none; border-color:var(--violet-2, #5b4b9e);
+    box-shadow:0 0 0 3px rgba(91,75,158,.12);
+  }
+}

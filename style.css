@@ -76,7 +76,14 @@
   .util{transition:background .35s ease}
   header.masthead{background:var(--paper);border-bottom:1px solid var(--line);position:relative;transition:background .35s ease,border-color .35s ease}
   .link-txt{font-size:12.5px;color:var(--text-2)}
-  .mast-row{max-width:1320px;display:flex;align-items:center;justify-content:space-between;height:78px;gap:24px}
+  /* ★ 좌우 여백과 가운데 맞춤이 없었습니다 (2026-08-04 · 모바일에서 확인)
+     max-width 만 있고 margin:0 auto · padding 이 없어서, 좁은 화면에서
+     로고가 왼쪽 끝에 붙고 <b>오른쪽 단추가 화면을 벗어났습니다.</b>
+     ★ box-sizing 을 border-box 로 두어야 padding 이 폭을 넘기지 않습니다. */
+  .mast-row{max-width:1320px;margin:0 auto;padding:0 20px;box-sizing:border-box;
+    display:flex;align-items:center;justify-content:space-between;height:78px;gap:24px}
+  @media(max-width:880px){ .mast-row{padding:0 16px;gap:12px} }
+  @media(max-width:420px){ .mast-row{padding:0 13px;gap:8px} }
   .brand{display:flex;align-items:center;gap:10px;flex:0 0 auto}
   .logo-img{height:34px;width:auto;display:block;transition:filter .35s ease}
   .site-header:not(.solid) .logo-img{filter:brightness(0) invert(1)}
@@ -731,4 +738,30 @@
     min-height:38px;padding-top:10px;padding-bottom:10px;
     margin-top:-10px;margin-bottom:-10px;
   }
+}
+
+
+/* ══ 맨 위 띠 — 모바일 ══════════════════════════════════════
+   util-mobile
+
+   ★ 왜 필요한가 (2026-08-04 · 393px 화면에서 확인)
+     띠에 링크가 넷 있습니다 —
+       왼쪽  WIXON ASSOCIATES INC · LPSTOCK · OPUSCLAM COMMUNITY
+       오른쪽 CUSTOMER CENTER ›
+     34px 높이 한 줄에 다 넣으려니 좁은 화면에서 <b>글자가 겹쳤습니다.</b>
+
+   ★ 왼쪽 자매 서비스 링크는 <b>감춥니다.</b>
+     푸터에도 같은 링크가 있고, 모바일에서 첫 화면의 34px 를 그것에
+     쓰는 것은 아깝습니다. 「고객센터」 는 급할 때 찾는 것이므로 남깁니다.
+
+   ★ 480px 아래에서만 그렇게 합니다 — 태블릿에서는 넉넉합니다. */
+@media (max-width: 480px){
+  .util .left{ display:none; }
+  .util .wrap{ justify-content:flex-end; }
+  .util .right a{ font-size:11px; }
+}
+/* 480~860px — 겹치지 않게 줄이되 다 보입니다 */
+@media (min-width: 481px) and (max-width: 860px){
+  .util .left a{ margin-right:11px; }
+  .util .left a:last-child{ display:none; }   /* 가장 긴 것 하나만 감춥니다 */
 }
