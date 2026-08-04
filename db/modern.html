@@ -632,6 +632,7 @@ if('serviceWorker' in navigator){
 })();
 
 </script>
+<script src="/assets/thumb.js"></script>
 <script src="/assets/db-list.js" defer></script>
 <script>
 /* 현대음악DB: config → 공용 엔진(db-list.js) */
@@ -655,7 +656,11 @@ if('serviceWorker' in navigator){
   function renderRow(o,no,ctx){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
     var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
-    var av=o.image_url?'<img src="'+esc(wikiThumb(o.image_url,128))+'" data-full="'+esc(o.image_url)+'" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko);
+    /* ★ 목록 그림은 assets/thumb.js 가 만듭니다 —
+       원본을 그대로 받지 않고 <b>보이는 크기만큼</b> 줄여 받습니다.
+       예전에는 못 받으면 원본으로 되돌아가서, 위키미디어 원본(수 MB)을
+       그대로 받는 일이 잦았습니다. */
+    var av=OCThumb.img(o.image_url, {size:38, fallback:ini(o.name_ko)});
     var nat=o.nationality?(esc(o.nationality)+(o.nat_code?' <span class="nat-code">('+esc(o.nat_code)+')</span>':'')):'<span class="nd">\u2014</span>';
     var links='<span class="c-link">'+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_audio,'음원',IC.audio)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
@@ -692,7 +697,17 @@ if('serviceWorker' in navigator){
     OCList.init({
       table:'modern_composers', pageSize:30, orderDefault:'sort_no.desc',
       searchCols:['name_ko','name_en','works','technique'], entity:'modern_composers',
-      buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
+      buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow,
+      /* ★ 사진 칸이 빈 항목은 <b>모아둔 사진</b>으로 채웁니다.
+         이 설정이 없어서 바르토크·메시앙처럼 널리 알려진 작곡가도
+         첫 글자만 보였습니다. 인물·단체·공연장·학교 목록에는 있었는데
+         현대음악DB 에만 빠져 있었습니다.
+
+         ★ entity_type 은 <b>modern_composers</b> 로 둡니다 —
+           표 이름과 같게 맞추는 것이 이 프로젝트의 방식입니다.
+           확인 SQL(check-modern-photos.sql)의 ⓶ 에서 실제로 어떤
+           이름으로 담겨 있는지 보고, 다르면 이 한 줄만 고치면 됩니다. */
+      photoFill:{ type:'modern_composers', col:'image_url' }
     });
   });
 })();
