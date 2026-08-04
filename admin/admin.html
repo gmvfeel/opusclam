@@ -673,15 +673,30 @@
           return;
         }
       }
-      var r=await sb.from('persons').delete().in('id',ids);
+      /* ★ <b>실제로 몇 줄이 지워졌는지 받아서 확인합니다.</b>
+         Supabase 는 줄 보안(RLS)이 막으면 <b>오류 없이 0줄</b>을 지웁니다.
+         그러면 「삭제했습니다」 라고 알려도 그대로 남아 있습니다.
+         .select('id') 를 붙이면 지워진 줄을 돌려주므로 알 수 있습니다.
+         (2026-08-04 · 현대음악DB 정제에서 이 함정을 겪었습니다) */
+      var r=await sb.from('persons').delete().in('id',ids).select('id');
       if(r.error){
         alert('차단 목록에는 등록됐으나 삭제에 실패했습니다.\n'+r.error.message
           + '\n\n차단은 되어 있으니 다시 들어오지는 않습니다. 삭제만 다시 시도해 주십시오.');
         return;
       }
-      mgData=mgData.filter(function(p){return ids.indexOf(p.id)<0;});
+      var gone=(r.data&&r.data.length)||0;
+      if(gone===0){
+        alert('삭제가 한 줄도 되지 않았습니다.\n\n'
+          + '오류는 없었지만 0줄이 지워졌습니다 — 줄 보안(RLS)이 막은 것입니다.\n'
+          + 'Supabase 는 지우기 정책이 없으면 오류 없이 0줄을 지웁니다.\n\n'
+          + '차단 목록에는 올라갔으므로 다음 수집에서는 안 들어옵니다.');
+        return;
+      }
+      var goneSet={}; r.data.forEach(function(x){goneSet[x.id]=1;});
+      mgData=mgData.filter(function(p){return !goneSet[p.id];});
       renderManage();
-      alert(ids.length+'명을 차단 목록에 등록하고 삭제했습니다.'
+      alert(gone+'명을 차단 목록에 등록하고 삭제했습니다.'
+        + (gone<ids.length ? '\n★ 고른 것은 '+ids.length+'명인데 '+gone+'명만 지워졌습니다.' : '')
         + (wids.length<ids.length ? '\n(위키데이터 번호가 없는 '+(ids.length-wids.length)
             +'명은 차단 목록에 담을 수 없어 재수집 때 다시 들어올 수 있습니다)' : ''));
     }
