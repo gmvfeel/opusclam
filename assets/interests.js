@@ -93,8 +93,18 @@
        (pick_monthly_school). 목록이 아니므로 링크만 둡니다. */
     { big:'community', key:'school-month', label:'이달의 음악학교', href:'/community/school-month.html',
       en:'School of the Month', noList:true },
-    { big:'community', key:'utility',    label:'유틸리티 / 자료', href:'/community/utility.html',
-      en:'Utility',    tb:'utility',   view:'/community/utility-view.html' },
+    /* ★ <b>유틸리티 / 자료는 목록에서 뺍니다.</b>
+       (2026-08-04 · 파트너 정한 것)
+       메인 광고 아래에 <b>고정 자리</b>로 늘 있습니다. 담아 두어도
+       메인이 바뀌지 않으니, 회원 입장에서는 「담았는데 아무 일도
+       안 나네?」 가 됩니다. 고를 수 없게 두는 편이 헷갈리지 않습니다.
+
+       ★ 게시판에서도 담기 단추가 안 나옵니다 — 이 목록에 없으면
+         include.js 가 단추를 놓지 않습니다.
+       ★ 나중에 메인 짜임이 바뀌어 고정이 아니게 되면 이 줄을 되살리면
+         됩니다.
+
+    */
 
     /* ── DATABASE ── */
     { big:'db', key:'person',     label:'인물DB',           href:'/db/person.html',
@@ -110,20 +120,23 @@
     { big:'db', key:'foundation', label:'관련기관·재단DB',  href:'/db/foundation.html',
       en:'Foundation',  tb:'foundations', view:'/db/foundation-view.html', nameCol:'name_ko' },
     { big:'db', key:'academic',   label:'학술DB',           href:'/db/academic.html',
-      en:'Academic',    tb:'academic',  view:'/db/academic-view.html', nameCol:'title' },
+      en:'Academic',    tb:'academic',  view:'/db/academic-view.html', nameCol:'title' }
 
-    /* ── 리쿠르트 ──
-       ★ 인재정보는 단체·기업·학교 회원만 볼 수 있습니다.
-         리쿠르트의 HIRING 목록과 같게 맞춥니다 — 어긋나면 담아 두었는데
-         안 보이는 일이 생깁니다. */
-    { big:'recruit', key:'job',    label:'채용정보', href:'/recruit/job.html',
-      en:'Recruit',     tb:'recruit_jobs', view:'/recruit/job-view.html', nameCol:'title' },
-    /* ★ 인재정보는 <b>연락처가 가려진 뷰</b>로 봅니다
-       (recruit_talents_public). 실제 연락처는 브라우저에 오지 않습니다. */
-    { big:'recruit', key:'talent', label:'인재정보', href:'/recruit/talent.html',
-      en:'Talent',      tb:'recruit_talents_public', view:'/recruit/talent-view.html',
-      nameCol:'name_ko',
-      only:['industry','org','school'] }
+    /* ── 리쿠르트 · 유틸리티는 <b>목록에 넣지 않습니다</b> ──────
+       (2026-08-04 · 파트너 정한 것)
+
+       메인 광고 아래에 <b>고정 자리</b>로 늘 있습니다 —
+         리쿠르트   한 칸에서 「구인 / 구직」 탭으로 둘 다 보여 줍니다
+         유틸리티   자기 칸이 따로 있습니다
+
+       담아 두어도 메인이 바뀌지 않으니, 회원 입장에서는
+       「담았는데 아무 일도 안 나네?」 가 됩니다. 고를 수 없게 두는 편이
+       헷갈리지 않습니다.
+
+       ★ 게시판에서도 담기 단추가 나오지 않습니다 — 이 목록에 없으면
+         include.js 가 단추를 놓지 않습니다.
+       ★ 입시요강은 <b>남깁니다</b> — 그것은 고정 자리가 아닙니다.
+       ★ 나중에 메인 짜임이 바뀌면 여기에 다시 넣으면 됩니다. */
   ];
 
   var BIG_LABEL = {

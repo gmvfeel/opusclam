@@ -321,8 +321,28 @@
     order.forEach(function (sl) {
       if (sl.cat) already[sl.cat.big + '|' + sl.cat.key] = sl;
     });
+
+    /* ★ <b>광고 아래 고정 자리</b>에 있는 갈래도 끼우지 않습니다.
+       (2026-08-04 · 파트너 지적)
+
+       광고 아래에는 리쿠르트·유틸리티·입시요강이 <b>따로</b> 있습니다
+       (section.lower). 그것은 board-main 밖이라 제 코드가 못 봅니다.
+       그래서 「유틸리티」 를 담으면 <b>위에도 아래에도</b> 나왔습니다.
+
+       ★ 화면 어디든 그 게시판 링크가 이미 있으면 끼우지 않습니다 —
+         같은 것을 두 번 보여 줄 값이 없습니다. */
+    var fixed = {};
+    (I.CATS || []).forEach(function (c) {
+      if (!c.href) return;
+      /* board-main 밖에서 그 주소를 쓰는 칸이 있나 */
+      var out = document.querySelectorAll('a.more[href="' + c.href + '"]');
+      for (var i2 = 0; i2 < out.length; i2++) {
+        if (!boardMain.contains(out[i2])) { fixed[c.big + '|' + c.key] = true; break; }
+      }
+    });
+
     var todo = want.filter(function (c) {
-      return !already[c.big + '|' + c.key];
+      return !already[c.big + '|' + c.key] && !fixed[c.big + '|' + c.key];
     });
 
     /* ⑤ 갈아 끼울 자리 — <b>담은 갈래가 아닌</b> 칸을 앞에서부터 */
