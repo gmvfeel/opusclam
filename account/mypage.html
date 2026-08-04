@@ -121,6 +121,54 @@
   /* 소개 — 줄이 길어질 수 있어 목록 밖에 둡니다 */
   .mp-intro{font-size:13px;line-height:1.8;color:var(--text-2);margin:14px 0 0;
     padding:13px 15px;background:var(--paper-2);border-radius:10px;white-space:pre-wrap}
+  /* ── 등급·포인트 ─────────────────────────────────────────
+     ★ 등급을 <b>크게</b> 보여 주고, 다음 등급까지 얼마나 남았는지
+       띠로 나타냅니다. 숫자만 있으면 얼마나 왔는지 감이 안 옵니다. */
+  .lv-top{display:flex;align-items:flex-end;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  .lv-name{font-family:var(--display);font-size:26px;font-weight:800;
+    letter-spacing:-.01em;line-height:1.2}
+  .lv-name small{display:block;font-family:var(--sans);font-size:12px;
+    font-weight:600;color:var(--text-3);letter-spacing:0;margin-top:4px}
+  .lv-nums{display:flex;gap:22px;text-align:right}
+  .lv-num .k{font-size:11.5px;color:var(--text-3);margin-bottom:3px}
+  .lv-num .v{font-family:var(--display);font-size:20px;font-weight:800;line-height:1}
+  .lv-num .v i{font-style:normal;font-size:12px;font-weight:600;color:var(--text-3);margin-left:2px}
+
+  .lv-bar{height:8px;border-radius:8px;background:rgba(0,0,0,.06);overflow:hidden;margin:4px 0 8px}
+  .lv-bar i{display:block;height:100%;border-radius:8px;
+    background:linear-gradient(90deg,#7a5cc4,#e0a83c);transition:width .5s ease}
+  .lv-next{font-size:12.5px;color:var(--text-3);line-height:1.7}
+  .lv-next b{color:var(--violet-2,#5b4b9e)}
+
+  .lv-can{margin:16px 0 0;padding:13px 15px;border-radius:10px;
+    background:var(--paper-2);font-size:12.5px;line-height:1.75;color:var(--text-2)}
+  .lv-can b{color:var(--text)}
+  .lv-can .row{display:flex;gap:8px}
+  .lv-can .row + .row{margin-top:6px}
+  .lv-can .row span:first-child{flex:0 0 74px;color:var(--text-3)}
+
+  /* 포인트 내역 */
+  .lv-log{margin-top:18px}
+  .lv-log h4{font-size:13px;font-weight:800;margin:0 0 10px;
+    display:flex;align-items:center;justify-content:space-between}
+  .lv-log h4 span{font-size:11.5px;font-weight:400;color:var(--text-3)}
+  .lv-log ul{list-style:none;margin:0;padding:0}
+  .lv-log li{display:flex;align-items:center;gap:10px;
+    padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .lv-log li:last-child{border-bottom:0}
+  .lv-log .lg-t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lv-log .lg-p{flex:0 0 auto;font-family:var(--display);font-weight:800;font-size:13px}
+  .lv-log .lg-p.up{color:#2f7f4f}
+  .lv-log .lg-p.dn{color:#a34a4a}
+  .lv-log .lg-d{flex:0 0 auto;font-size:11.5px;color:var(--text-3)}
+  .lv-log .lg-none{color:var(--text-3);font-size:12.5px;padding:12px 0}
+
+  @media(max-width:520px){
+    .lv-top{align-items:flex-start}
+    .lv-nums{gap:16px;text-align:left}
+    .lv-name{font-size:22px}
+  }
   .mp-badge{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;border:1px solid var(--line2);color:var(--tx2)}
   .mp-badge.type{background:var(--tagbg);color:var(--tx)}
   .mp-badge.approved{color:#3a9d63;border-color:rgba(58,157,99,.4)}
@@ -174,6 +222,24 @@
          · 내지원  — 전공자·일반 회원에게만 보입니다
          자격이 아니면 assets/recruit-apps.js 가 제목까지 함께 감춥니다.
          빈 칸을 보여 주는 것보다 낫습니다. -->
+    <!-- ══ 등급과 포인트 ══════════════════════════════════════
+       ★ 점수가 쌓이는데 <b>볼 곳이 없으면</b> 있는지도 모릅니다.
+         (2026-08-04 · 트리거로 자동 셈이 붙은 뒤 만들었습니다)
+       ★ 「왜 내 점수가 이렇지?」 를 알 수 있게 <b>내역</b>도 보여 줍니다.
+       ★ 로그인하지 않았거나 함수가 없으면 이 구역을 <b>감춥니다</b> —
+         빈 상자만 남으면 어수선합니다. -->
+    <div class="mp-head" style="margin-top:44px;display:none" id="lvHead">
+      <span class="jtag">LEVEL</span>
+      <h1 style="font-size:24px">등급 · 포인트</h1>
+      <p class="mp-note">
+        글쓰기 · 댓글 · 추천받기 · DB보강으로 <b>활동점수</b>가 쌓이고, 그것이 등급을 정합니다.
+        <b>쓸포인트</b>는 유료 서비스에 쓰는 것으로, 써도 등급은 내려가지 않습니다.
+      </p>
+    </div>
+    <div class="mp-card" id="lvBody" style="display:none">
+      <div class="mp-msg">불러오는 중…</div>
+    </div>
+
     <div class="mp-head" style="margin-top:44px">
       <span class="jtag">RECEIVED</span>
       <h1 style="font-size:24px">받은 지원</h1>
@@ -301,7 +367,130 @@
       +'<div style="text-align:center;margin-top:18px"><a href="/account/withdraw.html" style="font-size:12px;color:var(--tx3);text-decoration:underline">회원 탈퇴</a></div>';
     box.innerHTML=html;
     var lo=document.getElementById("mpLogout"); if(lo) lo.addEventListener("click",doLogout);
+    drawLevel();
   }
+
+  /* ── 등급·포인트 ─────────────────────────────────────────────
+     ★ 서버 함수 두 가지를 씁니다 —
+         oc_my_points()  등급 · 활동점수 · 쓸포인트 · 다음 등급
+         point_log       무슨 일로 얼마 받았나 (본인만 보입니다)
+     ★ 함수가 아직 없으면 이 구역을 <b>감춥니다.</b>
+       빈 상자만 남으면 어수선하고 「고장인가?」 싶습니다. */
+  var PT_LABEL = {
+    join:'가입', join_person:'연주자 가입 · 인물DB 동의',
+    db_enrich:'DB보강', qna_ask:'지식나눔 질문', qna_answer:'지식나눔 답글',
+    qna_picked:'답글 채택됨', post:'글 쓰기', comment:'댓글',
+    got_like:'내 글이 추천받음', got_dislike:'내 글이 비추천받음',
+    ticket_reg:'티켓·공연 등록', login:'로그인', login_streak7:'연속 7일 로그인',
+    monthly:'이달 활동', bad_post:'부실·광고 글'
+  };
+  var REF_LABEL = {
+    hottopic:'핫토픽', news:'뉴스', qna:'지식나눔', gallery:'공연사진',
+    modern_music:'현대음악', prenatal_music:'태교음악', utility:'유틸리티',
+    admission:'입시요강', admission_community:'입시커뮤니티', spot:'정보SPOT',
+    submissions:'DB보강', auth:'로그인'
+  };
+  function nf(n){ return String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+  async function drawLevel(){
+    var head = document.getElementById('lvHead');
+    var body = document.getElementById('lvBody');
+    if (!head || !body) return;
+    try {
+      var r = await sb.rpc('oc_my_points');
+      if (r.error) throw new Error(r.error.message);
+      var d = r.data;
+      if (!d || d.level == null) throw new Error('빈 값');
+
+      var act = d.act || 0;
+      var nx  = d.next || null;
+      var pct = 100, left = 0;
+      if (nx && nx.need) {
+        /* ★ 다음 문턱까지 어디쯤인가 — 이번 등급의 문턱은 서버가 주지
+           않으므로, 지금 점수를 다음 문턱으로 나눈 비율을 씁니다.
+           문턱 간격이 등급마다 커지니 그래도 뜻은 통합니다. */
+        pct = Math.max(2, Math.min(100, Math.round(act / nx.need * 100)));
+        left = Math.max(0, nx.need - act);
+      }
+
+      body.innerHTML =
+          '<div class="lv-top">'
+        +   '<div class="lv-name">' + esc(d.label || 'Clamer LV I')
+        +     '<small>지금 등급</small></div>'
+        +   '<div class="lv-nums">'
+        +     '<div class="lv-num"><div class="k">활동점수</div>'
+        +       '<div class="v">' + nf(act) + '<i>점</i></div></div>'
+        +     '<div class="lv-num"><div class="k">쓸포인트</div>'
+        +       '<div class="v">' + nf(d.use) + '<i>P</i></div></div>'
+        +     (d.streak ? '<div class="lv-num"><div class="k">연속 로그인</div>'
+        +       '<div class="v">' + nf(d.streak) + '<i>일</i></div></div>' : '')
+        +   '</div>'
+        + '</div>'
+        + '<div class="lv-bar"><i style="width:' + pct + '%"></i></div>'
+        + '<div class="lv-next">'
+        +   (nx
+              ? (left > 0
+                  ? '다음 등급 <b>' + esc(nx.label) + '</b> 까지 <b>' + nf(left) + '점</b> 남았습니다'
+                    + (nx.can ? ' · 오르면 ' + esc(nx.can) : '')
+                  /* ★ 문턱을 이미 넘었는데 등급이 아직 안 오른 때가 있습니다 —
+                     다음 활동에서 서버가 올려 줍니다. 「0점 남았습니다」 라고
+                     적으면 고장처럼 보이므로 다르게 적습니다. */
+                  : '<b>' + esc(nx.label) + '</b> 문턱을 넘었습니다 — 다음 활동에서 오릅니다')
+              : '가장 높은 등급입니다 — 모든 서비스를 쓸 수 있습니다')
+        + '</div>'
+        + '<div class="lv-can">'
+        +   '<div class="row"><span>지금 가능</span><span><b>' + esc(d.can || '-') + '</b></span></div>'
+        +   '<div class="row"><span>쓸포인트</span><span>유료 서비스에 씁니다. '
+        +     '써도 <b>등급은 내려가지 않습니다.</b></span></div>'
+        + '</div>'
+        + '<div class="lv-log" id="lvLog"></div>';
+
+      head.style.display = '';
+      body.style.display = '';
+      drawLog();
+    } catch (e) {
+      head.style.display = 'none';
+      body.style.display = 'none';
+    }
+  }
+
+  async function drawLog(){
+    var box = document.getElementById('lvLog');
+    if (!box) return;
+    try {
+      var r = await sb.from('point_log')
+        .select('code,act,use,ref_type,memo,created_at')
+        .order('created_at', { ascending:false })
+        .limit(12);
+      if (r.error) throw new Error(r.error.message);
+      var rows = r.data || [];
+      box.innerHTML = '<h4>포인트 내역 <span>최근 12건</span></h4>'
+        + (rows.length
+            ? '<ul>' + rows.map(function(x){
+                var nm = PT_LABEL[x.code] || x.code;
+                var wh = REF_LABEL[x.ref_type];
+                var a2 = x.act || 0;
+                /* ★ 같은 말이 두 번 나오지 않게 합니다 —
+                   「DB보강 · DB보강」 · 「로그인 · 로그인」 처럼 겹쳤습니다.
+                   무슨 일인지와 어디서인지가 같으면 하나만 보입니다. */
+                if (wh && (wh === nm || nm.indexOf(wh) >= 0)) wh = '';
+                return '<li>'
+                  + '<span class="lg-t">' + esc(nm)
+                  +   (wh ? ' <span style="color:var(--text-3);font-size:11.5px">· '
+                          + esc(wh) + '</span>' : '')
+                  + '</span>'
+                  + '<span class="lg-p ' + (a2 >= 0 ? 'up' : 'dn') + '">'
+                  +   (a2 >= 0 ? '+' : '-') + nf(Math.abs(a2)) + '</span>'
+                  + '<span class="lg-d">' + esc(fmt(x.created_at)) + '</span>'
+                  + '</li>';
+              }).join('') + '</ul>'
+            : '<div class="lg-none">아직 쌓인 것이 없습니다. '
+              + '글을 쓰거나 DB보강에 참여하시면 점수가 오릅니다.</div>');
+    } catch (e) {
+      box.innerHTML = '';
+    }
+  }
+
 
   var FAV_META={
     person:{table:"persons",view:"person-view.html",label:"인물"},
