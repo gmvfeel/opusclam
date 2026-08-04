@@ -276,6 +276,13 @@
           <span class="cm-qlabel">음원 / 동영상</span>
           <span class="cm-qcount"><b id="cMed">—</b><i>건</i></span>
         </a>
+        <!-- ★ 각 분야별 악보 — 819건이 공개돼 있으므로 현황에 넣습니다.
+             ★ 다른 갈래와 달리 <b>승인된 것만</b> 셉니다. 검수를 기다리는
+               것은 목록에 나오지 않으므로 숫자에 넣으면 어긋납니다. -->
+        <a class="cm-qcard" href="/spot/score.html">
+          <span class="cm-qlabel">각 분야별 악보</span>
+          <span class="cm-qcount"><b id="cScr">—</b><i>건</i></span>
+        </a>
       </div>
     </section>
 
@@ -926,12 +933,17 @@
       var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/spot';
       var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
       var H = { apikey:K, Authorization:'Bearer '+K, Prefer:'count=exact' };
+      /* 세 번째 칸은 <b>덧붙일 조건</b>입니다.
+         악보만 review_status=approved 를 함께 봅니다 — 검수를 기다리는
+         것은 목록에 나오지 않으므로 숫자에 넣으면 어긋납니다. */
       var MAP = [
         ['#cFes','페스티벌'], ['#cCoK','콩쿨'], ['#cFun','지원금'],
-        ['#cCon','공연정보'], ['#cSit','관련사이트'], ['#cMed','음원영상']
+        ['#cCon','공연정보'], ['#cSit','관련사이트'], ['#cMed','음원영상'],
+        ['#cScr','악보', '&review_status=eq.approved']
       ];
       MAP.forEach(function(m){
-        fetch(U + '?select=id&limit=1&hidden=is.false&section=eq.' + encodeURIComponent(m[1]), { headers:H })
+        fetch(U + '?select=id&limit=1&hidden=is.false&section=eq.'
+              + encodeURIComponent(m[1]) + (m[2] || ''), { headers:H })
           .then(function(r){
             var cr = r.headers.get('content-range'); if(!cr) return;
             var n = parseInt((cr.split('/')[1] || '0'), 10) || 0;
