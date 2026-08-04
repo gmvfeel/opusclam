@@ -704,7 +704,16 @@ if('serviceWorker' in navigator){
     OCList.init({
       table:'foundations', pageSize:30, orderDefault:'sort_no.desc',
       searchCols:['name_ko','name_en','location','business','field'], entity:'foundations',
-      buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
+      buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow,
+      /* ★ 사진 칸이 빈 곳은 <b>모아둔 사진</b>으로 채웁니다.
+         이 설정이 없어서 목록에 사진이 거의 없었습니다.
+         (인물·단체·공연장·학교에는 있었는데 여기만 빠져 있었습니다)
+
+         ★ entity_type 은 org 로 둡니다 — 재단·기관도 <b>단체</b>이므로
+           모아둔 사진에 그 갈래로 담겨 있을 가능성이 큽니다.
+           사진표에는 person · org · school · venue 넷만 있습니다.
+           foundation 갈래는 없으므로 org 를 봅니다. */
+      photoFill:{ type:'org', col:'logo_url' }
     });
   });
 })();

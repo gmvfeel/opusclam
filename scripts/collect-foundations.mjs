@@ -184,7 +184,7 @@ function detailQuery(qids) {
   const vs = qids.map(q => 'wd:' + q).join(' ');
   return `
 SELECT ?item ?nameKo ?nameEn ?inception ?countryKo ?countryEn ?cityKo ?cityEn
-       ?website ?image ?descKo ?descEn
+       ?website ?image ?photo ?descKo ?descEn
        (GROUP_CONCAT(DISTINCT ?genL; separator=", ") AS ?gen) WHERE {
   VALUES ?item { ${vs} }
   OPTIONAL { ?item rdfs:label ?nameKo. FILTER(LANG(?nameKo)="ko") }
@@ -198,12 +198,18 @@ SELECT ?item ?nameKo ?nameEn ?inception ?countryKo ?countryEn ?cityKo ?cityEn
     OPTIONAL { ?hq rdfs:label ?cityEn. FILTER(LANG(?cityEn)="en") } }
   OPTIONAL { ?item wdt:P856 ?website. }
   OPTIONAL { ?item wdt:P154 ?image. }
+  # ★ P18(사진)도 함께 받습니다.
+  #   P154(로고 그림)는 기업·단체 가운데 <b>일부에만</b> 있어서, 재단·기관은
+  #   대부분 비어 있었습니다. 음악단체 수집기(collect-orgs.mjs)는 처음부터
+  #   P18 을 보았기에 그쪽은 사진이 나왔습니다.
+  #   ★ 로고가 더 어울리므로 P154 를 먼저 쓰고, 없을 때만 P18 을 씁니다.
+  OPTIONAL { ?item wdt:P18 ?photo. }
   OPTIONAL { ?item wdt:P136 ?g0. ?g0 rdfs:label ?genL. FILTER(LANG(?genL)="en") }
   OPTIONAL { ?item schema:description ?descKo. FILTER(LANG(?descKo)="ko") }
   OPTIONAL { ?item schema:description ?descEn. FILTER(LANG(?descEn)="en") }
 }
 GROUP BY ?item ?nameKo ?nameEn ?inception ?countryKo ?countryEn ?cityKo ?cityEn
-         ?website ?image ?descKo ?descEn`;
+         ?website ?image ?photo ?descKo ?descEn`;
 }
 
 // 한 분류를 다 훑습니다. 실패한 묶음은 건너뛰고 나머지를 계속합니다.
@@ -268,7 +274,10 @@ function toRow(b, type) {
     field: clean(val(b, 'gen')),
     link_home: clean(val(b, 'website')),
     link_wiki: null,
-    logo_url: clean(val(b, 'image')),
+    /* ★ 로고(P154)를 먼저 쓰고, 없으면 사진(P18)을 씁니다.
+       기관·재단은 로고가 더 어울리지만, 없을 때 빈 자리로 두는 것보다
+       건물·행사 사진이라도 있는 편이 목록에서 알아보기 쉽습니다. */
+    logo_url: clean(val(b, 'image')) || clean(val(b, 'photo')),
     wikidata_id: qidOf(val(b, 'item')),
     source: 'wikidata',
     is_oc: false,
