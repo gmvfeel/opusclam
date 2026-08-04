@@ -180,6 +180,18 @@ window.OCBoard = (function () {
       + ' class="' + cls + '"' + ex + fb
       + ' onload="this.classList.remove(\'oc-imgload\')">';
   }
+
+  /* ── Linked 청하기 파일을 필요할 때만 싣습니다 ─────────────
+     ★ 자리(.bv-linked)가 놓이는 화면에서만 싣습니다.
+       목록 화면에서는 부르지 않으므로 헛되게 받아 오지 않습니다. */
+  function needLinkedAsk() {
+    if (window.__ocLinkedAsk) return;
+    window.__ocLinkedAsk = true;
+    var sc = document.createElement('script');
+    sc.src = '/assets/linked-ask.js';
+    sc.onerror = function () { /* 못 받아도 화면은 그대로 돕니다 */ };
+    document.head.appendChild(sc);
+  }
   function fmtDate(iso) {
     if (!iso) return '';
     var d = new Date(iso); if (isNaN(d)) return esc(String(iso).slice(0, 10));
@@ -842,6 +854,27 @@ window.OCBoard = (function () {
         var o = rows[0];
         document.title = (o.title || '뉴스') + ' · OPUSCLAM';
         var srcAu = [o.source, o.author_name].filter(Boolean).map(esc).join(' · ');
+
+        /* ★ <b>글 쓴 사람에게 Linked 를 청하는 자리</b>입니다.
+           (2026-08-04)
+
+           마이페이지에서만 청할 수 있었는데, 그러려면 <b>상대의 아이디를
+           알아야</b> 했습니다. 실제로는 글을 읽다가 「이 사람과 이어 두고
+           싶다」 가 자연스럽습니다.
+
+           ★ 자리만 만들고, 채우는 일은 assets/linked-ask.js 가 합니다 —
+             그 파일이 없어도 이 화면은 그대로 돕니다.
+           ★ author_id 가 없는 글(시드 자료)에는 놓지 않습니다. */
+        var lkSlot = (o.author_id && o.author_name)
+          ? '<span class="bv-linked" data-uid="' + esc(o.author_id)
+            + '" data-name="' + esc(o.author_name) + '"></span>'
+          : '';
+        /* ★ 자리를 놓을 때 <b>채우는 파일도 스스로</b> 싣습니다.
+           글 상세 화면 열 곳에 한 줄씩 넣으면 —
+             · 배포할 파일이 열 개가 되어 빠뜨리기 쉽고
+             · 새 게시판을 만들 때 또 넣어야 합니다
+           (오늘 interests.js 에서 같은 것을 겪고 이렇게 바꿨습니다) */
+        if (lkSlot) needLinkedAsk();
         var tag = o.category ? '<span class="board-tag">' + esc(o.category) + '</span>' : '';
         var thumb = o.thumb_url ? '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' : '';
         var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
@@ -999,7 +1032,7 @@ window.OCBoard = (function () {
         box.innerHTML =
           '<div class="bv-head">'
           + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'
-          + '<div class="bv-meta">' + tag + (srcAu ? '<span>' + srcAu + '</span>' : '')
+          + '<div class="bv-meta">' + tag + (srcAu ? '<span>' + srcAu + lkSlot + '</span>' : '')
           + '<span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
           + '</div>'
           + dl + thumb + body + xlinks + link

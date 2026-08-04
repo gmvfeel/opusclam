@@ -784,3 +784,49 @@ img.oc-imgload{
   margin-top:22px;padding-top:14px;border-top:1px solid var(--line);
   font-size:12px;line-height:1.7;color:var(--text-3)
 }
+
+
+/* ══ Linked 청하기 단추 (assets/linked-ask.js) ═════════════════
+   글 상세에서 <b>글 쓴 사람 옆</b>에 놓입니다.
+
+   ★ 작게 조용히 둡니다 — 글을 읽는 데 방해가 되면 안 됩니다.
+     다만 이어진 사이는 알아볼 수 있게 색을 달리합니다. */
+.bv-linked{ display:inline-flex;vertical-align:middle;margin-left:7px }
+
+.oc-lk-btn{
+  display:inline-flex;align-items:center;gap:3px;
+  height:22px;padding:0 8px;border-radius:999px;
+  font-family:inherit;font-size:10.5px;font-weight:700;line-height:1;
+  color:var(--violet-2,#5b4b9e);
+  background:rgba(91,75,158,.08);
+  border:1px solid rgba(91,75,158,.24);
+  cursor:pointer;white-space:nowrap;
+  transition:background .15s ease,border-color .15s ease;
+}
+.oc-lk-btn:hover{ background:rgba(91,75,158,.15);border-color:var(--violet-2,#5b4b9e) }
+.oc-lk-btn i{ font-style:normal;font-size:11px;font-weight:800 }
+/* 이미 이어졌거나 청한 사이 — 누를 수 없습니다 */
+.oc-lk-btn.off{
+  color:var(--text-3,#8a8ca0);
+  background:rgba(0,0,0,.04);
+  border-color:rgba(0,0,0,.10);
+  cursor:default;
+}
+.oc-lk-btn.off:hover{ background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.10) }
+
+@media (max-width:860px){
+  /* 모바일에서 누르기 쉽게 — 다만 글줄을 밀지 않게 높이만 조금 */
+  .oc-lk-btn{ height:26px;padding:0 10px;font-size:11px }
+}
+
+/* 짧은 알림 */
+.oc-lk-toast{
+  position:fixed;left:50%;bottom:34px;transform:translate(-50%,14px);
+  background:rgba(30,26,52,.94);color:#fff;
+  font-size:13px;font-weight:600;line-height:1.5;
+  padding:12px 20px;border-radius:999px;
+  box-shadow:0 10px 30px -10px rgba(20,14,45,.5);
+  opacity:0;transition:opacity .2s ease,transform .2s ease;
+  z-index:9999;pointer-events:none;max-width:86vw;text-align:center;
+}
+.oc-lk-toast.go{ opacity:1;transform:translate(-50%,0) }
