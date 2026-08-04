@@ -50,6 +50,19 @@
        리쿠르트에서는 제목이 짧을 때 「빈 상자만 커 보인다」 고 그 카드를
        없앤 적이 있습니다. 관심분야는 <b>많이 훑는 것</b>이 값입니다. */
   var ROWS = 7;
+
+  /* ★ <b>여유분을 더 가져옵니다</b> (2026-08-04 · 파트너 지적)
+     갈래마다 글 수와 키가 달라 두 줄기(왼쪽·오른쪽)가 어긋납니다.
+     그래서 처음부터 넉넉히 받아 두고, 화면에 그린 뒤 <b>짧은 줄기의
+     칸에 숨겨 둔 줄을 하나씩 켜서</b> 키를 맞춥니다.
+     통신은 한 번뿐이므로 무겁지 않습니다. */
+  var ROWS_MAX = 14;
+
+  /* ★ 키를 맞출 때 <b>여기까지</b> 줄일 수 있습니다.
+     처음에는 ROWS(7) 아래로 안 줄였는데, 그러면 짧은 쪽에 켤 줄이 없을 때
+     빈 자리가 그대로 남았습니다(「셋만 담음」 에서 181px).
+     넷은 원래 메인의 기본 줄 수이므로 초라하지 않습니다. */
+  var ROWS_MIN = 4;
   var KEY_MODE = 'oc-main-mode';   /* 'my' 또는 'first' */
 
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
@@ -127,7 +140,7 @@
         q += '&hidden=not.is.true&order=created_at.desc,id.desc';
       }
     }
-    q += '&limit=' + ROWS;
+    q += '&limit=' + ROWS_MAX;
 
     try {
       var r = await fetch(q, { headers: H });
@@ -143,9 +156,12 @@
      ★ 원래 메인의 .col-block 과 <b>같은 짜임</b>으로 만듭니다.
        그래야 스타일을 새로 만들지 않아도 어울립니다. */
   function blockHtml(cat, rows) {
+    /* ★ ROWS 줄까지 보이고, 남은 것은 <b>숨겨 둡니다.</b>
+       뒤에 키를 맞출 때 하나씩 켭니다(oc-my-more-row). */
     var lis = rows.length
-      ? rows.map(function (x) {
-          return '<li><a href="' + esc(cat.view || cat.href)
+      ? rows.map(function (x, i) {
+          return '<li' + (i >= ROWS ? ' class="oc-my-hid"' : '') + '>'
+            + '<a href="' + esc(cat.view || cat.href)
             + (cat.view ? ('?id=' + encodeURIComponent(x.id)) : '') + '">'
             + esc(x.t) + '</a>'
             + '<span class="dt">' + esc(fmtDate(x.d)) + '</span></li>';
@@ -182,6 +198,74 @@
       + ' <a href="/account/interests.html">순서 바꾸기 →</a>'
       + '</div>';
   }
+
+  /* ── 두 줄기 키 맞추기 ─────────────────────────────────────
+     ★ 왜 필요한가 (2026-08-04 · 파트너 지적)
+       왼쪽·오른쪽 줄기의 칸들이 키가 달라서, 한쪽이 먼저 끝나면
+       <b>아래에 빈 자리</b>가 생깁니다. 갈래마다 글 수도 다르고,
+       원래 칸에는 대표 카드가 있어 더 큽니다.
+
+     ★ <b>짧은 쪽의 내 칸에 숨겨 둔 줄을 하나씩 켭니다.</b>
+       미리 넉넉히 받아 두었으므로 통신이 늘지 않습니다.
+     ★ 원래 칸은 건드리지 않습니다 — 그쪽 짜임을 흐트리면 안 됩니다.
+     ★ 40번까지만 손봅니다 — 켤 줄이 없으면 그대로 둡니다. 완벽하게
+       맞추는 것보다 <b>눈에 거슬리지 않을 만큼</b>이면 됩니다. */
+  function balanceColumns() {
+    var c1 = document.querySelector('.board-main .col-1');
+    var c2 = document.querySelector('.board-main .col-2');
+    if (!c1 || !c2) return;
+
+    /* 좁은 화면에서는 두 줄기가 <b>위아래로</b> 놓이므로 맞출 것이 없습니다 */
+    if ((window.innerWidth || 0) <= 980) return;
+
+    /* ★ <b>내용의 끝 위치</b>를 잽니다.
+       col-1·col-2 는 격자 칸이라 <b>늘 같은 키</b>로 늘어납니다 —
+       그것을 재면 언제나 차이가 0 으로 나와 아무것도 못 맞춥니다.
+       마지막 칸의 아래 끝을 재야 실제로 어디까지 채워졌는지 알 수 있습니다. */
+    function endOf(col) {
+      var bs = col.querySelectorAll('.col-block');
+      if (!bs.length) return 0;
+      return bs[bs.length - 1].getBoundingClientRect().bottom;
+    }
+
+    /* ★ <b>양쪽으로</b> 맞춥니다.
+       짧은 쪽에 켤 줄이 없을 때도 있습니다 — 그 갈래에 글이 몇 건뿐이면
+       숨겨 둘 것이 애초에 없습니다. 그때는 <b>긴 쪽을 줄입니다.</b>
+       (2026-08-04 · 「셋만 담음」 에서 181px 가 남아 알았습니다)
+
+     ★ ROWS(7줄) 아래로는 줄이지 않습니다 — 너무 적으면 칸이 초라해집니다. */
+    function lastMineBlock(col) {
+      var bs = col.querySelectorAll('.oc-my-block');
+      return bs.length ? bs[bs.length - 1] : null;
+    }
+
+    for (var step = 0; step < 60; step++) {
+      var d = endOf(c1) - endOf(c2);
+      if (Math.abs(d) < 40) break;                 /* 40px 안이면 눈에 안 띕니다 */
+      var short = (d > 0) ? c2 : c1;
+      var tall  = (d > 0) ? c1 : c2;
+
+      /* ① 짧은 쪽에 숨은 줄이 있으면 켭니다 */
+      var hid = short.querySelector('.oc-my-block .oc-my-hid');
+      if (hid) { hid.classList.remove('oc-my-hid'); continue; }
+
+      /* ② 없으면 긴 쪽의 <b>마지막 내 칸</b>에서 줄을 되감춥니다 */
+      var blk = lastMineBlock(tall);
+      if (!blk) break;
+      var vis = blk.querySelectorAll('.list > li:not(.oc-my-hid):not(.oc-my-none)');
+      if (vis.length <= ROWS_MIN) break;           /* 넷 아래로는 줄이지 않습니다 */
+      vis[vis.length - 1].classList.add('oc-my-hid');
+    }
+  }
+
+  /* 창 크기가 바뀌면 다시 맞춥니다 — 폭에 따라 줄바꿈이 달라집니다 */
+  (function watchResize(){
+    var t = null;
+    window.addEventListener('resize', function () {
+      if (t) clearTimeout(t);
+      t = setTimeout(function () { t = null; balanceColumns(); }, 250);
+    });
+  })();
 
   /* 알림 줄 놓기 — 격자 밖에 둡니다(.wrap 이 격자라 안에 넣으면 밀립니다) */
   function addMoreLine(total) {
@@ -452,6 +536,8 @@
     /* 알림 줄과 띠 */
     addMoreLine(mine.length);
     mountBar('my', mine.length);
+    addMoreLine(mine.length);
+    balanceColumns();
   }
 
   /* interests.js 가 늦게 실릴 수 있으므로 기다립니다 */
