@@ -188,8 +188,13 @@
   async function loadRows(onlyUnlinked){
     var out = [], from = 0;
     for(;;){
+      /* ★ 칸을 하나하나 적지 않고 <b>모두</b> 받습니다.
+         처음에는 class 를 적었는데 그런 칸이 없어서
+           column modern_composers.class does not exist
+         오류로 통째로 멈췄습니다. 449명이면 무겁지 않으므로
+         칸 이름에 기대지 않는 편이 안전합니다. */
       var q = sb.from('modern_composers')
-        .select('id,name_ko,name_en,wikidata_id,person_id,image_url,works,technique,class')
+        .select('*')
         .order('id',{ ascending:true });
       if (onlyUnlinked) q = q.is('person_id', null);
       var r = await q.range(from, from + 199);
@@ -307,7 +312,11 @@
         var v = window.OCSuspect.score({
           name_ko: r.name_ko || '', name_en: r.name_en || '',
           wd_occupation: occ, wd_genre: gen,
-          description: '', works: r.works || '', field: r.class || r.technique || ''
+          /* ★ 없을 수 있는 칸은 <b>있는 것만</b> 씁니다.
+             표마다 칸 이름이 조금씩 다르므로 하나에 기대면 안 됩니다. */
+          description: r.description || r.desc || '',
+          works: r.works || '',
+          field: r.technique || r.school_style || r.lineage || ''
         });
         rows.push({
           id: r.id, name_ko: r.name_ko || '', name_en: r.name_en || '',
