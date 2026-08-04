@@ -412,7 +412,18 @@
   /* ★ 내 관심분야 표시 — 제목 옆에 조용히 붙습니다.
      크게 두면 아홉 칸 가운데 몇 개가 도드라져 어수선해집니다.
      목록 글자를 가리지 않게 제목 줄에만 둡니다. */
-  .oc-my-tag{display:inline-flex;align-items:center;gap:4px;
+  /* ★ 제목이 <b>줄바꿈되지 않게</b> 합니다.
+     「음악단체 DB」 처럼 공백이 든 이름은 표시가 붙으면 줄이 바뀌어
+     「VIEW MORE」 와 겹쳤습니다(2026-08-04 · 파트너 지적).
+     ★ 제목이 아주 길면 <b>제목을 줄이고</b> 표시와 VIEW MORE 를 지킵니다 —
+       그 둘은 자리가 작아 줄어들 여지가 없습니다. */
+  .sec-head .t{ min-width:0; flex-wrap:nowrap }
+  .sec-head .t .ko{
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;
+  }
+  .sec-head .more{ flex:0 0 auto }
+
+  .oc-my-tag{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;
     margin-left:8px;padding:2px 8px;border-radius:999px;
     font-size:10.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;
     color:var(--violet-2,#5b4b9e);
@@ -422,6 +433,13 @@
   .oc-my-tag i{font-style:normal;font-size:10px;color:#e0a83c;line-height:1}
   /* 어두운 배경(메인 위쪽)에서도 읽히게 */
   .site-header:not(.solid) ~ * .oc-my-tag{background:rgba(255,255,255,.10)}
+  /* ★ 칸이 좁으면(두 줄기 짜임) 글자를 빼고 별만 둡니다.
+     1000px 아래에서는 한 칸이 400px 밑으로 내려가 「음악단체 DB」 같은
+     이름에 표시까지 붙으면 빠듯합니다. */
+  @media(max-width:1000px){
+    .oc-my-tag{font-size:0;padding:2px 6px;margin-left:6px}
+    .oc-my-tag i{font-size:12px}
+  }
   @media(max-width:620px){
     /* 좁은 화면에서는 <b>별만</b> 남깁니다 — 제목이 밀리면 안 됩니다 */
     .oc-my-tag{padding:2px 6px;margin-left:6px}
