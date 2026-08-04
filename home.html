@@ -98,7 +98,10 @@
       min-height:38px;padding-top:10px;padding-bottom:10px;
       margin-top:-10px;margin-bottom:-10px;
     }
-    /* 맨 위 띠는 높이가 정해져 있어 여백만 줍니다 */
+    /* 맨 위 띠는 높이가 정해져 있어 여백만 줍니다.
+       ★ 글자도 <b>모바일에서만</b> 키웁니다 — 데스크톱은 8px 그대로입니다.
+         (그 띠는 조용히 있어야 하는 것인데, 앞서 두 곳을 함께 키워
+          데스크톱에서 도드라졌습니다) */
     .util .left a, .util .right a{ min-height:34px;padding-top:8px;padding-bottom:8px;
       margin-top:-8px;margin-bottom:-8px; }
     /* 푸터 링크도 같이 */
@@ -127,10 +130,13 @@
   .ph.dark::after{opacity:.34}
 
   /* ---------- utility top bar ---------- */
-  .util{background:#0a0d24;color:#a9abc7;font-size:11px;letter-spacing:.01em;border-bottom:1px solid rgba(255,255,255,.05)}
+  .util{background:#0a0d24;color:#a9abc7;font-size:9px;letter-spacing:.01em;border-bottom:1px solid rgba(255,255,255,.05)}
   .util .wrap{display:flex;align-items:center;justify-content:space-between;height:34px}
-  .util .left a{margin-right:18px;color:rgba(255,255,255,.34);font-family:var(--serif);letter-spacing:.05em;font-size:10.5px;font-weight:600;transition:color .2s ease}
-  .util .right a{color:rgba(255,255,255,.34);letter-spacing:.04em;font-size:10.5px;font-weight:600;transition:color .2s ease}
+  /* ★ 데스크톱은 <b>원래 크기(8px)</b> — 이 띠는 조용히 있어야 합니다.
+     모바일에서만 키웁니다(아래 @media). home.html 에 자체 규칙이 있어
+     style.css 를 덮어쓰므로, 여기도 함께 고쳐야 합니다. */
+  .util .left a{margin-right:18px;color:rgba(255,255,255,.34);font-family:var(--serif);letter-spacing:.05em;font-size:8px;font-weight:600;transition:color .2s ease}
+  .util .right a{color:rgba(255,255,255,.34);letter-spacing:.04em;font-size:8px;font-weight:600;transition:color .2s ease}
   .util a:hover{color:#fff}
   .m-community{display:none}
   @media(max-width:880px){
@@ -299,7 +305,7 @@
   /* ---------- triple banner ---------- */
   .triple{position:relative;z-index:1;background:var(--band-grad);overflow:hidden;box-shadow:0 16px 30px -10px rgba(0,0,0,.5)}
   .wxn-eyebrow{position:relative;z-index:3;height:30px;margin-top:6px;overflow:hidden}
-  .wxn-run{position:absolute;top:50%;left:0;white-space:nowrap;font-family:var(--serif);font-size:11px;font-weight:600;letter-spacing:.16em;color:rgba(255,255,255,.5);animation:wxnMove 120s linear infinite}
+  .wxn-run{position:absolute;top:50%;left:0;white-space:nowrap;font-family:var(--serif);font-size:8px;font-weight:600;letter-spacing:.16em;color:rgba(255,255,255,.5);animation:wxnMove 120s linear infinite}
   @keyframes wxnMove{
     0%{left:0;transform:translate(0,-50%)}
     50%{left:100%;transform:translate(-100%,-50%)}
@@ -376,6 +382,59 @@
   .board{padding:44px 0 10px}
   .board .wrap{display:grid;grid-template-columns:1fr 350px;gap:34px}
   .board-main{display:grid;min-width:0;grid-template-columns:1fr 1fr;column-gap:34px;grid-template-areas:'c1 c2' 'ad ad'}
+
+  /* ══ 나만의 메인 (assets/my-main.js) ══════════════════════
+     ★ 관심분야로 채운 메인임을 알려 주는 띠와, 원래 메인으로
+       돌아가는 길입니다. 바꿀 수 있다는 것을 모르면 갇힌 느낌이 됩니다. */
+  /* ★ 띠를 담는 자리 — 폭을 .wrap 과 같게 맞춥니다.
+     .board .wrap 이 격자(1fr 350px)라 그 안에 넣으면 칸이 밀립니다.
+     그래서 밖에 두고 폭만 맞춥니다. */
+  .oc-my-bar-host{max-width:var(--wrap);margin:0 auto;padding:0 20px}
+  @media(min-width:1200px){ .oc-my-bar-host{max-width:1560px;padding:0 48px} }
+
+  .oc-my-bar{display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;margin:0 0 22px;padding:13px 18px;
+    background:rgba(91,75,158,.07);border:1px solid rgba(91,75,158,.22);
+    border-radius:12px;font-size:13px;color:var(--text-2)}
+  .oc-my-bar b{color:var(--violet-2,#5b4b9e)}
+  .oc-my-bar.first{background:var(--paper-2);border-color:var(--line)}
+  .oc-my-bar.first b{color:var(--text)}
+  .oc-my-bar .btns{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .oc-my-bar .btns a,.oc-my-bar .btns button{
+    font-family:inherit;font-size:12.5px;font-weight:700;
+    height:34px;padding:0 14px;border-radius:8px;cursor:pointer;
+    display:inline-flex;align-items:center;text-decoration:none;
+    border:1px solid var(--line-2);background:#fff;color:var(--text-2);
+    transition:border-color .15s,color .15s}
+  .oc-my-bar .btns a:hover,.oc-my-bar .btns button:hover{
+    border-color:var(--violet-2,#5b4b9e);color:var(--violet-2,#5b4b9e)}
+
+  /* 담은 것이 여섯 개를 넘을 때 알리는 줄 */
+  .oc-my-more{margin:18px 0 0;padding:12px 16px;text-align:center;
+    background:var(--paper-2);border:1px dashed var(--line-2);border-radius:10px;
+    font-size:12.5px;color:var(--text-3)}
+  .oc-my-more b{color:var(--text-2)}
+  .oc-my-more a{margin-left:8px;color:var(--violet-2,#5b4b9e);
+    text-decoration:none;font-weight:700}
+  .oc-my-more a:hover{text-decoration:underline}
+
+  /* 관심분야를 담지 않은 회원에게 권하는 줄 */
+  .oc-my-invite{margin:0 0 22px;padding:15px 18px;
+    background:rgba(224,138,60,.07);border:1px solid rgba(224,138,60,.26);
+    border-radius:12px;font-size:13px;line-height:1.75;color:var(--text-2)}
+  .oc-my-invite b{color:var(--text)}
+  .oc-my-invite a{margin-left:6px;color:var(--ac,#c8792c);
+    text-decoration:none;font-weight:700;white-space:nowrap}
+  .oc-my-invite a:hover{text-decoration:underline}
+
+  /* 글이 아직 없는 갈래 */
+  .oc-my-none span{color:var(--text-3);font-size:12.5px}
+
+  @media(max-width:860px){
+    .oc-my-bar{flex-direction:column;align-items:flex-start;padding:12px 14px}
+    .oc-my-bar .btns{width:100%}
+    .oc-my-bar .btns a,.oc-my-bar .btns button{height:38px;flex:1 1 auto;justify-content:center}
+  }
   .col-1{grid-area:c1;min-width:0}
   .col-2{grid-area:c2;min-width:0}
   .board-ad{grid-area:ad;align-self:stretch}
@@ -739,6 +798,17 @@
   }
 
   @media(max-width:768px){.util{display:none}}
+
+  /* ══ 맨 위 띠 글자 — 모바일에서만 키움 ══════════════════════
+     ★ 왜 <b>맨 아래</b>에 두나
+       이 파일 위쪽에 모바일 규칙을 두었는데, 그 아래에 기본 규칙(8px)이
+       또 있어서 <b>기본이 이겼습니다.</b> CSS 는 무게가 같으면 나중에
+       쓴 것이 이깁니다. 그래서 맨 아래로 옮겼습니다.
+
+     ★ 데스크톱은 8px 그대로입니다 — 그 띠는 조용히 있어야 합니다. */
+  @media (max-width: 860px){
+    .util .left a, .util .right a, .util a{ font-size:10.5px; }
+  }
 </style>
 </head>
 <body>
@@ -2621,5 +2691,7 @@ if('serviceWorker' in navigator){
 })();
 </script>
 <script src="/assets/app.js" defer></script>
+<script src="/assets/interests.js"></script>
+<script src="/assets/my-main.js"></script>
 </body>
 </html>

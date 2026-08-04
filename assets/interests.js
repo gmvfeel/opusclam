@@ -44,42 +44,78 @@
      ★ 게시판을 늘리면 여기에 한 줄 더하십시오. */
   var CATS = [
     /* ── 정보SPOT ── */
-    { big:'spot', key:'festival',  label:'페스티벌정보',       href:'/spot/festival.html',  sec:'페스티벌' },
-    { big:'spot', key:'concours',  label:'국내/외 콩쿨정보',   href:'/spot/concours.html',  sec:'콩쿨' },
-    { big:'spot', key:'concert',   label:'공연정보',           href:'/spot/concert.html',   sec:'공연정보' },
-    { big:'spot', key:'funding',   label:'지원금 / 정책자금',  href:'/spot/funding.html',   sec:'지원금' },
-    { big:'spot', key:'media',     label:'음원 / 동영상',      href:'/spot/media.html',     sec:'음원영상' },
-    { big:'spot', key:'score',     label:'각 분야별 악보',     href:'/spot/score.html',     sec:'악보' },
-    { big:'spot', key:'sites',     label:'관련사이트',         href:'/spot/sites.html',     sec:'관련사이트' },
+    { big:'spot', key:'festival',  label:'페스티벌정보',       href:'/spot/festival.html',  sec:'페스티벌',
+      en:'Festival',   tb:'spot', view:'/spot/spot-view.html' },
+    { big:'spot', key:'concours',  label:'국내/외 콩쿨정보',   href:'/spot/concours.html',  sec:'콩쿨',
+      en:'Concours',   tb:'spot', view:'/spot/spot-view.html' },
+    { big:'spot', key:'concert',   label:'공연정보',           href:'/spot/concert.html',   sec:'공연정보',
+      en:'Concert',    tb:'spot', view:'/spot/spot-view.html' },
+    { big:'spot', key:'funding',   label:'지원금 / 정책자금',  href:'/spot/funding.html',   sec:'지원금',
+      en:'Funding',    tb:'spot', view:'/spot/spot-view.html' },
+    { big:'spot', key:'media',     label:'음원 / 동영상',      href:'/spot/media.html',     sec:'음원영상',
+      en:'Media',      tb:'spot', view:'/spot/spot-view.html' },
+    { big:'spot', key:'score',     label:'각 분야별 악보',     href:'/spot/score.html',     sec:'악보',
+      en:'Score',      tb:'spot', view:'/spot/spot-view.html' },
+    { big:'spot', key:'sites',     label:'관련사이트',         href:'/spot/sites.html',     sec:'관련사이트',
+      en:'Sites',      tb:'spot', view:'/spot/spot-view.html' },
 
     /* ── OC커뮤니티 ── */
-    { big:'community', key:'hottopic',   label:'핫토픽',          href:'/community/hottopic.html' },
-    { big:'community', key:'news',       label:'뉴스',            href:'/community/news.html' },
-    { big:'community', key:'qna',        label:'지식나눔',        href:'/community/qna.html' },
-    { big:'community', key:'admission',  label:'입시요강',        href:'/community/admission.html' },
-    { big:'community', key:'admission-community', label:'입시커뮤니티', href:'/community/admission-community.html' },
-    { big:'community', key:'gallery',    label:'공연사진 / 영상', href:'/community/gallery.html' },
-    { big:'community', key:'modern',     label:'현대음악',        href:'/community/modern.html' },
-    { big:'community', key:'prenatal',   label:'태교음악',        href:'/community/prenatal.html' },
-    { big:'community', key:'selfpr',     label:'SELF PR',         href:'/community/selfpr.html' },
-    { big:'community', key:'school-month', label:'이달의 음악학교', href:'/community/school-month.html' },
-    { big:'community', key:'utility',    label:'유틸리티 / 자료', href:'/community/utility.html' },
+    { big:'community', key:'hottopic',   label:'핫토픽',          href:'/community/hottopic.html',
+      en:'Hot Topic',  tb:'hottopic',  view:'/community/hottopic-view.html' },
+    { big:'community', key:'news',       label:'뉴스',            href:'/community/news.html',
+      en:'News',       tb:'news',      view:'/community/news-view.html' },
+    { big:'community', key:'qna',        label:'지식나눔',        href:'/community/qna.html',
+      en:'Q&A',        tb:'qna',       view:'/community/qna-view.html' },
+    { big:'community', key:'admission',  label:'입시요강',        href:'/community/admission.html',
+      en:'Admission',  tb:'admission', view:'/community/admission-view.html' },
+    { big:'community', key:'admission-community', label:'입시커뮤니티', href:'/community/admission-community.html',
+      en:'Admission Talk', tb:'admission_community', view:'/community/admission-community-view.html' },
+    { big:'community', key:'gallery',    label:'공연사진 / 영상', href:'/community/gallery.html',
+      en:'Gallery',    tb:'gallery',   view:'/community/gallery-view.html' },
+    { big:'community', key:'modern',     label:'현대음악',        href:'/community/modern.html',
+      en:'Modern',     tb:'modern_music', view:'/community/modern-view.html' },
+    { big:'community', key:'prenatal',   label:'태교음악',        href:'/community/prenatal.html',
+      en:'Prenatal',   tb:'prenatal_music', view:'/community/prenatal-view.html' },
+    /* ★ SELF PR 은 <b>회원 자기 소개</b>입니다 — members 표에서 옵니다.
+       메인에 글 목록으로 보여 줄 것이 아니라, 매일 한 사람을 뽑아
+       보여 주는 방식이었습니다(pick_self_pr). 그래서 <b>목록 가져오기는
+       하지 않고</b> 링크만 둡니다. */
+    { big:'community', key:'selfpr',     label:'SELF PR',         href:'/community/selfpr.html',
+      en:'Self PR',    noList:true },
+    /* ★ 이달의 음악학교도 <b>한 달에 한 곳</b>을 뽑는 방식입니다
+       (pick_monthly_school). 목록이 아니므로 링크만 둡니다. */
+    { big:'community', key:'school-month', label:'이달의 음악학교', href:'/community/school-month.html',
+      en:'School of the Month', noList:true },
+    { big:'community', key:'utility',    label:'유틸리티 / 자료', href:'/community/utility.html',
+      en:'Utility',    tb:'utility',   view:'/community/utility-view.html' },
 
     /* ── DATABASE ── */
-    { big:'db', key:'person',     label:'인물DB',           href:'/db/person.html' },
-    { big:'db', key:'org',        label:'음악단체DB',       href:'/db/org.html' },
-    { big:'db', key:'venue',      label:'공연장DB',         href:'/db/venue.html' },
-    { big:'db', key:'school',     label:'음악학교DB',       href:'/db/school.html' },
-    { big:'db', key:'modern',     label:'현대음악DB',       href:'/db/modern.html' },
-    { big:'db', key:'foundation', label:'관련기관·재단DB',  href:'/db/foundation.html' },
-    { big:'db', key:'academic',   label:'학술DB',           href:'/db/academic.html' },
+    { big:'db', key:'person',     label:'인물DB',           href:'/db/person.html',
+      en:'People',      tb:'persons',   view:'/db/person-view.html',   nameCol:'name_ko' },
+    { big:'db', key:'org',        label:'음악단체DB',       href:'/db/org.html',
+      en:'Organization', tb:'orgs',     view:'/db/org-view.html',      nameCol:'name_ko' },
+    { big:'db', key:'venue',      label:'공연장DB',         href:'/db/venue.html',
+      en:'Venue',       tb:'venues',    view:'/db/venue-view.html',    nameCol:'name_ko' },
+    { big:'db', key:'school',     label:'음악학교DB',       href:'/db/school.html',
+      en:'School',      tb:'schools',   view:'/db/school-view.html',   nameCol:'name_ko' },
+    { big:'db', key:'modern',     label:'현대음악DB',       href:'/db/modern.html',
+      en:'Contemporary', tb:'modern_composers', view:'/db/modern-view.html', nameCol:'name_ko' },
+    { big:'db', key:'foundation', label:'관련기관·재단DB',  href:'/db/foundation.html',
+      en:'Foundation',  tb:'foundations', view:'/db/foundation-view.html', nameCol:'name_ko' },
+    { big:'db', key:'academic',   label:'학술DB',           href:'/db/academic.html',
+      en:'Academic',    tb:'academic',  view:'/db/academic-view.html', nameCol:'title' },
 
     /* ── 리쿠르트 ──
        ★ 인재정보는 단체·기업·학교 회원만 볼 수 있습니다.
          리쿠르트의 HIRING 목록과 같게 맞춥니다 — 어긋나면 담아 두었는데
          안 보이는 일이 생깁니다. */
-    { big:'recruit', key:'job',    label:'채용정보', href:'/recruit/job.html' },
+    { big:'recruit', key:'job',    label:'채용정보', href:'/recruit/job.html',
+      en:'Recruit',     tb:'recruit_jobs', view:'/recruit/job-view.html', nameCol:'title' },
+    /* ★ 인재정보는 <b>연락처가 가려진 뷰</b>로 봅니다
+       (recruit_talents_public). 실제 연락처는 브라우저에 오지 않습니다. */
     { big:'recruit', key:'talent', label:'인재정보', href:'/recruit/talent.html',
+      en:'Talent',      tb:'recruit_talents_public', view:'/recruit/talent-view.html',
+      nameCol:'name_ko',
       only:['industry','org','school'] }
   ];
 

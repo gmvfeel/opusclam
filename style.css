@@ -54,10 +54,14 @@
   .ph.dark::after{color:rgba(255,255,255,.35)}
 
   /* ---------- utility top bar ---------- */
-  .util{background:#0a0d24;color:#a9abc7;font-size:11px;letter-spacing:.01em;border-bottom:1px solid rgba(255,255,255,.05)}
+  .util{background:#0a0d24;color:#a9abc7;font-size:9px;letter-spacing:.01em;border-bottom:1px solid rgba(255,255,255,.05)}
   .util .wrap{display:flex;align-items:center;justify-content:space-between;height:34px}
-  .util .left a{margin-right:18px;color:rgba(255,255,255,.34);font-family:var(--serif);letter-spacing:.05em;font-size:10.5px;font-weight:600;transition:color .2s ease}
-  .util .right a{color:rgba(255,255,255,.34);letter-spacing:.04em;font-size:10.5px;font-weight:600;transition:color .2s ease}
+  /* ★ 데스크톱은 <b>원래 크기(8px)</b>로 되돌렸습니다.
+     모바일에서 읽기 어려워 10.5px 로 올렸는데, 데스크톱에서도 함께
+     커져서 띠가 도드라졌습니다. 이 띠는 <b>조용히 있어야 하는 것</b>이라
+     원래 작았던 것입니다. 모바일에서만 키웁니다(아래 @media). */
+  .util .left a{margin-right:18px;color:rgba(255,255,255,.34);font-family:var(--serif);letter-spacing:.05em;font-size:8px;font-weight:600;transition:color .2s ease}
+  .util .right a{color:rgba(255,255,255,.34);letter-spacing:.04em;font-size:8px;font-weight:600;transition:color .2s ease}
   .util a:hover{color:#fff}
   .m-community{display:none}
   @media(max-width:880px){
@@ -225,7 +229,7 @@
   /* ---------- triple banner ---------- */
   .triple{position:relative;z-index:1;background:var(--band-grad);overflow:hidden;box-shadow:0 16px 30px -10px rgba(0,0,0,.5)}
   .wxn-eyebrow{position:relative;z-index:3;height:30px;margin-top:6px;overflow:hidden}
-  .wxn-run{position:absolute;top:50%;left:0;white-space:nowrap;font-family:var(--serif);font-size:10.5px;font-weight:600;letter-spacing:.16em;color:rgba(255,255,255,.5);animation:wxnMove 120s linear infinite}
+  .wxn-run{position:absolute;top:50%;left:0;white-space:nowrap;font-family:var(--serif);font-size:8px;font-weight:600;letter-spacing:.16em;color:rgba(255,255,255,.5);animation:wxnMove 120s linear infinite}
   @keyframes wxnMove{
     0%{left:0;transform:translate(0,-50%)}
     50%{left:100%;transform:translate(-100%,-50%)}
@@ -727,7 +731,11 @@
     display:inline-flex;align-items:center;
     min-height:34px;padding-top:8px;padding-bottom:8px;
     margin-top:-8px;margin-bottom:-8px;
+    /* ★ <b>모바일에서만</b> 키웁니다. 데스크톱은 8px 그대로 —
+       거기서는 마우스로 정확히 누를 수 있고, 띠가 조용히 있어야 합니다. */
+    font-size:10.5px;
   }
+  .util .left a, .util .right a{ font-size:10.5px; }
   footer a, .fnav a, .fmenu a, .foot a{
     display:inline-flex;align-items:center;
     min-height:34px;padding-top:7px;padding-bottom:7px;

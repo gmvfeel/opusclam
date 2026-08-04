@@ -36,7 +36,9 @@ button,input,select,textarea{font-family:inherit}
 /* ★ 맨 위 띠 링크 — 8px 은 모바일에서 읽기 어렵습니다.
    (2026-08-04 · 375px 로 재어 보고 알았습니다)
    10.5px 로 올리고, 모바일에서는 누를 자리도 넓힙니다. */
-.util a{color:var(--util-tx);font-size:10.5px;letter-spacing:.04em;font-weight:600;transition:color .2s}
+/* ★ 데스크톱은 <b>원래 크기(8px)</b> — 이 띠는 조용히 있어야 합니다.
+   모바일에서만 10.5px 로 키웁니다(아래 @media). */
+.util a{color:var(--util-tx);font-size:8px;letter-spacing:.04em;font-weight:600;transition:color .2s}
 .util .l a{margin-right:18px}.util a:hover{color:var(--navh)}
 .mast{border-top:1px solid var(--hair)}
 .mast .in{display:flex;align-items:center;justify-content:space-between;height:78px;gap:24px}
@@ -269,6 +271,7 @@ footer a{color:var(--tx4)}
     display:inline-flex;align-items:center;
     min-height:34px;padding-top:8px;padding-bottom:8px;
     margin-top:-8px;margin-bottom:-8px;
+    font-size:10.5px;      /* ★ 모바일에서만 키웁니다 */
   }
   footer a, .foot a, .fnav a{
     display:inline-flex;align-items:center;
