@@ -345,6 +345,19 @@
   if(document.readyState !== 'loading') check(); else document.addEventListener('DOMContentLoaded', check);
 })();
 
+
+/* ── INNER SPACE 를 필요할 때만 싣습니다 ───────────────────────
+   ★ 로그인한 사람에게만 필요합니다. 비로그인 화면에서는 헛되게 받아
+     오지 않습니다.
+   ★ 한 번만 싣습니다. */
+function needInnerSpace() {
+  if (window.__ocInnerJs) return;
+  window.__ocInnerJs = true;
+  var sc = document.createElement('script');
+  sc.src = '/assets/inner-space.js';
+  sc.onerror = function () { /* 못 받아도 화면은 그대로 돕니다 */ };
+  document.head.appendChild(sc);
+}
 /* ===== 회원 페이지 헤더(.authlink) 로그인 상태 반영 ===== */
 (function(){
   "use strict";
@@ -356,8 +369,14 @@
     window.ocAuth.session().then(function(s){
       if(!s) return; // 비로그인: 기존 '로그인 / 회원가입' 그대로 둠
       function paint(name, typeLabel){
+        /* ★ <b>이너스페이스</b>를 놓습니다 (2026-08-04)
+           이름을 누르면 마이페이지로 가고, 「이너스페이스」 를 누르면
+           <b>화면 위에 패널</b>이 열립니다 — 시안의 그 자리입니다.
+           ★ 그 파일을 스스로 싣습니다 — 화면마다 넣으면 빠뜨립니다. */
         al.innerHTML = '<a href="/account/mypage.html">'+esc(name)+'님'+(typeLabel?' ('+esc(typeLabel)+')':'')+'</a> '
+          + '<a href="#" data-oc-inner="1" id="oc-hdr-inner">이너스페이스</a> '
           + '<a href="#" id="oc-hdr-logout">로그아웃</a>';
+        needInnerSpace();
         var lo = document.getElementById('oc-hdr-logout');
         if(lo) lo.addEventListener('click', function(e){ e.preventDefault(); if(window.ocAuth.logout) window.ocAuth.logout(); });
       }
