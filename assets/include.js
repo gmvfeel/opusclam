@@ -229,6 +229,18 @@
     if (!nav) return;
     if (nav.parentNode.querySelector('.pdb-subnav-sel')) return;   /* 두 번 만들지 않습니다 */
 
+    /* ★ <b>글쓰기·등록 화면에는 놓지 않습니다.</b>
+       (2026-08-04 · 파트너 지적)
+
+       그 화면은 <b>지금 하는 일을 마치는 곳</b>입니다. 갈래를 옮길
+       이유가 없고, 옮기면 쓰던 것이 사라집니다. 그런데 제목 위에
+       풀다운이 놓이니 「고르라는 것인가?」 싶어 헷갈립니다.
+
+       ★ 알약은 그대로 둡니다 — 데스크톱에서 「지금 어디에 있나」 를
+         보여 주는 몫을 합니다. 풀다운만 놓지 않습니다. */
+    var f = fileOf(location.pathname);
+    if (/-?write$/.test(f) || f === 'write') return;
+
     var links = [].slice.call(nav.querySelectorAll('a[href]'));
     if (links.length < 3) return;   /* 두어 개면 알약이 낫습니다 */
 
