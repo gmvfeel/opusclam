@@ -671,6 +671,31 @@ html[data-theme="dark"] .con-row:hover{background:#000}
 .con-th{flex:0 0 auto;width:84px;aspect-ratio:3/4;border-radius:6px;overflow:hidden;
   background:var(--paper-2);border:1px solid var(--line-2);display:grid;place-items:center}
 .con-th img{width:100%;height:100%;object-fit:cover;display:block}
+/* ── 그림이 들어올 때까지 반짝이는 표시 ──────────────────────────
+   ★ 공연 포스터는 한 장에 수백 KB 이고 목록에 스물넷이 놓입니다.
+     그동안 자리가 빈 상자로 남으면 「안 나오는 건가」 싶습니다.
+     반짝이면 「오는 중」 임이 보입니다.
+
+   ★ 그림 자체에 걸어 둡니다 — 감싸는 상자마다 이름이 달라서
+     (.con-th · .bc-th · .board-row-thumb …) 그림에 두는 편이
+     한 번에 듣습니다.
+   ★ 다 받으면 board.js 가 이 이름을 뗍니다(onload). 못 받아도 뗍니다 —
+     그러지 않으면 영원히 반짝입니다. */
+img.oc-imgload{
+  background:linear-gradient(100deg,
+    var(--paper-2) 20%, var(--paper-3) 40%, var(--paper-2) 60%);
+  background-size:220% 100%;
+  animation:ocshim 1.1s linear infinite;
+}
+@keyframes ocshim{
+  0%{background-position:120% 0}
+  100%{background-position:-20% 0}
+}
+/* 움직임을 줄이기로 해 둔 분에게는 반짝이지 않고 옅은 바탕만 둡니다 */
+@media (prefers-reduced-motion: reduce){
+  img.oc-imgload{animation:none;background:var(--paper-2)}
+}
+
 .con-noimg{font-style:normal;font-size:22px;font-weight:800;color:#c3c5d4}
 
 .con-main{flex:1;min-width:0;padding-top:2px}

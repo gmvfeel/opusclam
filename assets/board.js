@@ -115,6 +115,40 @@ window.OCBoard = (function () {
   }
 
   /* 그림 하나를 만듭니다 — 줄인 것을 먼저 쓰고, 안 되면 원본으로 되돌립니다 */
+  /* ★ 이미 받아진 그림의 반짝임을 떼어 줍니다.
+
+     브라우저 곳간(cache)에 있던 그림은 <b>onload 가 불리지 않을 수</b>
+     있습니다. 그러면 그림은 보이는데 뒤에서 계속 반짝입니다.
+     그려 넣은 뒤 한 번 훑어 complete 인 것을 정리합니다.
+
+     ★ 목록을 그리는 곳마다 부르지 않고, 문서에 한 번만 감시를 붙입니다.
+       그러면 새 줄이 들어올 때도 저절로 정리됩니다. */
+  function sweepLoaded(root) {
+    var box = root || document;
+    var list = box.querySelectorAll ? box.querySelectorAll('img.oc-imgload') : [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].complete && list[i].naturalWidth > 0) {
+        list[i].classList.remove('oc-imgload');
+      }
+    }
+  }
+  if (!window.__ocImgSweep) {
+    window.__ocImgSweep = true;
+    /* 목록이 그려질 때마다 훑습니다 — 자주 부르지 않게 조금 미룹니다 */
+    var _t = null;
+    var _mo = new MutationObserver(function () {
+      if (_t) return;
+      _t = setTimeout(function () { _t = null; sweepLoaded(document); }, 120);
+    });
+    if (document.body) {
+      _mo.observe(document.body, { childList: true, subtree: true });
+    } else {
+      document.addEventListener('DOMContentLoaded', function () {
+        _mo.observe(document.body, { childList: true, subtree: true });
+      });
+    }
+  }
+
   function imgTag(u, w, extra) {
     if (!u) return '';
     var small = rsz(u, w);
@@ -122,9 +156,29 @@ window.OCBoard = (function () {
     var fb = (small !== orig)
       ? ' data-orig="' + esc(orig) + '"'
         + ' onerror="if(this.dataset.orig&&this.src!==this.dataset.orig){this.src=this.dataset.orig;}'
-        + 'else{this.onerror=null;this.style.display=\'none\';}"'
-      : ' onerror="this.onerror=null;this.style.display=\'none\'"';
-    return '<img src="' + esc(small) + '" alt="" loading="lazy"' + (extra || '') + fb + '>';
+        + 'else{this.onerror=null;this.classList.remove(\'oc-imgload\');this.style.display=\'none\';}"'
+      : ' onerror="this.onerror=null;this.classList.remove(\'oc-imgload\');this.style.display=\'none\'"';
+    /* ★ 그림이 들어올 때까지 <b>반짝이는 표시</b>를 둡니다.
+
+       왜 필요한가 — 공연 포스터는 한 장에 수백 KB 이고 목록에 스물넷이
+       놓입니다. 그동안 자리가 <b>빈 상자</b>로 남아서 「안 나오는 건가」
+       싶습니다. 반짝이면 「오는 중」 임이 보입니다.
+
+       어떻게 — 그림에 oc-imgload 를 달아 두고, 다 받으면 그 표시를
+       뗍니다(onload). 못 받아도 뗍니다 — 그러지 않으면 영원히 반짝입니다.
+       ★ 이미 브라우저 곳간에 있던 그림은 onload 가 늦게 불릴 수 있어
+         complete 를 함께 봅니다. */
+    /* ★ extra 에 class 가 들어올 수 있습니다 (피처드 그림 등).
+       그때 class 를 <b>따로 두 번</b> 적으면 브라우저가 뒤의 것만 쓰고
+       앞의 oc-imgload 를 버립니다 — 그래서 반짝임이 안 보였습니다.
+       그러니 <b>합쳐서 한 번</b>만 적습니다. */
+    var ex = extra || '';
+    var cls = 'oc-imgload';
+    var m = ex.match(/\sclass="([^"]*)"/);
+    if (m) { cls += ' ' + m[1]; ex = ex.replace(m[0], ''); }
+    return '<img src="' + esc(small) + '" alt="" loading="lazy" decoding="async"'
+      + ' class="' + cls + '"' + ex + fb
+      + ' onload="this.classList.remove(\'oc-imgload\')">';
   }
   function fmtDate(iso) {
     if (!iso) return '';
