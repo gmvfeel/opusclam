@@ -149,6 +149,7 @@
     inject('oc-subnav', url);
     markSubnav();
     buildSubnavSelect();
+    watchWidth();
     needFavButton();
   }
 
@@ -224,6 +225,34 @@
      ★ 알약에서 글자와 주소를 그대로 읽어 옵니다.
        메뉴를 늘리거나 이름을 고칠 때 <b>한 곳(partials)만</b> 고치면
        풀다운도 함께 바뀝니다. */
+  /* 좁은 화면인가 — CSS 의 860px 과 같게 맞춥니다.
+     두 곳에 숫자를 적으면 한쪽만 고쳐지므로, 여기 하나를 기준으로 둡니다. */
+  var NARROW = 860;
+  function isNarrow() {
+    return (window.innerWidth || document.documentElement.clientWidth || 0) <= NARROW;
+  }
+
+  /* ★ 창 크기가 바뀌면 다시 판단합니다.
+     PC 에서 창을 좁히면 풀다운이 생기고, 넓히면 없어집니다.
+     (개발자 도구로 모바일을 흉내낼 때도 자연스럽게 됩니다) */
+  var _rz = null;
+  function watchWidth() {
+    if (window.__ocSubnavWatch) return;
+    window.__ocSubnavWatch = true;
+    window.addEventListener('resize', function () {
+      if (_rz) return;
+      _rz = setTimeout(function () {
+        _rz = null;
+        var wrap = document.querySelector('.pdb-subnav-sel');
+        if (isNarrow()) {
+          if (!wrap) buildSubnavSelect();
+        } else if (wrap) {
+          wrap.remove();
+        }
+      }, 180);
+    });
+  }
+
   function buildSubnavSelect() {
     var nav = document.querySelector('.pdb-subnav');
     if (!nav) return;
@@ -240,6 +269,19 @@
          보여 주는 몫을 합니다. 풀다운만 놓지 않습니다. */
     var f = fileOf(location.pathname);
     if (/-?write$/.test(f) || f === 'write') return;
+
+    /* ★ <b>넓은 화면에서는 아예 만들지 않습니다.</b>
+       (2026-08-04 · 파트너 지적)
+
+       PC 에는 알약이 다 보이고 위에 GNB 도 있으므로 풀다운이 있을
+       이유가 없습니다. CSS 로 숨기게 두었는데, 그 CSS 가 아직 안
+       올라간 화면에서는 <b>그대로 보였습니다.</b>
+
+       CSS 하나에만 기대면 그것이 안 실렸을 때 드러납니다.
+       그래서 <b>만들지 않는 편</b>이 확실합니다.
+
+     ★ 창 크기를 바꾸면 다시 판단합니다 — 아래에서 지켜봅니다. */
+    if (!isNarrow()) return;
 
     var links = [].slice.call(nav.querySelectorAll('a[href]'));
     if (links.length < 3) return;   /* 두어 개면 알약이 낫습니다 */
