@@ -75,6 +75,11 @@
   .cand .q a{color:#9db8e0;text-decoration:none}
   .cand .q a:hover{text-decoration:underline}
   .cand.none .t{color:var(--tx3);font-weight:400}
+  /* ★ 기계가 미리 고른 것 — 파트너님이 훑을 때 눈에 띄어야 합니다 */
+  .cand .auto{font-style:normal;font-size:10.5px;font-weight:700;margin-left:7px;
+    padding:2px 7px;border-radius:20px;color:var(--ok);
+    border:1px solid rgba(111,207,143,.45)}
+  .cand .q em{font-style:normal;color:var(--tx3)}
   .nores{font-size:12.5px;color:var(--tx3);padding:6px 2px}
   .empty{padding:46px;text-align:center;color:var(--tx3);background:var(--card);
          border:1px solid var(--line);border-radius:12px}
@@ -108,6 +113,7 @@
     <label class="chk">한 번에 <input type="number" id="lim" value="40" min="1" max="200"> 곳</label>
     <button class="go" id="run" disabled>후보 찾기</button>
     <button id="save" disabled>고른 것 채우기</button>
+    <button id="clr">미리 고른 것 모두 끄기</button>
     <span class="cnt" id="cnt"></span>
   </div>
 
@@ -115,6 +121,7 @@
     <div class="s1"><div class="n" id="nAll">0</div><div class="l">살펴본 자료</div></div>
     <div class="s1 ok"><div class="n" id="nHit">0</div><div class="l">후보가 있음</div></div>
     <div class="s1 wa"><div class="n" id="nNo">0</div><div class="l">후보 없음</div></div>
+    <div class="s1 ok"><div class="n" id="nAuto">0</div><div class="l">미리 고름</div></div>
     <div class="s1"><div class="n" id="nPick">0</div><div class="l">고른 것</div></div>
   </div>
 
@@ -173,6 +180,73 @@
       $('who').innerHTML = '★ 로그인 확인 실패: ' + esc(String(e.message||e).slice(0,50));
     }
   })();
+
+  /* ── 후보가 얼마나 맞을 것 같은가 ────────────────────────────
+     ★ 왜 필요한가 (파트너 요청)
+       39곳을 하나하나 고르는 것은 번거롭습니다. 그런데 기계가 다
+       정하게 두면 「국립극장」 처럼 나라마다 있는 이름에서 엉뚱한 것이
+       걸립니다.
+
+       그래서 <b>확실한 것만 미리 골라 둡니다.</b> 파트너님은 훑어 보고
+       이상한 것만 체크를 끄시면 됩니다. 확실하지 않은 것은 비워 둡니다.
+
+     ★ 무엇을 보고 정하나
+       ① 이름이 <b>정확히 같은가</b>            +4  (가장 센 근거)
+       ② 이름이 앞뒤로 <b>들어 있는가</b>       +2
+       ③ 설명에 <b>우리 지역</b> 낱말이 있는가  +2  (대한민국·서울…)
+       ④ 설명에 <b>어울리는 갈래</b> 낱말인가   +2  (재단·협회·극장·음악…)
+       ⑤ 설명에 <b>어긋나는 갈래</b> 낱말인가   -4  (사람·앨범·영화·마을…)
+       ⑥ 후보가 하나뿐인가                      +1
+
+       ★ 6점 넘으면 <b>미리 고릅니다.</b> 그 아래는 비워 둡니다 —
+         애매한 것을 미리 골라 두면 파트너님이 훑을 때 놓칩니다. */
+  var GOOD_KIND = ['재단','협회','기관','단체','회사','음반','레이블','극장','회관',
+    'foundation','association','organization','organisation','institute','institution',
+    'company','label','record','theatre','theater','hall','centre','center','society',
+    'orchestra','conservatory','conservatoire','school','university','college',
+    'competition','festival','concours','trust','council','agency','museum','venue',
+    '음악','공연','문화','예술','콩쿠르','페스티벌','오케스트라','학교','대학'];
+  var BAD_KIND = ['사람','인물','작곡가','연주자','가수','배우','앨범','노래','영화','드라마',
+    '마을','도시','군','면','읍','리','역','강','산','섬','책','소설','만화','게임',
+    'human','person','composer','musician','singer','actor','album','song','single',
+    'film','movie','tv series','village','town','city','district','river','mountain',
+    'island','book','novel','manga','video game','station','wikimedia'];
+
+  function flat(v){
+    return String(v || '').toLowerCase()
+      .replace(/[\s·・,.\-–—()'"`\u2019]/g, '');
+  }
+
+  function scoreCand(row, c, only){
+    var sc = 0, why = [];
+    var a = flat(row.ko), b2 = flat(row.en), lb = flat(c.label);
+    var desc = String(c.desc || '').toLowerCase();
+
+    if (lb && (lb === a || lb === b2)) { sc += 4; why.push('이름 같음'); }
+    else if (lb && a && (lb.indexOf(a) >= 0 || a.indexOf(lb) >= 0)) { sc += 2; why.push('이름 비슷'); }
+    else if (lb && b2 && (lb.indexOf(b2) >= 0 || b2.indexOf(lb) >= 0)) { sc += 2; why.push('영문 비슷'); }
+
+    /* 우리가 아는 지역이 설명에 나오나 */
+    var where = String(row.where || '');
+    var parts = where.split(/[\s·,]+/).filter(function(w){ return w.length >= 2; });
+    for (var i = 0; i < parts.length; i++){
+      if (desc.indexOf(parts[i].toLowerCase()) >= 0){ sc += 2; why.push('지역 맞음'); break; }
+    }
+
+    if (desc){
+      for (var g = 0; g < GOOD_KIND.length; g++){
+        if (desc.indexOf(GOOD_KIND[g]) >= 0){ sc += 2; why.push('갈래 맞음'); break; }
+      }
+      for (var d = 0; d < BAD_KIND.length; d++){
+        if (desc.indexOf(BAD_KIND[d]) >= 0){ sc -= 4; why.push('★ 갈래 어긋남'); break; }
+      }
+    } else {
+      why.push('설명 없음');
+    }
+
+    if (only) { sc += 1; why.push('후보 하나뿐'); }
+    return { score: sc, why: why.join(' · ') };
+  }
 
   function cfgOf(){
     var v = ($('tbl').value || '').split('|');
@@ -258,11 +332,26 @@
         } catch (e){
           log('  ✗ ' + (ko || en) + ' — ' + String(e.message||e).slice(0,50));
         }
-        rows.push({
+        var row = {
           id: r.id, ko: ko, en: en,
           where: String(r[CFG.where] || '').trim(),
-          cands: cands.slice(0, 6), pick: ''
+          cands: cands.slice(0, 6), pick: '', auto: false
+        };
+        /* ★ 점수를 매겨 <b>확실한 것만</b> 미리 고릅니다 */
+        var only = (row.cands.length === 1);
+        row.cands.forEach(function(c){
+          var v = scoreCand(row, c, only);
+          c.score = v.score; c.why = v.why;
         });
+        row.cands.sort(function(a2,b2){ return b2.score - a2.score; });
+        if (row.cands.length && row.cands[0].score >= 6
+            /* 1등과 2등이 <b>비슷하면</b> 고르지 않습니다 — 헷갈리는
+               경우입니다(같은 이름이 여럿). */
+            && (row.cands.length === 1 || row.cands[0].score - row.cands[1].score >= 3)){
+          row.pick = row.cands[0].qid;
+          row.auto = true;
+        }
+        rows.push(row);
         prog(Math.round((i+1)/list.length*100), (i+1) + '/' + list.length + '곳');
         /* 위키데이터에 숨 돌릴 틈을 줍니다 */
         await new Promise(function(res){ setTimeout(res, 200); });
@@ -270,8 +359,11 @@
       }
       progHide();
       var hit = rows.filter(function(r){ return r.cands.length; }).length;
+      var au  = rows.filter(function(r){ return r.auto; }).length;
       log('✅ 끝 — ' + rows.length + '곳 · 후보 있음 ' + hit + ' · 후보 없음 ' + (rows.length - hit));
-      log('   후보를 고르신 뒤 「고른 것 채우기」를 누르십시오.');
+      log('   ★ 확실한 것 ' + au + '곳을 <b>미리 골라 두었습니다</b>.'.replace(/<[^>]+>/g,''));
+      log('     초록 표시가 붙은 것이 그것입니다 — 훑어 보시고 이상한 것만 끄십시오.');
+      log('   남은 ' + (hit - au) + '곳은 애매해서 비워 두었습니다 — 손으로 고르십시오.');
       log('   ★ 그다음 그 수집기를 한 번 돌려야 사진 등이 들어옵니다.');
       render();
     } catch (e){
@@ -286,6 +378,7 @@
     var hit = rows.filter(function(r){ return r.cands.length; }).length;
     $('nHit').textContent = hit;
     $('nNo').textContent = rows.length - hit;
+    $('nAuto').textContent = rows.filter(function(r){ return r.auto && r.pick; }).length;
     if (!rows.length){ $('rows').innerHTML = '<div class="empty">아직 찾지 않았습니다.</div>'; syncPick(); return; }
 
     $('rows').innerHTML = rows.map(function(r, i){
@@ -295,14 +388,18 @@
       } else {
         body = r.cands.map(function(c){
           var on = (r.pick === c.qid) ? ' on' : '';
+          var au = (r.auto && r.pick === c.qid) ? '<i class="auto">미리 고름</i>' : '';
           return '<label class="cand' + on + '">'
             + '<input type="radio" name="p' + i + '" value="' + esc(c.qid) + '"'
             +   (r.pick === c.qid ? ' checked' : '') + ' data-i="' + i + '">'
             + '<span>'
-            +   '<span class="t">' + esc(c.label) + '</span>'
+            +   '<span class="t">' + esc(c.label) + au + '</span>'
             +   (c.desc ? '<span class="d">' + esc(c.desc) + '</span>' : '')
-            +   '<span class="q"><a href="https://www.wikidata.org/wiki/' + esc(c.qid)
-            +     '" target="_blank" rel="noopener">' + esc(c.qid) + ' ↗</a></span>'
+            +   '<span class="q">'
+            +     '<a href="https://www.wikidata.org/wiki/' + esc(c.qid)
+            +       '" target="_blank" rel="noopener">' + esc(c.qid) + ' ↗</a>'
+            +     (c.why ? '<em> · ' + esc(c.why) + '</em>' : '')
+            +   '</span>'
             + '</span></label>';
         }).join('')
         /* ★ 「해당 없음」 을 둡니다 — 고르지 않은 것과 <b>일부러 넘긴 것</b>을
@@ -403,6 +500,14 @@
     render();
   }
 
+  $('clr').addEventListener('click', function(){
+    /* ★ 미리 고른 것을 한 번에 끕니다 — 기계 판정을 못 믿을 때
+       처음부터 손으로 고르실 수 있게 둡니다. */
+    var n = 0;
+    rows.forEach(function(r){ if (r.auto && r.pick){ r.pick = ''; r.auto = false; n++; } });
+    if (n) log('  미리 고른 ' + n + '곳을 껐습니다.');
+    render();
+  });
   $('run').addEventListener('click', run);
   $('save').addEventListener('click', save);
   $('rows').addEventListener('change', function(e){
