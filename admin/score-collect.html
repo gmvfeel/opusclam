@@ -146,6 +146,8 @@
 (function(){
   'use strict';
 
+  /* 자료를 모아 담을 때 쓰는 작성자 이름 — 개인 이름을 내보내지 않습니다 */
+  var SITE_AUTHOR = '오퍼스클램';
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var WD_SPARQL = 'https://query.wikidata.org/sparql';
@@ -301,7 +303,9 @@
   async function loadHave(){
     var out = {}, from = 0;
     for(;;){
-      var r = await sb.from('spot').select('link_url,copyright_source')
+      /* ★ 이제 주소는 score_links 에 있습니다. 이어진 표를 함께 물어
+         봅니다 — 관리자는 그 표를 읽을 수 있습니다. */
+      var r = await sb.from('spot').select('link_url,copyright_source,score_links(imslp_ref,url)')
         .eq('section','악보')
         .order('id',{ ascending:true })
         .range(from, from + 199);
@@ -309,13 +313,20 @@
       var d = r.data || [];
       if (!d.length) break;
       d.forEach(function(x){
+        /* 예전에 link_url 에 담긴 것 */
         var k1 = imslpKey(x.link_url);
         if (k1) out[k1] = 1;
+        /* 예전에 copyright_source 에 문서 이름이 있던 것 */
         var src = String(x.copyright_source || '');
         if (/^IMSLP:/i.test(src)){
           var k2 = imslpKey(src);
           if (k2) out[k2] = 1;
         }
+        /* 지금 방식 — score_links 표 */
+        (x.score_links || []).forEach(function(L){
+          var k3 = imslpKey(L.imslp_ref || L.url);
+          if (k3) out[k3] = 1;
+        });
       });
       from += d.length;
       if (from > 200000) break;
@@ -577,23 +588,55 @@
           category: instr || null,
           era: r.era || null,
           thumb_url: r.thumb || null,
-          /* ★ 파일은 담지 않습니다 — link_url 에 IMSLP 주소만 둡니다.
-             그래서 저장소를 쓰지 않고, 판본이 정리되면 늘 최신입니다. */
-          link_url: r.link,
+          /* ★ 주소를 spot 에 두지 않습니다.
+             게시판 엔진이 select=* 로 받아오므로 link_url 에 두면
+             <b>비회원의 목록 응답에도 주소가 들어갑니다.</b>
+             그래서 담은 뒤 score_links 표에 따로 넣습니다 —
+             그 표는 로그인한 회원만 읽습니다. */
           score_composer: r.comp_ko || null,
           person_id: r.person_id || null,
           score_opus: opus || null,
           copyright_basis: 'IMSLP 퍼블릭 도메인'
             + (r.life ? ' · 작곡가 ' + r.life : ''),
-          copyright_source: 'IMSLP: ' + r.imslp,
+          /* ★ 출처 표시는 <b>남겨야</b> 합니다 — IMSLP 내용은 CC BY-SA 이고
+             출처 표시를 요구합니다. 다만 문서 이름을 적으면 그것으로
+             주소를 조립할 수 있으므로, 이름 없이 출처만 적습니다.
+             문서 이름은 score_links 에 담습니다. */
+          copyright_source: 'IMSLP 퍼블릭 도메인',
           review_status: 'approved',
           reviewed_at: new Date().toISOString(),
           hidden: false,
           author_id: ME.id,
-          author_name: ME.name || null
+          /* ★ 작성자 이름을 <b>「오퍼스클램」</b> 으로 둡니다.
+
+             관리자가 자료를 모아 담는 것은 <b>개인의 글이 아니라
+             서비스의 일</b>입니다. 개인 이름이 사용자 화면에 나가면
+             까닭 없이 개인정보가 드러나고, 보는 사람도 「누구지?」 하고
+             헷갈립니다.
+
+             ★ author_id 는 <b>실제 계정</b>을 그대로 둡니다 —
+               누가 담았는지는 관리 쪽에서 따라갈 수 있어야 합니다.
+               보이는 이름만 서비스 이름으로 바꿉니다.
+
+             ★ 「오퍼스클램」 은 이미 쓰는 말입니다
+               (seed/arko-collect.mjs 가 같은 이름으로 담습니다). */
+          author_name: SITE_AUTHOR
         };
-        var ins = await sb.from('spot').insert(rec);
+        /* ★ 담은 줄의 id 를 받아야 링크를 이어 줄 수 있습니다 */
+        var ins = await sb.from('spot').insert(rec).select('id').single();
         if (ins.error) throw new Error(ins.error.message);
+        var newId = ins.data && ins.data.id;
+        if (newId){
+          var lk = await sb.from('score_links').insert({
+            spot_id: newId, imslp_ref: r.imslp, url: r.link
+          });
+          if (lk.error){
+            /* 링크를 못 담았으면 알려 줍니다 — 악보 줄은 남아 있지만
+               회원이 눌러도 「링크가 등록되지 않았습니다」 가 나옵니다. */
+            log('  ⚠ 링크를 담지 못했습니다: ' + (r._title || r.imslp)
+              + ' — ' + String(lk.error.message).slice(0, 70));
+          }
+        }
         r._saved = true;
         have[imslpKey(r.imslp)] = 1;   /* 이어서 담을 때 또 담지 않도록 */
         ok++;
