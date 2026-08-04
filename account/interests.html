@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관심분야 관리 · OPUSCLAM</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/auth.css">
+
+<style>
+  .iv-wrap{max-width:760px;margin:0 auto;padding:26px 20px 90px}
+  .iv-back{display:inline-block;color:var(--text-3);text-decoration:none;font-size:13px;margin-bottom:16px}
+  .iv-back:hover{color:var(--violet-2,#5b4b9e)}
+  .iv-head{margin-bottom:20px}
+  .iv-head .tag{display:inline-block;font-family:var(--display);font-size:11px;font-weight:700;
+    letter-spacing:.14em;color:var(--text-3);background:var(--paper-2);
+    border:1px solid var(--line);border-radius:999px;padding:5px 12px;margin-bottom:12px}
+  .iv-head h1{font-size:28px;font-weight:800;margin:0 0 8px;letter-spacing:-.02em}
+  .iv-head p{color:var(--text-2);font-size:13.5px;line-height:1.8;margin:0}
+  .iv-head p b{color:var(--text)}
+
+  .iv-card{background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:22px;margin-bottom:16px}
+  .iv-card h2{font-size:15px;font-weight:800;margin:0 0 4px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .iv-card h2 .n{font-size:12.5px;font-weight:700;color:var(--violet-2,#5b4b9e)}
+  .iv-card .note{font-size:12.5px;color:var(--text-3);line-height:1.7;margin:0 0 18px}
+  .iv-card .note b{color:var(--text-2)}
+
+  /* ── 담은 것 ── */
+  .iv-list{list-style:none;margin:0;padding:0}
+  .iv-list li{display:flex;align-items:center;gap:12px;
+    padding:12px 14px;margin-bottom:8px;
+    background:var(--paper-2);border:1px solid var(--line);border-radius:10px}
+  .iv-list li.moving{border-color:var(--violet-2,#5b4b9e);background:rgba(91,75,158,.06)}
+  .iv-list .no{flex:0 0 auto;width:24px;text-align:center;font-family:var(--display);
+    font-weight:800;font-size:13px;color:var(--text-3)}
+  .iv-list .nm{flex:1 1 auto;min-width:0}
+  .iv-list .nm a{color:var(--text);text-decoration:none;font-weight:700;font-size:14px}
+  .iv-list .nm a:hover{color:var(--violet-2,#5b4b9e)}
+  .iv-list .nm .big{display:block;font-size:11.5px;font-weight:400;color:var(--text-3);margin-top:2px}
+  .iv-list .btns{flex:0 0 auto;display:flex;gap:5px}
+  .iv-list .btns button{width:34px;height:34px;border-radius:8px;cursor:pointer;
+    border:1px solid var(--line-2);background:#fff;font-size:14px;color:var(--text-2);
+    font-family:inherit;line-height:1;transition:border-color .15s,color .15s}
+  .iv-list .btns button:hover{border-color:var(--violet-2,#5b4b9e);color:var(--violet-2,#5b4b9e)}
+  .iv-list .btns button:disabled{opacity:.3;cursor:default}
+  .iv-list .btns button.del:hover{border-color:#e08585;color:#e08585}
+
+  .iv-empty{padding:34px 20px;text-align:center;color:var(--text-3);font-size:13.5px;line-height:1.8;
+    background:var(--paper-2);border:1px dashed var(--line-2);border-radius:12px}
+  .iv-empty b{color:var(--text-2)}
+
+  /* ── 고르기 ── */
+  .iv-group{margin-bottom:18px}
+  .iv-group:last-child{margin-bottom:0}
+  .iv-group h3{font-size:12.5px;font-weight:700;color:var(--text-3);margin:0 0 9px;
+    letter-spacing:.02em}
+  .iv-chips{display:flex;flex-wrap:wrap;gap:7px}
+  .iv-chip{display:inline-flex;align-items:center;gap:6px;
+    height:36px;padding:0 14px;border-radius:999px;cursor:pointer;
+    font-family:inherit;font-size:13px;font-weight:600;
+    color:var(--text-2);background:#fff;border:1px solid var(--line-2);
+    transition:border-color .15s,color .15s,background .15s}
+  .iv-chip:hover{border-color:var(--violet-2,#5b4b9e);color:var(--violet-2,#5b4b9e)}
+  .iv-chip.on{background:rgba(91,75,158,.08);border-color:var(--violet-2,#5b4b9e);
+    color:var(--violet-2,#5b4b9e)}
+  .iv-chip .st{font-size:13px;line-height:1}
+  .iv-chip.on .st{color:#e0a83c}
+  .iv-chip:disabled{opacity:.5;cursor:default}
+
+  .iv-msg{font-size:13px;line-height:1.75;padding:12px 14px;border-radius:9px;
+    margin-bottom:16px;display:none}
+  .iv-msg.on{display:block}
+  .iv-msg.ok{background:rgba(111,207,143,.10);border:1px solid rgba(111,207,143,.4);color:#2f7f4f}
+  .iv-msg.no{background:rgba(224,133,133,.10);border:1px solid rgba(224,133,133,.4);color:#a34a4a}
+
+  @media(max-width:520px){
+    .iv-wrap{padding:18px 14px 60px}
+    .iv-card{padding:17px 15px}
+    .iv-list li{padding:11px 12px;gap:9px}
+    .iv-list .btns button{width:38px;height:38px}
+  }
+</style>
+</head>
+<body>
+
+<div id="oc-header"></div>
+
+<main class="iv-wrap">
+  <a class="iv-back" href="/account/mypage.html">← 마이페이지</a>
+
+  <div class="iv-head">
+    <span class="tag">MY INTEREST</span>
+    <h1>관심분야 관리</h1>
+    <p>담아 두신 갈래로 <b>메인 화면이 채워집니다</b> — 나만의 오퍼스클램입니다.<br>
+      <b>위에 있는 것이 먼저</b> 나옵니다. 화살표로 순서를 바꿀 수 있습니다.</p>
+  </div>
+
+  <div class="iv-msg" id="msg"></div>
+
+  <!-- ── 담은 것 ──────────────────────────────────── -->
+  <div class="iv-card">
+    <h2>담은 관심분야 <span class="n" id="cnt"></span></h2>
+    <p class="note">메인에 나올 순서입니다. <b>위에 있는 것이 먼저</b> 나옵니다.</p>
+    <ul class="iv-list" id="mine"></ul>
+    <div class="iv-empty" id="empty" style="display:none">
+      아직 담은 것이 없습니다.<br>
+      아래에서 <b>관심 있는 갈래를 골라</b> 주십시오 —
+      그러면 메인이 그것으로 채워집니다.
+    </div>
+  </div>
+
+  <!-- ── 고르기 ──────────────────────────────────── -->
+  <div class="iv-card">
+    <h2>갈래 고르기</h2>
+    <p class="note">눌러서 담고, 다시 눌러서 뺍니다.
+      게시판에서 <b>☆ 관심분야</b>를 눌러도 담깁니다.</p>
+    <div id="picker"></div>
+  </div>
+</main>
+
+<div id="oc-footer"></div>
+
+<script src="/assets/include.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/interests.js"></script>
+
+<script>
+(function(){
+  'use strict';
+
+  var $ = function(id){ return document.getElementById(id); };
+  var I = null, MINE = [], ME = null, busy = false;
+
+  function esc(v){
+    return String(v == null ? '' : v)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function say(kind, text){
+    var m = $('msg');
+    m.className = 'iv-msg on ' + kind;
+    m.textContent = text;
+    if (kind === 'ok') setTimeout(function(){ m.className = 'iv-msg'; }, 3200);
+  }
+
+  /* ── 담은 것 그리기 ──────────────────────────────────────
+     ★ 순서를 <b>화살표</b>로 바꿉니다.
+       끌어서 옮기는 것(drag)이 멋있지만, 모바일에서 목록을 끌면
+       화면이 함께 굴러가 잘 안 됩니다. 화살표는 어디서나 됩니다. */
+  function drawMine(){
+    var ul = $('mine');
+    $('cnt').textContent = MINE.length ? (MINE.length + '개') : '';
+    if (!MINE.length){
+      ul.innerHTML = '';
+      $('empty').style.display = '';
+      return;
+    }
+    $('empty').style.display = 'none';
+    ul.innerHTML = MINE.map(function(x, i){
+      var cat = I.find(x.big, x.key);
+      var label = cat ? cat.label : x.key;
+      var big = I.bigLabel[x.big] || x.big;
+      return '<li data-id="' + x.id + '">'
+        + '<span class="no">' + (i + 1) + '</span>'
+        + '<span class="nm">'
+        +   (cat ? '<a href="' + esc(cat.href) + '">' + esc(label) + '</a>'
+                 : '<span>' + esc(label) + '</span>')
+        +   '<span class="big">' + esc(big) + '</span>'
+        + '</span>'
+        + '<span class="btns">'
+        +   '<button type="button" class="up" title="위로"'
+        +     (i === 0 ? ' disabled' : '') + '>&#9650;</button>'
+        +   '<button type="button" class="dn" title="아래로"'
+        +     (i === MINE.length - 1 ? ' disabled' : '') + '>&#9660;</button>'
+        +   '<button type="button" class="del" title="빼기">&#10005;</button>'
+        + '</span>'
+        + '</li>';
+    }).join('');
+  }
+
+  /* ── 고르기 그리기 ───────────────────────────────────────
+     ★ 큰 메뉴별로 묶습니다 — 스물일곱 개를 죽 늘어놓으면 찾기 어렵습니다.
+     ★ 담은 것은 <b>채워진 별</b>로 보여 줍니다. 아래 목록과 위 목록이
+       따로 놀면 헷갈리므로 늘 함께 맞춥니다. */
+  function drawPicker(){
+    var t = (ME && ME.member_type) || '';
+    var cats = I.all(t);
+    var bigs = ['spot','community','db','recruit'];
+    var have = {};
+    MINE.forEach(function(x){ have[x.big + '|' + x.key] = 1; });
+
+    $('picker').innerHTML = bigs.map(function(b){
+      var list = cats.filter(function(c){ return c.big === b; });
+      if (!list.length) return '';
+      return '<div class="iv-group">'
+        + '<h3>' + esc(I.bigLabel[b]) + '</h3>'
+        + '<div class="iv-chips">'
+        + list.map(function(c){
+            var on = have[c.big + '|' + c.key];
+            return '<button type="button" class="iv-chip' + (on ? ' on' : '') + '"'
+              + ' data-big="' + esc(c.big) + '" data-key="' + esc(c.key) + '">'
+              + '<span class="st">' + (on ? '★' : '☆') + '</span>'
+              + esc(c.label) + '</button>';
+          }).join('')
+        + '</div></div>';
+    }).join('');
+  }
+
+  /* ── 불러오기 ───────────────────────────────────────────── */
+  async function load(){
+    I = window.OCInterests;
+    if (!I){ say('no', '관심분야 기능을 불러오지 못했습니다. 새로 고쳐 주십시오.'); return; }
+    ME = await I.me();
+    if (!ME){
+      location.href = '/account/login.html?next='
+        + encodeURIComponent('/account/interests.html');
+      return;
+    }
+    MINE = (await I.list(true)).slice();
+    drawMine();
+    drawPicker();
+  }
+
+  /* ── 순서 바꾸기 ─────────────────────────────────────────
+     ★ 화면을 먼저 바꾸고 서버에 알립니다 — 기다리게 하면 답답합니다.
+       실패하면 되돌리고 알립니다. */
+  async function move(id, dir){
+    if (busy) return;
+    var i = MINE.findIndex(function(x){ return String(x.id) === String(id); });
+    if (i < 0) return;
+    var j = i + dir;
+    if (j < 0 || j >= MINE.length) return;
+
+    busy = true;
+    var tmp = MINE[i]; MINE[i] = MINE[j]; MINE[j] = tmp;
+    drawMine();
+    /* 옮긴 줄을 잠깐 표시합니다 — 어느 것이 움직였는지 보이게 */
+    var li = $('mine').querySelector('li[data-id="' + id + '"]');
+    if (li){
+      li.classList.add('moving');
+      setTimeout(function(){ li.classList.remove('moving'); }, 900);
+    }
+
+    var r = await I.reorder(MINE.map(function(x){ return x.id; }));
+    busy = false;
+    if (!r.ok){
+      /* 되돌립니다 */
+      var t2 = MINE[i]; MINE[i] = MINE[j]; MINE[j] = t2;
+      drawMine();
+      say('no', '순서를 바꾸지 못했습니다. 잠시 뒤에 다시 해 주십시오.');
+    }
+  }
+
+  async function del(id){
+    if (busy) return;
+    var x = MINE.find(function(v){ return String(v.id) === String(id); });
+    if (!x) return;
+    var cat = I.find(x.big, x.key);
+    var nm = cat ? cat.label : x.key;
+    if (!confirm('「' + nm + '」 를 관심분야에서 뺍니다.\n\n메인에 더 이상 나오지 않습니다. 진행할까요?')) return;
+
+    busy = true;
+    var r = await I.remove(x.big, x.key);
+    busy = false;
+    if (!r.ok){ say('no', '빼지 못했습니다. 잠시 뒤에 다시 해 주십시오.'); return; }
+    MINE = (await I.list(true)).slice();
+    drawMine(); drawPicker();
+    say('ok', '「' + nm + '」 를 뺐습니다.');
+  }
+
+  async function toggle(big, key, btn){
+    if (busy) return;
+    busy = true;
+    btn.disabled = true;
+    var on = btn.classList.contains('on');
+    var r = on ? await I.remove(big, key) : await I.add(big, key);
+    btn.disabled = false;
+    busy = false;
+    if (!r.ok){
+      if (r.why === 'type') say('no', '이 갈래는 단체·기업·학교 회원만 담을 수 있습니다.');
+      else say('no', '처리하지 못했습니다. 잠시 뒤에 다시 해 주십시오.');
+      return;
+    }
+    MINE = (await I.list(true)).slice();
+    drawMine(); drawPicker();
+    var cat = I.find(big, key);
+    say('ok', '「' + ((cat && cat.label) || key) + '」 를 ' + (on ? '뺐습니다' : '담았습니다') + '.');
+  }
+
+  /* ── 누름 처리 ─────────────────────────────────────────── */
+  $('mine').addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('button');
+    if (!b) return;
+    var li = b.closest('li');
+    if (!li) return;
+    var id = li.getAttribute('data-id');
+    if (b.classList.contains('up'))  move(id, -1);
+    else if (b.classList.contains('dn')) move(id, 1);
+    else if (b.classList.contains('del')) del(id);
+  });
+
+  $('picker').addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.iv-chip');
+    if (!b) return;
+    toggle(b.getAttribute('data-big'), b.getAttribute('data-key'), b);
+  });
+
+  /* interests.js 가 늦게 실릴 수 있으므로 기다립니다 */
+  (function wait(n){
+    if (window.OCInterests){ load(); return; }
+    if (n > 40){ say('no', '관심분야 기능을 불러오지 못했습니다. 새로 고쳐 주십시오.'); return; }
+    setTimeout(function(){ wait(n + 1); }, 100);
+  })(0);
+})();
+</script>
+</body>
+</html>
