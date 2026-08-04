@@ -37,6 +37,31 @@
      이미 줄인 것이거나 위키미디어가 아니면 그대로 돌려줍니다. */
   function wikiThumb(u, w) {
     if (!u) return u;
+    u = String(u);
+
+    /* ★ http → https 로 올립니다.
+       담긴 주소가 http:// 인 것이 많습니다(공연장·단체 1,935줄).
+       우리 사이트는 https 이므로 브라우저가 그것을 막거나 한 번 더
+       돌려보내 느려집니다. */
+    if (u.indexOf('http://') === 0) u = 'https://' + u.slice(7);
+
+    /* ★ Special:FilePath 주소 — <b>이것이 버벅거림의 진짜 까닭이었습니다.</b>
+
+         http://commons.wikimedia.org/wiki/Special:FilePath/Phila%20Academy.JPG
+
+       이 모양은 <b>원본 파일로 넘겨주는</b> 주소입니다. 공연장 사진은
+       한 장에 5~15MB 인 것이 흔한데, 목록 서른 줄이면 수백 MB 를
+       받는 셈이었습니다.
+
+       다행히 width 를 붙일 수 있습니다(MediaWiki 공식 기능) —
+       그러면 알맞게 줄인 그림으로 넘겨줍니다. 5MB 가 5KB 가 됩니다.
+
+       공연장 1,123줄 · 음악단체 812줄이 이 모양입니다. */
+    if (u.indexOf('Special:FilePath/') >= 0 || u.indexOf('Special:Redirect/file/') >= 0) {
+      if (/[?&]width=/.test(u)) return u;          /* 이미 붙어 있으면 그대로 */
+      return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'width=' + w;
+    }
+
     if (u.indexOf('upload.wikimedia.org') < 0) return u;
     if (u.indexOf('/thumb/') >= 0) {
       /* 이미 thumb 인데 크기가 우리가 원하는 것보다 크면 줄입니다 */
