@@ -651,7 +651,13 @@
     async function mgDelete(){
       var ids=Array.prototype.slice.call(document.querySelectorAll('.mg-cb:checked')).map(function(c){return parseInt(c.value,10);});
       if(!ids.length){ alert('삭제할 인물을 먼저 체크하세요.'); return; }
-      if(!confirm(ids.length+'명을 차단 목록에 등록한 뒤 삭제합니다.\n(차단 등록이 먼저이므로, 그것이 실패하면 삭제하지 않습니다)\n삭제는 되돌릴 수 없어요. 진행할까요?')) return;
+      if(!confirm(ids.length+'명을 차단 목록에 등록한 뒤 삭제합니다.\n'
+        + '(차단 등록이 먼저이므로, 그것이 실패하면 삭제하지 않습니다)\n\n'
+        /* ★ 현대음악DB 에서도 함께 지운다는 것을 <b>미리</b> 알립니다.
+           모르고 지우면 「왜 저기서도 사라졌지?」 가 됩니다. */
+        + '★ 현대음악DB 에 같은 사람이 있으면 그쪽도 함께 지웁니다.\n'
+        + '  (두 곳에 따로 담기므로, 한쪽만 지우면 사용자단에 계속 보입니다)\n\n'
+        + '삭제는 되돌릴 수 없어요. 진행할까요?')) return;
       /* ★ 같은 위키데이터 번호를 <b>한 번만</b> 보냅니다.
 
          왜 필요한가 (2026-08-03 실제로 겪은 일입니다)
@@ -687,6 +693,53 @@
           return;
         }
       }
+      /* ★ 인물을 지우기 <b>전에</b> 현대음악DB 에서도 지웁니다.
+
+         왜 필요한가 (2026-08-04 · 파트너 지적)
+           현대음악DB(modern_composers)는 인물의 <b>복사본</b>입니다.
+           이름·생몰·국적·사진을 자기가 갖고 있습니다. 그래서 인물DB 에서
+           지워도 현대음악DB 에는 그대로 남아, <b>사용자단에 계속
+           보였습니다.</b>
+
+           「인물DB 에서 지웠는데 안 지워진다」 는 것은 사용자 관점에서
+           당연히 이상합니다. 둘 다 <b>같은 사람</b>이니까요.
+           표가 둘이라는 것은 우리 사정이고, 그것을 사람이 알아야 할
+           이유는 없습니다.
+
+         ★ <b>지우는 순서가 중요합니다.</b>
+           modern_composers.person_id 는 on delete set null 입니다.
+           인물을 먼저 지우면 person_id 가 null 이 되어 <b>어느 줄이
+           그 사람인지 알 수 없게</b> 됩니다. 그러니 먼저 지웁니다.
+
+         ★ 두 가지로 찾습니다 —
+           ① person_id 로 이어진 줄 (357명이 이어져 있습니다)
+           ② 이름이 같은 줄 (이어지지 않은 92명을 위해)
+
+         ★ 뒤에 구조를 고칠 것 — modern_composers 가 이름·생몰을 스스로
+           갖는 것이 문제의 뿌리입니다. 인물에 <b>붙는 정보</b>(사조·기법·
+           계보)만 갖게 바꾸면 이런 손질이 필요 없어집니다. */
+      var mcGone = 0;
+      try {
+        var mc1 = await sb.from('modern_composers').delete()
+          .in('person_id', ids).select('id');
+        if (!mc1.error) mcGone += (mc1.data && mc1.data.length) || 0;
+
+        /* 이어지지 않은 줄은 이름으로 찾습니다 */
+        var names = [];
+        mgData.forEach(function(p){
+          if (ids.indexOf(p.id) < 0) return;
+          var nm = (p.name_ko || '').trim();
+          if (nm && names.indexOf(nm) < 0) names.push(nm);
+        });
+        if (names.length){
+          var mc2 = await sb.from('modern_composers').delete()
+            .in('name_ko', names).select('id');
+          if (!mc2.error) mcGone += (mc2.data && mc2.data.length) || 0;
+        }
+      } catch (e){
+        console.error('현대음악DB 삭제 실패:', e);
+      }
+
       /* ★ <b>실제로 몇 줄이 지워졌는지 받아서 확인합니다.</b>
          Supabase 는 줄 보안(RLS)이 막으면 <b>오류 없이 0줄</b>을 지웁니다.
          그러면 「삭제했습니다」 라고 알려도 그대로 남아 있습니다.
@@ -710,6 +763,7 @@
       mgData=mgData.filter(function(p){return !goneSet[p.id];});
       renderManage();
       alert(gone+'명을 차단 목록에 등록하고 삭제했습니다.'
+        + (mcGone ? '\n· 현대음악DB 에서도 '+mcGone+'명 지웠습니다.' : '')
         + (gone<ids.length ? '\n★ 고른 것은 '+ids.length+'명인데 '+gone+'명만 지워졌습니다.' : '')
         + (wids.length<ids.length ? '\n(위키데이터 번호가 없는 '+(ids.length-wids.length)
             +'명은 차단 목록에 담을 수 없어 재수집 때 다시 들어올 수 있습니다)' : ''));
