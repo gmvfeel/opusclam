@@ -616,7 +616,7 @@
   .hub-list.as-grid .hub-row{min-width:0}
   .hub-list.as-grid .hub-date,
   .hub-list.as-grid .hub-view{display:none}
-  .hub-list.as-grid .hub-badge{min-width:0;padding:3px 7px;font-size:10px}
+  .hub-list.as-grid .hub-badge{min-width:0;padding:3px 7px;font-size:11px}
   .hub-list.as-grid .hub-th{width:40px;height:40px}
   .hub-list.as-grid .hub-name,
   .hub-list.as-grid .hub-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

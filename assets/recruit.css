@@ -1969,7 +1969,7 @@ html[data-theme="dark"] .rs-num--talent { background: #17201a; border-color: #5e
 .rs-bar[data-v]::after {
   content: attr(data-v);
   position: absolute; left: 50%; top: -15px; transform: translateX(-50%);
-  font-size: 10px; font-weight: 700; color: var(--text-3); white-space: nowrap;
+  font-size:11px; font-weight: 700; color: var(--text-3); white-space: nowrap;
 }
 .rs-col > em {
   flex: 0 0 auto; padding: 7px 0 9px;
@@ -2187,4 +2187,50 @@ tr.board-focus > td{animation:rcflash 4.5s ease}
 @keyframes rcflash{
   0%,18%{background:rgba(124,99,176,.16)}
   100%{background:transparent}
+}
+
+
+/* ══ 회원 종류별 표 — 모바일에서는 카드로 ═════════════════════
+   rg-tbl-card
+
+   ★ 왜 바꾸나 (2026-08-04 · 375px 로 재어 보고 알았습니다)
+     이 표는 칸이 여섯이라 min-width:660px 입니다. 화면(375px)의
+     <b>거의 두 배</b>라서, 가로로 밀어야 오른쪽 칸을 볼 수 있습니다.
+     그런데 표를 가로로 미는 것은 <b>머리글이 사라져</b> 무슨 칸인지
+     모르게 됩니다.
+
+   ★ 그래서 모바일에서는 줄 하나를 <b>카드 하나</b>로 세웁니다.
+     각 값 앞에 머리글을 붙여(data-th) 「채용정보 보기 : 가능」 처럼
+     읽히게 합니다. 가로로 밀 일이 없어집니다.
+
+   ★ 화면(recruit/guide.html)의 td 에 data-th 를 적어 두어야 합니다.
+     적지 않은 칸은 머리글 없이 값만 보입니다 — 깨지지는 않습니다. */
+@media (max-width: 720px){
+  .rg-tablewrap{ overflow-x: visible; }
+  .rg-tbl{ min-width: 0; display: block; }
+  .rg-tbl thead{ display: none; }        /* 머리글 줄은 감춥니다 */
+  .rg-tbl tbody{ display: block; }
+  .rg-tbl tbody tr{
+    display: block; margin-bottom: 12px; padding: 12px 14px;
+    border: 1px solid var(--line-2, #e8e6ef); border-radius: 10px;
+    background: #fff;
+  }
+  .rg-tbl tbody td{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; border: 0; padding: 6px 0; text-align: right;
+    font-size: 13px;
+  }
+  .rg-tbl tbody td + td{ border-top: 1px dashed rgba(0,0,0,.06); }
+  /* 값 앞에 머리글을 붙입니다 */
+  .rg-tbl tbody td::before{
+    content: attr(data-th); flex: 0 0 auto;
+    font-size: 12px; font-weight: 600; color: var(--text-2, #5f5c70);
+    text-align: left;
+  }
+  /* 회원 종류 칸은 카드의 제목처럼 둡니다 */
+  .rg-tbl tbody td.rg-who{
+    display: block; text-align: left; font-size: 15px; font-weight: 800;
+    padding: 0 0 8px; border-bottom: 1px solid rgba(0,0,0,.08); margin-bottom: 4px;
+  }
+  .rg-tbl tbody td.rg-who::before{ content: none; }
 }

@@ -122,7 +122,7 @@ html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115d
   .pdb-table .era-name,
   .pdb-table .era-yr,
   .pdb-table .lk{transition:background-color .25s ease, color .25s ease, border-color .25s ease}
-.oc-badge{display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-size:9px;font-weight:800;letter-spacing:.03em;color:#fff;background:#EC7A1C;border-radius:4px;padding:2px 5px;margin-left:6px;vertical-align:middle;line-height:1}
+.oc-badge{display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-size:10.5px;font-weight:800;letter-spacing:.03em;color:#fff;background:#EC7A1C;border-radius:4px;padding:2px 5px;margin-left:6px;vertical-align:middle;line-height:1}
 .pdb-legend .oc-badge{margin-left:0;margin-right:5px}
 .wxn-sub{margin:0 0 14px}
 .wxn-sub .wxn-run{color:var(--text-2)}
@@ -138,3 +138,34 @@ html[data-theme="dark"] .pdb-bg{opacity:.16}
 .pdb-bg .scene svg{width:100%;height:100%;display:block}
 .pdb-inner{position:relative;z-index:1}
 html[data-theme="dark"] .pdb-table tbody tr:not(.pdb-norow):hover td{background:#000}
+
+
+/* ══ 모바일에서 누를 자리 넓히기 ══════════════════════════════
+   oc-tap-mobile
+
+   ★ 왜 필요한가 (2026-08-04 · 375px·320px 로 재어 보고 알았습니다)
+     작은 링크들의 높이가 <b>17~20px</b> 이었습니다 —
+       「홈 / Database / 인물DB」 빵가루   12~57 × 18px
+       「VIEW MORE +」                    84 × 17px
+     애플·구글 지침은 44 × 44px 입니다. 이대로는 <b>손가락으로 정확히
+     누르기 어렵고</b>, 옆 링크를 잘못 누르게 됩니다.
+
+   ★ 글자를 키우지 않고 <b>누를 자리만</b> 넓힙니다.
+     글자를 키우면 줄이 밀려 짜임이 흐트러집니다. 위아래 여백을 주고
+     margin 을 음수로 되돌리면 <b>보이는 모습은 그대로</b>면서
+     누르기 쉬워집니다.
+
+   ★ 데스크톱에는 아무 영향이 없습니다 (860px 아래에서만 듭니다). */
+@media (max-width: 860px){
+  .pdb-crumb a,
+  .pdb-subnav a,
+  .board-crumb a{
+    display:inline-flex;align-items:center;
+    min-height:36px;padding-top:9px;padding-bottom:9px;
+    margin-top:-9px;margin-bottom:-9px;
+  }
+  /* 알약 모양 하위 메뉴는 이미 여백이 있으므로 높이만 확보합니다 */
+  .pdb-subnav a{ min-height:38px; }
+  /* 표 안의 작은 링크 아이콘 — 26px 이라 조금 더 넓힙니다 */
+  .pdb-table .c-link .lk{ width:32px;height:32px; }
+}

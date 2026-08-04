@@ -33,7 +33,10 @@ button,input,select,textarea{font-family:inherit}
 .gnb .in{max-width:1320px;margin:0 auto;padding:0 20px}
 .util{background:var(--bg2)}
 .util .in{max-width:1180px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:34px}
-.util a{color:var(--util-tx);font-size:8px;letter-spacing:.05em;font-weight:600;transition:color .2s}
+/* ★ 맨 위 띠 링크 — 8px 은 모바일에서 읽기 어렵습니다.
+   (2026-08-04 · 375px 로 재어 보고 알았습니다)
+   10.5px 로 올리고, 모바일에서는 누를 자리도 넓힙니다. */
+.util a{color:var(--util-tx);font-size:10.5px;letter-spacing:.04em;font-weight:600;transition:color .2s}
 .util .l a{margin-right:18px}.util a:hover{color:var(--navh)}
 .mast{border-top:1px solid var(--hair)}
 .mast .in{display:flex;align-items:center;justify-content:space-between;height:78px;gap:24px}
@@ -246,3 +249,32 @@ footer a{color:var(--tx4)}
 
 /* 모바일: 상단 유틸바 숨김 (2줄 넘침 방지) */
 @media(max-width:768px){.util{display:none}}
+
+
+/* ══ 모바일에서 누를 자리 넓히기 (맨 위 띠·푸터) ═══════════════
+   ★ 왜 필요한가 (2026-08-04 · 375px 로 재어 보고 알았습니다)
+     맨 위 띠와 푸터의 링크 높이가 <b>17~20px</b> 이었습니다 —
+       「광고안내」 63 × 20px · 「(주)윅슨어소시에이츠」 140 × 20px
+       「DataBase」 73 × 17px
+     애플·구글 지침은 44 × 44px 입니다. 이대로는 손가락으로 정확히
+     누르기 어렵고 옆 링크를 잘못 누르게 됩니다.
+
+   ★ 글자를 키우지 않고 <b>누를 자리만</b> 넓힙니다.
+     위아래 여백을 주고 margin 을 음수로 되돌리면 보이는 모습은
+     그대로면서 누르기 쉬워집니다.
+
+   ★ 이 파일은 모든 화면이 싣습니다 — 한 곳만 고치면 함께 듭니다. */
+@media (max-width: 860px){
+  .util a{
+    display:inline-flex;align-items:center;
+    min-height:34px;padding-top:8px;padding-bottom:8px;
+    margin-top:-8px;margin-bottom:-8px;
+  }
+  footer a, .foot a, .fnav a{
+    display:inline-flex;align-items:center;
+    min-height:34px;padding-top:7px;padding-bottom:7px;
+    margin-top:-7px;margin-bottom:-7px;
+  }
+  /* 푸터의 아주 작은 글자도 조금 키웁니다 */
+  footer a, .foot a{ font-size:11px; }
+}
