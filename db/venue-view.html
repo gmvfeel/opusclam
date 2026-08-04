@@ -1302,6 +1302,34 @@ if('serviceWorker' in navigator){
   fetch(URL+'/rest/v1/venues?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})
    .then(function(a){if(!a||!a.length)return;var x=a[0];var nm=(x.name_ko||'').trim();
      var por=document.querySelector('.pv-portrait span');if(por)por.textContent=(function(n){n=(x.name_ko||'').trim();return n?n[0]:'?';})();
+     /* ★ 대표 사진 — logo_url 에 담긴 것을 그립니다.
+
+        예전에는 <b>첫 글자만</b> 넣고 끝냈습니다. 그래서 목록에는
+        사진이 보이는데 상세로 들어오면 「세」 처럼 글자만 나왔습니다.
+        인물DB 에는 이 처리가 있었는데 단체·공연장에는 없었습니다.
+
+        ★ Special:FilePath 주소는 <b>원본으로 넘겨주는</b> 모양이라
+          공연장 사진은 한 장에 5~15MB 입니다. width 를 붙여
+          알맞게 줄여 받습니다. 상세는 목록보다 크게 보이므로 400 입니다.
+        ★ http 는 https 로 올립니다 — 우리 사이트가 https 이므로
+          브라우저가 http 그림을 막습니다. */
+     (function(){
+       var iu=(x.logo_url||'').trim(); if(!iu) return;
+       iu=iu.replace(/^http:\/\//,'https://');
+       if(iu.indexOf('Special:FilePath')>=0 || iu.indexOf('Special:Redirect/file')>=0){
+         if(!/[?&]width=/.test(iu)) iu+=(iu.indexOf('?')>=0?'&':'?')+'width=400';
+       }
+       var box=document.querySelector('.pv-portrait');
+       if(!box) return;
+       var ini=(x.name_ko||'').trim(); ini=ini?ini[0]:'?';
+       box.innerHTML=''; box.style.overflow='hidden';
+       var im=document.createElement('img');
+       im.src=iu; im.alt=(x.name_ko||''); im.loading='lazy'; im.decoding='async';
+       im.style.cssText='width:100%;height:100%;object-fit:cover';
+       /* 못 받으면 첫 글자로 되돌립니다 — 깨진 그림이 남으면 어색합니다 */
+       im.onerror=function(){ box.innerHTML='<span>'+ini+'</span>'; };
+       box.appendChild(im);
+     })();
      var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(x.name_en){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=x.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
      var tg=document.querySelector('.pv-tags');if(tg){var html=x.type?'<span class="tag">'+esc(x.type)+'</span>':'';if(x.is_oc)html+='<span class="oc-badge">OC</span>';tg.innerHTML=html;}
      var fc=document.querySelector('.pv-facts');if(fc)fc.innerHTML=fact('유형',esc(x.type||''))+fact('소재지',esc(x.location||''))+fact('개관',esc(x.opened||''))+fact('좌석수',esc(x.seats||''));

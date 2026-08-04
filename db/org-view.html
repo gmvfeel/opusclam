@@ -1301,6 +1301,34 @@ if('serviceWorker' in navigator){
   fetch(URL+'/rest/v1/orgs?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})
    .then(function(a){if(!a||!a.length)return;var o=a[0];var nm=(o.name_ko||'').trim();
      var por=document.querySelector('.pv-portrait span');if(por)por.textContent=nm?nm[0]:'?';
+     /* ★ 대표 사진 — logo_url 에 담긴 것을 그립니다.
+
+        예전에는 <b>첫 글자만</b> 넣고 끝냈습니다. 그래서 목록에는
+        사진이 보이는데 상세로 들어오면 「세」 처럼 글자만 나왔습니다.
+        인물DB 에는 이 처리가 있었는데 단체·공연장에는 없었습니다.
+
+        ★ Special:FilePath 주소는 <b>원본으로 넘겨주는</b> 모양이라
+          공연장 사진은 한 장에 5~15MB 입니다. width 를 붙여
+          알맞게 줄여 받습니다. 상세는 목록보다 크게 보이므로 400 입니다.
+        ★ http 는 https 로 올립니다 — 우리 사이트가 https 이므로
+          브라우저가 http 그림을 막습니다. */
+     (function(){
+       var iu=(o.logo_url||'').trim(); if(!iu) return;
+       iu=iu.replace(/^http:\/\//,'https://');
+       if(iu.indexOf('Special:FilePath')>=0 || iu.indexOf('Special:Redirect/file')>=0){
+         if(!/[?&]width=/.test(iu)) iu+=(iu.indexOf('?')>=0?'&':'?')+'width=400';
+       }
+       var box=document.querySelector('.pv-portrait');
+       if(!box) return;
+       var ini=(o.name_ko||'').trim(); ini=ini?ini[0]:'?';
+       box.innerHTML=''; box.style.overflow='hidden';
+       var im=document.createElement('img');
+       im.src=iu; im.alt=(o.name_ko||''); im.loading='lazy'; im.decoding='async';
+       im.style.cssText='width:100%;height:100%;object-fit:cover';
+       /* 못 받으면 첫 글자로 되돌립니다 — 깨진 그림이 남으면 어색합니다 */
+       im.onerror=function(){ box.innerHTML='<span>'+ini+'</span>'; };
+       box.appendChild(im);
+     })();
      var h=document.querySelector('.pv-name');if(h){h.textContent=nm;if(o.name_en){var sub=document.createElement('span');sub.className='pv-name-sub';sub.textContent=o.name_en;h.appendChild(document.createTextNode(' '));h.appendChild(sub);}}
      var tg=document.querySelector('.pv-tags');if(tg){var html=o.type?'<span class="tag">'+esc(o.type)+'</span>':'';if(o.is_oc)html+='<span class="oc-badge">OC</span>';tg.innerHTML=html;}
      var fc=document.querySelector('.pv-facts');if(fc)fc.innerHTML=fact('소재지',esc(o.location||''))+fact('창단',esc(o.founded||''))+fact('상임지휘자',esc(o.leader||''))+fact('연고',esc(o.home_venue||''));
@@ -1320,7 +1348,11 @@ if('serviceWorker' in navigator){
 document.title=nm+' · 음악단체DB · OPUSCLAM.COM';
      /* 모아둔 사진을 대표 사진과 갤러리에 넣습니다.
         기존 이미지가 있으면 대표 사진은 바꾸지 않습니다. */
-     if(window.OCPhotos) OCPhotos.mount({ type:'org', id:x.id, existing:x.logo_url, name:nm });var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
+     /* ★ id:x.id 로 적혀 있었습니다 — 이 화면의 변수는 o 입니다.
+        그래서 「x is not defined」 오류가 나고, 모아둔 사진을 넣는 일이
+        <b>통째로 멈췄습니다.</b> 대표 사진뿐 아니라 사진 갤러리도
+        비어 있었을 것입니다. */
+     if(window.OCPhotos) OCPhotos.mount({ type:'org', id:o.id, existing:o.logo_url, name:nm });var cr=document.querySelector('.pdb-crumb .on');if(cr)cr.textContent=nm;
    }).catch(function(e){console.error('org view 로드 실패:',e);}).finally(function(){var _l=document.getElementById("pv-loading");if(_l)_l.classList.add("hide");});
 })();
 </script>
