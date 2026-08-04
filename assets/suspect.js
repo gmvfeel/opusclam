@@ -68,6 +68,15 @@
   ];
 
   var MG_OCC_BAD=[
+    /* ★ 대중음악·연예 쪽 (2026-08-04 · 현대음악DB 정제에서 알았습니다)
+       최승현(아이돌)이 0점으로 나왔습니다 — idol 이 목록에 없었습니다.
+       rapper·actor 는 있었는데 그 옆의 말들이 빠져 있었습니다.
+       ★ 「video game composer」 처럼 composer 가 함께 든 직업은
+         -5점과 상쇄되어 안 걸립니다. 그런 사람은 화면에서 직업·장르를
+         보고 손으로 고르시면 됩니다 — 기계가 다 가릴 수는 없습니다. */
+    'idol','k-pop artist','pop singer','record producer','disc jockey',
+    'model','television actor','film actor','comedian','youtuber','streamer',
+    'game designer','sound designer','arranger of popular music',
     'novelist','writer','author','poet','playwright','essayist','translator',
     'politician','statesman','diplomat','president','minister','mayor','senator',
     'physician','surgeon','psychiatrist','dentist','veterinarian','nurse',
