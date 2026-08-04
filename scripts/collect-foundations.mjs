@@ -544,48 +544,11 @@ const FILL_COLS = ['name_en', 'location', 'founded', 'business', 'field',
                       한 번도 채워지지 않았습니다. */
                    'link_wiki'];
 
-/* ── 위키백과 대표 이미지 ─────────────────────────────────────
-   ★ 왜 필요한가 (2026-08-04)
-     위키데이터의 P154(로고)·P18(사진)은 재단·기관에 <b>드뭅니다.</b>
-     P18 을 더해도 14건만 채워졌습니다.
-
-     그런데 <b>위키백과 문서에는 맨 위 사진이 있는 경우가 많습니다.</b>
-     학교·공연장 수집기가 이미 그 방식(prop=pageimages)을 쓰고 있고,
-     인물DB 사진 6,441건도 그렇게 모였습니다.
-
-   ★ 480px 로 받습니다 — 목록은 38px, 상세는 400px 이므로 넉넉합니다.
-     원본을 받으면 수 MB 가 되어 무겁습니다.
-   ★ 한국어 문서를 먼저 봅니다. 없으면 영어 문서를 봅니다. */
-async function wikiImage(host, title) {
-  if (!title) return { image: '', text: '' };
-  /* ★ 학교·공연장 수집기와 <b>같은 주소 모양</b>으로 둡니다.
-     그쪽이 이미 잘 돌고 있으니 검증된 것에 맞추는 편이 안전합니다.
-     origin=* 은 브라우저에서 쓰는 것이라 Node 에서는 뺍니다.
-     ★ 설명(extracts)도 함께 받습니다 — 어차피 한 번 물어보는
-       것이므로, 설명이 빈 곳도 함께 채울 수 있습니다. */
-  const u = 'https://' + host + '/w/api.php?format=json&action=query'
-    + '&prop=extracts%7Cpageimages&explaintext=1&exchars=1200'
-    + '&piprop=thumbnail&pithumbsize=480&redirects=1&titles=' + title;
-  try {
-    const r = await fetch(u, { headers: { 'User-Agent': UA } });
-    if (!r.ok) return { image: '', text: '' };
-    const j = await r.json();
-    const pages = j && j.query && j.query.pages;
-    if (!pages) return { image: '', text: '' };
-    const pg = Object.values(pages)[0] || {};
-    return {
-      image: (pg.thumbnail && pg.thumbnail.source) || '',
-      text: (pg.extract || '').trim(),
-    };
-  } catch (e) { return { image: '', text: '' }; }
-}
-
-async function wikiImageOf(wikiUrl) {
-  if (!wikiUrl) return { image: '', text: '' };
-  const m = String(wikiUrl).match(/^https?:\/\/([a-z-]+\.wikipedia\.org)\/wiki\/(.+)$/);
-  if (!m) return { image: '', text: '' };
-  return await wikiImage(m[1], m[2]);
-}
+/* ★ 위키백과 대표 이미지 가져오기는 <b>admin/photo-fill.html</b> 로
+   옮겼습니다 (2026-08-04). 이 수집기에서 하면 이번에 받은 것만
+   대상이 되고, 목록 15,006건을 받다가 429 에 걸리기 때문입니다.
+   link_wiki 는 여기서 채우므로, 그 도구가 그것을 쓰거나
+   위키데이터 번호로 문서를 직접 찾습니다. */
 
 // ── 메인 ────────────────────────────────────────────────────
 async function main() {
@@ -661,47 +624,19 @@ async function main() {
     if (key) nameSet.add(key);
     fresh.push(r);
   }
-  /* ── 사진이 아직 빈 곳에 <b>위키백과 대표 이미지</b>를 채웁니다 ──
-     ★ 위키데이터에 로고·사진이 없는 곳이 대부분이므로 이 단계가
-       실제로 사진을 채우는 몫을 합니다.
-     ★ 이미 사진이 있는 곳은 건드리지 않습니다.
-     ★ 위키백과에 숨 돌릴 틈을 줍니다(0.15초) — 한꺼번에 두드리면
-       막힙니다. */
-  {
-    const needPic = [];
-    for (const r of rows) {
-      if (r.wikidata_id && blocked.has(String(r.wikidata_id))) continue;
-      const old = byQid.get(r.wikidata_id);
-      /* 이미 있는 줄이면 그 줄의 사진이 비었는지 봅니다.
-         새 줄이면 r.logo_url 이 비었는지 봅니다. */
-      const cur = old ? old.logo_url : r.logo_url;
-      if (!isEmpty(cur)) continue;
-      if (isEmpty(r.link_wiki)) continue;
-      needPic.push({ r, old });
-    }
-    if (needPic.length) {
-      console.log('■ 위키백과에서 대표 이미지를 찾습니다 ·', needPic.length, '곳');
-      let got = 0;
-      for (let i = 0; i < needPic.length; i++) {
-        const it = needPic[i];
-        const w = await wikiImageOf(it.r.link_wiki);
-        if (w.image) {
-          got++;
-          if (it.old) {
-            /* 이미 있는 줄 — 보강 목록에 더합니다 */
-            const found = patch.find(x => x.id === it.old.id);
-            if (found) found.p.logo_url = w.image;
-            else patch.push({ id: it.old.id, p: { logo_url: w.image } });
-          } else {
-            it.r.logo_url = w.image;   /* 새 줄 — 그 자리에서 채웁니다 */
-          }
-        }
-        if ((i + 1) % 40 === 0) console.log('   · ' + (i + 1) + '/' + needPic.length + ' · 찾음 ' + got);
-        await new Promise(res => setTimeout(res, 150));
-      }
-      console.log('■ 위키백과 이미지 · 찾음', got, '곳 · 못 찾음', needPic.length - got, '곳');
-    }
-  }
+  /* ★ 위키백과 사진 채우기는 <b>따로 떼어냈습니다</b> (2026-08-04)
+
+     여기서 하면 <b>이번에 위키데이터에서 받은 것만</b> 대상이 됩니다.
+     그런데 채워야 할 곳은 <b>DB 에 이미 있는 322곳</b>입니다 —
+     시험 실행에서 5곳만 잡힌 까닭이 그것입니다.
+
+     게다가 이 수집기는 음반사 목록 15,006건을 받다가 속도 제한(429)에
+     걸립니다. 사진은 <b>번호만 있으면</b> 되므로 그 무거운 일을 거칠
+     이유가 없습니다.
+
+     ★ 이제 <b>admin/photo-fill.html</b> 에서 채웁니다 —
+       DB 에서 「사진 없고 번호 있는」 줄을 직접 읽어, 위키백과에
+       물어보고, 찾은 사진을 <b>보여 준 뒤</b> 채웁니다. */
 
   if (dupNames.length) {
     console.log('■ 이름이 이미 있어 건너뜀', dupNames.length, '건'
