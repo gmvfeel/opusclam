@@ -475,10 +475,15 @@
   .tabs button.on{color:var(--ink)}
   .tabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--violet-2)}
 
-  .recruit-lead{background:var(--paper-3);border-radius:8px;padding:16px;margin-bottom:12px}
-  .recruit-lead .badge{display:inline-block;background:var(--gold);color:#3a2c05;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:middle}
-  .recruit-lead h4{font-family:var(--display);font-size:19px;font-weight:700;display:inline-block}
-  .recruit-lead p{font-size:12px;color:var(--text-2);margin-top:8px;line-height:1.5}
+  /* ★ 리쿠르트 대표 카드(.recruit-lead)를 없앴습니다 —
+     제목이 짧으면 빈 상자만 커 보였습니다. 그 자리에는 불러오지 못했을
+     때만 까닭을 적는 작은 안내(.recruit-note)를 둡니다. */
+  .recruit-note{background:var(--paper-3);border-radius:8px;padding:12px 14px;
+                margin-bottom:12px;font-size:12.5px;color:var(--text-2);line-height:1.6}
+  /* NEW 딱지 — 목록 줄 안에서 제목 옆에 붙습니다 */
+  #recruit-list .badge{display:inline-block;background:var(--gold);color:#3a2c05;
+    font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;
+    margin-left:6px;vertical-align:middle;flex:0 0 auto}
 
   .grid-region{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
   .grid-region a{background:var(--paper);border:1px solid var(--line);border-radius:6px;text-align:center;padding:11px 0;font-size:12.5px;color:var(--text);transition:.15s}
@@ -874,9 +879,21 @@
         </ul>
       </div>
 
+      <!-- ★ 페스티벌을 콩쿨 바로 아래로 올렸습니다.
+           예전에는 콩쿨 목록이 10줄이라 페스티벌이 한참 밑으로 밀려
+           눈에 잘 안 띄었습니다. 콩쿨을 5줄로 줄이고 위로 당깁니다. -->
       <div class="col-block">
         <div class="sec-head"><div class="t"><span class="en-s">Festival</span><span class="ko">페스티벌정보</span></div><a class="more en" href="/spot/festival.html">MORE +</a></div>
         <ul class="list" id="festival-list"></ul>
+      </div>
+
+      <!-- ★ 페스티벌이 있던 자리에 「각 분야별 악보」 를 놓습니다.
+           IMSLP 에서 모은 819건이 있으므로 메인에 낼 만합니다.
+           내려받기는 회원만이지만, 목록은 누구나 볼 수 있게 둡니다 —
+           무엇이 있는지 보이지 않으면 회원가입할 이유가 안 보입니다. -->
+      <div class="col-block">
+        <div class="sec-head"><div class="t"><span class="en-s">Scores</span><span class="ko">각 분야별 악보</span></div><a class="more en" href="/spot/score.html">MORE +</a></div>
+        <ul class="list" id="score-list"></ul>
       </div>
     </div>
 
@@ -1026,10 +1043,12 @@
       <div class="tabs" id="recruit-tabs">
         <button class="on" data-kind="job">구인</button><button data-kind="talent">구직</button>
       </div>
-      <div class="recruit-lead" id="recruit-lead">
-        <h4 class="disp">불러오는 중…</h4>
-        <p></p>
-      </div>
+      <!-- ★ 대표 카드를 없앴습니다.
+           맨 앞 한 건만 크게 보여 주었는데, 제목이 「ㄹㄹㄹ」 처럼 짧으면
+           빈 상자만 커 보이고 정작 목록은 줄어들었습니다.
+           공고는 <b>여러 건을 훑는 것</b>이 쓸모가 크므로 목록 6줄로 둡니다.
+           불러오지 못했을 때만 이 자리에 까닭을 적습니다. -->
+      <div class="recruit-note" id="recruit-note" hidden></div>
       <ul class="list" id="recruit-list"></ul>
     </div>
 
@@ -1499,6 +1518,43 @@ if('serviceWorker' in navigator){
         return { title: r.title || '', link: f.v + '?id=' + encodeURIComponent(r.id), posted_on: r.created_at };
       });
     }catch(e){ return null; }
+  }
+
+  /* ── 각 분야별 악보 ───────────────────────────────────────
+     ★ 정보SPOT 의 악보 게시판(spot · section=악보)에서 가져옵니다.
+       공개된 것(review_status=approved)만, 숨기지 않은 것만.
+
+     ★ 작곡가를 함께 보여 줍니다 — 「Six moments musicaux」 만 있으면
+       누구 작품인지 알 수 없어 목록을 훑는 뜻이 없어집니다.
+
+     ★ 내려받기는 회원만이지만 <b>목록은 누구나</b> 봅니다.
+       무엇이 있는지 보이지 않으면 회원가입할 이유가 안 보입니다. */
+  async function loadScoreList(n){
+    const list = document.getElementById('score-list');
+    if(!list) return;
+    try{
+      const rows = await sbGet('spot?select=id,title,title_ko,score_composer,category,created_at'
+        + '&section=eq.' + encodeURIComponent('악보')
+        + '&review_status=eq.approved&hidden=is.false'
+        /* ★ 정렬에 id 를 붙입니다 — created_at 이 같은 줄이 많으면
+           순서가 흔들려 늘 다른 것이 보입니다. */
+        + '&order=created_at.desc,id.asc&limit=' + (n || 5));
+      if(!Array.isArray(rows) || !rows.length) return;
+      list.innerHTML = '';
+      rows.forEach(function(r){
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '/spot/spot-view.html?id=' + encodeURIComponent(r.id);
+        a.textContent = r.title_ko || r.title || '';
+        li.appendChild(a);
+        /* 작곡가가 있으면 이름을, 없으면 날짜를 둡니다 */
+        const dt = document.createElement('span');
+        dt.className = 'dt';
+        dt.textContent = r.score_composer || fmtDate(r.created_at);
+        li.appendChild(dt);
+        list.appendChild(li);
+      });
+    }catch(e){ console.error('악보 로드 실패:', e); }
   }
 
   async function loadDateList(elId, table, n){
@@ -2404,77 +2460,66 @@ if('serviceWorker' in navigator){
 
   async function loadRecruit(kind){
     recruitKind = kind || 'job';
-    const lead = document.getElementById('recruit-lead');
+    const note = document.getElementById('recruit-note');
     const list = document.getElementById('recruit-list');
     const more = document.getElementById('recruit-more');
-    if(!lead || !list) return;
+    if(!list) return;
 
     const isJob = (recruitKind === 'job');
     if(more) more.href = isJob ? '/recruit/job.html' : '/recruit/talent.html';
 
-    const h = lead.querySelector('h4');
-    const p = lead.querySelector('p');
-    const badge = lead.querySelector('.badge');
-    if(h) h.textContent = '불러오는 중…';
-    if(p) p.textContent = '';
-    if(badge) badge.remove();
+    function say(msg){
+      if(!note) return;
+      if(!msg){ note.hidden = true; note.textContent = ''; return; }
+      note.hidden = false; note.textContent = msg;
+    }
+    say('불러오는 중…');
     list.innerHTML = '';
 
     const table = isJob ? 'recruit_jobs' : 'recruit_talents_public';
     const cols  = isJob
-      ? 'id,title,org_name,body,duty,apply_to,apply_always,apply_until_hired,created_at'
-      : 'id,title,name_masked,body,career,created_at';
+      ? 'id,title,org_name,apply_to,apply_always,apply_until_hired,created_at'
+      : 'id,title,name_masked,created_at';
     const view  = isJob ? '/recruit/job-view.html' : '/recruit/talent-view.html';
     const filter = isJob ? '&hidden=eq.false' : '';
 
     try{
+      /* ★ 여섯 줄을 보여 줍니다. 정렬에 id 를 붙입니다 —
+         created_at 이 같은 줄이 있으면 순서가 흔들립니다. */
       const rows = await sbGet(table + '?select=' + cols + filter
-        + '&order=created_at.desc&limit=5');
+        + '&order=created_at.desc,id.desc&limit=6');
 
       if(!Array.isArray(rows) || !rows.length){
-        if(h) h.textContent = isJob
-          ? '등록된 채용정보가 아직 없습니다'
-          : '인재정보는 채용 회원만 볼 수 있습니다';
-        if(p) p.textContent = isJob
-          ? '단체·학교 회원이 올린 공고가 여기에 보입니다.'
-          : '음악관계자·단체·기업 또는 음악학교 회원으로 로그인하시면 보입니다.';
+        say(isJob
+          ? '등록된 채용정보가 아직 없습니다. 단체·학교 회원이 올린 공고가 여기에 보입니다.'
+          : '인재정보는 채용 회원만 볼 수 있습니다. 음악관계자·단체·기업 또는 음악학교 회원으로 로그인해 주십시오.');
         return;
       }
+      say('');
 
-      /* 맨 앞 한 건은 크게 */
-      const r0 = rows[0];
-      if(h){
-        h.textContent = isJob ? (r0.org_name || r0.title || '') : (r0.name_masked || '');
-        h.style.cursor = 'pointer';
-        h.onclick = function(){ location.href = view + '?id=' + encodeURIComponent(r0.id); };
-      }
-      if(p){
-        const txt = (isJob ? (r0.duty || r0.body) : (r0.career || r0.body)) || r0.title || '';
-        p.textContent = String(txt).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 110);
-      }
-      /* 사흘 안에 올라온 것에만 NEW */
-      const fresh = r0.created_at &&
-        (Date.now() - new Date(r0.created_at).getTime()) < 3 * 864e5;
-      if(fresh && h){
-        const b = document.createElement('span');
-        b.className = 'badge'; b.textContent = 'NEW';
-        h.insertAdjacentElement('afterend', b);
-      }
-
-      /* 나머지는 목록으로 */
-      rows.slice(1).forEach(function(r){
+      /* ★ 사흘 안에 올라온 것에 NEW 를 답니다 —
+         대표 카드를 없앴으니 그 표시를 목록 줄에 둡니다. */
+      rows.forEach(function(r){
         const li = document.createElement('li');
         const a  = document.createElement('a');
         a.href = view + '?id=' + encodeURIComponent(r.id);
         a.textContent = recruitTitle(r);
+        li.appendChild(a);
+        const fresh = r.created_at &&
+          (Date.now() - new Date(r.created_at).getTime()) < 3 * 864e5;
+        if(fresh){
+          const b = document.createElement('span');
+          b.className = 'badge'; b.textContent = 'NEW';
+          li.appendChild(b);
+        }
         const dt = document.createElement('span');
         dt.className = 'dt'; dt.textContent = recruitWhen(r);
-        li.appendChild(a); li.appendChild(dt);
+        li.appendChild(dt);
         list.appendChild(li);
       });
     }catch(e){
       console.error('리쿠르트 로드 실패:', e);
-      if(h) h.textContent = '불러오지 못했습니다';
+      say('불러오지 못했습니다.');
     }
   }
 
@@ -2494,8 +2539,9 @@ if('serviceWorker' in navigator){
     loadTicker();
     loadDbPick();                      /* DATABASE 자리 — 일곱 갈래 무작위 */
     loadDateList('notice-list', 'notices');
-    loadDateList('concours-list', 'concours', 10);
+    loadDateList('concours-list', 'concours', 5);   /* 10 → 5줄 */
     loadDateList('festival-list', 'festival', 5);
+    loadScoreList(5);
     loadFunding(7);
     loadOrgs(4);
     loadMedia();
