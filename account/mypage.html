@@ -121,6 +121,61 @@
   /* 소개 — 줄이 길어질 수 있어 목록 밖에 둡니다 */
   .mp-intro{font-size:13px;line-height:1.8;color:var(--text-2);margin:14px 0 0;
     padding:13px 15px;background:var(--paper-2);border-radius:10px;white-space:pre-wrap}
+  /* ── 활동 통계 ───────────────────────────────────────────
+     ★ 그래프를 <b>SVG 로 직접</b> 그립니다. 라이브러리를 싣지 않아
+       가볍고, 색과 글자를 우리 짜임에 맞출 수 있습니다. */
+  .st-sum{display:flex;gap:26px;flex-wrap:wrap;margin-bottom:22px;
+    padding-bottom:20px;border-bottom:1px solid var(--line)}
+  .st-sum .k{font-size:11.5px;color:var(--text-3);margin-bottom:4px}
+  .st-sum .v{font-family:var(--display);font-size:24px;font-weight:800;line-height:1}
+  .st-sum .v i{font-style:normal;font-size:12px;font-weight:600;
+    color:var(--text-3);margin-left:3px}
+
+  .st-sec{margin-bottom:26px}
+  .st-sec:last-child{margin-bottom:0}
+  .st-sec h4{font-size:13px;font-weight:800;margin:0 0 4px}
+  .st-sec .note{font-size:11.5px;color:var(--text-3);line-height:1.65;margin:0 0 14px}
+
+  /* 원 그래프 */
+  .st-pie{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .st-pie svg{flex:0 0 auto}
+  .st-legend{flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:7px}
+  .st-legend .row{display:flex;align-items:center;gap:9px;font-size:12.5px}
+  .st-legend .dot{flex:0 0 auto;width:10px;height:10px;border-radius:3px}
+  .st-legend .nm{flex:1 1 auto;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .st-legend .n{flex:0 0 auto;font-weight:700;color:var(--text-2)}
+  .st-legend .pc{flex:0 0 auto;font-size:11.5px;color:var(--text-3);width:38px;text-align:right}
+
+  /* 막대 */
+  .st-bars{display:flex;flex-direction:column;gap:9px}
+  .st-bar{display:flex;align-items:center;gap:11px;font-size:12.5px}
+  .st-bar .nm{flex:0 0 92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    color:var(--text-2)}
+  /* ★ 「많이 읽힌 내 글」 은 <b>제목</b>이라 92px 로는 잘립니다.
+     그쪽만 넓힙니다 — 갈래 이름은 짧으니 그대로 둡니다. */
+  .st-sec.wide .st-bar .nm{flex:0 0 46%;max-width:300px}
+  @media(max-width:520px){ .st-sec.wide .st-bar .nm{flex:0 0 40%} }
+  .st-bar .tr{flex:1 1 auto;height:20px;border-radius:5px;
+    background:rgba(0,0,0,.05);overflow:hidden;min-width:0}
+  .st-bar .tr i{display:block;height:100%;border-radius:5px;
+    background:linear-gradient(90deg,#7a5cc4,#a58ae0);transition:width .5s ease}
+  .st-bar.hot .tr i{background:linear-gradient(90deg,#c8792c,#e0a83c)}
+  .st-bar .n{flex:0 0 auto;font-weight:700;color:var(--text-2);
+    min-width:44px;text-align:right}
+  .st-bar .n em{font-style:normal;font-size:11px;font-weight:400;color:var(--text-3)}
+
+  .st-none{padding:24px 20px;text-align:center;color:var(--text-3);
+    font-size:12.5px;line-height:1.8;background:var(--paper-2);
+    border:1px dashed var(--line-2);border-radius:11px}
+  .st-none b{color:var(--text-2)}
+
+  @media(max-width:520px){
+    .st-sum{gap:18px}
+    .st-pie{gap:16px}
+    .st-bar .nm{flex:0 0 74px}
+  }
+
   /* ── Linked (인맥) ───────────────────────────────────────
      ★ 사람을 다루는 곳이라 <b>얼굴과 이름</b>을 앞에 둡니다.
        목록처럼 글자만 늘어놓으면 누가 누구인지 잘 안 들어옵니다. */
@@ -344,6 +399,23 @@
          「팔로우」 가 되고, 원치 않는 사람에게 이어질 수 있습니다.
        ★ 아이디를 <b>정확히 알 때만</b> 찾습니다 — 이름으로 훑어볼 수 있게
          두면 회원 명부가 새어 나갑니다. -->
+<!-- ══ 활동 통계 ══════════════════════════════════════════
+       ★ 시안의 그래프 셋입니다 —
+           내 활동 분포 · 관심분야 새 글 · 많이 읽힌 내 글
+       ★ <b>열람 기록을 쌓지 않습니다.</b> 이미 있는 자료만 셉니다
+         (created_at · view_count). 「비용 최소화」 원칙입니다. -->
+    <div class="mp-head" style="margin-top:44px;display:none" id="stHead">
+      <span class="jtag">STATS</span>
+      <h1 style="font-size:24px">활동 통계</h1>
+      <p class="mp-note">
+        올리신 글이 <b>어느 갈래에 얼마나</b> 있는지, 관심분야에 <b>새 글이 얼마나</b> 왔는지,
+        <b>어느 글이 많이 읽혔는지</b> 보여 드립니다.
+      </p>
+    </div>
+    <div class="mp-card" id="stBody" style="display:none">
+      <div class="mp-msg">불러오는 중…</div>
+    </div>
+
     <div class="mp-head" style="margin-top:44px;display:none" id="lkHead">
       <span class="jtag">LINKED</span>
       <h1 style="font-size:24px">Linked · 인맥</h1>
@@ -430,6 +502,7 @@
 <div id="oc-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
+<script src="/assets/interests.js"></script>
 <script>
 (function(){
   var URL="https://ptdxzxkgddvkusamkiol.supabase.co";
@@ -508,8 +581,155 @@
     box.innerHTML=html;
     var lo=document.getElementById("mpLogout"); if(lo) lo.addEventListener("click",doLogout);
     drawLevel();
+    drawStats();
     drawLinks();
     loadMine(session.user.id);
+  }
+
+  /* ── 활동 통계 ───────────────────────────────────────────────
+     ★ oc_my_stats() 하나로 세 그래프의 자료를 다 받습니다.
+       열 표를 훑어야 하니 서버에서 한 번에 세는 편이 빠릅니다.
+
+     ★ 그래프를 <b>SVG 로 직접</b> 그립니다 — 라이브러리를 싣지 않아
+       가볍고, 우리 색·글자에 맞출 수 있습니다. */
+  var ST_COLORS = ['#7a5cc4','#e0a83c','#5b9bd5','#6fcf8f','#e08585',
+                   '#9b8ec4','#c8a04a','#7fb8a8','#b07fa8','#8a95c4'];
+
+  function stPie(items, total){
+    /* ★ 도넛으로 그립니다 — 가운데에 합계를 넣을 수 있어 자리를 아낍니다.
+       stroke-dasharray 로 나누면 조각을 따로 그리지 않아도 됩니다. */
+    var R = 54, W = 22, C = 2 * Math.PI * R;
+    var off = 0;
+    var segs = items.map(function(x, i){
+      var pct = total ? (x.n / total) : 0;
+      var len = C * pct;
+      var el = '<circle cx="70" cy="70" r="' + R + '" fill="none"'
+        + ' stroke="' + ST_COLORS[i % ST_COLORS.length] + '" stroke-width="' + W + '"'
+        + ' stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '"'
+        + ' stroke-dashoffset="' + (-off).toFixed(2) + '"'
+        + ' transform="rotate(-90 70 70)"></circle>';
+      off += len;
+      return el;
+    }).join('');
+    return '<svg width="140" height="140" viewBox="0 0 140 140" role="img"'
+      + ' aria-label="갈래별 내 글 분포">'
+      + '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke="rgba(0,0,0,.05)"'
+      +   ' stroke-width="' + W + '"></circle>'
+      + segs
+      + '<text x="70" y="66" text-anchor="middle" font-size="22" font-weight="800"'
+      +   ' fill="#2b2740" font-family="inherit">' + total + '</text>'
+      + '<text x="70" y="84" text-anchor="middle" font-size="10.5"'
+      +   ' fill="#8a8ca0" font-family="inherit">올린 글</text>'
+      + '</svg>';
+  }
+
+  function stBars(items, key, unit, hot){
+    var max = 1;
+    items.forEach(function(x){ if ((x[key] || 0) > max) max = x[key]; });
+    return '<div class="st-bars">'
+      + items.map(function(x){
+          var w = Math.max(2, Math.round((x[key] || 0) / max * 100));
+          return '<div class="st-bar' + (hot ? ' hot' : '') + '">'
+            + '<span class="nm" title="' + esc(x.nm) + '">' + esc(x.nm) + '</span>'
+            + '<span class="tr"><i style="width:' + w + '%"></i></span>'
+            + '<span class="n">' + nf(x[key]) + '<em>' + esc(unit) + '</em></span>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+
+  async function drawStats(){
+    var head = document.getElementById('stHead');
+    var body = document.getElementById('stBody');
+    if (!head || !body) return;
+    try {
+      var r = await sb.rpc('oc_my_stats');
+      if (r.error) throw new Error(r.error.message);
+      var d = r.data;
+      if (!d || d.ok !== true) throw new Error('빈 값');
+
+      var mine  = d.mine  || [];
+      var fresh = (d.fresh || []).filter(function(x){ return (x.n || 0) > 0; });
+      var tops  = d.tops  || [];
+
+      /* 담은 갈래만 골라 보여 줍니다 — 스물넷을 다 늘어놓으면 못 읽습니다.
+         ★ 관심분야의 key 와 표 이름이 달라(community/modern → modern_music)
+           <b>사람이 읽는 이름</b>으로 맞춥니다. */
+      var wantCat = {};
+      try {
+        var I = window.OCInterests;
+        if (I) {
+          (await I.list()).forEach(function(x){
+            var c = I.find(x.big, x.key);
+            if (c) wantCat[c.label] = true;
+          });
+        }
+      } catch (e) {}
+      var freshPick = fresh.filter(function(x){ return wantCat[x.cat]; });
+      /* 담은 것이 없거나 그 갈래에 새 글이 없으면 <b>전체</b>를 보여 줍니다 —
+         빈 그래프보다는 「어디가 활발한가」 라도 보이는 편이 낫습니다. */
+      var freshShow = freshPick.length ? freshPick : fresh;
+      freshShow = freshShow.slice().sort(function(a2,b2){ return b2.n - a2.n; }).slice(0, 8);
+
+      body.innerHTML =
+          '<div class="st-sum">'
+        +   '<div><div class="k">올린 글</div><div class="v">' + nf(d.posts) + '<i>개</i></div></div>'
+        +   '<div><div class="k">모두 읽힌 수</div><div class="v">' + nf(d.views) + '<i>회</i></div></div>'
+        +   '<div><div class="k">쓴 갈래</div><div class="v">' + nf(mine.length) + '<i>곳</i></div></div>'
+        + '</div>'
+
+        /* ⓐ 내 활동 분포 */
+        + '<div class="st-sec">'
+        +   '<h4>내 활동 분포</h4>'
+        +   '<p class="note">올리신 글이 어느 갈래에 얼마나 있는지입니다.</p>'
+        +   (mine.length
+              ? '<div class="st-pie">' + stPie(mine, d.posts || 0)
+                + '<div class="st-legend">'
+                + mine.map(function(x, i){
+                    var pc = d.posts ? Math.round(x.n / d.posts * 100) : 0;
+                    return '<div class="row">'
+                      + '<span class="dot" style="background:'
+                      +   ST_COLORS[i % ST_COLORS.length] + '"></span>'
+                      + '<span class="nm">' + esc(x.cat) + '</span>'
+                      + '<span class="n">' + nf(x.n) + '개</span>'
+                      + '<span class="pc">' + pc + '%</span>'
+                      + '</div>';
+                  }).join('')
+                + '</div></div>'
+              : '<div class="st-none">아직 올리신 글이 없습니다.<br>'
+                + '<b>커뮤니티</b>에 글을 쓰시면 여기에 나옵니다.</div>')
+        + '</div>'
+
+        /* ⓑ 관심분야 새 글 */
+        + '<div class="st-sec">'
+        +   '<h4>최근 7일 새 글</h4>'
+        +   '<p class="note">'
+        +     (freshPick.length
+                ? '담아 두신 관심분야에 올라온 새 글입니다.'
+                : '아직 관심분야를 담지 않으셨기에 <b>모든 갈래</b>를 보여 드립니다.')
+        +   '</p>'
+        +   (freshShow.length
+              ? stBars(freshShow.map(function(x){ return { nm:x.cat, n:x.n }; }), 'n', '건', false)
+              : '<div class="st-none">최근 7일간 새 글이 없습니다.</div>')
+        + '</div>'
+
+        /* ⓒ 많이 읽힌 내 글 */
+        + '<div class="st-sec wide">'
+        +   '<h4>많이 읽힌 내 글</h4>'
+        +   '<p class="note">조회수가 높은 순서입니다.</p>'
+        +   (tops.length
+              ? stBars(tops.map(function(x){
+                  return { nm:x.t, v:x.v };
+                }), 'v', '회', true)
+              : '<div class="st-none">아직 읽힌 기록이 없습니다.</div>')
+        + '</div>';
+
+      head.style.display = '';
+      body.style.display = '';
+    } catch (e) {
+      head.style.display = 'none';
+      body.style.display = 'none';
+    }
   }
 
   /* ── Linked (인맥) ───────────────────────────────────────────
