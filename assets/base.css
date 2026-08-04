@@ -25,6 +25,11 @@
 .site-header:not(.solid){background:linear-gradient(115deg,#0E1230 0%,#241a44 55%,#3a2456 100%)}
 html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115deg,#0a0a0a 0%,#161616 55%,#222 100%)}
 .pdb-table .c-ava{width:56px;padding-right:0}
+/* ── 목록 그림이 없을 때 보여 주는 글자 (assets/thumb.js) ──────
+   ★ 그림을 못 받았을 때 깨진 그림 표시가 남으면 목록이 어수선합니다.
+     이름 첫 자를 대신 놓습니다. .ava 안에 들어가므로 자리는 그대로입니다. */
+.oc-th-ini{font-family:var(--display);font-weight:700;font-size:13px;
+  color:var(--text-3);display:grid;place-items:center;width:100%;height:100%;font-style:normal}
 .pdb-table .ava{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--paper-2);border:1px solid var(--line);font-family:var(--display);font-weight:700;font-size:13px;color:var(--text-3);background-size:cover;background-position:center}
 .pdb-table .c-nation{color:var(--text-2);overflow:hidden;text-overflow:ellipsis}
 .pdb-table .nat-code{font-size:.85em;opacity:.6;margin-left:1px}

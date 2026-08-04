@@ -917,6 +917,7 @@ if('serviceWorker' in navigator){
   });
 })();
 </script>
+<script src="/assets/thumb.js"></script>
 <script src="/assets/db-list.js" defer></script>
 <script>
 /* 음악단체DB: config → 공용 엔진(db-list.js) */
@@ -942,7 +943,7 @@ if('serviceWorker' in navigator){
     var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
     var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
-      +'<td class="c-ava"><span class="ava">'+(o.logo_url?'<img src="'+esc(wikiThumb(o.logo_url,128))+'" data-full="'+esc(o.logo_url)+'" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko))+'</span></td>'
+      +'<td class="c-ava"><span class="ava">'+OCThumb.img(o.logo_url, {size:38, fallback:ini(o.name_ko)})+'</span></td>'
       +'<td class="c-name"><a href="org-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
       +'<td class="c-field">'+(o.type?'<span class="tag">'+esc(o.type)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
       +'<td class="c-nation">'+nd(o.location)+'</td>'

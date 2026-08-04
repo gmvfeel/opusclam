@@ -326,7 +326,15 @@ window.OCList = (function () {
             if (!r || !r.id) return;
             if (String(r[col] || '').trim()) return;
             var u = by[r.id];
-            if (u) { r[col] = wikiThumb(u, 160); r._photoFromStore = true; }
+            /* ★ 목록 그림은 보이는 크기(38px)의 두 배로만 받습니다.
+               예전에는 160px 로 받았는데, 그림 한 장이 크면 목록을
+               굴릴 때 버벅거렸습니다. 공용 규칙(assets/thumb.js)을
+               쓰면 화면 쪽과 어긋나지 않습니다. */
+            if (u) {
+              r[col] = (window.OCThumb && window.OCThumb.wikiThumb)
+                ? window.OCThumb.wikiThumb(u, 76) : wikiThumb(u, 76);
+              r._photoFromStore = true;
+            }
           });
         })
         .catch(function () { /* 실패해도 목록은 그린다 */ });

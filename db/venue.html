@@ -633,6 +633,7 @@ if('serviceWorker' in navigator){
 })();
 
 </script>
+<script src="/assets/thumb.js"></script>
 <script src="/assets/db-list.js" defer></script>
 <script>
 /* 공연장DB: config → 공용 엔진(db-list.js) */
@@ -656,7 +657,10 @@ if('serviceWorker' in navigator){
   function renderRow(o,no,ctx){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
     var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
-    var av=o.logo_url?'<img src="'+esc(wikiThumb(o.logo_url,128))+'" data-full="'+esc(o.logo_url)+'" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}" alt="" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block">':ini(o.name_ko);
+    /* ★ 목록 그림은 assets/thumb.js 가 만듭니다 —
+       원본을 그대로 받지 않고 <b>보이는 크기만큼</b> 줄여 받습니다.
+       예전에는 못 받으면 원본으로 되돌아가서 목록을 굴릴 때 버벅거렸습니다. */
+    var av=OCThumb.img(o.logo_url, {size:38, fallback:ini(o.name_ko)});
     var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
