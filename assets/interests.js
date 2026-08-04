@@ -42,6 +42,13 @@
      sec    spot 표의 section 값 (메인에서 글을 가져올 때 씁니다)
      only   이 회원 종류만 고를 수 있음 (없으면 누구나)
      ★ 게시판을 늘리면 여기에 한 줄 더하십시오. */
+  /* ★ hidden 칸이 <b>없는</b> 표가 있으면 그 갈래에 noHidden:true 를
+     붙여 주십시오. 그러지 않으면 「hidden=not.is.true」 조건이
+       column ... does not exist
+     오류를 내어 그 칸이 통째로 비어 보입니다.
+     확인 SQL(check-hidden-null.sql) 의 ⓵ 에서 「hidden 칸 없음」 으로
+     나오는 표가 그것입니다. */
+
   var CATS = [
     /* ── 정보SPOT ── */
     { big:'spot', key:'festival',  label:'페스티벌정보',       href:'/spot/festival.html',  sec:'페스티벌',

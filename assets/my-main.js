@@ -71,8 +71,9 @@
 
     /* 정보SPOT 은 한 표(spot)에 여러 갈래가 있어 section 으로 가릅니다 */
     if (cat.tb === 'spot' && cat.sec) {
+      /* ★ 여기도 「숨긴 것만 빼기」 로 둡니다 (위와 같은 까닭) */
       q += '&section=eq.' + encodeURIComponent(cat.sec)
-         + '&hidden=is.false';
+         + '&hidden=not.is.true';
       /* 악보는 확인을 지난 것만 보여 줍니다 */
       if (cat.key === 'score') q += '&review_status=eq.approved';
       q += '&order=created_at.desc,id.desc';
@@ -82,7 +83,25 @@
     } else if (cat.tb === 'recruit_jobs') {
       q += '&status=eq.open&order=created_at.desc,id.desc';
     } else {
-      q += '&hidden=is.false&order=created_at.desc,id.desc';
+      /* ★ <b>hidden 이 null 인 것도 보여 줍니다.</b>
+
+         왜 (2026-08-04 · 지식나눔·공연사진이 비어 보여서 알았습니다)
+           예전에는 &hidden=is.false 만 두었습니다. 그런데 SQL 에서
+           <b>null 은 false 와 같지 않습니다.</b> 그래서 「숨기지 않았다」 는
+           뜻으로 null 이 담긴 글이 <b>모두 걸러졌습니다.</b>
+
+           게시판마다 사정이 달랐습니다 — hottopic 은 false 로 채워져
+           있어서 나왔고, qna·gallery 는 null 이라 하나도 안 나왔습니다.
+
+         ★ 「숨긴 것만 빼자」 가 우리 뜻이므로 <b>hidden 이 참인 것만</b>
+           걸러 냅니다. 그러면 null 이든 false 든 다 보입니다.
+         ★ hidden 칸이 아예 없는 표(utility 등)에서는 이 조건을 쓰면
+           통째로 실패하므로, 그런 표는 아래에서 따로 다룹니다. */
+      if (cat.noHidden) {
+        q += '&order=created_at.desc,id.desc';
+      } else {
+        q += '&hidden=not.is.true&order=created_at.desc,id.desc';
+      }
     }
     q += '&limit=' + ROWS;
 
@@ -250,9 +269,26 @@
       if (i < half) c1 += html; else c2 += html;
     });
 
+    /* ★ <b>광고 자리를 살려 둡니다.</b>
+
+       왜 (2026-08-04 · 파트너 지적)
+         board-main 을 통째로 갈아 끼우면 그 안에 있던
+           <a class="ad-slot board-ad">
+         까지 사라집니다. 광고는 <b>수익 자리</b>이므로 모드와 무관하게
+         늘 있어야 합니다.
+
+       ★ 옛 것을 <b>그대로 옮겨 붙입니다.</b> 새로 만들면 링크·이미지가
+         달라질 수 있으니, 있는 것을 떼어 두었다가 다시 넣습니다.
+       ★ a 태그라 「div」 로 찾으면 못 찾습니다 — 클래스로 찾습니다. */
+    var ad = boardMain.querySelector('.board-ad');
+    var adNode = ad ? ad.cloneNode(true) : null;
+
     boardMain.innerHTML =
         '<div class="col-1">' + c1 + '</div>'
       + '<div class="col-2">' + c2 + '</div>';
+
+    /* 광고를 되돌려 놓습니다 — grid-area:ad 로 제자리를 찾습니다 */
+    if (adNode) boardMain.appendChild(adNode);
 
     /* 알림 줄과 띠 */
     /* 알림 줄도 격자 밖에 놓습니다 (같은 까닭) */
