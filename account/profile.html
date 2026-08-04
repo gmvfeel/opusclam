@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>회원정보 수정 · OPUSCLAM</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/auth.css">
+
+<style>
+  .me-wrap{max-width:720px;margin:0 auto;padding:26px 20px 90px}
+  .me-head{margin-bottom:20px}
+  .me-head .tag{display:inline-block;font-family:var(--display);font-size:11px;font-weight:700;
+    letter-spacing:.14em;color:var(--text-3);background:var(--paper-2);
+    border:1px solid var(--line);border-radius:999px;padding:5px 12px;margin-bottom:12px}
+  .me-head h1{font-size:28px;font-weight:800;margin:0 0 8px;letter-spacing:-.02em}
+  .me-head p{color:var(--text-2);font-size:13.5px;line-height:1.8;margin:0}
+  .me-head p b{color:var(--text)}
+
+  .me-card{background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:24px 22px;margin-bottom:16px}
+  .me-card h2{font-size:15px;font-weight:800;margin:0 0 4px}
+  .me-card .note{font-size:12.5px;color:var(--text-3);line-height:1.7;margin:0 0 18px}
+  .me-card .note b{color:var(--text-2)}
+
+  /* ── 사진 ── */
+  .me-photo{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+  .me-photo .ph{width:96px;height:96px;border-radius:50%;overflow:hidden;flex:0 0 auto;
+    background:var(--paper-2);border:1px solid var(--line);display:grid;place-items:center}
+  .me-photo .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .me-photo .ph span{font-family:var(--display);font-size:32px;font-weight:800;color:var(--text-3)}
+  .me-photo .side{flex:1 1 auto;min-width:0}
+  .me-photo .side p{font-size:12px;color:var(--text-3);line-height:1.7;margin:8px 0 0}
+
+  /* ── 입력 ── */
+  .me-row{margin-bottom:16px}
+  .me-row label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+  .me-row label .opt{font-weight:400;font-size:11.5px;color:var(--text-3);margin-left:6px}
+  .me-row input[type=text], .me-row input[type=tel], .me-row input[type=date],
+  .me-row textarea, .me-row select{
+    width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;
+    padding:11px 13px;border:1px solid var(--line-2);border-radius:9px;
+    background:#fff;color:var(--text);transition:border-color .15s}
+  .me-row textarea{min-height:96px;resize:vertical;line-height:1.7}
+  .me-row input:focus, .me-row textarea:focus, .me-row select:focus{
+    outline:none;border-color:var(--violet-2,#5b4b9e);box-shadow:0 0 0 3px rgba(91,75,158,.10)}
+  .me-row .hint{font-size:11.5px;color:var(--text-3);margin-top:5px;line-height:1.65}
+  .me-row.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .me-row .cnt{float:right;font-size:11px;color:var(--text-3);font-weight:400}
+
+  /* 고칠 수 없는 것 */
+  .me-fixed{background:var(--paper-2);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;margin-bottom:20px}
+  .me-fixed li{display:flex;justify-content:space-between;gap:12px;font-size:13px;
+    padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05)}
+  .me-fixed li:last-child{border-bottom:0}
+  .me-fixed .k{color:var(--text-3)}
+  .me-fixed .v{font-weight:700;text-align:right;word-break:break-all}
+  .me-fixed .why{font-size:11.5px;color:var(--text-3);margin:10px 0 0;line-height:1.65}
+
+  .me-btns{display:flex;gap:10px;margin-top:22px}
+  .me-btns button{flex:1 1 auto;font-family:inherit;font-size:14px;font-weight:700;
+    height:48px;border-radius:10px;cursor:pointer;border:1px solid var(--line-2);
+    background:#fff;color:var(--text);transition:filter .15s}
+  .me-btns button.go{background:var(--ink,#2b2740);border-color:var(--ink,#2b2740);color:#fff;flex:2 1 auto}
+  .me-btns button.go:hover{filter:brightness(1.14)}
+  .me-btns button:disabled{opacity:.5;cursor:default}
+
+  .me-msg{font-size:13px;line-height:1.75;padding:12px 14px;border-radius:9px;margin-bottom:16px;display:none}
+  .me-msg.on{display:block}
+  .me-msg.ok{background:rgba(111,207,143,.10);border:1px solid rgba(111,207,143,.4);color:#2f7f4f}
+  .me-msg.no{background:rgba(224,133,133,.10);border:1px solid rgba(224,133,133,.4);color:#a34a4a}
+
+  .me-back{display:inline-block;color:var(--text-3);text-decoration:none;font-size:13px;margin-bottom:16px}
+  .me-back:hover{color:var(--violet-2,#5b4b9e)}
+
+  @media(max-width:520px){
+    .me-wrap{padding:18px 14px 60px}
+    .me-card{padding:18px 16px}
+    .me-row.two{grid-template-columns:1fr}
+    .me-photo{gap:14px}
+    .me-photo .ph{width:78px;height:78px}
+  }
+</style>
+</head>
+<body>
+
+<div id="oc-header"></div>
+
+<main class="me-wrap">
+  <a class="me-back" href="/account/mypage.html">← 마이페이지</a>
+
+  <div class="me-head">
+    <span class="tag">MY PROFILE</span>
+    <h1>회원정보 수정</h1>
+    <p>연락처가 바뀌면 <b>여기서 고쳐 주십시오.</b>
+      리쿠르트에서 연락처로 연락이 오므로, 옛 번호가 남아 있으면 놓칠 수 있습니다.</p>
+  </div>
+
+  <div class="me-msg" id="msg"></div>
+
+  <form id="meForm" autocomplete="off">
+    <!-- ── 프로필 ────────────────────────────────────── -->
+    <div class="me-card">
+      <h2>프로필</h2>
+      <p class="note">사진과 소개는 <b>다른 회원에게 보입니다.</b>
+        연락처·주소는 보이지 않습니다.</p>
+
+      <div class="me-photo">
+        <div class="ph" id="phBox"><span id="phIni">·</span></div>
+        <div class="side">
+          <input type="file" id="phFile" accept="image/*" style="display:none">
+          <button type="button" class="mp-btn ghost" id="phPick"
+            style="font-size:13px;padding:9px 16px;border-radius:8px;border:1px solid var(--line-2);
+                   background:#fff;font-family:inherit;font-weight:700;cursor:pointer">사진 고르기</button>
+          <button type="button" id="phDel"
+            style="font-size:12.5px;padding:9px 12px;border-radius:8px;border:1px solid var(--line-2);
+                   background:#fff;font-family:inherit;cursor:pointer;color:var(--text-3);margin-left:6px">지우기</button>
+          <p>★ 800픽셀로 줄여 올립니다 — 큰 사진을 고르셔도 됩니다.<br>
+            10MB 넘는 파일은 받지 않습니다.</p>
+        </div>
+      </div>
+
+      <div class="me-row">
+        <label for="fName">이름</label>
+        <input type="text" id="fName" maxlength="40" placeholder="이름">
+        <p class="hint">리쿠르트 공고·지원에 이 이름이 쓰입니다.</p>
+      </div>
+
+      <div class="me-row">
+        <label for="fIntro">소개 <span class="cnt" id="introCnt">0 / 300</span></label>
+        <textarea id="fIntro" maxlength="300"
+          placeholder="전공·활동·관심사를 짧게 적어 주십시오."></textarea>
+      </div>
+
+      <div class="me-row two">
+        <div>
+          <label for="fField">전공 · 분야 <span class="opt">비워도 됩니다</span></label>
+          <input type="text" id="fField" maxlength="40" placeholder="예 · 피아노 · 성악 · 작곡">
+        </div>
+        <div>
+          <label for="fSchool">학교 <span class="opt">비워도 됩니다</span></label>
+          <input type="text" id="fSchool" maxlength="60" placeholder="출신 · 재학 학교">
+        </div>
+      </div>
+
+      <div class="me-row" id="orgRow" style="display:none">
+        <label for="fOrg">소속 단체 · 기업</label>
+        <input type="text" id="fOrg" maxlength="60" placeholder="소속">
+      </div>
+    </div>
+
+    <!-- ── 연락처 ────────────────────────────────────── -->
+    <div class="me-card">
+      <h2>연락처</h2>
+      <p class="note">다른 회원에게 <b>보이지 않습니다.</b>
+        리쿠르트에서 연락받을 때만 쓰입니다.</p>
+
+      <div class="me-row two">
+        <div>
+          <label for="fPhone">휴대폰</label>
+          <input type="tel" id="fPhone" maxlength="20" placeholder="010-0000-0000" inputmode="numeric">
+          <p class="hint">숫자만 넣으셔도 됩니다 — 저장할 때 다듬습니다.</p>
+        </div>
+        <div>
+          <label for="fBirth">생년월일 <span class="opt">비워도 됩니다</span></label>
+          <input type="date" id="fBirth">
+        </div>
+      </div>
+
+      <div class="me-row">
+        <label for="fAddr">주소 <span class="opt">비워도 됩니다</span></label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="fAddr" maxlength="120" placeholder="주소를 찾아 주십시오" readonly
+            style="flex:1 1 auto;background:var(--paper-2)">
+          <button type="button" id="addrBtn"
+            style="flex:0 0 auto;font-size:13px;font-weight:700;padding:0 16px;border-radius:9px;
+                   border:1px solid var(--line-2);background:#fff;font-family:inherit;cursor:pointer">주소 찾기</button>
+        </div>
+        <input type="text" id="fAddr2" maxlength="80" placeholder="상세 주소" style="margin-top:8px">
+      </div>
+    </div>
+
+    <!-- ── 고칠 수 없는 것 ───────────────────────────── -->
+    <div class="me-card">
+      <h2>고칠 수 없는 것</h2>
+      <p class="note">아이디와 회원 종류는 <b>스스로 바꿀 수 없습니다.</b>
+        바꾸셔야 하면 고객센터로 알려 주십시오.</p>
+      <ul class="me-fixed" id="fixedBox"></ul>
+      <p class="why">★ 아이디를 바꾸면 그동안 쓴 글·지원 내역을 이어 붙일 수 없습니다.
+        회원 종류는 리쿠르트 권한과 이어져 있어, 함부로 바꾸면 남의 자료를 볼 수 있게 됩니다.</p>
+    </div>
+
+    <div class="me-btns">
+      <button type="button" id="btnCancel">되돌리기</button>
+      <button type="submit" class="go" id="btnSave">저장</button>
+    </div>
+  </form>
+</main>
+
+<div id="oc-footer"></div>
+
+<script src="/assets/include.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="/assets/addr.js"></script>
+
+<script>
+(function(){
+  'use strict';
+
+  var URL_SB = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var KEY_SB = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* ★ 같은 Supabase 객체를 씁니다 — 새로 만들면 로그인 상태가 갈라집니다.
+     (assets/auth.js 와 함께 쓰는 방식입니다) */
+  if (!window.__ocSb && window.supabase)
+    window.__ocSb = window.supabase.createClient(URL_SB, KEY_SB);
+  var sb = window.__ocSb;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var ME = null, SESS = null, photoUrl = '', dirty = false;
+
+  var TYPE = { industry:'음악관계자', org:'단체·기업', school:'음악학교',
+               major:'전공자', general:'일반' };
+  var STATUS = { pending:'승인 대기', approved:'승인 완료', rejected:'반려' };
+  /* 소속 칸을 보여 줄 회원 종류 — 리쿠르트의 HIRING 과 같습니다 */
+  var HAS_ORG = ['industry','org','school'];
+
+  function esc(v){
+    return String(v == null ? '' : v)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function say(kind, text){
+    var m = $('msg');
+    m.className = 'me-msg on ' + kind;
+    m.textContent = text;
+    if (kind === 'ok') setTimeout(function(){ m.className = 'me-msg'; }, 4000);
+    try { m.scrollIntoView({ behavior:'smooth', block:'nearest' }); } catch(e){}
+  }
+
+  /* ── 휴대폰 다듬기 ───────────────────────────────────────
+     ★ 숫자만 넣으셔도 되게 합니다. 사람이 「01012345678」 로 적는 것이
+       자연스러운데, 그것을 그대로 담으면 나중에 견주기 어렵습니다. */
+  function tidyPhone(v){
+    var d = String(v || '').replace(/[^0-9]/g, '');
+    if (!d) return '';
+    if (d.length === 11) return d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7);
+    if (d.length === 10){
+      /* 02 로 시작하면 서울 지역번호입니다 */
+      if (d.slice(0,2) === '02') return '02-' + d.slice(2,6) + '-' + d.slice(6);
+      return d.slice(0,3) + '-' + d.slice(3,6) + '-' + d.slice(6);
+    }
+    if (d.length === 9 && d.slice(0,2) === '02') return '02-' + d.slice(2,5) + '-' + d.slice(5);
+    return String(v || '').trim();   /* 모양을 모르면 그대로 둡니다 */
+  }
+
+  /* ── 사진 줄이기 ─────────────────────────────────────────
+     ★ 브라우저에서 800픽셀로 줄여 올립니다.
+       원본을 올리면 몇 MB 가 되어 저장·전송 비용이 커지고, 목록에서
+       그것을 38픽셀로 줄여 그리느라 느려집니다.
+       (오늘 이미지 성능을 손보며 배운 것입니다)
+     ★ 리쿠르트 사진 올리기와 같은 방식입니다. */
+  function shrink(file, max){
+    return new Promise(function(res, rej){
+      var fr = new FileReader();
+      fr.onerror = function(){ rej(new Error('파일을 읽지 못했습니다')); };
+      fr.onload = function(){
+        var im = new Image();
+        im.onerror = function(){ rej(new Error('그림이 아닌 것 같습니다')); };
+        im.onload = function(){
+          var w = im.width, h = im.height;
+          var sc = Math.min(1, max / Math.max(w, h));
+          var cw = Math.round(w * sc), ch = Math.round(h * sc);
+          var cv = document.createElement('canvas');
+          cv.width = cw; cv.height = ch;
+          var cx = cv.getContext('2d');
+          cx.fillStyle = '#fff'; cx.fillRect(0, 0, cw, ch);   /* 투명을 흰색으로 */
+          cx.drawImage(im, 0, 0, cw, ch);
+          cv.toBlob(function(b){
+            if (!b) { rej(new Error('그림을 줄이지 못했습니다')); return; }
+            res(b);
+          }, 'image/jpeg', 0.86);
+        };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  function drawPhoto(){
+    var box = $('phBox');
+    if (photoUrl){
+      box.innerHTML = '<img src="' + esc(photoUrl) + '" alt=""'
+        + ' onerror="this.parentNode.innerHTML=\'<span>' + esc(iniOf()) + '</span>\'">';
+    } else {
+      box.innerHTML = '<span>' + esc(iniOf()) + '</span>';
+    }
+  }
+  function iniOf(){
+    var n = ($('fName').value || (ME && ME.name) || '').trim();
+    return n ? n.charAt(0) : '·';
+  }
+
+  /* ── 불러오기 ───────────────────────────────────────────── */
+  async function load(){
+    try {
+      var g = await sb.auth.getSession();
+      SESS = g && g.data && g.data.session;
+      if (!SESS){
+        location.href = '/account/login.html?next=' + encodeURIComponent('/account/profile.html');
+        return;
+      }
+      var r = await sb.from('members').select('*').eq('id', SESS.user.id).single();
+      if (r.error) throw new Error(r.error.message);
+      ME = r.data || {};
+
+      $('fName').value   = ME.name || '';
+      $('fIntro').value  = ME.intro || '';
+      $('fField').value  = ME.field || '';
+      $('fSchool').value = ME.school_name || '';
+      $('fOrg').value    = ME.org_name || '';
+      $('fPhone').value  = ME.phone || '';
+      $('fBirth').value  = ME.birth || '';
+      photoUrl           = ME.photo_url || '';
+
+      /* 주소는 「기본 + 상세」 로 담겨 있을 수 있습니다.
+         우리가 「|」 로 갈라 담으므로 그것으로 나눕니다. */
+      var ad = String(ME.address || '');
+      if (ad.indexOf('|') >= 0){
+        $('fAddr').value  = ad.split('|')[0].trim();
+        $('fAddr2').value = ad.split('|').slice(1).join('|').trim();
+      } else {
+        $('fAddr').value = ad;
+      }
+
+      /* 소속 칸은 단체·기업·학교 회원에게만 보입니다 */
+      if (HAS_ORG.indexOf(ME.member_type) >= 0) $('orgRow').style.display = '';
+
+      /* 고칠 수 없는 것 */
+      $('fixedBox').innerHTML =
+          '<li><span class="k">아이디</span><span class="v">' + esc(ME.username || '-') + '</span></li>'
+        + '<li><span class="k">이메일</span><span class="v">' + esc(ME.email || '-') + '</span></li>'
+        + '<li><span class="k">회원 종류</span><span class="v">'
+        +   esc(TYPE[ME.member_type] || ME.member_type || '-') + '</span></li>'
+        + '<li><span class="k">승인 상태</span><span class="v">'
+        +   esc(STATUS[ME.status] || ME.status || '-') + '</span></li>';
+
+      drawPhoto();
+      cntIntro();
+    } catch (e){
+      say('no', '회원정보를 불러오지 못했습니다: ' + String(e.message || e).slice(0, 80));
+    }
+  }
+
+  function cntIntro(){
+    $('introCnt').textContent = ($('fIntro').value || '').length + ' / 300';
+  }
+
+  /* ── 저장 ───────────────────────────────────────────────── */
+  async function save(){
+    if (!ME) return;
+    var nm = ($('fName').value || '').trim();
+    if (!nm){ say('no', '이름을 넣어 주십시오.'); $('fName').focus(); return; }
+
+    $('btnSave').disabled = true;
+    $('btnSave').textContent = '저장하는 중…';
+    try {
+      /* 주소는 「기본 | 상세」 로 이어 담습니다 */
+      var a1 = ($('fAddr').value || '').trim();
+      var a2 = ($('fAddr2').value || '').trim();
+      var addr = a1 ? (a2 ? (a1 + ' | ' + a2) : a1) : (a2 || null);
+
+      var patch = {
+        name:        nm,
+        intro:       ($('fIntro').value || '').trim() || null,
+        field:       ($('fField').value || '').trim() || null,
+        school_name: ($('fSchool').value || '').trim() || null,
+        org_name:    ($('fOrg').value || '').trim() || null,
+        phone:       tidyPhone($('fPhone').value) || null,
+        birth:       ($('fBirth').value || '') || null,
+        address:     addr,
+        photo_url:   photoUrl || null,
+        updated_at:  new Date().toISOString()
+      };
+
+      /* ★ 실제로 몇 줄이 바뀌었는지 받아서 확인합니다.
+         Supabase 는 줄 보안이 막으면 <b>오류 없이 0줄</b>을 고칩니다.
+         그러면 「저장했습니다」 라고 알려도 그대로입니다.
+         (오늘 여러 번 겪은 함정입니다) */
+      var u = await sb.from('members').update(patch).eq('id', ME.id).select('id');
+      if (u.error) throw new Error(u.error.message);
+      if (!u.data || !u.data.length){
+        say('no', '저장이 되지 않았습니다. 한 줄도 바뀌지 않았습니다 — '
+          + '권한 문제일 수 있으니 고객센터로 알려 주십시오.');
+        return;
+      }
+
+      /* 다듬은 번호를 화면에도 반영합니다 */
+      $('fPhone').value = patch.phone || '';
+      dirty = false;
+      say('ok', '저장했습니다.');
+    } catch (e){
+      say('no', '저장하지 못했습니다: ' + String(e.message || e).slice(0, 90));
+    }
+    $('btnSave').disabled = false;
+    $('btnSave').textContent = '저장';
+  }
+
+  /* ── 사진 올리기 ───────────────────────────────────────── */
+  $('phPick').addEventListener('click', function(){ $('phFile').click(); });
+  $('phDel').addEventListener('click', function(){
+    if (!photoUrl) return;
+    if (!confirm('사진을 지웁니다. 저장을 눌러야 실제로 지워집니다.')) return;
+    photoUrl = ''; dirty = true; drawPhoto();
+  });
+  $('phFile').addEventListener('change', async function(){
+    var f = this.files && this.files[0];
+    if (!f) return;
+    if (f.size > 10 * 1024 * 1024){
+      say('no', '10MB 넘는 파일은 받지 않습니다. 더 작은 사진을 골라 주십시오.');
+      this.value = ''; return;
+    }
+    say('ok', '사진을 줄이는 중…');
+    try {
+      var blob = await shrink(f, 800);
+      /* ★ 저장통은 <b>recruit</b> 를 씁니다.
+         「photos」 라는 저장통이 실제로 있는지 확인하지 않고 쓰면
+           Bucket not found
+         오류가 납니다. recruit 는 리쿠르트 사진 올리기에서 이미
+         쓰고 있으므로 있는 것이 확실합니다.
+         ★ 폴더로 갈라 두면 나중에 정리하기 쉽습니다 — member/… */
+      var BUCKET = 'recruit';
+      var path = 'member/' + ME.id + '/' + Date.now() + '.jpg';
+      var up = await sb.storage.from(BUCKET).upload(path, blob, {
+        contentType: 'image/jpeg', upsert: true
+      });
+      if (up.error) throw new Error(up.error.message);
+      var pub = sb.storage.from(BUCKET).getPublicUrl(path);
+      photoUrl = (pub && pub.data && pub.data.publicUrl) || '';
+      dirty = true;
+      drawPhoto();
+      say('ok', '사진을 올렸습니다. <b>저장</b>을 눌러 주십시오.'.replace(/<[^>]+>/g,''));
+    } catch (e){
+      say('no', '사진을 올리지 못했습니다: ' + String(e.message || e).slice(0, 80));
+    }
+    this.value = '';
+  });
+
+  /* ── 주소 찾기 ─────────────────────────────────────────── */
+  $('addrBtn').addEventListener('click', function(){
+    if (window.OCAddr && window.OCAddr.open){
+      window.OCAddr.open(function(v){
+        $('fAddr').value = (v && (v.address || v.roadAddress || v.jibunAddress)) || '';
+        dirty = true;
+        $('fAddr2').focus();
+      });
+    } else if (window.daum && window.daum.Postcode){
+      new window.daum.Postcode({ oncomplete: function(d){
+        $('fAddr').value = d.roadAddress || d.jibunAddress || '';
+        dirty = true;
+        $('fAddr2').focus();
+      }}).open();
+    } else {
+      /* ★ 주소 찾기를 못 불러왔을 때 <b>손으로 넣을 수 있게</b> 풀어 줍니다.
+         그러지 않으면 주소를 아예 넣을 수 없게 됩니다. */
+      $('fAddr').removeAttribute('readonly');
+      $('fAddr').style.background = '#fff';
+      $('fAddr').focus();
+      say('no', '주소 찾기를 불러오지 못했습니다. 손으로 넣어 주십시오.');
+    }
+  });
+
+  /* ── 되돌리기 ──────────────────────────────────────────── */
+  $('btnCancel').addEventListener('click', function(){
+    if (dirty && !confirm('고친 것을 버리고 처음 상태로 되돌립니다. 진행할까요?')) return;
+    dirty = false;
+    load();
+  });
+
+  $('meForm').addEventListener('submit', function(e){ e.preventDefault(); save(); });
+  $('fIntro').addEventListener('input', cntIntro);
+  $('fName').addEventListener('input', function(){ if (!photoUrl) drawPhoto(); });
+  ['fName','fIntro','fField','fSchool','fOrg','fPhone','fBirth','fAddr2']
+    .forEach(function(id){ $(id).addEventListener('input', function(){ dirty = true; }); });
+
+  /* 고친 것을 두고 나가려 할 때 알립니다 */
+  window.addEventListener('beforeunload', function(e){
+    if (!dirty) return;
+    e.preventDefault(); e.returnValue = '';
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

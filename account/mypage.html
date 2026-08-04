@@ -114,6 +114,13 @@
   .mp-note b{color:var(--tx2);font-weight:700}
   .mp-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 32px;box-shadow:0 6px 18px rgba(40,40,70,.12)}
   .mp-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+  /* ★ 프로필 사진 — 회원정보 카드 맨 위에 둥글게 */
+  .mp-photo{width:88px;height:88px;border-radius:50%;overflow:hidden;margin:0 auto 16px;
+    border:1px solid var(--line);background:var(--paper-2)}
+  .mp-photo img{width:100%;height:100%;object-fit:cover;display:block}
+  /* 소개 — 줄이 길어질 수 있어 목록 밖에 둡니다 */
+  .mp-intro{font-size:13px;line-height:1.8;color:var(--text-2);margin:14px 0 0;
+    padding:13px 15px;background:var(--paper-2);border-radius:10px;white-space:pre-wrap}
   .mp-badge{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;border:1px solid var(--line2);color:var(--tx2)}
   .mp-badge.type{background:var(--tagbg);color:var(--tx)}
   .mp-badge.approved{color:#3a9d63;border-color:rgba(58,157,99,.4)}
@@ -255,6 +262,11 @@
     var isEmail = (!prov || prov==='email');
     var statusCls = m.status||"pending";
     var html=""
+      /* ★ 프로필 사진 — 있으면 보여 줍니다 */
+      +(m.photo_url
+         ? '<div class="mp-photo"><img src="'+esc(m.photo_url)+'" alt=""'
+           + ' onerror="this.parentNode.style.display=\'none\'"></div>'
+         : '')
       +'<div class="mp-badges">'
       +  '<span class="mp-badge type">'+esc(TYPE[m.member_type]||m.member_type||"회원")+'</span>'
       +  '<span class="mp-badge '+esc(statusCls)+'">'+esc(STATUS[m.status]||m.status||"-")+'</span>'
@@ -265,9 +277,21 @@
       +  '<li><span class="k">이메일</span><span class="v">'+esc(m.email||"-")+'</span></li>'
       +  '<li><span class="k">휴대폰</span><span class="v">'+esc(m.phone||"-")+'</span></li>'
       +  '<li><span class="k">가입일</span><span class="v">'+fmt(m.created_at)+'</span></li>'
+      /* 채워 넣은 것이 있으면 함께 보여 줍니다 — 비어 있으면 줄을 만들지
+         않습니다. 빈 줄이 늘어서면 「안 채운 것」 이 눈에 거슬립니다. */
+      +  (m.field       ? '<li><span class="k">전공 · 분야</span><span class="v">'+esc(m.field)+'</span></li>' : '')
+      +  (m.school_name ? '<li><span class="k">학교</span><span class="v">'+esc(m.school_name)+'</span></li>' : '')
+      +  (m.org_name    ? '<li><span class="k">소속</span><span class="v">'+esc(m.org_name)+'</span></li>' : '')
       +'</ul>'
+      /* 소개는 줄이 길어질 수 있어 목록 밖에 둡니다 */
+      +  (m.intro ? '<p class="mp-intro">'+esc(m.intro)+'</p>' : '')
       +'<div class="mp-actions">'
-      +  (qual?'<a class="mp-btn primary" href="/db/write.html">DB 등록 · 보강 하러 가기</a>':'')
+      /* ★ 회원정보를 <b>고칠 수 있는 길</b>을 놓습니다.
+         예전에는 읽기만 되어서, 전화번호가 바뀌어도 고칠 방법이
+         없었습니다. 리쿠르트에서 연락처로 연락이 오므로 그것을 못
+         고치면 놓치게 됩니다. */
+      +  '<a class="mp-btn primary" href="/account/profile.html">회원정보 수정</a>'
+      +  (qual?'<a class="mp-btn ghost" href="/db/write.html">DB 등록 · 보강 하러 가기</a>':'')
       +  (isEmail?'<a class="mp-btn ghost" href="/account/change-password.html">비밀번호 변경</a>':'')
       +  '<button class="mp-btn ghost" id="mpLogout">로그아웃</button>'
       +'</div>'
