@@ -215,3 +215,63 @@ html[data-theme="dark"] .pdb-table tbody tr:not(.pdb-norow):hover td{background:
     box-shadow:0 0 0 3px rgba(91,75,158,.12);
   }
 }
+
+
+/* ══ 관심분야 담기 단추 ════════════════════════════════════════
+   assets/interests.js 가 게시판 제목 옆에 놓습니다.
+
+   ★ 담긴 것은 <b>채워진 별</b>로 또렷하게 보여 줍니다.
+     회원이 무엇을 담았는지 목록에 가지 않고도 알 수 있어야 합니다.
+   ★ 모바일에서 누르기 쉽게 높이를 38px 로 둡니다 — 오늘 손 크기를
+     재어 보고 정한 기준입니다. */
+.oc-fav-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  height:34px;padding:0 13px;
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  color:var(--text-2,#5f5c70);
+  background:#fff;border:1px solid var(--line-2,#e8e6ef);border-radius:999px;
+  cursor:pointer;transition:border-color .15s,color .15s,background .15s;
+  white-space:nowrap;vertical-align:middle;
+}
+.oc-fav-btn:hover{border-color:var(--violet-2,#5b4b9e);color:var(--violet-2,#5b4b9e)}
+.oc-fav-btn .star{font-style:normal;font-size:14px;line-height:1}
+.oc-fav-btn.on{
+  background:rgba(91,75,158,.08);
+  border-color:var(--violet-2,#5b4b9e);
+  color:var(--violet-2,#5b4b9e);
+}
+.oc-fav-btn.on .star{color:#e0a83c}
+.oc-fav-btn:disabled{opacity:.55;cursor:default}
+@media (max-width:860px){
+  .oc-fav-btn{height:38px;padding:0 15px}
+}
+
+/* 짧은 알림 — alert 은 흐름을 끊습니다 */
+.oc-fav-toast{
+  position:fixed;left:50%;bottom:34px;transform:translate(-50%,14px);
+  background:rgba(30,26,52,.94);color:#fff;
+  font-size:13px;font-weight:600;line-height:1.5;
+  padding:12px 20px;border-radius:999px;
+  box-shadow:0 10px 30px -10px rgba(20,14,45,.5);
+  opacity:0;transition:opacity .2s ease,transform .2s ease;
+  z-index:9999;pointer-events:none;max-width:86vw;text-align:center;
+}
+.oc-fav-toast.go{opacity:1;transform:translate(-50%,0)}
+
+/* ── 관심분야 단추가 놓일 자리 ─────────────────────────────
+   ★ 처음에는 position:absolute 로 두었는데 단추가 <b>화면 오른쪽
+     밖으로</b> 밀렸습니다. .pdb-titlebar 에 원래 스타일이 없어서
+     폭이 내용만큼이었기 때문입니다(제목 글자 폭).
+
+     그래서 <b>flex</b>로 만들어 제목과 단추를 한 줄에 두고,
+     사이를 벌립니다(space-between). 그러면 단추가 늘 안쪽에 있습니다.
+   ★ 좁은 화면에서는 아래로 내립니다 — 옆에 두면 제목이 눌립니다. */
+.pdb-titlebar{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+}
+.pdb-favslot{flex:0 0 auto}
+@media (max-width:860px){
+  .pdb-titlebar{align-items:flex-start;gap:10px}
+  .pdb-favslot{width:100%;margin-top:4px}
+}

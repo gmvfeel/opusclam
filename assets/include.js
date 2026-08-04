@@ -149,6 +149,64 @@
     inject('oc-subnav', url);
     markSubnav();
     buildSubnavSelect();
+    needFavButton();
+  }
+
+  /* ── 관심분야 단추를 놓기 위해 interests.js 를 <b>스스로</b> 싣습니다 ──
+     ★ 왜 이렇게 하나
+       처음에는 게시판 화면 <b>69개</b>에 <script src="…interests.js"> 를
+       한 줄씩 넣었습니다. 그런데 그것은 —
+         · 배포할 파일이 69개가 되어 빠뜨리기 쉽습니다
+         · 게시판을 늘릴 때마다 또 넣어야 하고, 잊으면 단추가 안 나옵니다
+         · 어느 화면에 들어갔는지 확인하기 어렵습니다
+
+       그래서 이 파일이 <b>필요할 때만</b> 싣습니다. 게시판 화면은
+       이미 include.js 를 싣고 있으므로 아무것도 더 하지 않아도 됩니다.
+
+     ★ 필요 없는 화면에서는 싣지 않습니다 — 제목 줄(.pdb-titlebar)이
+       없으면 단추를 놓을 자리도 없습니다. */
+  function needFavButton() {
+    if (!document.querySelector('.pdb-titlebar')) return;
+    if (window.OCInterests) { mountFavButton(); return; }
+    if (document.getElementById('oc-interests-js')) return;   /* 이미 싣는 중 */
+    var sc = document.createElement('script');
+    sc.id = 'oc-interests-js';
+    sc.src = '/assets/interests.js';
+    sc.onload = function () { mountFavButton(); };
+    sc.onerror = function () { /* 못 받아도 화면은 그대로 돕니다 */ };
+    document.head.appendChild(sc);
+  }
+
+  /* ── 관심분야 담기 단추를 놓습니다 ─────────────────────────
+     ★ 왜 여기서 놓나
+       스물일곱 게시판에 각각 코드를 넣으면, 게시판을 늘릴 때마다
+       잊기 쉽습니다. 여기서 <b>주소를 보고</b> 알아서 놓으면
+       assets/interests.js 에 한 줄 더하는 것만으로 끝납니다.
+
+     ★ 어디에 놓나 — 제목 줄(.pdb-titlebar) 오른쪽입니다.
+       거기가 모든 게시판에 있고, 제목 옆이라 눈에 띕니다.
+
+     ★ interests.js 가 없으면 아무 일도 하지 않습니다 —
+       그 파일을 싣지 않은 화면에서 오류가 나면 안 됩니다. */
+  function mountFavButton() {
+    if (!window.OCInterests) return;
+    var bar = document.querySelector('.pdb-titlebar');
+    if (!bar || bar.querySelector('.oc-fav-btn')) return;
+
+    /* 지금 화면이 어느 갈래인지 주소로 찾습니다 */
+    var path = location.pathname;
+    var cat = null;
+    var cats = window.OCInterests.CATS || [];
+    for (var i = 0; i < cats.length; i++) {
+      if (cats[i].href === path) { cat = cats[i]; break; }
+    }
+    if (!cat) return;   /* 목록에 없는 화면 — 담을 것이 없습니다 */
+
+    /* 제목 오른쪽에 자리를 만듭니다 */
+    var slot = document.createElement('div');
+    slot.className = 'pdb-favslot';
+    bar.appendChild(slot);
+    window.OCInterests.button(slot, cat.big, cat.key);
   }
 
   /* ── 모바일용 하위 메뉴 풀다운 ─────────────────────────────
