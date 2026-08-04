@@ -88,17 +88,51 @@
   };
 
   /* ── Supabase ─────────────────────────────────────────────
-     ★ 같은 객체를 씁니다 — 새로 만들면 로그인 상태가 갈라집니다. */
-  function sb() {
-    if (!window.__ocSb && window.supabase && window.supabase.createClient)
+     ★ 같은 객체를 씁니다 — 새로 만들면 로그인 상태가 갈라집니다.
+
+     ★ <b>supabase-js 가 없는 화면도 있습니다.</b>
+       DATABASE 목록(인물DB 등)은 그것을 싣지 않습니다. 그래서 처음에는
+       로그인해 있는데도 <b>로그인 화면으로 보내는</b> 일이 났습니다 —
+       Supabase 객체를 못 만들어 「로그인 안 함」 으로 읽었기 때문입니다.
+
+       그래서 없으면 <b>스스로 싣습니다.</b> 그러면 어느 화면에서든
+       똑같이 돕니다. */
+  var _libWait = null;
+
+  function loadLib() {
+    if (window.supabase && window.supabase.createClient) return Promise.resolve(true);
+    if (_libWait) return _libWait;
+    _libWait = new Promise(function (res) {
+      /* 이미 누군가 싣는 중이면 그것을 기다립니다 */
+      var old = document.querySelector('script[data-oc-sblib]');
+      if (old) {
+        old.addEventListener('load', function () { res(true); });
+        old.addEventListener('error', function () { res(false); });
+        return;
+      }
+      var sc = document.createElement('script');
+      sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      sc.setAttribute('data-oc-sblib', '1');
+      sc.onload = function () { res(true); };
+      sc.onerror = function () { res(false); };
+      document.head.appendChild(sc);
+    });
+    return _libWait;
+  }
+
+  async function sb() {
+    if (window.__ocSb) return window.__ocSb;
+    var ok = await loadLib();
+    if (!ok || !window.supabase || !window.supabase.createClient) return null;
+    if (!window.__ocSb)
       window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY);
-    return window.__ocSb || null;
+    return window.__ocSb;
   }
 
   var _me = undefined;   /* undefined = 아직 안 봄 · null = 로그인 안 함 */
   async function me() {
     if (_me !== undefined) return _me;
-    var c = sb();
+    var c = await sb();
     if (!c) { _me = null; return _me; }
     try {
       var g = await c.auth.getSession();
@@ -131,7 +165,7 @@
   var _mine = null;
   async function list(force) {
     if (_mine && !force) return _mine;
-    var m = await me(), c = sb();
+    var m = await me(), c = await sb();
     if (!m || !c) { _mine = []; return _mine; }
     try {
       var r = await c.from('member_interests')
@@ -150,8 +184,8 @@
 
   /* ── 담기 · 빼기 ───────────────────────────────────────── */
   async function add(big, key) {
-    var m = await me(), c = sb();
-    if (!m) return { ok:false, why:'login' };
+    var m = await me(), c = await sb();
+    if (!m || !c) return { ok:false, why:'login' };
     var cat = find(big, key);
     if (!cat) return { ok:false, why:'unknown' };
     if (cat.only && cat.only.indexOf(m.member_type) < 0)
@@ -178,8 +212,8 @@
   }
 
   async function remove(big, key) {
-    var m = await me(), c = sb();
-    if (!m) return { ok:false, why:'login' };
+    var m = await me(), c = await sb();
+    if (!m || !c) return { ok:false, why:'login' };
     try {
       /* ★ 실제로 몇 줄이 지워졌는지 받아서 확인합니다 —
          줄 보안이 막으면 오류 없이 0줄이 됩니다. */
@@ -195,8 +229,8 @@
 
   /* ── 순서 바꾸기 ───────────────────────────────────────── */
   async function reorder(ids) {
-    var m = await me(), c = sb();
-    if (!m) return { ok:false };
+    var m = await me(), c = await sb();
+    if (!m || !c) return { ok:false };
     try {
       for (var i = 0; i < ids.length; i++) {
         await c.from('member_interests')
