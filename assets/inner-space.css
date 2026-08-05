@@ -1,282 +1,347 @@
 /* ============================================================
    OPUSCLAM  INNER SPACE 스타일        assets/inner-space.css
-   2026-08-04
+   2026-08-04  (시안대로 다시 만듦)
 
-   ★ 시안을 따릅니다 — <b>어두운 보라</b> 바탕에 흰 카드들입니다.
-     메인 위쪽(GNB·메인비주얼) 자리를 덮는 크기입니다.
+   ★ 시안과 맞춘 것
+     · <b>보라 그라데이션</b> 바탕에 <b>흰 카드</b>
+       (앞서 어두운 남색으로 만들었는데 시안과 달랐습니다)
+     · <b>네 줄기</b> — 회원카드+영상 / 메뉴+Linked / 관심분야 통계 /
+       Update 현황 + 조회수
+     · 제목은 <b>가운데</b>, 단추는 오른쪽
+     · 아래로 <b>스크롤하면 메인 내용이 이어집니다</b>
 
-   ★ 왜 어둡게 두나
-     메인 위쪽이 원래 어두운 보라입니다. 같은 색으로 두면 <b>그 자리를
-     대신하는 것</b>처럼 보여 자연스럽습니다. 밝게 두면 화면이 갑자기
-     하얘져 놀랍니다.
-
-   ★ 위쪽만 덮고 <b>아래는 그대로 보입니다.</b>
-     시안이 그랬습니다 — 패널 아래로 메인 내용이 이어집니다.
-     그래서 높이를 화면의 92%로 두고, 스크롤은 패널 안에서 돕니다.
+   ★ 스크롤을 막지 않습니다 (2026-08-04 · 파트너 지시)
+     앞서 fixed 로 덮고 뒤 스크롤을 막았는데, 시안은 <b>메인비주얼 자리에
+     얹히고 그 아래로 메인이 이어지는</b> 모습입니다.
+     그래서 문서 흐름 안에 놓아 아래 내용을 밀어냅니다.
    ============================================================ */
 
-/* 뒤 화면이 굴러가지 않게 */
-html.ins-lock, html.ins-lock body { overflow: hidden; }
-
+/* ── 패널 ─────────────────────────────────────────────────────
+   ★ position 을 fixed 로 두지 않습니다 — 문서 흐름 안에 놓여
+     <b>아래 내용을 밀어냅니다.</b> 그래서 그냥 스크롤하면 메인이 보입니다. */
 .ins-panel{
-  position: fixed; inset: 0;
-  z-index: 9000;
-  /* ★ <b>진하게</b> 둡니다.
-     처음에 0.55 로 두었더니 뒤 화면(메뉴·글자)이 다 보여 어수선했습니다.
-     시안은 어두운 보라로 <b>덮는</b> 모습이었습니다. */
-  background: rgba(16, 13, 34, .975);
-  backdrop-filter: blur(6px);
+  position: relative;
+  background:
+    radial-gradient(1200px 420px at 18% -10%, rgba(255,255,255,.16), transparent 60%),
+    linear-gradient(135deg, #4b3f7a 0%, #6b4f96 42%, #8a63a8 100%);
+  padding: 0 0 30px;
   opacity: 0;
-  transition: opacity .26s ease;
-  overflow: auto;
-  padding: 0 0 40px;
-  -webkit-overflow-scrolling: touch;
+  transition: opacity .3s ease;
+  overflow: hidden;
 }
 .ins-panel.on{ opacity: 1; }
 
-.ins-wrap{
-  max-width: 1360px; margin: 0 auto; padding: 26px 24px 0;
-  transform: translateY(-14px);
-  transition: transform .26s ease;
-}
-.ins-panel.on .ins-wrap{ transform: translateY(0); }
+/* ★ 위 여백을 <b>헤더만큼</b> 둡니다.
+   헤더가 화면에 붙어(fixed) 있어서, 22px 만 두면 제목이 그 아래로
+   숨습니다. 헤더 높이(약 96px)를 지나 시작하게 합니다. */
+.ins-wrap{ max-width: 1360px; margin: 0 auto; padding: 116px 24px 0; }
+@media (max-width: 860px){ .ins-wrap{ padding-top: 92px; } }
 
 /* ── 맨 위 줄 ─────────────────────────────────────────────── */
 .ins-top{
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 14px; flex-wrap: wrap; margin-bottom: 18px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 .ins-title{
+  grid-column: 2;
   font-family: var(--display, inherit);
-  font-size: 20px; font-weight: 800; letter-spacing: .04em;
-  color: #fff;
+  font-size: 25px; font-weight: 700; letter-spacing: .10em;
+  color: #fff; text-align: center; white-space: nowrap;
 }
-.ins-title em{
-  font-style: normal; font-size: 13px; font-weight: 600;
-  color: rgba(255,255,255,.5); margin-left: 6px;
+.ins-top-btns{
+  grid-column: 3;
+  display: flex; gap: 8px; justify-content: flex-end;
 }
-.ins-top-btns{ display: flex; gap: 8px; flex: 0 0 auto; }
 .ins-tb{
   display: inline-flex; align-items: center;
-  height: 34px; padding: 0 15px; border-radius: 999px;
+  height: 32px; padding: 0 17px; border-radius: 999px;
   font-size: 12.5px; font-weight: 700; text-decoration: none;
-  color: rgba(255,255,255,.86);
-  border: 1px solid rgba(255,255,255,.28);
-  background: rgba(255,255,255,.06);
-  transition: background .15s ease, border-color .15s ease;
+  color: #f3d9a4;
+  border: 1px solid rgba(243,217,164,.6);
+  background: transparent;
+  transition: background .15s ease, color .15s ease;
+  white-space: nowrap;
+  cursor: pointer; font-family: inherit;
 }
-.ins-tb:hover{ background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.5); }
+.ins-tb:hover{ background: rgba(243,217,164,.18); color: #fff; }
+.ins-tb.solid{
+  color: #fff; background: rgba(255,255,255,.16);
+  border-color: rgba(255,255,255,.4);
+}
+.ins-tb.solid:hover{ background: rgba(255,255,255,.28); }
 
-/* ── 격자 ───────────────────────────────────────────────────
-   ★ 시안처럼 왼쪽에 회원 카드, 가운데에 메뉴, 오른쪽에 통계를 둡니다. */
+/* ── 네 줄기 ───────────────────────────────────────────────── */
 .ins-grid{
   display: grid;
-  /* ★ <b>자리를 이름으로</b> 정합니다.
-     처음에는 칸만 셋으로 두었더니 카드들이 저절로 흘러가 짜임이
-     어긋났습니다(「관심분야 새 글」 이 왼쪽 아래로 내려갔습니다).
-     이름을 주면 어디에 놓일지 확실합니다. */
-  grid-template-columns: 250px minmax(0,1fr) minmax(0,1fr);
+  grid-template-columns: 200px minmax(0,1.15fr) minmax(0,1.15fr) minmax(0,1.5fr);
   grid-template-areas:
-    'me menu pie'
-    'me link fresh';
-  gap: 14px;
+    'me   menu pie  bars'
+    'vid  link pie  hits';
+  gap: 13px;
   align-items: start;
 }
-.ins-me    { grid-area: me; }
-.ins-menu  { grid-area: menu; }
-#insPie    { grid-area: pie; }
-#insFresh  { grid-area: fresh; }
-.ins-linked{ grid-area: link; }
+.ins-me       { grid-area: me; }
+.ins-vid      { grid-area: vid; }
+.ins-menu     { grid-area: menu; }
+.ins-linked   { grid-area: link; }
+.ins-pie-card { grid-area: pie; }
+.ins-bars-card{ grid-area: bars; }
+.ins-hits-card{ grid-area: hits; }
+
+/* ── 카드 — 흰 바탕 ───────────────────────────────────────── */
 .ins-card{
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 16px;
-  padding: 18px;
-  color: #fff;
+  background: #fff;
+  border-radius: 14px;
+  padding: 17px;
+  color: var(--text, #2b2740);
   min-width: 0;
+  box-shadow: 0 12px 30px -18px rgba(30,20,60,.45);
 }
 .ins-card h4{
-  font-size: 12.5px; font-weight: 800; margin: 0 0 14px;
-  color: rgba(255,255,255,.92);
+  font-size: 13px; font-weight: 800; margin: 0 0 13px;
+  color: var(--ink, #2b2740);
   display: flex; align-items: center; gap: 7px;
 }
 .ins-card h4 em{
   font-style: normal; font-size: 11px; font-weight: 400;
-  color: rgba(255,255,255,.5);
+  color: var(--text-3, #8a8ca0);
 }
 .ins-msg, .ins-none{
   font-size: 12.5px; line-height: 1.8;
-  color: rgba(255,255,255,.55);
-  padding: 16px 0; text-align: center;
+  color: var(--text-3, #8a8ca0);
+  padding: 18px 0; text-align: center;
 }
-.ins-hint{ font-size: 11px; color: rgba(255,255,255,.45); margin: -6px 0 10px; }
+.ins-hint{ font-size: 11px; color: var(--text-3, #8a8ca0); margin: -6px 0 10px; }
 .ins-badge{
   font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
-  background: rgba(224,168,60,.22); color: #f0c479;
+  background: rgba(224,168,60,.16); color: #b8801f;
   border: 1px solid rgba(224,168,60,.4);
 }
 
 /* ── 회원 카드 ─────────────────────────────────────────────── */
 .ins-me{ text-align: center; }
 .ins-ph{
-  position: relative; width: 96px; height: 96px; margin: 4px auto 14px;
+  position: relative; width: 84px; height: 84px; margin: 2px auto 11px;
   border-radius: 50%; overflow: hidden;
-  background: rgba(255,255,255,.10);
-  border: 1px solid rgba(255,255,255,.22);
+  background: var(--paper-2, #f4f4f8);
+  border: 1px solid var(--line, #e6e6ee);
   display: grid; place-items: center;
 }
 .ins-ph img{ width: 100%; height: 100%; object-fit: cover; display: block; }
 .ins-ph span{
-  font-family: var(--display, inherit); font-size: 34px; font-weight: 800;
-  color: rgba(255,255,255,.5);
+  font-family: var(--display, inherit); font-size: 30px; font-weight: 800;
+  color: var(--text-3, #8a8ca0);
 }
 .ins-ph-edit{
-  position: absolute; right: -2px; bottom: -2px;
-  width: 28px; height: 28px; border-radius: 50%;
+  position: absolute; right: -1px; bottom: -1px;
+  width: 26px; height: 26px; border-radius: 50%;
   display: grid; place-items: center;
-  background: #e0a83c; color: #221a08;
-  font-size: 13px; text-decoration: none;
-  border: 2px solid rgba(20,16,40,.9);
+  background: #8a63a8; color: #fff;
+  font-size: 12px; text-decoration: none;
+  border: 2px solid #fff;
 }
 .ins-nm{
   font-family: var(--display, inherit);
-  font-size: 19px; font-weight: 800; line-height: 1.3;
+  font-size: 17px; font-weight: 800; line-height: 1.3;
 }
-.ins-sub{ font-size: 11.5px; color: rgba(255,255,255,.55); margin-top: 3px; }
+.ins-sub{ font-size: 11px; color: var(--text-3, #8a8ca0); margin-top: 2px; }
 
 .ins-lv{
-  margin-top: 16px; padding-top: 14px;
-  border-top: 1px solid rgba(255,255,255,.13);
+  margin-top: 13px; padding-top: 11px;
+  border-top: 1px solid var(--line, #e6e6ee);
   text-align: left;
 }
 .ins-lv-row{
   display: flex; align-items: baseline; justify-content: space-between;
-  gap: 10px; font-size: 11.5px; color: rgba(255,255,255,.6);
-  padding: 3px 0;
+  gap: 10px; font-size: 11px; color: var(--text-3, #8a8ca0);
+  padding: 2px 0;
 }
 .ins-lv-row b{
-  font-family: var(--display, inherit); font-size: 13px; font-weight: 800;
-  color: #fff;
+  font-family: var(--display, inherit); font-size: 12.5px; font-weight: 800;
+  color: var(--violet-2, #5b4b9e);
 }
 .ins-lv-bar{
-  height: 5px; border-radius: 5px; margin: 9px 0 6px;
-  background: rgba(255,255,255,.12); overflow: hidden;
+  height: 4px; border-radius: 4px; margin: 8px 0 5px;
+  background: rgba(0,0,0,.07); overflow: hidden;
 }
 .ins-lv-bar i{
-  display: block; height: 100%; border-radius: 5px;
-  background: linear-gradient(90deg, #a58ae0, #e0a83c);
+  display: block; height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, #8a63a8, #e0a83c);
   transition: width .6s ease;
 }
-.ins-lv-next{ font-size: 10.5px; color: rgba(255,255,255,.5); }
+.ins-lv-next{ font-size: 10px; color: var(--text-3, #8a8ca0); }
 
-/* ── 바로 가기 ─────────────────────────────────────────────── */
-.ins-menu-list{ list-style: none; margin: 0; padding: 0; }
-.ins-menu-list li + li{ margin-top: 2px; }
-.ins-menu-list a{
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 12px; border-radius: 9px;
-  font-size: 13px; font-weight: 600; text-decoration: none;
-  color: rgba(255,255,255,.86);
-  transition: background .13s ease, color .13s ease;
+/* ── 영상 카드 ─────────────────────────────────────────────
+   ★ 시안에 있던 자리입니다. 담은 갈래의 최신 영상이 있으면 그것을,
+     없으면 「음원/동영상」 으로 가는 길만 놓습니다. */
+/* ★ 아직 안 채워졌으면 <b>자리를 차지하지 않습니다</b> — 빈 흰 상자가
+   남으면 어수선합니다. 채워지면 저절로 보입니다. */
+.ins-vid:empty{ display: none; }
+.ins-vid{ padding: 0; overflow: hidden; }
+.ins-vid a{
+  display: block; position: relative; text-decoration: none;
+  aspect-ratio: 16 / 10; background: #2b2740;
 }
-.ins-menu-list a:hover{ background: rgba(255,255,255,.11); color: #fff; }
+.ins-vid img{ width: 100%; height: 100%; object-fit: cover; display: block; opacity: .8; }
+.ins-vid .play{ position: absolute; inset: 0; display: grid; place-items: center; }
+.ins-vid .play i{
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,.92); color: #2b2740;
+  display: grid; place-items: center;
+  font-style: normal; font-size: 14px; padding-left: 3px;
+}
+.ins-vid .cap{
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 20px 12px 10px;
+  background: linear-gradient(transparent, rgba(0,0,0,.78));
+  color: #fff; font-size: 11px; font-weight: 600; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── 회원정보 메뉴 ─────────────────────────────────────────── */
+.ins-menu-list{ list-style: none; margin: 0; padding: 0; }
+.ins-menu-list li + li{ margin-top: 1px; }
+.ins-menu-list a{
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; text-decoration: none;
+  color: var(--text-2, #55566e);
+  border-left: 3px solid transparent;
+  transition: background .13s ease, color .13s ease, border-color .13s ease;
+}
+.ins-menu-list a:hover{
+  background: rgba(138,99,168,.09);
+  color: var(--violet-2, #5b4b9e);
+  border-left-color: #8a63a8;
+}
 .ins-menu-list a i{
   font-style: normal; font-size: 10.5px; font-weight: 800;
   padding: 2px 7px; border-radius: 999px;
-  background: rgba(224,168,60,.22); color: #f0c479;
+  background: rgba(224,168,60,.16); color: #b8801f;
   margin-left: auto;
 }
 
-/* ── 도넛 ──────────────────────────────────────────────────── */
-.ins-pie{ display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.ins-pie svg{ flex: 0 0 auto; }
-.ins-legend{ flex: 1 1 130px; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.ins-legend .row{ display: flex; align-items: center; gap: 7px; font-size: 11.5px; }
+/* ── 도넛 (내 관심분야 통계) ───────────────────────────────── */
+.ins-pie-wrap{ text-align: center; }
+.ins-pie-wrap svg{ display: inline-block; }
+.ins-legend{ margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.ins-legend .row{ display: flex; align-items: center; gap: 8px; font-size: 11.5px; }
+.ins-legend .pc{
+  flex: 0 0 34px; text-align: right;
+  font-family: var(--display, inherit); font-weight: 800; font-size: 13px;
+}
 .ins-legend .dot{ flex: 0 0 auto; width: 8px; height: 8px; border-radius: 2px; }
 .ins-legend .nm{
   flex: 1 1 auto; min-width: 0; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
-  color: rgba(255,255,255,.8);
+  color: var(--text-2, #55566e); text-align: left;
 }
-.ins-legend .pc{ flex: 0 0 auto; color: rgba(255,255,255,.55); }
 
-/* ── 막대 ──────────────────────────────────────────────────── */
-.ins-bars{ display: flex; flex-direction: column; gap: 8px; }
-.ins-bar{ display: flex; align-items: center; gap: 9px; font-size: 11.5px; }
-.ins-bar .nm{
-  flex: 0 0 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  color: rgba(255,255,255,.8);
+/* ── 세로 막대 (상위 관심컨텐츠 Update) ────────────────────── */
+.ins-vbars{
+  display: flex; align-items: flex-end; justify-content: space-around;
+  gap: 8px; height: 112px; padding: 0 2px;
+  border-bottom: 1px solid var(--line, #e6e6ee);
 }
-.ins-bar .tr{
-  flex: 1 1 auto; height: 16px; border-radius: 4px; min-width: 0;
-  background: rgba(255,255,255,.10); overflow: hidden;
+.ins-vbar{ flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;
+  justify-content: flex-end; height: 100%; }
+.ins-vbar .col{
+  margin: 0 auto; width: 62%; max-width: 26px; border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #b79ad8, #8a63a8);
+  transition: height .5s ease;
 }
-.ins-bar .tr i{
-  display: block; height: 100%; border-radius: 4px;
-  background: linear-gradient(90deg, #a58ae0, #d9c2ff);
-  transition: width .5s ease;
+.ins-vbar .n{
+  font-family: var(--display, inherit); font-size: 11px; font-weight: 800;
+  color: var(--violet-2, #5b4b9e); margin-bottom: 3px; text-align: center;
 }
-.ins-bar .n{
-  flex: 0 0 auto; min-width: 28px; text-align: right;
-  font-weight: 800; color: #fff;
+.ins-vlabels{ display: flex; justify-content: space-around; gap: 8px; margin-top: 7px; }
+.ins-vlabels span{
+  flex: 1 1 0; min-width: 0; text-align: center;
+  font-size: 10px; color: var(--text-3, #8a8ca0);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── 꺾은선 (내 컨텐츠 조회수) ─────────────────────────────── */
+.ins-line{ width: 100%; height: auto; display: block; }
+.ins-line-x{
+  display: flex; justify-content: space-between; margin-top: 5px;
+  font-size: 9.5px; color: var(--text-3, #8a8ca0);
 }
 
 /* ── Linked 얼굴 ───────────────────────────────────────────── */
-.ins-faces{ display: flex; flex-wrap: wrap; gap: 7px; }
+.ins-faces{ display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .ins-face{
-  width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+  width: 38px; height: 38px; border-radius: 50%; overflow: hidden;
   display: grid; place-items: center;
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.2);
-  font-family: var(--display, inherit); font-size: 15px; font-weight: 800;
-  color: rgba(255,255,255,.75);
+  background: var(--paper-2, #f4f4f8);
+  border: 1px solid var(--line, #e6e6ee);
+  font-family: var(--display, inherit); font-size: 14px; font-weight: 800;
+  color: var(--text-3, #8a8ca0);
 }
 .ins-face img{ width: 100%; height: 100%; object-fit: cover; display: block; }
-.ins-face.more{ font-size: 12px; background: rgba(255,255,255,.06); }
+.ins-face.more{
+  font-size: 11px; background: #fff;
+  border-style: dashed; color: var(--violet-2, #5b4b9e);
+  text-decoration: none;
+}
 .ins-more{
-  display: inline-block; margin-top: 12px;
+  display: inline-block; margin-top: 11px;
   font-size: 11.5px; font-weight: 700; text-decoration: none;
-  color: #e0a83c;
+  color: #8a63a8;
 }
 .ins-more:hover{ text-decoration: underline; }
 
 /* ── 닫기 ──────────────────────────────────────────────────── */
-.ins-close-row{ text-align: right; margin: 16px 0 0; }
+.ins-close-row{ text-align: right; margin: 15px 0 0; }
 .ins-close{
-  display: inline-flex; align-items: center; gap: 9px;
-  height: 44px; padding: 0 22px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 42px; padding: 0 24px; border-radius: 999px;
   font-family: inherit; font-size: 12.5px; font-weight: 800;
-  letter-spacing: .06em; cursor: pointer;
+  letter-spacing: .08em; cursor: pointer;
   color: #fff;
-  background: rgba(255,255,255,.10);
-  border: 1px solid rgba(255,255,255,.3);
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.36);
   transition: background .15s ease;
 }
-.ins-close:hover{ background: rgba(255,255,255,.2); }
+.ins-close:hover{ background: rgba(255,255,255,.26); }
 .ins-close i{ font-style: normal; font-size: 14px; }
 
 /* ── 좁은 화면 ─────────────────────────────────────────────── */
-@media (max-width: 1100px){
-  /* 회원 카드는 왼쪽에 두고 나머지를 오른쪽에 쌓습니다 */
+@media (max-width: 1200px){
   .ins-grid{
-    grid-template-columns: 220px minmax(0,1fr);
+    grid-template-columns: 190px minmax(0,1fr) minmax(0,1fr);
     grid-template-areas:
-      'me menu'
-      'me pie'
-      'me fresh'
+      'me   menu pie'
+      'vid  link pie'
+      'bars bars hits';
+  }
+}
+@media (max-width: 900px){
+  .ins-grid{
+    grid-template-columns: 170px minmax(0,1fr);
+    grid-template-areas:
+      'me   menu'
+      'vid  menu'
+      'pie  pie'
+      'bars bars'
+      'hits hits'
       'link link';
   }
 }
-@media (max-width: 760px){
-  .ins-wrap{ padding: 18px 14px 0; }
+@media (max-width: 620px){
+  .ins-wrap{ padding: 16px 14px 0; }
   .ins-grid{
     grid-template-columns: minmax(0,1fr);
-    grid-template-areas: 'me' 'menu' 'link' 'pie' 'fresh';
+    grid-template-areas: 'me' 'menu' 'link' 'pie' 'bars' 'hits' 'vid';
   }
-  .ins-card{ padding: 15px; border-radius: 13px; }
-  .ins-title{ font-size: 16px; }
-  .ins-top-btns{ width: 100%; }
-  .ins-tb{ flex: 1 1 auto; justify-content: center; height: 38px; }
+  .ins-top{ grid-template-columns: 1fr; }
+  .ins-title{ grid-column: 1; font-size: 18px; }
+  .ins-top-btns{ grid-column: 1; justify-content: center; }
+  .ins-tb{ flex: 1 1 auto; justify-content: center; height: 36px; }
   .ins-close-row{ text-align: center; }
   .ins-close{ width: 100%; justify-content: center; }
 }

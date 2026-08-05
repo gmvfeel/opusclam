@@ -365,13 +365,7 @@
     var mine = await I.list(true);
     if (!mine.length) {
       /* 담은 것이 없으면 <b>권하는 줄</b>만 놓습니다. 메인은 그대로 둡니다. */
-      var sec0 = document.querySelector('section.board');
-      if (sec0 && !document.querySelector('.oc-my-invite')) {
-        var d = document.createElement('div');
-        d.className = 'oc-my-bar-host';
-        d.innerHTML = inviteHtml();
-        sec0.parentNode.insertBefore(d, sec0);
-      }
+      /* ★ 권유 줄도 놓지 않습니다 — 이너스페이스에서 권합니다. */
       return;
     }
 
@@ -534,9 +528,12 @@
     });
 
     /* 알림 줄과 띠 */
-    addMoreLine(mine.length);
-    mountBar('my', mine.length);
-    addMoreLine(mine.length);
+    /* 알림 줄도 이너스페이스로 옮깁니다 */
+    /* ★ 띠를 없앴습니다 (2026-08-04 · 파트너 지시)
+       「나의 메인 · 관심분야 3개를 …」 띠는 <b>INNER SPACE 로 옮깁니다.</b>
+       메인 위에 띠가 하나 더 있으면 짜임이 어수선하고, 그 기능(관심분야
+       관리 · First Main)은 이너스페이스 안에 있는 편이 자연스럽습니다. */
+    /* 알림 줄도 이너스페이스로 옮깁니다 */
     balanceColumns();
   }
 
