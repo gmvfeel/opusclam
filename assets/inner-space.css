@@ -21,9 +21,22 @@
      <b>아래 내용을 밀어냅니다.</b> 그래서 그냥 스크롤하면 메인이 보입니다. */
 .ins-panel{
   position: relative;
+  /* ★ <b>시안 색을 재어 맞추고 한 단 짙게</b> 했습니다 (2026-08-05 · 파트너 지시)
+
+     파트너님이 올려 주신 시안 띠에서 실제로 뽑은 색은 이렇습니다 —
+       왼쪽 #4b5681 (푸른빛 남보라) → 가운데 #66588c → 오른쪽 #895b9a
+     예전 것(#4b3f7a → #8a63a8)은 <b>보라 쪽으로 치우치고 밝았습니다.</b>
+     그래서 시안 색을 기준으로 삼고 <b>86% 로 눌러</b> 짙게 했습니다 —
+       #414a6f → #584c78 → #764e84
+     흰 카드가 더 또렷하게 떠 보입니다.
+
+   ★ 방향도 시안에 맞춰 <b>거의 가로</b>(105deg)로 두었습니다.
+     예전 135deg 는 대각선이라 위쪽 왼편이 유난히 밝았습니다.
+   ★ 위쪽 흰 번짐은 .16 → <b>.09</b> 로 낮췄습니다 — 짙게 하려는데
+     번짐이 세면 위가 다시 밝아집니다. */
   background:
-    radial-gradient(1200px 420px at 18% -10%, rgba(255,255,255,.16), transparent 60%),
-    linear-gradient(135deg, #4b3f7a 0%, #6b4f96 42%, #8a63a8 100%);
+    radial-gradient(1200px 420px at 18% -10%, rgba(255,255,255,.09), transparent 60%),
+    linear-gradient(105deg, #414a6f 0%, #584c78 46%, #764e84 100%);
   padding: 0 0 30px;
   opacity: 0;
   transition: opacity .3s ease;
@@ -79,7 +92,8 @@ html.ins-open [data-oc-inner]{
   /* ★ <b>얇고 크게</b> (2026-08-05 · 파트너 지시)
      25px/700 이 너무 굵고 작았습니다. Pretendard 는 300(Light) 을 갖고
      있어 굵기를 확실히 낮출 수 있습니다. */
-  font-size: 37px; font-weight: 300; letter-spacing: .10em;
+  /* ★ 자간을 <b>좁게</b> (2026-08-05 · 파트너 지시) .10em → .03em */
+  font-size: 37px; font-weight: 300; letter-spacing: .03em;
   color: #fff; text-align: center; white-space: nowrap;
 }
 .ins-top-btns{
