@@ -1969,21 +1969,62 @@
   }
 
 
-  var FAV_META={
-    person:{table:"persons",view:"person-view.html",label:"인물"},
-    org:{table:"orgs",view:"org-view.html",label:"음악단체"},
-    venue:{table:"venues",view:"venue-view.html",label:"공연장"},
-    school:{table:"schools",view:"school-view.html",label:"음악학교"},
-    modern:{table:"modern_composers",view:"modern-view.html",label:"현대음악"},
-    foundation:{table:"foundations",view:"foundation-view.html",label:"기관·재단"},
-    academic:{table:"academic",view:"academic-view.html",label:"학술"}
+  var /* ══ 즐겨찾기 · 킵 갈래 짝짓기 ═══════════════════════════════
+     ★ <b>무엇이 잘못됐었나</b> (2026-08-05 · 파트너 지적 —
+       즐겨찾기 목록에 「#79 admission」 처럼 나왔습니다)
+
+       assets/pv.js 는 갈래(item_type)를 <b>화면 파일 이름</b>으로 정합니다 —
+         /db/person-view.html            → person
+         /community/admission-view.html  → admission
+         /spot/spot-view.html            → spot
+       그런데 이 짝짓기 표에 <b>DATABASE 일곱 갈래만</b> 있었습니다.
+       그래서 게시판·정보SPOT 을 담으면
+         · 이름을 찾을 표를 몰라 <b>「#번호」</b> 로 나오고
+         · 갈래 이름도 <b>영문 그대로</b>(admission) 나오고
+         · 주소도 /db/ 로 만들어 <b>엉뚱한 곳</b>으로 갔습니다
+
+     ★ 두 가지를 함께 고쳤습니다 —
+       ⓐ <b>col</b>  이름이 담긴 칸 (DB 는 name_ko · 게시판은 title)
+       ⓑ <b>path</b> 상세 화면의 <b>전체 주소</b> (예전에는 /db/ 를 앞에
+          붙여 만들었으므로 게시판은 갈 수 없었습니다)
+
+     ★ 갈래가 하나 <b>겹쳤습니다</b> —
+         /db/modern-view.html        현대음악DB
+         /community/modern-view.html 현대음악 게시판
+       둘 다 파일 이름이 modern 이라 구별할 수 없었습니다.
+       그래서 게시판 쪽만 pv.js 에서 <b>modern_music</b> 으로 바꿨습니다
+       (표 이름과 같게). 아래 표도 그 이름으로 받습니다. */
+  FAV_META={
+    /* ── DATABASE 일곱 갈래 · 이름 칸은 name_ko ── */
+    person:     {table:"persons",          col:"name_ko", path:"/db/person-view.html",      label:"인물"},
+    org:        {table:"orgs",             col:"name_ko", path:"/db/org-view.html",         label:"음악단체"},
+    venue:      {table:"venues",           col:"name_ko", path:"/db/venue-view.html",       label:"공연장"},
+    school:     {table:"schools",          col:"name_ko", path:"/db/school-view.html",      label:"음악학교"},
+    modern:     {table:"modern_composers", col:"name_ko", path:"/db/modern-view.html",      label:"현대음악DB"},
+    foundation: {table:"foundations",      col:"name_ko", path:"/db/foundation-view.html",  label:"기관·재단"},
+    academic:   {table:"academic",         col:"name_ko", path:"/db/academic-view.html",    label:"학술"},
+
+    /* ── 커뮤니티·정보SPOT · 이름 칸은 title ── */
+    hottopic:              {table:"hottopic",            col:"title", path:"/community/hottopic-view.html",            label:"핫토픽"},
+    news:                  {table:"news",                col:"title", path:"/community/news-view.html",                label:"뉴스·공지"},
+    qna:                   {table:"qna",                 col:"title", path:"/community/qna-view.html",                 label:"지식나눔"},
+    gallery:               {table:"gallery",             col:"title", path:"/community/gallery-view.html",             label:"공연사진·영상"},
+    modern_music:          {table:"modern_music",        col:"title", path:"/community/modern-view.html",              label:"현대음악"},
+    prenatal:              {table:"prenatal_music",      col:"title", path:"/community/prenatal-view.html",            label:"태교음악"},
+    utility:               {table:"utility",             col:"title", path:"/community/utility-view.html",             label:"유틸리티"},
+    admission:             {table:"admission",           col:"title", path:"/community/admission-view.html",           label:"입시요강"},
+    "admission-community": {table:"admission_community", col:"title", path:"/community/admission-community-view.html", label:"입시커뮤니티"},
+    spot:                  {table:"spot",                col:"title", path:"/spot/spot-view.html",                      label:"정보SPOT"}
   };
   function renderFavs(rows, nameMap){
     var favBox=document.getElementById("mpFavs"); if(!favBox) return;
     function itemHtml(x){
       var meta=FAV_META[x.item_type]||{};
       var nm=(nameMap[x.item_type]&&nameMap[x.item_type][String(x.item_id)])||("#"+x.item_id);
-      var href="/db/"+(meta.view||"#")+"?id="+encodeURIComponent(x.item_id);
+      /* ★ 갈래마다 상세 화면이 다른 폴더에 있으므로 <b>전체 주소</b>를 씁니다.
+         예전에는 "/db/" 를 앞에 붙였기 때문에 게시판 자료를 눌러도
+         /db/… 로 가서 아무것도 없었습니다. */
+      var href=(meta.path||"#")+(meta.path?("?id="+encodeURIComponent(x.item_id)):"");
       return '<li><a href="'+href+'">'+esc(nm)+'</a>'
         +'<span class="mp-fav-cat">'+esc(meta.label||x.item_type)+'</span>'
         +'<button type="button" class="mp-fav-del" data-fid="'+esc(x.id)+'" aria-label="삭제">\u00d7</button></li>';
@@ -2015,8 +2056,11 @@
       var jobs=Object.keys(byType).map(function(tp){
         var meta=FAV_META[tp]; if(!meta) return Promise.resolve({tp:tp,names:{}});
         var ids=byType[tp].map(function(x){return x.item_id;});
-        return sb.from(meta.table).select("id,name_ko").in("id",ids).then(function(nr){
-          var map={}; (nr.data||[]).forEach(function(o){ map[String(o.id)]=o.name_ko; }); return {tp:tp,names:map};
+        /* ★ 이름이 담긴 칸이 갈래마다 다릅니다 — DB 는 name_ko, 게시판은 title.
+           칸 이름을 짐작하지 않고 <b>표에 적어 둔 것</b>을 씁니다. */
+        var col=meta.col||"name_ko";
+        return sb.from(meta.table).select("id,"+col).in("id",ids).then(function(nr){
+          var map={}; (nr.data||[]).forEach(function(o){ map[String(o.id)]=o[col]; }); return {tp:tp,names:map};
         }).catch(function(){ return {tp:tp,names:{}}; });
       });
       Promise.all(jobs).then(function(res){

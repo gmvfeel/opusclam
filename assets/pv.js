@@ -127,7 +127,16 @@
       if (!toggles.length) return;
       var q = new URLSearchParams(location.search);
       var itemId = q.get('id');
-      var itemType = location.pathname.split('/').pop().replace('-view.html', '');
+      /* ★ 갈래는 <b>화면 파일 이름</b>으로 정합니다 (person-view.html → person).
+       ★ 딱 하나 <b>겹치는 것</b>이 있어 바로잡습니다 (2026-08-05) —
+           /db/modern-view.html        현대음악DB
+           /community/modern-view.html 현대음악 게시판
+         둘 다 modern 이 되어 마이페이지 즐겨찾기에서 <b>구별할 수
+         없었습니다.</b> 게시판 쪽만 표 이름과 같게 modern_music 으로
+         둡니다. (받는 쪽은 account/mypage.html 의 FAV_META) */
+    var TYPE_FIX = { '/community/modern-view.html': 'modern_music' };
+    var itemType = TYPE_FIX[location.pathname]
+      || location.pathname.split('/').pop().replace('-view.html', '');
       var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
       var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
       var client = null;
