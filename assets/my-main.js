@@ -76,7 +76,31 @@
 
    ★ sessionStorage 이므로 <b>브라우저를 닫으면 초기화</b>됩니다 —
      새로 오시면 늘 오퍼스클램 메인부터 보게 됩니다. */
-  var KEY_MODE = 'oc-main-mode';   /* 'my' 일 때만 나의 메인 */
+  var KEY_MODE = 'oc-main-mode';   /* <b>한 번만 쓰는</b> 표시 */
+
+  /* ★ 표시를 <b>읽는 즉시 지웁니다</b> (2026-08-05 · 파트너 지시)
+
+     파트너님이 바라시는 규칙은 이렇습니다 —
+       나의 메인은 <b>이너스페이스가 열려 있는 그때만</b> 보입니다.
+       로그인 전 · 로그인 뒤 이너스페이스를 누르기 전 · 로고를 눌러
+       메인으로 온 때 · <b>새로 고친 때</b> · 이너스페이스를 닫은 뒤 ·
+       로그아웃한 뒤 — 이 모두는 <b>기존 메인</b>입니다.
+
+     그래서 표시를 세션에 <b>남겨 두지 않습니다.</b> 이너스페이스가 넣어
+     준 표시를 이 파일이 실릴 때 <b>한 번 읽고 곧 지웁니다.</b> 그러면
+     새로 고쳐도 표시가 없으니 저절로 기존 메인이 됩니다.
+
+   ★ 지우는 일을 start() 안이 아니라 <b>여기</b>에서 합니다.
+     start() 는 interests.js 를 최대 4초까지 기다리므로, 그 사이에
+     inner-space.js 가 표시를 살펴보면 <b>어긋납니다.</b>
+   ★ 'my' 일 때는 &lt;html&gt; 에 표시를 붙여 둡니다 —
+     inner-space.js 가 「지금 나의 메인인가」를 이것으로 압니다. */
+  var ONCE = null;
+  try {
+    ONCE = sessionStorage.getItem(KEY_MODE);
+    sessionStorage.removeItem(KEY_MODE);
+  } catch (e) {}
+  if (ONCE === 'my') document.documentElement.setAttribute('data-oc-mymain', '1');
 
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
@@ -328,6 +352,10 @@
 
   /* ── 시작 ───────────────────────────────────────────────── */
   async function start() {
+    /* ★ 표시가 없으면 <b>아무것도 하지 않습니다</b> — 기존 메인 그대로.
+       (덤으로 평소에는 Supabase 를 부르지 않아 <b>더 빠르고 값도 덜 듭니다</b>) */
+    if (ONCE !== 'my') return;
+
     var I = window.OCInterests;
     if (!I) return;
 
@@ -342,9 +370,7 @@
     }
 
     /* 「First Main」 을 골라 두었으면 원래 메인을 보여 줍니다 */
-    var mode = 'first';   /* ★ 기본값 — 원래 메인을 그대로 둡니다 */
-    try { if (sessionStorage.getItem(KEY_MODE) === 'my') mode = 'my'; } catch (e) {}
-    if (mode !== 'my') return;   /* 손대지 않고 물러납니다 */
+    /* (모드 판정은 파일 맨 위에서 이미 끝났습니다 — ONCE) */
 
     saveOrig();
     if (!boardMain) return;

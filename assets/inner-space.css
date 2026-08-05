@@ -23,8 +23,8 @@
   position: relative;
   /* ★ 세로 flex 로 둡니다 (2026-08-05)
      패널이 메인비주얼+두 띠의 자리를 대신하면서 min-height 로 늘어납니다.
-     그때 남는 자리가 <b>아래에 빈 보라</b>로 남으면 어색하므로,
-     CLOSE 줄을 맨 아래로 밀어 붙입니다(.ins-close-row 의 margin-top:auto). */
+     CLOSE 가 위로 올라간 뒤로는 아래에 남는 자리가 <b>넉넉한 여백</b>이
+     됩니다. 내용은 위에서부터 쌓습니다. */
   display: flex;
   flex-direction: column;
   /* ★ <b>시안 색을 재어 맞추고 한 단 짙게</b> 했습니다 (2026-08-05 · 파트너 지시)
@@ -401,18 +401,18 @@ html.ins-open [data-oc-inner]{
 
 /* ── 닫기 ──────────────────────────────────────────────────── */
 /* ★ margin-top:auto — 남는 자리를 모두 위로 밀어 CLOSE 를 맨 아래에 둡니다 */
-.ins-close-row{ text-align: right; margin: 15px 0 0; margin-top: auto; padding-top: 15px; }
+/* ★ CLOSE 가 <b>상단 단추 줄</b>로 올라왔습니다 (2026-08-05 · 파트너 지시)
+   .ins-tb 를 함께 입으므로 크기·모양은 그것을 따르고, 여기서는
+   <b>색만</b> 달리해 First Main·회원정보 수정과 구별합니다
+   (그 둘은 금빛 테두리, CLOSE 는 흰빛). */
 .ins-close{
-  display: inline-flex; align-items: center; gap: 10px;
-  height: 42px; padding: 0 24px; border-radius: 999px;
-  font-family: inherit; font-size: 12.5px; font-weight: 800;
-  letter-spacing: .08em; cursor: pointer;
+  gap: 9px;
+  letter-spacing: .06em; font-weight: 800;
   color: #fff;
   background: rgba(255,255,255,.14);
-  border: 1px solid rgba(255,255,255,.36);
-  transition: background .15s ease;
+  border-color: rgba(255,255,255,.38);
 }
-.ins-close:hover{ background: rgba(255,255,255,.26); }
+.ins-close:hover{ background: rgba(255,255,255,.26); color: #fff; }
 .ins-close i{ font-style: normal; font-size: 14px; }
 
 /* ── 좁은 화면 ─────────────────────────────────────────────── */
@@ -452,6 +452,8 @@ html.ins-open [data-oc-inner]{
   .ins-title{ grid-column: 1; font-size: 25px; }
   .ins-top-btns{ grid-column: 1; justify-content: center; }
   .ins-tb{ flex: 1 1 auto; justify-content: center; height: 36px; }
-  .ins-close-row{ text-align: center; }
-  .ins-close{ width: 100%; justify-content: center; }
+  /* ★ 단추가 셋이 되어 좁은 화면에서는 <b>줄을 바꿔</b> 놓습니다
+     (First Main · 회원정보 수정 · INNER SPACE CLOSE) */
+  .ins-top-btns{ flex-wrap: wrap; }
+  .ins-close{ letter-spacing: .02em; }
 }

@@ -63,6 +63,27 @@
      ★ 없는 구역은 건너뜁니다 — 다른 화면에서도 안전합니다.
      ★ 구역을 더하거나 빼려면 <b>이 목록만</b> 고치면 됩니다. */
   var TAKEOVER = ['section.hero', 'section.triple', 'section.quick'];
+  /* ── 주소에서 <b>?inner=1</b> 을 떼어 냅니다 ───────────────────
+     ★ 패널을 열 때 붙이는 표시입니다. 남겨 두면 <b>새로 고쳤을 때</b>
+       패널이 저절로 다시 열립니다 — 파트너님 규칙(새로 고치면 기존 메인)에
+       어긋납니다. 화면을 다시 부르지 않고 주소만 고칩니다. */
+  function dropInnerParam() {
+    try {
+      if (!/[?&]inner=1/.test(location.search) || !history.replaceState) return;
+      var q = location.search.replace(/([?&])inner=1&?/, '$1').replace(/[?&]$/, '');
+      history.replaceState(null, '', location.pathname + q + location.hash);
+    } catch (e) {}
+  }
+
+  /* 지금 아래 내용이 「나의 메인」으로 그려져 있나 (my-main.js 가 붙입니다) */
+  function isMyMain() {
+    return document.documentElement.hasAttribute('data-oc-mymain');
+  }
+  /* 여기가 메인 화면인가 — 메인비주얼이 있으면 메인입니다 */
+  function isMainPage() {
+    return !!document.querySelector('section.hero');
+  }
+
   function skipHere() {
     var pth = location.pathname;
     for (var i = 0; i < SKIP.length; i++) if (pth === SKIP[i]) return true;
@@ -128,6 +149,11 @@
       +     '<span class="ins-top-btns">'
       +       '<button type="button" class="ins-tb" id="insFirst">First Main</button>'
       +       '<a class="ins-tb solid" href="/account/profile.html">회원정보 수정</a>'
+      /* ★ CLOSE 를 <b>이 줄로 옮겼습니다</b> (2026-08-05 · 파트너 지시)
+             예전에는 패널 맨 아래 오른쪽에 따로 있었습니다. 세 단추가
+             한자리에 모이니 찾기 쉽습니다. 맨 오른쪽에 둡니다. */
+      +       '<button type="button" class="ins-tb ins-close" id="insClose">'
+      +         'INNER SPACE CLOSE <i>&#10005;</i></button>'
       +     '</span>'
       +   '</div>'
 
@@ -162,10 +188,6 @@
       +     '</div>'
       +   '</div>'
 
-      +   '<div class="ins-close-row">'
-      +     '<button type="button" class="ins-close" id="insClose">'
-      +       'INNER SPACE CLOSE <i>&#10005;</i></button>'
-      +   '</div>'
       + '</div>';
   }
 
@@ -265,26 +287,30 @@
       if (I) n = (await I.list()).length;
     } catch (e) {}
 
-    var first = false;
-    /* ★ 'my' 가 아니면 모두 오퍼스클램 메인입니다 (2026-08-05 뒤집음) */
-    try { first = sessionStorage.getItem('oc-main-mode') !== 'my'; } catch (e) {}
-
     if (!n) {
       box.innerHTML = '<b>나의 메인</b>이 아직 꾸며지지 않았습니다 · '
         + '<a href="/account/interests.html">관심분야 담기 &#8594;</a>';
       return;
     }
-    box.innerHTML = first
-      ? '<b>오퍼스클램 메인</b>을 보고 있습니다 · '
-        + '<a href="#" id="insToMy">나의 메인으로 &#8594;</a>'
-      : '<b>나의 메인</b> · 관심분야 <b>' + n + '개</b>를 앞자리에 놓았습니다 · '
+
+    /* ★ 세션이 아니라 <b>지금 화면 상태</b>를 봅니다 (2026-08-05)
+       표시는 my-main.js 가 읽는 즉시 지우므로 세션에 남아 있지 않습니다.
+         · 메인 화면이고 나의 메인으로 그려져 있음 → 그렇게 알려 줍니다
+         · 다른 화면(게시판 등)             → 메인으로 가는 길을 줍니다 */
+    if (isMyMain()) {
+      box.innerHTML = '<b>나의 메인</b> · 관심분야 <b>' + n + '개</b>를 앞자리에 놓았습니다 · '
         + '<a href="/account/interests.html">순서 바꾸기 &#8594;</a>';
+      return;
+    }
+
+    box.innerHTML = '관심분야 <b>' + n + '개</b>를 담아 두셨습니다 · '
+      + '<a href="#" id="insToMy">나의 메인 보기 &#8594;</a>';
 
     var toMy = document.getElementById('insToMy');
     if (toMy) toMy.addEventListener('click', function (e) {
       e.preventDefault();
       try { sessionStorage.setItem('oc-main-mode', 'my'); } catch (e2) {}
-      location.href = '/home.html';
+      location.href = '/home.html?inner=1';
     });
   }
 
@@ -602,15 +628,11 @@
        그래서 「지우기」가 아니라 <b>'my' 를 넣는 것</b>이 이너스페이스의
        일입니다. 로그인만으로는 메인이 바뀌지 않고, <b>이너스페이스를
        누른 때에만</b> 바뀝니다. */
-    var mainMine = false;
-    try { mainMine = sessionStorage.getItem('oc-main-mode') === 'my'; } catch (e0) {}
-    if (!mainMine) {
+    if (isMainPage() && !isMyMain()) {
       try { sessionStorage.setItem('oc-main-mode', 'my'); } catch (e0) {}
-      /* .board-main 이 있으면 메인 화면입니다 — 다시 그려야 바뀝니다 */
-      if (document.querySelector('.board-main')) {
-        location.href = location.pathname + '?inner=1';
-        return;
-      }
+      /* replace 를 씁니다 — 뒤로가기 기록을 더럽히지 않습니다 */
+      location.replace(location.pathname + '?inner=1');
+      return;
     }
 
     opened = true;
@@ -687,16 +709,17 @@
     /* 패널이 보이게 맨 위로 올립니다 — 스크롤 중이었을 수 있습니다 */
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
 
+    dropInnerParam();   /* ★ 열자마자 주소를 정리합니다 */
+
     document.getElementById('insClose').addEventListener('click', close);
     document.addEventListener('keydown', onEsc);
 
     /* First Main — 원래 메인을 보여 줍니다 (나의 메인 대신) */
     var fm = document.getElementById('insFirst');
     if (fm) fm.addEventListener('click', function () {
-      /* ★ 표시를 <b>지웁니다</b> — 표시가 없으면 오퍼스클램 메인입니다
-         (2026-08-05 뒤집음. 예전에는 'first' 를 넣었습니다) */
+      /* ★ 표시 <b>없이</b> 메인으로 갑니다 — 표시가 없으면 기존 메인입니다 */
       try { sessionStorage.removeItem('oc-main-mode'); } catch (e) {}
-      location.href = '/home.html';
+      location.replace('/home.html');
     });
 
     /* 자료를 한꺼번에 받아 옵니다 — 하나씩 기다리면 느립니다 */
@@ -726,22 +749,27 @@
   function onEsc(e) { if (e.key === 'Escape') close(); }
 
   function close() {
+    /* ★ <b>닫으면 기존 메인으로</b> 되돌립니다 (2026-08-05 · 파트너 지시)
+
+       아래 내용이 「나의 메인」으로 그려져 있으면, my-main.js 가 원래
+       칸들을 <b>갈아 끼워 놓은 상태</b>입니다. 글자만 되돌리면 그 안에서
+       돌던 코드(굴러가는 글씨·넘어가는 카드 등)가 죽으므로,
+       <b>다시 부르는 편이 확실합니다.</b>
+       표시는 my-main.js 가 이미 지웠으니, 다시 부르면 기존 메인이 됩니다.
+     ★ replace 를 써서 뒤로가기 기록을 더럽히지 않습니다.
+     ★ ?inner=1 은 이미 떼어 두었으므로 패널은 다시 열리지 않습니다. */
+    if (isMyMain()) {
+      location.replace(location.pathname);
+      return;
+    }
+
     var el = document.getElementById('ocInnerSpace');
     if (!el) { opened = false; return; }
     el.classList.remove('on');
     document.documentElement.classList.remove('ins-open');
     document.removeEventListener('keydown', onEsc);
 
-    /* ★ 주소에 남은 <b>?inner=1</b> 을 지웁니다 (2026-08-05)
-       패널을 열 때 붙인 것입니다. 닫은 뒤에도 남아 있으면, 새로 고쳤을 때
-       패널이 <b>저절로 다시 열려</b> 놀라게 됩니다.
-       화면을 다시 불러오지 않고 주소만 바꿉니다(replaceState). */
-    try {
-      if (/[?&]inner=1/.test(location.search) && history.replaceState) {
-        var q = location.search.replace(/([?&])inner=1&?/, '$1').replace(/[?&]$/, '');
-        history.replaceState(null, '', location.pathname + q + location.hash);
-      }
-    } catch (e4) {}
+    dropInnerParam();   /* 혹시 남아 있으면 떼어 냅니다 */
     setTimeout(function () {
       el.remove();
       /* ★ 감췄던 구역을 <b>모두</b> 되돌립니다 (2026-08-05)
