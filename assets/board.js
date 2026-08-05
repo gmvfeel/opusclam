@@ -1061,18 +1061,63 @@ window.OCBoard = (function () {
           });
         })();
 
-        /* 사이드탭: 하단(빅배너/푸터) 겹침 방지 → 근처 오면 숨김 (인물DB와 동일) */
+        /* ── 사이드탭 자리잡기 ─────────────────────────────────
+           (2026-08-05 다시 만듦 · 파트너 지적 두 가지를 함께 풀었습니다)
+
+           ⓐ <b>짧은 글에서 아예 안 보였습니다</b>
+              예전 규칙 : 푸터 윗변이 「단추 아래끝 + 20」 보다 위면 <b>감춤</b>.
+              단추가 top:500px 이라 아래끝이 약 810px 인데, 짧은 글은
+              푸터가 처음부터 그 위에 있어 <b>어느 자리로 스크롤해도</b>
+              계속 감춰졌습니다.
+              → 이제 감추지 않고 <b>푸터 위로 올라갑니다.</b> 올릴 자리마저
+                없을 때만 감춥니다.
+
+           ⓑ <b>이너스페이스를 열면 단추가 패널 위에 떴습니다</b>
+              → 패널이 화면을 덮고 있는 동안에는 <b>비켜</b> 있고,
+                스크롤해서 <b>글까지 내려오면</b> 나타납니다.
+                (「아래 뷰페이지 쪽에 있어야 한다」는 뜻대로)
+
+         ★ 자리를 잴 때는 <b>display 를 건드리지 않습니다</b> —
+           display:none 이면 크기가 0 이 되어 셈이 어긋납니다.
+           보이고 감추는 것은 opacity·visibility 로만 합니다. */
         (function () {
           var tabs = document.querySelector('.pv-sidetabs');
           if (!tabs) return;
-          function upd() {
-            var stop = document.querySelector('.bigban') || document.querySelector('.triple') || document.querySelector('footer') || document.querySelector('#oc-footer');
-            var hide;
-            if (stop) hide = stop.getBoundingClientRect().top < tabs.getBoundingClientRect().bottom + 20;
-            else hide = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 360);
-            tabs.style.opacity = hide ? '0' : '1';
-            tabs.style.visibility = hide ? 'hidden' : 'visible';
+          var BASE = 500;      /* 원래 자리 (board.css 의 top 과 같아야 합니다) */
+          var MIN  = 96;       /* 이보다 위로는 올리지 않습니다 (헤더 자리) */
+
+          function show(on) {
+            tabs.style.opacity = on ? '1' : '0';
+            tabs.style.visibility = on ? 'visible' : 'hidden';
           }
+
+          function upd() {
+            /* ⓑ 이너스페이스 패널이 화면을 덮고 있으면 비켜 있습니다 */
+            var ins = document.getElementById('ocInnerSpace');
+            if (ins) {
+              var ib = ins.getBoundingClientRect().bottom;
+              if (ib > 140) { show(false); return; }
+            }
+
+            /* ⓐ 푸터가 가까우면 그 위로 올라갑니다 */
+            tabs.style.top = BASE + 'px';
+            var h = tabs.offsetHeight || 0;
+            var stop = document.querySelector('.bigban')
+                    || document.querySelector('.triple')
+                    || document.querySelector('footer')
+                    || document.querySelector('#oc-footer');
+            if (!stop) {
+              var near = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 360);
+              show(!near);
+              return;
+            }
+            var st = stop.getBoundingClientRect().top;
+            var room = st - 20 - h;          /* 푸터 위에 놓을 수 있는 윗변 */
+            if (room >= BASE) { show(true); return; }        /* 원래 자리로 충분 */
+            if (room >= MIN)  { tabs.style.top = room + 'px'; show(true); return; }
+            show(false);                                      /* 올릴 자리도 없음 */
+          }
+
           window.addEventListener('scroll', upd, { passive: true });
           window.addEventListener('resize', upd);
           upd();
