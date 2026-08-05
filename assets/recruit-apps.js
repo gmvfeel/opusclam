@@ -524,6 +524,29 @@
     if (h && h.classList && h.classList.contains('mp-head')) h.hidden = true;
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
+  /* ★ <b>기다렸다 부르기</b> 고리 (2026-08-05 · 마이페이지 대시보드)
+
+     예전에는 화면이 열리면 곧바로 그렸습니다. 그런데 마이페이지가
+     대시보드가 되어, 「리쿠르트」 칸을 열지 않는 사람에게도 지원 목록을
+     <b>미리 받아 오는 셈</b>이 됩니다(질의 두 번).
+
+     그래서 화면이 <b>data-ra-lazy</b> 를 달아 두면 스스로 그리지 않고
+     기다립니다. 그 화면이 필요할 때 OCRecruitApps.init() 을 부릅니다.
+     ★ 그 표시가 없는 화면은 <b>예전과 똑같이</b> 스스로 그립니다 —
+       다른 화면을 건드리지 않습니다.
+     ★ 두 번 불러도 한 번만 그립니다. */
+  var started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    init();
+  }
+  window.OCRecruitApps = { init: start };
+
+  function autoStart() {
+    if (document.documentElement.hasAttribute('data-ra-lazy')) return;  /* 기다립니다 */
+    start();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', autoStart);
+  else autoStart();
 })();

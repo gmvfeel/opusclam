@@ -58,35 +58,119 @@
     #stBody > .st-sec,#lkBody > .lk-sec{margin-bottom:22px}
   }
 
-  /* ══ 요약 띠 ═══════════════════════════════════════════════
-     ★ 어느 탭에 있어도 「내가 누구인지」가 위에 남아 있게 합니다.
-     ★ 색은 auth.css 의 변수를 씁니다 — 그러면 다크모드가 저절로 따라옵니다. */
-  .mp-sum{
-    display:flex; align-items:center; gap:16px;
-    background:var(--panel); border:1px solid var(--line);
-    border-radius:16px; padding:18px 20px; margin-bottom:22px;
+  /* ══ 대시보드 ═════════════════════════════════════════════
+     ★ 아홉 칸을 <b>세 줄기</b>로 늘어놓습니다. 칸마다 제목 · 내용 몇 줄 ·
+       「→ 상세로」 가 들어갑니다.
+     ★ 좁아지면 두 줄기 → 한 줄기로 줄어듭니다. */
+  .dash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+  .dcard{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:20px 20px 16px;display:flex;flex-direction:column;min-width:0;
   }
-  .mp-sum-load{font-size:13px;color:var(--tx3)}
-  .mp-sum-ph{
-    flex:0 0 auto; width:54px; height:54px; border-radius:50%;
-    overflow:hidden; background:var(--bg2); border:1px solid var(--line);
-    display:grid; place-items:center;
-    font-size:20px; font-weight:800; color:var(--tx3);
+  .dc-load{font-size:12.5px;color:var(--tx3);padding:14px 0;text-align:center}
+
+  /* 칸 제목 */
+  .dc-h{
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    margin:0 0 14px;
   }
-  .mp-sum-ph img{width:100%;height:100%;object-fit:cover;display:block}
-  .mp-sum-who{flex:1 1 auto; min-width:0}
-  .mp-sum-who .nm{
-    font-size:17px; font-weight:800; color:var(--tx);
-    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  .dc-h h3{margin:0;font-size:13.5px;font-weight:800;color:var(--tx);letter-spacing:-.01em}
+  .dc-h em{font-style:normal;font-size:11px;font-weight:600;color:var(--tx3)}
+
+  /* 칸 안의 내용은 늘어나고, 「→」 는 늘 <b>맨 아래</b>에 붙습니다 */
+  .dc-body{flex:1 1 auto;min-width:0}
+  .dc-go{
+    margin-top:14px;padding-top:12px;border-top:1px solid var(--line);
+    font-size:12px;font-weight:700;color:var(--tx2);text-decoration:none;
+    display:inline-flex;align-items:center;gap:6px;
   }
-  .mp-sum-who .sub{margin-top:3px; font-size:11.5px; color:var(--tx3)}
-  .mp-sum-nums{
-    flex:0 0 auto; display:flex; gap:18px;
-    padding-left:16px; border-left:1px solid var(--line);
+  .dc-go:hover{color:var(--accent)}
+
+  /* 회원 칸 */
+  .dc-me-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .dc-ph{
+    flex:0 0 auto;width:56px;height:56px;border-radius:50%;overflow:hidden;
+    background:var(--bg2);border:1px solid var(--line);
+    display:grid;place-items:center;font-size:21px;font-weight:800;color:var(--tx3);
   }
-  .mp-sum-nums div{text-align:right}
-  .mp-sum-nums .k{display:block; font-size:10.5px; color:var(--tx3)}
-  .mp-sum-nums .v{display:block; margin-top:2px; font-size:13.5px; font-weight:800; color:var(--tx)}
+  .dc-ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .dc-me-nm{font-size:17px;font-weight:800;color:var(--tx);line-height:1.3}
+  .dc-me-sub{margin-top:4px;display:flex;gap:6px;flex-wrap:wrap}
+
+  /* 값 늘어놓기 (등급 칸 · 리쿠르트 칸 · 저장함 칸) */
+  .dc-nums{display:flex;gap:20px;flex-wrap:wrap}
+  .dc-nums .k{display:block;font-size:11px;color:var(--tx3)}
+  .dc-nums .v{display:block;margin-top:3px;font-size:20px;font-weight:800;color:var(--tx);line-height:1}
+  .dc-nums .v i{font-style:normal;font-size:11.5px;font-weight:600;color:var(--tx3);margin-left:2px}
+
+  /* 등급 막대 */
+  .dc-lvname{font-size:19px;font-weight:800;color:var(--tx);margin-bottom:3px}
+  .dc-bar{height:6px;border-radius:6px;background:rgba(0,0,0,.07);overflow:hidden;margin:12px 0 7px}
+  .dc-bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#7a5cc4,#e0a83c)}
+  .dc-lvnext{font-size:11.5px;color:var(--tx3);line-height:1.6}
+  .dc-lvnext b{color:var(--tx2)}
+
+  /* 작은 목록 (내가 올린 것 · 많이 읽힌 글) */
+  .dc-list{list-style:none;margin:0;padding:0}
+  .dc-list li{
+    display:flex;align-items:center;gap:9px;padding:7px 0;font-size:12.5px;
+    border-bottom:1px dashed var(--line);
+  }
+  .dc-list li:last-child{border-bottom:0}
+  .dc-list .c{
+    flex:0 0 auto;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;
+    background:var(--chip);color:var(--tx3);
+  }
+  .dc-list .t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)}
+  .dc-list .t a{color:var(--tx);text-decoration:none;font-weight:600}
+  .dc-list .t a:hover{color:var(--accent);text-decoration:underline}
+  .dc-list .n{flex:0 0 auto;font-weight:800;color:var(--tx2);font-size:12px}
+
+  /* 작은 막대 (관심분야 새 글) */
+  .dc-bars{display:flex;flex-direction:column;gap:8px}
+  .dc-b{display:flex;align-items:center;gap:9px;font-size:12px}
+  .dc-b .nm{flex:0 0 78px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)}
+  .dc-b .tr{flex:1 1 auto;min-width:0;height:14px;border-radius:4px;background:rgba(0,0,0,.05);overflow:hidden}
+  .dc-b .tr i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#7a5cc4,#a58ae0)}
+  .dc-b .n{flex:0 0 auto;font-weight:800;color:var(--tx2);min-width:22px;text-align:right}
+
+  /* 도넛 (활동 분포) */
+  .dc-pie{display:flex;align-items:center;gap:16px}
+  .dc-pie svg{flex:0 0 auto}
+  .dc-pie-lg{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px;font-size:11.5px}
+  .dc-pie-lg .row{display:flex;align-items:center;gap:7px}
+  .dc-pie-lg .dot{flex:0 0 auto;width:8px;height:8px;border-radius:2px}
+  .dc-pie-lg .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)}
+  .dc-pie-lg .pc{flex:0 0 auto;font-weight:800;color:var(--tx2)}
+
+  /* Linked 얼굴 */
+  .dc-faces{display:flex;gap:6px;flex-wrap:wrap}
+  .dc-face{
+    width:34px;height:34px;border-radius:50%;overflow:hidden;background:var(--bg2);
+    border:1px solid var(--line);display:grid;place-items:center;
+    font-size:12px;font-weight:800;color:var(--tx3);
+  }
+  .dc-face img{width:100%;height:100%;object-fit:cover;display:block}
+
+  /* 아무것도 없을 때 */
+  .dc-none{font-size:12px;color:var(--tx3);line-height:1.8;padding:10px 0}
+
+  /* 칸 안의 작은 단추 */
+  .dc-btn{
+    display:inline-block;margin-top:12px;padding:9px 14px;border-radius:8px;
+    background:var(--pri);color:var(--prit);font-size:12.5px;font-weight:700;
+    text-decoration:none;
+  }
+
+  @media (max-width:980px){ .dash{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media (max-width:640px){ .dash{grid-template-columns:minmax(0,1fr)} }
+
+  /* ← 대시보드 */
+  .mp-back{
+    display:inline-block;margin-bottom:16px;font-size:12.5px;font-weight:700;
+    color:var(--tx3);text-decoration:none;
+  }
+  .mp-back:hover{color:var(--tx)}
 
   /* ══ 탭 ════════════════════════════════════════════════════
      ★ 좁은 화면에서는 <b>옆으로 밀립니다</b> — 줄을 바꾸면 두 줄이 되어
@@ -118,12 +202,6 @@
   .mp-pane.on{display:block}
 
   @media (max-width:560px){
-    .mp-sum{flex-wrap:wrap; gap:12px}
-    .mp-sum-nums{
-      width:100%; padding-left:0; border-left:0;
-      padding-top:12px; border-top:1px solid var(--line);
-      justify-content:space-between; gap:10px;
-    }
     .mp-tab{padding:10px 11px 12px; font-size:12.5px}
   }
   .mp-head{margin-bottom:26px}
@@ -490,10 +568,6 @@
       <h1>마이페이지</h1>
     </div>
 
-    <!-- ══ 요약 띠 ═══════════════════════════════════════════
-         ★ 어느 탭에 있어도 <b>내가 누구인지</b>가 위에 남아 있게 합니다.
-           사진 · 이름 · 회원종류 · 승인상태 · 등급 · 활동점수 · OC POINT -->
-    <div class="mp-sum" id="mpSum"><div class="mp-sum-load">불러오는 중…</div></div>
 
     <!-- ══ 탭 줄 ════════════════════════════════════════════
          ★ 왜 탭인가 (2026-08-05 · 파트너 지시)
@@ -507,7 +581,8 @@
          ★ 주소의 #표시로 <b>바로 그 탭</b>을 열 수 있습니다 —
            이너스페이스 메뉴가 이것을 씁니다. -->
     <div class="mp-tabs" id="mpTabs" role="tablist">
-      <button type="button" class="mp-tab on" data-tab="info"     role="tab">내 정보</button>
+      <button type="button" class="mp-tab on" data-tab="dash"     role="tab">대시보드</button>
+      <button type="button" class="mp-tab"    data-tab="info"     role="tab">내 정보</button>
       <button type="button" class="mp-tab"    data-tab="activity" role="tab">활동 · 등급</button>
       <button type="button" class="mp-tab"    data-tab="posts"    role="tab">내가 올린 것</button>
       <button type="button" class="mp-tab"    data-tab="linked"   role="tab">Linked</button>
@@ -515,8 +590,41 @@
       <button type="button" class="mp-tab"    data-tab="saved"    role="tab">저장함</button>
     </div>
 
+    <!-- ══════════════════════════════════════════════════════
+         대시보드                       (2026-08-05 · 파트너 지시)
+
+         ★ 왜 대시보드인가
+           탭으로 나눈 것은 「긴 스크롤」만 없앴고, 들어와도 <b>내 상태가
+           한눈에 보이지 않았습니다.</b> 아홉 칸으로 나누어 들어오는
+           순간 요약이 보이고, 칸마다 「→」로 <b>그 상세로 파고듭니다.</b>
+
+         ★ 이너스페이스와 <b>역할을 나눕니다</b>
+             이너스페이스 — 메인 위에 얹히는 <b>훑어보기</b>
+             마이페이지   — 내 것을 <b>다루는 곳</b> (목록·상태변경·관리)
+           그래서 이 칸들은 숫자만이 아니라 <b>실제 내용 몇 줄</b>을 담습니다.
+
+         ★ 자료는 이미 있는 것만 씁니다 —
+             oc_my_points() · oc_my_stats() · oc_my_links()
+             member_favorites(셈) · recruit_applications(셈)
+           예전에 마이페이지에 들어올 때마다 뒤졌던 <b>열 개 표</b>는
+           「내가 올린 것」 탭을 열 때만 뒤집니다. -->
+    <div class="mp-pane on" data-pane="dash">
+      <div class="dash">
+        <div class="dcard dc-me"    id="dMe"><div class="dc-load">불러오는 중…</div></div>
+        <div class="dcard dc-lv"    id="dLv"><div class="dc-load">불러오는 중…</div></div>
+        <div class="dcard dc-act"   id="dAct"><div class="dc-load">불러오는 중…</div></div>
+        <div class="dcard dc-mine"  id="dMine"><div class="dc-load">불러오는 중…</div></div>
+        <div class="dcard dc-fresh" id="dFresh"><div class="dc-load">불러오는 중…</div></div>
+        <div class="dcard dc-tops"  id="dTops"><div class="dc-load">불러오는 중…</div></div>
+        <div class="dcard dc-link"  id="dLink"><div class="dc-load">불러오는 중…</div></div>
+        <div class="dcard dc-recr"  id="dRecr"><div class="dc-load">불러오는 중…</div></div>
+        <div class="dcard dc-save"  id="dSave"><div class="dc-load">불러오는 중…</div></div>
+      </div>
+    </div>
+
     <!-- ───────── 내 정보 ───────── -->
-    <div class="mp-pane on" data-pane="info">
+    <div class="mp-pane" data-pane="info">
+      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-card" id="mpBody">
         <div class="mp-msg">불러오는 중…</div>
       </div>
@@ -526,6 +634,7 @@
          활동 통계와 등급·포인트는 「내 활동을 본다」는 한 가지 일이라
          한 탭에 함께 둡니다. -->
     <div class="mp-pane" data-pane="activity">
+      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head" style="display:none" id="stHead">
         <span class="jtag">STATS</span>
         <h1 style="font-size:24px">활동 통계</h1>
@@ -553,6 +662,7 @@
 
     <!-- ───────── 내가 올린 것 ───────── -->
     <div class="mp-pane" data-pane="posts">
+      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head" style="display:none" id="myHead">
         <span class="jtag">MY POSTS</span>
         <h1 style="font-size:24px">내가 올린 것</h1>
@@ -568,6 +678,7 @@
 
     <!-- ───────── Linked ───────── -->
     <div class="mp-pane" data-pane="linked">
+      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head" style="display:none" id="lkHead">
         <span class="jtag">LINKED</span>
         <h1 style="font-size:24px">Linked · 인맥</h1>
@@ -588,6 +699,7 @@
          (제목이 담는 칸의 <b>바로 앞</b>에 있어야 합니다 — 그 파일이
           previousElementSibling 으로 찾습니다). -->
     <div class="mp-pane" data-pane="recruit">
+      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head">
         <span class="jtag">RECEIVED</span>
         <h1 style="font-size:24px">받은 지원</h1>
@@ -627,6 +739,7 @@
 
     <!-- ───────── 저장함 ───────── -->
     <div class="mp-pane" data-pane="saved">
+      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head">
         <span class="jtag">SAVED</span>
         <h1 style="font-size:24px">내 즐겨찾기 · 킵</h1>
@@ -637,6 +750,10 @@
     </div>
   </div>
 </main>
+<!-- ★ 리쿠르트 지원 목록은 「리쿠르트」 칸을 열 때 그립니다.
+     이 표시(data-ra-lazy)를 보고 recruit-apps.js 가 스스로 그리지 않고
+     기다립니다. 안 보는 목록을 미리 받아 오지 않으려는 것입니다. -->
+<script>document.documentElement.setAttribute('data-ra-lazy','1');</script>
 <script src="/assets/recruit.js" defer></script>
 <script src="/assets/recruit-apps.js" defer></script>
 <div id="oc-footer"></div>
@@ -730,46 +847,288 @@
        모두 불러 열 개 넘는 표를 뒤졌습니다. 이제 <b>고른 탭만</b> 부릅니다.
        (아래 tabDraw 참조) */
     UID = session.user.id;
-    drawSum(m, session);
+    drawDash(m, session);
     tabInit();
   }
 
-  /* ══ 요약 띠 ═══════════════════════════════════════════════
-     ★ 어느 탭에 있어도 「내가 누구인지」가 위에 남아 있게 합니다.
-     ★ 등급·포인트는 getPoints() 로 <b>한 번만</b> 부르고 담아 둡니다 —
-       「활동 · 등급」 탭도 같은 값을 씁니다(두 번 부르지 않습니다). */
-  async function drawSum(m, session){
-    var el=document.getElementById('mpSum'); if(!el) return;
-    var nm=(m&&m.name)||'회원';
-    var ini=String(nm).trim().charAt(0)||'?';
-    var sub=[];
-    if(m.username) sub.push(m.username);
-    if(m.field) sub.push(m.field);
-    if(m.school_name) sub.push(m.school_name);
-    if(m.org_name) sub.push(m.org_name);
+  /* ══════════════════════════════════════════════════════════
+     대시보드                            (2026-08-05 · 파트너 지시)
 
-    el.innerHTML =
-        '<div class="mp-sum-ph">'
-      +   (m.photo_url
-            ? '<img src="'+esc(m.photo_url)+'" alt="" onerror="this.parentNode.innerHTML=\''+esc(ini)+'\'">'
-            : esc(ini))
-      + '</div>'
-      + '<div class="mp-sum-who">'
-      +   '<div class="nm">'+esc(nm)
-      +     '<span class="mp-badge type">'+esc(TYPE[m.member_type]||m.member_type||'회원')+'</span>'
-      +     '<span class="mp-badge '+esc(m.status||'pending')+'">'+esc(STATUS[m.status]||m.status||'-')+'</span>'
+     ★ 아홉 칸을 그립니다. 자료는 <b>이미 있는 것</b>만 씁니다 —
+         oc_my_points()  등급 · 활동점수 · 쓸포인트 · 다음 등급
+         oc_my_stats()   올린 글 수 · 읽힌 수 · 갈래 분포 · 새 글 · 많이 읽힌 글
+         oc_my_links()   이어진 사람 · 받은 요청 · 보낸 요청
+         member_favorites · recruit_applications  (셈만)
+     ★ 세 RPC 는 <b>담아 두고</b> 상세 화면도 같은 값을 씁니다
+       (getPoints · getStats) — 두 번 부르지 않습니다.
+     ★ 「내가 올린 것」 칸은 <b>열 개 표를 뒤지지 않습니다</b> —
+       oc_my_stats() 의 갈래별 셈으로 채웁니다. 실제 목록은 그 탭을
+       열 때 부릅니다. 값을 아끼는 원칙입니다.
+     ══════════════════════════════════════════════════════════ */
+  var DASH_COLORS = ['#7a5cc4','#e0a83c','#5b9bd5','#6fcf8f','#e08585',
+                     '#9b8ec4','#c8a04a','#7fb8a8','#b07fa8','#8a95c4'];
+
+  function dcHead(title, note){
+    return '<div class="dc-h"><h3>' + title + '</h3>'
+      + (note ? '<em>' + note + '</em>' : '') + '</div>';
+  }
+  function dcGo(tab, text){
+    return '<a class="dc-go" href="#' + tab + '">' + text + ' &#8594;</a>';
+  }
+  function dcSet(id, inner){
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = inner;
+  }
+
+  /* 작은 도넛 — 상세의 stPie 보다 작게 그립니다 */
+  function dcPie(items, total, size){
+    var R = size/2, r = R - 9, cx = R, cy = R, acc = -Math.PI/2, out = '';
+    var sum = total || items.reduce(function(a,b){ return a + (b.n||0); }, 0) || 1;
+    items.forEach(function(x, i){
+      var ang = (x.n||0) / sum * Math.PI * 2;
+      if (ang <= 0) return;
+      var x1 = cx + r*Math.cos(acc), y1 = cy + r*Math.sin(acc);
+      acc += ang;
+      var x2 = cx + r*Math.cos(acc), y2 = cy + r*Math.sin(acc);
+      out += '<path d="M' + cx + ' ' + cy + ' L' + x1.toFixed(1) + ' ' + y1.toFixed(1)
+        + ' A' + r + ' ' + r + ' 0 ' + (ang > Math.PI ? 1 : 0) + ' 1 '
+        + x2.toFixed(1) + ' ' + y2.toFixed(1) + ' Z" fill="'
+        + DASH_COLORS[i % DASH_COLORS.length] + '"/>';
+    });
+    /* 가운데를 뚫어 도넛으로 — 카드 바탕색으로 덮습니다 */
+    out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r*0.56).toFixed(1)
+      + '" fill="var(--panel)"/>';
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 '
+      + size + ' ' + size + '" role="img" aria-label="활동 분포">' + out + '</svg>';
+  }
+
+  async function drawDash(m, session){
+    /* ── ① 회원 */
+    var nm = (m && m.name) || '회원';
+    var ini = String(nm).trim().charAt(0) || '?';
+    dcSet('dMe',
+        dcHead('회원')
+      + '<div class="dc-body">'
+      +   '<div class="dc-me-top">'
+      +     '<div class="dc-ph">'
+      +       (m.photo_url
+                ? '<img src="'+esc(m.photo_url)+'" alt="" onerror="this.parentNode.innerHTML=\''+esc(ini)+'\'">'
+                : esc(ini))
+      +     '</div>'
+      +     '<div style="min-width:0">'
+      +       '<div class="dc-me-nm">'+esc(nm)+'</div>'
+      +       '<div class="dc-me-sub">'
+      +         '<span class="mp-badge type">'+esc(TYPE[m.member_type]||m.member_type||'회원')+'</span>'
+      +         '<span class="mp-badge '+esc(m.status||'pending')+'">'+esc(STATUS[m.status]||m.status||'-')+'</span>'
+      +       '</div>'
+      +     '</div>'
       +   '</div>'
-      +   '<div class="sub">'+esc(sub.join(' · ')||'-')+'</div>'
+      +   '<ul class="dc-list">'
+      +     '<li><span class="c">아이디</span><span class="t">'+esc(m.username||'-')+'</span></li>'
+      +     '<li><span class="c">이메일</span><span class="t">'+esc(m.email||'-')+'</span></li>'
+      +     '<li><span class="c">가입일</span><span class="t">'+fmt(m.created_at)+'</span></li>'
+      +   '</ul>'
+      +   '<a class="dc-btn" href="/account/profile.html">회원정보 수정</a>'
       + '</div>'
-      + '<div class="mp-sum-nums" id="mpSumNums"></div>';
+      + dcGo('info', '내 정보 자세히'));
 
-    var d = await getPoints();
-    var box=document.getElementById('mpSumNums'); if(!box) return;
-    if(!d || d.level==null){ box.remove(); return; }
-    box.innerHTML =
-        '<div><span class="k">회원레벨</span><span class="v">'+esc(d.label||'Clamer LV I')+'</span></div>'
-      + '<div><span class="k">활동점수</span><span class="v">'+nf(d.act)+'</span></div>'
-      + '<div><span class="k">OC POINT</span><span class="v">'+nf(d.use)+'</span></div>';
+    /* ── ② 등급 · 포인트 */
+    getPoints().then(function(d){
+      if (!d || d.level == null) {
+        dcSet('dLv', dcHead('등급 · 포인트')
+          + '<div class="dc-body"><div class="dc-none">아직 점수가 없습니다.</div></div>'
+          + dcGo('activity', '등급 · 포인트'));
+        return;
+      }
+      var act = d.act || 0, nx = d.next || null, pct = 100, left = 0;
+      if (nx && nx.need) {
+        pct = Math.max(2, Math.min(100, Math.round(act / nx.need * 100)));
+        left = Math.max(0, nx.need - act);
+      }
+      dcSet('dLv',
+          dcHead('등급 · 포인트', d.streak ? '연속 로그인 ' + nf(d.streak) + '일' : '')
+        + '<div class="dc-body">'
+        +   '<div class="dc-lvname">' + esc(d.label || 'Clamer LV I') + '</div>'
+        +   '<div class="dc-bar"><i style="width:' + pct + '%"></i></div>'
+        +   '<div class="dc-lvnext">'
+        +     (nx
+                ? (left > 0
+                    ? '다음 <b>' + esc(nx.label) + '</b> 까지 <b>' + nf(left) + '점</b>'
+                    : '<b>' + esc(nx.label) + '</b> 문턱을 넘었습니다')
+                : '가장 높은 등급입니다')
+        +   '</div>'
+        +   '<div class="dc-nums" style="margin-top:14px">'
+        +     '<div><span class="k">활동점수</span><span class="v">' + nf(act) + '<i>점</i></span></div>'
+        +     '<div><span class="k">OC POINT</span><span class="v">' + nf(d.use) + '<i>P</i></span></div>'
+        +   '</div>'
+        + '</div>'
+        + dcGo('activity', '내역 보기'));
+    });
+
+    /* ── ③④⑤⑥ 활동 통계에서 오는 네 칸 */
+    getStats().then(function(d){
+      if (!d || d.ok !== true) {
+        ['dAct','dMine','dFresh','dTops'].forEach(function(id){
+          dcSet(id, '<div class="dc-body"><div class="dc-none">자료를 불러오지 못했습니다.</div></div>');
+        });
+        return;
+      }
+      var mine  = d.mine || [];
+      var fresh = (d.fresh || []).filter(function(x){ return (x.n||0) > 0; })
+                    .slice().sort(function(a,b){ return b.n - a.n; });
+      var tops  = d.tops || [];
+
+      /* ③ 활동 분포 (도넛) */
+      dcSet('dAct',
+          dcHead('내 활동 분포', nf(d.posts) + '개 · ' + nf(d.views) + '회 읽힘')
+        + '<div class="dc-body">'
+        +   (mine.length
+              ? '<div class="dc-pie">' + dcPie(mine, d.posts || 0, 104)
+                + '<div class="dc-pie-lg">'
+                + mine.slice(0, 4).map(function(x, i){
+                    var pc = d.posts ? Math.round(x.n / d.posts * 100) : 0;
+                    return '<div class="row">'
+                      + '<span class="dot" style="background:' + DASH_COLORS[i % DASH_COLORS.length] + '"></span>'
+                      + '<span class="nm">' + esc(x.cat) + '</span>'
+                      + '<span class="pc">' + (pc || '<1') + '%</span></div>';
+                  }).join('')
+                + '</div></div>'
+              : '<div class="dc-none">아직 올리신 글이 없습니다.</div>')
+        + '</div>'
+        + dcGo('activity', '활동 통계'));
+
+      /* ④ 내가 올린 것 — 갈래별 셈 (열 개 표를 뒤지지 않습니다) */
+      dcSet('dMine',
+          dcHead('내가 올린 것', nf(d.posts) + '개')
+        + '<div class="dc-body">'
+        +   (mine.length
+              ? '<ul class="dc-list">'
+                + mine.slice(0, 5).map(function(x){
+                    return '<li><span class="c">' + esc(x.cat) + '</span>'
+                      + '<span class="t"></span><span class="n">' + nf(x.n) + '</span></li>';
+                  }).join('')
+                + '</ul>'
+              : '<div class="dc-none">아직 올리신 글이 없습니다.<br>커뮤니티에 첫 글을 남겨 보세요.</div>')
+        + '</div>'
+        + dcGo('posts', '목록 보기'));
+
+      /* ⑤ 관심분야 새 글 (최근 7일) */
+      var fmax = fresh.length ? fresh[0].n : 1;
+      dcSet('dFresh',
+          dcHead('관심분야 새 글', '최근 7일')
+        + '<div class="dc-body">'
+        +   (fresh.length
+              ? '<div class="dc-bars">'
+                + fresh.slice(0, 5).map(function(x){
+                    var w = Math.max(6, Math.round(x.n / fmax * 100));
+                    return '<div class="dc-b"><span class="nm" title="' + esc(x.cat) + '">'
+                      + esc(x.cat) + '</span>'
+                      + '<span class="tr"><i style="width:' + w + '%"></i></span>'
+                      + '<span class="n">' + nf(x.n) + '</span></div>';
+                  }).join('')
+                + '</div>'
+              : '<div class="dc-none">최근 7일간 새 글이 없습니다.</div>')
+        + '</div>'
+        + dcGo('activity', '자세히'));
+
+      /* ⑥ 많이 읽힌 내 글 */
+      dcSet('dTops',
+          dcHead('많이 읽힌 내 글')
+        + '<div class="dc-body">'
+        +   (tops.length
+              ? '<ul class="dc-list">'
+                + tops.slice(0, 5).map(function(x){
+                    /* ★ oc_my_stats() 의 tops 는 <b>제목(t)과 조회수(v)만</b>
+                       줍니다 — 주소 칸이 없어 링크를 걸 수 없습니다.
+                       (칸 이름을 짐작하지 않는다는 원칙입니다) */
+                    return '<li><span class="t" title="' + esc(x.t || '') + '">'
+                      + esc(x.t || '-')
+                      + '</span><span class="n">' + nf(x.v) + '회</span></li>';
+                  }).join('')
+                + '</ul>'
+              : '<div class="dc-none">아직 읽힌 기록이 없습니다.</div>')
+        + '</div>'
+        + dcGo('activity', '활동 통계'));
+    });
+
+    /* ── ⑦ Linked */
+    (async function(){
+      var d = null;
+      try { var r = await sb.rpc('oc_my_links'); d = (r && !r.error) ? r.data : null; } catch(e){}
+      var lk = (d && d.linked) || [], rc = (d && d.received) || [], sn = (d && d.sent) || [];
+      dcSet('dLink',
+          dcHead('Linked · 인맥', rc.length ? '받은 요청 ' + rc.length + '건' : '')
+        + '<div class="dc-body">'
+        +   '<div class="dc-nums" style="margin-bottom:14px">'
+        +     '<div><span class="k">이어진 사람</span><span class="v">' + nf(lk.length) + '<i>명</i></span></div>'
+        +     '<div><span class="k">받은 요청</span><span class="v">' + nf(rc.length) + '</span></div>'
+        +     '<div><span class="k">보낸 요청</span><span class="v">' + nf(sn.length) + '</span></div>'
+        +   '</div>'
+        +   (lk.length
+              ? '<div class="dc-faces">'
+                + lk.slice(0, 7).map(function(x){
+                    var i2 = String(x.name || '?').trim().charAt(0) || '?';
+                    return '<span class="dc-face">'
+                      + (x.photo_url
+                          ? '<img src="' + esc(x.photo_url) + '" alt="" onerror="this.parentNode.innerHTML=\'' + esc(i2) + '\'">'
+                          : esc(i2))
+                      + '</span>';
+                  }).join('')
+                + '</div>'
+              : '<div class="dc-none">아직 이어진 사람이 없습니다.<br>아이디를 아시면 청해 보세요.</div>')
+        + '</div>'
+        + dcGo('linked', '인맥 관리'));
+    })();
+
+    /* ── ⑧ 리쿠르트 — <b>셈만</b> 합니다 (목록은 그 탭에서) */
+    (async function(){
+      var recv = null, sent = null;
+      try {
+        var r1 = await sb.from('recruit_applications')
+          .select('id,recruit_jobs!inner(member_id)', { count:'exact', head:true })
+          .eq('recruit_jobs.member_id', session.user.id);
+        if (!r1.error) recv = r1.count || 0;
+      } catch(e){}
+      try {
+        var r2 = await sb.from('recruit_applications')
+          .select('id', { count:'exact', head:true })
+          .eq('applicant_id', session.user.id);
+        if (!r2.error) sent = r2.count || 0;
+      } catch(e){}
+      dcSet('dRecr',
+          dcHead('리쿠르트')
+        + '<div class="dc-body">'
+        +   '<div class="dc-nums">'
+        +     '<div><span class="k">받은 지원</span><span class="v">' + (recv==null?'-':nf(recv)) + '<i>건</i></span></div>'
+        +     '<div><span class="k">내 지원</span><span class="v">' + (sent==null?'-':nf(sent)) + '<i>건</i></span></div>'
+        +   '</div>'
+        +   '<div class="dc-none">지원서 열람과 진행 상태 변경은 상세에서 하실 수 있습니다.</div>'
+        + '</div>'
+        + dcGo('recruit', '지원 관리'));
+    })();
+
+    /* ── ⑨ 저장함 */
+    (async function(){
+      var fav = null, keep = null;
+      try {
+        var r = await sb.from('member_favorites').select('kind');
+        if (!r.error) {
+          var rows = r.data || [];
+          fav  = rows.filter(function(x){ return x.kind === 'favorite'; }).length;
+          keep = rows.filter(function(x){ return x.kind === 'keep'; }).length;
+        }
+      } catch(e){}
+      dcSet('dSave',
+          dcHead('저장함')
+        + '<div class="dc-body">'
+        +   '<div class="dc-nums">'
+        +     '<div><span class="k">즐겨찾기</span><span class="v">' + (fav==null?'-':nf(fav)) + '</span></div>'
+        +     '<div><span class="k">킵</span><span class="v">' + (keep==null?'-':nf(keep)) + '</span></div>'
+        +   '</div>'
+        +   '<div class="dc-none">상세페이지의 즐겨찾기 · 킵 단추로 담을 수 있습니다.</div>'
+        + '</div>'
+        + dcGo('saved', '전체 보기'));
+    })();
   }
 
   /* ══ 탭 ════════════════════════════════════════════════════
@@ -783,7 +1142,16 @@
     activity: function(){ drawStats(); drawLevel(); },
     posts:    function(){ if(UID) loadMine(UID); },
     linked:   function(){ drawLinks(); },
-    saved:    function(){ loadFavs(); }
+    saved:    function(){ loadFavs(); },
+    /* ★ 리쿠르트도 <b>열 때</b> 그립니다 (2026-08-05)
+       assets/recruit-apps.js 는 예전에 화면이 열릴 때 스스로 그렸습니다.
+       그러면 안 보는 탭의 지원 목록까지 미리 받아 오게 됩니다.
+       그 파일에 「기다렸다 부르기」 고리를 두어 여기서 부릅니다. */
+    recruit:  function(){
+      try { if (window.OCRecruitApps && window.OCRecruitApps.init) window.OCRecruitApps.init(); }
+      catch(e){}
+    }
+    /* dash · info 는 이미 그려져 있으므로 부를 것이 없습니다 */
   };
   var tabDone = {};
 
@@ -792,7 +1160,7 @@
     var panes=document.querySelectorAll('.mp-pane');
     var found=false;
     for(var i=0;i<tabs.length;i++) if(tabs[i].getAttribute('data-tab')===key) found=true;
-    if(!found) key='info';
+    if(!found) key='dash';
 
     for(var a=0;a<tabs.length;a++)
       tabs[a].classList.toggle('on', tabs[a].getAttribute('data-tab')===key);
@@ -821,12 +1189,27 @@
         showTab(t.getAttribute('data-tab'), true);
       });
     }
-    /* 주소의 #표시 또는 ?tab= 을 봅니다 */
+    /* ★ 「← 대시보드」와 칸의 「→」도 같은 길로 움직입니다 —
+       주소를 새로 열지 않고 판만 갈아 끼웁니다. */
+    if(!document.body.getAttribute('data-mp-nav')){
+      document.body.setAttribute('data-mp-nav','1');
+      document.addEventListener('click', function(e){
+        var a=e.target.closest && e.target.closest('a.mp-back, a.dc-go');
+        if(!a) return;
+        var h=(a.getAttribute('href')||'');
+        if(h.charAt(0)!=='#') return;
+        e.preventDefault();
+        showTab(h.slice(1), true);
+        try{ window.scrollTo({top:0, behavior:'smooth'}); }catch(e2){ window.scrollTo(0,0); }
+      });
+    }
+
+    /* 주소의 #표시 또는 ?tab= 을 봅니다 — 없으면 <b>대시보드</b>입니다 */
     var want=(location.hash||'').replace('#','');
     if(!want){
       try{ want=new URLSearchParams(location.search).get('tab')||''; }catch(e){}
     }
-    showTab(want||'info', false);
+    showTab(want||'dash', false);
   }
 
   /* ── 활동 통계 ───────────────────────────────────────────────
@@ -886,10 +1269,8 @@
     var body = document.getElementById('stBody');
     if (!head || !body) return;
     try {
-      var r = await sb.rpc('oc_my_stats');
-      if (r.error) throw new Error(r.error.message);
-      var d = r.data;
-      if (!d || d.ok !== true) throw new Error('빈 값');
+      var d = await getStats();   /* ★ 담아 둔 값을 씁니다 */
+      if (!d || d.ok !== true) throw new Error(d && d.err ? d.err : '빈 값');
 
       var mine  = d.mine  || [];
       var fresh = (d.fresh || []).filter(function(x){ return (x.n || 0) > 0; });
@@ -1358,6 +1739,19 @@
 
   /* ★ oc_my_points() 는 요약 띠와 「활동 · 등급」 탭이 <b>함께</b> 씁니다.
      한 번만 부르고 담아 둡니다 — 값을 아끼는 원칙입니다. */
+  /* ★ oc_my_stats() 도 <b>대시보드와 상세가 함께</b> 씁니다 — 한 번만 부릅니다. */
+  var _st=null, _stGot=false;
+  async function getStats(){
+    if(_stGot) return _st;
+    _stGot=true;
+    try{
+      var r=await sb.rpc('oc_my_stats');
+      if(r && r.error) throw new Error(r.error.message);
+      _st=(r && r.data) || null;
+    }catch(e){ _st={ ok:false, err:String((e&&e.message)||e) }; }
+    return _st;
+  }
+
   var _pt=null, _ptGot=false;
   async function getPoints(){
     if(_ptGot) return _pt;
