@@ -1764,28 +1764,45 @@
 
   /* ★ oc_my_points() 는 요약 띠와 「활동 · 등급」 탭이 <b>함께</b> 씁니다.
      한 번만 부르고 담아 둡니다 — 값을 아끼는 원칙입니다. */
-  /* ★ oc_my_stats() 도 <b>대시보드와 상세가 함께</b> 씁니다 — 한 번만 부릅니다. */
-  var _st=null, _stGot=false;
-  async function getStats(){
-    if(_stGot) return _st;
-    _stGot=true;
-    try{
-      var r=await sb.rpc('oc_my_stats');
-      if(r && r.error) throw new Error(r.error.message);
-      _st=(r && r.data) || null;
-    }catch(e){ _st={ ok:false, err:String((e&&e.message)||e) }; }
-    return _st;
+  /* ══ 서버 함수 결과를 <b>한 번만</b> 부르고 함께 씁니다 ══════════
+     대시보드와 상세 화면이 같은 자료를 봅니다. 두 번 부르지 않습니다.
+
+   ★ <b>값이 아니라 「약속(Promise)」을 담아 둡니다</b>
+     (2026-08-05 · 파트너 화면에 「통계를 불러오지 못했습니다 · 빈 값」이
+      나와 알았습니다)
+
+     처음에는 이렇게 만들었습니다 —
+       담았나? → 예면 담아 둔 <b>값</b>을 준다
+       아니면 「담았다」 표시를 켜고 → 서버에 물어 → 값을 채운다
+     그런데 「표시를 켜는 것」이 <b>먼저</b>이고 「값을 채우는 것」이
+     나중입니다. 그 사이에 다른 곳에서 부르면 표시는 이미 켜졌으니
+     <b>아직 비어 있는 값</b>을 받아 갑니다. 그래서 「빈 값」이 됐습니다.
+     이너스페이스에서 마이페이지#activity 로 바로 들어오면
+     대시보드와 활동 통계가 <b>거의 동시에</b> 부르므로 반드시 걸립니다.
+
+     약속을 담아 두면 늦게 부른 쪽도 <b>같은 약속을 기다립니다.</b>
+     서버에는 여전히 한 번만 물어봅니다. */
+  var _stP = null, _ptP = null;
+
+  function getStats(){
+    if (!_stP) _stP = (async function(){
+      try{
+        var r = await sb.rpc('oc_my_stats');
+        if (r && r.error) throw new Error(r.error.message);
+        return (r && r.data) || null;
+      }catch(e){ return { ok:false, err:String((e&&e.message)||e) }; }
+    })();
+    return _stP;
   }
 
-  var _pt=null, _ptGot=false;
-  async function getPoints(){
-    if(_ptGot) return _pt;
-    _ptGot=true;
-    try{
-      var r=await sb.rpc('oc_my_points');
-      _pt=(r && !r.error) ? r.data : null;
-    }catch(e){ _pt=null; }
-    return _pt;
+  function getPoints(){
+    if (!_ptP) _ptP = (async function(){
+      try{
+        var r = await sb.rpc('oc_my_points');
+        return (r && !r.error) ? r.data : null;
+      }catch(e){ return null; }
+    })();
+    return _ptP;
   }
 
   async function drawLevel(){
