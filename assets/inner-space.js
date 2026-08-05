@@ -51,7 +51,9 @@
     var l = document.createElement('link');
     l.id = 'oc-inner-css';
     l.rel = 'stylesheet';
-    l.href = '/assets/inner-space.css';
+    /* ★ CSS 도 캐시를 무력화합니다 — 날마다 한 번은 새로 받습니다 */
+    l.href = '/assets/inner-space.css?v='
+      + new Date().toISOString().slice(0,10).replace(/-/g,'');
     document.head.appendChild(l);
   }
 

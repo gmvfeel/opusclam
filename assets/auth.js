@@ -355,7 +355,12 @@ function needInnerSpace() {
   if (window.__ocInnerJs) return;
   window.__ocInnerJs = true;
   var sc = document.createElement('script');
-  sc.src = '/assets/inner-space.js';
+  /* ★ <b>캐시를 무력화</b>합니다 (2026-08-04 · 파트너님 화면에서 옛 파일이
+       실렸습니다). 브라우저와 Vercel 이 파일을 담아 두므로, 고쳐도
+       옛 것이 돌 수 있습니다. 날짜를 붙이면 <b>날마다 한 번</b>은
+       새로 받아 옵니다 — 매번 받으면 느려지니 그 정도가 알맞습니다. */
+    var v = new Date().toISOString().slice(0,10).replace(/-/g,"");
+    sc.src = '/assets/inner-space.js?v=' + v;
   sc.onerror = function () { /* 못 받아도 화면은 그대로 돕니다 */ };
   document.head.appendChild(sc);
 }
