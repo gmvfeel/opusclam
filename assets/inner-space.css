@@ -113,6 +113,62 @@ html.ins-open [data-oc-inner]{
   text-underline-offset: 4px;
 }
 
+/* ── 확인할 것 ─────────────────────────────────────────────
+   ★ 제목 아래 <b>한 줄</b>로 놓습니다. 「지금 손대야 할 일」만 담습니다.
+   ★ 보라 바탕에 얹히므로 <b>옅은 흰 알약</b>으로 만듭니다 — 카드처럼
+     흰 상자로 하면 아래 칸들과 헷갈립니다. */
+.ins-todo{
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 8px; margin: -6px 0 18px;
+}
+.ins-todo-k{
+  font-size: 10.5px; font-weight: 800; letter-spacing: .12em;
+  color: rgba(255,255,255,.66);
+}
+.ins-todo-i{
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 30px; padding: 0 13px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; text-decoration: none;
+  color: #fff;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.30);
+  transition: background .15s ease;
+}
+.ins-todo-i:hover{ background: rgba(255,255,255,.26); }
+.ins-todo-i b{
+  font-size: 11px; font-weight: 800;
+  padding: 2px 7px; border-radius: 999px;
+  background: #e0a83c; color: #3a2c05;
+}
+/* 알림이 아니라 <b>상태</b>인 것은 조용하게 (승인 대기 등) */
+.ins-todo-i.quiet{
+  background: transparent; color: rgba(255,255,255,.72);
+  border-color: rgba(255,255,255,.22); font-weight: 600;
+}
+
+/* ── 점수 채우는 길 (회원 카드 안) ─────────────────────────
+   ★ 「490점 남았습니다」 아래에 <b>무엇을 하면 되는지</b>를 놓습니다. */
+.ins-lv-how{
+  margin-top: 11px; padding-top: 10px;
+  border-top: 1px solid rgba(43,39,64,.075);
+  text-align: left;
+}
+.ins-lv-how .k{
+  display: block; margin-bottom: 5px;
+  font-size: 10px; font-weight: 800; letter-spacing: .1em;
+  color: var(--text-3, #8a8ca0);
+}
+.ins-lv-how a{
+  display: block; padding: 5px 0;
+  font-size: 11.5px; font-weight: 700; text-decoration: none;
+  color: var(--violet-2, #5b4b9e);
+}
+.ins-lv-how a:hover{ text-decoration: underline; }
+.ins-lv-how .q{
+  display: block; margin-top: 5px;
+  font-size: 10.5px; line-height: 1.6; color: var(--text-3, #8a8ca0);
+}
+
 /* ── 맨 위 줄 ─────────────────────────────────────────────── */
 .ins-top{
   display: grid;
@@ -584,6 +640,10 @@ html[data-theme="dark"] .ins-face{
   border-color: rgba(255,255,255,.12);
 }
 html[data-theme="dark"] .ins-ph span{ color: var(--text-2, #a2a2a2); }
+
+/* 「점수 채우는 길」 — 구분선과 링크색 */
+html[data-theme="dark"] .ins-lv-how{ border-top-color: rgba(255,255,255,.085); }
+html[data-theme="dark"] .ins-lv-how a{ color: #b79ad8; }
 
 /* 「+N」 얼굴 자리가 흰색으로 굳어 있었습니다 */
 html[data-theme="dark"] .ins-face.more{

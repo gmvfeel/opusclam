@@ -172,7 +172,8 @@
     return ''
       + '<div class="ins-wrap">'
       +   '<div class="ins-top">'
-      +     '<span class="ins-title">INNER SPACE (MY SPACE)</span>'
+      /* ★ (MY SPACE) 를 뗐습니다 (2026-08-05 · 파트너 지시) */
+      +     '<span class="ins-title">INNER SPACE</span>'
       +     '<span class="ins-top-btns">'
       +       '<button type="button" class="ins-tb" id="insFirst">First Main</button>'
       +       '<a class="ins-tb solid" href="/account/profile.html">회원정보 수정</a>'
@@ -183,6 +184,14 @@
       +         'INNER SPACE CLOSE <i>&#10005;</i></button>'
       +     '</span>'
       +   '</div>'
+
+      /* ★ <b>확인할 것</b> (2026-08-05 · 파트너 지시)
+             받은 Linked 요청 · 안 본 지원 · 승인 대기를 <b>한 줄로 모읍니다.</b>
+             예전에는 「받은 요청 1건」이 메뉴 목록 안에 작은 알약으로만 있어
+             놓치기 쉬웠습니다.
+           ★ <b>없으면 만들지 않습니다</b> — 빈 줄이 남으면 어수선합니다
+             (drawTodo 가 비면 자리를 지웁니다). */
+      +   '<div class="ins-todo" id="insTodo"></div>'
 
       +   '<div class="ins-grid">'
       /* ①② 첫째 줄기 — <b>한 묶음</b>으로 둡니다 (2026-08-05 · 파트너 지적)
@@ -216,6 +225,66 @@
       +   '</div>'
 
       + '</div>';
+  }
+
+  /* ── 확인할 것 ─────────────────────────────────────────────
+     ★ 「지금 내가 손대야 할 일」만 모읍니다. 자랑거리(점수·조회수)는
+       아래 칸들이 이미 보여 줍니다.
+     ★ 자료를 <b>새로 부르지 않는 것</b>부터 씁니다 —
+         받은 Linked 요청 : oc_my_links() (이미 불렀습니다)
+         승인 대기        : members 줄 (이미 있습니다)
+       「안 본 지원」만 셈 한 번을 더 부르는데, <b>채용을 낼 수 있는 회원</b>
+       에게만 부릅니다(그 밖의 회원에게는 있을 수 없는 일입니다).
+     ★ 알림 표를 새로 만들지 않았습니다 — 있는 자료로 셀 수 있으면
+       표를 늘리지 않는 편이 낫습니다(값·품이 함께 늡니다). */
+  async function drawTodo(m, links) {
+    var box = document.getElementById('insTodo');
+    if (!box) return;
+
+    var items = [];
+
+    /* ⓐ 받은 Linked 요청 — 내가 답해야 하는 것 */
+    var recv = (links && links.received) ? links.received.length : 0;
+    if (recv) items.push({
+      t: '받은 Linked 요청', n: recv + '건',
+      h: '/account/mypage.html#linked'
+    });
+
+    /* ⓑ 승인 대기 — 아직 자료 등록·보강을 못 하는 상태입니다 */
+    if (m && m.status === 'pending') items.push({
+      t: '승인 대기 중', n: '',
+      h: '/account/mypage.html#info', quiet: true
+    });
+
+    /* ⓒ 안 본 지원 — 채용을 낼 수 있는 회원에게만 */
+    var hiring = ['industry','org','school'].indexOf(m && m.member_type) >= 0;
+    if (hiring) {
+      try {
+        var c = await sb();
+        if (c) {
+          /* ★ 조건은 assets/recruit-apps.js 의 셈과 <b>같게</b> 맞춥니다 —
+             다르면 「안 본 것 N건」인데 목록에 없는 일이 생깁니다. */
+          var r = await c.from('recruit_applications')
+            .select('id,recruit_jobs!inner(member_id)', { count:'exact', head:true })
+            .eq('recruit_jobs.member_id', m.id)
+            .is('read_at', null)
+            .neq('status', '지원취소')
+            .not('org_hidden', 'is', true);
+          if (!r.error && r.count) items.push({
+            t: '안 본 지원', n: r.count + '건',
+            h: '/account/mypage.html#recruit'
+          });
+        }
+      } catch (e) { /* 못 세면 그 줄만 빼고 나머지는 보여 줍니다 */ }
+    }
+
+    if (!items.length) { box.remove(); return; }
+
+    box.innerHTML = '<span class="ins-todo-k">확인할 것</span>'
+      + items.map(function (x) {
+          return '<a class="ins-todo-i' + (x.quiet ? ' quiet' : '') + '" href="' + esc(x.h) + '">'
+            + esc(x.t) + (x.n ? '<b>' + esc(x.n) + '</b>' : '') + '</a>';
+        }).join('');
   }
 
   /* ── 회원 카드 ───────────────────────────────────────────── */
@@ -253,6 +322,26 @@
                 ? '<div class="ins-lv-next">' + esc(nx.label) + ' 까지 '
                   + nf(Math.max(0, nx.need - act)) + '점</div>'
                 : '<div class="ins-lv-next">가장 높은 등급입니다</div>')
+            /* ★ <b>점수 채우는 길</b>을 붙입니다 (2026-08-05 · 파트너 지시)
+                 「490점 남았습니다」 로 끝나면 <b>무엇을 해야 하는지</b>를
+                 알 수 없습니다. 점수가 붙는 활동으로 바로 갈 수 있게 합니다.
+               ★ 여기 적은 활동은 실제로 점수가 붙는 것들입니다 —
+                 point_log 의 code 가 그것을 증명합니다
+                 (qna_ask · qna_answer · post · comment · db_enrich · login · got_like).
+               ★ <b>점수 숫자는 적지 않았습니다.</b> 실제 값은 서버 트리거가
+                 정하는데 그 SQL 이 저장소에 없어 확인할 수 없었습니다.
+                 확인되지 않은 숫자를 적으면 <b>틀린 안내</b>가 됩니다.
+                 (파트너님이 값을 알려 주시면 그때 넣겠습니다)
+               ★ 가장 높은 등급이면 붙이지 않습니다 — 채울 것이 없습니다. */
+            + (nx
+                ? '<div class="ins-lv-how">'
+                  + '<span class="k">점수 채우는 길</span>'
+                  + '<a href="/community/qna.html">지식나눔 질문 · 답글</a>'
+                  + '<a href="/community/hottopic.html">커뮤니티 글 쓰기</a>'
+                  + '<a href="/db/index.html">DB보강</a>'
+                  + '<span class="q">댓글 · 내 글이 추천받기 · 매일 로그인도 쌓입니다</span>'
+                  + '</div>'
+                : '')
             + '</div>'
           : '');
   }
@@ -806,6 +895,7 @@
       links = (got[3] && got[3].data) || null;
     } catch (e) { /* 일부가 없어도 나머지는 그립니다 */ }
 
+    drawTodo(m, links);
     drawMe(m, pt);
     drawMenu(m, links);
     drawPie(st);
