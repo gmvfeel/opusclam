@@ -1144,6 +1144,25 @@
     /* 패널이 보이게 맨 위로 올립니다 — 스크롤 중이었을 수 있습니다 */
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
 
+    /* ★ <b>열렸다고 알립니다</b> (2026-08-05 · 파트너 지적 — 패널을 열자마자
+         게시판 상세의 [‹ 리스트] [+ 글쓰기] 가 패널 위에 떠 있었습니다)
+
+       까닭 — assets/board.js 의 자리잡기는 <b>스크롤·창 크기 변화</b>에만
+       다시 계산합니다. 「패널이 열렸다」는 그 둘이 아니어서 계산이 돌지
+       않았고, 열기 전 상태(보임)가 그대로 남았습니다.
+       이미 맨 위에 있을 때는 scrollTo 도 아무 일을 하지 않아 스크롤
+       사건조차 나지 않습니다.
+
+     ★ 그래서 resize 를 한 번 알립니다 — board.js 가 그것을 듣고 다시
+       재어 <b>비켜</b> 줍니다. (닫을 때도 같은 방법을 씁니다)
+     ★ 한 번 더 늦게 알립니다 — 카드 내용이 채워지면서 패널 키가 커지므로,
+       그때의 키로 다시 재야 정확합니다. */
+    function tellResize() {
+      try { window.dispatchEvent(new Event('resize')); } catch (e2) {}
+    }
+    tellResize();
+    setTimeout(tellResize, 400);
+
     dropInnerParam();   /* ★ 열자마자 주소를 정리합니다 */
 
     document.getElementById('insClose').addEventListener('click', close);
