@@ -35,6 +35,12 @@
   --ln-vi2:     #8a63a8;
   --ln-blue:    #7b8ce8;   /* CLASS INFORMATION 테두리 */
   --ln-gold:    #e0a83c;
+  /* ★ 히어로 글자용 <b>밝은 갈색</b> (2026-08-05 · 파트너 지시)
+     검정 바탕에 흰 글자는 차갑습니다. 따뜻한 갈색이 클래식의 결과
+     맞고, 시안의 금빛 강조와도 이어집니다.
+     ▶ 이 두 줄만 고치면 영문·국문 색이 함께 바뀝니다. */
+  --ln-warm:    #e6d0ad;   /* 영문 — 밝은 쪽 */
+  --ln-warm2:   #cbb28c;   /* 국문 — 한 단 낮춘 쪽 */
 
   background: var(--ln-bg);
   color: var(--ln-tx);
@@ -100,20 +106,22 @@ html.ln-page .theme-toggle{ display: none !important; }
   -webkit-background-clip: text; background-clip: text;
   color: transparent;
 }
-/* ★ 영문은 <b>얇게</b>, 국문은 <b>크게</b> (2026-08-05 · 파트너 지시)
+/* ★ 히어로 글자 (2026-08-05 · 파트너 지시로 세 번 다듬었습니다)
      영문 굵기 400 → <b>200</b>  (Pretendard 는 200 을 갖고 있어 실제로
                                 반영됩니다. 없는 굵기를 적으면 브라우저가
                                 가까운 것으로 바꿔 「안 바뀐 것처럼」 보입니다)
-     국문 크기 12 → <b>15px</b> · 색도 한 단 밝게
-   ▶ 이 두 규칙만 고치면 됩니다. */
+     영문 크기 21 → 22 → <b>26px</b> (최대값)
+     국문 크기 12 → 15 → <b>17px</b>
+     색   흰색 → <b>밝은 갈색</b> (--ln-warm · --ln-warm2)
+   ▶ 크기는 아래 두 줄, 색은 위쪽 변수 두 줄에서 고칩니다. */
 .ln-hero-en{
-  margin: 24px 0 0; font-size: clamp(16px, 1.6vw, 22px);
-  font-weight: 200; line-height: 1.66; letter-spacing: -.005em;
-  color: var(--ln-tx);
+  margin: 26px 0 0; font-size: clamp(17px, 1.8vw, 26px);
+  font-weight: 200; line-height: 1.62; letter-spacing: -.005em;
+  color: var(--ln-warm);
 }
 .ln-hero-ko{
-  margin: 18px 0 0; font-size: 15px; font-weight: 300;
-  line-height: 1.75; color: var(--ln-tx2);
+  margin: 20px 0 0; font-size: 17px; font-weight: 300;
+  line-height: 1.72; color: var(--ln-warm2);
 }
 
 /* ══ 7탭 ════════════════════════════════════════════════════
