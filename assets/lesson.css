@@ -41,6 +41,18 @@
 }
 .ln a{ color: inherit; }
 
+/* ══ 헤더 · 모드 전환 ═══════════════════════════════════════════
+   ★ 레슨:ON 은 늘 어두우므로 <b>모드 전환 단추를 감춥니다.</b>
+     바꿀 것이 없는 단추를 두면 눌러 보고 「고장인가」 하게 됩니다.
+     (표시는 각 화면의 head 스크립트가 &lt;html&gt; 에 붙입니다) */
+html.ln-page .theme-toggle{ display: none !important; }
+
+/* 좁은 화면에서 히어로 위 여백을 줄입니다 —
+   헤더가 낮아지므로 그만큼만 비우면 됩니다. */
+@media (max-width: 880px){
+  .ln-hero{ padding-top: 142px; }
+}
+
 /* ── 감싸는 폭 ─────────────────────────────────────────────
    ★ 회원 화면과 같은 값을 씁니다 — 화면을 오갈 때 폭이 들썩이면
      어수선합니다. (auth.css 의 --oc-page-w 와 같은 1120px 계열) */
@@ -50,9 +62,15 @@
    시안 — 피아노 사진 위에 LESSON:ON 큰 글자, 영문 세 줄, 국문 한 줄.
    ★ 사진은 아직 없으므로 <b>어두운 그라데이션</b>으로 대신합니다.
      사진이 준비되면 .ln-hero 의 background-image 한 줄만 더하면 됩니다. */
+/* ★ 위 여백을 <b>96 → 196px</b> 로 늘렸습니다 (2026-08-05 · 파트너 지시)
+
+   왜 — 헤더를 히어로 위에 <b>투명하게</b> 얹었으므로(data-header="overlay"),
+   헤더 높이(약 100px)만큼은 <b>비워 두어야</b> 제목이 그 아래로 숨지
+   않습니다. 거기에 여유를 더해 시안처럼 넉넉하게 둡니다.
+   ▶ 이 한 값만 고치면 위아래 자리가 조절됩니다. */
 .ln-hero{
   position: relative;
-  padding: 96px 0 40px;
+  padding: 196px 0 56px;
   text-align: center;
   background:
     radial-gradient(900px 380px at 78% 8%, rgba(255,255,255,.07), transparent 62%),

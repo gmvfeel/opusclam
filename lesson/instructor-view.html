@@ -2,7 +2,18 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<!-- ★ 레슨:ON 은 <b>늘 어둡습니다</b> (2026-08-05 · 파트너 지시)
+     시안의 성격 자체가 어둡고, 영상을 보는 화면은 어두운 편이 눈이 편합니다.
+     그래서 회원이 밝은 모드를 쓰고 있어도 <b>이 섹션만</b> 어둡게 둡니다.
+   ★ localStorage 는 <b>건드리지 않습니다</b> — 회원이 고른 모드를 바꿔
+     버리면, 레슨:ON 을 한 번 다녀온 뒤 사이트 전체가 어두워집니다.
+     여기서는 &lt;html&gt; 에만 붙이고 저장하지 않습니다.
+   ★ ln-page 표시도 함께 붙입니다 — 헤더의 모드 전환 단추를 감추는 데
+     씁니다(늘 어두우니 바꿀 것이 없습니다). -->
+<script>(function(){try{
+  document.documentElement.setAttribute('data-theme','dark');
+  document.documentElement.classList.add('ln-page');
+}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>인스트럭터 · 레슨 : ON · OPUSCLAM.COM</title>
 <link rel="manifest" href="/manifest.webmanifest">
@@ -20,7 +31,9 @@
 <link rel="stylesheet" href="/assets/lesson.css">
 </head>
 
-<body>
+<!-- ★ data-header="overlay" — 헤더를 히어로 위에 <b>투명하게</b> 얹습니다.
+     스크롤하면 assets/header.js 가 불투명(.solid)으로 바꿉니다. -->
+<body data-header="overlay">
 <div id="oc-header"></div>
 <script src="/assets/include.js"></script>
 <script src="/assets/header.js"></script>

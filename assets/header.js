@@ -20,7 +20,11 @@
        흰 배경의 일반/게시판 페이지. 헤더가 늘 보인다.
    · data-header="overlay" = 투명하게 히어로 위에 얹혔다가
        스크롤/호버 시 solid. 상단이 어두운 히어로인 홈·DB 페이지용.
-       (히어로 요소는 .hero / .pdb / .pdb-bg 중 하나를 자동 인식)
+       (히어로 요소는 .hero / .pdb / .pdb-bg / .board-hero / .ln-hero 중
+        하나를 자동 인식)
+     ★ .ln-hero 를 더했습니다 (2026-08-05 · 레슨:ON)
+       레슨:ON 히어로 이름이 목록에 없어 투명 모드가 걸리지 않았습니다.
+       화면마다 예외를 두지 않고 <b>이 목록 한 곳</b>만 늘립니다.
    ------------------------------------------------------------ */
 (function(){
   var sh=document.getElementById('siteHeader');
@@ -34,7 +38,7 @@
   }
 
   /* overlay: 투명 → 스크롤/호버 시 solid */
-  var hero=document.querySelector('.hero, .pdb, .pdb-bg, .board-hero');
+  var hero=document.querySelector('.hero, .pdb, .pdb-bg, .board-hero, .ln-hero');
   var hovering=false;
   function update(){
     var solid;
