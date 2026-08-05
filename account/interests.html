@@ -31,7 +31,19 @@
   .iv-head p{color:var(--text-2);font-size:13.5px;line-height:1.8;margin:0}
   .iv-head p b{color:var(--text)}
 
-  .iv-card{background:#fff;border:1px solid var(--line);border-radius:14px;
+  /* ══ 카드 테두리 ═══════════════════════════════════════════
+     ★ 마이페이지와 <b>같은 선</b>을 씁니다 (2026-08-05 · 파트너 지시)
+       파트너님이 주신 시안 조각에서 재어 낸 값입니다 —
+         색 #514a6b (짙은 남보라) · 굵기 3px
+     ★ 값을 변수로 둡니다. 굵기·색을 바꾸실 때 이 한 줄만 고치면
+       이 화면의 카드가 한꺼번에 바뀝니다.
+     ★ 마이페이지처럼 <b>덮어쓰는 규칙을 따로 두지 않고</b> 카드 규칙이
+       변수를 직접 쓰게 합니다 — CSS 는 나중에 쓴 것이 이기므로,
+       앞쪽에 둔 덮어쓰기는 안 먹습니다.
+     ★ 이 화면의 카드는 바탕이 늘 흰색(#fff)이라 다크모드에서도
+       짙은 선이 맞습니다 — 옅은 흰선으로 바꾸지 않습니다. */
+  .iv-wrap{ --mp-edge:#514a6b; --mp-edge-w:3px }
+  .iv-card{background:#fff;border:var(--mp-edge-w) solid var(--mp-edge);border-radius:14px;
     padding:22px;margin-bottom:16px}
   .iv-card h2{font-size:15px;font-weight:800;margin:0 0 4px;
     display:flex;align-items:center;justify-content:space-between;gap:10px}

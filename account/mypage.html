@@ -179,12 +179,10 @@
   @media (max-width:980px){ .dash{grid-template-columns:repeat(2,minmax(0,1fr))} }
   @media (max-width:640px){ .dash{grid-template-columns:minmax(0,1fr)} }
 
-  /* ← 대시보드 */
-  .mp-back{
-    display:inline-block;margin-bottom:16px;font-size:12.5px;font-weight:700;
-    color:var(--tx3);text-decoration:none;
-  }
-  .mp-back:hover{color:var(--tx)}
+  /* ★ 「← 대시보드」 링크를 없앴습니다 (2026-08-05 · 파트너 지시)
+     바로 위에 탭 줄이 있어 「대시보드」를 누르면 되므로, 같은 일을 하는
+     링크가 하나 더 있으면 자리만 먹습니다. 그 스타일도 함께 걷어냈습니다.
+     ★ 만들지 않는 편이 확실합니다 — CSS 로 감추면 언제든 되살아납니다. */
 
   /* ══ 카드 테두리 ═══════════════════════════════════════════
      ★ 파트너님이 주신 시안 조각에서 <b>색과 굵기를 직접 재어</b> 맞췄습니다 —
@@ -657,7 +655,6 @@
 
     <!-- ───────── 내 정보 ───────── -->
     <div class="mp-pane" data-pane="info">
-      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-card" id="mpBody">
         <div class="mp-msg">불러오는 중…</div>
       </div>
@@ -667,7 +664,6 @@
          활동 통계와 등급·포인트는 「내 활동을 본다」는 한 가지 일이라
          한 탭에 함께 둡니다. -->
     <div class="mp-pane" data-pane="activity">
-      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head" style="display:none" id="stHead">
         <span class="jtag">STATS</span>
         <h1 style="font-size:24px">활동 통계</h1>
@@ -695,7 +691,6 @@
 
     <!-- ───────── 내가 올린 것 ───────── -->
     <div class="mp-pane" data-pane="posts">
-      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head" style="display:none" id="myHead">
         <span class="jtag">MY POSTS</span>
         <h1 style="font-size:24px">내가 올린 것</h1>
@@ -711,7 +706,6 @@
 
     <!-- ───────── Linked ───────── -->
     <div class="mp-pane" data-pane="linked">
-      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head" style="display:none" id="lkHead">
         <span class="jtag">LINKED</span>
         <h1 style="font-size:24px">Linked · 인맥</h1>
@@ -732,7 +726,6 @@
          (제목이 담는 칸의 <b>바로 앞</b>에 있어야 합니다 — 그 파일이
           previousElementSibling 으로 찾습니다). -->
     <div class="mp-pane" data-pane="recruit">
-      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head">
         <span class="jtag">RECEIVED</span>
         <h1 style="font-size:24px">받은 지원</h1>
@@ -772,7 +765,6 @@
 
     <!-- ───────── 저장함 ───────── -->
     <div class="mp-pane" data-pane="saved">
-      <a class="mp-back" href="#dash">&#8592; 대시보드</a>
       <div class="mp-head">
         <span class="jtag">SAVED</span>
         <h1 style="font-size:24px">내 즐겨찾기 · 킵</h1>
@@ -1227,7 +1219,7 @@
     if(!document.body.getAttribute('data-mp-nav')){
       document.body.setAttribute('data-mp-nav','1');
       document.addEventListener('click', function(e){
-        var a=e.target.closest && e.target.closest('a.mp-back, a.dc-go');
+        var a=e.target.closest && e.target.closest('a.dc-go');
         if(!a) return;
         var h=(a.getAttribute('href')||'');
         if(h.charAt(0)!=='#') return;
