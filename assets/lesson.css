@@ -264,7 +264,12 @@ html.ln-page .site-header:not(.solid) header.masthead{
    ▶ 크기는 아래 두 줄, 색은 위쪽 변수 두 줄에서 고칩니다. */
 .ln-hero-en{
   margin: 26px 0 0; font-size: clamp(17px, 1.8vw, 26px);
-  font-weight: 200; line-height: 1.62; letter-spacing: -.005em;
+  /* ★ 2026-08-06 — 줄 사이를 <b>1.62 → 1.36</b> 으로 좁혔습니다
+       (파트너 요청). 글자가 크고(최대 26px) 세 줄이 짧은 문장이라
+       1.62 는 서로 떨어져 보였습니다. 세 줄이 <b>한 덩이</b>로 읽히게
+       붙입니다.
+     ▶ 더 좁히려면 1.28 · 더 벌리려면 1.45 쪽으로 움직이십시오. */
+  font-weight: 200; line-height: 1.36; letter-spacing: -.005em;
   color: var(--ln-warm);
 }
 .ln-hero-ko{
