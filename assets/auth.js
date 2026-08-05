@@ -512,7 +512,8 @@ function needInnerSpace() {
            currentColor 라 어느 헤더에서든 색이 따라옵니다. */
         var MYTAG = '<i style="font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.04em;margin-left:6px;padding:2px 6px;border-radius:4px;border:1px solid currentColor;opacity:.7;vertical-align:1px">마이페이지</i>';
 
-        al.innerHTML = '<a href="/account/mypage.html">'+esc(name)+'님'+(typeLabel?' ('+esc(typeLabel)+')':'')+MYTAG+'</a> '
+        /* ★ 회원 종류 (일반) 를 뗐습니다 — assets/app.js 와 같은 까닭 */
+        al.innerHTML = '<a href="/account/mypage.html">'+esc(name)+'님'+MYTAG+'</a> '
           + (noInner ? '' : '<a href="#" data-oc-inner="1" id="oc-hdr-inner">이너스페이스</a> ')
           + '<a href="#" id="oc-hdr-logout">로그아웃</a>';
         if (!noInner) needInnerSpace();

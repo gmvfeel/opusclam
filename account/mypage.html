@@ -845,7 +845,9 @@
     var al=document.querySelector(".authlink"); if(!al) return;
     var nm=(m&&(m.name||m.username))||(session.user.email)||"회원";
     var tl=(m&&TYPE[m.member_type])||"";
-    al.innerHTML='<a href="/account/mypage.html">'+esc(nm)+'님'+(tl?" ("+tl+")":"")+'</a> <a href="#" id="mpHdrLogout">로그아웃</a>';
+    /* ★ 회원 종류 (일반) 를 뗐습니다 (2026-08-05 · 파트너 지시)
+       회원 종류는 아래 대시보드 「회원」 칸에서 배지로 보여 줍니다. */
+    al.innerHTML='<a href="/account/mypage.html">'+esc(nm)+'님</a> <a href="#" id="mpHdrLogout">로그아웃</a>';
     var lo=document.getElementById("mpHdrLogout");
     if(lo) lo.addEventListener("click",function(e){e.preventDefault();doLogout();});
   }

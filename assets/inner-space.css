@@ -673,7 +673,9 @@ html.ins-open [data-oc-inner]{
    (그 둘은 금빛 테두리, CLOSE 는 흰빛). */
 .ins-close{
   gap: 9px;
-  letter-spacing: .06em; font-weight: 800;
+  /* ★ 글자를 <b>얇게</b> (2026-08-05 · 파트너 지시) 800 → 500,
+     자간은 조금 넓혀(.06 → .12em) 짧아진 글자가 헐렁해 보이지 않게 합니다. */
+  letter-spacing: .12em; font-weight: 500;
   color: #fff;
   background: rgba(255,255,255,.14);
   border-color: rgba(255,255,255,.38);

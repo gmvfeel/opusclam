@@ -190,7 +190,9 @@
       +     '<span class="ins-title">INNER SPACE</span>'
       +     '<span class="ins-top-r">'
       +       '<button type="button" class="ins-tb ins-close" id="insClose">'
-      +         'INNER SPACE CLOSE <i>&#10005;</i></button>'
+      /* ★ 글자를 <b>CLOSE</b> 로 줄였습니다 (2026-08-05 · 파트너 지시)
+             「INNER SPACE CLOSE」 는 제목과 같은 말이 겹쳐 길었습니다. */
+      +         'CLOSE <i>&#10005;</i></button>'
       +     '</span>'
       +   '</div>'
 

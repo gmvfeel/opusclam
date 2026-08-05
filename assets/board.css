@@ -237,7 +237,17 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
    첫 단추가 DB 화면보다 위로 올라가 어긋나 보입니다.
    그래서 가운데 맞추기를 쓰지 않고 첫 단추의 윗변을 직접 지정합니다.
    (DB 화면에서 단추 윗변이 놓이는 자리와 같은 값입니다) */
-.pv-sidetabs{position:fixed;left:max(8px, calc(50% - 676px));top:500px;z-index:45;display:flex;flex-direction:column;gap:8px;transition:opacity .25s ease,visibility .25s ease}
+/* ★ <b>안쪽으로</b> 옮겼습니다 (2026-08-05 · 파트너 지시)
+     676px → <b>560px</b> (가운데에서 얼마나 왼쪽인가)
+
+   왜 이 값인가 — 본문(.board-view)이 <b>820px</b> 폭으로 가운데 있으므로
+   본문 왼쪽 끝은 가운데에서 410px 입니다. 단추 폭이 약 44px 이니
+     예전 : 단추 오른끝이 가운데에서 632px  → 본문과 <b>222px</b> 떨어짐
+     지금 : 단추 오른끝이 가운데에서 516px  → 본문과 <b>106px</b> 떨어짐
+   본문에 <b>닿지 않을 만큼</b>만 당겼습니다.
+ ★ max(8px, …) 는 그대로 둡니다 — 창이 좁아지면 왼쪽 끝에 붙되
+   본문과는 겹치지 않습니다(1040px 아래에서는 아예 감춥니다). */
+.pv-sidetabs{position:fixed;left:max(8px, calc(50% - 560px));top:500px;z-index:45;display:flex;flex-direction:column;gap:8px;transition:opacity .25s ease,visibility .25s ease}
 .pv-listtab,.pv-writetab{display:flex;flex-direction:column;align-items:center;gap:10px;color:#fff;text-decoration:none;padding:24px 13px 24px 10px;border-radius:0 13px 13px 0;box-shadow:0 14px 32px -8px rgba(45,33,73,.6);transition:background .15s ease,padding-left .15s ease}
 .pv-listtab{background:#372a5c}
 .pv-listtab:hover{background:#281d45;padding-left:16px}
