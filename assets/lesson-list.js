@@ -133,18 +133,167 @@
        그때 <b>원본으로 가는 길</b>을 함께 두어야 헛걸음이 되지 않습니다.
      ★ loading="lazy" — 화면에 들어올 때 불러옵니다. 목록이 무거워지지
        않게 하려는 것입니다. */
-  function embed(provider, id) {
+  function srcOf(provider, id, autoplay) {
     if (!provider || provider === 'none' || !id) return '';
-    var src = '';
     if (provider === 'youtube') {
-      src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?rel=0&modestbranding=1';
-    } else if (provider === 'vimeo') {
-      src = 'https://player.vimeo.com/video/' + encodeURIComponent(id);
-    } else return '';
+      return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id)
+           + '?rel=0&modestbranding=1&playsinline=1' + (autoplay ? '&autoplay=1' : '');
+    }
+    if (provider === 'vimeo') {
+      return 'https://player.vimeo.com/video/' + encodeURIComponent(id)
+           + (autoplay ? '?autoplay=1' : '');
+    }
+    return '';
+  }
+  function embed(provider, id) {
+    var src = srcOf(provider, id, false);
+    if (!src) return '';
     return '<div class="ln-embed"><iframe src="' + esc(src) + '"'
       + ' title="강의 영상" loading="lazy" allowfullscreen'
       + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"'
       + ' referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
+  }
+
+  /* ── 크게 보기 (라이트박스) ─────────────────────────────────
+     ★ 왜 이렇게 하나 — 마스터클래스는 <b>30분이 넘습니다</b>.
+       글 사이에 낀 작은 창으로는 끝까지 보지 않습니다. 눌렀을 때
+       화면을 가득 덮어 주면 그때부터 「본다」가 됩니다.
+     ★ 처음에는 <b>표지만</b> 둡니다 — 유튜브 틀을 미리 부르지 않으니
+       페이지가 가볍고, 재생을 누른 사람에게만 불러옵니다.
+     ★ 짜임은 <b>여기서 만들어 넣습니다</b>(styleOnce) — lesson.css 는
+       레슨:ON 전체가 함께 쓰는 파일이라, 화면 하나 때문에 공용 파일에
+       손대면 다른 화면이 조용히 망가질 수 있습니다(전에 겪었습니다).
+     ★ 닫을 때 <b>틀을 지웁니다</b> — 남겨 두면 소리가 계속 납니다. */
+  function styleOnce() {
+    if (window.__ocLbCss) return;
+    window.__ocLbCss = true;
+    var css = ''
+      + '.oc-lbtn{display:block;width:100%;padding:0;border:0;background:none;'
+      +   'font:inherit;color:inherit;cursor:pointer;text-align:left;}'
+      /* ★ .ln-video 는 「영상 준비 중」 자리표시로 만들어진 짜임이라
+         표지를 흐리게(opacity .5) 깔고 비율이 16/10 입니다. 여기서는
+         <b>실제로 볼 영상의 표지</b>이므로 더 선명하게, 영상과 같은
+         16/9 로 맞춥니다. ※ .oc-lbtn 안쪽만 바꿉니다 — .ln-video 자체를
+         건드리면 「준비 중」 자리들이 함께 달라집니다. */
+      + '.oc-lbtn .ln-video{aspect-ratio:16/9;}'
+      + '.oc-lbtn .ln-video img{opacity:.74;transition:opacity .18s ease, transform .3s ease;}'
+      + '.oc-lbtn:hover .ln-video img{opacity:.9;transform:scale(1.02);}'
+      + '.oc-lbtn .ln-play{transition:transform .18s ease, opacity .18s ease;'
+      +   'background:rgba(0,0,0,.35);}'
+      + '.oc-lbtn:hover .ln-play{transform:scale(1.12);background:rgba(0,0,0,.5);}'
+      + '.oc-lbtn .ln-video-note{font-size:12px;letter-spacing:.02em;}'
+      + '.oc-lbtn:focus-visible{outline:2px solid #a24ea7;outline-offset:3px;border-radius:10px;}'
+
+      + '.oc-lb{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;'
+      +   'justify-content:center;padding:22px;background:rgba(6,6,10,.94);'
+      +   '-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);'
+      +   'opacity:0;transition:opacity .2s ease;}'
+      + '.oc-lb.on{opacity:1;}'
+      + '.oc-lb-in{width:min(1400px,94vw);'
+      +   'max-width:calc((100vh - 160px) * 1.7778);'
+      +   'transform:scale(.96);transition:transform .22s ease;}'
+      + '@supports (height:100dvh){.oc-lb-in{max-width:calc((100dvh - 160px) * 1.7778);}}'
+      + '.oc-lb.on .oc-lb-in{transform:scale(1);}'
+      + '.oc-lb-frame{width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;'
+      +   'overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.6);}'
+      + '.oc-lb-frame iframe{width:100%;height:100%;border:0;display:block;}'
+      + '.oc-lb-cap{margin-top:14px;color:#d6d2e2;font-size:14px;line-height:1.6;}'
+      + '.oc-lb-cap b{color:#fff;font-weight:600;}'
+      + '.oc-lb-cap a{color:#c4a9e6;}'
+      + '.oc-lb-x{position:absolute;top:16px;right:18px;width:44px;height:44px;'
+      +   'border:0;border-radius:50%;background:rgba(255,255,255,.10);color:#fff;'
+      +   'font-size:20px;line-height:1;cursor:pointer;}'
+      + '.oc-lb-x:hover{background:rgba(255,255,255,.20);}'
+      + '@media (max-width:760px){.oc-lb{padding:12px;}'
+      +   '.oc-lb-in{width:100%;max-width:none;}.oc-lb-x{top:8px;right:10px;}}';
+    var s = document.createElement('style');
+    s.setAttribute('data-oc', 'lightbox');
+    s.textContent = css;
+    document.head.appendChild(s);
+  }
+
+  /* 표지 + 재생 버튼 — 누르면 라이트박스가 열립니다 */
+  function poster(o) {
+    if (!srcOf(o.video_provider, o.video_id, false)) return '';
+    var t = thumbOf(o);
+    return '<button type="button" class="oc-lbtn" data-lb="1"'
+      +   ' data-p="' + esc(o.video_provider) + '" data-i="' + esc(o.video_id) + '"'
+      +   ' data-t="' + esc(o.title || '') + '"'
+      +   ' data-c="' + esc(o.source === 'curated' ? (o.credit || '') : (o.instructor_name || '')) + '"'
+      +   ' data-u="' + esc(o.credit_url || '') + '"'
+      +   ' aria-label="영상을 크게 보기">'
+      +   '<span class="ln-video">'
+      +     (t ? '<img src="' + esc(t) + '" alt="">' : '')
+      +     '<span class="ln-play" aria-hidden="true">&#9658;</span>'
+      +     '<span class="ln-video-note">눌러서 크게 보기</span>'
+      +   '</span>'
+      + '</button>';
+  }
+
+  function openLb(d) {
+    styleOnce();
+    var src = srcOf(d.p, d.i, true);
+    if (!src) return;
+
+    var lb = document.createElement('div');
+    lb.className = 'oc-lb';
+    lb.setAttribute('role', 'dialog');
+    lb.setAttribute('aria-modal', 'true');
+    lb.innerHTML =
+        '<button type="button" class="oc-lb-x" aria-label="닫기">&#10005;</button>'
+      + '<div class="oc-lb-in">'
+      +   '<div class="oc-lb-frame"><iframe src="' + esc(src) + '" title="' + esc(d.t || '강의 영상') + '"'
+      +     ' allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"'
+      +     ' referrerpolicy="strict-origin-when-cross-origin"></iframe></div>'
+      +   '<div class="oc-lb-cap"><b>' + esc(d.t || '') + '</b>'
+      +     (d.c ? ' · ' + esc(d.c) : '')
+      +     (d.u ? ' · <a href="' + esc(d.u) + '" target="_blank" rel="noopener">원본 보기 &#8599;</a>' : '')
+      +   '</div>'
+      + '</div>';
+
+    /* 뒤 화면이 따라 움직이지 않게 잠급니다 — 자리는 기억해 둡니다 */
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var prevOv = document.body.style.overflow;
+    document.body.appendChild(lb);
+    document.body.style.overflow = 'hidden';
+    /* 한 틱 뒤에 켜야 어울림(transition)이 걸립니다 */
+    setTimeout(function () { lb.classList.add('on'); }, 10);
+
+    function close() {
+      document.removeEventListener('keydown', onKey);
+      lb.classList.remove('on');
+      /* ★ 틀을 먼저 지워야 소리가 곧바로 멈춥니다 */
+      var f = lb.querySelector('iframe'); if (f) f.setAttribute('src', '');
+      setTimeout(function () {
+        if (lb.parentNode) lb.parentNode.removeChild(lb);
+        document.body.style.overflow = prevOv || '';
+        window.scrollTo(0, y);
+      }, 200);
+    }
+    function onKey(e) { if (e.key === 'Escape' || e.keyCode === 27) close(); }
+
+    lb.querySelector('.oc-lb-x').addEventListener('click', close);
+    lb.addEventListener('click', function (e) {
+      /* 바탕을 누르면 닫습니다 — 안쪽(영상·설명)은 그대로 둡니다 */
+      if (!e.target.closest('.oc-lb-in')) close();
+    });
+    document.addEventListener('keydown', onKey);
+    setTimeout(function () { lb.querySelector('.oc-lb-x').focus(); }, 240);
+  }
+
+  /* 표지 단추에 손잡이 걸기 — 렌더가 끝난 뒤에 한 번 부릅니다 */
+  function bindLb(root) {
+    if (!root) return;
+    Array.prototype.forEach.call(root.querySelectorAll('[data-lb="1"]'), function (b) {
+      if (b.__lb) return; b.__lb = true;
+      b.addEventListener('click', function () {
+        openLb({
+          p: b.getAttribute('data-p'), i: b.getAttribute('data-i'),
+          t: b.getAttribute('data-t'), c: b.getAttribute('data-c'),
+          u: b.getAttribute('data-u')
+        });
+      });
+    });
   }
   /* 유튜브 표지 — 표지 사진을 안 올렸을 때 씁니다 (값 0원) */
   function thumbOf(o) {
@@ -415,9 +564,10 @@
         box.innerHTML = head
           + '<section class="ln-sec">' + creditBar + '<h3 class="ln-h2">About this Class</h3>'
           + '<div class="ln-about">'
-          +   (embed(o.video_provider, o.video_id)
-                /* 영상이 있으면 <b>그대로 재생</b>합니다 */
-                ? embed(o.video_provider, o.video_id)
+          +   (poster(o)
+                /* ★ 영상이 있으면 <b>표지와 재생 단추</b>를 둡니다 —
+                   누르면 화면을 가득 덮으며 크게 재생됩니다(openLb). */
+                ? poster(o)
                 /* 없으면 자리만 두고 준비 중이라고 알립니다 */
                 : '<div class="ln-video">'
                   + (thumbOf(o) ? '<img src="' + esc(thumbOf(o)) + '" alt="">' : '')
@@ -431,6 +581,11 @@
           + '</div>'
           + liveBox
           + '</section>';
+
+        /* ★ 표지 단추에 손잡이를 겁니다 — innerHTML 로 그린 뒤라야
+           요소가 실제로 생겨 있습니다. 이 줄을 빼면 눌러도 아무 일이
+           일어나지 않습니다(조용한 고장이라 찾기 어렵습니다). */
+        bindLb(box);
 
         if (live) drawApply(o, me);
         drawOthers(o);
