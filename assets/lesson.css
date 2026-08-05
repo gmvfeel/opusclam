@@ -185,15 +185,23 @@ html.ln-page .site-header:not(.solid) header.masthead{
      ★ 왜 덮는가 — 제목(LESSON:ON)과 안내 글이 사진 위에 놓입니다.
        사진의 밝은 부분(건반·손)과 글자가 겹치면 읽히지 않습니다.
        아래로 갈수록 짙어지게 해서 <b>본문과 이어지게</b> 합니다. */
-  --ln-hero-veil: .58;
-  --ln-hero-pos: center 22%;
+  /* ★ 2026-08-06 — 파트너 요청으로 <b>건반과 손이 더 보이게</b> 조절
+       어둠  .58 → .46   ·   자리  22% → 10%
+     건반과 손은 사진의 <b>위쪽</b>에 있습니다. 그래서 두 가지를 함께
+     움직였습니다 — 덜 덮고(veil), 위쪽을 보이게(pos). 하나만 바꾸면
+     「밝아졌지만 여전히 어두운 아래쪽」이거나 「건반은 보이는데 어두워
+     안 보임」이 됩니다. */
+  --ln-hero-veil: .46;
+  --ln-hero-pos: center 10%;
 
   background:
-    /* ① 위에서 아래로 짙어지는 어둠 — 글자를 읽히게 하고 본문과 잇습니다 */
+    /* ① 위에서 아래로 짙어지는 어둠 — 글자를 읽히게 하고 본문과 잇습니다
+       ★ 맨 위는 <b>덜 덮습니다</b>(×.72) — 건반이 거기 있습니다.
+         대신 아래쪽은 짙게 해서 본문과 자연스럽게 잇습니다. */
     linear-gradient(180deg,
-      rgba(12,12,16, calc(var(--ln-hero-veil) * .92)) 0%,
-      rgba(12,12,16, calc(var(--ln-hero-veil) * 1.02)) 48%,
-      rgba(12,12,16, .96) 82%,
+      rgba(12,12,16, calc(var(--ln-hero-veil) * .72)) 0%,
+      rgba(12,12,16, calc(var(--ln-hero-veil) * .96)) 44%,
+      rgba(12,12,16, .94) 80%,
       var(--ln-bg) 100%),
     /* ② 사진 */
     url('/assets/lesson-hero.jpg') var(--ln-hero-pos) / cover no-repeat,
