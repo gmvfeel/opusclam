@@ -281,3 +281,55 @@ footer a{color:var(--tx4)}
   /* 푸터의 아주 작은 글자도 조금 키웁니다 */
   footer a, .foot a{ font-size:11px; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   전체메뉴 (회원 화면 공용)              2026-08-05 · 파트너 지적
+
+   ★ 무엇이 잘못됐었나
+     회원 헤더(partials/header-auth.html)의 「전체메뉴」 단추는
+     <b>아무것에도 이어져 있지 않았습니다.</b> 여는 코드도, 열릴 메뉴도
+     없었습니다(메인 헤더의 .fullmenu 는 partials/header.html 에만 있음).
+     그래서 로그인·가입·마이페이지 등 <b>모든 회원 화면에서</b> 눌러도
+     아무 일이 없었습니다.
+
+   ★ 어떻게 했나
+     메인의 큰 전체메뉴를 베껴 오지 않고, <b>오른쪽에서 미끄러져 나오는
+     서랍</b>을 둡니다. 내용은 assets/auth.js 가 <b>헤더에 이미 있는
+     링크</b>를 그대로 모아 만듭니다 — 메뉴 목록을 두 곳에 적어 두면
+     반드시 한 곳을 빠뜨립니다.
+   ══════════════════════════════════════════════════════════════ */
+.oc-fm{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(18,20,32,.5);
+  opacity:0;visibility:hidden;
+  transition:opacity .22s ease,visibility .22s ease;
+}
+.oc-fm.on{opacity:1;visibility:visible}
+.oc-fm-panel{
+  position:absolute;top:0;right:0;bottom:0;
+  width:min(340px,86vw);
+  background:var(--bg);border-left:1px solid var(--line);
+  padding:20px 20px 34px;overflow-y:auto;
+  transform:translateX(100%);transition:transform .26s ease;
+}
+.oc-fm.on .oc-fm-panel{transform:none}
+.oc-fm-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.oc-fm-top b{font-size:11px;letter-spacing:.16em;color:var(--tx3);font-weight:800}
+.oc-fm-x{
+  width:36px;height:36px;border:1px solid var(--icon-b);border-radius:9px;
+  background:transparent;cursor:pointer;color:var(--tx2);
+  font-family:inherit;font-size:17px;line-height:1;
+}
+.oc-fm-x:hover{color:var(--tx);border-color:var(--tx3)}
+.oc-fm h4{
+  margin:20px 0 4px;font-size:10.5px;letter-spacing:.14em;
+  color:var(--tx4);font-weight:800;
+}
+.oc-fm a{
+  display:block;padding:11px 10px;border-radius:9px;
+  font-size:14.5px;font-weight:600;color:var(--tx);text-decoration:none;
+}
+.oc-fm a:hover{background:var(--chip)}
+.oc-fm a[aria-disabled="true"]{color:var(--tx4);cursor:default}
+.oc-fm a[aria-disabled="true"]:hover{background:none}
+html.oc-fm-open{overflow:hidden}

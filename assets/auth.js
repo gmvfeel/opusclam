@@ -232,6 +232,13 @@
        로드된 페이지에서만 그린다. (auth.js 만 쓰는 게시판 등 다른 페이지에
        점 덩어리가 잘못 끼어드는 것을 방지) */
     if(!document.querySelector('link[href*="auth.css"]')) return;
+    /* ★ <b>무늬를 쓰지 않는 화면</b>은 건너뜁니다 (2026-08-05 · 파트너 지시)
+       마이페이지가 대시보드가 되면서 카드가 화면을 가득 채웁니다. 그
+       뒤로 별자리 무늬가 비쳐 어수선했습니다.
+       &lt;html data-no-net&gt; 를 달아 둔 화면에서는 그리지 않습니다.
+     ★ 이 파일이 무늬를 <b>스스로 만들어 붙이므로</b>, 화면에서 &lt;div&gt; 만
+       지워서는 없어지지 않습니다 — 반드시 이 관문이 있어야 합니다. */
+    if(document.documentElement.hasAttribute('data-no-net')) return;
     var el=document.getElementById('oc-net');
     if(!el){ el=document.createElement('div'); el.id='oc-net'; el.className='oc-net'; el.setAttribute('aria-hidden','true'); document.body.insertBefore(el, document.body.firstChild); }
     if(el.dataset.done) return; el.dataset.done='1';
@@ -301,7 +308,101 @@
       idEl.addEventListener('input',sync); domEl.addEventListener('input',sync);
     });
   }
-  function init(){ net(); eyes(); guide(); cal(); email(); }
+  /* ── 전체메뉴 서랍 ─────────────────────────────────────────
+     ★ 회원 헤더의 「전체메뉴」 단추가 <b>아무것에도 안 이어져</b> 있었습니다.
+       (2026-08-05 · 파트너 지적 — 눌러도 아무 일이 없었습니다)
+
+     ★ 메뉴 목록을 <b>여기 적지 않습니다.</b> 헤더에 이미 있는 링크
+       (.gnb .nav a 와 .gnb .authlink a)를 <b>누를 때 모아</b> 만듭니다.
+         · 목록을 두 곳에 적으면 반드시 한 곳을 빠뜨립니다
+         · .authlink 는 로그인 확인 뒤에 채워지므로, <b>누르는 순간</b>
+           모으면 늘 지금 상태가 담깁니다
+     ★ 단추는 화면마다 뒤늦게 그려질 수 있어, 문서 전체에 <b>한 번만</b>
+       귀를 달아 둡니다(위임). 그러면 언제 그려져도 걸립니다. */
+  function fmBuild(){
+    var box = document.getElementById('oc-fm');
+    if (box) return box;
+
+    box = document.createElement('div');
+    box.className = 'oc-fm';
+    box.id = 'oc-fm';
+    box.innerHTML = '<div class="oc-fm-panel">'
+      + '<div class="oc-fm-top"><b>MENU</b>'
+      +   '<button type="button" class="oc-fm-x" aria-label="닫기">&#10005;</button></div>'
+      + '<div class="oc-fm-body"></div>'
+      + '</div>';
+    document.body.appendChild(box);
+
+    /* 닫는 길 — 닫기 단추 · 바깥 누르기 · Esc */
+    box.addEventListener('click', function(e){
+      if (e.target === box || (e.target.closest && e.target.closest('.oc-fm-x'))) fmClose();
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') fmClose();
+    });
+    return box;
+  }
+
+  function fmClose(){
+    var box = document.getElementById('oc-fm');
+    if (box) box.classList.remove('on');
+    document.documentElement.classList.remove('oc-fm-open');
+  }
+
+  function fmOpen(){
+    var box = fmBuild();
+    var body = box.querySelector('.oc-fm-body');
+    if (!body) return;
+
+    function pick(sel){
+      return [].slice.call(document.querySelectorAll(sel)).filter(function(a){
+        return (a.textContent || '').trim();
+      });
+    }
+    function line(a){
+      var t = (a.textContent || '').trim();
+      var h = a.getAttribute('href') || '#';
+      var off = a.getAttribute('aria-disabled') === 'true';
+      return '<a href="' + h + '"' + (off ? ' aria-disabled="true"' : '') + '>' + t + '</a>';
+    }
+
+    var html = '';
+    var menus = pick('.gnb .nav a');
+    if (menus.length) html += '<h4>MENU</h4>' + menus.map(line).join('');
+
+    var mine = pick('.gnb .authlink a');
+    if (mine.length) html += '<h4>MY</h4>' + mine.map(line).join('');
+
+    var util = pick('.gnb .util a');
+    if (util.length) html += '<h4>ALLIANCE</h4>' + util.map(line).join('');
+
+    body.innerHTML = html || '<h4>MENU</h4><a href="/home.html">오퍼스클램 메인</a>';
+
+    /* 서랍 안의 링크를 누르면 서랍은 닫습니다 (같은 화면 안 이동일 때) */
+    body.addEventListener('click', function(e){
+      var a = e.target.closest && e.target.closest('a');
+      if (!a) return;
+      if (a.getAttribute('aria-disabled') === 'true') { e.preventDefault(); return; }
+      fmClose();
+    });
+
+    box.classList.add('on');
+    document.documentElement.classList.add('oc-fm-open');
+  }
+
+  function fullmenu(){
+    if (window.__ocFmBound) return;
+    window.__ocFmBound = true;
+    document.addEventListener('click', function(e){
+      var b = e.target.closest && e.target.closest('.gnb .burger');
+      if (!b) return;
+      e.preventDefault();
+      var box = document.getElementById('oc-fm');
+      if (box && box.classList.contains('on')) fmClose(); else fmOpen();
+    });
+  }
+
+  function init(){ net(); eyes(); guide(); cal(); email(); fullmenu(); }
   if(document.readyState!=='loading') init(); else document.addEventListener('DOMContentLoaded', init);
 })();
 
