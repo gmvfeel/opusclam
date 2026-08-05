@@ -297,6 +297,67 @@
     });
   }
 
+  /* ── 생년월일 · 고르는 상자 세 개 ─────────────────────────
+     ★ 왜 달력을 쓰지 않나 (2026-08-05 · 파트너 지적)
+       input type="date" 의 달력은 <b>브라우저가 그립니다.</b> 그래서
+       브라우저마다 다르고, 어두운 화면에서 흐트러져 보였습니다.
+       시안(07)도 「선택 / 선택 / 선택」 세 개입니다 — 브라우저에 맡기지
+       않으면 어디서나 같게 보입니다.
+     ★ <b>날 수를 달마다 다시 셉니다</b> — 2월을 고르면 29일까지,
+       4월을 고르면 30일까지만 나옵니다. 그러지 않으면 2월 31일 같은
+       날짜를 고를 수 있게 되고, 표에 넣을 때 오류가 납니다.
+     ★ 윤년도 셈합니다 (2024년 2월은 29일). */
+  function birthInit() {
+    var Y = $('fBirthY'), M = $('fBirthM'), D = $('fBirthD');
+    if (!Y || !M || !D) return;
+
+    var now = new Date().getFullYear();
+    var hy = '<option value="">선택</option>';
+    /* 가르치실 분이므로 올해부터 열 해 전까지는 뺍니다 */
+    for (var y = now - 10; y >= 1930; y--) hy += '<option value="' + y + '">' + y + '</option>';
+    Y.innerHTML = hy;
+
+    var hm = '<option value="">선택</option>';
+    for (var m = 1; m <= 12; m++) hm += '<option value="' + m + '">' + m + '월</option>';
+    M.innerHTML = hm;
+
+    function days() {
+      var y = parseInt(Y.value, 10), m = parseInt(M.value, 10);
+      var keep = D.value;
+      var last = 31;
+      if (m) {
+        /* 그 달의 <b>0일</b> = 앞 달의 마지막 날. 윤년을 저절로 셈합니다. */
+        last = new Date(y || 2000, m, 0).getDate();
+      }
+      var hd = '<option value="">선택</option>';
+      for (var d = 1; d <= last; d++) hd += '<option value="' + d + '">' + d + '일</option>';
+      D.innerHTML = hd;
+      if (keep && parseInt(keep, 10) <= last) D.value = keep;
+    }
+    Y.addEventListener('change', days);
+    M.addEventListener('change', days);
+    days();
+  }
+  /* 세 상자를 YYYY-MM-DD 로 합칩니다 — 하나라도 비면 null 입니다 */
+  function birthGet() {
+    var y = ($('fBirthY') || {}).value, m = ($('fBirthM') || {}).value, d = ($('fBirthD') || {}).value;
+    if (!y || !m || !d) return null;
+    return y + '-' + ('0' + m).slice(-2) + '-' + ('0' + d).slice(-2);
+  }
+  /* YYYY-MM-DD 를 세 상자에 나눠 넣습니다 */
+  function birthSet(v) {
+    if (!v) return;
+    var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return;
+    var Y = $('fBirthY'), M = $('fBirthM'), D = $('fBirthD');
+    if (!Y || !M || !D) return;
+    Y.value = String(parseInt(m[1], 10));
+    M.value = String(parseInt(m[2], 10));
+    /* 달을 정한 뒤에 날 수를 다시 세야 그 날이 목록에 있습니다 */
+    M.dispatchEvent(new Event('change'));
+    D.value = String(parseInt(m[3], 10));
+  }
+
   /* ══ ③ 신청 ══════════════════════════════════════════════════ */
   function apply() {
     var gate = $('lnGate'), form = $('lnForm'), btns = $('lnBtns'), sayBox = $('lnSay');
@@ -316,6 +377,7 @@
     function note(html) { gate.innerHTML = '<div class="ln-none">' + html + '</div>'; }
 
     fillFields($('fField'), false);
+    birthInit();
 
     /* 「기타」를 고르면 직접 적는 칸을 보여 줍니다 */
     $('fField').addEventListener('change', function () {
@@ -390,7 +452,7 @@
             $('fName').value = ME.name || '';
             $('fPhone').value = ME.phone || '';
             $('fEmail').value = ME.email || u.email || '';
-            $('fBirth').value = ME.birth || '';
+            birthSet(ME.birth);
             $('fMajor').value = [ME.school_name, ME.field].filter(Boolean).join(' · ');
             if (ME.photo_url) {
               photoUrl = ME.photo_url;
@@ -410,7 +472,7 @@
                   $('fCountry').value = o.school_country || '';
                   $('fDegree').value = o.school_degree || '';
                   $('fMajor').value = o.school_major || '';
-                  $('fBirth').value = o.birth || '';
+                  birthSet(o.birth);
                   $('fBio').value = o.bio || '';
                   $('fBioN').textContent = String(($('fBio').value || '').length);
                   if (o.photo_url) { photoUrl = o.photo_url; $('fPhoto').innerHTML = '<img src="' + esc(photoUrl) + '" alt="">'; }
@@ -534,7 +596,7 @@
         school_country: ($('fCountry').value || '').trim() || null,
         school_degree: $('fDegree').value || null,
         school_major: ($('fMajor').value || '').trim() || null,
-        birth: $('fBirth').value || null,
+        birth: birthGet(),
         photo_url: photoUrl || null,
         bio: bio,
         cert_url: certUrl || null,

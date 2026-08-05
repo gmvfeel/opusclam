@@ -146,10 +146,27 @@
             </div>
           </div>
 
+          <!-- ★ 생년월일을 <b>고르는 상자 세 개</b>로 바꿨습니다
+                 (2026-08-05 · 파트너 지적 — 달력이 이상하게 나왔습니다)
+
+               까닭 — input type="date" 의 달력은 <b>우리가 그리는 것이
+               아니라 브라우저가 그립니다.</b> 그래서 브라우저마다 모양이
+               다르고, 어두운 화면에서는 제대로 안 보이는 경우가 있습니다.
+               (color-scheme:dark 를 넣어도 완전히 잡히지 않았습니다)
+
+             ★ 시안(07_인스트럭터신청)도 <b>「선택 / 선택 / 선택」 세 개</b>
+               입니다. 시안이 맞았습니다 — 브라우저에 맡기지 않으면
+               어디서나 같게 보입니다.
+             ★ 값은 assets/lesson-instructor.js 가 YYYY-MM-DD 로 합쳐
+               보냅니다(표는 그대로 date 칸입니다). -->
           <div class="ln-fld">
-            <label for="fBirth">생년월일</label>
+            <label>생년월일</label>
             <div class="ln-fld-b">
-              <input type="date" id="fBirth">
+              <div class="ln-row">
+                <select id="fBirthY" style="flex:0 0 110px" aria-label="태어난 해"></select>
+                <select id="fBirthM" style="flex:0 0 92px"  aria-label="태어난 달"></select>
+                <select id="fBirthD" style="flex:0 0 92px"  aria-label="태어난 날"></select>
+              </div>
               <div class="ln-hint"><b>다른 회원에게 보이지 않습니다.</b></div>
             </div>
           </div>
