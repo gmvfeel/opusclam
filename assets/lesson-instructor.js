@@ -71,7 +71,10 @@
   /* 활동분야 고르는 상자 채우기 (목록·신청이 함께 씁니다) */
   function fillFields(sel, withAll) {
     if (!sel) return;
-    var h = withAll ? '<option value="">분류선택 · 전체</option>' : '<option value="">선택하세요</option>';
+    /* ★ 첫 줄 글자를 시안과 같게 (2026-08-05 · 파트너 지시)
+         목록에서는 「분류선택」 — 고르지 않으면 전체가 나옵니다
+         신청폼에서는 「선택하세요」 — 반드시 골라야 하는 칸입니다 */
+    var h = withAll ? '<option value="">분류선택</option>' : '<option value="">선택하세요</option>';
     FIELDS.forEach(function (f) { h += '<option value="' + esc(f) + '">' + esc(f) + '</option>'; });
     sel.innerHTML = h;
   }

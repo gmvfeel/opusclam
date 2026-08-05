@@ -384,17 +384,47 @@ html.ln-page .site-header:not(.solid) header.masthead{
 .ln-pager button.on{ background: var(--ln-vi); border-color: var(--ln-vi); color: #fff; font-weight: 700; }
 .ln-pager button:disabled{ opacity: .35; cursor: default; }
 
-/* ══ 고르는 상자 (분류선택) ══════════════════════════════════ */
+/* ══ 고르는 상자 (분류선택) ══════════════════════════════════
+   시안(06)의 오른쪽 위 상자를 따릅니다 — 어두운 네모 + 오른쪽 홑화살표.
+
+   ★ 무엇이 잘못됐었나 (2026-08-05 · 파트너 지적)
+     ⑴ <b>펼친 목록이 흰 바탕</b>에 흐린 글자였습니다.
+        펼쳐지는 목록은 우리가 CSS 로 그리는 것이 아니라 <b>브라우저·운영체제</b>
+        가 그립니다. 그래서 상자만 어둡게 해도 목록은 밝은 채로 남습니다.
+        → <b>color-scheme: dark</b> 로 「이 요소는 어두운 결」이라고 알려 줍니다.
+          그러면 브라우저가 목록을 어둡게 그립니다.
+        → option 에도 색을 적어 둡니다 (일부 브라우저는 이것만 봅니다).
+     ⑵ 화살표를 <b>삼각형 두 조각</b>으로 흉내 내고 있었습니다.
+        시안은 홑화살표(∨)라 결이 달랐습니다.
+        → SVG 를 주소로 심어 <b>또렷한 홑화살표</b>로 바꿉니다.
+
+   ★ 자리 — 오른쪽에 붙입니다. .ln-sec-top 이 flex 이므로
+     margin-left:auto 로 <b>스스로 오른쪽으로</b> 갑니다(감싸는 쪽 규칙이
+     바뀌어도 흔들리지 않게 여기서 정해 둡니다). */
 .ln-select{
-  height: 38px; padding: 0 34px 0 13px; min-width: 168px;
-  background: var(--ln-bg2) no-repeat right 12px center;
-  background-image: linear-gradient(45deg, transparent 50%, var(--ln-tx3) 50%),
-                    linear-gradient(135deg, var(--ln-tx3) 50%, transparent 50%);
-  background-size: 5px 5px, 5px 5px;
-  background-position: right 16px center, right 12px center;
+  /* ★ 이 한 줄이 <b>펼친 목록</b>을 어둡게 만듭니다 */
+  color-scheme: dark;
+
+  margin-left: auto;
+  height: 40px; padding: 0 40px 0 15px; min-width: 180px;
+  background-color: var(--ln-bg2);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237f7f8c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px 14px;
   border: 1px solid var(--ln-line2); border-radius: 4px;
-  font-family: inherit; font-size: 12.5px; color: var(--ln-tx);
-  appearance: none; -webkit-appearance: none; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  color: var(--ln-tx2);
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease;
+}
+.ln-select:hover{ border-color: var(--ln-tx3); color: var(--ln-tx); }
+.ln-select:focus{ outline: none; border-color: var(--ln-vi2); color: var(--ln-tx); }
+/* 펼친 목록의 각 줄 — 브라우저가 그리지만, 이 값을 보는 것도 있습니다 */
+.ln-select option{
+  background: #1c1c24; color: #f2f2f5;
+  font-size: 13px; padding: 8px 12px;
 }
 
 /* ══ 신청폼 (07) ════════════════════════════════════════════
