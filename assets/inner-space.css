@@ -32,16 +32,17 @@
      파트너님이 올려 주신 시안 띠에서 실제로 뽑은 색은 이렇습니다 —
        왼쪽 #4b5681 (푸른빛 남보라) → 가운데 #66588c → 오른쪽 #895b9a
      예전 것(#4b3f7a → #8a63a8)은 <b>보라 쪽으로 치우치고 밝았습니다.</b>
-     그래서 시안 색을 기준으로 삼고 <b>74% 로 눌러</b> 짙게 했습니다 —
-       #38405f → #4b4168 → #654372
+     그래서 시안 색을 기준으로 삼고 <b>68% 로 눌러</b> 짙게 했습니다 —
+       #333a58 → #453c5f → #5d3e69
      흰 카드가 더 또렷하게 떠 보입니다.
 
    ★ 짙기는 <b>이 세 값만</b> 고치면 됩니다 (시안 원색 × 비율).
        시안 원색 : #4b5681 · #66588c · #895b9a
        86% : #414a6f · #584c78 · #764e84   (2026-08-05 첫 시도)
        80% : #3c4567 · #524670 · #6e497b
-     ▶ 74% : #38405f · #4b4168 · #654372   (지금 쓰는 것)
-       68% : #333a58 · #453c5f · #5d3e69   (더 짙게 하려면)
+       74% : #38405f · #4b4168 · #654372
+     ▶ 68% : #333a58 · #453c5f · #5d3e69   (지금 쓰는 것)
+       62% : #2e3450 · #3f3757 · #553961   (더 짙게 하려면)
 
    ★ 방향도 시안에 맞춰 <b>거의 가로</b>(105deg)로 두었습니다.
      예전 135deg 는 대각선이라 위쪽 왼편이 유난히 밝았습니다.
@@ -49,7 +50,7 @@
      번짐이 세면 위가 다시 밝아집니다. */
   background:
     radial-gradient(1200px 420px at 18% -10%, rgba(255,255,255,.09), transparent 60%),
-    linear-gradient(105deg, #38405f 0%, #4b4168 46%, #654372 100%);
+    linear-gradient(105deg, #333a58 0%, #453c5f 46%, #5d3e69 100%);
   padding: 0 0 30px;
   opacity: 0;
   transition: opacity .3s ease;
@@ -71,6 +72,12 @@
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  /* ★ 위아래 <b>가운데로 모읍니다</b> (2026-08-05 · 파트너 지시)
+     패널이 메인비주얼+두 띠의 높이를 채우다 보니 내용보다 300px 쯤
+     남습니다. CLOSE 가 위로 올라간 뒤 그 자리가 통째로 비어 보였습니다.
+     가운데로 모으면 위아래로 고르게 나뉘어 <b>일부러 둔 여백</b>처럼
+     보입니다. (내용이 더 길면 이 값은 아무 일도 하지 않습니다) */
+  justify-content: center;
   padding: var(--ins-pad-top, 116px) 24px 0;
 }
 
@@ -293,7 +300,9 @@ html.ins-open [data-oc-inner]{
 
 /* ── 회원정보 메뉴 ─────────────────────────────────────────── */
 .ins-menu-list{ list-style: none; margin: 0; padding: 0; }
-.ins-menu-list li + li{ margin-top: 1px; }
+/* ★ 줄마다 <b>옅은 구분선</b>을 둡니다 (2026-08-05 · 파트너 지시)
+   첫 줄 위와 마지막 줄 아래에는 두지 않습니다(li + li). */
+.ins-menu-list li + li{ border-top: 1px solid rgba(43,39,64,.075); }
 .ins-menu-list a{
   display: flex; align-items: center; gap: 9px;
   padding: 9px 11px; border-radius: 8px;
@@ -332,7 +341,11 @@ html.ins-open [data-oc-inner]{
 /* ── 도넛 (내 관심분야 통계) ───────────────────────────────── */
 .ins-pie-wrap{ text-align: center; }
 .ins-pie-wrap svg{ display: inline-block; }
-.ins-legend{ margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+/* ★ 범례도 줄마다 <b>옅은 구분선</b>으로 나눕니다 (2026-08-05 · 파트너 지시)
+   gap 으로 띄우던 것을 padding 으로 바꾸어야 선이 줄 사이에 놓입니다. */
+.ins-legend{ margin-top: 12px; display: flex; flex-direction: column; gap: 0; }
+.ins-legend .row{ padding: 5px 0; }
+.ins-legend .row + .row{ border-top: 1px solid rgba(43,39,64,.075); }
 .ins-legend .row{ display: flex; align-items: center; gap: 8px; font-size: 11.5px; }
 .ins-legend .pc{
   flex: 0 0 34px; text-align: right;
@@ -346,6 +359,36 @@ html.ins-open [data-oc-inner]{
 }
 
 /* ── 세로 막대 (상위 관심컨텐츠 Update) ────────────────────── */
+/* ── 막대 차트의 <b>격자선·눈금값</b> ─────────────────────────
+   (2026-08-05 · 파트너 지시 — 시안처럼 선이 보이게)
+
+   짜임
+     .ins-plot            자리를 잡는 틀 (키는 막대 칸과 같습니다)
+       .ins-yax           왼쪽 눈금값 — 틀 왼쪽에 겹쳐 놓습니다
+       .ins-vbars         막대 칸 — 격자선을 이 안에 넣습니다
+     .ins-vlabels         갈래 이름 — 막대와 같은 만큼 왼쪽을 비웁니다
+
+   ★ 격자선을 .ins-plot 이 아니라 <b>.ins-vbars 안</b>에 넣습니다.
+     .ins-plot 을 기준으로 하면 아래 이름 줄까지 키에 들어가 <b>선이
+     어긋납니다.</b> */
+.ins-plot{ position: relative; }
+.ins-yax{
+  position: absolute; left: 0; bottom: 0;
+  width: 27px; height: 112px;
+}
+.ins-yax span{
+  position: absolute; right: 0;
+  transform: translateY(50%);
+  font-size: 9px; line-height: 1; white-space: nowrap;
+  color: var(--text-3, #8a8ca0);
+}
+.ins-plot .ins-vbars{ margin-left: 31px; position: relative; }
+.ins-vbars .gl{
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: rgba(43,39,64,.07);
+}
+.ins-plot + .ins-vlabels{ margin-left: 31px; }
+
 .ins-vbars{
   display: flex; align-items: flex-end; justify-content: space-around;
   gap: 8px; height: 112px; padding: 0 2px;

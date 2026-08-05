@@ -33,6 +33,14 @@
 (function () {
   'use strict';
 
+  /* ★ <b>두 번 실행되는 것</b>을 막습니다 (2026-08-05)
+     이 파일은 두 길로 실려 옵니다 —
+       ① 화면이 &lt;script&gt; 로 직접 싣기
+       ② app.js · auth.js 가 로그인을 확인한 뒤 스스로 싣기
+     둘이 겹치면 누름을 <b>두 번 받아 패널이 두 개</b> 열립니다.
+     이미 한 번 돌았으면(window.OCInner 가 있으면) 조용히 물러납니다. */
+  if (window.OCInner) return;
+
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
 
@@ -109,6 +117,25 @@
       .replace(/&/g,'&amp;').replace(/</g,'&lt;')
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  /* ── 눈금을 <b>보기 좋은 수</b>로 다듬습니다 ─────────────────
+     ★ 왜 (2026-08-05 · 파트너 지시 — 시안처럼 격자선을 보이게)
+       격자선을 그리려면 「어디에 몇 줄을 그을까」 를 정해야 합니다.
+       가장 큰 값을 그대로 쓰면 6 · 17 · 2110 처럼 어수선한 눈금이 나옵니다.
+       그래서 눈금 간격을 1 · 2 · 5 · 10 · 20 · 50 … 로 다듬습니다.
+     ★ 글 수·조회수는 <b>정수</b>이므로 소수 눈금은 쓰지 않습니다.
+       보기 : 6 → 0·2·4·6 / 17 → 0·5·10·15·20 / 2110 → 0·1000·2000·3000 */
+  function ticks(v) {
+    v = Math.max(1, Math.ceil(v));
+    var step = Math.ceil(v / 4);
+    var mag = Math.pow(10, Math.floor(Math.log(step) / Math.LN10));
+    var norm = step / mag;
+    step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+    var top = step * Math.ceil(v / step);
+    var out = [];
+    for (var t = 0; t <= top + 0.0001; t += step) out.push(Math.round(t));
+    return { top: top, list: out };
+  }
+
   function nf(n) { return String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
   /* ── Supabase ───────────────────────────────────────────── */
@@ -461,16 +488,35 @@
     var max = 1;
     show.forEach(function (x) { if (x.n > max) max = x.n; });
 
+    /* ★ <b>격자선과 눈금값</b>을 넣습니다 (2026-08-05 · 파트너 지시 — 시안처럼)
+       ★ 막대 높이도 <b>다듬은 눈금</b>(tk.top)을 기준으로 잡습니다.
+         가장 큰 값을 기준으로 삼으면 막대 끝이 격자선과 <b>어긋납니다.</b> */
+    var tk = ticks(max);
+    var PH = 88;   /* 막대가 자랄 수 있는 높이 (칸은 112px, 위 24px 은 숫자 자리) */
+    function atY(t) { return (t / tk.top * PH).toFixed(1); }
+
     box.innerHTML = '<h4>상위 관심컨텐츠 Update 현황 <em>최근 7일</em></h4>'
       + (pick.length ? '' : '<div class="ins-hint">관심분야를 담으시면 그것만 보여 드립니다</div>')
-      + '<div class="ins-vbars">'
-      +   show.map(function (x) {
-            var h = Math.max(6, Math.round(x.n / max * 88));
-            return '<div class="ins-vbar">'
-              + '<div class="n">' + nf(x.n) + '</div>'
-              + '<div class="col" style="height:' + h + 'px"></div>'
-              + '</div>';
-          }).join('')
+      + '<div class="ins-plot">'
+      /* 왼쪽 눈금값 */
+      +   '<div class="ins-yax">'
+      +     tk.list.map(function (t) {
+              return '<span style="bottom:' + atY(t) + 'px">' + nf(t) + '</span>';
+            }).join('')
+      +   '</div>'
+      +   '<div class="ins-vbars">'
+      /* 격자선 — 0 은 칸 아래 축선이 이미 그 몫을 합니다 */
+      +     tk.list.map(function (t) {
+              return t ? '<i class="gl" style="bottom:' + atY(t) + 'px"></i>' : '';
+            }).join('')
+      +     show.map(function (x) {
+              var h = Math.max(3, Math.round(x.n / tk.top * PH));
+              return '<div class="ins-vbar">'
+                + '<div class="n">' + nf(x.n) + '</div>'
+                + '<div class="col" style="height:' + h + 'px"></div>'
+                + '</div>';
+            }).join('')
+      +   '</div>'
       + '</div>'
       + '<div class="ins-vlabels">'
       +   show.map(function (x) {
@@ -494,21 +540,27 @@
     }
     /* 조회수가 적은 것부터 왼쪽에 두어 <b>오르는 모양</b>으로 보이게 합니다 */
     var pts = tops.slice().reverse();
-    var W = 320, H = 110, PAD = 14;
+
+    /* ★ <b>격자선과 왼쪽 눈금값</b>을 넣습니다 (2026-08-05 · 파트너 지시 — 시안처럼)
+       왼쪽에 눈금값 자리(PL)를 만들고, 눈금마다 옅은 가로선을 긋습니다. */
+    var W = 320, H = 126;
+    var PL = 32, PR = 8, PT = 12, PB = 20;   /* 왼·오른·위·아래 여백 */
     var max = 1;
     pts.forEach(function (x) { if ((x.v || 0) > max) max = x.v; });
+    var tk = ticks(max);
 
-    var step = pts.length > 1 ? (W - PAD * 2) / (pts.length - 1) : 0;
+    var yBot = H - PB, yTop = PT;
+    function yOf(v) { return yBot - (v / tk.top) * (yBot - yTop); }
+
+    var step = pts.length > 1 ? (W - PL - PR) / (pts.length - 1) : 0;
     var xy = pts.map(function (x, i) {
-      var px = PAD + step * i;
-      var py = H - PAD - ((x.v || 0) / max) * (H - PAD * 2);
-      return [px, py];
+      return [PL + step * i, yOf(x.v || 0)];
     });
     var line = xy.map(function (p2, i) {
       return (i ? 'L' : 'M') + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1);
     }).join(' ');
-    var area = line + ' L' + xy[xy.length - 1][0].toFixed(1) + ' ' + (H - PAD)
-      + ' L' + xy[0][0].toFixed(1) + ' ' + (H - PAD) + ' Z';
+    var area = line + ' L' + xy[xy.length - 1][0].toFixed(1) + ' ' + yBot
+      + ' L' + xy[0][0].toFixed(1) + ' ' + yBot + ' Z';
 
     box.innerHTML = '<h4>내 컨텐츠 조회수 <em>많이 읽힌 순</em></h4>'
       + '<svg class="ins-line" viewBox="0 0 ' + W + ' ' + H + '" role="img"'
@@ -517,8 +569,15 @@
       +     '<stop offset="0%" stop-color="#8a63a8" stop-opacity=".26"/>'
       +     '<stop offset="100%" stop-color="#8a63a8" stop-opacity="0"/>'
       +   '</linearGradient></defs>'
-      +   '<line x1="' + PAD + '" y1="' + (H - PAD) + '" x2="' + (W - PAD)
-      +     '" y2="' + (H - PAD) + '" stroke="#e6e6ee" stroke-width="1"/>'
+      /* 격자선 + 눈금값 (맨 아래 0 은 축선이라 조금 진하게) */
+      +   tk.list.map(function (t) {
+            var y = yOf(t).toFixed(1);
+            return '<line x1="' + PL + '" y1="' + y + '" x2="' + (W - PR) + '" y2="' + y
+              + '" stroke="' + (t ? '#eeedf4' : '#e0dfe9') + '" stroke-width="1"/>'
+              + '<text x="' + (PL - 6) + '" y="' + y + '" text-anchor="end"'
+              + ' dominant-baseline="middle" font-size="8.5" fill="#9a9bad">'
+              + nf(t) + '</text>';
+          }).join('')
       +   '<path d="' + area + '" fill="url(#insLnG)"/>'
       +   '<path d="' + line + '" fill="none" stroke="#8a63a8" stroke-width="2"'
       +     ' stroke-linejoin="round" stroke-linecap="round"/>'

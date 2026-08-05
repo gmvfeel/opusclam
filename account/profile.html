@@ -93,8 +93,11 @@
 
 <main class="me-wrap">
   <a class="me-back" href="/account/mypage.html">← 마이페이지</a>
-  <!-- ★ 헤더에 로그아웃 링크가 없어 여기에 직접 놓습니다 -->
-  <a class="me-back" href="#" data-oc-inner="1" style="margin-left:14px">이너스페이스 ↗</a>
+  <!-- ★ 본문의 「이너스페이스 ↗」 우회 링크를 없앴습니다 (2026-08-05)
+       이 화면이 assets/app.js 를 싣지 않아 헤더가 로그인 상태를 보여 주지
+       못했고(계속 「로그인 · 회원가입」), 그래서 본문에 우회로를 두었습니다.
+       이제 app.js 를 싣게 했으니 헤더에 이름·이너스페이스·로그아웃이
+       제대로 나옵니다. -->
 
   <div class="me-head">
     <span class="tag">MY PROFILE</span>
@@ -207,9 +210,15 @@
 <div id="oc-footer"></div>
 
 <script src="/assets/include.js"></script>
+<!-- ★ app.js 를 더했습니다 (2026-08-05 · 파트너 지시)
+     헤더의 「로그인 · 회원가입」 을 회원 이름·이너스페이스·로그아웃으로
+     바꾸는 일은 이 파일이 합니다. 없어서 이 화면만 로그인 전처럼 보였습니다.
+     푸터(#oc-footer)도 이 파일이 그리므로 함께 살아납니다. -->
+<script src="/assets/app.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
-<script src="/assets/inner-space.js"></script>
+<!-- ★ inner-space.js 는 app.js 가 <b>로그인한 사람에게만</b> 싣습니다.
+     여기서 또 싣으면 두 번 돌아 패널이 두 개 열립니다. -->
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="/assets/addr.js"></script>
 
