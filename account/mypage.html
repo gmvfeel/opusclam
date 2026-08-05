@@ -925,6 +925,33 @@
   var DASH_COLORS = ['#7a5cc4','#e0a83c','#5b9bd5','#6fcf8f','#e08585',
                      '#9b8ec4','#c8a04a','#7fb8a8','#b07fa8','#8a95c4'];
 
+  /* ── 표 이름으로 상세 화면 주소 만들기 ─────────────────────
+     ★ 갈래마다 상세 화면이 다릅니다 —
+         핫토픽   /community/hottopic-view.html?id=…
+         정보SPOT /spot/spot-view.html?id=…
+       그 짝짓기는 <b>assets/interests.js 의 CATS</b> 만 갖고 있어야 합니다.
+       여기에 또 적으면 게시판이 늘 때 한 곳을 빠뜨립니다.
+     ★ 이름(cat)이 아니라 <b>표 이름(tb)</b>으로 찾습니다 — 정보SPOT 은
+       한 표를 일곱 갈래가 나눠 쓰므로 이름으로는 맞지 않습니다.
+       (막대 그래프에서 같은 실수를 한 번 했습니다)
+     ★ tb 는 서버 함수 oc_my_stats() 가 함께 돌려줍니다
+       (sql/inner-tops-link-01.sql 로 더한 칸입니다).
+       그 SQL 을 아직 실행하지 않았으면 tb 가 없으므로 <b>링크 없이</b>
+       제목만 보입니다 — 고장 나지 않습니다. */
+  function viewOf(tb){
+    if (!tb) return '';
+    var C = (window.OCInterests && window.OCInterests.CATS) || [];
+    for (var i = 0; i < C.length; i++) {
+      if (C[i].tb === tb && C[i].view) return C[i].view;
+    }
+    return '';
+  }
+  function linkOf(x){
+    var v = viewOf(x && x.tb);
+    if (!v || !x || x.id == null) return '';
+    return v + '?id=' + encodeURIComponent(x.id);
+  }
+
   function dcHead(title, note){
     return '<div class="dc-h"><h3>' + title + '</h3>'
       + (note ? '<em>' + note + '</em>' : '') + '</div>';
@@ -1095,11 +1122,13 @@
         +   (tops.length
               ? '<ul class="dc-list">'
                 + tops.slice(0, 5).map(function(x){
-                    /* ★ oc_my_stats() 의 tops 는 <b>제목(t)과 조회수(v)만</b>
-                       줍니다 — 주소 칸이 없어 링크를 걸 수 없습니다.
-                       (칸 이름을 짐작하지 않는다는 원칙입니다) */
+                    /* ★ 이제 <b>제목을 누르면 그 글로 갑니다</b> (2026-08-05)
+                       oc_my_stats() 가 표 이름(tb)을 함께 주므로 주소를
+                       만들 수 있습니다. 주소를 못 만들면 글자만 보입니다. */
+                    var h = linkOf(x);
+                    var t2 = esc(x.t || '-');
                     return '<li><span class="t" title="' + esc(x.t || '') + '">'
-                      + esc(x.t || '-')
+                      + (h ? '<a href="' + esc(h) + '">' + t2 + '</a>' : t2)
                       + '</span><span class="n">' + nf(x.v) + '회</span></li>';
                   }).join('')
                 + '</ul>'
@@ -1313,7 +1342,12 @@
       + items.map(function(x){
           var w = Math.max(2, Math.round((x[key] || 0) / max * 100));
           return '<div class="st-bar' + (hot ? ' hot' : '') + '">'
-            + '<span class="nm" title="' + esc(x.nm) + '">' + esc(x.nm) + '</span>'
+            /* ★ 주소가 있으면 <b>제목을 누를 수 있게</b> 합니다 (2026-08-05)
+               「많이 읽힌 내 글」에만 주소가 붙습니다. 관심분야 새 글 막대는
+               갈래 이름이라 주소가 없고, 그때는 예전처럼 글자만 나옵니다. */
+            + '<span class="nm" title="' + esc(x.nm) + '">'
+            +   (x.href ? '<a href="' + esc(x.href) + '">' + esc(x.nm) + '</a>' : esc(x.nm))
+            + '</span>'
             + '<span class="tr"><i style="width:' + w + '%"></i></span>'
             + '<span class="n">' + nf(x[key]) + '<em>' + esc(unit) + '</em></span>'
             + '</div>';
@@ -1400,7 +1434,7 @@
         +   '<p class="note">조회수가 높은 순서입니다.</p>'
         +   (tops.length
               ? stBars(tops.map(function(x){
-                  return { nm:x.t, v:x.v };
+                  return { nm:x.t, v:x.v, href:linkOf(x) };
                 }), 'v', '회', true)
               : '<div class="st-none">아직 읽힌 기록이 없습니다.</div>')
         + '</div>';
