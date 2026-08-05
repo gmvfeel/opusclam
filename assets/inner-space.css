@@ -76,6 +76,13 @@
      아래 여백을 B 만큼 주면 내용은 B/2 만큼 올라갑니다.
    ▶ 지금 90px (약 45px 올라갑니다)
      더 올리려면 이 값을 키우고, 내리려면 줄이면 됩니다. */
+/* ★ 카드 사이 간격을 <b>변수 하나</b>로 모았습니다 (2026-08-05)
+   격자(가로·세로) · 줄기 안쪽 · 넷째 줄기, <b>세 곳이 이 값을 함께</b> 씁니다.
+   앞서 세 곳을 따로 고쳤는데, 한 곳을 빠뜨리면 가로 사이와 세로 사이가
+   어긋나 보입니다. 앞으로는 <b>이 줄만</b> 고치면 됩니다.
+     13px → 10px → 8px (지금) */
+.ins-wrap{ --ins-gap: 8px; }
+
 .ins-wrap{
   max-width: 1360px;
   margin: 0 auto;
@@ -306,16 +313,13 @@ html.ins-open [data-oc-inner]{
      아래로 큰 빈 자리가 생기고 영상 카드가 그만큼 내려갔습니다.
      이제 줄기마다 스스로 쌓이므로 카드가 <b>바로 아래에 붙습니다.</b> */
   grid-template-areas: 'left mid pie right';
-  /* ★ 카드 사이를 <b>13 → 10px</b> 로 좁혔습니다 (2026-08-05 · 파트너 지시)
-     ★ 세 곳(격자 · 줄기 안쪽 · 넷째 줄기)을 <b>같은 값</b>으로 맞춰야
-       가로 사이와 세로 사이가 같아 보입니다. 한 곳만 바꾸면 어긋납니다. */
-  gap: 10px;
+  gap: var(--ins-gap, 8px);
   align-items: start;
 }
 
 /* 줄기 안쪽은 위에서부터 차곡차곡 쌓습니다 */
 .ins-left, .ins-mid, .ins-col3{
-  display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  display: flex; flex-direction: column; gap: var(--ins-gap, 8px); min-width: 0;
 }
 .ins-left { grid-area: left; }
 .ins-mid  { grid-area: mid; }
@@ -338,7 +342,7 @@ html.ins-open [data-oc-inner]{
    한 묶음으로 두면 gap(13px)만큼만 떨어집니다. */
 .ins-right{
   grid-area: right;
-  display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  display: flex; flex-direction: column; gap: var(--ins-gap, 8px); min-width: 0;
 }
 
 /* ── 카드 — 흰 바탕 ───────────────────────────────────────── */
