@@ -110,6 +110,37 @@
     return '';
   }
 
+  /* ── 영상 재생틀 ───────────────────────────────────────────
+     ★ <b>공식 임베드만</b> 씁니다. 그것이 유튜브·Vimeo 가 스스로 열어 둔
+       길이고, 조회수도 원작자에게 갑니다. 영상을 내려받아 우리 저장통에
+       올리는 일은 하지 않습니다.
+     ★ 유튜브는 <b>youtube-nocookie</b> 를 씁니다 — 보는 사람 쪽에
+       쿠키를 덜 남기는 주소입니다(개인정보처리방침과 결이 맞습니다).
+     ★ 「공유 → 퍼가기」가 없는 영상은 여기서 재생되지 않습니다.
+       그때 <b>원본으로 가는 길</b>을 함께 두어야 헛걸음이 되지 않습니다.
+     ★ loading="lazy" — 화면에 들어올 때 불러옵니다. 목록이 무거워지지
+       않게 하려는 것입니다. */
+  function embed(provider, id) {
+    if (!provider || provider === 'none' || !id) return '';
+    var src = '';
+    if (provider === 'youtube') {
+      src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?rel=0&modestbranding=1';
+    } else if (provider === 'vimeo') {
+      src = 'https://player.vimeo.com/video/' + encodeURIComponent(id);
+    } else return '';
+    return '<div class="ln-embed"><iframe src="' + esc(src) + '"'
+      + ' title="강의 영상" loading="lazy" allowfullscreen'
+      + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"'
+      + ' referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
+  }
+  /* 유튜브 표지 — 표지 사진을 안 올렸을 때 씁니다 (값 0원) */
+  function thumbOf(o) {
+    if (o.cover_url) return o.cover_url;
+    if (o.video_provider === 'youtube' && o.video_id)
+      return 'https://i.ytimg.com/vi/' + encodeURIComponent(o.video_id) + '/hqdefault.jpg';
+    return '';
+  }
+
   /* 「지금 보는 탭」 표시 — 서브메뉴는 include.js 가 나중에 넣습니다 */
   function markTabs() {
     var n = 0;
@@ -162,12 +193,16 @@
       if (o.status === 'ongoing') badges += '<span class="ln-badge">진행중</span>';
       else if (o.status === 'open') badges += '<span class="ln-badge">모집중</span>';
       if (closed) badges += '<span class="ln-badge done">마감</span>';
+      /* ★ 큐레이션은 <b>표시해 둡니다</b> — 회원이 「오퍼스클램이 만든 것」과
+         「골라 모은 것」을 구별할 수 있어야 합니다. 이것을 감추면
+         나중에 신뢰를 잃습니다. */
+      if (o.source === 'curated') badges += '<span class="ln-badge cur">큐레이션</span>';
 
       var body =
           '<a class="ln-card-a" href="/lesson/lesson-view.html?id=' + encodeURIComponent(o.id) + '">'
         +   '<div class="ln-card-ph">'
         +     (badges ? '<span class="ln-badges">' + badges + '</span>' : '')
-        +     (o.cover_url ? '<img src="' + esc(o.cover_url) + '" alt="">' : '')
+        +     (thumbOf(o) ? '<img src="' + esc(thumbOf(o)) + '" alt="">' : '')
         +   '</div>'
         +   '<div class="ln-card-body">'
         +     '<div class="ln-card-cat">' + esc(o.field || cfg.en) + '</div>'
@@ -299,6 +334,19 @@
           + '</div>';
 
         /* About this Class — 왼쪽 영상 자리 / 오른쪽 맛보기 바 + plan */
+        /* ★ 큐레이션이면 <b>출처를 또렷하게</b> 보여 줍니다.
+           작게 숨기면 「우리가 만든 것」처럼 보입니다. 그러면 안 됩니다. */
+        var creditBar = (o.source === 'curated')
+          ? '<div class="ln-credit">'
+            + '<span class="k">큐레이션</span>'
+            + '<span class="v">이 영상은 <b>' + esc(o.credit || '원작자')
+            + '</b> 가 공개한 것입니다. 오퍼스클램은 <b>골라서 소개</b>합니다.'
+            + (o.credit_url
+                ? ' <a href="' + esc(o.credit_url) + '" target="_blank" rel="noopener">원본 보기 &#8599;</a>'
+                : '')
+            + '</span></div>'
+          : '';
+
         var sampleBar =
             '<div class="ln-sample">'
           +   '<span class="k">&#9656; CLASS SAMPLE</span>'
@@ -337,13 +385,18 @@
         }
 
         box.innerHTML = head
-          + '<section class="ln-sec"><h3 class="ln-h2">About this Class</h3>'
+          + '<section class="ln-sec">' + creditBar + '<h3 class="ln-h2">About this Class</h3>'
           + '<div class="ln-about">'
-          +   '<div class="ln-video">'
-          +     (o.cover_url ? '<img src="' + esc(o.cover_url) + '" alt="">' : '')
-          +     '<span class="ln-play" aria-hidden="true">&#9658;</span>'
-          +     '<span class="ln-video-note">영상은 준비 중입니다</span>'
-          +   '</div>'
+          +   (embed(o.video_provider, o.video_id)
+                /* 영상이 있으면 <b>그대로 재생</b>합니다 */
+                ? embed(o.video_provider, o.video_id)
+                /* 없으면 자리만 두고 준비 중이라고 알립니다 */
+                : '<div class="ln-video">'
+                  + (thumbOf(o) ? '<img src="' + esc(thumbOf(o)) + '" alt="">' : '')
+                  + '<span class="ln-play" aria-hidden="true">&#9658;</span>'
+                  + '<span class="ln-video-note">'
+                  + (live ? '실시간 레슨입니다' : '영상은 준비 중입니다') + '</span>'
+                  + '</div>')
           +   '<div class="ln-panel">' + sampleBar
           +     '<h3 class="ln-h2" style="margin-top:26px">' + planTitle + '</h3>' + plan
           +   '</div>'
@@ -493,7 +546,7 @@
             return '<article class="ln-card">'
               + '<a class="ln-card-a" href="/lesson/lesson-view.html?id=' + encodeURIComponent(x.id) + '">'
               +   '<div class="ln-card-ph">'
-              +     (x.cover_url ? '<img src="' + esc(x.cover_url) + '" alt="">' : '') + '</div>'
+              +     (thumbOf(x) ? '<img src="' + esc(thumbOf(x)) + '" alt="">' : '') + '</div>'
               +   '<div class="ln-card-body">'
               +     '<div class="ln-card-cat">' + esc(x.field || '') + '</div>'
               +     '<div class="ln-card-t">' + esc(x.title || '-') + '</div>'
@@ -504,5 +557,46 @@
     }
   }
 
-  window.OCLesson = { list: list, view: view, TABS: TABS, FIELDS: FIELDS };
+  /* ══ ③ 대문의 최근 강의 ══════════════════════════════════════
+     ★ 탭을 가리지 않고 <b>모두</b>에서 최근 것을 뽑습니다.
+       대문은 「무엇이 있는지」 보여 주는 자리이므로 갈래를 나누지 않습니다. */
+  function home(opt) {
+    opt = opt || {};
+    var box = $(opt.box || 'lnHomeList');
+    if (!box) return;
+    waitSb(function (c) {
+      if (!c) { box.innerHTML = '<div class="ln-none">자료를 불러오지 못했습니다.</div>'; return; }
+      c.from('lessons_public').select('*')
+        .order('sort_order', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(opt.limit || 4)
+        .then(function (r) {
+          var rows = (r.data) || [];
+          if (!rows.length) {
+            box.innerHTML = '<div class="ln-none" style="grid-column:1/-1">'
+              + '<b>강의는 준비 중입니다.</b><br>'
+              + '마스터클래스 · 공개레슨 · 1:1레슨 · 그룹레슨이 차례로 열립니다.<br>'
+              + '먼저 가르치실 분을 모으고 있습니다 —'
+              + '<a class="ln-vd" style="margin-top:16px" href="/lesson/instructor-apply.html">'
+              + '인스트럭터 신청 &#8594;</a></div>';
+            return;
+          }
+          box.innerHTML = rows.map(function (o) {
+            return '<article class="ln-card">'
+              + '<a class="ln-card-a" href="/lesson/lesson-view.html?id=' + encodeURIComponent(o.id) + '">'
+              +   '<div class="ln-card-ph">'
+              +     (o.source === 'curated' ? '<span class="ln-badges"><span class="ln-badge cur">큐레이션</span></span>' : '')
+              +     (thumbOf(o) ? '<img src="' + esc(thumbOf(o)) + '" alt="">' : '') + '</div>'
+              +   '<div class="ln-card-body">'
+              +     '<div class="ln-card-cat">' + esc(o.field || '') + '</div>'
+              +     '<div class="ln-card-t">' + esc(o.title || '-') + '</div>'
+              +     '<div class="ln-card-d">' + esc(o.summary || '') + '</div>'
+              +     '<span class="ln-pill">CLASS INFORMATION &#8594;</span>'
+              +   '</div></a></article>';
+          }).join('');
+        });
+    });
+  }
+
+  window.OCLesson = { list: list, view: view, home: home, TABS: TABS, FIELDS: FIELDS };
 })();

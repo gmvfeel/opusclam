@@ -409,6 +409,72 @@ html.ln-page .site-header:not(.solid) header.masthead{
   text-align: center; font-size: 11px; color: var(--ln-tx3);
 }
 
+/* ══ 영상 재생틀 ═════════════════════════════════════════════
+   ★ 16:9 를 지킵니다 — 틀이 흔들리면 화면이 덜컹거립니다.
+   ★ 공식 임베드만 씁니다(유튜브 nocookie · Vimeo player). */
+.ln-embed{
+  position: relative; aspect-ratio: 16 / 9;
+  background: #000; border: 1px solid var(--ln-line);
+  overflow: hidden;
+}
+.ln-embed iframe{
+  position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block;
+}
+
+/* ══ 큐레이션 표시 ═══════════════════════════════════════════
+   ★ 회원이 <b>「오퍼스클램이 만든 것」과 「골라 모은 것」</b>을 구별할 수
+     있어야 합니다. 작게 숨기면 나중에 신뢰를 잃습니다. */
+.ln-badge.cur{ background: #3d6e99; }
+.ln-credit{
+  display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+  margin: 0 0 22px; padding: 13px 16px;
+  background: rgba(61,110,153,.10);
+  border: 1px solid rgba(61,110,153,.34);
+  font-size: 12px; line-height: 1.7;
+}
+.ln-credit .k{
+  flex: 0 0 auto; padding: 2px 9px; border-radius: 999px;
+  font-size: 10px; font-weight: 800; letter-spacing: .06em;
+  background: #3d6e99; color: #fff;
+}
+.ln-credit .v{ flex: 1 1 260px; color: var(--ln-tx2); }
+.ln-credit .v b{ color: var(--ln-tx); }
+.ln-credit a{ color: var(--ln-blue); font-weight: 700; margin-left: 4px; }
+
+/* ══ 내 강의 목록 ════════════════════════════════════════════ */
+.lw-list{ list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ln-line2); }
+.lw-list li{
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 13px 4px; font-size: 12.5px;
+  border-bottom: 1px solid var(--ln-line);
+}
+.lw-list .st{
+  flex: 0 0 auto; padding: 3px 9px; border-radius: 3px;
+  font-size: 10.5px; font-weight: 800;
+  background: #4a4a54; color: #fff;
+}
+.lw-list .st.open{    background: #3f7a4f; }
+.lw-list .st.ongoing{ background: #8a3ea0; }
+.lw-list .st.closed{  background: #6a6a76; }
+.lw-list .st.draft{   background: #4a4a54; }
+.lw-list .tb{ flex: 0 0 auto; font-size: 11px; color: var(--ln-tx3); }
+.lw-list .cu{
+  flex: 0 0 auto; padding: 2px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 800; background: #3d6e99; color: #fff;
+}
+.lw-list .t{
+  flex: 1 1 200px; min-width: 0; color: var(--ln-tx);
+  font-weight: 600; text-decoration: none;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lw-list .t:hover{ color: var(--ln-blue); text-decoration: underline; }
+.lw-list .ed{
+  flex: 0 0 auto; padding: 5px 12px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; text-decoration: none;
+  color: var(--ln-blue); border: 1px solid var(--ln-blue);
+}
+.lw-list .ed:hover{ background: var(--ln-blue); color: #0d0d10; }
+
 /* CLASS SAMPLE 바 */
 .ln-sample{
   display: flex; align-items: center; justify-content: space-between;
