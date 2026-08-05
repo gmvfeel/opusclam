@@ -61,7 +61,20 @@
     }
   };
 
-  var FIELDS = ['STRINGS', 'BRASS', 'WINDS', 'PERCUSSIONS', '작곡/이론', '기타'];
+  /* ── 분야 (여덟 갈래) ──────────────────────────────────────────
+     ★ 이 목록은 <b>네 파일이 함께</b> 씁니다 — 하나만 고치면 어긋납니다.
+         assets/lesson-curate.js      큐레이션 등록
+         assets/lesson-instructor.js  인스트럭터 신청 · 목록 분류
+         assets/lesson-list.js        강의 목록 분류
+         assets/lesson-write.js       강의 등록
+     ★ 2026-08-06 — PIANO · VOCAL 을 더했습니다.
+       마스터클래스 영상은 <b>피아노가 가장 많고</b>, 성악도 적지 않은데
+       처음 목록(시안)은 오케스트라 악기만 담고 있어 둘 다 「기타」로
+       들어갔습니다. 그러면 회원이 분야로 찾을 수 없고, 피아노·성악
+       전공 강사가 <b>자기 분야를 고를 수 없습니다</b>.
+     ★ 값을 바꿀 때는 표의 CHECK 제약도 함께 봐야 합니다
+       (sql/lesson-fields-01.sql 참고). */
+  var FIELDS = ['PIANO', 'STRINGS', 'BRASS', 'WINDS', 'PERCUSSIONS', 'VOCAL', '작곡/이론', '기타'];
 
   var STATUS_LABEL = { open: '모집중', ongoing: '진행중', closed: '마감', draft: '준비중' };
 
