@@ -417,25 +417,52 @@ html.ins-open [data-oc-inner]{
 
 /* ── 회원 카드 ─────────────────────────────────────────────── */
 .ins-me{ text-align: center; }
+/* ★ <b>overflow:hidden 을 걷어냈습니다</b> (2026-08-05 · 파트너 지적 —
+     오른쪽 아래 수정 단추가 잘 안 보였습니다)
+
+   까닭 — 이 틀이 <b>동그랗게 잘라내는(overflow:hidden)</b> 상자였습니다.
+   그런데 수정 단추가 right:-1px · bottom:-1px 로 <b>틀 밖으로</b> 조금
+   나가 있어서, 동그란 잘라내기에 <b>단추의 바깥쪽이 깎였습니다.</b>
+   그래서 반달처럼 남아 무엇인지 알아볼 수 없었습니다.
+
+   고침 — 틀은 자르지 않고, <b>사진 자체를</b> 동그랗게 만듭니다.
+   그러면 사진은 그대로 동그랗고 단추는 온전히 보입니다. */
 .ins-ph{
   position: relative; width: 84px; height: 84px; margin: 2px auto 11px;
-  border-radius: 50%; overflow: hidden;
+  border-radius: 50%;
   background: var(--paper-2, #f4f4f8);
   border: 1px solid var(--line, #e6e6ee);
   display: grid; place-items: center;
 }
-.ins-ph img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+.ins-ph img{
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  border-radius: 50%;
+}
 .ins-ph span{
   font-family: var(--display, inherit); font-size: 30px; font-weight: 800;
   color: var(--text-3, #8a8ca0);
 }
+/* ★ 수정 단추를 <b>눈에 띄게</b> (2026-08-05 · 파트너 지시)
+     · 조금 크게 (26 → 30px)
+     · 흰 테두리를 <b>두껍게</b>(2 → 2.5px) — 사진 색이 무엇이든 떨어져 보입니다
+     · 옅은 그림자로 떠 보이게
+     · 손을 올리면 조금 커집니다
+   ★ 자리도 <b>바깥으로</b> 조금 더 냅니다 — 이제 잘리지 않으므로
+     사진에 겹치지 않고 옆에 붙어 앉습니다. */
 .ins-ph-edit{
-  position: absolute; right: -1px; bottom: -1px;
-  width: 26px; height: 26px; border-radius: 50%;
+  position: absolute; right: -3px; bottom: -3px;
+  width: 30px; height: 30px; border-radius: 50%;
   display: grid; place-items: center;
-  background: #8a63a8; color: #fff;
-  font-size: 12px; text-decoration: none;
-  border: 2px solid #fff;
+  background: linear-gradient(135deg, #8a63a8, #6b4f96);
+  color: #fff;
+  font-size: 14px; line-height: 1; text-decoration: none;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 7px -2px rgba(45,30,80,.5);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.ins-ph-edit:hover{
+  transform: scale(1.08);
+  box-shadow: 0 4px 11px -3px rgba(45,30,80,.6);
 }
 .ins-nm{
   font-family: var(--display, inherit);
@@ -808,6 +835,9 @@ html[data-theme="dark"] .ins-soon .t:hover{ color: #9ec4e6; }
 html[data-theme="dark"] .ins-soon .d.hot{
   background: rgba(224,133,133,.22); color: #eda58f;
 }
+
+/* 사진 수정 단추 — 테두리를 어두운 카드 색으로 (흰 테두리는 다크에서 튑니다) */
+html[data-theme="dark"] .ins-ph-edit{ border-color: var(--paper-3, #1f1f1f); }
 
 /* 「관심분야 새 글」 — 구분선 · 갈래 알약 */
 html[data-theme="dark"] .ins-fresh li{ border-bottom-color: rgba(255,255,255,.085); }
