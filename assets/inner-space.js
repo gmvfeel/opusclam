@@ -335,18 +335,22 @@
                ★ 여기 적은 활동은 실제로 점수가 붙는 것들입니다 —
                  point_log 의 code 가 그것을 증명합니다
                  (qna_ask · qna_answer · post · comment · db_enrich · login · got_like).
-               ★ <b>점수 숫자는 적지 않았습니다.</b> 실제 값은 서버 트리거가
-                 정하는데 그 SQL 이 저장소에 없어 확인할 수 없었습니다.
-                 확인되지 않은 숫자를 적으면 <b>틀린 안내</b>가 됩니다.
-                 (파트너님이 값을 알려 주시면 그때 넣겠습니다)
+               ★ <b>점수는 LEVEL.doc 의 값</b>입니다 (2026-08-05 · 파트너 제공) —
+                   커뮤니티 글 100 · 지식나눔 질문 150 · 답글 100 ·
+                   댓글 50 · 내 글이 추천받음 10 · DB보강(컨펌 후) 100 ·
+                   매일 로그인 100(LEVEL I) · 연주회 티켓 등록 1,000
+                 짐작이 아니라 규칙 문서에서 옮긴 것입니다.
+               ★ 만약 서버 트리거의 값이 이와 다르면 <b>트리거가 옳습니다</b> —
+                 그때는 이 숫자를 트리거에 맞춰 고쳐야 합니다.
                ★ 가장 높은 등급이면 붙이지 않습니다 — 채울 것이 없습니다. */
             + (nx
                 ? '<div class="ins-lv-how">'
                   + '<span class="k">점수 채우는 길</span>'
-                  + '<a href="/community/qna.html">지식나눔 질문 · 답글</a>'
-                  + '<a href="/community/hottopic.html">커뮤니티 글 쓰기</a>'
-                  + '<a href="/db/index.html">DB보강</a>'
-                  + '<span class="q">댓글 · 내 글이 추천받기 · 매일 로그인도 쌓입니다</span>'
+                  + '<a href="/community/qna.html">지식나눔 질문<b>150</b></a>'
+                  + '<a href="/community/qna.html">지식나눔 답글<b>100</b></a>'
+                  + '<a href="/community/hottopic.html">커뮤니티 글 쓰기<b>100</b></a>'
+                  + '<a href="/db/index.html">DB보강<b>100</b></a>'
+                  + '<span class="q">댓글 50 · 내 글이 추천받기 10 · 매일 로그인 100</span>'
                   + '</div>'
                 : '')
             + '</div>'
@@ -638,6 +642,31 @@
                 + '<div class="col" style="height:' + h + 'px"></div>'
                 + '</div>';
             }).join('')
+      /* ★ <b>막대 위를 잇는 선</b> (2026-08-05 · 파트너 지시)
+             막대만 있으면 「어느 쪽이 크다」만 보이고, 선을 얹으면
+             <b>흐름</b>이 보입니다.
+
+           ★ 자리 계산 —
+             칸이 c 개면 i 번째 막대의 가운데는 (i+0.5)/c 입니다.
+             그래서 viewBox 를 <b>0~100</b> 으로 두고 그 비율로 찍습니다.
+             ★ 이 셈이 맞으려면 칸 사이 gap 이 <b>0</b> 이어야 합니다 —
+               gap 이 있으면 가운데가 조금씩 밀립니다. 그래서 CSS 에서
+               .ins-plot .ins-vbars 의 gap·padding 을 0 으로 두었습니다
+               (막대 사이 틈은 칸 안쪽 여백이 이미 만들어 줍니다).
+           ★ preserveAspectRatio="none" 으로 가로를 늘리므로, 선 굵기가
+             함께 늘어나지 않게 <b>vector-effect</b> 를 씁니다. */
+      +     (function () {
+              var c = show.length;
+              if (!c) return '';
+              var pp = show.map(function (x, i) {
+                var h = Math.max(3, Math.round(x.n / tk.top * PH));
+                return ((i + 0.5) / c * 100).toFixed(2) + ',' + (PH - h).toFixed(1);
+              }).join(' ');
+              return '<svg class="ins-vline" viewBox="0 0 100 ' + PH + '"'
+                + ' preserveAspectRatio="none" aria-hidden="true">'
+                + '<polyline points="' + pp + '" vector-effect="non-scaling-stroke"/>'
+                + '</svg>';
+            })()
       +   '</div>'
       + '</div>'
       + '<div class="ins-vlabels">'
