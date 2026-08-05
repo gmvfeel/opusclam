@@ -468,9 +468,25 @@
            Bucket not found
          오류가 납니다. recruit 는 리쿠르트 사진 올리기에서 이미
          쓰고 있으므로 있는 것이 확실합니다.
-         ★ 폴더로 갈라 두면 나중에 정리하기 쉽습니다 — member/… */
+
+       ★ <b>경로를 고쳤습니다</b> (2026-08-05 · 파트너 지적)
+           고치기 전 : member/{내id}/…      → 올리기 거부
+           고친 뒤   : {내id}/member_…      → 정상
+
+         까닭 — 저장통 권한 규칙이 「<b>첫 칸이 내 id 인 폴더</b>에만
+         올릴 수 있다」로 되어 있습니다(Supabase 의 기본 짜임 :
+         storage.foldername(name)[1] = auth.uid()). 그런데 앞에 member/ 를
+         붙였더니 첫 칸이 member 가 되어
+           new row violates row-level security policy
+         로 막혔습니다.
+
+       ★ 이미 잘 돌고 있는 <b>리쿠르트 지원서 첨부</b>가 {내id}/app_… 를
+         쓰고 있습니다. 같은 규칙을 따르는 것이 맞습니다 —
+         권한 규칙을 새로 만들지 않아도 되고, 「남의 폴더에는 못 올린다」는
+         안전한 짜임이 그대로 유지됩니다.
+       ★ 이름 앞에 member_ 를 붙여 지원서 첨부와 구별합니다. */
       var BUCKET = 'recruit';
-      var path = 'member/' + ME.id + '/' + Date.now() + '.jpg';
+      var path = ME.id + '/member_' + Date.now() + '.jpg';
       var up = await sb.storage.from(BUCKET).upload(path, blob, {
         contentType: 'image/jpeg', upsert: true
       });
