@@ -271,17 +271,23 @@
        ★ 커뮤니티(내 커뮤니티 관리 · Inner Circle 생성)는 <b>넣지 않습니다</b>
          — 파트너와 「나중에」 로 정한 것입니다.
        ★ 「구매내역 / 수강내역」 도 아직 없습니다(쇼핑·레슨:ON 뒤에). */
+    /* ★ 마이페이지가 <b>탭 구조</b>가 되었습니다 (2026-08-05)
+       예전에는 #lvHead 처럼 <b>구역 id</b>로 갔습니다. 그런데 여덟 덩어리가
+       세로로 쌓여 있어, 눌러도 한참 스크롤된 자리에 떨어졌습니다.
+       이제 <b>탭 이름</b>으로 갑니다 — 그 탭이 곧바로 열립니다.
+         #info · #activity · #posts · #linked · #recruit · #saved
+       (받는 쪽은 account/mypage.html 의 tabInit 입니다) */
     var rows = [
-      { t:'POINT · 등급',            h:'/account/mypage.html#lvHead' },
-      { t:'업데이트 한 컨텐츠 관리',   h:'/account/mypage.html#myHead' },
-      { t:'받은 Linked / 보낸 Linked', h:'/account/mypage.html#lkHead', n:recv },
-      { t:'활동 통계',               h:'/account/mypage.html#stHead' },
+      { t:'POINT · 등급',            h:'/account/mypage.html#activity' },
+      { t:'업데이트 한 컨텐츠 관리',   h:'/account/mypage.html#posts' },
+      { t:'받은 Linked / 보낸 Linked', h:'/account/mypage.html#linked', n:recv },
+      { t:'활동 통계',               h:'/account/mypage.html#activity' },
       { t:'관심분야 관리',            h:'/account/interests.html' },
       { t:'회원정보 수정',            h:'/account/profile.html' },
       hiring
-        ? { t:'받은 지원',   h:'/account/mypage.html' }
-        : { t:'내 지원 내역', h:'/account/mypage.html' },
-      { t:'즐겨찾기 · 킵',  h:'/account/mypage.html' }
+        ? { t:'받은 지원',   h:'/account/mypage.html#recruit' }
+        : { t:'내 지원 내역', h:'/account/mypage.html#recruit' },
+      { t:'즐겨찾기 · 킵',  h:'/account/mypage.html#saved' }
     ];
 
     box.innerHTML = '<h4>회원정보</h4>'
@@ -618,11 +624,11 @@
                       : esc(ini))
                   + '</span>';
               }).join('')
-            + '<a class="ins-face more" href="/account/mypage.html#lkHead">'
+            + '<a class="ins-face more" href="/account/mypage.html#linked">'
             +   (lk.length > 7 ? '+' + (lk.length - 7) : '&#8250;') + '</a>'
             + '</div>'
           : '<div class="ins-none">아직 이어진 사람이 없습니다<br>'
-            + '<a class="ins-more" href="/account/mypage.html#lkHead">Linked 청하기 &#8594;</a></div>');
+            + '<a class="ins-more" href="/account/mypage.html#linked">Linked 청하기 &#8594;</a></div>');
   }
 
   /* ── 영상 카드 ─────────────────────────────────────────────

@@ -10,6 +10,75 @@
 <link rel="stylesheet" href="/assets/auth.css">
 <style>
   .mp-wrap{max-width:640px;margin:56px auto;padding:0 20px}
+
+  /* ══ 요약 띠 ═══════════════════════════════════════════════
+     ★ 어느 탭에 있어도 「내가 누구인지」가 위에 남아 있게 합니다.
+     ★ 색은 auth.css 의 변수를 씁니다 — 그러면 다크모드가 저절로 따라옵니다. */
+  .mp-sum{
+    display:flex; align-items:center; gap:16px;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:16px; padding:18px 20px; margin-bottom:22px;
+  }
+  .mp-sum-load{font-size:13px;color:var(--tx3)}
+  .mp-sum-ph{
+    flex:0 0 auto; width:54px; height:54px; border-radius:50%;
+    overflow:hidden; background:var(--bg2); border:1px solid var(--line);
+    display:grid; place-items:center;
+    font-size:20px; font-weight:800; color:var(--tx3);
+  }
+  .mp-sum-ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .mp-sum-who{flex:1 1 auto; min-width:0}
+  .mp-sum-who .nm{
+    font-size:17px; font-weight:800; color:var(--tx);
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  .mp-sum-who .sub{margin-top:3px; font-size:11.5px; color:var(--tx3)}
+  .mp-sum-nums{
+    flex:0 0 auto; display:flex; gap:18px;
+    padding-left:16px; border-left:1px solid var(--line);
+  }
+  .mp-sum-nums div{text-align:right}
+  .mp-sum-nums .k{display:block; font-size:10.5px; color:var(--tx3)}
+  .mp-sum-nums .v{display:block; margin-top:2px; font-size:13.5px; font-weight:800; color:var(--tx)}
+
+  /* ══ 탭 ════════════════════════════════════════════════════
+     ★ 좁은 화면에서는 <b>옆으로 밀립니다</b> — 줄을 바꾸면 두 줄이 되어
+       어느 것이 켜졌는지 알아보기 어렵습니다. */
+  .mp-tabs{
+    display:flex; gap:4px; margin-bottom:24px;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .mp-tabs::-webkit-scrollbar{display:none}
+  .mp-tab{
+    flex:0 0 auto; position:relative;
+    padding:11px 14px 13px; border:0; background:none;
+    font-family:inherit; font-size:13.5px; font-weight:700;
+    color:var(--tx3); cursor:pointer; white-space:nowrap;
+    transition:color .15s ease;
+  }
+  .mp-tab:hover{color:var(--tx2)}
+  .mp-tab.on{color:var(--tx)}
+  /* 켜진 탭 아래 밑줄 — 띠(border-bottom) 위에 겹쳐 놓습니다 */
+  .mp-tab.on::after{
+    content:''; position:absolute; left:8px; right:8px; bottom:-1px;
+    height:2px; border-radius:2px; background:var(--accent);
+  }
+
+  /* 고른 탭만 보입니다 */
+  .mp-pane{display:none}
+  .mp-pane.on{display:block}
+
+  @media (max-width:560px){
+    .mp-sum{flex-wrap:wrap; gap:12px}
+    .mp-sum-nums{
+      width:100%; padding-left:0; border-left:0;
+      padding-top:12px; border-top:1px solid var(--line);
+      justify-content:space-between; gap:10px;
+    }
+    .mp-tab{padding:10px 11px 12px; font-size:12.5px}
+  }
   .mp-head{margin-bottom:26px}
   .mp-head[hidden]{display:none}
 
@@ -373,127 +442,151 @@
       <span class="jtag">MY PAGE</span>
       <h1>마이페이지</h1>
     </div>
-    <div class="mp-card" id="mpBody">
-      <div class="mp-msg">불러오는 중…</div>
+
+    <!-- ══ 요약 띠 ═══════════════════════════════════════════
+         ★ 어느 탭에 있어도 <b>내가 누구인지</b>가 위에 남아 있게 합니다.
+           사진 · 이름 · 회원종류 · 승인상태 · 등급 · 활동점수 · OC POINT -->
+    <div class="mp-sum" id="mpSum"><div class="mp-sum-load">불러오는 중…</div></div>
+
+    <!-- ══ 탭 줄 ════════════════════════════════════════════
+         ★ 왜 탭인가 (2026-08-05 · 파트너 지시)
+           여덟 덩어리가 전부 전체폭으로 세로로 쌓여 있어, 끝까지 보려면
+           스크롤을 한참 내려야 했습니다. 기능은 다 있는데 <b>구조가
+           없었습니다.</b>
+         ★ 사이드바가 아니라 <b>가로 탭</b>입니다 — 오퍼스클램은
+           「사이드바 없는 중앙 정렬」이 대원칙입니다.
+         ★ 고른 탭만 자료를 불러옵니다(늦게 부르기). 예전에는 들어오는
+           순간 열 개 넘는 표를 다 뒤졌습니다. <b>값도 덜 들고 빠릅니다.</b>
+         ★ 주소의 #표시로 <b>바로 그 탭</b>을 열 수 있습니다 —
+           이너스페이스 메뉴가 이것을 씁니다. -->
+    <div class="mp-tabs" id="mpTabs" role="tablist">
+      <button type="button" class="mp-tab on" data-tab="info"     role="tab">내 정보</button>
+      <button type="button" class="mp-tab"    data-tab="activity" role="tab">활동 · 등급</button>
+      <button type="button" class="mp-tab"    data-tab="posts"    role="tab">내가 올린 것</button>
+      <button type="button" class="mp-tab"    data-tab="linked"   role="tab">Linked</button>
+      <button type="button" class="mp-tab"    data-tab="recruit"  role="tab">리쿠르트</button>
+      <button type="button" class="mp-tab"    data-tab="saved"    role="tab">저장함</button>
     </div>
 
-    <!-- ── 리쿠르트 지원 내역 ──────────────────────────────────
+    <!-- ───────── 내 정보 ───────── -->
+    <div class="mp-pane on" data-pane="info">
+      <div class="mp-card" id="mpBody">
+        <div class="mp-msg">불러오는 중…</div>
+      </div>
+    </div>
+
+    <!-- ───────── 활동 · 등급 ─────────
+         활동 통계와 등급·포인트는 「내 활동을 본다」는 한 가지 일이라
+         한 탭에 함께 둡니다. -->
+    <div class="mp-pane" data-pane="activity">
+      <div class="mp-head" style="display:none" id="stHead">
+        <span class="jtag">STATS</span>
+        <h1 style="font-size:24px">활동 통계</h1>
+        <p class="mp-note">
+          올리신 글이 <b>어느 갈래에 얼마나</b> 있는지, 관심분야에 <b>새 글이 얼마나</b> 왔는지,
+          <b>어느 글이 많이 읽혔는지</b> 보여 드립니다.
+        </p>
+      </div>
+      <div class="mp-card" id="stBody" style="display:none">
+        <div class="mp-msg">불러오는 중…</div>
+      </div>
+
+      <div class="mp-head" style="margin-top:44px;display:none" id="lvHead">
+        <span class="jtag">LEVEL</span>
+        <h1 style="font-size:24px">등급 · 포인트</h1>
+        <p class="mp-note">
+          글쓰기 · 댓글 · 추천받기 · DB보강으로 <b>활동점수</b>가 쌓이고, 그것이 등급을 정합니다.
+          <b>쓸포인트</b>는 유료 서비스에 쓰는 것으로, 써도 등급은 내려가지 않습니다.
+        </p>
+      </div>
+      <div class="mp-card" id="lvBody" style="display:none">
+        <div class="mp-msg">불러오는 중…</div>
+      </div>
+    </div>
+
+    <!-- ───────── 내가 올린 것 ───────── -->
+    <div class="mp-pane" data-pane="posts">
+      <div class="mp-head" style="display:none" id="myHead">
+        <span class="jtag">MY POSTS</span>
+        <h1 style="font-size:24px">내가 올린 것</h1>
+        <p class="mp-note">
+          커뮤니티와 정보SPOT에 올리신 것을 모았습니다. 제목을 누르면 그 글로 갑니다.
+          <b>고치거나 지우는 것</b>은 글 안에서 하실 수 있습니다.
+        </p>
+      </div>
+      <div class="mp-card" id="myBody" style="display:none">
+        <div class="mp-msg">불러오는 중…</div>
+      </div>
+    </div>
+
+    <!-- ───────── Linked ───────── -->
+    <div class="mp-pane" data-pane="linked">
+      <div class="mp-head" style="display:none" id="lkHead">
+        <span class="jtag">LINKED</span>
+        <h1 style="font-size:24px">Linked · 인맥</h1>
+        <p class="mp-note">
+          아는 회원과 이어 두시면 서로의 활동을 볼 수 있습니다.
+          <b>양쪽이 승낙</b>해야 이어집니다. 연락처와 주소는 이어진 사이에도 보이지 않습니다.
+        </p>
+      </div>
+      <div class="mp-card" id="lkBody" style="display:none">
+        <div class="mp-msg">불러오는 중…</div>
+      </div>
+    </div>
+
+    <!-- ───────── 리쿠르트 ─────────
          · 받은지원 — 단체·기업·학교 회원에게만 보입니다
          · 내지원  — 전공자·일반 회원에게만 보입니다
-         자격이 아니면 assets/recruit-apps.js 가 제목까지 함께 감춥니다.
-         빈 칸을 보여 주는 것보다 낫습니다. -->
-    <!-- ══ 등급과 포인트 ══════════════════════════════════════
-       ★ 점수가 쌓이는데 <b>볼 곳이 없으면</b> 있는지도 모릅니다.
-         (2026-08-04 · 트리거로 자동 셈이 붙은 뒤 만들었습니다)
-       ★ 「왜 내 점수가 이렇지?」 를 알 수 있게 <b>내역</b>도 보여 줍니다.
-       ★ 로그인하지 않았거나 함수가 없으면 이 구역을 <b>감춥니다</b> —
-         빈 상자만 남으면 어수선합니다. -->
-<!-- ══ 내가 올린 것 ══════════════════════════════════════
-       ★ 글을 쓰고 나면 <b>찾을 길이 없었습니다.</b>
-         「내가 쓴 글을 고치고 싶은데 어디 있지?」 가 됩니다.
-         (2026-08-04 · 시안의 「업데이트 한 컨텐츠 관리」 자리입니다)
-       ★ 열 갈래를 훑어 <b>한곳에 모아</b> 보여 줍니다. -->
-<!-- ══ Linked (인맥) ══════════════════════════════════════
-       ★ 시안의 「받은 Linked / 보낸 Linked」 · 「MY OC Linked」 자리입니다.
-       ★ <b>양쪽이 승낙</b>해야 이어집니다 — 한쪽이 마음대로 이으면
-         「팔로우」 가 되고, 원치 않는 사람에게 이어질 수 있습니다.
-       ★ 아이디를 <b>정확히 알 때만</b> 찾습니다 — 이름으로 훑어볼 수 있게
-         두면 회원 명부가 새어 나갑니다. -->
-<!-- ══ 활동 통계 ══════════════════════════════════════════
-       ★ 시안의 그래프 셋입니다 —
-           내 활동 분포 · 관심분야 새 글 · 많이 읽힌 내 글
-       ★ <b>열람 기록을 쌓지 않습니다.</b> 이미 있는 자료만 셉니다
-         (created_at · view_count). 「비용 최소화」 원칙입니다. -->
-    <div class="mp-head" style="margin-top:44px;display:none" id="stHead">
-      <span class="jtag">STATS</span>
-      <h1 style="font-size:24px">활동 통계</h1>
-      <p class="mp-note">
-        올리신 글이 <b>어느 갈래에 얼마나</b> 있는지, 관심분야에 <b>새 글이 얼마나</b> 왔는지,
-        <b>어느 글이 많이 읽혔는지</b> 보여 드립니다.
-      </p>
-    </div>
-    <div class="mp-card" id="stBody" style="display:none">
-      <div class="mp-msg">불러오는 중…</div>
+         자격이 아니면 assets/recruit-apps.js 가 제목까지 함께 감춥니다
+         (제목이 담는 칸의 <b>바로 앞</b>에 있어야 합니다 — 그 파일이
+          previousElementSibling 으로 찾습니다). -->
+    <div class="mp-pane" data-pane="recruit">
+      <div class="mp-head">
+        <span class="jtag">RECEIVED</span>
+        <h1 style="font-size:24px">받은 지원</h1>
+        <p class="mp-note">
+          올리신 채용공고에 들어온 지원입니다. 지원서를 열어 보시고 진행 상태를
+          <b>접수 · 검토중 · 서류합격 · 최종합격 · 불합격</b> 가운데서 고르실 수 있습니다.
+          바꾸시면 지원자의 마이페이지에 <b>곧바로 반영</b>됩니다.
+          메모는 지원자에게 보이지 않습니다.<br>
+          다만 <b>알림 메일이나 문자는 가지 않습니다.</b> 지원자가 마이페이지를 열어야
+          보이므로, 합격·불합격 같은 결과는 공고에 적어 두신 연락처로
+          <b>직접 알려 주시는 편이 좋습니다.</b><br>
+          다 처리한 지원은 <b>목록에서 숨길</b> 수 있습니다. 지우는 것이 아니라
+          이 목록에서만 감추는 것이므로, 지원자의 기록은 그대로 남고
+          <b>「숨긴 지원 보기」</b>로 언제든 되돌리실 수 있습니다.
+        </p>
+      </div>
+      <div class="mp-card" id="raRecv">
+        <div class="mp-msg">불러오는 중…</div>
+      </div>
+
+      <div class="mp-head" style="margin-top:44px">
+        <span class="jtag">APPLIED</span>
+        <h1 style="font-size:24px">내 지원 내역</h1>
+        <p class="mp-note">
+          지원하신 채용공고와 진행 상태입니다. 지원하신 단체·기업이 상태를 바꾸면
+          이곳에서 <b>바로 확인</b>하실 수 있습니다.<br>
+          상태가 바뀌어도 <b>따로 알림이 오지는 않으니</b> 이 페이지에서 살펴봐 주십시오.
+          결과 안내는 단체마다 시기가 다르고, 연락도 단체가 직접 하는 일입니다.
+          급하시면 공고의 문의처로 물어보십시오.
+          지원은 <b>최종합격 전까지</b> 취소하고 다시 내실 수 있습니다.
+        </p>
+      </div>
+      <div class="mp-card" id="raSent">
+        <div class="mp-msg">불러오는 중…</div>
+      </div>
     </div>
 
-    <div class="mp-head" style="margin-top:44px;display:none" id="lkHead">
-      <span class="jtag">LINKED</span>
-      <h1 style="font-size:24px">Linked · 인맥</h1>
-      <p class="mp-note">
-        아는 회원과 이어 두시면 서로의 활동을 볼 수 있습니다.
-        <b>양쪽이 승낙</b>해야 이어집니다. 연락처와 주소는 이어진 사이에도 보이지 않습니다.
-      </p>
-    </div>
-    <div class="mp-card" id="lkBody" style="display:none">
-      <div class="mp-msg">불러오는 중…</div>
-    </div>
-
-    <div class="mp-head" style="margin-top:44px;display:none" id="myHead">
-      <span class="jtag">MY POSTS</span>
-      <h1 style="font-size:24px">내가 올린 것</h1>
-      <p class="mp-note">
-        커뮤니티와 정보SPOT에 올리신 것을 모았습니다. 제목을 누르면 그 글로 갑니다.
-        <b>고치거나 지우는 것</b>은 글 안에서 하실 수 있습니다.
-      </p>
-    </div>
-    <div class="mp-card" id="myBody" style="display:none">
-      <div class="mp-msg">불러오는 중…</div>
-    </div>
-
-    <div class="mp-head" style="margin-top:44px;display:none" id="lvHead">
-      <span class="jtag">LEVEL</span>
-      <h1 style="font-size:24px">등급 · 포인트</h1>
-      <p class="mp-note">
-        글쓰기 · 댓글 · 추천받기 · DB보강으로 <b>활동점수</b>가 쌓이고, 그것이 등급을 정합니다.
-        <b>쓸포인트</b>는 유료 서비스에 쓰는 것으로, 써도 등급은 내려가지 않습니다.
-      </p>
-    </div>
-    <div class="mp-card" id="lvBody" style="display:none">
-      <div class="mp-msg">불러오는 중…</div>
-    </div>
-
-    <div class="mp-head" style="margin-top:44px">
-      <span class="jtag">RECEIVED</span>
-      <h1 style="font-size:24px">받은 지원</h1>
-      <p class="mp-note">
-        올리신 채용공고에 들어온 지원입니다. 지원서를 열어 보시고 진행 상태를
-        <b>접수 · 검토중 · 서류합격 · 최종합격 · 불합격</b> 가운데서 고르실 수 있습니다.
-        바꾸시면 지원자의 마이페이지에 <b>곧바로 반영</b>됩니다.
-        메모는 지원자에게 보이지 않습니다.<br>
-        다만 <b>알림 메일이나 문자는 가지 않습니다.</b> 지원자가 마이페이지를 열어야
-        보이므로, 합격·불합격 같은 결과는 공고에 적어 두신 연락처로
-        <b>직접 알려 주시는 편이 좋습니다.</b><br>
-        다 처리한 지원은 <b>목록에서 숨길</b> 수 있습니다. 지우는 것이 아니라
-        이 목록에서만 감추는 것이므로, 지원자의 기록은 그대로 남고
-        <b>「숨긴 지원 보기」</b>로 언제든 되돌리실 수 있습니다.
-      </p>
-    </div>
-    <div class="mp-card" id="raRecv">
-      <div class="mp-msg">불러오는 중…</div>
-    </div>
-
-    <div class="mp-head" style="margin-top:44px">
-      <span class="jtag">APPLIED</span>
-      <h1 style="font-size:24px">내 지원 내역</h1>
-      <p class="mp-note">
-        지원하신 채용공고와 진행 상태입니다. 지원하신 단체·기업이 상태를 바꾸면
-        이곳에서 <b>바로 확인</b>하실 수 있습니다.<br>
-        상태가 바뀌어도 <b>따로 알림이 오지는 않으니</b> 이 페이지에서 살펴봐 주십시오.
-        결과 안내는 단체마다 시기가 다르고, 연락도 단체가 직접 하는 일입니다.
-        급하시면 공고의 문의처로 물어보십시오.
-        지원은 <b>최종합격 전까지</b> 취소하고 다시 내실 수 있습니다.
-      </p>
-    </div>
-    <div class="mp-card" id="raSent">
-      <div class="mp-msg">불러오는 중…</div>
-    </div>
-
-    <div class="mp-head" style="margin-top:44px">
-      <span class="jtag">SAVED</span>
-      <h1 style="font-size:24px">내 즐겨찾기 · 킵</h1>
-    </div>
-    <div class="mp-card" id="mpFavs">
-      <div class="mp-msg">불러오는 중…</div>
+    <!-- ───────── 저장함 ───────── -->
+    <div class="mp-pane" data-pane="saved">
+      <div class="mp-head">
+        <span class="jtag">SAVED</span>
+        <h1 style="font-size:24px">내 즐겨찾기 · 킵</h1>
+      </div>
+      <div class="mp-card" id="mpFavs">
+        <div class="mp-msg">불러오는 중…</div>
+      </div>
     </div>
   </div>
 </main>
@@ -583,10 +676,109 @@
       +'<div style="text-align:center;margin-top:18px"><a href="/account/withdraw.html" style="font-size:12px;color:var(--tx3);text-decoration:underline">회원 탈퇴</a></div>';
     box.innerHTML=html;
     var lo=document.getElementById("mpLogout"); if(lo) lo.addEventListener("click",doLogout);
-    drawLevel();
-    drawStats();
-    drawLinks();
-    loadMine(session.user.id);
+
+    /* ★ 여기서 <b>한꺼번에 부르지 않습니다</b> (2026-08-05 · 탭 구조)
+       예전에는 들어오는 순간 drawLevel · drawStats · drawLinks · loadMine 을
+       모두 불러 열 개 넘는 표를 뒤졌습니다. 이제 <b>고른 탭만</b> 부릅니다.
+       (아래 tabDraw 참조) */
+    UID = session.user.id;
+    drawSum(m, session);
+    tabInit();
+  }
+
+  /* ══ 요약 띠 ═══════════════════════════════════════════════
+     ★ 어느 탭에 있어도 「내가 누구인지」가 위에 남아 있게 합니다.
+     ★ 등급·포인트는 getPoints() 로 <b>한 번만</b> 부르고 담아 둡니다 —
+       「활동 · 등급」 탭도 같은 값을 씁니다(두 번 부르지 않습니다). */
+  async function drawSum(m, session){
+    var el=document.getElementById('mpSum'); if(!el) return;
+    var nm=(m&&m.name)||'회원';
+    var ini=String(nm).trim().charAt(0)||'?';
+    var sub=[];
+    if(m.username) sub.push(m.username);
+    if(m.field) sub.push(m.field);
+    if(m.school_name) sub.push(m.school_name);
+    if(m.org_name) sub.push(m.org_name);
+
+    el.innerHTML =
+        '<div class="mp-sum-ph">'
+      +   (m.photo_url
+            ? '<img src="'+esc(m.photo_url)+'" alt="" onerror="this.parentNode.innerHTML=\''+esc(ini)+'\'">'
+            : esc(ini))
+      + '</div>'
+      + '<div class="mp-sum-who">'
+      +   '<div class="nm">'+esc(nm)
+      +     '<span class="mp-badge type">'+esc(TYPE[m.member_type]||m.member_type||'회원')+'</span>'
+      +     '<span class="mp-badge '+esc(m.status||'pending')+'">'+esc(STATUS[m.status]||m.status||'-')+'</span>'
+      +   '</div>'
+      +   '<div class="sub">'+esc(sub.join(' · ')||'-')+'</div>'
+      + '</div>'
+      + '<div class="mp-sum-nums" id="mpSumNums"></div>';
+
+    var d = await getPoints();
+    var box=document.getElementById('mpSumNums'); if(!box) return;
+    if(!d || d.level==null){ box.remove(); return; }
+    box.innerHTML =
+        '<div><span class="k">회원레벨</span><span class="v">'+esc(d.label||'Clamer LV I')+'</span></div>'
+      + '<div><span class="k">활동점수</span><span class="v">'+nf(d.act)+'</span></div>'
+      + '<div><span class="k">OC POINT</span><span class="v">'+nf(d.use)+'</span></div>';
+  }
+
+  /* ══ 탭 ════════════════════════════════════════════════════
+     ★ 탭을 <b>처음 열 때만</b> 자료를 부릅니다. 두 번 부르지 않습니다.
+     ★ 주소의 #표시로 바로 그 탭을 엽니다 (#activity · #posts · #linked …).
+       이너스페이스 메뉴가 이 표시를 씁니다.
+     ★ 「내 정보」는 render() 가 이미 그렸고, 「리쿠르트」는
+       assets/recruit-apps.js 가 스스로 그리므로 부를 것이 없습니다. */
+  var UID = null;
+  var TAB_DRAW = {
+    activity: function(){ drawStats(); drawLevel(); },
+    posts:    function(){ if(UID) loadMine(UID); },
+    linked:   function(){ drawLinks(); },
+    saved:    function(){ loadFavs(); }
+  };
+  var tabDone = {};
+
+  function showTab(key, remember){
+    var tabs=document.querySelectorAll('.mp-tab');
+    var panes=document.querySelectorAll('.mp-pane');
+    var found=false;
+    for(var i=0;i<tabs.length;i++) if(tabs[i].getAttribute('data-tab')===key) found=true;
+    if(!found) key='info';
+
+    for(var a=0;a<tabs.length;a++)
+      tabs[a].classList.toggle('on', tabs[a].getAttribute('data-tab')===key);
+    for(var b=0;b<panes.length;b++)
+      panes[b].classList.toggle('on', panes[b].getAttribute('data-pane')===key);
+
+    /* 처음 여는 탭이면 그때 자료를 부릅니다 */
+    if(!tabDone[key]){
+      tabDone[key]=true;
+      var f=TAB_DRAW[key];
+      if(f) try{ f(); }catch(e){}
+    }
+
+    if(remember){
+      try{ history.replaceState(null,'', location.pathname+'#'+key); }catch(e){}
+    }
+  }
+
+  function tabInit(){
+    var bar=document.getElementById('mpTabs');
+    if(bar && !bar.getAttribute('data-bound')){
+      bar.setAttribute('data-bound','1');
+      bar.addEventListener('click', function(e){
+        var t=e.target.closest && e.target.closest('.mp-tab');
+        if(!t) return;
+        showTab(t.getAttribute('data-tab'), true);
+      });
+    }
+    /* 주소의 #표시 또는 ?tab= 을 봅니다 */
+    var want=(location.hash||'').replace('#','');
+    if(!want){
+      try{ want=new URLSearchParams(location.search).get('tab')||''; }catch(e){}
+    }
+    showTab(want||'info', false);
   }
 
   /* ── 활동 통계 ───────────────────────────────────────────────
@@ -1116,14 +1308,25 @@
   };
   function nf(n){ return String(n || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
+  /* ★ oc_my_points() 는 요약 띠와 「활동 · 등급」 탭이 <b>함께</b> 씁니다.
+     한 번만 부르고 담아 둡니다 — 값을 아끼는 원칙입니다. */
+  var _pt=null, _ptGot=false;
+  async function getPoints(){
+    if(_ptGot) return _pt;
+    _ptGot=true;
+    try{
+      var r=await sb.rpc('oc_my_points');
+      _pt=(r && !r.error) ? r.data : null;
+    }catch(e){ _pt=null; }
+    return _pt;
+  }
+
   async function drawLevel(){
     var head = document.getElementById('lvHead');
     var body = document.getElementById('lvBody');
     if (!head || !body) return;
     try {
-      var r = await sb.rpc('oc_my_points');
-      if (r.error) throw new Error(r.error.message);
-      var d = r.data;
+      var d = await getPoints();   /* ★ 담아 둔 값을 씁니다 (두 번 부르지 않음) */
       if (!d || d.level == null) throw new Error('빈 값');
 
       var act = d.act || 0;
@@ -1286,7 +1489,8 @@
       }
       render(mr.data, session);
       headerLoggedIn(mr.data, session);
-      loadFavs();
+      /* ★ loadFavs() 를 여기서 부르지 않습니다 — 「저장함」 탭을 열 때
+         부릅니다(늦게 부르기). 안 보는 탭의 자료를 미리 받을 까닭이 없습니다. */
     });
   });
 })();

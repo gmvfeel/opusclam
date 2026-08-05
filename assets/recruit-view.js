@@ -802,7 +802,7 @@
           if (mine) mine.remove();          /* 내 공고에는 지원하기가 필요 없습니다 */
           if (box) {
             box.insertAdjacentHTML('afterbegin',
-              '<a class="rv-btn rv-btn--go" href="/account/mypage.html#raRecv">'
+              '<a class="rv-btn rv-btn--go" href="/account/mypage.html#recruit">'
               + '받은 지원 ' + (cd.total || 0) + '건'
               + (cd.unread ? ' <span class="rv-newdot">' + cd.unread + '</span>' : '')
               + '</a>');
