@@ -20,7 +20,10 @@
      나중에 실리므로 확실히 이깁니다. */
   .oc-net{display:none !important}
 
-  .me-wrap{max-width:720px;margin:0 auto;padding:26px 20px 90px}
+  /* ★ 가로폭을 <b>마이페이지와 같게</b> 맞췄습니다 (2026-08-05 · 파트너 지시)
+     720px 이라 마이페이지(1120px)에서 넘어오면 폭이 확 좁아졌습니다.
+     값은 assets/auth.css 의 --oc-page-w 한 곳이 정합니다. */
+  .me-wrap{max-width:var(--oc-page-w,1120px);margin:0 auto;padding:26px 20px 90px}
   .me-head{margin-bottom:20px}
   .me-head .tag{display:inline-block;font-family:var(--display);font-size:11px;font-weight:700;
     letter-spacing:.14em;color:var(--text-3);background:var(--paper-2);

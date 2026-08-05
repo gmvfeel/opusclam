@@ -20,7 +20,8 @@
      나중에 실리므로 확실히 이깁니다. */
   .oc-net{display:none !important}
 
-  .iv-wrap{max-width:760px;margin:0 auto;padding:26px 20px 90px}
+  /* ★ 가로폭을 <b>마이페이지와 같게</b> — 값은 auth.css 의 --oc-page-w */
+  .iv-wrap{max-width:var(--oc-page-w,1120px);margin:0 auto;padding:26px 20px 90px}
   .iv-back{display:inline-block;color:var(--text-3);text-decoration:none;font-size:13px;margin-bottom:16px}
   .iv-back:hover{color:var(--violet-2,#5b4b9e)}
   .iv-head{margin-bottom:20px}
