@@ -105,6 +105,39 @@
     .iv-list li{padding:11px 12px;gap:9px}
     .iv-list .btns button{width:38px;height:38px}
   }
+
+  /* ══════════════════════════════════════════════════════════
+     다크모드                             2026-08-05 · 파트너 지시
+     ★ 회원정보 수정 화면과 <b>같은 까닭·같은 해법</b>입니다 —
+       카드 바탕이 #fff 로 굳어 있는데 글자색은 변수를 쓰므로,
+       다크모드에서 흰 바탕에 흰 글자가 되었습니다.
+       바탕을 어둡게 하여 변수 글자색이 저절로 맞게 합니다.
+     ★ 나중에 쓴 규칙이 이기므로 이 묶음은 <b>맨 끝</b>에 둡니다.
+     ══════════════════════════════════════════════════════════ */
+  [data-theme="dark"] .iv-wrap{ --mp-edge:rgba(255,255,255,.24) }
+
+  [data-theme="dark"] .iv-card{ background:var(--paper-3,#1f1f1f) }
+
+  /* 담은 갈래 줄 · 비었을 때 안내 — 너무 검어 구멍처럼 보입니다 */
+  [data-theme="dark"] .iv-list li,
+  [data-theme="dark"] .iv-empty{
+    background:rgba(255,255,255,.05);
+    border-color:rgba(255,255,255,.12);
+  }
+
+  /* 알약 단추 · 화살표 단추 — 흰 바탕이 굳어 있었습니다 */
+  [data-theme="dark"] .iv-chip,
+  [data-theme="dark"] .iv-list .btns button{
+    background:rgba(255,255,255,.06);
+    border-color:rgba(255,255,255,.16);
+    color:var(--text-2,#a2a2a2);
+  }
+  /* 고른 알약은 눈에 띄게 */
+  [data-theme="dark"] .iv-chip.on{
+    background:rgba(255,255,255,.14);
+    border-color:rgba(255,255,255,.34);
+    color:var(--text,#eaeaea);
+  }
 </style>
 </head>
 <body>

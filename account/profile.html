@@ -105,6 +105,58 @@
     .me-photo{gap:14px}
     .me-photo .ph{width:78px;height:78px}
   }
+
+  /* ══════════════════════════════════════════════════════════
+     다크모드                             2026-08-05 · 파트너 지시
+
+     ★ 무엇이 잘못됐었나
+       카드 바탕이 <b>#fff 로 굳어</b> 있고, 글자색은 style.css 의
+       변수(--text · --text-2 · --text-3)를 씁니다. 다크모드가 되면
+       그 변수들이 <b>밝은 색으로 뒤집히므로</b> 흰 바탕에 흰 글자가
+       되어 글이 사라집니다. (이너스페이스에서 겪은 것과 같은 일입니다)
+
+     ★ 어떻게 고쳤나
+       글자색을 되돌리는 쪽이 아니라 <b>바탕을 어둡게</b> 했습니다.
+       그러면 변수로 된 글자색이 저절로 알맞아지고, 손댈 곳은
+       <b>굳어 있는 색</b>들뿐입니다.
+     ★ 나중에 쓴 규칙이 이기므로 이 묶음은 <b>맨 끝</b>에 둡니다.
+     ══════════════════════════════════════════════════════════ */
+  [data-theme="dark"] .me-wrap{ --mp-edge:rgba(255,255,255,.24) }
+
+  /* 카드 — 어둡게 */
+  [data-theme="dark"] .me-card{ background:var(--paper-3,#1f1f1f) }
+
+  /* 고칠 수 없는 항목 상자 · 사진 동그라미 — 너무 검어 구멍처럼 보입니다 */
+  [data-theme="dark"] .me-fixed,
+  [data-theme="dark"] .me-photo .ph{
+    background:rgba(255,255,255,.05);
+    border-color:rgba(255,255,255,.12);
+  }
+  [data-theme="dark"] .me-fixed li{ border-bottom-color:rgba(255,255,255,.07) }
+
+  /* 입력칸 — 흰 바탕이 굳어 있었습니다 */
+  [data-theme="dark"] .me-row input,
+  [data-theme="dark"] .me-row textarea,
+  [data-theme="dark"] .me-row select{
+    background:rgba(255,255,255,.04);
+    border-color:rgba(255,255,255,.16);
+    color:var(--text,#eaeaea);
+  }
+  [data-theme="dark"] .me-row input::placeholder,
+  [data-theme="dark"] .me-row textarea::placeholder{ color:var(--text-3,#6d6d6d) }
+
+  /* 단추 — 흰 바탕이 굳어 있었습니다 */
+  [data-theme="dark"] .me-btns button{
+    background:rgba(255,255,255,.06);
+    border-color:rgba(255,255,255,.16);
+    color:var(--text,#eaeaea);
+  }
+  /* ★ 「저장」 단추가 다크에서 <b>흰 바탕에 흰 글자</b>가 되었습니다 —
+     --ink 가 다크에서 #ededed(밝은색)로 뒤집히는데 글자색은 #fff 로
+     굳어 있었습니다. 다크에서는 밝은 단추 + 어두운 글자로 뒤집습니다. */
+  [data-theme="dark"] .me-btns button.go{
+    background:#e9e9ec; border-color:#e9e9ec; color:#17171c;
+  }
 </style>
 </head>
 <body>
