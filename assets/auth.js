@@ -379,10 +379,16 @@ function needInnerSpace() {
            이름을 누르면 마이페이지로 가고, 「이너스페이스」 를 누르면
            <b>화면 위에 패널</b>이 열립니다 — 시안의 그 자리입니다.
            ★ 그 파일을 스스로 싣습니다 — 화면마다 넣으면 빠뜨립니다. */
+        /* ★ <b>마이페이지에서는 놓지 않습니다</b> (2026-08-05 · 파트너 지시)
+           마이페이지가 곧 이너스페이스의 「자세한 판」이라 같은 것이
+           두 번입니다. 여기서 걸러 두면 <b>깜빡임도 없습니다.</b>
+           (규칙의 본디 자리는 assets/inner-space.js 의 SKIP 목록입니다) */
+        var noInner = (location.pathname === '/account/mypage.html');
+
         al.innerHTML = '<a href="/account/mypage.html">'+esc(name)+'님'+(typeLabel?' ('+esc(typeLabel)+')':'')+'</a> '
-          + '<a href="#" data-oc-inner="1" id="oc-hdr-inner">이너스페이스</a> '
+          + (noInner ? '' : '<a href="#" data-oc-inner="1" id="oc-hdr-inner">이너스페이스</a> ')
           + '<a href="#" id="oc-hdr-logout">로그아웃</a>';
-        needInnerSpace();
+        if (!noInner) needInnerSpace();
         var lo = document.getElementById('oc-hdr-logout');
         if(lo) lo.addEventListener('click', function(e){ e.preventDefault(); if(window.ocAuth.logout) window.ocAuth.logout(); });
       }

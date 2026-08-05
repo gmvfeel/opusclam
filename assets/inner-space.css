@@ -31,30 +31,34 @@
 }
 .ins-panel.on{ opacity: 1; }
 
-/* ★ 위 여백을 <b>헤더만큼</b> 둡니다.
-   헤더가 화면에 붙어(fixed) 있어서, 22px 만 두면 제목이 그 아래로
-   숨습니다. 헤더 높이(약 96px)를 지나 시작하게 합니다. */
-.ins-wrap{ max-width: 1360px; margin: 0 auto; padding: 116px 24px 0; }
-@media (max-width: 860px){ .ins-wrap{ padding-top: 92px; } }
+/* ★ 위 여백은 <b>inner-space.js 가 헤더를 재어</b> 정합니다 (2026-08-05)
 
-/* ★ 패널이 열려 있는 동안 <b>헤더 글자를 밝게</b> 합니다.
-   (2026-08-04 · 파트너 지적 — 보라 바탕에 어두운 글자라 안 보였습니다)
-
-   ★ 헤더는 우리 것이 아니라 화면마다 짜임이 다릅니다. 그래서 색만
-     덮어씁니다 — 짜임은 건드리지 않습니다.
-   ★ html.ins-open 은 패널을 열 때 붙입니다. */
-html.ins-open .site-header a,
-html.ins-open #siteHeader a,
-html.ins-open header a,
-html.ins-open .authlink a,
-html.ins-open [data-oc-inner]{
-  color: rgba(255,255,255,.92) !important;
+   헤더가 화면에 붙어(fixed) 있는 화면에서는 그만큼 비워야 제목이
+   그 아래로 숨지 않습니다. 반대로 헤더가 <b>보통처럼 흐르는</b> 화면
+   (회원 화면의 .gnb)에서는 116px 이 <b>까닭 없는 빈 띠</b>가 됩니다.
+   그래서 못박지 않고 --ins-pad-top 을 받아 씁니다.
+   (혹시 값이 안 오면 116px 로 둡니다 — 예전과 같습니다) */
+.ins-wrap{
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: var(--ins-pad-top, 116px) 24px 0;
 }
-html.ins-open .site-header a:hover,
-html.ins-open #siteHeader a:hover,
-html.ins-open header a:hover,
-html.ins-open [data-oc-inner]:hover{ color: #fff !important; }
-/* 지금 열려 있는 것이니 눈에 띄게 */
+
+/* ★ 헤더 글자색을 <b>더는 덮어쓰지 않습니다</b> (2026-08-05 · 파트너 지적)
+
+   앞서 패널이 열려 있는 동안 헤더의 모든 링크를 흰색으로 못박았습니다
+   (html.ins-open ... a { color: #fff !important }).
+   그런데 오퍼스클램 헤더는 <b>스스로 두 얼굴</b>을 가집니다 —
+     · 맨 위(투명) : 흰 글자
+     · 스크롤 뒤(.solid, 흰 바탕) : 어두운 글자
+   흰색으로 못박으니 <b>스크롤하면 흰 바탕에 흰 글자</b>가 되어
+   GNB 가 통째로 사라졌습니다.
+
+   ★ 그래서 색은 <b>헤더가 스스로 정하게</b> 맡깁니다. 우리가 할 일은
+     「이너스페이스」 링크가 옆 링크와 <b>같은 결(class)</b>을 갖게 하는
+     것뿐이고, 그것은 app.js · auth.js · inner-space.js 가 맡습니다.
+
+   ★ 지금 열려 있다는 <b>표시</b>만 남깁니다 (색은 건드리지 않습니다). */
 html.ins-open [data-oc-inner]{
   font-weight: 800;
   text-decoration: underline;

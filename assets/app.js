@@ -115,6 +115,15 @@
       if (!a.parentNode) return;
       if (a.parentNode.querySelector('[data-oc-inner]')) return;
       var b = document.createElement('a');
+      /* ★ 옆 링크의 <b>결(class)을 그대로 물려받습니다</b> (2026-08-05 · 파트너 지적)
+
+         메인 헤더의 로그인·로그아웃 링크는 <b>.link-txt</b> 를 가집니다.
+         그 결이 있어야 색 규칙이 걸립니다 —
+           .site-header:not(.solid) .link-txt { color: 흰색 }   (맨 위, 투명 헤더)
+           .link-txt                          { color: 어두움 } (스크롤 뒤, 흰 헤더)
+         결 없이 넣었더니 어두운 헤더에 어두운 글자가 되어
+         <b>「이너스페이스」 글자가 안 보였습니다.</b> */
+      b.className = a.className;
       b.href = '#';
       b.setAttribute('data-oc-inner', '1');
       b.textContent = '이너스페이스';

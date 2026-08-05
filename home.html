@@ -1432,7 +1432,13 @@
     if(window.innerWidth<=880){
       solid = window.scrollY>8;               // 모바일: 맨 위는 투명, 스크롤하면 불투명
     } else {
-      var trigger=hero.offsetHeight-sh.offsetHeight-8;
+      /* ★ 이너스페이스가 열려 있으면 <b>그 높이</b>를 봅니다 (2026-08-05)
+     패널은 메인비주얼(hero) 자리를 대신합니다. 그런데 hero 를
+     display:none 으로 감추므로 높이가 0 이 되어, <b>60px 만 스크롤해도</b>
+     헤더가 흰 바탕(.solid)으로 바뀌어 보라 패널 위에 얹혔습니다.
+     패널을 기준으로 재면 패널을 지날 때까지 투명하게 있습니다. */
+  var ref=document.getElementById('ocInnerSpace')||hero;
+  var trigger=ref.offsetHeight-sh.offsetHeight-8;
       solid = hovering || window.scrollY>Math.max(trigger,60);
     }
     sh.classList.toggle('solid', solid);

@@ -43,6 +43,19 @@
 
   var opened = false;
 
+  /* ── 이너스페이스를 쓰지 않는 화면 ─────────────────────────────
+     ★ <b>마이페이지</b>는 이너스페이스의 「자세한 판」입니다. 같은 것을
+       두 곳에 두면 어수선하고, 마이페이지 위에 패널을 얹으면 헤더가
+       아래로 밀려 <b>GNB 가 사라집니다.</b> 그래서 아예 만들지 않습니다.
+     ★ 규칙을 <b>이 목록 한 곳</b>에만 둡니다. 다른 화면을 빼려면
+       여기에 주소를 더하면 됩니다. */
+  var SKIP = ['/account/mypage.html'];
+  function skipHere() {
+    var pth = location.pathname;
+    for (var i = 0; i < SKIP.length; i++) if (pth === SKIP[i]) return true;
+    return false;
+  }
+
   /* ★ 스타일도 <b>스스로</b> 싣습니다.
      화면마다 <link> 를 넣으면 빠뜨리기 쉽고, 패널을 안 여는 화면에서는
      헛되게 받아 옵니다. 처음 열 때 한 번만 싣습니다. */
@@ -534,6 +547,7 @@
   /* ── 열기 ─
   /* ── 열기 ───────────────────────────────────────────────── */
   async function open() {
+    if (skipHere()) return;   /* ★ 마이페이지 등에서는 열지 않습니다 */
     if (opened) return;
     var c = await sb();
     if (!c) return;
@@ -571,13 +585,30 @@
       hero.parentNode.insertBefore(el, hero);
     } else {
       /* 헤더 다음에 놓습니다 — 헤더를 못 찾으면 맨 앞에 */
-      var hd = document.querySelector('.site-header, #siteHeader, header');
+      /* ★ <b>.gnb</b> 를 더했습니다 (2026-08-05)
+         회원 화면 공용 헤더(partials/header-auth.html)의 맨 바깥이
+         &lt;div class="gnb"&gt; 입니다. 그것을 못 찾아 패널이 <b>헤더보다
+         위에</b> 놓였고, 그래서 헤더가 화면 밖으로 밀려났습니다. */
+      var hd = document.querySelector('.site-header, #siteHeader, .gnb, header');
       if (hd && hd.parentNode) hd.parentNode.insertBefore(el, hd.nextSibling);
       else document.body.insertBefore(el, document.body.firstChild);
     }
 
-    /* ★ 헤더 글자를 밝게 하려고 표시를 붙입니다 (CSS 가 그것을 봅니다).
-       보라 바탕에 어두운 글자면 「이너스페이스」 가 안 보입니다. */
+    /* ★ 위 여백을 <b>헤더를 재어</b> 잡습니다 (2026-08-05)
+
+       앞서 CSS 에 116px 로 못박아 두었습니다. 그런데 헤더가 화면에
+       붙어(fixed) 있는 화면과 <b>보통처럼 흐르는</b> 화면이 섞여 있어,
+       흐르는 화면에서는 116px 이 <b>까닭 없는 빈 띠</b>가 됩니다.
+       그래서 실제로 재어 정합니다 — 붙어 있으면 그 높이만큼, 아니면 조금만. */
+    var hdr = document.querySelector('.site-header, #siteHeader, .gnb, header');
+    var pad = 26;
+    if (hdr) {
+      var ps = '';
+      try { ps = getComputedStyle(hdr).position; } catch (e2) {}
+      if (ps === 'fixed' || ps === 'sticky') pad = hdr.offsetHeight + 22;
+    }
+    el.style.setProperty('--ins-pad-top', pad + 'px');
+
     document.documentElement.classList.add('ins-open');
     setTimeout(function () { el.classList.add('on'); }, 20);
     /* 패널이 보이게 맨 위로 올립니다 — 스크롤 중이었을 수 있습니다 */
@@ -648,7 +679,7 @@
   });
 
   try {
-    if (new URLSearchParams(location.search).get('inner') === '1') {
+    if (!skipHere() && new URLSearchParams(location.search).get('inner') === '1') {
       setTimeout(open, 400);
     }
   } catch (e) {}
@@ -668,6 +699,13 @@
        아무 일도 하지 않으므로 두 번 생기지 않습니다.
      ★ 로그아웃 링크 <b>앞</b>에 놓습니다 — 「내 것」 끼리 모여 있게요. */
   function selfMount() {
+    if (skipHere()) {
+      /* ★ 다른 파일이 벌써 놓았을 수 있어 <b>걷어냅니다.</b> */
+      [].forEach.call(document.querySelectorAll('[data-oc-inner]'), function (x) {
+        if (x.parentNode) x.parentNode.removeChild(x);
+      });
+      return true;   /* 더 살펴보지 않습니다 */
+    }
     if (document.querySelector('[data-oc-inner]')) return true;
 
     /* 로그아웃 링크를 찾습니다 — 그것이 있으면 로그인한 화면입니다 */
@@ -681,6 +719,10 @@
       if (!a.parentNode) return;
       if (a.parentNode.querySelector('[data-oc-inner]')) return;
       var b = document.createElement('a');
+      /* ★ 옆에 있는 링크의 <b>결(class)을 그대로 물려받습니다</b> (2026-08-05)
+         헤더는 화면마다 제 색 규칙이 있습니다(예: .link-txt).
+         결이 없으면 <b>바탕과 같은 색</b>이 되어 글자가 안 보입니다. */
+      b.className = a.className;
       b.href = '#';
       b.setAttribute('data-oc-inner', '1');
       b.textContent = '이너스페이스';
