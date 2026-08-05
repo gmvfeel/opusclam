@@ -96,8 +96,16 @@
 
   /* 빈 결과 · 안내 */
   /* ★ 「검색어를 입력해 주세요」를 <b>위로</b> 올립니다 (2026-08-05 · 파트너 지시)
-     위 여백이 56px 이라 검색칸에서 한참 떨어져 있었습니다. */
-  .osr-empty{margin:14px 0 60px;text-align:center;font-size:15.5px;color:var(--text-2,#5c5e70);line-height:2}
+       56px → 14px → <b>-12px</b> (지금)
+
+     ★ 왜 <b>음수</b>인가
+       이 글자를 담는 .osr-results 가 위쪽에 34px 여백을 갖고 있습니다.
+       그 여백은 <b>검색 결과가 있을 때</b>도 쓰이므로 줄이면 결과 화면의
+       짜임이 함께 흐트러집니다. 그래서 이 글자만 음수 여백으로
+       <b>끌어올립니다.</b> 검색칸에서 22px 아래에 놓입니다.
+     ★ 이 글자는 <b>검색어가 없을 때만</b> 나오고 그 위에는 아무것도
+       없으므로(요약 줄이 비어 있음) 끌어올려도 겹칠 것이 없습니다. */
+  .osr-empty{margin:-12px 0 56px;text-align:center;font-size:15.5px;color:var(--text-2,#5c5e70);line-height:2}
   .osr-empty b{color:var(--text-1,#1b1c2b)}
   .osr-empty span{display:block;margin-top:4px;font-size:13px;color:var(--text-3,#8a8c9e)}
   /* .osr-scope 스타일은 걷어냈습니다 — 그 상자를 없앴습니다 */
