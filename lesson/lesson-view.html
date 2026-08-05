@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- ★ 레슨:ON 은 <b>늘 어둡습니다</b> (2026-08-05 · 파트너 지시)
+     시안의 성격 자체가 어둡고, 영상을 보는 화면은 어두운 편이 눈이 편합니다.
+     그래서 회원이 밝은 모드를 쓰고 있어도 <b>이 섹션만</b> 어둡게 둡니다.
+   ★ localStorage 는 <b>건드리지 않습니다</b> — 회원이 고른 모드를 바꿔
+     버리면, 레슨:ON 을 한 번 다녀온 뒤 사이트 전체가 어두워집니다.
+     여기서는 &lt;html&gt; 에만 붙이고 저장하지 않습니다.
+   ★ ln-page 표시도 함께 붙입니다 — 헤더의 모드 전환 단추를 감추는 데
+     씁니다(늘 어두우니 바꿀 것이 없습니다). -->
+<script>(function(){try{
+  document.documentElement.setAttribute('data-theme','dark');
+  document.documentElement.classList.add('ln-page');
+}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>강의정보 · 레슨 : ON · OPUSCLAM.COM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0d0d10">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<link rel="stylesheet" href="/assets/lesson.css">
+</head>
+
+<!-- ★ data-header="overlay" — 헤더를 히어로 위에 <b>투명하게</b> 얹습니다.
+     스크롤하면 assets/header.js 가 불투명(.solid)으로 바꿉니다. -->
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     강의정보 — 시안 01_1(마스터클래스 강의정보) 계열을 따릅니다
+       INSTRUCTOR 이름 / 제목 / 소개
+       About this Class — 왼쪽 영상 · 오른쪽 CLASS SAMPLE + plan
+       (실시간 레슨이면) 신청 칸
+       Other Classes — 같은 탭의 다른 강의 넷
+
+     ★ 영상은 아직 <b>재생하지 않습니다</b> — 영상 플랫폼이 정해지지
+       않았습니다. 자리를 두고 「준비 중」으로 둡니다. 강의마다
+       video_provider 를 적어 두었으므로, 정해지면 <b>재생하는 부분만</b>
+       더하면 됩니다(표와 화면을 다시 만들지 않습니다).
+     ★ 실시간 링크는 <b>승인된 사람만</b> 단추를 눌러 받습니다
+       (oc_lesson_live_url). 화면에 미리 담아 두지 않습니다.
+     ══════════════════════════════════════════════════════════════ -->
+<div class="ln">
+
+  <section class="ln-hero">
+    <div class="ln-wrap ln-hero-in">
+      <h1 class="ln-logo">LESSON:ON</h1>
+      <p class="ln-hero-en">
+        Learn from the most inspiring WORLD BEST artists,<br>
+        Unlimited access to instructors MASTER CLASS.<br>
+        New classes are added periodically.
+      </p>
+      <p class="ln-hero-ko">
+        가장 많은 영감을 주는 아티스트에게 배우세요. 마스터 클래스 무제한수강, 매달 새로운 수업이 추가됩니다.
+      </p>
+      <div id="oc-subnav" data-src="/partials/subnav-lesson.html"></div>
+    </div>
+  </section>
+
+  <div class="ln-wrap">
+    <div id="lnView"><div class="ln-msg">불러오는 중…</div></div>
+
+    <section class="ln-sec">
+      <div class="ln-sec-top">
+        <div>
+          <div class="ln-eyebrow">Other Classes</div>
+          <h2 class="ln-h1">다른 강의</h2>
+        </div>
+      </div>
+      <div class="ln-grid" id="lnOthers"></div>
+    </section>
+  </div>
+
+  <div class="ln-cta">
+    <span class="ln-cta-in">
+      <b>레슨:ON 이 곧 문을 엽니다</b>
+      <a href="/lesson/master.html">강의 전체 보기 &#9656;</a>
+    </span>
+  </div>
+
+</div><!-- /.ln -->
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/lesson-list.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.OCLesson) OCLesson.view({ box: 'lnView' });
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
