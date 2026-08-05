@@ -177,6 +177,47 @@ html.ins-open [data-oc-inner]{
   font-size: 10.5px; line-height: 1.6; color: var(--text-3, #8a8ca0);
 }
 
+/* ── 다가오는 일정 ─────────────────────────────────────────
+   ★ 「관심분야 새 글」과 결을 맞춥니다 — 알약 · 제목 · 오른쪽 표시.
+     다른 점은 오른쪽이 <b>날짜가 아니라 D-day</b> 라는 것뿐입니다. */
+.ins-soon{ list-style: none; margin: 0; padding: 0; }
+.ins-soon li{
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; font-size: 12px;
+  border-bottom: 1px solid rgba(43,39,64,.075);
+}
+.ins-soon li:last-child{ border-bottom: 0; }
+.ins-soon .c{
+  flex: 0 0 auto; font-size: 10px; font-weight: 800;
+  padding: 2px 7px; border-radius: 999px;
+  background: rgba(91,155,213,.14); color: #3d6e99;
+  white-space: nowrap;
+}
+.ins-soon .t{
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text, #2b2740); font-weight: 600; text-decoration: none;
+}
+.ins-soon .t:hover{ color: #3d6e99; text-decoration: underline; }
+.ins-soon .d{
+  flex: 0 0 auto; font-size: 10.5px; font-weight: 800;
+  color: var(--text-3, #8a8ca0);
+}
+/* 사흘 안으로 다가온 것 */
+.ins-soon .d.hot{
+  color: #b8541f;
+  background: rgba(224,133,133,.16);
+  padding: 2px 7px; border-radius: 999px;
+}
+
+/* ── OC POINT 안내 (회원 카드 안) ──────────────────────────── */
+.ins-lv-note{
+  margin-top: 7px;
+  font-size: 10.5px; line-height: 1.6;
+  color: var(--text-3, #8a8ca0);
+}
+.ins-lv-note b{ color: var(--text-2, #55566e); font-weight: 700; }
+
 /* ── 관심분야 새 글 목록 ───────────────────────────────────
    ★ 「Update 현황」 막대가 갯수를 보여 주고, 이 목록이 <b>무엇인지</b>를
      보여 줍니다. 갈래 알약 · 제목 · 날짜 세 칸입니다. */
@@ -723,6 +764,16 @@ html[data-theme="dark"] .ins-face{
   border-color: rgba(255,255,255,.12);
 }
 html[data-theme="dark"] .ins-ph span{ color: var(--text-2, #a2a2a2); }
+
+/* 「다가오는 일정」 — 구분선 · 갈래 알약 · D-day */
+html[data-theme="dark"] .ins-soon li{ border-bottom-color: rgba(255,255,255,.085); }
+html[data-theme="dark"] .ins-soon .c{
+  background: rgba(255,255,255,.09); color: #9ec4e6;
+}
+html[data-theme="dark"] .ins-soon .t:hover{ color: #9ec4e6; }
+html[data-theme="dark"] .ins-soon .d.hot{
+  background: rgba(224,133,133,.22); color: #eda58f;
+}
 
 /* 「관심분야 새 글」 — 구분선 · 갈래 알약 */
 html[data-theme="dark"] .ins-fresh li{ border-bottom-color: rgba(255,255,255,.085); }

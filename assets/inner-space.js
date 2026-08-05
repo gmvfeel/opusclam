@@ -213,6 +213,10 @@
       +       '<div class="ins-card ins-menu" id="insMenu"></div>'
       +       '<div class="ins-card ins-linked" id="insLinked">'
       +         '<h4>MY OC Linked</h4><div class="ins-msg">불러오는 중…</div></div>'
+      /* ★ <b>다가오는 일정</b> (2026-08-05 · 파트너 지시)
+             콩쿨 · 지원금 · 페스티벌 · 공연정보 가운데 날짜가 가까운 것들. */
+      +       '<div class="ins-card" id="insSoon">'
+      +         '<h4>다가오는 일정</h4><div class="ins-msg">불러오는 중…</div></div>'
       +     '</div>'
       /* ⑤ 내 관심분야 통계 */
       +     '<div class="ins-card ins-pie-card" id="insPie">'
@@ -328,6 +332,16 @@
             + '<div class="ins-lv-row"><span>회원레벨</span><b>' + esc(lvl) + '</b></div>'
             + '<div class="ins-lv-row"><span>활동점수</span><b>' + nf(act) + '</b></div>'
             + '<div class="ins-lv-row"><span>OC POINT</span><b>' + nf(use) + '</b></div>'
+            /* ★ <b>언제부터 쓸 수 있나</b>를 적습니다 (2026-08-05 · 파트너 지시)
+               LEVEL.doc — 「유료서비스 이용시 액티브 10,000포인트부터 사용 가능」
+               지금 60P 만 보이면 <b>언제 쓸 수 있는지 알 수가 없습니다.</b>
+               ★ 1만을 넘긴 회원에게는 「쓸 수 있습니다」로 바꿔 줍니다 —
+                 넘긴 사람에게 문턱을 계속 보여 줄 까닭이 없습니다. */
+            + '<div class="ins-lv-note">'
+            +   (use >= 10000
+                  ? 'OC POINT를 <b>유료 서비스에 쓸 수 있습니다</b>'
+                  : 'OC POINT는 <b>10,000P부터</b> 유료 서비스에 쓸 수 있습니다')
+            + '</div>'
             + '<div class="ins-lv-bar"><i style="width:' + pct + '%"></i></div>'
             + (nx
                 ? '<div class="ins-lv-next">' + esc(nx.label) + ' 까지 '
@@ -678,6 +692,81 @@
             return '<span title="' + esc(x.cat) + '">' + esc(x.cat) + '</span>';
           }).join('')
       + '</div>';
+  }
+
+  /* ── 다가오는 일정 ─────────────────────────────────────────
+     ★ 정보SPOT 의 콩쿨 · 지원금 · 페스티벌 · 공연정보 가운데 날짜가
+       <b>가까운 것</b>을 다섯 개 보여 줍니다. 조회는 <b>한 번</b>입니다.
+
+     ★ 제목을 「마감 임박」으로 하지 않았습니다 (2026-08-05)
+       spot 표의 날짜 칸은 date_from · date_to · date_text 인데,
+       date_to 가 <b>접수 마감인지 행사 종료인지</b> 코드만으로는 확정할 수
+       없었습니다. 「마감」이라고 못 박으면 <b>틀린 안내</b>가 될 수 있어
+       어느 쪽이든 맞는 <b>「다가오는 일정」</b>으로 두었습니다.
+       (파트너님이 확인해 주시면 「접수 마감」으로 바꾸겠습니다)
+
+     ★ 날짜가 없는 자료는 <b>빼고</b> 보여 줍니다 — D-day 를 셀 수 없는데
+       목록에 끼우면 「언제인지 모르는 일정」이 되어 쓸모가 없습니다. */
+  async function drawSoon() {
+    var box = document.getElementById('insSoon');
+    if (!box) return;
+    var head = '<h4>다가오는 일정</h4>';
+
+    var rows = [];
+    try {
+      var c = await sb();
+      if (!c) throw new Error('no client');
+      var today = new Date();
+      var iso = today.toISOString().slice(0, 10);
+      var r = await c.from('spot')
+        .select('id,title,section,date_to')
+        .in('section', ['콩쿨', '지원금', '페스티벌', '공연정보'])
+        .not('hidden', 'is', true)
+        .gte('date_to', iso)
+        .order('date_to', { ascending: true })
+        .limit(6);
+      if (r && r.error) throw new Error(r.error.message);
+      rows = r.data || [];
+    } catch (e) {
+      box.innerHTML = head + '<div class="ins-none">일정을 불러오지 못했습니다.</div>';
+      return;
+    }
+
+    if (!rows.length) {
+      box.innerHTML = head + '<div class="ins-none">다가오는 일정이 없습니다.</div>';
+      return;
+    }
+
+    /* 남은 날 — 오늘 0시를 기준으로 셉니다 (시각 때문에 하루가 어긋나지 않게) */
+    function dleft(v) {
+      try {
+        var a = new Date(v); a.setHours(0, 0, 0, 0);
+        var b = new Date();  b.setHours(0, 0, 0, 0);
+        return Math.round((a - b) / 86400000);
+      } catch (e) { return null; }
+    }
+    function md(v) {
+      try {
+        var d = new Date(v);
+        return ('0' + (d.getMonth() + 1)).slice(-2) + '.' + ('0' + d.getDate()).slice(-2);
+      } catch (e) { return ''; }
+    }
+
+    box.innerHTML = head
+      + '<ul class="ins-soon">'
+      + rows.slice(0, 5).map(function (o) {
+          var n2 = dleft(o.date_to);
+          var tag = (n2 === 0) ? '오늘' : (n2 > 0 ? 'D-' + n2 : '');
+          /* 사흘 안이면 눈에 띄게 */
+          var hot = (n2 !== null && n2 <= 3) ? ' hot' : '';
+          return '<li>'
+            + '<span class="c">' + esc(o.section || '') + '</span>'
+            + '<a class="t" href="/spot/spot-view.html?id=' + encodeURIComponent(o.id) + '"'
+            +   ' title="' + esc(o.title || '') + '">' + esc(o.title || '-') + '</a>'
+            + '<span class="d' + hot + '">' + esc(tag || md(o.date_to)) + '</span>'
+            + '</li>';
+        }).join('')
+      + '</ul>';
   }
 
   /* ── 관심분야 새 글 (제목 + 바로가기) ──────────────────────
@@ -1074,6 +1163,7 @@
     drawHits(st);
     drawLinked(links);
     drawFresh();
+    drawSoon();
     drawVid();
   }
 
