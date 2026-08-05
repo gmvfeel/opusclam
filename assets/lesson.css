@@ -43,11 +43,12 @@
      이제 <b>거의 흰색에 노란끼만 살짝</b> 도는 정도로 낮췄습니다.
 
      ▶ 이 두 줄만 고치면 영문·국문 색이 함께 바뀝니다.
-         너무 노람  #e6d0ad · #cbb28c
-       ▶ 지금       #ece7dc · #c9c2b4
-         더 하얗게  #f0eeea · #cfcbc4 */
-  --ln-warm:    #ece7dc;   /* 영문 — 밝은 쪽 */
-  --ln-warm2:   #c9c2b4;   /* 국문 — 한 단 낮춘 쪽 */
+         너무 노람  #e6d0ad · #cbb28c   (노란끼 57 · 63)
+         한 단 낮춤 #ece7dc · #c9c2b4   (노란끼 16 · 21)
+       ▶ 지금       #f0eeea · #cfcbc4   (노란끼 10 · 11)
+         더 하얗게  #f5f4f2 · #d6d3ce   (노란끼  5 ·  8) */
+  --ln-warm:    #f0eeea;   /* 영문 — 밝은 쪽 */
+  --ln-warm2:   #cfcbc4;   /* 국문 — 한 단 낮춘 쪽 */
 
   background: var(--ln-bg);
   color: var(--ln-tx);
@@ -103,12 +104,19 @@ html.ln-page .theme-toggle{ display: none !important; }
 }
 .ln-hero-in{ position: relative; z-index: 1; }
 
-/* LESSON:ON — 시안처럼 보라에서 남보라로 */
+/* LESSON:ON — 시안처럼 보라에서 남보라로
+   ★ 크기·굵기를 다듬었습니다 (2026-08-05 · 파트너 지시)
+       크기 최대 92 → <b>116px</b> (작은 화면 44 → 52px)
+       굵기 800 → <b>700</b>  「조금만 얇게」
+       자간 .02 → <b>.01em</b>  글자가 커지면 사이가 벌어 보여
+                              조금 붙이는 편이 낫습니다
+   ▶ 크기는 font-size 한 줄, 굵기는 font-weight 한 줄에서 고칩니다.
+     더 얇게 가시려면 600 · 500 도 Pretendard 가 갖고 있습니다. */
 .ln-logo{
   margin: 0;
   font-family: var(--display, inherit);
-  font-size: clamp(44px, 7vw, 92px);
-  font-weight: 800; letter-spacing: .02em; line-height: 1;
+  font-size: clamp(52px, 8.4vw, 116px);
+  font-weight: 700; letter-spacing: .01em; line-height: 1;
   background: linear-gradient(90deg, var(--ln-vi) 0%, var(--ln-vi) 34%, var(--ln-in) 78%);
   -webkit-background-clip: text; background-clip: text;
   color: transparent;
