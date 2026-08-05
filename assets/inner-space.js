@@ -717,12 +717,25 @@
      ★ 정보SPOT 의 콩쿨 · 지원금 · 페스티벌 · 공연정보 가운데 날짜가
        <b>가까운 것</b>을 다섯 개 보여 줍니다. 조회는 <b>한 번</b>입니다.
 
-     ★ 제목을 「마감 임박」으로 하지 않았습니다 (2026-08-05)
-       spot 표의 날짜 칸은 date_from · date_to · date_text 인데,
-       date_to 가 <b>접수 마감인지 행사 종료인지</b> 코드만으로는 확정할 수
-       없었습니다. 「마감」이라고 못 박으면 <b>틀린 안내</b>가 될 수 있어
-       어느 쪽이든 맞는 <b>「다가오는 일정」</b>으로 두었습니다.
-       (파트너님이 확인해 주시면 「접수 마감」으로 바꾸겠습니다)
+     ★ 제목을 「접수 마감」으로 하지 <b>않습니다</b>
+       (2026-08-05 · 파트너님이 등록 화면을 확인해 주셨습니다)
+         지원금   date_to = <b>접수 마감</b> (예: 2026.09.15 18:00)
+         공연정보 date_from·date_to = <b>공연 기간</b>
+         콩쿨     일정을 <b>글자</b>로 적습니다 (예: 「접수 3월 · 예선 5월」)
+                  → 날짜 칸이 비어 있어 D-day 를 셀 수 없습니다
+       즉 <b>같은 칸이 갈래마다 다른 뜻</b>입니다. 「접수 마감」으로 못
+       박으면 공연정보에서 틀립니다. 그래서 이름은 그대로 두고, 대신
+       갈래 알약(지원금·공연정보…)이 <b>무슨 날짜인지</b> 알려 줍니다.
+
+     ★ D-day 는 <b>두 칸 가운데 알맞은 것</b>으로 셉니다 —
+         아직 시작 안 했으면 date_from (시작까지 며칠)
+         이미 시작했으면   date_to   (마감·종료까지 며칠)
+       그러면 지원금은 「접수 마감까지」, 공연정보는 「개막까지」 또는
+       「종료까지」 가 되어 <b>어느 갈래에서도 뜻이 통합니다.</b>
+
+     ★ 한 갈래가 <b>목록을 다 차지하지 않게</b> 막습니다 — KOPIS 공연이
+       수백 건이라 공연정보만 다섯 줄을 채워, 정작 쓸모 있는 <b>지원금
+       접수 마감</b>이 밀려났습니다(파트너님 화면에서 그랬습니다).
 
      ★ 날짜가 없는 자료는 <b>빼고</b> 보여 줍니다 — D-day 를 셀 수 없는데
        목록에 끼우면 「언제인지 모르는 일정」이 되어 쓸모가 없습니다. */
@@ -738,12 +751,14 @@
       var today = new Date();
       var iso = today.toISOString().slice(0, 10);
       var r = await c.from('spot')
-        .select('id,title,section,date_to')
+        .select('id,title,section,date_from,date_to')
         .in('section', ['콩쿨', '지원금', '페스티벌', '공연정보'])
         .not('hidden', 'is', true)
         .gte('date_to', iso)
         .order('date_to', { ascending: true })
-        .limit(6);
+        /* ★ 넉넉히 받아 옵니다 — 갈래마다 두 줄까지만 쓰므로
+           적게 받으면 한 갈래로 다 채워지고 자리가 빕니다. */
+        .limit(24);
       if (r && r.error) throw new Error(r.error.message);
       rows = r.data || [];
     } catch (e) {
@@ -771,10 +786,24 @@
       } catch (e) { return ''; }
     }
 
+    /* 갈래마다 두 줄까지 — 자리가 남으면 남은 것으로 채웁니다 */
+    var MAX = 5, PER = 2, pick = [], spare = [], cnt = {};
+    rows.forEach(function (o) {
+      var k = o.section || '?';
+      cnt[k] = (cnt[k] || 0) + 1;
+      if (cnt[k] <= PER) { if (pick.length < MAX) pick.push(o); }
+      else spare.push(o);
+    });
+    for (var si = 0; si < spare.length && pick.length < MAX; si++) pick.push(spare[si]);
+
     box.innerHTML = head
+      + '<div class="ins-hint">접수 마감 · 공연 일정이 가까운 순입니다</div>'
       + '<ul class="ins-soon">'
-      + rows.slice(0, 5).map(function (o) {
-          var n2 = dleft(o.date_to);
+      + pick.map(function (o) {
+          /* ★ 아직 시작 안 했으면 <b>시작날</b>, 이미 시작했으면 <b>끝날</b> */
+          var df = o.date_from ? dleft(o.date_from) : null;
+          var base = (df !== null && df > 0) ? o.date_from : o.date_to;
+          var n2 = dleft(base);
           var tag = (n2 === 0) ? '오늘' : (n2 > 0 ? 'D-' + n2 : '');
           /* 사흘 안이면 눈에 띄게 */
           var hot = (n2 !== null && n2 <= 3) ? ' hot' : '';
@@ -782,7 +811,7 @@
             + '<span class="c">' + esc(o.section || '') + '</span>'
             + '<a class="t" href="/spot/spot-view.html?id=' + encodeURIComponent(o.id) + '"'
             +   ' title="' + esc(o.title || '') + '">' + esc(o.title || '-') + '</a>'
-            + '<span class="d' + hot + '">' + esc(tag || md(o.date_to)) + '</span>'
+            + '<span class="d' + hot + '">' + esc(tag || md(base)) + '</span>'
             + '</li>';
         }).join('')
       + '</ul>';
