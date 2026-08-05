@@ -572,18 +572,21 @@
       /* 격자선 + 눈금값 (맨 아래 0 은 축선이라 조금 진하게) */
       +   tk.list.map(function (t) {
             var y = yOf(t).toFixed(1);
-            return '<line x1="' + PL + '" y1="' + y + '" x2="' + (W - PR) + '" y2="' + y
-              + '" stroke="' + (t ? '#eeedf4' : '#e0dfe9') + '" stroke-width="1"/>'
-              + '<text x="' + (PL - 6) + '" y="' + y + '" text-anchor="end"'
-              + ' dominant-baseline="middle" font-size="8.5" fill="#9a9bad">'
+            /* ★ 색을 <b>CSS 로 넘깁니다</b> (2026-08-05 · 다크모드)
+               여기에 색을 적어 두면 다크모드에서 바꿀 길이 없습니다.
+               클래스만 주고 색은 inner-space.css 가 정합니다. */
+            return '<line class="gl' + (t ? '' : ' z') + '" x1="' + PL + '" y1="' + y
+              + '" x2="' + (W - PR) + '" y2="' + y + '" stroke-width="1"/>'
+              + '<text class="gt" x="' + (PL - 6) + '" y="' + y + '" text-anchor="end"'
+              + ' dominant-baseline="middle" font-size="8.5">'
               + nf(t) + '</text>';
           }).join('')
       +   '<path d="' + area + '" fill="url(#insLnG)"/>'
-      +   '<path d="' + line + '" fill="none" stroke="#8a63a8" stroke-width="2"'
+      +   '<path class="ln" d="' + line + '" stroke-width="2"'
       +     ' stroke-linejoin="round" stroke-linecap="round"/>'
       +   xy.map(function (p2, i) {
-            return '<circle cx="' + p2[0].toFixed(1) + '" cy="' + p2[1].toFixed(1)
-              + '" r="3" fill="#fff" stroke="#8a63a8" stroke-width="2"><title>'
+            return '<circle class="pt" cx="' + p2[0].toFixed(1) + '" cy="' + p2[1].toFixed(1)
+              + '" r="3" stroke-width="2"><title>'
               + esc((pts[i].t || '') + ' · ' + nf(pts[i].v) + '회') + '</title></circle>';
           }).join('')
       + '</svg>'

@@ -425,6 +425,13 @@ html.ins-open [data-oc-inner]{
 
 /* ── 꺾은선 (내 컨텐츠 조회수) ─────────────────────────────── */
 .ins-line{ width: 100%; height: auto; display: block; }
+/* ★ 꺾은선 그림의 색 — JS 가 아니라 <b>여기</b>서 정합니다 (2026-08-05)
+   그래야 다크모드에서 갈아 낄 수 있습니다. */
+.ins-line .gl{ stroke: #eeedf4; }
+.ins-line .gl.z{ stroke: #e0dfe9; }   /* 맨 아래 축선 */
+.ins-line .gt{ fill: #9a9bad; }        /* 눈금값 글씨 */
+.ins-line .ln{ fill: none; stroke: #8a63a8; }
+.ins-line .pt{ fill: #fff; stroke: #8a63a8; }
 .ins-line-x{
   display: flex; justify-content: space-between; margin-top: 5px;
   font-size: 9.5px; color: var(--text-3, #8a8ca0);
@@ -512,4 +519,74 @@ html.ins-open [data-oc-inner]{
      (First Main · 회원정보 수정 · INNER SPACE CLOSE) */
   .ins-top-btns{ flex-wrap: wrap; }
   .ins-close{ letter-spacing: .02em; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   다크모드                                     (2026-08-05 · 파트너 지적)
+
+   ★ 무엇이 잘못됐었나
+     이 파일에는 다크모드 규칙이 <b>하나도 없었습니다.</b> 그런데 카드 안의
+     글자색은 style.css 의 변수(--text · --ink · --text-2)를 씁니다.
+     다크모드가 되면 그 변수들이 <b>밝은 색</b>으로 바뀝니다 —
+       --text  #2b2740 → #eaeaea
+       --ink   #2b2740 → #ededed
+     카드 바탕만 <b>흰색으로 남아</b> 있어서, 흰 바탕에 흰 글자가 되어
+     제목과 글자가 사라졌습니다.
+
+   ★ 어떻게 고쳤나
+     글자색을 되돌리는 쪽이 아니라, <b>카드를 어둡게</b> 했습니다.
+     그러면 변수로 된 글자색이 <b>저절로 알맞아집니다</b> — 고칠 곳이
+     적고, 사이트의 다른 다크 화면과도 결이 같습니다.
+     함께 손댈 것은 <b>굳어 있는 색</b>들뿐입니다 (구분선·격자선 등).
+   ★ 나중에 쓴 규칙이 이기므로 이 묶음은 <b>파일 맨 끝</b>에 둡니다.
+   ══════════════════════════════════════════════════════════════ */
+
+/* 바탕 — 시안 색을 45% 로 더 눌러 깊게 */
+html[data-theme="dark"] .ins-panel{
+  background:
+    radial-gradient(1200px 420px at 18% -10%, rgba(255,255,255,.05), transparent 60%),
+    linear-gradient(105deg, #22273a 0%, #2e283f 46%, #3e2945 100%);
+}
+
+/* 카드 — 어둡게. 그림자 대신 <b>옅은 테두리</b>로 경계를 만듭니다
+   (어두운 바탕에서는 그림자가 거의 보이지 않습니다) */
+html[data-theme="dark"] .ins-card{
+  background: var(--paper-3, #1f1f1f);
+  border: 1px solid rgba(255,255,255,.07);
+  box-shadow: 0 10px 26px -14px rgba(0,0,0,.6);
+}
+
+/* 옅은 구분선 — 어두운 선은 안 보이므로 밝은 선으로 */
+html[data-theme="dark"] .ins-menu-list li + li,
+html[data-theme="dark"] .ins-legend .row + .row{
+  border-top-color: rgba(255,255,255,.085);
+}
+
+/* 막대 차트 격자선 · 등급 막대 홈 */
+html[data-theme="dark"] .ins-vbars .gl{ background: rgba(255,255,255,.075); }
+html[data-theme="dark"] .ins-lv-bar{ background: rgba(255,255,255,.10); }
+
+/* 꺾은선 차트 */
+html[data-theme="dark"] .ins-line .gl{ stroke: rgba(255,255,255,.075); }
+html[data-theme="dark"] .ins-line .gl.z{ stroke: rgba(255,255,255,.16); }
+html[data-theme="dark"] .ins-line .gt{ fill: #8b8b95; }
+html[data-theme="dark"] .ins-line .pt{ fill: var(--paper-3, #1f1f1f); }
+
+/* 어두운 바탕에서 너무 가라앉는 보라 글자를 조금 밝힙니다 */
+html[data-theme="dark"] .ins-mainline a,
+html[data-theme="dark"] .ins-more{ color: #b79ad8; }
+
+/* 사진 없는 사람의 <b>동그라미</b> — 다크에서 --paper-2 가 거의 검정(#101010)이라
+   어두운 카드 위에서 구멍처럼 보였습니다. 옅은 흰빛으로 띄웁니다. */
+html[data-theme="dark"] .ins-ph,
+html[data-theme="dark"] .ins-face{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.12);
+}
+html[data-theme="dark"] .ins-ph span{ color: var(--text-2, #a2a2a2); }
+
+/* 「+N」 얼굴 자리가 흰색으로 굳어 있었습니다 */
+html[data-theme="dark"] .ins-face.more{
+  background: transparent;
+  border-color: rgba(255,255,255,.22);
 }
