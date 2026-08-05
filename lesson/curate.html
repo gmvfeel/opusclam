@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- ★ 레슨:ON 은 늘 어둡습니다. localStorage 는 건드리지 않습니다. -->
+<script>(function(){try{
+  document.documentElement.setAttribute('data-theme','dark');
+  document.documentElement.classList.add('ln-page');
+}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>큐레이션 등록 · 레슨 : ON · OPUSCLAM.COM</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0d0d10">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<link rel="stylesheet" href="/assets/lesson.css">
+
+<!-- ══════════════════════════════════════════════════════════════
+     ★ 이 화면만 쓰는 짜임은 <b>여기에</b> 둡니다.
+       assets/lesson.css 는 레슨:ON 전체가 함께 쓰는 파일입니다.
+       관리자 한 사람이 쓰는 화면 때문에 공용 파일을 건드리면
+       다른 화면이 조용히 망가질 수 있습니다(전에 겪었습니다).
+     ══════════════════════════════════════════════════════════════ -->
+<style>
+  .cu-say{ padding:14px 18px; border-radius:10px; margin:14px 0; font-size:14.5px; line-height:1.7; }
+  .cu-say.ok{ background:rgba(120,200,150,.12); border:1px solid rgba(120,200,150,.35); color:#bfe6cd; }
+  .cu-say.no{ background:rgba(230,120,120,.12); border:1px solid rgba(230,120,120,.35); color:#f0c3c3; }
+  .cu-say a{ color:inherit; text-decoration:underline; }
+
+  .cu-guide{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10);
+             border-radius:12px; padding:20px 24px; margin:18px 0 26px; font-size:14px; line-height:1.85; color:#c9c6d6; }
+  .cu-guide b{ color:#efeaf6; }
+  .cu-guide ol{ margin:8px 0 0; padding-left:22px; }
+  .cu-guide li{ margin:4px 0; }
+
+  .cu-paste{ width:100%; min-height:130px; padding:16px 18px; border-radius:12px;
+             background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.16);
+             color:#f2eff8; font-size:14.5px; line-height:1.8; font-family:inherit; resize:vertical; }
+  .cu-paste::placeholder{ color:#8a86a0; }
+  .cu-paste:focus{ outline:none; border-color:#a24ea7; }
+
+  .cu-bar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:14px 0 6px; }
+
+  .cu-rows{ margin:24px 0 0; }
+  .cu-empty{ color:#8a86a0; font-size:14px; padding:22px 0; }
+
+  .cu-row{ display:flex; gap:16px; align-items:flex-start; padding:18px 0;
+           border-top:1px solid rgba(255,255,255,.10); }
+  .cu-row.off{ opacity:.38; }
+  .cu-chk{ flex:0 0 auto; padding-top:4px; cursor:pointer; }
+  .cu-chk input{ width:20px; height:20px; accent-color:#a24ea7; cursor:pointer; }
+  .cu-chk span{ display:none; }
+
+  .cu-th{ flex:0 0 168px; aspect-ratio:16/9; border-radius:8px; overflow:hidden; background:#15151d; }
+  .cu-th img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .cu-f{ flex:1 1 auto; min-width:0; }
+  .cu-f input[type="text"], .cu-f select{
+    width:100%; padding:11px 14px; border-radius:9px; background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.16); color:#f2eff8; font-size:14.5px; font-family:inherit; }
+  .cu-f input[type="text"]:focus, .cu-f select:focus{ outline:none; border-color:#a24ea7; }
+  .cu-f input[type="text"]::placeholder{ color:#8a86a0; }
+  /* ★ 고르는 상자는 브라우저가 그립니다 — 어둡게 알려 줘야 합니다 */
+  .cu-f select{ color-scheme:dark; }
+  .cu-f2{ display:flex; gap:10px; margin-top:9px; }
+  .cu-f2 input{ flex:1 1 60%; }
+  .cu-f2 select{ flex:0 0 190px; }
+
+  .cu-links{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+  .cu-mini{ background:none; border:none; padding:0; font:inherit; font-size:13px;
+            color:#b79ad6; cursor:pointer; text-decoration:underline; }
+  .cu-mini:hover{ color:#d9c7ef; }
+  .cu-mini.del{ color:#d99; }
+  .cu-id{ font-size:12px; color:#6e6a82; font-family:ui-monospace,Menlo,monospace; margin-left:auto; }
+
+  .cu-play{ margin-top:12px; }
+  .cu-play iframe{ width:100%; max-width:520px; aspect-ratio:16/9; border:0; border-radius:10px; background:#000; }
+  .cu-hint{ font-size:12.5px; color:#8a86a0; line-height:1.7; margin:8px 0 0; max-width:520px; }
+
+  .cu-foot{ display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+            margin-top:26px; padding-top:22px; border-top:1px solid rgba(255,255,255,.14); }
+  .cu-foot select{ padding:11px 14px; border-radius:9px; background:rgba(255,255,255,.05);
+                   border:1px solid rgba(255,255,255,.16); color:#f2eff8; font-size:14.5px;
+                   font-family:inherit; color-scheme:dark; }
+  .cu-foot .n{ font-size:14px; color:#c9c6d6; }
+  .cu-foot .n b{ color:#efeaf6; font-size:17px; }
+
+  .cu-list{ margin-top:10px; }
+  .cu-lh{ font-size:14px; color:#c9c6d6; margin-bottom:8px; }
+  .cu-item{ display:flex; gap:14px; align-items:center; padding:12px 0;
+            border-top:1px solid rgba(255,255,255,.08); }
+  .cu-item.off{ opacity:.45; }
+  .cu-ith{ flex:0 0 92px; aspect-ratio:16/9; border-radius:6px; overflow:hidden; background:#15151d; }
+  .cu-ith img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .cu-itx{ flex:1 1 auto; min-width:0; }
+  .cu-itx a{ display:block; color:#f2eff8; font-size:14.5px; text-decoration:none;
+             overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cu-itx a:hover{ text-decoration:underline; }
+  .cu-meta{ display:block; font-size:12.5px; color:#8a86a0; margin-top:3px; }
+  .cu-iact{ flex:0 0 auto; display:flex; gap:12px; }
+
+  @media (max-width:760px){
+    .cu-row{ flex-wrap:wrap; }
+    .cu-th{ flex:0 0 118px; }
+    .cu-f{ flex:1 1 100%; }
+    .cu-f2{ flex-wrap:wrap; }
+    .cu-f2 select{ flex:1 1 100%; }
+    .cu-id{ margin-left:0; }
+    .cu-iact{ flex-direction:column; gap:6px; }
+  }
+</style>
+</head>
+
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     큐레이션 등록 — 관리자만
+
+     ★ 왜 인스트럭터 등록 화면과 따로인가
+       lesson-write.html 은 「강사가 <b>자기</b> 강의를 내는」 화면입니다.
+       여기는 「이미 공개된 남의 영상을 <b>골라 모으는</b>」 화면입니다.
+       강사가 없고(instructor_id=null), 출처가 반드시 있어야 하고,
+       한 번에 여럿을 넣습니다. 성격이 달라 길을 따로 냈습니다.
+
+     ★ 값은 아예 받지 않습니다 — 큐레이션은 늘 0원입니다.
+     ★ 표지도 받지 않습니다 — 유튜브 표지를 그대로 씁니다(값 0원).
+     ══════════════════════════════════════════════════════════════ -->
+<div class="ln">
+
+  <section class="ln-hero">
+    <div class="ln-wrap ln-hero-in">
+      <h1 class="ln-logo">LESSON:ON</h1>
+      <p class="ln-hero-en">
+        Curated master classes from the world's finest artists.<br>
+        Selected from publicly shared performances, credited to their creators.
+      </p>
+      <p class="ln-hero-ko">
+        세계적인 아티스트의 마스터클래스를 골라 모았습니다. 공개된 영상만 쓰고, 출처를 반드시 밝힙니다.
+      </p>
+      <div id="oc-subnav" data-src="/partials/subnav-lesson.html"></div>
+    </div>
+  </section>
+
+  <div class="ln-wrap">
+
+    <section class="ln-sec">
+      <div class="ln-eyebrow">Admin · Curation</div>
+      <h2 class="ln-h1">큐레이션 등록</h2>
+      <p class="ln-lead">
+        유튜브에 <b>공개된</b> 마스터클래스 영상을 골라 마스터클래스 탭에 올립니다.
+        제목과 채널 이름은 유튜브에서 <b>저절로</b> 가져옵니다.
+      </p>
+
+      <div id="cuGate"></div>
+
+      <div id="cuBox" hidden>
+
+        <div class="cu-guide">
+          <b>이렇게 쓰십니다</b>
+          <ol>
+            <li>유튜브에서 영상을 고릅니다 — <b>공식 채널</b>(오케스트라 · 음악원 · 콩쿠르 · 연주자 본인)만 쓰십시오.</li>
+            <li>영상 주소를 <b>한 줄에 하나씩</b> 아래 칸에 붙여넣고 <b>불러오기</b>를 누릅니다.</li>
+            <li>제목 · 채널 이름이 저절로 채워집니다. <b>분야만</b> 골라 주십시오.</li>
+            <li>줄마다 <b>▶ 여기서 재생해 보기</b>로 확인하십시오 — 임베드를 막아 둔 영상은 우리 사이트에서 재생되지 않습니다.</li>
+            <li><b>한꺼번에 등록</b>을 누르면 끝입니다.</li>
+          </ol>
+        </div>
+
+        <textarea id="cuPaste" class="cu-paste" placeholder="https://www.youtube.com/watch?v=...
+https://youtu.be/...
+https://www.youtube.com/watch?v=...
+
+한 줄에 하나씩. 몇 개든 괜찮습니다."></textarea>
+
+        <div class="cu-bar">
+          <button type="button" class="ln-btn go" id="cuLoad">불러오기</button>
+          <span style="font-size:13px;color:#8a86a0">이미 올린 영상과 겹치는 것은 저절로 걸러집니다</span>
+        </div>
+        <div id="cuSay"></div>
+
+        <div id="cuRows" class="cu-rows"></div>
+
+        <div class="cu-foot" id="cuFoot" hidden>
+          <span class="n">고른 것 <b id="cuCount">0</b>개</span>
+          <select id="cuStatus">
+            <option value="open">모집중 — 바로 목록에 보입니다</option>
+            <option value="draft">준비중 — 나만 보입니다</option>
+          </select>
+          <button type="button" class="ln-btn go" id="cuSave">마스터클래스에 한꺼번에 등록</button>
+        </div>
+        <div id="cuSay2"></div>
+
+      </div><!-- /#cuBox -->
+    </section>
+
+    <section class="ln-sec">
+      <div class="ln-eyebrow">Already Curated</div>
+      <h2 class="ln-h2">올려 둔 큐레이션</h2>
+      <p class="ln-lead">
+        재생되지 않는 영상은 여기서 바로 <b>지우기</b>, 잠시 내리려면 <b>감추기</b>를 쓰십시오.
+      </p>
+      <div id="cuList" class="cu-list"></div>
+    </section>
+
+  </div>
+
+  <div class="ln-cta">
+    <span class="ln-cta-in">
+      <b>올린 영상이 회원에게 어떻게 보이는지 확인하시려면</b>
+      <a href="/lesson/master.html">마스터클래스 목록 &#9656;</a>
+    </span>
+  </div>
+
+</div><!-- /.ln -->
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/lesson-curate.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.OCLessonCurate) OCLessonCurate.page();
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

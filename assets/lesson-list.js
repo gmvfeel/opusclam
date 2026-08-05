@@ -324,10 +324,20 @@
         var canApply = live && (o.status === 'open' || o.status === 'ongoing') && !full
                        && (!o.apply_to || new Date(o.apply_to) > new Date());
 
+        /* ★ 큐레이션은 <b>강사가 없습니다</b> — 남이 공개한 영상을 골라
+           모은 것이므로 instructor_id 가 비어 있습니다. 그 자리에
+           「-」를 찍으면 정보가 빠진 것처럼 보이고, 아무 강사 이름을
+           끌어다 놓으면 「그 사람이 만든 강의」로 거짓이 됩니다.
+           그래서 <b>채널 이름(출처)</b>을 밝히고 머리글도 SOURCE 로
+           바꿉니다 — 모아온 것임이 화면에서 정직하게 드러납니다. */
+        var curated = (o.source === 'curated');
+        var byRole  = curated && !o.instructor_name ? 'SOURCE' : 'INSTRUCTOR';
+        var byName  = o.instructor_name || (curated ? (o.credit || '출처 미표기') : '-');
+
         /* 머리 — 시안: INSTRUCTOR 이름 / 제목 / 소개 */
         var head =
             '<div class="ln-detail-head">'
-          +   '<div class="ln-detail-role">INSTRUCTOR<b>' + esc(o.instructor_name || '-') + '</b></div>'
+          +   '<div class="ln-detail-role">' + byRole + '<b>' + esc(byName) + '</b></div>'
           +   '<h2 class="ln-detail-t">' + esc(o.title || '-')
           +     (o.subtitle ? ', ' + esc(o.subtitle) : '') + '</h2>'
           +   (o.summary ? '<div class="ln-detail-d">' + esc(o.summary) + '</div>' : '')
@@ -350,7 +360,7 @@
         var sampleBar =
             '<div class="ln-sample">'
           +   '<span class="k">&#9656; CLASS SAMPLE</span>'
-          +   '<span class="v">Instructor : ' + esc(o.instructor_name || '-')
+          +   '<span class="v">' + (byRole === 'SOURCE' ? 'Source' : 'Instructor') + ' : ' + esc(byName)
           +     (o.duration_min ? '<i>강의길이: ' + esc(dur(o.duration_min)) + '</i>' : '') + '</span>'
           + '</div>';
 
