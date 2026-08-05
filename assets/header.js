@@ -13,6 +13,36 @@
    여기서 또 붙이면 클릭당 두 번 토글되어 다크모드가 안 켜지므로 넣지 않는다. */
 
 /* ------------------------------------------------------------
+   모드 전환(다크/화이트) — <b>모든 화면</b>에서 되게 여기서 잡는다.
+   ★ 2026-08-05 · 파트너 지적 — 리쿠르트에서 모드 전환이 안 됐다.
+
+   무엇이 문제였나 — 처리하는 곳이 <b>화면마다 달랐다</b>
+     · home.html · db/* 열여섯 화면 → 각자 <b>자기 안에</b> 코드를 두었다
+     · 리쿠르트 · 회원 화면        → assets/auth.js 의 코드에 의존
+     · DB 화면은 auth.js 를 아예 싣지 않는다
+   같은 일을 하는 코드가 열일곱 곳에 흩어져 있으니, 어느 화면에서 되고
+   어느 화면에서 안 되는지 알기 어려웠다.
+
+   header.js 는 <b>거의 모든 화면이 싣는다.</b> 그래서 여기 한 곳에 둔다.
+   ★ 두 번 걸리면 <b>두 번 뒤집혀 그대로</b>가 되므로, 창에 표시를 두어
+     한 번만 걸리게 한다(auth.js 도 같은 표시를 본다).
+   ★ 화면 안의 옛 코드들은 그대로 두어도 이 표시 때문에 겹치지 않는다.
+   ------------------------------------------------------------ */
+(function(){
+  if (window.__ocThemeBound) return;
+  window.__ocThemeBound = true;
+  document.addEventListener('click', function(e){
+    var t = e.target && e.target.closest && e.target.closest('.theme-toggle');
+    if (!t) return;
+    var root = document.documentElement;
+    var toDark = root.getAttribute('data-theme') !== 'dark';
+    if (toDark) root.setAttribute('data-theme','dark');
+    else root.removeAttribute('data-theme');
+    try { localStorage.setItem('oc-theme', toDark ? 'dark' : 'light'); } catch(err){}
+  });
+})();
+
+/* ------------------------------------------------------------
    헤더 표시 모드 — 페이지가 <body data-header="..."> 로 명시한다.
    (DOM 구조를 추측하지 않으므로 페이지가 바뀌어도 안 깨진다)
 

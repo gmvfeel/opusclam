@@ -76,6 +76,37 @@
     sel.innerHTML = h;
   }
 
+  /* ── 「지금 보는 탭」 표시 ────────────────────────────────
+     ★ 예전에는 서브메뉴에 pdb-subnav 를 달아 include.js 가 자동으로
+       붙여 주게 했습니다. 그런데 그 이름에 <b>알약 모양·모바일에서
+       감추기</b> 같은 짜임이 딸려 와 시안과 어긋났습니다(파트너 지적).
+       그래서 이름을 떼고 표시는 <b>여기서</b> 붙입니다.
+
+     ★ 서브메뉴는 include.js 가 <b>문서를 다 읽은 뒤</b> 넣습니다.
+       그래서 곧바로 찾으면 없을 수 있어 <b>몇 번 다시 봅니다.</b>
+     ★ 아직 없는 다섯 탭은 모두 대문(/lesson/index.html)을 가리킵니다.
+       그러면 대문에서 <b>다섯 개가 함께 켜집니다.</b> 그래서 대문에서는
+       아무것도 켜지 않습니다 — 「지금 어디」가 헷갈리는 것보다 낫습니다. */
+  function markTabs() {
+    var n = 0;
+    (function tick() {
+      var nav = document.querySelector('.ln-tabs');
+      if (!nav) {
+        if (++n > 40) return;               /* 2초쯤 기다리고 그만둡니다 */
+        return setTimeout(tick, 50);
+      }
+      var here = location.pathname.replace(/\/index\.html$/, '/');
+      if (here === '/lesson/' || here === '/lesson/index.html') return;
+      [].forEach.call(nav.querySelectorAll('a[href]'), function (a) {
+        var h = (a.getAttribute('href') || '').replace(/\/index\.html$/, '/');
+        if (h === here) a.classList.add('active');
+      });
+    })();
+  }
+  /* 화면이 실리면 곧 한 번 붙입니다 */
+  if (document.readyState !== 'loading') markTabs();
+  else document.addEventListener('DOMContentLoaded', markTabs);
+
   /* ══ ① 목록 ══════════════════════════════════════════════════ */
   function list(opt) {
     opt = opt || {};

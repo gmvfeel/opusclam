@@ -2,6 +2,11 @@
 (function(){
   try{ if(localStorage.getItem('oc-theme')==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){}
   function ready(){
+    /* ★ assets/header.js 가 이미 잡았으면 여기서는 잡지 않습니다 (2026-08-05)
+       두 곳이 함께 걸리면 <b>두 번 뒤집혀 그대로</b>가 되어
+       「눌러도 안 바뀐다」 가 됩니다. */
+    if (window.__ocThemeBound) return;
+    window.__ocThemeBound = true;
     document.addEventListener('click', function(e){
       var t = e.target.closest && e.target.closest('.theme-toggle'); if(!t) return;
       var toDark = document.documentElement.getAttribute('data-theme') !== 'dark';
