@@ -205,7 +205,19 @@
       +   'font-size:20px;line-height:1;cursor:pointer;}'
       + '.oc-lb-x:hover{background:rgba(255,255,255,.20);}'
       + '@media (max-width:760px){.oc-lb{padding:12px;}'
-      +   '.oc-lb-in{width:100%;max-width:none;}.oc-lb-x{top:8px;right:10px;}}';
+      +   '.oc-lb-in{width:100%;max-width:none;}.oc-lb-x{top:8px;right:10px;}}'
+
+      /* 큐레이션 강의의 「About this Video」 칸 */
+      + '.oc-cv dl{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;margin:0;}'
+      + '.oc-cv dt{color:var(--ln-tx3,#8a86a0);font-size:12.5px;letter-spacing:.04em;'
+      +   'text-transform:uppercase;white-space:nowrap;}'
+      + '.oc-cv dd{margin:0;font-size:14px;line-height:1.6;}'
+      + '.oc-cv dd b{font-weight:600;}'
+      + '.oc-cv dd a{color:#b79ad6;text-decoration:underline;font-size:13px;margin-left:4px;}'
+      + '.oc-cv-note{margin:20px 0 0;padding-top:18px;'
+      +   'border-top:1px solid var(--ln-line,rgba(255,255,255,.12));'
+      +   'font-size:13px;line-height:1.85;color:var(--ln-tx3,#8a86a0);}'
+      + '.oc-cv-note b{color:var(--ln-tx2,#c9c6d6);font-weight:600;}';
     var s = document.createElement('style');
     s.setAttribute('data-oc', 'lightbox');
     s.textContent = css;
@@ -284,6 +296,10 @@
   /* 표지 단추에 손잡이 걸기 — 렌더가 끝난 뒤에 한 번 부릅니다 */
   function bindLb(root) {
     if (!root) return;
+    /* ★ 짜임을 <b>여기서</b> 넣습니다 — openLb(누른 뒤)에서만 넣으면
+       첫 클릭 전까지 표지 효과와 「About this Video」 칸 모양이
+       들어가지 않습니다. 그리기가 끝난 이 자리가 맞습니다. */
+    styleOnce();
     Array.prototype.forEach.call(root.querySelectorAll('[data-lb="1"]'), function (b) {
       if (b.__lb) return; b.__lb = true;
       b.addEventListener('click', function () {
@@ -531,14 +547,44 @@
           +     (o.duration_min ? '<i>강의길이: ' + esc(dur(o.duration_min)) + '</i>' : '') + '</span>'
           + '</div>';
 
-        var planTitle = (o.tab === 'master') ? 'MasterClass plan' : 'Lesson plan';
-        var plan = cur.length
-          ? '<ul class="ln-plan">' + cur.map(function (x) {
-              return '<li><span class="no">CLASS ' + ('0' + (x.no || 1)).slice(-2) + '</span>'
-                + '<span class="t">' + esc(x.title || '') + '</span>'
-                + '<span class="go">VIEW DETAIL &#8594;</span></li>';
-            }).join('') + '</ul>'
-          : '<div class="ln-none" style="margin-top:0">회차가 아직 등록되지 않았습니다.</div>';
+        /* ★ 큐레이션에는 <b>회차라는 것이 없습니다</b> — 우리 강사가 짠
+           강의가 아니라, 한 편으로 완결된 공개 영상을 골라 온 것입니다.
+           그런데도 「회차가 아직 등록되지 않았습니다」를 띄우면 회원 눈에
+           <b>준비가 덜 된 강의</b>처럼 보입니다. 그래서 그 자리에 이 영상에
+           실제로 있는 것을 담고, 출처를 한 번 더 밝힙니다.
+           ※ 큐레이션인데 회차가 들어 있으면(드물지만) 회차를 보여 줍니다. */
+        var curPanel = (o.source === 'curated' && !cur.length);
+
+        var planTitle = curPanel
+          ? 'About this Video'
+          : ((o.tab === 'master') ? 'MasterClass plan' : 'Lesson plan');
+
+        var plan;
+        if (curPanel) {
+          var rows = '';
+          rows += '<dt>출처</dt><dd><b>' + esc(o.credit || '출처 미표기') + '</b>'
+                + (o.credit_url
+                    ? ' <a href="' + esc(o.credit_url) + '" target="_blank" rel="noopener">원본 &#8599;</a>'
+                    : '') + '</dd>';
+          if (o.field)        rows += '<dt>분야</dt><dd>' + esc(o.field) + '</dd>';
+          if (o.duration_min) rows += '<dt>재생시간</dt><dd>' + esc(dur(o.duration_min)) + '</dd>';
+          rows += '<dt>수강료</dt><dd>무료</dd>';
+          rows += '<dt>구성</dt><dd>한 편으로 완결된 마스터클래스</dd>';
+
+          plan = '<div class="oc-cv"><dl>' + rows + '</dl>'
+            + '<p class="oc-cv-note">'
+            + '오퍼스클램은 이 영상을 <b>골라서 소개</b>합니다. 유튜브가 공식으로 열어 둔 방식으로 '
+            + '보여 드리므로 <b>조회수는 원작자에게</b> 갑니다. 좋으셨다면 원본 채널도 찾아가 보십시오.'
+            + '</p></div>';
+        } else {
+          plan = cur.length
+            ? '<ul class="ln-plan">' + cur.map(function (x) {
+                return '<li><span class="no">CLASS ' + ('0' + (x.no || 1)).slice(-2) + '</span>'
+                  + '<span class="t">' + esc(x.title || '') + '</span>'
+                  + '<span class="go">VIEW DETAIL &#8594;</span></li>';
+              }).join('') + '</ul>'
+            : '<div class="ln-none" style="margin-top:0">회차가 아직 등록되지 않았습니다.</div>';
+        }
 
         /* 실시간 레슨 안내 — 정원·일정·신청 */
         var liveBox = '';

@@ -104,6 +104,15 @@
         <a class="ln-btn go" href="/lesson/lesson-write.html">＋ 강의 등록</a>
         <a class="ln-btn" href="/lesson/my-lessons.html" style="margin-left:8px">내 강의</a>
       </div>
+
+      <!-- ★ 관리자에게만 보이는 길 (2026-08-06)
+             큐레이션(공개된 영상을 골라 모으는 일)은 <b>강사의 일이 아니라
+             운영의 일</b>입니다. 그래서 위 강사 도구와 줄을 나눕니다.
+           ★ 회원에게는 보이지 않습니다 — is_admin 인 사람에게만 켭니다. -->
+      <div id="lnAdmTools" style="margin-top:14px" hidden>
+        <a class="ln-btn go" href="/lesson/curate.html">&#9656; 큐레이션 등록 · 관리</a>
+        <span style="margin-left:10px;font-size:12.5px;color:var(--ln-tx3)">관리자에게만 보입니다</span>
+      </div>
     </section>
 
   </div>
@@ -147,20 +156,25 @@
       c.auth.getSession().then(function (r) {
         var u = r.data && r.data.session && r.data.session.user;
         if (!u) return;
-        c.from('lesson_instructors').select('status').eq('member_id', u.id).maybeSingle()
-          .then(function (ir) {
-            var ok = ir.data && ir.data.status === 'approved';
-            if (!ok) {
-              c.from('members').select('is_admin').eq('id', u.id).maybeSingle().then(function (mr) {
-                if (mr.data && mr.data.is_admin) show();
-              });
-              return;
-            }
-            show();
-          });
+        /* ★ 두 가지를 <b>함께</b> 봅니다 —
+           예전에는 「승인된 강사면 관리자인지 안 보고 끝」이었습니다.
+           그러면 <b>관리자이면서 강사인 분</b>은 큐레이션 단추를 못 봅니다.
+           둘은 서로 배타적이지 않으므로 각각 확인합니다. */
+        Promise.all([
+          c.from('lesson_instructors').select('status').eq('member_id', u.id).maybeSingle(),
+          c.from('members').select('is_admin').eq('id', u.id).maybeSingle()
+        ]).then(function (rs) {
+          var ins = rs[0] && rs[0].data;
+          var mem = rs[1] && rs[1].data;
+          var isIns = !!(ins && ins.status === 'approved');
+          var isAdm = !!(mem && mem.is_admin);
+
+          if (isIns || isAdm) show('lnInsTools');
+          if (isAdm)          show('lnAdmTools');
+        });
       });
-      function show() {
-        var el = document.getElementById('lnInsTools');
+      function show(id) {
+        var el = document.getElementById(id);
         if (el) { el.removeAttribute('hidden'); el.style.display = ''; }
       }
     })(0);
