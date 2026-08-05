@@ -266,7 +266,8 @@
     } catch (e) {}
 
     var first = false;
-    try { first = sessionStorage.getItem('oc-main-mode') === 'first'; } catch (e) {}
+    /* ★ 'my' 가 아니면 모두 오퍼스클램 메인입니다 (2026-08-05 뒤집음) */
+    try { first = sessionStorage.getItem('oc-main-mode') !== 'my'; } catch (e) {}
 
     if (!n) {
       box.innerHTML = '<b>나의 메인</b>이 아직 꾸며지지 않았습니다 · '
@@ -282,7 +283,7 @@
     var toMy = document.getElementById('insToMy');
     if (toMy) toMy.addEventListener('click', function (e) {
       e.preventDefault();
-      try { sessionStorage.removeItem('oc-main-mode'); } catch (e2) {}
+      try { sessionStorage.setItem('oc-main-mode', 'my'); } catch (e2) {}
       location.href = '/home.html';
     });
   }
@@ -595,11 +596,16 @@
 
      ★ 메인의 내용은 my-main.js 가 <b>화면을 그릴 때 한 번</b> 정합니다.
        이미 원래 메인으로 그려져 있으면 다시 불러야 바뀝니다. 그래서
-       ?inner=1 을 붙여 다시 열리게 합니다 (패널도 저절로 열립니다). */
-    var wasFirst = false;
-    try { wasFirst = sessionStorage.getItem('oc-main-mode') === 'first'; } catch (e0) {}
-    if (wasFirst) {
-      try { sessionStorage.removeItem('oc-main-mode'); } catch (e0) {}
+       ?inner=1 을 붙여 다시 열리게 합니다 (패널도 저절로 열립니다).
+
+     ★ 2026-08-05 뒤집음 — 기본이 <b>오퍼스클램 메인</b>이 되었습니다.
+       그래서 「지우기」가 아니라 <b>'my' 를 넣는 것</b>이 이너스페이스의
+       일입니다. 로그인만으로는 메인이 바뀌지 않고, <b>이너스페이스를
+       누른 때에만</b> 바뀝니다. */
+    var mainMine = false;
+    try { mainMine = sessionStorage.getItem('oc-main-mode') === 'my'; } catch (e0) {}
+    if (!mainMine) {
+      try { sessionStorage.setItem('oc-main-mode', 'my'); } catch (e0) {}
       /* .board-main 이 있으면 메인 화면입니다 — 다시 그려야 바뀝니다 */
       if (document.querySelector('.board-main')) {
         location.href = location.pathname + '?inner=1';
@@ -687,7 +693,9 @@
     /* First Main — 원래 메인을 보여 줍니다 (나의 메인 대신) */
     var fm = document.getElementById('insFirst');
     if (fm) fm.addEventListener('click', function () {
-      try { sessionStorage.setItem('oc-main-mode', 'first'); } catch (e) {}
+      /* ★ 표시를 <b>지웁니다</b> — 표시가 없으면 오퍼스클램 메인입니다
+         (2026-08-05 뒤집음. 예전에는 'first' 를 넣었습니다) */
+      try { sessionStorage.removeItem('oc-main-mode'); } catch (e) {}
       location.href = '/home.html';
     });
 
@@ -723,6 +731,17 @@
     el.classList.remove('on');
     document.documentElement.classList.remove('ins-open');
     document.removeEventListener('keydown', onEsc);
+
+    /* ★ 주소에 남은 <b>?inner=1</b> 을 지웁니다 (2026-08-05)
+       패널을 열 때 붙인 것입니다. 닫은 뒤에도 남아 있으면, 새로 고쳤을 때
+       패널이 <b>저절로 다시 열려</b> 놀라게 됩니다.
+       화면을 다시 불러오지 않고 주소만 바꿉니다(replaceState). */
+    try {
+      if (/[?&]inner=1/.test(location.search) && history.replaceState) {
+        var q = location.search.replace(/([?&])inner=1&?/, '$1').replace(/[?&]$/, '');
+        history.replaceState(null, '', location.pathname + q + location.hash);
+      }
+    } catch (e4) {}
     setTimeout(function () {
       el.remove();
       /* ★ 감췄던 구역을 <b>모두</b> 되돌립니다 (2026-08-05)

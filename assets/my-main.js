@@ -63,7 +63,20 @@
      빈 자리가 그대로 남았습니다(「셋만 담음」 에서 181px).
      넷은 원래 메인의 기본 줄 수이므로 초라하지 않습니다. */
   var ROWS_MIN = 4;
-  var KEY_MODE = 'oc-main-mode';   /* 'my' 또는 'first' */
+  /* ★ <b>기본은 오퍼스클램 메인</b>입니다 (2026-08-05 · 파트너 지시)
+
+     예전에는 이 표시가 없으면 곧 「나의 메인」이었습니다. 그래서 로그인만
+     하면 메인 내용이 저절로 바뀌어, 회원이 <b>원래 메인을 볼 기회</b>가
+     없었습니다.
+     이제 뒤집었습니다 —
+       표시 없음 · 그 밖의 값 → <b>오퍼스클램 메인</b> (기본)
+       표시가 'my'          → <b>나의 메인</b>
+     'my' 를 넣는 것은 <b>이너스페이스를 여는 일</b> 하나뿐이고,
+     [First Main] 은 그 표시를 지웁니다. (assets/inner-space.js)
+
+   ★ sessionStorage 이므로 <b>브라우저를 닫으면 초기화</b>됩니다 —
+     새로 오시면 늘 오퍼스클램 메인부터 보게 됩니다. */
+  var KEY_MODE = 'oc-main-mode';   /* 'my' 일 때만 나의 메인 */
 
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
@@ -329,9 +342,9 @@
     }
 
     /* 「First Main」 을 골라 두었으면 원래 메인을 보여 줍니다 */
-    var mode = 'my';
-    try { if (sessionStorage.getItem(KEY_MODE) === 'first') mode = 'first'; } catch (e) {}
-    if (mode === 'first') return;   /* ★ 띠를 놓지 않습니다 — 이너스페이스가 알려 줍니다 */
+    var mode = 'first';   /* ★ 기본값 — 원래 메인을 그대로 둡니다 */
+    try { if (sessionStorage.getItem(KEY_MODE) === 'my') mode = 'my'; } catch (e) {}
+    if (mode !== 'my') return;   /* 손대지 않고 물러납니다 */
 
     saveOrig();
     if (!boardMain) return;
