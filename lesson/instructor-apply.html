@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인스트럭터 신청 · 레슨 : ON · OPUSCLAM.COM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0d0d10">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<link rel="stylesheet" href="/assets/lesson.css">
+</head>
+
+<body>
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     인스트럭터 신청 — 시안 07_인스트럭터신청 을 따릅니다
+       왼쪽 「정보입력」 / 오른쪽 「Profile」 두 상자
+
+     ★ 시안과 <b>다르게 간 것 하나</b> — 아이디·비밀번호 칸을 뺐습니다.
+       시안에는 아이디·비밀번호·비밀번호확인이 있고 「정보불러오기」 단추가
+       있습니다. 즉 <b>가입과 신청을 한 화면에서</b> 하려던 것입니다.
+       그런데 시안 안에도 이렇게 적혀 있습니다 —
+         「인스트럭트 신청은 전공자회원으로 등록된 회원만 신청가능합니다」
+       이미 회원인 사람에게 비밀번호를 다시 받는 것은
+         · 쓸 까닭이 없고 (이미 로그인해 있습니다)
+         · <b>위험합니다</b> (비밀번호를 화면에서 다룰 일을 만듭니다)
+       그래서 <b>로그인한 회원의 정보를 자동으로 채웁니다.</b>
+       시안의 「정보불러오기」 를 저절로 되게 한 것과 같습니다.
+
+     ★ 자격은 <b>서버에서</b> 봅니다 (oc_lesson_apply_ok · 줄 보안 정책).
+       화면에서만 막으면 곧바로 뚫립니다.
+     ══════════════════════════════════════════════════════════════ -->
+<div class="ln">
+
+  <section class="ln-hero">
+    <div class="ln-wrap ln-hero-in">
+      <h1 class="ln-logo">LESSON:ON</h1>
+      <p class="ln-hero-en">
+        Learn from the most inspiring WORLD BEST artists,<br>
+        Unlimited access to instructors MASTER CLASS.<br>
+        New classes are added periodically.
+      </p>
+      <div id="oc-subnav" data-src="/partials/subnav-lesson.html"></div>
+    </div>
+  </section>
+
+  <div class="ln-wrap">
+    <section class="ln-sec">
+      <div class="ln-eyebrow">Apply Instructor</div>
+      <h2 class="ln-h1">인스트럭터 신청</h2>
+
+      <!-- 자격·상태 안내가 놓이는 자리 (로그인 여부 · 전공자 여부 · 이미 신청함) -->
+      <div id="lnGate"></div>
+
+      <form id="lnForm" class="ln-form2" hidden autocomplete="off">
+
+        <!-- ══ 왼쪽 · 정보입력 ══════════════════════════════════ -->
+        <div class="ln-box">
+          <h3 class="ln-box-h">정보입력</h3>
+
+          <div class="ln-fld">
+            <label>아이디</label>
+            <div class="ln-fld-b">
+              <input type="text" id="fId" disabled>
+              <div class="ln-hint">
+                로그인하신 계정입니다. 인스트럭터 신청은
+                <b>전공자 회원</b>만 하실 수 있습니다.
+              </div>
+            </div>
+          </div>
+
+          <div class="ln-fld">
+            <label for="fName">이름<span class="req">*</span></label>
+            <div class="ln-fld-b">
+              <input type="text" id="fName" maxlength="40" placeholder="실명을 적어 주십시오">
+              <div class="ln-hint">강의와 프로필에 이 이름이 쓰입니다.</div>
+            </div>
+          </div>
+
+          <div class="ln-fld">
+            <label for="fField">활동분야<span class="req">*</span></label>
+            <div class="ln-fld-b">
+              <div class="ln-row">
+                <select id="fField" style="flex:0 0 168px"></select>
+                <input type="text" id="fFieldEtc" maxlength="40"
+                       placeholder="기타 분야의 정보를 입력해주세요." style="flex:1 1 180px" hidden>
+              </div>
+            </div>
+          </div>
+
+          <div class="ln-fld">
+            <label for="fPhone">전화번호<span class="req">*</span></label>
+            <div class="ln-fld-b">
+              <input type="tel" id="fPhone" maxlength="20" placeholder="010-0000-0000">
+              <div class="ln-hint">
+                <b>다른 회원에게 보이지 않습니다.</b> 심사와 안내에만 씁니다.
+              </div>
+            </div>
+          </div>
+
+          <div class="ln-fld">
+            <label for="fEmail">이메일</label>
+            <div class="ln-fld-b"><input type="email" id="fEmail" maxlength="80" placeholder="name@example.com"></div>
+          </div>
+
+          <div class="ln-fld">
+            <label>출신학교</label>
+            <div class="ln-fld-b">
+              <div class="ln-row">
+                <input type="text" id="fCountry" maxlength="20" placeholder="국가" style="flex:0 0 96px">
+                <select id="fDegree" style="flex:0 0 110px">
+                  <option value="">학위</option>
+                  <option>학사</option><option>석사</option><option>박사</option><option>수료</option>
+                </select>
+                <input type="text" id="fMajor" maxlength="60" placeholder="학교 · 학과" style="flex:1 1 160px">
+              </div>
+            </div>
+          </div>
+
+          <div class="ln-fld">
+            <label for="fBirth">생년월일</label>
+            <div class="ln-fld-b">
+              <input type="date" id="fBirth">
+              <div class="ln-hint"><b>다른 회원에게 보이지 않습니다.</b></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ 오른쪽 · Profile ═════════════════════════════════ -->
+        <div class="ln-box">
+          <h3 class="ln-box-h">Profile</h3>
+
+          <div class="ln-fld">
+            <label>인스트럭터 사진</label>
+            <div class="ln-fld-b">
+              <div class="ln-pick">
+                <div class="ln-pick-ph" id="fPhoto">사진</div>
+                <div>
+                  <button type="button" class="ln-btn" id="fPhotoPick" style="height:34px;padding:0 16px">찾아보기</button>
+                  <div class="ln-hint">
+                    800픽셀로 줄여 올립니다 — 큰 사진을 고르셔도 됩니다.<br>
+                    10MB 넘는 파일은 받지 않습니다.
+                  </div>
+                </div>
+              </div>
+              <input type="file" id="fPhotoFile" accept="image/*" hidden>
+            </div>
+          </div>
+
+          <div class="ln-fld">
+            <label for="fBio">이력사항<span class="req">*</span></label>
+            <div class="ln-fld-b">
+              <textarea id="fBio" maxlength="2000"
+                placeholder="학력 · 수상 · 활동 경력을 줄을 나누어 적어 주십시오.&#10;- 서울예고, 서울대, 미국 Indiana University 대학원 졸업&#10;- 동아콩쿠르, 대한민국국악상 수상"></textarea>
+              <div class="ln-hint">
+                이 내용이 <b>인스트럭터 정보에 그대로 보입니다.</b>
+                줄바꿈도 그대로 나옵니다. <span id="fBioN">0</span> / 2,000
+              </div>
+            </div>
+          </div>
+
+          <div class="ln-fld">
+            <label>증명서등록<span class="req">*</span></label>
+            <div class="ln-fld-b">
+              <div class="ln-row">
+                <input type="text" id="fCertName" placeholder="선택된 파일 없음" disabled style="flex:1 1 140px">
+                <button type="button" class="ln-btn" id="fCertPick" style="height:38px;padding:0 16px">찾아보기</button>
+              </div>
+              <input type="file" id="fCertFile" accept=".pdf,.jpg,.jpeg,.png,.hwp,.doc,.docx" hidden>
+              <div class="ln-hint">
+                졸업증명서 · 경력증명서 등 <b>학력과 경력을 증명할 수 있는 문서</b>를 올려 주십시오.<br>
+                <b>다른 회원에게 보이지 않습니다.</b> 심사에만 씁니다.
+              </div>
+            </div>
+          </div>
+
+          <div class="ln-fld">
+            <label>활동사진/동영상</label>
+            <div class="ln-fld-b">
+              <button type="button" class="ln-btn" id="fMediaPick" style="height:34px;padding:0 16px">＋ 파일추가</button>
+              <input type="file" id="fMediaFile" accept="image/*,video/*" multiple hidden>
+              <div class="ln-hint">
+                이미지는 한 장에 <b>10MB</b> 까지, 최대 <b>여덟 개</b>까지 올릴 수 있습니다.<br>
+                <b>동영상은 주소로 넣는 편이 좋습니다</b> — 파일로 올리면 무거워서
+                보는 분이 기다리게 됩니다. 유튜브·Vimeo 주소를 이력사항에 적어 주셔도 됩니다.
+              </div>
+              <ul class="ln-files" id="fMediaList" hidden></ul>
+            </div>
+          </div>
+
+          <div class="ln-fld">
+            <label>동의</label>
+            <div class="ln-fld-b">
+              <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ln-tx2);cursor:pointer">
+                <input type="checkbox" id="fAgree" style="width:auto;margin-top:2px">
+                <span>개인정보 수집 및 이용에 동의합니다.
+                  <a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--ln-blue)">약관보기</a>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div class="ln-btns" id="lnBtns" hidden>
+        <button type="button" class="ln-btn go" id="fSave">인스트럭터 신청</button>
+        <a class="ln-btn" href="/lesson/index.html">취소</a>
+      </div>
+
+      <div id="lnSay"></div>
+    </section>
+  </div>
+
+  <div class="ln-cta">
+    <span class="ln-cta-in">
+      <b>심사는 서류 확인으로 이루어집니다</b>
+      <a href="/lesson/instructor.html">인스트럭터 정보 &#9656;</a>
+    </span>
+  </div>
+
+</div><!-- /.ln -->
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/lesson-instructor.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.OCLessonIns) OCLessonIns.apply();
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

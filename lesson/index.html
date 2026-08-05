@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>레슨 : ON · OPUSCLAM.COM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0d0d10">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<link rel="stylesheet" href="/assets/lesson.css">
+</head>
+
+<body>
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     레슨:ON 메인 — 시안 00_LessonON_Main 을 따릅니다
+
+     ★ 껍데기와 안쪽을 가릅니다 (파트너 지시)
+         껍데기 — 지금 사이트의 헤더 · 푸터 · 서브메뉴 짜임
+         안쪽   — 시안 그대로 (검정 바탕 · 보라 강조)
+       시안 헤더의 「ALL CATEGORIES」 드롭다운은 3~4년 전 것이라 쓰지 않고,
+       7탭은 <b>서브메뉴</b>로 놓습니다.
+
+     ★ 시안에 있으나 <b>아직 두지 않은 것</b>
+         · 연간회원권 팝업 — 가격 정책이 정해지지 않았습니다
+         · Trending / Coming Soon / Sample Lesson — 강의 표(lessons)가
+           아직 없습니다. 그 자리를 만들어 두고 「준비중」으로 둡니다.
+       화면을 미리 만들어 두면 <b>없는 자료를 있는 척</b> 하게 되므로,
+       자리만 두고 내용은 표가 생긴 뒤에 채웁니다.
+     ══════════════════════════════════════════════════════════════ -->
+<div class="ln">
+
+  <!-- ── 히어로 ────────────────────────────────────────────── -->
+  <section class="ln-hero">
+    <div class="ln-wrap ln-hero-in">
+      <h1 class="ln-logo">LESSON:ON</h1>
+      <p class="ln-hero-en">
+        Learn from the most inspiring WORLD BEST artists,<br>
+        Unlimited access to instructors MASTER CLASS.<br>
+        New classes are added periodically.
+      </p>
+      <p class="ln-hero-ko">
+        가장 많은 영감을 주는 아티스트에게 배우세요. 마스터 클래스 무제한수강, 매달 새로운 수업이 추가됩니다.
+      </p>
+
+      <!-- 7탭 — partials/subnav-lesson.html 한 곳에서 관리합니다 -->
+      <div id="oc-subnav" data-src="/partials/subnav-lesson.html"></div>
+    </div>
+  </section>
+
+  <div class="ln-wrap">
+
+    <!-- ── 인스트럭터 — 지금 만들 수 있는 유일한 진짜 내용입니다 ── -->
+    <section class="ln-sec">
+      <div class="ln-sec-top">
+        <div>
+          <div class="ln-eyebrow">Instructor</div>
+          <h2 class="ln-h1">인스트럭터</h2>
+        </div>
+        <a class="ln-vd" href="/lesson/instructor.html">전체 보기 &#8594;</a>
+      </div>
+      <div class="ln-ins-grid" id="lnInsHome"><div class="ln-msg">불러오는 중…</div></div>
+    </section>
+
+    <!-- ── 아직 준비 중인 것들 ────────────────────────────────
+         ★ 시안의 Trending · Coming Soon · Sample Lesson 자리입니다.
+           강의 표(lessons)가 생기면 이 자리를 채웁니다. -->
+    <section class="ln-sec">
+      <div class="ln-eyebrow">Classes</div>
+      <h2 class="ln-h1">강의</h2>
+      <div class="ln-none">
+        <b>강의는 준비 중입니다.</b><br>
+        마스터클래스 · 공개레슨 · 1:1레슨 · 그룹레슨이 차례로 열립니다.<br>
+        먼저 가르치실 분을 모으고 있습니다 —
+        <a class="ln-vd" style="margin-top:16px" href="/lesson/instructor-apply.html">인스트럭터 신청 &#8594;</a>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ── 아래 띠 ───────────────────────────────────────────────
+       ★ 시안에는 「월 5,0(연간청구)」 이 적혀 있으나 <b>값을 적지
+         않았습니다</b> — 가격 정책이 아직 정해지지 않았습니다.
+         정해지면 이 글자만 고치면 됩니다. -->
+  <div class="ln-cta">
+    <span class="ln-cta-in">
+      <b>레슨:ON 이 곧 문을 엽니다</b>
+      <a href="/lesson/instructor-apply.html">GET STARTED &#9656;</a>
+    </span>
+  </div>
+
+</div><!-- /.ln -->
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/lesson-instructor.js"></script>
+<script>
+  /* 메인의 인스트럭터 — 승인된 분 넷만 보여 줍니다.
+     ★ 표가 아니라 <b>뷰</b>(lesson_instructors_public)를 읽습니다.
+       그 뷰에는 연락처가 아예 담기지 않습니다. */
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.OCLessonIns) OCLessonIns.list({ box: 'lnInsHome', limit: 4, pager: false });
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
