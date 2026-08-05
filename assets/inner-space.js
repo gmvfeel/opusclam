@@ -57,7 +57,12 @@
        아래로 밀려 <b>GNB 가 사라집니다.</b> 그래서 아예 만들지 않습니다.
      ★ 규칙을 <b>이 목록 한 곳</b>에만 둡니다. 다른 화면을 빼려면
        여기에 주소를 더하면 됩니다. */
-  var SKIP = ['/account/mypage.html'];
+  /* ★ 목록은 <b>assets/auth.js</b> 가 창에 얹어 둔 것(window.OC_NO_INNER)을
+       씁니다 — 그 파일이 헤더 링크를 놓는 곳이므로 판단 기준이 같아야
+       합니다. 두 곳에 따로 적으면 반드시 한 곳을 빠뜨립니다.
+     ★ auth.js 가 없는 화면(메인 등)에서는 아래 대비 목록을 씁니다. */
+  var SKIP = ['/account/mypage.html', '/account/profile.html',
+              '/account/interests.html'];
 
   /* ── 패널이 <b>자리를 대신할</b> 메인 구역 ─────────────────────
      ★ 왜 (2026-08-05 · 파트너 지시)
@@ -93,9 +98,9 @@
   }
 
   function skipHere() {
-    var pth = location.pathname;
-    for (var i = 0; i < SKIP.length; i++) if (pth === SKIP[i]) return true;
-    return false;
+    var list = (window.OC_NO_INNER && window.OC_NO_INNER.length)
+      ? window.OC_NO_INNER : SKIP;
+    return list.indexOf(location.pathname) >= 0;
   }
 
   /* ★ 스타일도 <b>스스로</b> 싣습니다.

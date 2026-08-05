@@ -45,7 +45,7 @@
        짙은 선이 맞습니다 — 옅은 흰선으로 바꾸지 않습니다. */
   .me-wrap{ --mp-edge:#514a6b; --mp-edge-w:3px }
   .me-card{background:#fff;border:var(--mp-edge-w) solid var(--mp-edge);border-radius:14px;
-    padding:24px 22px;margin-bottom:16px}
+    padding:var(--oc-card-pad,40px 54px);margin-bottom:16px}
   .me-card h2{font-size:15px;font-weight:800;margin:0 0 4px}
   .me-card .note{font-size:12.5px;color:var(--text-3);line-height:1.7;margin:0 0 18px}
   .me-card .note b{color:var(--text-2)}
@@ -103,7 +103,7 @@
 
   @media(max-width:520px){
     .me-wrap{padding:18px 14px 60px}
-    .me-card{padding:18px 16px}
+    .me-card{padding:var(--oc-card-pad-sm,24px 20px)}
     .me-row.two{grid-template-columns:1fr}
     .me-photo{gap:14px}
     .me-photo .ph{width:78px;height:78px}

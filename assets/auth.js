@@ -491,11 +491,22 @@ function needInnerSpace() {
            이름을 누르면 마이페이지로 가고, 「이너스페이스」 를 누르면
            <b>화면 위에 패널</b>이 열립니다 — 시안의 그 자리입니다.
            ★ 그 파일을 스스로 싣습니다 — 화면마다 넣으면 빠뜨립니다. */
-        /* ★ <b>마이페이지에서는 놓지 않습니다</b> (2026-08-05 · 파트너 지시)
-           마이페이지가 곧 이너스페이스의 「자세한 판」이라 같은 것이
-           두 번입니다. 여기서 걸러 두면 <b>깜빡임도 없습니다.</b>
-           (규칙의 본디 자리는 assets/inner-space.js 의 SKIP 목록입니다) */
-        var noInner = (location.pathname === '/account/mypage.html');
+        /* ★ <b>이너스페이스를 놓지 않는 화면</b> (2026-08-05 · 파트너 지시)
+             /account/mypage.html    마이페이지가 곧 이너스페이스의 「자세한 판」
+             /account/profile.html   회원정보 수정 — 일 하는 화면입니다
+             /account/interests.html 관심분야 관리 — 일 하는 화면입니다
+           같은 것을 두 번 두면 어수선하고, 무엇을 고치던 중에 패널이
+           열리면 흐름이 끊깁니다. 여기서 걸러 두면 <b>깜빡임도 없습니다.</b>
+
+         ★ 목록을 <b>여기 한 곳</b>에 두고 창에 얹어 둡니다 —
+           assets/inner-space.js 도 이것을 보고 스스로 물러납니다.
+           두 곳에 적으면 반드시 한 곳을 빠뜨립니다. */
+        window.OC_NO_INNER = [
+          '/account/mypage.html',
+          '/account/profile.html',
+          '/account/interests.html'
+        ];
+        var noInner = window.OC_NO_INNER.indexOf(location.pathname) >= 0;
 
         al.innerHTML = '<a href="/account/mypage.html">'+esc(name)+'님'+(typeLabel?' ('+esc(typeLabel)+')':'')+'</a> '
           + (noInner ? '' : '<a href="#" data-oc-inner="1" id="oc-hdr-inner">이너스페이스</a> ')
