@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="ko">
+<!-- data-no-net : 배경 별자리 무늬를 쓰지 않습니다 (assets/auth.js 가 이것을 봅니다) -->
+<html lang="ko" data-no-net>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,20 @@
   /* ★ 폭을 <b>640 → 1120px</b> 로 넓혔습니다 (2026-08-05 · 파트너 지시)
      탭으로 나눈 뒤에도 양옆이 크게 놀았습니다. 하위 짜임을 살펴보니
      모두 <b>유동형(flex·%)</b>이어서 넓혀도 깨지지 않습니다. */
-  .mp-wrap{max-width:1120px;margin:56px auto;padding:0 20px}
+  /* ★ 배경 무늬를 <b>두 겹으로 막습니다</b> (2026-08-05)
+
+     첫째 겹은 assets/auth.js 의 관문(&lt;html data-no-net&gt;)입니다. 그런데
+     그 파일은 주소에 버전이 없어 <b>브라우저와 Vercel 이 담아 둡니다</b> —
+     고쳐도 옛것이 돌 수 있습니다. 실제로 파트너님 화면에 무늬가 남았습니다.
+     그래서 이 화면의 스타일에서 한 번 더 막습니다. 이 &lt;style&gt; 은
+     auth.css 보다 <b>나중에</b> 실리므로 확실히 이깁니다.
+   ★ 무늬가 만들어지더라도 눈에 보이지 않고, 누름도 먹지 않습니다. */
+  .oc-net{display:none !important}
+
+  /* ★ 아래 여백을 <b>120 → 170px</b> 로 더 넓혔습니다 (2026-08-05 · 파트너 지시)
+     대시보드 카드가 아래 롤링 배너에 여전히 붙어 보였습니다.
+     ▶ 이 한 값만 바꾸면 간격이 조절됩니다. */
+  .mp-wrap{max-width:1120px;margin:56px auto 170px;padding:0 20px}
 
   /* ══ 단 나누기 ═════════════════════════════════════════════
      ★ 넓어진 자리를 쓰려고 탭마다 <b>여러 단</b>으로 짭니다.
@@ -556,7 +570,9 @@
 </style>
 </head>
 <body>
-<div id="oc-net" class="oc-net" aria-hidden="true"></div>
+<!-- ★ 배경 별자리 무늬를 쓰지 않습니다 (2026-08-05 · 파트너 지시)
+     &lt;html data-no-net&gt; 을 보고 assets/auth.js 가 그리지 않습니다.
+     이 자리표만 지워서는 그 파일이 스스로 만들어 붙입니다. -->
 <!-- ===== header (partials/header-auth.html 에서 공통 관리) ===== -->
 <div id="oc-header-auth"></div>
 <script src="/assets/include.js"></script>
