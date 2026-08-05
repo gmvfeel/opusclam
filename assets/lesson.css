@@ -172,15 +172,49 @@ html.ln-page .site-header:not(.solid) header.masthead{
   position: relative;
   padding: 196px 0 56px;
   text-align: center;
+
+  /* ★ 배경 사진 (2026-08-06 · 파트너 제공) ───────────────────
+     ▶ <b>사진을 바꾸실 때</b>: assets/lesson-hero.jpg 를 <b>같은 이름으로
+       덮어쓰기만</b> 하십시오. 이 파일은 손댈 필요가 없습니다.
+       (그래서 파일 이름을 날짜나 내용이 아니라 자리 이름으로 두었습니다)
+     ▶ 어두운 정도·위치는 아래 변수 두 개로 조절합니다.
+         --ln-hero-veil  사진을 덮는 어둠. 0 이면 사진 그대로,
+                         1 에 가까울수록 어두워집니다. 글자가 안 읽히면
+                         값을 올리십시오.
+         --ln-hero-pos   사진의 어느 부분을 보일지. 지금은 위쪽 가운데.
+     ★ 왜 덮는가 — 제목(LESSON:ON)과 안내 글이 사진 위에 놓입니다.
+       사진의 밝은 부분(건반·손)과 글자가 겹치면 읽히지 않습니다.
+       아래로 갈수록 짙어지게 해서 <b>본문과 이어지게</b> 합니다. */
+  --ln-hero-veil: .58;
+  --ln-hero-pos: center 22%;
+
   background:
-    radial-gradient(900px 380px at 78% 8%, rgba(255,255,255,.07), transparent 62%),
+    /* ① 위에서 아래로 짙어지는 어둠 — 글자를 읽히게 하고 본문과 잇습니다 */
+    linear-gradient(180deg,
+      rgba(12,12,16, calc(var(--ln-hero-veil) * .92)) 0%,
+      rgba(12,12,16, calc(var(--ln-hero-veil) * 1.02)) 48%,
+      rgba(12,12,16, .96) 82%,
+      var(--ln-bg) 100%),
+    /* ② 사진 */
+    url('/assets/lesson-hero.jpg') var(--ln-hero-pos) / cover no-repeat,
+    /* ③ 사진을 못 불러왔을 때를 위한 바탕 — 예전 그라데이션을 남겨 둡니다 */
     linear-gradient(180deg, #16161c 0%, #0f0f13 62%, var(--ln-bg) 100%);
+  background-color: #0f0f13;
+
   border-bottom: 1px solid var(--ln-line);
   overflow: hidden;
 }
-/* 오른쪽 위 옅은 건반 결 — 사진 대신 분위기만 냅니다 */
+/* ★ 예전에는 사진이 없어서 <b>가짜 건반 결</b>(빗금 무늬)을 그려 분위기만
+   냈습니다. 이제 진짜 사진이 들어왔으므로 아래 ::after 규칙을 껐습니다.
+   (같은 점수의 규칙은 <b>나중 것이 이기므로</b> 여기서 끄면 안 됩니다 —
+    아래 원래 자리에서 껐습니다) */
+/* 오른쪽 위 옅은 건반 결 — 사진 대신 분위기만 냈던 것
+   ★ 2026-08-06 — <b>껐습니다</b>(content: none). 진짜 사진이 들어왔는데
+     빗금 무늬가 겹치면 지저분합니다. 규칙은 남겨 두었으니, 사진을 다시
+     빼기로 하면 content 를 '' 로 되돌리면 됩니다. */
 .ln-hero::after{
-  content: ''; position: absolute; right: -60px; top: -30px;
+  content: none; /* 사진을 쓰지 않을 때: '' */
+  position: absolute; right: -60px; top: -30px;
   width: 620px; height: 300px; pointer-events: none;
   background: repeating-linear-gradient(100deg,
     rgba(255,255,255,.05) 0 12px, transparent 12px 30px);
