@@ -80,6 +80,36 @@
   .dcard{
     background:var(--panel);border:var(--mp-edge-w) solid var(--mp-edge);border-radius:14px;
     padding:20px 20px 16px;display:flex;flex-direction:column;min-width:0;
+    transition:transform .18s ease, box-shadow .18s ease, background-color .18s ease;
+  }
+
+  /* ★ 칸에 <b>손을 올렸을 때</b> (2026-08-05 · 파트너 지시)
+     살짝 <b>떠오르게</b> 합니다 — 3px 올리고 그림자를 깔면 「누를 수 있는
+     것」처럼 보입니다. 크게 움직이면 아홉 칸이 들썩여 어지러우므로
+     이 정도가 알맞습니다.
+   ★ 칸 아래 「→」 글자도 함께 강조색으로 바뀝니다 — 칸 어디에 손을
+     올려도 <b>어디로 가는지</b>가 눈에 들어옵니다.
+   ★ 손가락으로 쓰는 화면(hover 가 없는 기기)에서는 <b>켜지 않습니다.</b>
+     그런 기기는 눌렀을 때 hover 가 남아 어색합니다. */
+  @media (hover:hover){
+    .dcard:hover{
+      transform:translateY(-3px);
+      box-shadow:0 14px 28px -16px rgba(40,36,70,.42);
+    }
+    .dcard:hover .dc-go{ color:var(--accent) }
+    /* 다크에서는 그림자가 잘 안 보이므로 바탕을 아주 조금 밝힙니다.
+       ★ 이 규칙도 <b>이 묶음 안에</b> 두어야 합니다 — 밖에 두면 손가락으로
+         쓰는 기기에서 누른 뒤 효과가 남아 어색합니다. */
+    [data-theme="dark"] .dcard:hover{
+      box-shadow:0 14px 30px -16px rgba(0,0,0,.6);
+      background-color:rgba(255,255,255,.03);
+    }
+  }
+
+  /* 움직임을 줄이도록 설정한 분에게는 뜨는 효과를 빼고 그림자만 둡니다 */
+  @media (prefers-reduced-motion:reduce){
+    .dcard{ transition:none }
+    .dcard:hover{ transform:none }
   }
   .dc-load{font-size:12.5px;color:var(--tx3);padding:14px 0;text-align:center}
 
