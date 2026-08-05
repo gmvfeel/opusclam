@@ -219,6 +219,13 @@
       +       '<div class="ins-card" id="insBars">'
       +         '<h4>상위 관심컨텐츠 Update 현황 <em>최근 7일</em></h4>'
       +         '<div class="ins-msg">불러오는 중…</div></div>'
+      /* ★ <b>관심분야 새 글</b> 목록 (2026-08-05 · 파트너 지시)
+             바로 위 「Update 현황」은 <b>갯수</b>만 보여 줍니다 —
+             「지식나눔 9건」을 봐도 무엇이 올라왔는지는 모릅니다.
+             제목과 바로가기를 그 아래에 붙여 <b>눌러서 갈 수 있게</b> 합니다. */
+      +       '<div class="ins-card" id="insFresh">'
+      +         '<h4>관심분야 새 글 <em>최근 7일</em></h4>'
+      +         '<div class="ins-msg">불러오는 중…</div></div>'
       +       '<div class="ins-card" id="insHits">'
       +         '<h4>내 컨텐츠 조회수</h4><div class="ins-msg">불러오는 중…</div></div>'
       +     '</div>'
@@ -620,6 +627,103 @@
       + '</div>';
   }
 
+  /* ── 관심분야 새 글 (제목 + 바로가기) ──────────────────────
+     ★ 서버 함수 oc_my_fresh() 는 <b>열 갈래 모두</b>의 최근 글을 줍니다.
+       담은 갈래로 걸러내는 일은 <b>여기서</b> 합니다 —
+       갈래(big·key) ↔ 표 이름(tb) 짝짓기는 assets/interests.js 의 CATS 만
+       갖고 있어야 합니다. 서버에 또 적으면 한 곳을 빠뜨립니다.
+
+     ★ 주소도 CATS 가 갖고 있습니다(view) — 갈래마다 상세 화면이 달라
+       (예: /community/hottopic-view.html · /spot/spot-view.html)
+       여기서 짐작해 만들면 어긋납니다.
+
+     ★ 정보SPOT 은 <b>한 표를 section 으로 갈라</b> 일곱 갈래가 나눠 씁니다.
+       그래서 표 이름만이 아니라 section 까지 맞춰야 합니다. */
+  async function drawFresh() {
+    var box = document.getElementById('insFresh');
+    if (!box) return;
+    var head = '<h4>관심분야 새 글 <em>최근 7일</em></h4>';
+
+    /* 담아 두신 갈래를 CATS 모양으로 가져옵니다 */
+    var mine = [];
+    try {
+      var I = window.OCInterests;
+      if (I) {
+        var saved = await I.list();
+        saved.forEach(function (x) {
+          var c = I.find(x.big, x.key);
+          if (c && c.tb) mine.push(c);
+        });
+      }
+    } catch (e) {}
+
+    if (!mine.length) {
+      box.innerHTML = head
+        + '<div class="ins-none">관심분야를 담으시면 <b>그 갈래의 새 글</b>을'
+        + ' 여기에 모아 드립니다 · '
+        + '<a class="ins-more" href="/account/interests.html">관심분야 담기 &#8594;</a></div>';
+      return;
+    }
+
+    var items = [];
+    try {
+      var c2 = await sb();
+      if (!c2) throw new Error('no client');
+      var r = await c2.rpc('oc_my_fresh', { lim: 5 });
+      if (r && r.error) throw new Error(r.error.message);
+      items = (r && r.data && r.data.items) || [];
+    } catch (e) {
+      box.innerHTML = head + '<div class="ins-none">새 글을 불러오지 못했습니다.</div>';
+      return;
+    }
+
+    /* 담은 갈래에 해당하는 것만 남깁니다 */
+    function catOf(it) {
+      for (var i = 0; i < mine.length; i++) {
+        var k = mine[i];
+        if (k.tb !== it.tb) continue;
+        /* 정보SPOT 처럼 갈래가 section 으로 갈리는 경우 */
+        if (k.sec || it.sec) { if (k.sec !== it.sec) continue; }
+        return k;
+      }
+      return null;
+    }
+
+    var rows = [];
+    items.forEach(function (it) {
+      if (rows.length >= 6) return;
+      var k = catOf(it);
+      if (k) rows.push({ it: it, k: k });
+    });
+
+    if (!rows.length) {
+      box.innerHTML = head
+        + '<div class="ins-none">담으신 갈래에 <b>최근 7일간 새 글이 없습니다.</b></div>';
+      return;
+    }
+
+    function md(v) {
+      try {
+        var d = new Date(v);
+        return ('0' + (d.getMonth() + 1)).slice(-2) + '.' + ('0' + d.getDate()).slice(-2);
+      } catch (e) { return ''; }
+    }
+
+    box.innerHTML = head
+      + '<ul class="ins-fresh">'
+      + rows.map(function (o) {
+          var href = (o.k.view || o.k.href || '#')
+            + (o.k.view ? '?id=' + encodeURIComponent(o.it.id) : '');
+          return '<li>'
+            + '<span class="c">' + esc(o.k.label || o.it.cat) + '</span>'
+            + '<a class="t" href="' + esc(href) + '" title="' + esc(o.it.t || '') + '">'
+            +   esc(o.it.t || '-') + '</a>'
+            + '<span class="d">' + md(o.it.at) + '</span>'
+            + '</li>';
+        }).join('')
+      + '</ul>';
+  }
+
   /* ── 내 컨텐츠 조회수 (꺾은선) ──────────────────────────────
      ★ 시안은 「일별」 이었지만 <b>글별</b>로 그립니다.
        일별로 보려면 날마다 조회수를 적어 두어야 하는데(그것이 열람 기록),
@@ -902,6 +1006,7 @@
     drawBars(st);
     drawHits(st);
     drawLinked(links);
+    drawFresh();
     drawVid();
   }
 
