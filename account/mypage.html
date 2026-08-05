@@ -78,7 +78,7 @@
      ★ 좁아지면 두 줄기 → 한 줄기로 줄어듭니다. */
   .dash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
   .dcard{
-    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    background:var(--panel);border:var(--mp-edge-w) solid var(--mp-edge);border-radius:14px;
     padding:20px 20px 16px;display:flex;flex-direction:column;min-width:0;
   }
   .dc-load{font-size:12.5px;color:var(--tx3);padding:14px 0;text-align:center}
@@ -185,6 +185,23 @@
     color:var(--tx3);text-decoration:none;
   }
   .mp-back:hover{color:var(--tx)}
+
+  /* ══ 카드 테두리 ═══════════════════════════════════════════
+     ★ 파트너님이 주신 시안 조각에서 <b>색과 굵기를 직접 재어</b> 맞췄습니다 —
+         색 #514a6b (짙은 남보라) · 굵기 3px · 둥근 모서리
+       예전에는 1px 의 옅은 회색선이라 카드 경계가 흐릿했습니다.
+
+     ★ 값을 <b>변수 두 개</b>로 둡니다. 굵기나 색을 바꾸실 때 이 두 줄만
+       고치면 대시보드 아홉 칸과 상세 카드 여덟 개가 <b>한꺼번에</b> 바뀝니다.
+     ★ 다크모드에서는 짙은 남보라가 어두운 바탕에 묻히므로 옅은 흰선으로
+       바꿉니다.
+
+     ★ 값은 이 두 줄이 정하고, .mp-card · .dcard 규칙이 그것을 <b>직접
+       씁니다.</b> 따로 덮어쓰는 규칙을 두지 않습니다 — CSS 는 <b>나중에 쓴
+       것이 이기므로</b> 앞쪽에 둔 덮어쓰기는 안 먹습니다
+       (한 번 그렇게 넣었다가 안 먹어서 고쳤습니다). */
+  .mp-wrap{ --mp-edge:#514a6b; --mp-edge-w:3px }
+  [data-theme="dark"] .mp-wrap{ --mp-edge:rgba(255,255,255,.24) }
 
   /* ══ 탭 ════════════════════════════════════════════════════
      ★ 좁은 화면에서는 <b>옆으로 밀립니다</b> — 줄을 바꾸면 두 줄이 되어
@@ -320,7 +337,7 @@
        (자격이 아닌 회원에게 제목만 남아 고장처럼 보이게 됩니다) */
   .mp-note{margin:12px 0 0;font-size:13px;line-height:1.85;color:var(--tx3)}
   .mp-note b{color:var(--tx2);font-weight:700}
-  .mp-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 32px;box-shadow:0 6px 18px rgba(40,40,70,.12)}
+  .mp-card{background:var(--panel);border:var(--mp-edge-w) solid var(--mp-edge);border-radius:16px;padding:34px 32px;box-shadow:0 6px 18px rgba(40,40,70,.12)}
   .mp-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
   /* ★ 프로필 사진 — 회원정보 카드 맨 위에 둥글게 */
   .mp-photo{width:88px;height:88px;border-radius:50%;overflow:hidden;margin:0 auto 16px;
