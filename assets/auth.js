@@ -308,97 +308,108 @@
       idEl.addEventListener('input',sync); domEl.addEventListener('input',sync);
     });
   }
-  /* ── 전체메뉴 서랍 ─────────────────────────────────────────
-     ★ 회원 헤더의 「전체메뉴」 단추가 <b>아무것에도 안 이어져</b> 있었습니다.
-       (2026-08-05 · 파트너 지적 — 눌러도 아무 일이 없었습니다)
+  /* ── 전체메뉴 ──────────────────────────────────────────────
+     ★ 무엇이 잘못됐었나 (2026-08-05 · 파트너 지적)
+       회원 헤더의 「전체메뉴」 단추가 <b>아무것에도 이어져 있지</b>
+       않았습니다. 눌러도 아무 일이 없었습니다.
 
-     ★ 메뉴 목록을 <b>여기 적지 않습니다.</b> 헤더에 이미 있는 링크
-       (.gnb .nav a 와 .gnb .authlink a)를 <b>누를 때 모아</b> 만듭니다.
-         · 목록을 두 곳에 적으면 반드시 한 곳을 빠뜨립니다
-         · .authlink 는 로그인 확인 뒤에 채워지므로, <b>누르는 순간</b>
-           모으면 늘 지금 상태가 담깁니다
-     ★ 단추는 화면마다 뒤늦게 그려질 수 있어, 문서 전체에 <b>한 번만</b>
-       귀를 달아 둡니다(위임). 그러면 언제 그려져도 걸립니다. */
-  function fmBuild(){
-    var box = document.getElementById('oc-fm');
-    if (box) return box;
+     ★ 처음에는 오른쪽 서랍을 새로 만들었는데, 파트너님 말씀대로
+       그것은 <b>모바일 결</b>이었습니다. 메인의 <b>PC 전체메뉴</b>와
+       같아야 맞습니다.
 
-    box = document.createElement('div');
-    box.className = 'oc-fm';
-    box.id = 'oc-fm';
-    box.innerHTML = '<div class="oc-fm-panel">'
-      + '<div class="oc-fm-top"><b>MENU</b>'
-      +   '<button type="button" class="oc-fm-x" aria-label="닫기">&#10005;</button></div>'
-      + '<div class="oc-fm-body"></div>'
-      + '</div>';
-    document.body.appendChild(box);
+     ★ 그래서 <b>메뉴를 새로 적지 않습니다.</b> 메인 헤더 파일
+       (partials/header.html)에 이미 있는 #fullMenu 를 <b>그대로 가져와</b>
+       씁니다. 메뉴가 바뀌면 그 파일 한 곳만 고치면 양쪽에 반영됩니다.
+       (목록을 두 곳에 적으면 반드시 한 곳을 빠뜨립니다)
 
-    /* 닫는 길 — 닫기 단추 · 바깥 누르기 · Esc */
-    box.addEventListener('click', function(e){
-      if (e.target === box || (e.target.closest && e.target.closest('.oc-fm-x'))) fmClose();
-    });
-    document.addEventListener('keydown', function(e){
-      if (e.key === 'Escape') fmClose();
-    });
-    return box;
+     ★ 여는 방법도 메인과 같습니다 (assets/header.js 와 같은 짜임) —
+       .open 을 붙이고, [data-fm-close] · 메뉴 링크 · Esc 로 닫습니다.
+     ★ 꾸미는 규칙(.fullmenu*)은 style.css 에 있습니다. 회원 화면도
+       그 파일을 싣습니다.
+     ★ 한 번 가져오면 담아 둡니다 — 두 번 받아 오지 않습니다. */
+  var fmBox = null, fmLoading = false;
+
+  function fmSet(open){
+    if (!fmBox) return;
+    fmBox.classList.toggle('open', !!open);
+    document.body.style.overflow = open ? 'hidden' : '';
+    var b = document.querySelector('.gnb .burger');
+    if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
-  function fmClose(){
-    var box = document.getElementById('oc-fm');
-    if (box) box.classList.remove('on');
-    document.documentElement.classList.remove('oc-fm-open');
+  function fmWire(){
+    if (!fmBox) return;
+    fmBox.querySelectorAll('[data-fm-close]').forEach(function(el){
+      el.addEventListener('click', function(){ fmSet(false); });
+    });
+    fmBox.querySelectorAll('.fm-col a').forEach(function(a){
+      a.addEventListener('click', function(){ fmSet(false); });
+    });
+    /* 헤더 로고를 전체메뉴에도 씁니다 (메인과 같은 처리) */
+    var hdr = document.querySelector('.gnb .logo img');
+    var fml = fmBox.querySelector('.fm-logo');
+    if (hdr && fml) fml.src = hdr.src;
   }
 
-  function fmOpen(){
-    var box = fmBuild();
-    var body = box.querySelector('.oc-fm-body');
-    if (!body) return;
+  /* ★ 전체메뉴의 꾸미는 규칙(.fullmenu*)은 <b>style.css</b> 에 있습니다.
+     그런데 마이페이지 · 로그인 · 가입은 그 파일을 싣지 않습니다.
+     안 싣고 마크업만 붙이면 <b>꾸밈 없는 링크 뭉치</b>가 쏟아집니다.
+     그래서 필요할 때(처음 여는 그때) 한 번만 싣습니다.
 
-    function pick(sel){
-      return [].slice.call(document.querySelectorAll(sel)).filter(function(a){
-        return (a.textContent || '').trim();
-      });
-    }
-    function line(a){
-      var t = (a.textContent || '').trim();
-      var h = a.getAttribute('href') || '#';
-      var off = a.getAttribute('aria-disabled') === 'true';
-      return '<a href="' + h + '"' + (off ? ' aria-disabled="true"' : '') + '>' + t + '</a>';
-    }
-
-    var html = '';
-    var menus = pick('.gnb .nav a');
-    if (menus.length) html += '<h4>MENU</h4>' + menus.map(line).join('');
-
-    var mine = pick('.gnb .authlink a');
-    if (mine.length) html += '<h4>MY</h4>' + mine.map(line).join('');
-
-    var util = pick('.gnb .util a');
-    if (util.length) html += '<h4>ALLIANCE</h4>' + util.map(line).join('');
-
-    body.innerHTML = html || '<h4>MENU</h4><a href="/home.html">오퍼스클램 메인</a>';
-
-    /* 서랍 안의 링크를 누르면 서랍은 닫습니다 (같은 화면 안 이동일 때) */
-    body.addEventListener('click', function(e){
-      var a = e.target.closest && e.target.closest('a');
-      if (!a) return;
-      if (a.getAttribute('aria-disabled') === 'true') { e.preventDefault(); return; }
-      fmClose();
+   ★ <b>auth.css 바로 앞에</b> 끼웁니다 — 순서가 중요합니다.
+     뒤에 붙이면 style.css 가 auth.css 를 이겨 회원 화면 꾸밈이
+     흐트러집니다. 회원정보 수정 화면이 이미 「style.css → auth.css」
+     순서로 잘 돌고 있으니 그 순서를 그대로 따릅니다.
+   ★ 규칙을 <b>베껴 적지 않습니다</b> — 한 곳(style.css)만 고치면 됩니다. */
+  function fmNeedCss(){
+    if (document.querySelector('link[href="/style.css"]')) return Promise.resolve();
+    var auth = document.querySelector('link[href*="auth.css"]');
+    if (!auth || !auth.parentNode) return Promise.resolve();
+    return new Promise(function(done){
+      var l = document.createElement('link');
+      l.rel = 'stylesheet';
+      l.href = '/style.css';
+      l.onload = function(){ done(); };
+      l.onerror = function(){ done(); };
+      auth.parentNode.insertBefore(l, auth);
+      /* 혹시 load 가 오지 않아도 오래 기다리지 않습니다 */
+      setTimeout(done, 1500);
     });
+  }
 
-    box.classList.add('on');
-    document.documentElement.classList.add('oc-fm-open');
+  async function fmLoad(){
+    if (fmBox || fmLoading) return;
+    fmLoading = true;
+    try {
+      await fmNeedCss();
+      var r = await fetch('/partials/header.html', { cache: 'force-cache' });
+      var html = await r.text();
+      var tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      var fm = tmp.querySelector('#fullMenu');
+      if (!fm) { fmLoading = false; return; }
+      document.body.appendChild(fm);
+      fmBox = fm;
+      fmWire();
+    } catch (e) { /* 못 가져오면 아무 일도 하지 않습니다 */ }
+    fmLoading = false;
   }
 
   function fullmenu(){
     if (window.__ocFmBound) return;
     window.__ocFmBound = true;
-    document.addEventListener('click', function(e){
+
+    document.addEventListener('click', async function(e){
       var b = e.target.closest && e.target.closest('.gnb .burger');
       if (!b) return;
       e.preventDefault();
-      var box = document.getElementById('oc-fm');
-      if (box && box.classList.contains('on')) fmClose(); else fmOpen();
+      if (!fmBox) await fmLoad();
+      if (!fmBox) return;
+      fmSet(!fmBox.classList.contains('open'));
+    });
+
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && fmBox && fmBox.classList.contains('open')) fmSet(false);
     });
   }
 

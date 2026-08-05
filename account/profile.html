@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="ko">
+<!-- data-no-net : 배경 별자리 무늬를 쓰지 않습니다 (assets/auth.js 가 이것을 봅니다) -->
+<html lang="ko" data-no-net>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,13 @@
 <link rel="stylesheet" href="/assets/auth.css">
 
 <style>
+  /* ★ 배경 무늬를 <b>두 겹으로 막습니다</b> (2026-08-05 · 파트너 지시)
+     첫째 겹은 assets/auth.js 의 관문(&lt;html data-no-net&gt;)입니다. 그런데
+     그 파일은 주소에 버전이 없어 브라우저·Vercel 이 <b>옛것을 담아 둡니다.</b>
+     그래서 여기서 한 번 더 막습니다 — 이 &lt;style&gt; 은 auth.css 보다
+     나중에 실리므로 확실히 이깁니다. */
+  .oc-net{display:none !important}
+
   .me-wrap{max-width:720px;margin:0 auto;padding:26px 20px 90px}
   .me-head{margin-bottom:20px}
   .me-head .tag{display:inline-block;font-family:var(--display);font-size:11px;font-weight:700;

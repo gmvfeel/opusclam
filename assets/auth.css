@@ -282,54 +282,26 @@ footer a{color:var(--tx4)}
   footer a, .foot a{ font-size:11px; }
 }
 
+/* 전체메뉴(.fullmenu)의 꾸미는 규칙은 <b>style.css</b> 에 있습니다 —
+   회원 화면도 그 파일을 싣고, 마크업은 partials/header.html 의 #fullMenu 를
+   assets/auth.js 가 가져와 붙입니다. 여기에 따로 적지 않습니다
+   (2026-08-05 · 오른쪽 서랍을 만들었다가 걷어냈습니다). */
+
 /* ══════════════════════════════════════════════════════════════
-   전체메뉴 (회원 화면 공용)              2026-08-05 · 파트너 지적
+   헤더를 스크롤에 붙여 둡니다                2026-08-05 · 파트너 지시
 
-   ★ 무엇이 잘못됐었나
-     회원 헤더(partials/header-auth.html)의 「전체메뉴」 단추는
-     <b>아무것에도 이어져 있지 않았습니다.</b> 여는 코드도, 열릴 메뉴도
-     없었습니다(메인 헤더의 .fullmenu 는 partials/header.html 에만 있음).
-     그래서 로그인·가입·마이페이지 등 <b>모든 회원 화면에서</b> 눌러도
-     아무 일이 없었습니다.
+   ★ 메인 쪽 헤더(.site-header)는 style.css 에서 position:fixed 로
+     화면에 붙어 있습니다. 그런데 회원 화면 헤더(.gnb)는
+     position:relative 여서 <b>스크롤하면 위로 사라졌습니다.</b>
 
-   ★ 어떻게 했나
-     메인의 큰 전체메뉴를 베껴 오지 않고, <b>오른쪽에서 미끄러져 나오는
-     서랍</b>을 둡니다. 내용은 assets/auth.js 가 <b>헤더에 이미 있는
-     링크</b>를 그대로 모아 만듭니다 — 메뉴 목록을 두 곳에 적어 두면
-     반드시 한 곳을 빠뜨립니다.
+   ★ fixed 가 아니라 <b>sticky</b> 를 씁니다 —
+     fixed 로 하면 헤더가 문서 흐름에서 빠져 그만큼 <b>위를 비워 줘야</b>
+     하고, 열여섯 화면의 위 여백을 모두 손봐야 합니다.
+     sticky 는 제자리에 있으면서 스크롤할 때만 붙으므로 여백을 손댈
+     필요가 없습니다.
+
+   ★ 이 파일은 회원 화면 <b>공용</b>이라 로그인 · 가입 · 마이페이지 등
+     열여섯 화면이 함께 붙습니다.
+   ★ 겹침 순서 — 전체메뉴(.fullmenu)는 z-index 120 이라 헤더 위로 옵니다.
    ══════════════════════════════════════════════════════════════ */
-.oc-fm{
-  position:fixed;inset:0;z-index:300;
-  background:rgba(18,20,32,.5);
-  opacity:0;visibility:hidden;
-  transition:opacity .22s ease,visibility .22s ease;
-}
-.oc-fm.on{opacity:1;visibility:visible}
-.oc-fm-panel{
-  position:absolute;top:0;right:0;bottom:0;
-  width:min(340px,86vw);
-  background:var(--bg);border-left:1px solid var(--line);
-  padding:20px 20px 34px;overflow-y:auto;
-  transform:translateX(100%);transition:transform .26s ease;
-}
-.oc-fm.on .oc-fm-panel{transform:none}
-.oc-fm-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.oc-fm-top b{font-size:11px;letter-spacing:.16em;color:var(--tx3);font-weight:800}
-.oc-fm-x{
-  width:36px;height:36px;border:1px solid var(--icon-b);border-radius:9px;
-  background:transparent;cursor:pointer;color:var(--tx2);
-  font-family:inherit;font-size:17px;line-height:1;
-}
-.oc-fm-x:hover{color:var(--tx);border-color:var(--tx3)}
-.oc-fm h4{
-  margin:20px 0 4px;font-size:10.5px;letter-spacing:.14em;
-  color:var(--tx4);font-weight:800;
-}
-.oc-fm a{
-  display:block;padding:11px 10px;border-radius:9px;
-  font-size:14.5px;font-weight:600;color:var(--tx);text-decoration:none;
-}
-.oc-fm a:hover{background:var(--chip)}
-.oc-fm a[aria-disabled="true"]{color:var(--tx4);cursor:default}
-.oc-fm a[aria-disabled="true"]:hover{background:none}
-html.oc-fm-open{overflow:hidden}
+.gnb{position:sticky;top:0;z-index:80}
