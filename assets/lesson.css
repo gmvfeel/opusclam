@@ -405,8 +405,23 @@ html.ln-page .site-header:not(.solid) header.masthead{
   /* ★ 이 한 줄이 <b>펼친 목록</b>을 어둡게 만듭니다 */
   color-scheme: dark;
 
+  /* ★ <b>왜 가로로 늘어났었나</b> (2026-08-05 · 파트너 지적)
+     아래쪽에 이런 규칙이 있습니다 —
+       .ln input, .ln select, .ln textarea { width: 100% }
+     신청폼의 입력칸을 칸에 꽉 채우려고 둔 것인데, <b>select 전부</b>에
+     걸리므로 이 상자까지 늘어났습니다. 여기서 <b>width 를 되돌립니다.</b>
+     (아래 규칙을 고치면 신청폼 입력칸이 좁아집니다 — 건드리지 않습니다)
+
+   ★ 크기는 시안 이미지를 <b>재어</b> 맞췄습니다 — <b>260 × 50px</b>
+   ★ 자리 — flex 안에서 오른쪽 <b>위</b>로 붙입니다
+       margin-left:auto     오른쪽으로
+       align-self:flex-start 위로 (감싸는 쪽이 flex-end 라도 위로 갑니다)
+       flex:0 0 auto        늘어나거나 줄어들지 않게 */
+  width: 260px; max-width: 100%;
+  flex: 0 0 auto;
   margin-left: auto;
-  height: 40px; padding: 0 40px 0 15px; min-width: 180px;
+  align-self: flex-start;
+  height: 50px; padding: 0 44px 0 17px;
   background-color: var(--ln-bg2);
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237f7f8c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
   background-repeat: no-repeat;
@@ -545,6 +560,11 @@ html.ln-page .site-header:not(.solid) header.masthead{
   .ln-form2{ grid-template-columns: minmax(0,1fr); }
   .ln-two{ grid-template-columns: minmax(0,1fr); gap: 24px; }
 }
+/* 좁은 화면에서는 260px 가 넘칠 수 있어 칸에 맞춥니다 */
+@media (max-width: 560px){
+  .ln-select{ width: 100%; margin-left: 0; }
+}
+
 @media (max-width: 680px){
   .ln-wrap{ padding: 0 16px; }
   .ln-hero{ padding: 72px 0 30px; }
