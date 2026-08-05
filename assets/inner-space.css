@@ -37,6 +37,30 @@
 .ins-wrap{ max-width: 1360px; margin: 0 auto; padding: 116px 24px 0; }
 @media (max-width: 860px){ .ins-wrap{ padding-top: 92px; } }
 
+/* ★ 패널이 열려 있는 동안 <b>헤더 글자를 밝게</b> 합니다.
+   (2026-08-04 · 파트너 지적 — 보라 바탕에 어두운 글자라 안 보였습니다)
+
+   ★ 헤더는 우리 것이 아니라 화면마다 짜임이 다릅니다. 그래서 색만
+     덮어씁니다 — 짜임은 건드리지 않습니다.
+   ★ html.ins-open 은 패널을 열 때 붙입니다. */
+html.ins-open .site-header a,
+html.ins-open #siteHeader a,
+html.ins-open header a,
+html.ins-open .authlink a,
+html.ins-open [data-oc-inner]{
+  color: rgba(255,255,255,.92) !important;
+}
+html.ins-open .site-header a:hover,
+html.ins-open #siteHeader a:hover,
+html.ins-open header a:hover,
+html.ins-open [data-oc-inner]:hover{ color: #fff !important; }
+/* 지금 열려 있는 것이니 눈에 띄게 */
+html.ins-open [data-oc-inner]{
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 /* ── 맨 위 줄 ─────────────────────────────────────────────── */
 .ins-top{
   display: grid;
@@ -78,8 +102,8 @@
   display: grid;
   grid-template-columns: 200px minmax(0,1.15fr) minmax(0,1.15fr) minmax(0,1.5fr);
   grid-template-areas:
-    'me   menu pie  bars'
-    'vid  link pie  hits';
+    'me   menu pie  right'
+    'vid  link pie  right';
   gap: 13px;
   align-items: start;
 }
@@ -88,8 +112,17 @@
 .ins-menu     { grid-area: menu; }
 .ins-linked   { grid-area: link; }
 .ins-pie-card { grid-area: pie; }
-.ins-bars-card{ grid-area: bars; }
-.ins-hits-card{ grid-area: hits; }
+
+/* ★ 넷째 줄기의 두 카드를 <b>한 묶음</b>으로 둡니다.
+   (2026-08-04 · 파트너 지적 — 사이가 너무 벌어졌습니다)
+
+   앞서 두 카드를 격자의 두 행에 각각 놓았더니, 왼쪽 카드가 크면
+   둘째 행이 <b>그만큼 아래로</b> 밀려 사이가 크게 벌어졌습니다.
+   한 묶음으로 두면 gap(13px)만큼만 떨어집니다. */
+.ins-right{
+  grid-area: right;
+  display: flex; flex-direction: column; gap: 13px; min-width: 0;
+}
 
 /* ── 카드 — 흰 바탕 ───────────────────────────────────────── */
 .ins-card{
@@ -225,6 +258,21 @@
   margin-left: auto;
 }
 
+/* ── 나의 메인 상태 줄 ─────────────────────────────────────
+   ★ 메인 위에 있던 띠를 여기로 옮긴 것입니다. */
+.ins-mainline{
+  margin: 13px 0 0; padding: 11px 12px;
+  background: rgba(138,99,168,.08);
+  border: 1px solid rgba(138,99,168,.2);
+  border-radius: 9px;
+  font-size: 11.5px; line-height: 1.7; color: var(--text-2, #55566e);
+}
+.ins-mainline b{ color: var(--violet-2, #5b4b9e) }
+.ins-mainline a{
+  color: #8a63a8; font-weight: 700; text-decoration: none; white-space: nowrap;
+}
+.ins-mainline a:hover{ text-decoration: underline }
+
 /* ── 도넛 (내 관심분야 통계) ───────────────────────────────── */
 .ins-pie-wrap{ text-align: center; }
 .ins-pie-wrap svg{ display: inline-block; }
@@ -315,10 +363,13 @@
   .ins-grid{
     grid-template-columns: 190px minmax(0,1fr) minmax(0,1fr);
     grid-template-areas:
-      'me   menu pie'
-      'vid  link pie'
-      'bars bars hits';
+      'me   menu  pie'
+      'vid  link  pie'
+      'right right right';
   }
+  /* 넓이가 남으니 두 카드를 나란히 둡니다 */
+  .ins-right{ flex-direction: row; }
+  .ins-right > *{ flex: 1 1 0; min-width: 0; }
 }
 @media (max-width: 900px){
   .ins-grid{
@@ -327,16 +378,16 @@
       'me   menu'
       'vid  menu'
       'pie  pie'
-      'bars bars'
-      'hits hits'
+      'right right'
       'link link';
   }
+  .ins-right{ flex-direction: column; }
 }
 @media (max-width: 620px){
   .ins-wrap{ padding: 16px 14px 0; }
   .ins-grid{
     grid-template-columns: minmax(0,1fr);
-    grid-template-areas: 'me' 'menu' 'link' 'pie' 'bars' 'hits' 'vid';
+    grid-template-areas: 'me' 'menu' 'link' 'pie' 'right' 'vid';
   }
   .ins-top{ grid-template-columns: 1fr; }
   .ins-title{ grid-column: 1; font-size: 18px; }

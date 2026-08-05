@@ -117,13 +117,15 @@
       /* ⑤ 내 관심분야 통계 */
       +     '<div class="ins-card ins-pie-card" id="insPie">'
       +       '<h4>내 관심분야 통계</h4><div class="ins-msg">불러오는 중…</div></div>'
-      /* ⑥ 상위 관심컨텐츠 Update 현황 */
-      +     '<div class="ins-card ins-bars-card" id="insBars">'
-      +       '<h4>상위 관심컨텐츠 Update 현황 <em>최근 7일</em></h4>'
-      +       '<div class="ins-msg">불러오는 중…</div></div>'
-      /* ⑦ 내 컨텐츠 조회수 */
-      +     '<div class="ins-card ins-hits-card" id="insHits">'
-      +       '<h4>내 컨텐츠 조회수</h4><div class="ins-msg">불러오는 중…</div></div>'
+      /* ⑥⑦ 넷째 줄기 — <b>한 묶음</b>으로 둡니다.
+             따로 두면 왼쪽 카드 키에 따라 사이가 크게 벌어집니다. */
+      +     '<div class="ins-right">'
+      +       '<div class="ins-card" id="insBars">'
+      +         '<h4>상위 관심컨텐츠 Update 현황 <em>최근 7일</em></h4>'
+      +         '<div class="ins-msg">불러오는 중…</div></div>'
+      +       '<div class="ins-card" id="insHits">'
+      +         '<h4>내 컨텐츠 조회수</h4><div class="ins-msg">불러오는 중…</div></div>'
+      +     '</div>'
       +   '</div>'
 
       +   '<div class="ins-close-row">'
@@ -205,53 +207,166 @@
           return '<li><a href="' + esc(r.h) + '">' + esc(r.t)
             + (r.n ? '<i>' + r.n + '</i>' : '') + '</a></li>';
         }).join('')
-      + '</ul>';
+      + '</ul>'
+      /* ★ <b>나의 메인 상태</b>를 여기에 적습니다 (2026-08-04 · 파트너 지시)
+         메인 위에 있던 띠 —
+           「나의 메인 · 관심분야 3개를 앞자리에 놓았습니다」
+         를 없애고 그 내용을 이너스페이스로 옮겼습니다. 띠가 하나 더 있으면
+         짜임이 어수선하고, 이 정보는 <b>내 것</b>이라 여기가 맞습니다. */
+      + '<div class="ins-mainline" id="insMainLine"></div>';
+
+    drawMainLine();
   }
 
   /* ── 활동 분포 (도넛) ───────────────────────────────────── */
+  /* ── 나의 메인 상태 ─────────────────────────────────────────
+     ★ 메인 위에 있던 띠를 없애고 그 내용을 여기로 옮겼습니다.
+       담은 갯수와 「First Main 으로 보는 중」 여부를 알려 줍니다. */
+  async function drawMainLine() {
+    var box = document.getElementById('insMainLine');
+    if (!box) return;
+    var n = 0;
+    try {
+      var I = window.OCInterests;
+      if (I) n = (await I.list()).length;
+    } catch (e) {}
+
+    var first = false;
+    try { first = sessionStorage.getItem('oc-main-mode') === 'first'; } catch (e) {}
+
+    if (!n) {
+      box.innerHTML = '<b>나의 메인</b>이 아직 꾸며지지 않았습니다 · '
+        + '<a href="/account/interests.html">관심분야 담기 &#8594;</a>';
+      return;
+    }
+    box.innerHTML = first
+      ? '<b>오퍼스클램 메인</b>을 보고 있습니다 · '
+        + '<a href="#" id="insToMy">나의 메인으로 &#8594;</a>'
+      : '<b>나의 메인</b> · 관심분야 <b>' + n + '개</b>를 앞자리에 놓았습니다 · '
+        + '<a href="/account/interests.html">순서 바꾸기 &#8594;</a>';
+
+    var toMy = document.getElementById('insToMy');
+    if (toMy) toMy.addEventListener('click', function (e) {
+      e.preventDefault();
+      try { sessionStorage.removeItem('oc-main-mode'); } catch (e2) {}
+      location.href = '/home.html';
+    });
+  }
+
   /* ── 내 관심분야 통계 (도넛) ─────────────────────────────
      ★ 시안의 「내 관심분야 통계」 자리입니다.
-       열람 기록을 쌓지 않으므로 <b>내가 쓴 글의 갈래 분포</b>로 대신합니다 —
-       무엇에 관심이 있나 = 무엇을 쓰나. (비용 최소화 원칙) */
+       <b>담아 두신 갈래가 각각 얼마나 큰가</b> 를 보여 줍니다 —
+       그 갈래에 쌓인 자료 수의 비율입니다.
+       (2026-08-04 · 처음에는 「내가 쓴 글의 분포」 로 만들었는데, 그것은
+        「내 활동 분포」 이고 <b>관심분야 통계가 아니었습니다.</b>) */
   function drawPie(st) {
     var box = document.getElementById('insPie');
     if (!box) return;
-    var items = (st && st.mine) || [];
-    var total = (st && st.posts) || 0;
-    if (!items.length) {
-      box.innerHTML = '<h4>내 관심분야 통계</h4>'
-        + '<div class="ins-none">아직 올리신 글이 없습니다<br>'
-        + '<a class="ins-more" href="/account/interests.html">관심분야 고르기 &#8594;</a></div>';
-      return;
-    }
-    var R = 44, W = 40, C = 2 * Math.PI * R, off = 0;   /* 굵게 — 시안의 원 그래프 */
-    var segs = items.map(function (x, i) {
-      var len = C * (total ? x.n / total : 0);
-      var el = '<circle cx="66" cy="66" r="' + R + '" fill="none"'
-        + ' stroke="' + COLORS[i % COLORS.length] + '" stroke-width="' + W + '"'
-        + ' stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '"'
-        + ' stroke-dashoffset="' + (-off).toFixed(2) + '"'
-        + ' transform="rotate(-90 66 66)"></circle>';
-      off += len;
-      return el;
-    }).join('');
+    box.innerHTML = '<h4>내 관심분야 통계</h4><div class="ins-msg">불러오는 중…</div>';
 
-    box.innerHTML = '<h4>내 관심분야 통계</h4>'
-      + '<div class="ins-pie-wrap">'
-      +   '<svg width="132" height="132" viewBox="0 0 132 132" role="img"'
-      +     ' aria-label="갈래별 내 글 분포">' + segs + '</svg>'
-      +   '<div class="ins-legend">'
-      +     items.slice(0, 7).map(function (x, i) {
-            var pc = total ? Math.round(x.n / total * 100) : 0;
-            return '<div class="row">'
-              + '<span class="pc" style="color:' + COLORS[i % COLORS.length] + '">'
-              +   pc + '%</span>'
-              + '<span class="dot" style="background:' + COLORS[i % COLORS.length] + '"></span>'
-              + '<span class="nm">' + esc(x.cat) + '</span>'
-              + '</div>';
-          }).join('')
-      +   '</div>'
-      + '</div>';
+    /* 담은 갈래를 읽습니다 — 순서까지 그대로 씁니다 */
+    (async function () {
+      var mine = [];
+      try {
+        var I = window.OCInterests;
+        var c0 = await sb();
+        if (I && c0) {
+          var list = await I.list();
+
+          /* ★ 갈래마다 <b>직접</b> 셉니다 (2026-08-04)
+
+             처음에는 서버가 돌려준 값을 <b>이름으로 짝지었는데</b> 어긋났습니다 —
+               · 정보SPOT 은 한 표(spot)에 일곱 갈래가 들어 있어, 「각 분야별
+                 악보」 를 담아도 「정보SPOT」 과 이름이 달라 0 이 됐습니다
+               · 「공연사진 / 영상」(관심분야) 과 「공연사진」(서버) 처럼
+                 이름이 조금씩 다른 것도 있었습니다
+
+             ★ interests.js 에 <b>표 이름(tb)과 갈래(sec)</b>가 이미 있으므로
+               그것으로 셉니다. head:true 로 <b>갯수만</b> 받아 가볍습니다.
+             ★ 담은 것이 많아도 아홉 개까지이므로 질의가 크게 늘지 않습니다. */
+          var picked = [];
+          list.forEach(function (x) {
+            var c = I.find(x.big, x.key);
+            if (c && c.tb) picked.push(c);
+          });
+
+          var counts = await Promise.all(picked.map(async function (c) {
+            try {
+              var q = c0.from(c.tb).select('id', { count: 'exact', head: true });
+              if (c.tb === 'spot' && c.sec) q = q.eq('section', c.sec);
+              if (c.tb === 'recruit_jobs') q = q.eq('status', 'open');
+              var r = await q;
+              return (r && typeof r.count === 'number') ? r.count : 0;
+            } catch (e) { return 0; }
+          }));
+
+          picked.forEach(function (c, i) {
+            mine.push({ cat: c.label, n: counts[i] || 0, href: c.href });
+          });
+        }
+      } catch (e) {}
+
+      /* 담은 것이 없으면 권합니다 */
+      if (!mine.length) {
+        box.innerHTML = '<h4>내 관심분야 통계</h4>'
+          + '<div class="ins-none">아직 관심분야를 담지 않으셨습니다<br>'
+          + '담아 두시면 <b>나의 메인</b>이 그 갈래로 채워집니다<br>'
+          + '<a class="ins-more" href="/account/interests.html">관심분야 고르기 &#8594;</a></div>';
+        return;
+      }
+
+      var total = 0;
+      mine.forEach(function (x) { total += x.n; });
+
+      /* 자료가 아직 없는 갈래만 담으셨을 수도 있습니다 */
+      if (!total) {
+        box.innerHTML = '<h4>내 관심분야 통계 <em>' + mine.length + '개</em></h4>'
+          + '<div class="ins-legend">'
+          + mine.map(function (x, i) {
+              return '<div class="row">'
+                + '<span class="pc" style="color:' + COLORS[i % COLORS.length] + '">·</span>'
+                + '<span class="dot" style="background:' + COLORS[i % COLORS.length] + '"></span>'
+                + '<span class="nm">' + esc(x.cat) + '</span></div>';
+            }).join('')
+          + '</div>'
+          + '<div class="ins-hint" style="margin:12px 0 0">담으신 갈래에 아직 자료가 없습니다</div>';
+        return;
+      }
+
+      /* 큰 것부터 — 작은 조각이 앞에 오면 읽기 어렵습니다 */
+      mine.sort(function (a, b) { return b.n - a.n; });
+
+      var R = 44, W = 40, C = 2 * Math.PI * R, off = 0;
+      var segs = mine.map(function (x, i) {
+        var len = C * (x.n / total);
+        var el = '<circle cx="66" cy="66" r="' + R + '" fill="none"'
+          + ' stroke="' + COLORS[i % COLORS.length] + '" stroke-width="' + W + '"'
+          + ' stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '"'
+          + ' stroke-dashoffset="' + (-off).toFixed(2) + '"'
+          + ' transform="rotate(-90 66 66)"><title>' + esc(x.cat) + ' · '
+          + nf(x.n) + '건</title></circle>';
+        off += len;
+        return el;
+      }).join('');
+
+      box.innerHTML = '<h4>내 관심분야 통계 <em>담은 것 ' + mine.length + '개</em></h4>'
+        + '<div class="ins-pie-wrap">'
+        +   '<svg width="132" height="132" viewBox="0 0 132 132" role="img"'
+        +     ' aria-label="담은 갈래별 자료 비율">' + segs + '</svg>'
+        +   '<div class="ins-legend">'
+        +     mine.slice(0, 8).map(function (x, i) {
+              var pc = Math.round(x.n / total * 100);
+              return '<div class="row">'
+                + '<span class="pc" style="color:' + COLORS[i % COLORS.length] + '">'
+                +   (pc || '<1') + '%</span>'
+                + '<span class="dot" style="background:' + COLORS[i % COLORS.length] + '"></span>'
+                + '<span class="nm" title="' + esc(x.cat) + ' · ' + nf(x.n) + '건">'
+                +   esc(x.cat) + '</span>'
+                + '</div>';
+            }).join('')
+        +   '</div>'
+        + '</div>';
+    })();
   }
 
   /* ── 상위 관심컨텐츠 Update 현황 (세로 막대) ────────────────
@@ -459,6 +574,9 @@
       else document.body.insertBefore(el, document.body.firstChild);
     }
 
+    /* ★ 헤더 글자를 밝게 하려고 표시를 붙입니다 (CSS 가 그것을 봅니다).
+       보라 바탕에 어두운 글자면 「이너스페이스」 가 안 보입니다. */
+    document.documentElement.classList.add('ins-open');
     setTimeout(function () { el.classList.add('on'); }, 20);
     /* 패널이 보이게 맨 위로 올립니다 — 스크롤 중이었을 수 있습니다 */
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
@@ -503,6 +621,7 @@
     var el = document.getElementById('ocInnerSpace');
     if (!el) { opened = false; return; }
     el.classList.remove('on');
+    document.documentElement.classList.remove('ins-open');
     document.removeEventListener('keydown', onEsc);
     setTimeout(function () {
       el.remove();
