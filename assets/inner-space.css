@@ -21,6 +21,12 @@
      <b>아래 내용을 밀어냅니다.</b> 그래서 그냥 스크롤하면 메인이 보입니다. */
 .ins-panel{
   position: relative;
+  /* ★ 세로 flex 로 둡니다 (2026-08-05)
+     패널이 메인비주얼+두 띠의 자리를 대신하면서 min-height 로 늘어납니다.
+     그때 남는 자리가 <b>아래에 빈 보라</b>로 남으면 어색하므로,
+     CLOSE 줄을 맨 아래로 밀어 붙입니다(.ins-close-row 의 margin-top:auto). */
+  display: flex;
+  flex-direction: column;
   /* ★ <b>시안 색을 재어 맞추고 한 단 짙게</b> 했습니다 (2026-08-05 · 파트너 지시)
 
      파트너님이 올려 주신 시안 띠에서 실제로 뽑은 색은 이렇습니다 —
@@ -61,6 +67,10 @@
 .ins-wrap{
   max-width: 1360px;
   margin: 0 auto;
+  width: 100%;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   padding: var(--ins-pad-top, 116px) 24px 0;
 }
 
@@ -390,7 +400,8 @@ html.ins-open [data-oc-inner]{
 .ins-more:hover{ text-decoration: underline; }
 
 /* ── 닫기 ──────────────────────────────────────────────────── */
-.ins-close-row{ text-align: right; margin: 15px 0 0; }
+/* ★ margin-top:auto — 남는 자리를 모두 위로 밀어 CLOSE 를 맨 아래에 둡니다 */
+.ins-close-row{ text-align: right; margin: 15px 0 0; margin-top: auto; padding-top: 15px; }
 .ins-close{
   display: inline-flex; align-items: center; gap: 10px;
   height: 42px; padding: 0 24px; border-radius: 999px;

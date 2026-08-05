@@ -50,6 +50,19 @@
      ★ 규칙을 <b>이 목록 한 곳</b>에만 둡니다. 다른 화면을 빼려면
        여기에 주소를 더하면 됩니다. */
   var SKIP = ['/account/mypage.html'];
+
+  /* ── 패널이 <b>자리를 대신할</b> 메인 구역 ─────────────────────
+     ★ 왜 (2026-08-05 · 파트너 지시)
+       패널이 메인비주얼(section.hero) <b>하나만</b> 대신했습니다. 그래서
+       그 아래 두 구역 —
+         section.triple  ALLIANCE WXN 검은 띠 (엘파그·엘피스탁·현대음악DB…)
+         section.quick   보라 아이콘 줄 (리쿠르트·콩쿨정보·공연정보…)
+       이 <b>아래로 밀려</b> 내려갔습니다. 파트너님이 바라시는 모습은
+       패널이 그 세 구역이 차지하던 <b>세로 자리를 통째로 채우는</b> 것입니다.
+
+     ★ 없는 구역은 건너뜁니다 — 다른 화면에서도 안전합니다.
+     ★ 구역을 더하거나 빼려면 <b>이 목록만</b> 고치면 됩니다. */
+  var TAKEOVER = ['section.hero', 'section.triple', 'section.quick'];
   function skipHere() {
     var pth = location.pathname;
     for (var i = 0; i < SKIP.length; i++) if (pth === SKIP[i]) return true;
@@ -615,8 +628,27 @@
 
     var hero = document.querySelector('section.hero');
     if (hero) {
-      hero.setAttribute('data-ins-hid', '1');
-      hero.style.display = 'none';
+      /* ★ 대신할 구역들을 모읍니다 (메인비주얼 + 그 아래 두 띠) */
+      var takeover = [];
+      TAKEOVER.forEach(function (sel) {
+        var x = document.querySelector(sel);
+        if (x) takeover.push(x);
+      });
+
+      /* ★ <b>감추기 전에 키를 잽니다</b> — 감춘 뒤에는 0 이 됩니다.
+         이 합계만큼 패널을 늘려 <b>같은 자리를 꽉 채웁니다.</b> */
+      var tall = 0;
+      takeover.forEach(function (x) { tall += x.offsetHeight; });
+
+      takeover.forEach(function (x) {
+        x.setAttribute('data-ins-hid', '1');
+        x.style.display = 'none';
+      });
+
+      /* 화면보다 짧아지지 않게 한 번 더 살핍니다 */
+      if (tall < 520) tall = 520;
+      el.style.minHeight = tall + 'px';
+
       hero.parentNode.insertBefore(el, hero);
     } else {
       /* 헤더 다음에 놓습니다 — 헤더를 못 찾으면 맨 앞에 */
@@ -693,9 +725,19 @@
     document.removeEventListener('keydown', onEsc);
     setTimeout(function () {
       el.remove();
-      /* 감췄던 메인비주얼을 되돌립니다 */
-      var hero = document.querySelector('[data-ins-hid]');
-      if (hero) { hero.style.display = ''; hero.removeAttribute('data-ins-hid'); }
+      /* ★ 감췄던 구역을 <b>모두</b> 되돌립니다 (2026-08-05)
+         예전에는 querySelector 로 <b>첫 하나만</b> 되돌렸습니다. 이제
+         세 구역을 감추므로 querySelectorAll 로 전부 살려야 합니다. */
+      [].forEach.call(document.querySelectorAll('[data-ins-hid]'), function (x) {
+        x.style.display = '';
+        x.removeAttribute('data-ins-hid');
+      });
+
+      /* ★ 되살린 뒤 <b>다시 재게</b> 알립니다 (2026-08-05)
+         section.triple 의 굴러가는 글자는 폭(scrollWidth)을 재어 움직입니다.
+         감춰져 있는 동안 폭이 0 이라, 그때 창 크기가 바뀌면 0 으로 재어
+         멈출 수 있습니다. 되살린 다음 resize 를 한 번 알려 다시 재게 합니다. */
+      try { window.dispatchEvent(new Event('resize')); } catch (e3) {}
       opened = false;
     }, 300);
   }
