@@ -759,7 +759,8 @@
     if (hdr) {
       var ps = '';
       try { ps = getComputedStyle(hdr).position; } catch (e2) {}
-      if (ps === 'fixed' || ps === 'sticky') pad = hdr.offsetHeight + 22;
+      /* ★ 버퍼를 22 → 12 로 줄였습니다 (2026-08-05 · 「약간 위로」) */
+      if (ps === 'fixed' || ps === 'sticky') pad = hdr.offsetHeight + 12;
     }
     el.style.setProperty('--ins-pad-top', pad + 'px');
 

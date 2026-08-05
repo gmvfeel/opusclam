@@ -65,6 +65,17 @@
    (회원 화면의 .gnb)에서는 116px 이 <b>까닭 없는 빈 띠</b>가 됩니다.
    그래서 못박지 않고 --ins-pad-top 을 받아 씁니다.
    (혹시 값이 안 오면 116px 로 둡니다 — 예전과 같습니다) */
+/* ★ 내용을 <b>약간 위로</b> 올립니다 (2026-08-05 · 파트너 지시)
+
+   왜 내려가 있었나 —
+     ① 헤더를 비켜 두는 위 여백(--ins-pad-top, 약 116px)
+     ② 그 아래에서 다시 <b>가운데로 모으기</b>
+   두 가지가 <b>겹쳐</b> 내용이 두 번 내려갔습니다.
+
+   고친 방법 — <b>아래 여백</b>을 주어 가운데의 기준을 위로 당깁니다.
+     아래 여백을 B 만큼 주면 내용은 B/2 만큼 올라갑니다.
+   ▶ 지금 90px (약 45px 올라갑니다)
+     더 올리려면 이 값을 키우고, 내리려면 줄이면 됩니다. */
 .ins-wrap{
   max-width: 1360px;
   margin: 0 auto;
@@ -78,7 +89,7 @@
      가운데로 모으면 위아래로 고르게 나뉘어 <b>일부러 둔 여백</b>처럼
      보입니다. (내용이 더 길면 이 값은 아무 일도 하지 않습니다) */
   justify-content: center;
-  padding: var(--ins-pad-top, 116px) 24px 0;
+  padding: var(--ins-pad-top, 116px) 24px 90px;
 }
 
 /* ★ 헤더 글자색을 <b>더는 덮어쓰지 않습니다</b> (2026-08-05 · 파트너 지적)
@@ -481,7 +492,9 @@ html.ins-open [data-oc-inner]{
   .ins-right{ flex-direction: column; }
 }
 @media (max-width: 620px){
-  .ins-wrap{ padding: 16px 14px 0; }
+  /* ★ 좁은 화면에서도 헤더를 비켜 둡니다 — 16px 로 못박혀 있어서
+     제목이 고정 헤더 아래로 숨을 수 있었습니다 (2026-08-05) */
+  .ins-wrap{ padding: var(--ins-pad-top, 92px) 14px 40px; }
   /* ★ 좁은 화면에서는 줄기 묶음을 <b>풀어</b> 카드를 하나씩 세웁니다.
      display:contents 를 주면 카드가 다시 격자의 칸이 되므로,
      아래 grid-template-areas 의 예전 순서(<b>영상은 맨 끝</b>)가 그대로
