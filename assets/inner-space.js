@@ -1186,6 +1186,36 @@
 
   function onEsc(e) { if (e.key === 'Escape') close(); }
 
+  /* ── 남은 흔적 걷어내기 ─────────────────────────────────────
+     ★ 왜 필요한가 (2026-08-05 · 파트너 지적 — 게시판 상세의
+       [‹ 리스트] [+ 질문하기] 단추가 아예 안 나왔습니다)
+
+       패널이 열려 있는 동안 &lt;html&gt; 에 <b>ins-open</b> 을 붙입니다.
+       그 표시를 보고 화면에 붙어 있는 단추들을 감춥니다.
+       그런데 패널을 <b>열어 둔 채</b> 다른 화면으로 갔다가 <b>뒤로가기</b>로
+       돌아오면, 브라우저가 화면을 <b>그대로 되살립니다</b>(bfcache).
+       그러면 표시도 함께 살아나 단추가 계속 감춰집니다.
+
+     ★ 그래서 되살아난 화면에서는 흔적을 걷어냅니다 —
+         ins-open 표시 · 남은 패널 · 감춰 둔 메인 구역 · 스크롤 잠금
+       ★ 화면이 처음 실릴 때도 한 번 부릅니다 — 값이 거의 들지 않고,
+         어떤 까닭으로든 표시가 남아 있으면 그때 풀립니다. */
+  function tidy() {
+    try {
+      document.documentElement.classList.remove('ins-open');
+      document.body.style.overflow = '';
+      var el = document.getElementById('ocInnerSpace');
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+      [].forEach.call(document.querySelectorAll('[data-ins-hid]'), function (x) {
+        x.style.display = '';
+        x.removeAttribute('data-ins-hid');
+      });
+      opened = false;
+    } catch (e) {}
+  }
+  window.addEventListener('pageshow', function (e) { if (e.persisted) tidy(); });
+  tidy();
+
   function close() {
     /* ★ <b>닫으면 기존 메인으로</b> 되돌립니다 (2026-08-05 · 파트너 지시)
 
@@ -1201,10 +1231,15 @@
       return;
     }
 
+    /* ★ 표시를 <b>맨 먼저</b> 걷어냅니다 (2026-08-05)
+       예전에는 패널을 못 찾으면 그대로 물러났습니다. 그러면 ins-open 이
+       남아 화면에 붙은 단추가 계속 감춰집니다. 순서를 바꿨습니다. */
+    document.documentElement.classList.remove('ins-open');
+    document.body.style.overflow = '';
+
     var el = document.getElementById('ocInnerSpace');
     if (!el) { opened = false; return; }
     el.classList.remove('on');
-    document.documentElement.classList.remove('ins-open');
     document.removeEventListener('keydown', onEsc);
 
     dropInnerParam();   /* 혹시 남아 있으면 떼어 냅니다 */
