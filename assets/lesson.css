@@ -74,6 +74,36 @@
      (표시는 각 화면의 head 스크립트가 &lt;html&gt; 에 붙입니다) */
 html.ln-page .theme-toggle{ display: none !important; }
 
+/* ★ 맨 위에서는 헤더를 <b>정말 투명하게</b> 둡니다
+   (2026-08-05 · 파트너 지시)
+
+   무엇이 문제였나 — 「투명」 상태가 실제로는 투명이 아니었습니다.
+     assets/base.css
+       .site-header:not(.solid){ background: linear-gradient(115deg,
+                                  #0E1230, #241a44, #3a2456) }
+       html[data-theme="dark"] … { background: linear-gradient(115deg,
+                                  #0a0a0a, #161616, #222) }
+     DB·게시판 화면은 히어로가 <b>밝은 무늬</b>라 그 어두운 그라데이션이
+     있어야 글자가 읽혔습니다. 그런데 레슨:ON 히어로는 <b>이미 어둡습니다.</b>
+     그래서 헤더에 또 어두운 판을 깔면 <b>띠처럼 도드라져</b> 보입니다.
+   ★ 게다가 .util 과 header.masthead 는 <b>.solid 와 무관하게</b> 늘
+     자기 배경을 갖고 있어 그것까지 지워야 합니다.
+
+   ★ <b>레슨:ON 화면에서만</b> 지웁니다 (html.ln-page) — 공용 파일
+     (base.css · style.css)은 건드리지 않습니다. 그 파일을 고치면
+     DB·게시판·메인이 함께 달라집니다.
+   ★ 스크롤해서 .solid 가 붙으면 <b>원래대로</b> 어두운 헤더가 됩니다 —
+     아래 규칙은 :not(.solid) 일 때만 걸립니다. */
+html.ln-page .site-header:not(.solid){ background: transparent !important; }
+html.ln-page .site-header:not(.solid) .util{
+  background: transparent !important;
+  border-bottom-color: rgba(255,255,255,.10);
+}
+html.ln-page .site-header:not(.solid) header.masthead{
+  background: transparent !important;
+  border-bottom-color: transparent;
+}
+
 /* 좁은 화면에서 히어로 위 여백을 줄입니다 —
    헤더가 낮아지므로 그만큼만 비우면 됩니다. */
 @media (max-width: 880px){
