@@ -237,7 +237,24 @@ html[data-theme="dark"] .pv-tool{background:var(--paper)}
    첫 단추가 DB 화면보다 위로 올라가 어긋나 보입니다.
    그래서 가운데 맞추기를 쓰지 않고 첫 단추의 윗변을 직접 지정합니다.
    (DB 화면에서 단추 윗변이 놓이는 자리와 같은 값입니다) */
-.pv-sidetabs{position:fixed;left:max(8px, calc(50% - 676px));top:500px;z-index:45;display:flex;flex-direction:column;gap:8px;transition:opacity .25s ease,visibility .25s ease}
+/* ★ <b>자리를 화면 가운데로</b> 옮겼습니다 (2026-08-05 · 파트너 지적 —
+     게시판 상세에서 단추가 아예 안 보였습니다)
+
+   무엇이 문제였나
+     단추가 top:500px 에 놓여 아래끝이 약 <b>810px</b> 이었습니다. 그런데
+     board.js 가 「푸터가 가까우면 감춤」 규칙을 쓰는데, 그 기준이
+       푸터 윗변 &lt; 단추 아래끝 + 20   →   감춤
+     입니다. 즉 <b>푸터 윗변이 830px 보다 위</b>면 감춥니다.
+     짧은 글은 푸터가 처음부터 그 위에 있어서 <b>어느 자리로 스크롤해도
+     계속 감춰졌습니다.</b> 숨은 것이 아니라 늘 감춰져 있던 것입니다.
+
+   어떻게 고쳤나
+     못박은 500px 대신 <b>화면 위아래 가운데</b>에 둡니다. 900px 높이
+     화면이면 295~605px 에 놓이므로, 푸터가 700px 께 있어도 겹치지
+     않아 <b>제대로 보입니다.</b> 긴 글에서는 예전과 다름없습니다.
+   ★ 좁은 화면(1040px 아래)에서 감추는 규칙과 「목록으로」 가로 단추는
+     그대로 둡니다 — 그것은 뜻이 있는 규칙입니다. */
+.pv-sidetabs{position:fixed;left:max(8px, calc(50% - 676px));top:50%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;gap:8px;transition:opacity .25s ease,visibility .25s ease}
 .pv-listtab,.pv-writetab{display:flex;flex-direction:column;align-items:center;gap:10px;color:#fff;text-decoration:none;padding:24px 13px 24px 10px;border-radius:0 13px 13px 0;box-shadow:0 14px 32px -8px rgba(45,33,73,.6);transition:background .15s ease,padding-left .15s ease}
 .pv-listtab{background:#372a5c}
 .pv-listtab:hover{background:#281d45;padding-left:16px}
