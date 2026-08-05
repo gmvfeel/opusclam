@@ -261,7 +261,11 @@
         </div>
         <div>
           <label for="fBirth">생년월일 <span class="opt">비워도 됩니다</span></label>
-          <input type="date" id="fBirth">
+          <!-- ★ 브라우저 달력 대신 <b>고르는 상자 셋</b> (2026-08-05 · 파트너 지시)
+               까닭 — 달력은 브라우저가 그려서 모양이 제각각이고, 다크모드에서
+               흐트러져 보였습니다. 도우미는 assets/auth.js 의 OCBirth 한 곳에
+               있고, 가입 화면 셋도 같은 것을 씁니다. -->
+          <div id="fBirthBox"></div>
         </div>
       </div>
 
@@ -427,7 +431,9 @@
       $('fSchool').value = ME.school_name || '';
       $('fOrg').value    = ME.org_name || '';
       $('fPhone').value  = ME.phone || '';
-      $('fBirth').value  = ME.birth || '';
+      /* 상자 셋을 놓고 지금 값을 넣습니다 (한 번만) */
+      if (window.OCBirth && $('fBirthBox') && !$('fBirthBox')._ocBirth)
+        OCBirth.mount($('fBirthBox'), ME.birth || '');
       photoUrl           = ME.photo_url || '';
 
       /* 주소는 「기본 + 상세」 로 담겨 있을 수 있습니다.
@@ -484,7 +490,7 @@
         school_name: ($('fSchool').value || '').trim() || null,
         org_name:    ($('fOrg').value || '').trim() || null,
         phone:       tidyPhone($('fPhone').value) || null,
-        birth:       ($('fBirth').value || '') || null,
+        birth:       (window.OCBirth ? OCBirth.get($('fBirthBox')) : null),
         address:     addr,
         photo_url:   photoUrl || null,
         updated_at:  new Date().toISOString()
@@ -603,8 +609,19 @@
   $('meForm').addEventListener('submit', function(e){ e.preventDefault(); save(); });
   $('fIntro').addEventListener('input', cntIntro);
   $('fName').addEventListener('input', function(){ if (!photoUrl) drawPhoto(); });
-  ['fName','fIntro','fField','fSchool','fOrg','fPhone','fBirth','fAddr2']
+  /* ★ fBirth 를 뺐습니다 — 이제 상자 셋입니다.
+     상자들은 아래에서 따로 살핍니다(그러지 않으면 생년월일만 바꿨을 때
+     「바뀐 것이 없습니다」 가 되어 저장이 막힙니다). */
+  ['fName','fIntro','fField','fSchool','fOrg','fPhone','fAddr2']
     .forEach(function(id){ $(id).addEventListener('input', function(){ dirty = true; }); });
+
+  /* ★ 생년월일 상자 셋도 살핍니다 — <b>change</b> 로 봅니다.
+     고르는 상자는 input 이 아니라 change 가 납니다. 이것을 빠뜨리면
+     생년월일만 바꿨을 때 「바뀐 것이 없습니다」 가 되어 저장이 막힙니다.
+     ★ 상자는 나중에 만들어지므로 <b>담는 요소에 걸어</b> 둡니다
+       (그러면 안에 무엇이 생겨도 함께 잡힙니다). */
+  if ($('fBirthBox'))
+    $('fBirthBox').addEventListener('change', function(){ dirty = true; });
 
   /* 고친 것을 두고 나가려 할 때 알립니다 */
   window.addEventListener('beforeunload', function(e){

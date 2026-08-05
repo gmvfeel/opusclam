@@ -1,3 +1,129 @@
+/* ══════════════════════════════════════════════════════════════
+   생년월일 — <b>고르는 상자 세 개</b>로                2026-08-05
+   window.OCBirth
+
+   ★ 왜 만드나 (파트너 지적)
+     input type="date" 의 달력은 <b>우리가 그리는 것이 아니라 브라우저가
+     그립니다.</b> 그래서 브라우저마다 모양이 다르고, 어두운 화면에서는
+     흐트러져 보입니다. 시안(07_인스트럭터신청)도 「선택 / 선택 / 선택」
+     세 개입니다 — 브라우저에 맡기지 않으면 어디서나 같게 보입니다.
+
+   ★ 같은 결함이 <b>네 화면</b>에 있었습니다 —
+       account/profile.html · join-major · join-industry · join-general
+     화면마다 따로 고치면 하나를 빠뜨립니다. 그래서 <b>여기 한 곳</b>에
+     두고 네 화면이 함께 씁니다. auth.js 는 그 넷이 모두 싣습니다.
+
+   쓰는 법
+     OCBirth.mount(자리요소, 지금값)   →  상자 셋을 그 자리에 놓습니다
+     OCBirth.get(자리요소)             →  'YYYY-MM-DD' 또는 null
+     OCBirth.set(자리요소, 값)         →  값을 셋에 나눠 넣습니다
+
+   ★ <b>날 수를 달마다 다시 셉니다</b> — 2월은 29일까지, 4월은 30일까지.
+     그러지 않으면 「2월 31일」을 고를 수 있고 저장할 때 오류가 납니다.
+     윤년도 저절로 셈합니다(그 달의 0일 = 앞 달 마지막 날).
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+  if (window.OCBirth) return;
+
+  function sel(cls, label){
+    var s = document.createElement('select');
+    s.className = cls || '';
+    s.setAttribute('aria-label', label || '');
+    return s;
+  }
+  function fill(el, list, keep){
+    var h = '<option value="">선택</option>';
+    list.forEach(function(o){ h += '<option value="'+o[0]+'">'+o[1]+'</option>'; });
+    el.innerHTML = h;
+    if (keep) el.value = keep;
+  }
+  function lastDay(y, m){
+    if (!m) return 31;
+    return new Date(y || 2000, m, 0).getDate();   /* 0일 = 앞 달 마지막 날 */
+  }
+
+  /* 자리요소 안에 상자 셋을 놓습니다.
+     ★ 상자에 붙이는 class 는 <b>화면이 정합니다</b> — 화면마다 입력칸
+       모양이 달라서(inp · ln-select …) 여기서 못박으면 어긋납니다. */
+  function mount(host, value, opt){
+    if (!host) return null;
+    opt = opt || {};
+    var cls = opt.cls || '';
+    var wrap = document.createElement('div');
+    wrap.className = opt.rowCls || 'oc-birth';
+    wrap.style.display = 'flex';
+    wrap.style.gap = '8px';
+    wrap.style.flexWrap = 'wrap';
+
+    var Y = sel(cls, '태어난 해'), M = sel(cls, '태어난 달'), D = sel(cls, '태어난 날');
+    Y.style.flex = '0 0 110px'; M.style.flex = '0 0 92px'; D.style.flex = '0 0 92px';
+    wrap.appendChild(Y); wrap.appendChild(M); wrap.appendChild(D);
+
+    var now = new Date().getFullYear();
+    var years = [];
+    var from = now - (opt.minAge == null ? 10 : opt.minAge);
+    for (var y = from; y >= (opt.oldest || 1930); y--) years.push([y, y]);
+    fill(Y, years);
+
+    var months = [];
+    for (var m = 1; m <= 12; m++) months.push([m, m + '월']);
+    fill(M, months);
+
+    function days(){
+      var keep = D.value, last = lastDay(parseInt(Y.value,10), parseInt(M.value,10));
+      var list = [];
+      for (var d = 1; d <= last; d++) list.push([d, d + '일']);
+      fill(D, list, (keep && parseInt(keep,10) <= last) ? keep : '');
+    }
+    Y.addEventListener('change', days);
+    M.addEventListener('change', days);
+    days();
+
+    host.innerHTML = '';
+    host.appendChild(wrap);
+    host._ocBirth = { Y:Y, M:M, D:D, days:days };
+    if (value) set(host, value);
+    return host._ocBirth;
+  }
+
+  function get(host){
+    var b = host && host._ocBirth; if (!b) return null;
+    var y = b.Y.value, m = b.M.value, d = b.D.value;
+    if (!y || !m || !d) return null;
+    return y + '-' + ('0'+m).slice(-2) + '-' + ('0'+d).slice(-2);
+  }
+
+  function set(host, v){
+    var b = host && host._ocBirth; if (!b || !v) return;
+    var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return;
+    b.Y.value = String(parseInt(m[1],10));
+    b.M.value = String(parseInt(m[2],10));
+    b.days();                                   /* 달을 정한 뒤 날 수를 다시 셉니다 */
+    b.D.value = String(parseInt(m[3],10));
+  }
+
+  /* ── [data-birth] 자리에 상자 셋을 <b>저절로</b> 놓습니다 ────────
+     ★ 가입 화면 셋은 각자 코드를 두지 않습니다 — 화면에 자리만 두면
+       여기서 채웁니다. 화면마다 적으면 하나를 빠뜨립니다.
+     ★ 상자에 붙일 class 는 화면이 data-cls 로 알려 줍니다(없으면 inp).
+       화면마다 입력칸 모양이 달라서(inp · ln-select …) 여기서 못박으면
+       어긋납니다. */
+  function autoMount(){
+    var list = document.querySelectorAll('[data-birth]');
+    for (var i = 0; i < list.length; i++){
+      var host = list[i];
+      if (host._ocBirth) continue;
+      mount(host, host.getAttribute('data-value') || '',
+            { cls: host.getAttribute('data-cls') || 'inp' });
+    }
+  }
+  if (document.readyState !== 'loading') autoMount();
+  else document.addEventListener('DOMContentLoaded', autoMount);
+
+  window.OCBirth = { mount: mount, get: get, set: set, autoMount: autoMount };
+})();
+
 /* 테마(다크/화이트) 토글 — .theme-toggle 클릭 시 전환, localStorage 저장 */
 (function(){
   try{ if(localStorage.getItem('oc-theme')==='dark') document.documentElement.setAttribute('data-theme','dark'); }catch(e){}
@@ -182,6 +308,18 @@
     els.forEach(function(el){
       var _grp = el.closest('[data-group]'); if(_grp && _grp.style.display === 'none') return;
       var k = el.getAttribute('data-k');
+      /* ★ 생년월일은 <b>고르는 상자 셋</b>입니다 (2026-08-05)
+         담는 요소가 &lt;div&gt; 라서 el.value 가 없습니다. 그대로 두면
+         빈 값이 들어가 생년월일이 <b>저장되지 않습니다.</b>
+         OCBirth 가 셋을 합쳐 'YYYY-MM-DD' 로 줍니다. */
+      if(el.hasAttribute('data-birth')){
+        var bv = (window.OCBirth ? (OCBirth.get(el) || '') : '');
+        el.style.borderColor = '';
+        if(el.hasAttribute('data-req') && !bv){ missing = true; el.style.outline = '1px solid #f2777a'; }
+        else { el.style.outline = ''; }
+        if(CK.indexOf(k) >= 0) common[k] = bv; else if(bv) extra[k] = bv;
+        return;
+      }
       if(el.type === 'checkbox'){
         if(el.hasAttribute('data-multi')){ extra[k] = extra[k] || []; if(el.checked) extra[k].push(el.value); }
         else { extra[k] = el.checked; }
