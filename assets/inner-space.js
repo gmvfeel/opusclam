@@ -213,14 +213,20 @@
       +       '<div class="ins-card ins-menu" id="insMenu"></div>'
       +       '<div class="ins-card ins-linked" id="insLinked">'
       +         '<h4>MY OC Linked</h4><div class="ins-msg">불러오는 중…</div></div>'
-      /* ★ <b>다가오는 일정</b> (2026-08-05 · 파트너 지시)
-             콩쿨 · 지원금 · 페스티벌 · 공연정보 가운데 날짜가 가까운 것들. */
-      +       '<div class="ins-card" id="insSoon">'
+      +     '</div>'
+      /* ⑤⑥ 셋째 줄기 — <b>한 묶음</b>으로 둡니다
+             ★ 「다가오는 일정」을 여기로 옮겼습니다 (2026-08-05 · 파트너 지적)
+               처음에는 둘째 줄기(MY OC Linked 아래)에 두었는데, 셋째 줄기는
+               도넛 하나뿐이라 <b>아래가 크게 비어</b> 있었고 둘째 줄기만
+               길어졌습니다. 빈 자리를 쓰는 편이 낫습니다.
+             ★ 넷째 줄기(.ins-right)와 같은 방식입니다 — 묶어 두면 격자의
+               줄 키에 끌려다니지 않고 스스로 쌓입니다. */
+      +     '<div class="ins-col3">'
+      +       '<div class="ins-card ins-pie-card" id="insPie">'
+      +         '<h4>내 관심분야 통계</h4><div class="ins-msg">불러오는 중…</div></div>'
+      +       '<div class="ins-card ins-soon-card" id="insSoon">'
       +         '<h4>다가오는 일정</h4><div class="ins-msg">불러오는 중…</div></div>'
       +     '</div>'
-      /* ⑤ 내 관심분야 통계 */
-      +     '<div class="ins-card ins-pie-card" id="insPie">'
-      +       '<h4>내 관심분야 통계</h4><div class="ins-msg">불러오는 중…</div></div>'
       /* ⑥⑦ 넷째 줄기 — <b>한 묶음</b>으로 둡니다.
              따로 두면 왼쪽 카드 키에 따라 사이가 크게 벌어집니다. */
       +     '<div class="ins-right">'

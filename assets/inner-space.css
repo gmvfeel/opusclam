@@ -305,16 +305,21 @@ html.ins-open [data-oc-inner]{
 }
 
 /* 줄기 안쪽은 위에서부터 차곡차곡 쌓습니다 */
-.ins-left, .ins-mid{
+.ins-left, .ins-mid, .ins-col3{
   display: flex; flex-direction: column; gap: 13px; min-width: 0;
 }
 .ins-left { grid-area: left; }
 .ins-mid  { grid-area: mid; }
+/* ★ 셋째 줄기 — 도넛 + 다가오는 일정 (2026-08-05 · 파트너 지적)
+   예전에는 도넛 하나뿐이라 <b>아래가 크게 비어</b> 있었고, 「다가오는 일정」이
+   둘째 줄기에 있어 그쪽만 길어졌습니다. 빈 자리를 쓰는 편이 낫습니다. */
+.ins-col3 { grid-area: pie; }
 .ins-me       { grid-area: me; }
 .ins-vid      { grid-area: vid; }
 .ins-menu     { grid-area: menu; }
 .ins-linked   { grid-area: link; }
 .ins-pie-card { grid-area: pie; }
+.ins-soon-card{ grid-area: soon; }   /* 좁은 화면에서 제자리를 찾게 */
 
 /* ★ 넷째 줄기의 두 카드를 <b>한 묶음</b>으로 둡니다.
    (2026-08-04 · 파트너 지적 — 사이가 너무 벌어졌습니다)
@@ -685,10 +690,10 @@ html.ins-open [data-oc-inner]{
      display:contents 를 주면 카드가 다시 격자의 칸이 되므로,
      아래 grid-template-areas 의 예전 순서(<b>영상은 맨 끝</b>)가 그대로
      살아납니다 — 지난번에 정한 순서를 지키는 것입니다. */
-  .ins-left, .ins-mid{ display: contents; }
+  .ins-left, .ins-mid, .ins-col3{ display: contents; }
   .ins-grid{
     grid-template-columns: minmax(0,1fr);
-    grid-template-areas: 'me' 'menu' 'link' 'pie' 'right' 'vid';
+    grid-template-areas: 'me' 'menu' 'link' 'pie' 'soon' 'right' 'vid';
   }
   .ins-top{ grid-template-columns: 1fr; }
   .ins-title{ grid-column: 1; font-size: 25px; }
