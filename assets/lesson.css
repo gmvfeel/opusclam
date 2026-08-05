@@ -65,8 +65,51 @@
 
   background: var(--ln-bg);
   color: var(--ln-tx);
+
+  /* ★ <b>브라우저가 그리는 것들</b>도 어둡게 (2026-08-05 · 파트너 지적 —
+     생년월일 칸의 달력이 이상하게 보였습니다)
+
+     날짜 고르는 달력 · 고르는 목록 · 스크롤바는 <b>우리가 CSS 로 그리는
+     것이 아니라</b> 브라우저·운영체제가 그립니다. 그래서 화면만 어둡게
+     해도 그것들은 <b>밝은 채로</b> 남아 흰 상자들이 튀어 보입니다.
+     이 한 줄이 「이 안은 어두운 결」이라고 알려 주어 함께 어두워집니다. */
+  color-scheme: dark;
 }
 .ln a{ color: inherit; }
+
+/* ══ hidden 을 <b>반드시</b> 듣게 ═══════════════════════════════
+   ★ 무엇이 잘못됐었나 (2026-08-05 · 파트너 지적 —
+     「보내는 중…」 이 그대로 남고 폼도 사라지지 않았습니다)
+
+     브라우저는 hidden 을 <b>display:none</b> 으로 다룹니다. 그런데 그것은
+     브라우저의 기본값이라 <b>우리가 적은 규칙에 집니다.</b>
+       .ln-form2{ display: grid }   ← hidden 이어도 grid 로 보입니다
+       .ln-btns { display: flex }   ← hidden 이어도 flex 로 보입니다
+     그래서 ⑴ 자격을 확인하기 <b>전부터 폼이 보였고</b>,
+            ⑵ 저장한 뒤 폼과 단추가 <b>사라지지 않았습니다.</b>
+     단추는 「보내는 중…」 글자와 눌리지 않는 상태로 남아, 파트너님 눈에는
+     <b>끝나지 않은 것처럼</b> 보였습니다(실제로는 저장이 끝났습니다).
+
+   ★ 이 한 규칙으로 레슨:ON 안의 <b>모든</b> hidden 이 듣습니다.
+     앞으로 만들 화면에서도 같은 함정에 빠지지 않습니다. */
+.ln [hidden], .ln[hidden]{ display: none !important; }
+
+/* ══ 자동완성 바탕색 ═══════════════════════════════════════════
+   ★ 브라우저가 저장해 둔 값을 채우면 <b>연한 파란 바탕</b>을 칠합니다.
+     어두운 화면에서는 그 칸만 하얗게 떠 보입니다(파트너님 화면의
+     전화번호·이메일·국가 칸이 그랬습니다).
+   ★ 바탕색은 못 바꾸게 되어 있어, <b>안쪽 그림자로 덮는</b> 것이
+     널리 쓰이는 방법입니다. */
+.ln input:-webkit-autofill,
+.ln input:-webkit-autofill:hover,
+.ln input:-webkit-autofill:focus,
+.ln select:-webkit-autofill{
+  -webkit-text-fill-color: var(--ln-tx);
+  -webkit-box-shadow: inset 0 0 0 1000px #1b1b22;
+  box-shadow: inset 0 0 0 1000px #1b1b22;
+  caret-color: var(--ln-tx);
+  transition: background-color 9999s ease-out 0s;
+}
 
 /* ══ 헤더 · 모드 전환 ═══════════════════════════════════════════
    ★ 레슨:ON 은 늘 어두우므로 <b>모드 전환 단추를 감춥니다.</b>

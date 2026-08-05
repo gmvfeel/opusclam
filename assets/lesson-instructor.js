@@ -558,12 +558,25 @@
           btn.disabled = false; btn.textContent = old;
           return;
         }
+        /* ★ 저장이 끝나면 폼과 단추를 감춥니다.
+           ★ hidden 만으로는 <b>믿을 수 없습니다</b> — 감싸는 규칙이
+             display:grid · display:flex 를 갖고 있으면 hidden 을 이깁니다
+             (2026-08-05 · 파트너 화면에서 실제로 그랬습니다).
+             assets/lesson.css 에 「.ln [hidden]{display:none !important}」 를
+             두어 고쳤지만, 여기서도 <b>display 를 직접</b> 눌러 둡니다 —
+             CSS 를 아직 갈지 않은 상태에서도 제대로 보이게. */
         form.setAttribute('hidden', '');
         btns.setAttribute('hidden', '');
+        form.style.display = 'none';
+        btns.style.display = 'none';
+        /* 단추 글자도 되돌립니다 — 감춰지지 않는 경우에도
+           「보내는 중…」 이 남아 <b>끝나지 않은 것처럼</b> 보입니다. */
+        btn.textContent = old;
         note('<b>신청을 보냈습니다.</b><br>'
           + '서류를 확인한 뒤 알려 드립니다. 진행 상태는 마이페이지에서 보실 수 있습니다.'
           + '<a class="ln-vd" style="margin-top:16px" href="/account/mypage.html">마이페이지 &#8594;</a>');
         if (sayBox) sayBox.innerHTML = '';
+        try { gate.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e2) {}
       }).catch(function (e) {
         say('no', '보내지 못했습니다: ' + esc(String(e.message || e).slice(0, 120)));
         btn.disabled = false; btn.textContent = old;
