@@ -568,17 +568,37 @@
     var fresh = ((st && st.fresh) || []).filter(function (x) { return (x.n || 0) > 0; });
 
     /* 담은 갈래만 골라 보여 줍니다 */
+    /* ★ <b>이름 대신 표 이름으로 맞춥니다</b> (2026-08-05 · 파트너 화면에서
+         어긋난 것을 보고 고쳤습니다)
+
+       무엇이 어긋났나 —
+         이 막대는 「핫토픽 6 · 태교음악 2」만 보여 주는데, 바로 아래
+         「관심분야 새 글」에는 <b>악보(정보SPOT) 글이 다섯 개</b> 나왔습니다.
+         두 카드가 서로 다른 말을 하니 고장처럼 보입니다.
+
+       까닭 —
+         서버는 정보SPOT 을 <b>표 하나</b>로 세어 이름을 「정보SPOT」으로
+         줍니다. 그런데 관심분야에서 정보SPOT 은 <b>일곱 갈래</b>로 갈라져
+         있어 이름이 「각 분야별 악보」·「공연정보」… 입니다.
+         이름으로 짝지으면 <b>영영 맞지 않습니다.</b>
+
+       고침 —
+         CATS 의 <b>표 이름(tb)</b>으로 맞춥니다. 서버의 fresh 도 tb 를
+         함께 주므로 정확히 짝지어집니다.
+       ★ 다만 정보SPOT 은 일곱 갈래가 한 표를 나눠 쓰므로, 그 막대는
+         <b>일곱 갈래를 합친 수</b>가 됩니다. 갈래별로 가르려면 서버에서
+         section 별로 세야 하는데, 그것은 나중에 필요할 때 하겠습니다. */
     var want = {};
     try {
       var I = window.OCInterests;
       if (I) {
         (await I.list()).forEach(function (x) {
           var c = I.find(x.big, x.key);
-          if (c) want[c.label] = true;
+          if (c && c.tb) want[c.tb] = true;
         });
       }
     } catch (e) {}
-    var pick = fresh.filter(function (x) { return want[x.cat]; });
+    var pick = fresh.filter(function (x) { return want[x.tb]; });
     var show = (pick.length ? pick : fresh)
       .slice().sort(function (a, b) { return b.n - a.n; }).slice(0, 5);
 
@@ -689,12 +709,23 @@
       return null;
     }
 
-    var rows = [];
+    /* ★ 한 갈래가 <b>목록을 다 차지하지 않게</b> 합니다
+         (2026-08-05 · 파트너 화면에서 「악보」가 다섯 줄을 채웠습니다)
+       갈래마다 최대 두 줄까지만 넣습니다. 여섯 줄이면 세 갈래쯤 보이니
+       「내 관심분야에 무엇이 올라왔나」를 훑기에 알맞습니다.
+       ★ 두 줄까지 채운 뒤 자리가 남으면 <b>남은 것으로 채웁니다</b> —
+         갈래가 하나뿐인 회원에게 빈 목록을 보이는 것보다 낫습니다. */
+    var MAX = 6, PER = 2;
+    var rows = [], spare = [], cnt = {};
     items.forEach(function (it) {
-      if (rows.length >= 6) return;
       var k = catOf(it);
-      if (k) rows.push({ it: it, k: k });
+      if (!k) return;
+      var key = k.big + '/' + k.key;
+      cnt[key] = (cnt[key] || 0) + 1;
+      if (cnt[key] <= PER) { if (rows.length < MAX) rows.push({ it: it, k: k }); }
+      else spare.push({ it: it, k: k });
     });
+    for (var si = 0; si < spare.length && rows.length < MAX; si++) rows.push(spare[si]);
 
     if (!rows.length) {
       box.innerHTML = head
@@ -751,9 +782,12 @@
     var yBot = H - PB, yTop = PT;
     function yOf(v) { return yBot - (v / tk.top) * (yBot - yTop); }
 
+    /* ★ 점이 <b>하나</b>일 때는 가운데에 놓습니다 (2026-08-05)
+       예전에는 왼쪽 끝(PL)에 붙어 눈금값과 겹쳐 <b>고장처럼</b> 보였습니다. */
+    var one = pts.length === 1;
     var step = pts.length > 1 ? (W - PL - PR) / (pts.length - 1) : 0;
     var xy = pts.map(function (x, i) {
-      return [PL + step * i, yOf(x.v || 0)];
+      return [one ? (PL + (W - PL - PR) / 2) : (PL + step * i), yOf(x.v || 0)];
     });
     var line = xy.map(function (p2, i) {
       return (i ? 'L' : 'M') + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1);
