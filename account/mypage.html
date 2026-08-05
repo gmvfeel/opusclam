@@ -9,7 +9,54 @@
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="/assets/auth.css">
 <style>
-  .mp-wrap{max-width:640px;margin:56px auto;padding:0 20px}
+  /* ★ 폭을 <b>640 → 1120px</b> 로 넓혔습니다 (2026-08-05 · 파트너 지시)
+     탭으로 나눈 뒤에도 양옆이 크게 놀았습니다. 하위 짜임을 살펴보니
+     모두 <b>유동형(flex·%)</b>이어서 넓혀도 깨지지 않습니다. */
+  .mp-wrap{max-width:1120px;margin:56px auto;padding:0 20px}
+
+  /* ══ 단 나누기 ═════════════════════════════════════════════
+     ★ 넓어진 자리를 쓰려고 탭마다 <b>여러 단</b>으로 짭니다.
+       내 정보  2단 (자료 | 단추)
+       활동     2단 (활동분포 | 새 글) + 많이 읽힌 글은 통째로
+       Linked   3단 (받은 요청 | 이어진 사람 | 보낸 요청)
+       저장함   2단 (즐겨찾기 | 킵)
+     ★ 마크업이 아니라 <b>CSS 격자</b>로 짭니다 — 그리는 함수를
+       건드리지 않아도 되고, 좁은 화면에서는 한 단으로 돌아옵니다. */
+
+  /* ── 내 정보 : 자료 | 단추 */
+  .mp-two{display:grid;grid-template-columns:minmax(0,1fr) 264px;gap:34px;align-items:start}
+  .mp-two .mp-list{margin-bottom:0}
+  .mp-two .mp-side{position:sticky;top:96px}
+
+  /* ── 활동 통계 : 두 단, 「많이 읽힌 내 글」은 통째로 */
+  #stBody{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 34px;align-items:start}
+  #stBody > .st-sum,
+  #stBody > .st-sec.wide{grid-column:1 / -1}
+  #stBody > .st-sec{margin-bottom:20px}
+
+  /* ── Linked : 세 단 (받은 요청 · 이어진 사람 · 보낸 요청) */
+  #lkBody{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 26px;align-items:start}
+  #lkBody > .lk-find{grid-column:1 / -1}
+  #lkBody > .lk-sec{margin-bottom:0}
+
+  /* ── 저장함 : 두 단 (즐겨찾기 · 킵) */
+  #mpFavs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 34px;align-items:start}
+
+  /* 「불러오는 중…」 같은 안내는 <b>단을 가로질러</b> 놓습니다 —
+     안 그러면 첫 단에만 치우쳐 어색합니다 */
+  #stBody > .mp-msg, #lkBody > .mp-msg, #mpFavs > .mp-msg,
+  #stBody > .st-none, #lkBody > .lk-msg{grid-column:1 / -1}
+
+  /* ── 좁아지면 단을 줄입니다 */
+  @media (max-width:900px){
+    .mp-two{grid-template-columns:minmax(0,1fr);gap:24px}
+    .mp-two .mp-side{position:static}
+    #lkBody{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:680px){
+    #stBody,#lkBody,#mpFavs{grid-template-columns:minmax(0,1fr)}
+    #stBody > .st-sec,#lkBody > .lk-sec{margin-bottom:22px}
+  }
 
   /* ══ 요약 띠 ═══════════════════════════════════════════════
      ★ 어느 탭에 있어도 「내가 누구인지」가 위에 남아 있게 합니다.
@@ -636,16 +683,13 @@
     var prov = session.user.app_metadata && session.user.app_metadata.provider;
     var isEmail = (!prov || prov==='email');
     var statusCls = m.status||"pending";
+    /* ★ 사진과 배지를 <b>여기서 빼냈습니다</b> (2026-08-05 · 탭 구조)
+       위 요약 띠가 사진 · 이름 · 회원종류 · 승인상태를 이미 보여 줍니다.
+       같은 것을 두 번 두면 자리만 먹고 어수선합니다.
+     ★ 두 단으로 짭니다 — 왼쪽은 <b>자료</b>, 오른쪽은 <b>단추</b>. */
     var html=""
-      /* ★ 프로필 사진 — 있으면 보여 줍니다 */
-      +(m.photo_url
-         ? '<div class="mp-photo"><img src="'+esc(m.photo_url)+'" alt=""'
-           + ' onerror="this.parentNode.style.display=\'none\'"></div>'
-         : '')
-      +'<div class="mp-badges">'
-      +  '<span class="mp-badge type">'+esc(TYPE[m.member_type]||m.member_type||"회원")+'</span>'
-      +  '<span class="mp-badge '+esc(statusCls)+'">'+esc(STATUS[m.status]||m.status||"-")+'</span>'
-      +'</div>'
+      +'<div class="mp-two">'
+      +'<div class="mp-col">'
       +'<ul class="mp-list">'
       +  '<li><span class="k">이름</span><span class="v">'+esc(m.name||"-")+'</span></li>'
       +  '<li><span class="k">아이디</span><span class="v">'+esc(m.username||"-")+'</span></li>'
@@ -660,6 +704,8 @@
       +'</ul>'
       /* 소개는 줄이 길어질 수 있어 목록 밖에 둡니다 */
       +  (m.intro ? '<p class="mp-intro">'+esc(m.intro)+'</p>' : '')
+      +'</div>'
+      +'<div class="mp-col mp-side">'
       +'<div class="mp-actions">'
       /* ★ 회원정보를 <b>고칠 수 있는 길</b>을 놓습니다.
          예전에는 읽기만 되어서, 전화번호가 바뀌어도 고칠 방법이
@@ -673,7 +719,9 @@
       +  (isEmail?'<a class="mp-btn ghost" href="/account/change-password.html">비밀번호 변경</a>':'')
       +  '<button class="mp-btn ghost" id="mpLogout">로그아웃</button>'
       +'</div>'
-      +'<div style="text-align:center;margin-top:18px"><a href="/account/withdraw.html" style="font-size:12px;color:var(--tx3);text-decoration:underline">회원 탈퇴</a></div>';
+      +'<div style="text-align:center;margin-top:18px"><a href="/account/withdraw.html" style="font-size:12px;color:var(--tx3);text-decoration:underline">회원 탈퇴</a></div>'
+      +'</div>'
+      +'</div>';
     box.innerHTML=html;
     var lo=document.getElementById("mpLogout"); if(lo) lo.addEventListener("click",doLogout);
 
