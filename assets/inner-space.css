@@ -76,7 +76,10 @@ html.ins-open [data-oc-inner]{
 .ins-title{
   grid-column: 2;
   font-family: var(--display, inherit);
-  font-size: 25px; font-weight: 700; letter-spacing: .10em;
+  /* ★ <b>얇고 크게</b> (2026-08-05 · 파트너 지시)
+     25px/700 이 너무 굵고 작았습니다. Pretendard 는 300(Light) 을 갖고
+     있어 굵기를 확실히 낮출 수 있습니다. */
+  font-size: 37px; font-weight: 300; letter-spacing: .10em;
   color: #fff; text-align: center; white-space: nowrap;
 }
 .ins-top-btns{
@@ -105,12 +108,22 @@ html.ins-open [data-oc-inner]{
 .ins-grid{
   display: grid;
   grid-template-columns: 200px minmax(0,1.15fr) minmax(0,1.15fr) minmax(0,1.5fr);
-  grid-template-areas:
-    'me   menu pie  right'
-    'vid  link pie  right';
+  /* ★ 네 줄기를 <b>각각 한 칸</b>으로 둡니다 (2026-08-05 · 파트너 지적)
+     예전에는 두 줄(me/vid · menu/link)로 나누었습니다. 격자는 <b>줄 키를
+     칸끼리 맞추므로</b>, 회원 카드가 옆의 회원정보 메뉴보다 짧으면 그
+     아래로 큰 빈 자리가 생기고 영상 카드가 그만큼 내려갔습니다.
+     이제 줄기마다 스스로 쌓이므로 카드가 <b>바로 아래에 붙습니다.</b> */
+  grid-template-areas: 'left mid pie right';
   gap: 13px;
   align-items: start;
 }
+
+/* 줄기 안쪽은 위에서부터 차곡차곡 쌓습니다 */
+.ins-left, .ins-mid{
+  display: flex; flex-direction: column; gap: 13px; min-width: 0;
+}
+.ins-left { grid-area: left; }
+.ins-mid  { grid-area: mid; }
 .ins-me       { grid-area: me; }
 .ins-vid      { grid-area: vid; }
 .ins-menu     { grid-area: menu; }
@@ -135,15 +148,23 @@ html.ins-open [data-oc-inner]{
   padding: 17px;
   color: var(--text, #2b2740);
   min-width: 0;
-  box-shadow: 0 12px 30px -18px rgba(30,20,60,.45);
+  /* ★ 그림자를 조금 더 <b>또렷하게</b> (2026-08-05 · 파트너 지시)
+     보라 바탕에서 흰 카드가 떠 보이게 가까운 그림자를 더했습니다.
+     짙게 하지 않고 세 겹으로 나누어 은은하게 둡니다. */
+  box-shadow:
+    0 2px 5px rgba(30,20,60,.07),
+    0 10px 22px -10px rgba(30,20,60,.22),
+    0 22px 44px -24px rgba(30,20,60,.42);
 }
 .ins-card h4{
-  font-size: 13px; font-weight: 800; margin: 0 0 13px;
+  /* ★ 제목을 <b>내용보다 크게</b> (2026-08-05 · 파트너 지시)
+     내용이 12.5px 인데 제목이 13px 이라 거의 같았습니다. */
+  font-size: 15.5px; font-weight: 800; margin: 0 0 13px;
   color: var(--ink, #2b2740);
   display: flex; align-items: center; gap: 7px;
 }
 .ins-card h4 em{
-  font-style: normal; font-size: 11px; font-weight: 400;
+  font-style: normal; font-size: 11.5px; font-weight: 400;
   color: var(--text-3, #8a8ca0);
 }
 .ins-msg, .ins-none{
@@ -367,8 +388,7 @@ html.ins-open [data-oc-inner]{
   .ins-grid{
     grid-template-columns: 190px minmax(0,1fr) minmax(0,1fr);
     grid-template-areas:
-      'me   menu  pie'
-      'vid  link  pie'
+      'left mid   pie'
       'right right right';
   }
   /* 넓이가 남으니 두 카드를 나란히 둡니다 */
@@ -379,22 +399,25 @@ html.ins-open [data-oc-inner]{
   .ins-grid{
     grid-template-columns: 170px minmax(0,1fr);
     grid-template-areas:
-      'me   menu'
-      'vid  menu'
+      'left mid'
       'pie  pie'
-      'right right'
-      'link link';
+      'right right';
   }
   .ins-right{ flex-direction: column; }
 }
 @media (max-width: 620px){
   .ins-wrap{ padding: 16px 14px 0; }
+  /* ★ 좁은 화면에서는 줄기 묶음을 <b>풀어</b> 카드를 하나씩 세웁니다.
+     display:contents 를 주면 카드가 다시 격자의 칸이 되므로,
+     아래 grid-template-areas 의 예전 순서(<b>영상은 맨 끝</b>)가 그대로
+     살아납니다 — 지난번에 정한 순서를 지키는 것입니다. */
+  .ins-left, .ins-mid{ display: contents; }
   .ins-grid{
     grid-template-columns: minmax(0,1fr);
     grid-template-areas: 'me' 'menu' 'link' 'pie' 'right' 'vid';
   }
   .ins-top{ grid-template-columns: 1fr; }
-  .ins-title{ grid-column: 1; font-size: 18px; }
+  .ins-title{ grid-column: 1; font-size: 25px; }
   .ins-top-btns{ grid-column: 1; justify-content: center; }
   .ins-tb{ flex: 1 1 auto; justify-content: center; height: 36px; }
   .ins-close-row{ text-align: center; }

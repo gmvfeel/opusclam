@@ -119,16 +119,22 @@
       +   '</div>'
 
       +   '<div class="ins-grid">'
-      /* ① 회원 카드 */
-      +     '<div class="ins-card ins-me" id="insMe">'
-      +       '<div class="ins-msg">불러오는 중…</div></div>'
-      /* ② 영상 */
-      +     '<div class="ins-card ins-vid" id="insVid"></div>'
-      /* ③ 회원정보 메뉴 */
-      +     '<div class="ins-card ins-menu" id="insMenu"></div>'
-      /* ④ MY OC Linked */
-      +     '<div class="ins-card ins-linked" id="insLinked">'
-      +       '<h4>MY OC Linked</h4><div class="ins-msg">불러오는 중…</div></div>'
+      /* ①② 첫째 줄기 — <b>한 묶음</b>으로 둡니다 (2026-08-05 · 파트너 지적)
+             따로 두면 격자의 <b>줄 키</b>가 옆 칸(회원정보 메뉴)에 맞춰지고,
+             회원 카드는 그보다 짧아서 그 아래로 <b>큰 빈 자리</b>가 생깁니다.
+             영상 카드가 그만큼 내려가 사이가 벌어졌습니다.
+             넷째 줄기(.ins-right)가 이미 쓰던 방식과 같습니다. */
+      +     '<div class="ins-left">'
+      +       '<div class="ins-card ins-me" id="insMe">'
+      +         '<div class="ins-msg">불러오는 중…</div></div>'
+      +       '<div class="ins-card ins-vid" id="insVid"></div>'
+      +     '</div>'
+      /* ③④ 둘째 줄기 — 같은 까닭으로 한 묶음 */
+      +     '<div class="ins-mid">'
+      +       '<div class="ins-card ins-menu" id="insMenu"></div>'
+      +       '<div class="ins-card ins-linked" id="insLinked">'
+      +         '<h4>MY OC Linked</h4><div class="ins-msg">불러오는 중…</div></div>'
+      +     '</div>'
       /* ⑤ 내 관심분야 통계 */
       +     '<div class="ins-card ins-pie-card" id="insPie">'
       +       '<h4>내 관심분야 통계</h4><div class="ins-msg">불러오는 중…</div></div>'
@@ -529,9 +535,15 @@
     try {
       var c = await sb();
       if (!c) { box.innerHTML = fallback; return; }
+      /* ★ <b>숨긴 자료를 걸러 냅니다</b> (2026-08-05)
+         정보SPOT 목록(spot/media.html)은 숨긴 것을 빼고 보여 주는데
+         여기에는 그 조건이 없어, 숨긴 자료가 이 카드에 뜰 수 있었습니다.
+         ★ is.false 가 아니라 <b>not.is.true</b> 를 씁니다 —
+           hidden 이 비어 있는(null) 자료를 놓치지 않습니다. */
       var r = await c.from('spot')
         .select('id,title,thumb_url')
         .eq('section', '음원영상')
+        .not('hidden', 'is', true)
         .order('created_at', { ascending: false })
         .limit(1);
       var row = (r && r.data && r.data[0]) || null;
@@ -557,6 +569,29 @@
       location.href = '/account/login.html?next='
         + encodeURIComponent(location.pathname + location.search);
       return;
+    }
+
+    /* ★ 이너스페이스를 열면 <b>아래 메인도 「나의 메인」</b>이 됩니다
+       (2026-08-05 · 파트너 지시)
+
+       이너스페이스는 「내 자리」입니다. 그 아래로 이어지는 메인도 담아
+       두신 관심분야로 채워져 있어야 짝이 맞습니다.
+       그런데 [First Main] 을 한 번 누르면 sessionStorage 에 'first' 가
+       남아, 그 뒤로는 계속 <b>원래 메인</b>이 보였습니다.
+       그것을 여기서 풀어 줍니다.
+
+     ★ 메인의 내용은 my-main.js 가 <b>화면을 그릴 때 한 번</b> 정합니다.
+       이미 원래 메인으로 그려져 있으면 다시 불러야 바뀝니다. 그래서
+       ?inner=1 을 붙여 다시 열리게 합니다 (패널도 저절로 열립니다). */
+    var wasFirst = false;
+    try { wasFirst = sessionStorage.getItem('oc-main-mode') === 'first'; } catch (e0) {}
+    if (wasFirst) {
+      try { sessionStorage.removeItem('oc-main-mode'); } catch (e0) {}
+      /* .board-main 이 있으면 메인 화면입니다 — 다시 그려야 바뀝니다 */
+      if (document.querySelector('.board-main')) {
+        location.href = location.pathname + '?inner=1';
+        return;
+      }
     }
 
     opened = true;

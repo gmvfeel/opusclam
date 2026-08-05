@@ -297,62 +297,21 @@
     boardMain = document.querySelector('.board-main');
     if (boardMain) origHTML = boardMain.innerHTML;
   }
-  function showFirst() {
-    /* ★ 원래 메인으로 되돌립니다 — 감춘 것을 다시 보이게 하는 것이 아니라
-       담아 둔 글자를 그대로 되돌려 놓습니다. 그러면 안에서 돌던 코드가
-       다시 필요해질 수 있으므로, 새로 고치는 편이 확실합니다. */
-    try { sessionStorage.setItem(KEY_MODE, 'first'); } catch (e) {}
-    location.reload();
-  }
-  function showMy() {
-    try { sessionStorage.removeItem(KEY_MODE); } catch (e) {}
-    location.reload();
-  }
+  /* ── 상단 띠를 <b>없앴습니다</b> (2026-08-05 · 파트너 지시) ──────────
+     예전에는 메인 위에 띠를 놓아
+       「나의 메인 · 관심분야 3개를 앞자리에 놓았습니다  [관심분야 관리][First Main]」
+       「오퍼스클램 메인을 보고 있습니다  [나의 메인으로]」
+     를 보여 주었습니다. 그 내용은 <b>이너스페이스</b>로 옮겼습니다 —
+       · 회원정보 카드 아래 「나의 메인 · 관심분야 N개…」 줄
+       · 맨 위 [First Main] 단추
+     띠가 하나 더 있으면 메인 짜임이 어수선하고, 이 정보는 「내 것」이라
+     이너스페이스가 제자리입니다.
 
-  /* ── 띠 단추 ───────────────────────────────────────────────
-     ★ 「지금 무엇을 보고 있나」 와 「바꾸는 길」 을 함께 둡니다.
-       모드를 바꿀 수 있다는 것을 모르면 갇힌 느낌이 됩니다. */
-  function bar(mode, n) {
-    var el = document.createElement('div');
-    el.className = 'oc-my-bar' + (mode === 'first' ? ' first' : '');
-    el.innerHTML = (mode === 'my')
-      /* ★ 「채웠습니다」 가 아니라 「바꿨습니다」 입니다 —
-         원래 칸을 하나씩 갈아 끼우는 방식이므로 그 편이 사실에 맞습니다. */
-      ? '<span><b>나의 메인</b> · 관심분야 ' + n + '개를 앞자리에 놓았습니다</span>'
-        + '<span class="btns">'
-        + '<a href="/account/interests.html">관심분야 관리</a>'
-        + '<button type="button" id="ocFirstMain">First Main</button>'
-        + '</span>'
-      : '<span><b>오퍼스클램 메인</b>을 보고 있습니다</span>'
-        + '<span class="btns">'
-        + '<button type="button" id="ocMyMain">나의 메인으로</button>'
-        + '</span>';
-    return el;
-  }
-
-  /* ★ 띠는 <b>.wrap 밖</b>에 놓습니다.
-
-     왜 (2026-08-04 · 짜임이 깨져서 알았습니다)
-       .board .wrap 은 <b>격자(1fr 350px)</b>입니다. 그 안에 띠를 넣으면
-       칸이 하나 밀려서 board-main 이 350px 자리로 갑니다 —
-       1400px 화면인데 350px 로 눌려 글자가 세로로 섰습니다.
-
-     그래서 section.board <b>앞</b>에 놓고, 폭은 .wrap 과 같게 맞춥니다. */
-  function mountBar(mode, n) {
-    var sec = document.querySelector('section.board');
-    if (!sec) return;
-    var old = document.querySelector('.oc-my-bar');
-    if (old) old.remove();
-    var el = bar(mode, n);
-    var host = document.createElement('div');
-    host.className = 'oc-my-bar-host';
-    host.appendChild(el);
-    sec.parentNode.insertBefore(host, sec);
-    var f = document.getElementById('ocFirstMain');
-    if (f) f.addEventListener('click', showFirst);
-    var m = document.getElementById('ocMyMain');
-    if (m) m.addEventListener('click', showMy);
-  }
+     ★ <b>만들지 않습니다</b> — CSS 로 감추면 언제든 되살아납니다.
+     ★ 함께 없앤 것 : bar() · mountBar() · showFirst() · showMy()
+       (모드 바꾸기는 이너스페이스가 맡습니다)
+     ★ home.html 의 .oc-my-bar 스타일은 그대로 두었습니다 —
+       .oc-my-bar-host 는 아래 addMoreLine() 이 아직 씁니다. */
 
   /* ── 시작 ───────────────────────────────────────────────── */
   async function start() {
@@ -372,7 +331,7 @@
     /* 「First Main」 을 골라 두었으면 원래 메인을 보여 줍니다 */
     var mode = 'my';
     try { if (sessionStorage.getItem(KEY_MODE) === 'first') mode = 'first'; } catch (e) {}
-    if (mode === 'first') { mountBar('first', mine.length); return; }
+    if (mode === 'first') return;   /* ★ 띠를 놓지 않습니다 — 이너스페이스가 알려 줍니다 */
 
     saveOrig();
     if (!boardMain) return;
@@ -428,7 +387,7 @@
     var want = mine.slice(0, MAX).map(function (x) {
       return I.find(x.big, x.key);
     }).filter(function (c) { return c && c.tb; });
-    if (!want.length) { mountBar('my', mine.length); return; }
+    if (!want.length) return;
 
     /* ④ 이미 그 갈래가 놓인 자리는 <b>그대로 둡니다</b> */
     var already = {};
@@ -512,7 +471,7 @@
     }
     /* ★ 갈아 끼울 것이 없어도 <b>띠와 표시는 남겨야</b> 합니다 —
        담은 것이 다 원래 칸에 있는 경우입니다. */
-    if (!pairs.length) { mountBar('my', mine.length); addMoreLine(mine.length); return; }
+    if (!pairs.length) { addMoreLine(mine.length); return; }
 
     /* ⑥ 글을 한꺼번에 가져옵니다 — 하나씩 기다리면 느립니다 */
     var got = await Promise.all(pairs.map(function (p2) { return fetchRows(p2.cat); }));
