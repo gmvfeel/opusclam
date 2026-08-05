@@ -100,7 +100,24 @@
   var OC_TYPE_LABEL={major:"전공자",industry:"음악관계자",org:"단체·기업",school:"음악학교",general:"일반"};
   function setLoggedIn(links, name, typeLabel, sb){
     var label=name+"님"+(typeLabel?" ("+typeLabel+")":"");
-    links.login.forEach(function(a){ a.textContent=label; a.setAttribute("href","/account/mypage.html"); a.onclick=null; });
+    /* ★ 이름 옆에 <b>「마이페이지」</b> 를 붙입니다 (2026-08-05 · 파트너 지적)
+       「김유경님 (일반)」 만 있으면 <b>그것을 눌러야 마이페이지가 나온다</b>는
+       것을 알 수 없습니다. 옆에 「이너스페이스」 가 있어 그쪽을 먼저 누르게
+       됩니다.
+     ★ 글자를 <b>DOM 으로</b> 붙입니다 — innerHTML 로 이름을 끼우면
+       이름에 &lt; 같은 글자가 있을 때 위험합니다(이 파일에는 esc 가 없습니다).
+     ★ 색은 <b>currentColor</b> 를 씁니다 — 투명 헤더(흰 글자)든 흰 헤더
+       (어두운 글자)든 다크모드든 <b>따라옵니다.</b>
+       (같은 표시를 assets/auth.js 도 붙입니다 — 그쪽은 회원 화면 헤더) */
+    links.login.forEach(function(a){
+      a.textContent=label;
+      a.setAttribute("href","/account/mypage.html");
+      a.onclick=null;
+      var tg=document.createElement("i");
+      tg.textContent="마이페이지";
+      tg.setAttribute("style", "font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.04em;margin-left:6px;padding:2px 6px;border-radius:4px;border:1px solid currentColor;opacity:.7;vertical-align:1px");
+      a.appendChild(tg);
+    });
     links.join.forEach(function(a){ a.textContent="로그아웃"; a.setAttribute("href","#"); a.onclick=function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); }; });
 
     /* ★ <b>이너스페이스</b>를 끼워 넣습니다 (2026-08-04)

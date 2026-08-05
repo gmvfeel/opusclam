@@ -106,8 +106,13 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       </a>
       <button class="theme-toggle" id="themeToggle" aria-label="다크/화이트 모드 전환">
-        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+        <!-- ★ 아이콘을 <b>명암(contrast)</b> 하나로 바꿨습니다 (2026-08-05 · 파트너 지시)
+             예전에는 초승달 ↔ 여덟 갈래 해 두 개를 CSS 로 갈아 끼웠습니다.
+             해 아이콘이 아기자기해서 플랫폼의 결과 맞지 않았습니다.
+             반쪽이 채워진 동그라미는 <b>명암 전환</b>을 뜻하는 널리 쓰이는
+             표시이고, 한 개라 상태와 어긋날 일도 없습니다.
+             ★ 회원 화면 헤더(partials/header-auth.html)도 같은 것을 씁니다. -->
+        <svg class="ic-contrast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="currentColor" stroke="none"/></svg>
       </button>
       <button class="fullmenu-btn" id="fullMenuBtn" aria-label="전체 메뉴 열기" aria-expanded="false"><span></span><span></span><span></span></button>
       <button class="burger" id="burger" aria-label="메뉴 열기" aria-expanded="false"><span></span><span></span><span></span></button>

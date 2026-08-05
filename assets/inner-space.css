@@ -114,6 +114,13 @@
      것뿐이고, 그것은 app.js · auth.js · inner-space.js 가 맡습니다.
 
    ★ 지금 열려 있다는 <b>표시</b>만 남깁니다 (색은 건드리지 않습니다). */
+/* ★ 패널이 열려 있으면 <b>화면에 붙어 있는 것들</b>을 감춥니다
+   (2026-08-05 · 파트너 지적)
+   게시판 상세에는 왼쪽에 [‹ 리스트] [+ 질문하기] 가 화면에 붙어(fixed)
+   있습니다. 패널을 열면 그것이 <b>패널 위에 떠</b> 엉뚱한 자리에 놓입니다.
+   패널을 보는 동안에는 필요 없으므로 감추고, 닫으면 돌아옵니다. */
+html.ins-open .pv-sidetabs{ display: none !important; }
+
 html.ins-open [data-oc-inner]{
   font-weight: 800;
   text-decoration: underline;

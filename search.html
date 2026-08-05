@@ -95,12 +95,12 @@
   .osr-item mark{background:rgba(201,169,78,.26);color:inherit;border-radius:3px;padding:0 1px;font-weight:800}
 
   /* 빈 결과 · 안내 */
-  .osr-empty{margin:56px 0;text-align:center;font-size:15.5px;color:var(--text-2,#5c5e70);line-height:2}
+  /* ★ 「검색어를 입력해 주세요」를 <b>위로</b> 올립니다 (2026-08-05 · 파트너 지시)
+     위 여백이 56px 이라 검색칸에서 한참 떨어져 있었습니다. */
+  .osr-empty{margin:14px 0 60px;text-align:center;font-size:15.5px;color:var(--text-2,#5c5e70);line-height:2}
   .osr-empty b{color:var(--text-1,#1b1c2b)}
   .osr-empty span{display:block;margin-top:4px;font-size:13px;color:var(--text-3,#8a8c9e)}
-  .osr-scope{margin-top:42px;padding:18px 20px;background:var(--paper-2,#f7f7fb);
-    border-radius:13px;font-size:12.5px;color:var(--text-3,#8a8c9e);line-height:1.95}
-  .osr-scope b{display:block;margin-bottom:5px;font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--text-2,#5c5e70)}
+  /* .osr-scope 스타일은 걷어냈습니다 — 그 상자를 없앴습니다 */
 
   /* 로딩 */
   .osr-skel{display:block;height:13px;border-radius:5px;
@@ -167,11 +167,10 @@
   <div class="osr-summary"></div>
   <div class="osr-groups"></div>
 
-  <div class="osr-scope">
-    <b>검색 범위</b>
-    인물 · 음악단체 · 공연장 · 음악학교 · 현대음악 · 관련기관재단 · 학술<br>
-    핫토픽 · 공연사진영상 · 입시요강 · 입시커뮤니티 · 지식나눔 · 뉴스공지
-  </div>
+  <!-- ★ 「검색 범위」 상자를 없앴습니다 (2026-08-05 · 파트너 지시)
+       검색칸 아래에 이미 「데이터베이스 7종과 커뮤니티 게시판을 한 번에
+       찾습니다」 안내가 있어 <b>같은 말이 두 번</b>이었습니다.
+       ★ CSS 로 감추지 않고 <b>만들지 않습니다</b> — 감추면 언제든 되살아납니다. -->
 </main>
 
 <div id="oc-footer"></div>
