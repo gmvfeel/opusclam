@@ -221,7 +221,13 @@ html.ins-open [data-oc-inner]{
   font-size: 37px; font-weight: 300; letter-spacing: .03em;
   color: #fff; text-align: center; white-space: nowrap;
 }
-.ins-top-btns{
+/* ★ 왼쪽 단추 묶음 · 오른쪽 닫기 (2026-08-05 · 파트너 지시)
+   가운데 칸(제목)이 auto 이므로, 양옆 1fr 칸에 각각 붙입니다. */
+.ins-top-l{
+  grid-column: 1;
+  display: flex; gap: 8px; justify-content: flex-start;
+}
+.ins-top-r{
   grid-column: 3;
   display: flex; gap: 8px; justify-content: flex-end;
 }
@@ -294,7 +300,31 @@ html.ins-open [data-oc-inner]{
     0 2px 5px rgba(30,20,60,.07),
     0 10px 22px -10px rgba(30,20,60,.22),
     0 22px 44px -24px rgba(30,20,60,.42);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
+/* ★ 손을 올리면 <b>살짝 떠오릅니다</b> (2026-08-05 · 파트너 지시)
+   마이페이지 대시보드 칸과 같은 결로 맞췄습니다 — 3px 올리고 그림자를
+   진하게. 크게 움직이면 여러 칸이 들썩여 어지럽습니다.
+   ★ 손가락으로 쓰는 기기에서는 켜지 않습니다 — 누른 뒤 효과가 남습니다.
+   ★ 움직임을 줄이도록 설정한 분에게는 뜨는 것만 뺍니다. */
+@media (hover:hover){
+  .ins-card:hover{
+    transform: translateY(-3px);
+    box-shadow:
+      0 3px 7px rgba(30,20,60,.10),
+      0 14px 28px -12px rgba(30,20,60,.30),
+      0 28px 52px -26px rgba(30,20,60,.50);
+  }
+  html[data-theme="dark"] .ins-card:hover{
+    box-shadow: 0 16px 34px -16px rgba(0,0,0,.7);
+    border-color: rgba(255,255,255,.14);
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  .ins-card{ transition: none }
+  .ins-card:hover{ transform: none }
+}
+
 .ins-card h4{
   /* ★ 제목을 <b>내용보다 크게</b> (2026-08-05 · 파트너 지시)
      내용이 12.5px 인데 제목이 13px 이라 거의 같았습니다. */
@@ -621,11 +651,12 @@ html.ins-open [data-oc-inner]{
   }
   .ins-top{ grid-template-columns: 1fr; }
   .ins-title{ grid-column: 1; font-size: 25px; }
-  .ins-top-btns{ grid-column: 1; justify-content: center; }
+  .ins-top-l, .ins-top-r{ grid-column: 1; justify-content: center; }
   .ins-tb{ flex: 1 1 auto; justify-content: center; height: 36px; }
   /* ★ 단추가 셋이 되어 좁은 화면에서는 <b>줄을 바꿔</b> 놓습니다
      (First Main · 회원정보 수정 · INNER SPACE CLOSE) */
-  .ins-top-btns{ flex-wrap: wrap; }
+  /* 단추가 셋이라 좁은 화면에서는 줄을 바꿔 놓습니다 */
+  .ins-top-l, .ins-top-r{ flex-wrap: wrap; }
   .ins-close{ letter-spacing: .02em; }
 }
 

@@ -173,13 +173,17 @@
       + '<div class="ins-wrap">'
       +   '<div class="ins-top">'
       /* ★ (MY SPACE) 를 뗐습니다 (2026-08-05 · 파트너 지시) */
-      +     '<span class="ins-title">INNER SPACE</span>'
-      +     '<span class="ins-top-btns">'
+      /* ★ 단추를 <b>왼쪽·오른쪽으로 갈랐습니다</b> (2026-08-05 · 파트너 지시)
+             [First Main] [회원정보 수정] 은 <b>왼쪽</b>,
+             [INNER SPACE CLOSE] 는 <b>오른쪽</b>, 제목은 가운데입니다.
+             셋이 오른쪽에 몰려 있어 제목과 붙고 답답했습니다.
+           ★ 「가는 단추」와 「닫는 단추」를 갈라 두면 실수로 닫는 일도 줍니다. */
+      +     '<span class="ins-top-l">'
       +       '<button type="button" class="ins-tb" id="insFirst">First Main</button>'
       +       '<a class="ins-tb solid" href="/account/profile.html">회원정보 수정</a>'
-      /* ★ CLOSE 를 <b>이 줄로 옮겼습니다</b> (2026-08-05 · 파트너 지시)
-             예전에는 패널 맨 아래 오른쪽에 따로 있었습니다. 세 단추가
-             한자리에 모이니 찾기 쉽습니다. 맨 오른쪽에 둡니다. */
+      +     '</span>'
+      +     '<span class="ins-title">INNER SPACE</span>'
+      +     '<span class="ins-top-r">'
       +       '<button type="button" class="ins-tb ins-close" id="insClose">'
       +         'INNER SPACE CLOSE <i>&#10005;</i></button>'
       +     '</span>'
