@@ -177,7 +177,12 @@
     if (!box) return;
     var pagerBox = $(opt.pagerBox || 'lnPager');
     var fieldSel = $(opt.fieldSel || 'lnField');
-    var size = opt.pageSize || 8;
+    /* ★ 한 화면에 몇 개를 보일지 — <b>스무 개</b>가 기본입니다.
+       카드가 넓은 화면에서 네 줄로 놓이므로 20 이면 다섯 칸이 꽉 찹니다.
+       ※ 목록 다섯 화면(master · open · live · one · group)이 각자
+         pageSize 를 넘깁니다 — <b>바꿀 때는 여섯 곳을 함께</b> 고쳐야
+         탭마다 개수가 달라지는 일이 없습니다. */
+    var size = opt.pageSize || 20;
     var page = 1, field = '';
 
     /* 머리글 — 탭 설정에서 가져옵니다 (화면에 적지 않습니다) */
