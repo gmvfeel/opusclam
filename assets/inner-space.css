@@ -258,8 +258,14 @@ html.ins-open [data-oc-inner]{
   /* ★ <b>얇고 크게</b> (2026-08-05 · 파트너 지시)
      25px/700 이 너무 굵고 작았습니다. Pretendard 는 300(Light) 을 갖고
      있어 굵기를 확실히 낮출 수 있습니다. */
-  /* ★ 자간을 <b>좁게</b> (2026-08-05 · 파트너 지시) .10em → .03em */
-  font-size: 37px; font-weight: 300; letter-spacing: .03em;
+  /* ★ 제목 다듬기 (2026-08-05 · 파트너 지시)
+       자간   .10em → .03em → <b>0</b>      (더 붙였습니다)
+       크기   25 → 37 → <b>31px</b>          (조금 줄였습니다)
+       굵기   700 → 300 → <b>200</b>         (더 얇게)
+     ★ Pretendard 는 100(Thin)·200(ExtraLight)까지 갖고 있어 200 이
+       실제로 반영됩니다. 없는 굵기를 적으면 브라우저가 가까운 것으로
+       바꿔 버려 <b>바뀌지 않은 것처럼</b> 보입니다. */
+  font-size: 31px; font-weight: 200; letter-spacing: 0;
   color: #fff; text-align: center; white-space: nowrap;
 }
 /* ★ 왼쪽 단추 묶음 · 오른쪽 닫기 (2026-08-05 · 파트너 지시)
@@ -300,13 +306,16 @@ html.ins-open [data-oc-inner]{
      아래로 큰 빈 자리가 생기고 영상 카드가 그만큼 내려갔습니다.
      이제 줄기마다 스스로 쌓이므로 카드가 <b>바로 아래에 붙습니다.</b> */
   grid-template-areas: 'left mid pie right';
-  gap: 13px;
+  /* ★ 카드 사이를 <b>13 → 10px</b> 로 좁혔습니다 (2026-08-05 · 파트너 지시)
+     ★ 세 곳(격자 · 줄기 안쪽 · 넷째 줄기)을 <b>같은 값</b>으로 맞춰야
+       가로 사이와 세로 사이가 같아 보입니다. 한 곳만 바꾸면 어긋납니다. */
+  gap: 10px;
   align-items: start;
 }
 
 /* 줄기 안쪽은 위에서부터 차곡차곡 쌓습니다 */
 .ins-left, .ins-mid, .ins-col3{
-  display: flex; flex-direction: column; gap: 13px; min-width: 0;
+  display: flex; flex-direction: column; gap: 10px; min-width: 0;
 }
 .ins-left { grid-area: left; }
 .ins-mid  { grid-area: mid; }
@@ -329,7 +338,7 @@ html.ins-open [data-oc-inner]{
    한 묶음으로 두면 gap(13px)만큼만 떨어집니다. */
 .ins-right{
   grid-area: right;
-  display: flex; flex-direction: column; gap: 13px; min-width: 0;
+  display: flex; flex-direction: column; gap: 10px; min-width: 0;
 }
 
 /* ── 카드 — 흰 바탕 ───────────────────────────────────────── */
@@ -693,10 +702,13 @@ html.ins-open [data-oc-inner]{
   .ins-left, .ins-mid, .ins-col3{ display: contents; }
   .ins-grid{
     grid-template-columns: minmax(0,1fr);
-    grid-template-areas: 'me' 'menu' 'link' 'pie' 'soon' 'right' 'vid';
+    /* ★ 좁은 화면 순서도 <b>바뀐 자리</b>를 따릅니다 (2026-08-05)
+       넓은 화면에서 둘째 줄기가 「메뉴 → 일정」, 셋째가 「통계 → Linked」
+       이므로 그 순서 그대로 세웁니다. 영상은 지난번대로 맨 끝입니다. */
+    grid-template-areas: 'me' 'menu' 'soon' 'pie' 'link' 'right' 'vid';
   }
   .ins-top{ grid-template-columns: 1fr; }
-  .ins-title{ grid-column: 1; font-size: 25px; }
+  .ins-title{ grid-column: 1; font-size: 22px; }
   .ins-top-l, .ins-top-r{ grid-column: 1; justify-content: center; }
   .ins-tb{ flex: 1 1 auto; justify-content: center; height: 36px; }
   /* ★ 단추가 셋이 되어 좁은 화면에서는 <b>줄을 바꿔</b> 놓습니다

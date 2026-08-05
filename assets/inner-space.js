@@ -211,8 +211,14 @@
       /* ③④ 둘째 줄기 — 같은 까닭으로 한 묶음 */
       +     '<div class="ins-mid">'
       +       '<div class="ins-card ins-menu" id="insMenu"></div>'
-      +       '<div class="ins-card ins-linked" id="insLinked">'
-      +         '<h4>MY OC Linked</h4><div class="ins-msg">불러오는 중…</div></div>'
+      +       '<div class="ins-card ins-soon-card" id="insSoon">'
+      +         '<h4>다가오는 일정</h4><div class="ins-msg">불러오는 중…</div></div>'
+      /* ★ 자리를 맞바꿨습니다 (2026-08-05 · 파트너 지시)
+             「다가오는 일정」은 다섯 줄이라 <b>키가 크고</b>,
+             「MY OC Linked」는 짧습니다.
+             키 큰 것을 짧은 <b>회원정보 메뉴</b> 아래에,
+             짧은 것을 키 큰 <b>도넛</b> 아래에 두면 두 줄기 키가
+             고르게 맞아 아래가 비지 않습니다. */
       +     '</div>'
       /* ⑤⑥ 셋째 줄기 — <b>한 묶음</b>으로 둡니다
              ★ 「다가오는 일정」을 여기로 옮겼습니다 (2026-08-05 · 파트너 지적)
@@ -224,8 +230,8 @@
       +     '<div class="ins-col3">'
       +       '<div class="ins-card ins-pie-card" id="insPie">'
       +         '<h4>내 관심분야 통계</h4><div class="ins-msg">불러오는 중…</div></div>'
-      +       '<div class="ins-card ins-soon-card" id="insSoon">'
-      +         '<h4>다가오는 일정</h4><div class="ins-msg">불러오는 중…</div></div>'
+      +       '<div class="ins-card ins-linked" id="insLinked">'
+      +         '<h4>MY OC Linked</h4><div class="ins-msg">불러오는 중…</div></div>'
       +     '</div>'
       /* ⑥⑦ 넷째 줄기 — <b>한 묶음</b>으로 둡니다.
              따로 두면 왼쪽 카드 키에 따라 사이가 크게 벌어집니다. */
