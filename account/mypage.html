@@ -130,6 +130,18 @@
   }
   .dc-go:hover{color:var(--accent)}
 
+  /* ★ 칸 아래에 <b>길이 둘</b>일 때 (2026-08-06)
+     .dc-go 는 <b>스스로 위에 선을 그립니다</b>(border-top). 그대로 두
+     개를 나란히 놓으면 선이 두 번 생겨 어긋납니다. 그래서 선을
+     감싸는 자리로 옮기고 안쪽 선은 지웁니다.
+     ※ .dc-goes .dc-go 는 클래스 2개라 .dc-go(1개)보다 <b>점수가 높아</b>
+       확실히 이깁니다. */
+  .dc-goes{
+    margin-top:14px; padding-top:12px; border-top:1px solid var(--line);
+    display:flex; gap:18px; flex-wrap:wrap; align-items:center;
+  }
+  .dc-goes .dc-go{ margin-top:0; padding-top:0; border-top:0; }
+
   /* 회원 칸 */
   .dc-me-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
   .dc-ph{
@@ -830,6 +842,8 @@
         </p>
       </div>
       <div class="mp-card">
+        <a href="/lesson/index.html" style="text-decoration:underline">레슨:ON 둘러보기 &#8594;</a>
+        <span style="margin:0 10px;opacity:.4">·</span>
         <a href="/lesson/my-lessons.html" style="text-decoration:underline">내 강의로 가기 &#8594;</a>
         <span style="margin:0 10px;opacity:.4">·</span>
         <a href="/lesson/instructor-apply.html" style="text-decoration:underline">인스트럭터 신청 &#8594;</a>
@@ -1272,7 +1286,13 @@
               ? '<div class="dc-none">내 강의에 들어온 신청이 <b>' + nf(recv) + '건</b> 있습니다.</div>'
               : '<div class="dc-none">승인된 레슨은 상세에서 <b>참여 링크</b>를 받으실 수 있습니다.</div>')
         + '</div>'
-        + dcGo('lesson', '내 레슨'));
+        /* ★ 두 갈래 길 — 「내 레슨」은 <b>이 화면의 탭</b>을 열고,
+           「레슨:ON」은 <b>섹션으로</b> 나갑니다. 마이페이지에서
+           레슨:ON 으로 가는 길이 아예 없었습니다(파트너 지적). */
+        + '<div class="dc-goes">'
+        +   dcGo('lesson', '내 레슨')
+        +   '<a class="dc-go" href="/lesson/index.html">레슨:ON 둘러보기 &#8594;</a>'
+        + '</div>');
     })();
 
     /* ── ⑨ 저장함 */
