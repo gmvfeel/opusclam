@@ -1,11 +1,24 @@
-<!-- 회원 화면 공용 헤더 (로그인·회원가입·마이페이지 등 16개 화면이 함께 씁니다)
+<!-- 회원 화면 공용 헤더 (로그인·회원가입·마이페이지 등 18개 화면이 함께 씁니다)
      · 이 파일 한 곳만 고치면 그 화면들에 모두 반영됩니다
      · 테마 전환은 assets/auth.js 가 .theme-toggle 을 보고 맡습니다
-     · 「레슨 : ON」 과 「SHOPPING」 은 아직 화면이 없어 # 그대로 두었습니다
-       (본 헤더도 같습니다. 화면이 생기면 두 곳을 함께 고칩니다)
-     · 「CUSTOMER CENTER」 도 아직 화면이 없습니다
+
+     ★ 2026-08-06 — 「레슨 : ON」 을 <b>실제 화면에 이었습니다</b> (파트너 지적)
+       무엇이 잘못됐었나 — 마이페이지 같은 회원 화면에서 위 메뉴의
+       레슨:ON 을 누르면 주소가 <b>…/mypage.html#</b> 로만 바뀌고 아무 데도
+       가지 않았습니다.
+       왜 그랬나 — 레슨:ON 화면이 <b>없던 때</b> 만든 헤더라 href="#" 에
+       aria-disabled="true" · title="준비 중입니다" 까지 붙어 있었습니다.
+       그 뒤 레슨:ON 화면 열세 개가 다 생겼는데 <b>이 헤더만</b> 옛 상태로
+       남아 있었습니다. 본 헤더(partials/header.html)는 이미 이어져 있어서
+       회원 화면에서만 막혀 보였습니다.
+       ▶ 교훈 — 새 섹션을 열면 <b>헤더가 둘</b>이라는 것을 잊지 말 것.
+         partials/header.html 과 partials/header-auth.html 을 함께 봐야 합니다.
+
+     · 「SHOPPING」 과 「CUSTOMER CENTER」 는 <b>아직 화면이 없어</b> # 그대로
+       둡니다. 화면이 생기면 본 헤더와 이 파일 <b>두 곳</b>을 함께 고칩니다.
+
      ★ 전체메뉴(≡) 는 이 헤더에 펼칠 메뉴가 없어 눌러도 아무 일이 없습니다.
-       960px 아래에서는 위 큰 메뉴가 숨으므로 그 폭에서는 길이 막힙니다.
+       960px 아래에서는 위 큰 메뉴가 숨으므로 <b>그 폭에서는 길이 막힙니다</b>.
        고치는 방법은 파트너님과 정하기로 두었습니다. -->
 <div class="gnb">
   <div class="util"><div class="in">
@@ -14,12 +27,104 @@
   </div></div>
   <div class="mast"><div class="in">
     <a class="logo" href="/home.html"><img src="/assets/logo.png" alt="OPUSCLAM.COM"></a>
-    <nav class="nav"><a href="/db/index.html">DATABASE</a><a href="/community/index.html">OC커뮤니티</a><a href="/spot/index.html">정보SPOT</a><a href="#" aria-disabled="true" title="준비 중입니다">레슨 : ON</a><a href="/recruit/guide.html">리쿠르트</a><a href="#" aria-disabled="true" title="준비 중입니다">SHOPPING</a></nav>
+    <nav class="nav"><a href="/db/index.html">DATABASE</a><a href="/community/index.html">OC커뮤니티</a><a href="/spot/index.html">정보SPOT</a><a href="/lesson/index.html">레슨 : ON</a><a href="/recruit/guide.html">리쿠르트</a><a href="#" aria-disabled="true" title="준비 중입니다">SHOPPING</a></nav>
     <div class="tools">
       <span class="authlink"><a href="/account/login.html">로그인</a> <a href="/account/join.html">회원가입</a></span>
       <a class="circ" href="/search.html" title="통합검색" aria-label="통합검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></a>
       <span class="circ theme-toggle" title="테마 전환"><svg class="ic-contrast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="currentColor" stroke="none"/></svg></span>
-      <button class="burger" title="전체메뉴"><span></span><span></span><span></span></button>
+      <button class="burger" title="전체메뉴" aria-label="전체메뉴" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
   </div></div>
+
+  <!-- ══ 전체메뉴 패널 (2026-08-06 · 파트너 요청) ══════════════════
+       ★ 무엇이 잘못됐었나
+         960px 아래에서는 위 큰 메뉴가 숨는데 ≡ 는 눌러도 아무 일이
+         없었습니다. 그래서 <b>휴대폰으로 회원 화면에 들어오면 다른
+         섹션으로 나갈 길이 아예 없었습니다</b>(18개 화면 전부).
+       ★ 여는 일은 assets/include.js 가 맡습니다 —
+         이 파일은 <b>끼워 넣어지는</b> 조각이라 여기 적은 &lt;script&gt; 는
+         실행되지 않습니다(insertAdjacentHTML 로 넣기 때문입니다).
+         &lt;style&gt; 은 적용되므로 짜임만 여기 둡니다.
+       ★ 로그인·마이페이지 줄은 <b>위 헤더에서 그대로 옮겨 옵니다</b> —
+         auth.js 가 이미 로그인 상태에 맞게 고쳐 둔 것을 베끼면
+         같은 판단을 두 번 하지 않아도 됩니다. -->
+  <div class="ga-dim" id="gaDim" hidden></div>
+  <div class="ga-panel" id="gaPanel" hidden role="dialog" aria-modal="true" aria-label="전체메뉴">
+    <div class="ga-top">
+      <span class="ga-ttl">MENU</span>
+      <button type="button" class="ga-x" id="gaClose" aria-label="닫기">&#10005;</button>
+    </div>
+    <nav class="ga-nav">
+      <a href="/db/index.html">DATABASE</a>
+      <a href="/community/index.html">OC커뮤니티</a>
+      <a href="/spot/index.html">정보SPOT</a>
+      <a href="/lesson/index.html">레슨 : ON</a>
+      <a href="/recruit/guide.html">리쿠르트</a>
+      <span class="ga-off" title="준비 중입니다">SHOPPING</span>
+    </nav>
+    <div class="ga-sub">
+      <a href="/search.html">통합검색</a>
+      <a href="/home.html">홈</a>
+    </div>
+    <div class="ga-auth" id="gaAuth"></div>
+  </div>
 </div>
+
+<style>
+  /* ══ 회원 화면 전체메뉴 패널 ══════════════════════════════════
+     ★ 이름을 ga- 로 두었습니다 — 본 헤더의 mobile drawer(.nav.open 등)와
+       <b>겹치지 않게</b> 하려는 것입니다. 같은 이름을 쓰면 어느 쪽을
+       고쳐도 다른 쪽이 흔들립니다. */
+  .ga-dim{
+    position:fixed; inset:0; z-index:990;
+    background:rgba(6,6,10,.62);
+    opacity:0; transition:opacity .2s ease;
+  }
+  .ga-dim.on{ opacity:1; }
+
+  .ga-panel{
+    position:fixed; top:0; right:0; z-index:991;
+    width:min(320px, 86vw); height:100%;
+    display:flex; flex-direction:column;
+    padding:18px 22px 28px;
+    background:#12121a; color:#f2eff8;
+    box-shadow:-14px 0 40px rgba(0,0,0,.42);
+    transform:translateX(100%); transition:transform .24s ease;
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+  }
+  .ga-panel.on{ transform:translateX(0); }
+
+  .ga-top{ display:flex; align-items:center; justify-content:space-between; }
+  .ga-ttl{ font-size:11px; font-weight:800; letter-spacing:.24em; color:#8a86a0; }
+  .ga-x{
+    width:38px; height:38px; border:0; border-radius:50%; cursor:pointer;
+    background:rgba(255,255,255,.08); color:#f2eff8; font-size:16px; line-height:1;
+  }
+  .ga-x:hover{ background:rgba(255,255,255,.16); }
+
+  .ga-nav{ display:flex; flex-direction:column; margin-top:22px; }
+  .ga-nav a, .ga-nav .ga-off{
+    padding:15px 2px; border-bottom:1px solid rgba(255,255,255,.09);
+    font-size:15px; font-weight:600; color:#f2eff8; text-decoration:none;
+  }
+  .ga-nav a:hover{ color:#c9a4e8; }
+  .ga-nav a.active{ color:#c9a4e8; }
+  .ga-nav .ga-off{ color:#6e6a82; font-weight:400; }
+
+  .ga-sub{ display:flex; gap:18px; flex-wrap:wrap; margin-top:20px; }
+  .ga-sub a{ font-size:13px; color:#b0abc4; text-decoration:none; }
+  .ga-sub a:hover{ color:#e2d8f2; text-decoration:underline; }
+
+  .ga-auth{
+    margin-top:auto; padding-top:20px; border-top:1px solid rgba(255,255,255,.12);
+    display:flex; gap:14px; flex-wrap:wrap; align-items:center;
+    font-size:13.5px; color:#c9c6d6;
+  }
+  .ga-auth a{ color:#e2d8f2; text-decoration:none; }
+  .ga-auth a:hover{ text-decoration:underline; }
+  /* 위 헤더에서 베껴 온 이름표(마이페이지 배지 등)도 읽히게 둡니다 */
+  .ga-auth b, .ga-auth strong{ color:#fff; }
+
+  /* 넓은 화면에서는 ≡ 가 숨으므로 패널도 쓰이지 않습니다.
+     혹시 열려 있는 채로 창을 넓히면 include.js 가 닫아 줍니다. */
+</style>

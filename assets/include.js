@@ -318,11 +318,115 @@
     nav.parentNode.insertBefore(wrap, nav.nextSibling);
   }
 
+  /* ── 회원 화면 전체메뉴 (2026-08-06 · 파트너 요청) ────────────
+     ★ 무엇이 잘못됐었나
+       회원 화면(마이페이지 등 18개)은 partials/header-auth.html 을
+       씁니다. 그 헤더는 960px 아래에서 위 큰 메뉴가 숨는데 ≡ 는
+       눌러도 아무 일이 없었습니다. 그래서 <b>휴대폰으로 회원 화면에
+       들어오면 다른 섹션으로 나갈 길이 아예 없었습니다.</b>
+
+     ★ 왜 여기에 두나
+       끼워 넣어진 조각 안의 &lt;script&gt; 는 <b>실행되지 않습니다</b>
+       (insertAdjacentHTML 로 넣기 때문입니다). 회원 화면들이 공통으로
+       싣는 것은 이 파일뿐이므로, 여는 일은 여기서 맡습니다.
+       ※ 본 헤더(header.html)의 서랍은 assets/header.js 가 맡습니다 —
+         회원 화면은 그 파일을 싣지 않습니다.
+
+     ★ 로그인 줄은 <b>위 헤더에서 베껴 옵니다</b>
+       auth.js 가 이미 로그인 상태에 맞게 .authlink 를 고쳐 둡니다.
+       그것을 베끼면 같은 판단을 두 번 하지 않아도 되고, 로그인
+       여부가 어긋나는 일도 없습니다.
+       ※ 손잡이가 걸린 단추(이너스페이스 등)는 베껴도 움직이지 않으니
+         <b>링크만</b> 남깁니다 — 눌렀는데 아무 일 없는 것이 더 나쁩니다. */
+  function authMenu() {
+    var burger = document.querySelector('.gnb .burger');
+    var panel  = document.getElementById('gaPanel');
+    var dim    = document.getElementById('gaDim');
+    if (!burger || !panel || !dim) return;            /* 본 헤더 화면이면 조용히 지납니다 */
+    if (burger.getAttribute('data-ga')) return;       /* 두 번 걸지 않습니다 */
+    burger.setAttribute('data-ga', '1');
+
+    function show(el, on) {
+      if (on) { el.removeAttribute('hidden'); el.style.display = ''; }
+      else    { el.setAttribute('hidden', ''); el.style.display = 'none'; }
+    }
+
+    function fillAuth() {
+      var dst = document.getElementById('gaAuth');
+      if (!dst) return;
+      dst.innerHTML = '';
+
+      /* ★ <b>주소가 있는 링크만</b> 새로 만들어 옮깁니다.
+         베껴 붙이면 손잡이로 움직이는 것(로그아웃 · 이너스페이스 패널)이
+         눌러도 아무 일 없는 껍데기가 됩니다. 그것보다 <b>없는 편</b>이
+         낫습니다 — 로그아웃은 마이페이지 안에 있습니다. */
+      var src = document.querySelector('.gnb .authlink');
+      if (src) {
+        [].forEach.call(src.querySelectorAll('a[href]'), function (a) {
+          var h = a.getAttribute('href') || '';
+          if (h.charAt(0) !== '/') return;            /* '#' 는 손잡이로 움직이는 것 */
+          var t = (a.textContent || '').trim();
+          if (!t) return;
+          var b = document.createElement('a');
+          b.setAttribute('href', h);
+          b.textContent = t;
+          dst.appendChild(b);
+        });
+      }
+
+      /* 로그인하지 않았거나 옮길 것이 없으면 기본 두 줄 */
+      if (!dst.children.length) {
+        dst.innerHTML = '<a href="/account/login.html">로그인</a>'
+                      + '<a href="/account/join.html">회원가입</a>';
+      }
+    }
+
+    function open() {
+      fillAuth();
+      markPanel();
+      show(dim, true); show(panel, true);
+      /* 한 틱 뒤에 켜야 어울림(transition)이 걸립니다 */
+      setTimeout(function () { dim.classList.add('on'); panel.classList.add('on'); }, 10);
+      burger.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+    function close() {
+      dim.classList.remove('on'); panel.classList.remove('on');
+      burger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      setTimeout(function () { show(dim, false); show(panel, false); }, 240);
+    }
+    function toggle() { panel.classList.contains('on') ? close() : open(); }
+
+    /* 지금 보고 있는 섹션에 표시 — 폴더로 견줍니다(위 큰 메뉴와 같은 규칙) */
+    function markPanel() {
+      var dir = dirOf(location.pathname);
+      [].forEach.call(panel.querySelectorAll('.ga-nav a[href]'), function (a) {
+        var h = a.getAttribute('href') || '';
+        a.classList.toggle('active', h.charAt(0) === '/' && dir !== '/' && dirOf(h) === dir);
+      });
+    }
+
+    burger.addEventListener('click', toggle);
+    dim.addEventListener('click', close);
+    var x = document.getElementById('gaClose');
+    if (x) x.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) {
+      if ((e.key === 'Escape' || e.keyCode === 27) && panel.classList.contains('on')) close();
+    });
+    /* 창을 넓히면 ≡ 가 숨으므로 열려 있던 패널도 닫습니다 —
+       안 닫으면 스크롤이 잠긴 채로 남습니다. */
+    window.addEventListener('resize', function () {
+      if (panel.classList.contains('on') && window.innerWidth > 960) close();
+    });
+  }
+
   // 헤더만 담당(동기 주입). 푸터는 app.js가 그린다.
   // 페이지는 oc-header / oc-header-auth 중 하나의 자리만 가진다.
   inject('oc-header', '/partials/header.html');            // db·home 등 메인 헤더
   inject('oc-header-auth', '/partials/header-auth.html');  // 회원 페이지 단순 헤더
   markActiveMenu();
+  authMenu();   /* 회원 헤더의 ≡ — 본 헤더 화면에서는 조용히 지납니다 */
 
   /* 하위 메뉴는 문서 중간에 있으므로 문서가 다 읽힌 뒤에 넣는다.
      이미 다 읽혔으면 곧바로 넣는다. */
