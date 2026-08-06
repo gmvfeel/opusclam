@@ -29,6 +29,7 @@
       <div class="stats">
         <div><div class="num" id="stDb">12,400+</div><div class="label">클래식 DB</div></div>
         <div><div class="num" id="stPeople">8,500+</div><div class="label">아티스트 &amp; 회원</div></div>
+        <div><div class="num" id="stAcad">15,000+</div><div class="label">학술 논문</div></div>
       </div>
     </div>
     <div class="auth-box">
@@ -94,6 +95,8 @@
         var people = (Number(d.artists) || 0) + (Number(d.members) || 0);
         if (db) put(document.getElementById('stDb'), db);
         if (people) put(document.getElementById('stPeople'), people);
+        var acad = Number(d.academic) || 0;
+        if (acad) put(document.getElementById('stAcad'), acad);
       })
       .catch(function(e){
         /* 조용히 물러납니다 — 적어 둔 값이 그대로 남습니다 */
