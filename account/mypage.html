@@ -648,6 +648,7 @@
       <button type="button" class="mp-tab"    data-tab="posts"    role="tab">내가 올린 것</button>
       <button type="button" class="mp-tab"    data-tab="linked"   role="tab">Linked</button>
       <button type="button" class="mp-tab"    data-tab="recruit"  role="tab">리쿠르트</button>
+      <button type="button" class="mp-tab"    data-tab="lesson"   role="tab">내 레슨</button>
       <button type="button" class="mp-tab"    data-tab="saved"    role="tab">저장함</button>
     </div>
 
@@ -793,6 +794,44 @@
       </div>
     </div>
 
+    <!-- ───────── 내 레슨 ─────────
+         ★ 2026-08-06 — 신청 흐름의 <b>반쪽</b>을 메웁니다.
+           강사는 「내 강의」에서 신청을 보고 승인할 수 있게 되었는데,
+           신청한 회원은 자기가 무엇을 신청했는지 볼 곳이 없었습니다.
+         ★ 그리는 것은 assets/lesson-my.js 가 합니다 — 이 화면은 이미
+           크므로(11만 자) 더 키우지 않습니다. 리쿠르트가
+           assets/recruit-apps.js 로 나뉘어 있는 것과 같은 결입니다. -->
+    <div class="mp-pane" data-pane="lesson">
+      <div class="mp-head">
+        <span class="jtag">APPLIED</span>
+        <h1 style="font-size:24px">내 레슨</h1>
+        <p class="mp-note">
+          신청하신 1:1 · 그룹레슨과 진행 상태입니다. 인스트럭터가 승인하면
+          이곳에서 <b>참여 링크</b>를 받으실 수 있습니다.<br>
+          상태가 바뀌어도 <b>따로 알림이 오지는 않으니</b> 이 페이지에서 살펴봐 주십시오.
+          승인 대기 중인 신청은 <b>취소하고 다시</b> 내실 수 있습니다.<br>
+          마스터클래스와 공개레슨은 <b>신청 없이 바로</b> 보실 수 있어 여기 나오지 않습니다.
+        </p>
+      </div>
+      <div class="mp-card" id="mlApplied">
+        <div class="mp-msg">불러오는 중…</div>
+      </div>
+
+      <div class="mp-head" style="margin-top:44px">
+        <span class="jtag">TEACHING</span>
+        <h1 style="font-size:24px">가르치고 계신다면</h1>
+        <p class="mp-note">
+          인스트럭터로 승인되신 분은 <b>「내 강의」</b>에서 강의를 올리고,
+          들어온 신청을 <b>승인 · 거절</b>하실 수 있습니다.
+        </p>
+      </div>
+      <div class="mp-card">
+        <a href="/lesson/my-lessons.html" style="text-decoration:underline">내 강의로 가기 &#8594;</a>
+        <span style="margin:0 10px;opacity:.4">·</span>
+        <a href="/lesson/instructor-apply.html" style="text-decoration:underline">인스트럭터 신청 &#8594;</a>
+      </div>
+    </div>
+
     <!-- ───────── 저장함 ───────── -->
     <div class="mp-pane" data-pane="saved">
       <div class="mp-head">
@@ -811,6 +850,8 @@
 <script>document.documentElement.setAttribute('data-ra-lazy','1');</script>
 <script src="/assets/recruit.js" defer></script>
 <script src="/assets/recruit-apps.js" defer></script>
+<!-- ★ 내 레슨 엔진 — 탭을 열 때 TAB_DRAW.lesson 이 부릅니다 -->
+<script src="/assets/lesson-my.js" defer></script>
 <div id="oc-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
@@ -1235,6 +1276,12 @@
        그 파일에 「기다렸다 부르기」 고리를 두어 여기서 부릅니다. */
     recruit:  function(){
       try { if (window.OCRecruitApps && window.OCRecruitApps.init) window.OCRecruitApps.init(); }
+      catch(e){}
+    },
+    /* ★ 내 레슨도 <b>열 때</b> 그립니다 — 안 보는 탭의 신청까지 미리
+       받아 오면 화면 여는 속도만 느려집니다. */
+    lesson:   function(){
+      try { if (window.OCLessonMy && window.OCLessonMy.init) window.OCLessonMy.init(); }
       catch(e){}
     }
     /* dash · info 는 이미 그려져 있으므로 부를 것이 없습니다 */
