@@ -106,7 +106,15 @@
              overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .cu-itx a:hover{ text-decoration:underline; }
   .cu-meta{ display:block; font-size:12.5px; color:#8a86a0; margin-top:3px; }
-  .cu-iact{ flex:0 0 auto; display:flex; gap:12px; }
+  .cu-iact{ flex:0 0 auto; display:flex; gap:12px; align-items:center; }
+
+  /* 추천 별 — 눌러서 마스터클래스 맨 위 큰 자리에 올립니다 */
+  .cu-star{ width:30px; height:30px; padding:0; border-radius:50%; cursor:pointer;
+            border:1px solid rgba(255,255,255,.16); background:none;
+            color:#8a86a0; font-size:15px; line-height:1; }
+  .cu-star:hover{ border-color:#c9a4e8; color:#c9a4e8; }
+  .cu-star.on{ border-color:#c9a4e8; background:rgba(162,78,167,.22); color:#e9cbff; }
+  .cu-star:disabled{ opacity:.4; cursor:not-allowed; }
 
   @media (max-width:760px){
     .cu-row{ flex-wrap:wrap; }

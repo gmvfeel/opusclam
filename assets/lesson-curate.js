@@ -352,26 +352,43 @@
       wrap.innerHTML = '<p class="cu-empty">불러오는 중…</p>';
 
       c.from('lessons')
-        .select('id,title,credit,video_id,status,hidden,field,created_at')
+        .select('id,title,credit,video_id,status,hidden,field,sort_order,created_at')
         .eq('source', 'curated')
+        .order('sort_order', { ascending: false })
         .order('created_at', { ascending: false })
         .then(function (r) {
           if (r.error) { wrap.innerHTML = '<div class="cu-say no">' + esc(r.error.message) + '</div>'; return; }
           var d = r.data || [];
           if (!d.length) { wrap.innerHTML = '<p class="cu-empty">아직 올린 큐레이션 강의가 없습니다.</p>'; return; }
 
-          wrap.innerHTML = '<div class="cu-lh"><b>' + d.length + '개</b> 올라가 있습니다</div>'
+          /* ★ <b>추천</b>은 sort_order 가 가장 큰 하나입니다 —
+             마스터클래스 목록 맨 위 큰 자리에 걸립니다.
+             모두 0 이면 「가장 최근에 올린 것」이 저절로 추천됩니다.
+             ▶ 별을 누르면 그 강의만 1 로 올리고 나머지는 0 으로 내립니다.
+               여러 개가 1 이면 어느 것이 추천인지 알 수 없게 됩니다. */
+          var top = d.filter(function (x) { return (x.sort_order || 0) > 0; })[0];
+
+          wrap.innerHTML = '<div class="cu-lh"><b>' + d.length + '개</b> 올라가 있습니다'
+            + ' &middot; <span style="color:#c9a4e8">★</span> 을 누르면 '
+            + '<b>마스터클래스 맨 위 추천</b>으로 올라갑니다'
+            + (top ? '' : ' (지금은 가장 최근에 올린 것이 추천됩니다)') + '</div>'
             + d.map(function (o) {
                 var st = (o.status === 'open') ? '모집중' : (o.status === 'draft' ? '준비중' : o.status);
+                var isTop = top && String(top.id) === String(o.id);
                 return '<div class="cu-item' + (o.hidden ? ' off' : '') + '" data-id="' + esc(o.id) + '">'
                   + '<div class="cu-ith"><img src="' + esc(thumb(o.video_id)) + '" alt=""></div>'
                   + '<div class="cu-itx">'
                   +   '<a href="/lesson/lesson-view.html?id=' + encodeURIComponent(o.id) + '">' + esc(o.title) + '</a>'
                   +   '<span class="cu-meta">' + esc(o.credit || '-')
                   +     ' · ' + esc(o.field || '분야없음') + ' · ' + esc(st)
-                  +     (o.hidden ? ' · <b>감춤</b>' : '') + '</span>'
+                  +     (o.hidden ? ' · <b>감춤</b>' : '')
+                  +     (isTop ? ' · <b style="color:#c9a4e8">추천</b>' : '') + '</span>'
                   + '</div>'
                   + '<div class="cu-iact">'
+                  +   '<button type="button" class="cu-star' + (isTop ? ' on' : '') + '"'
+                  +     ' data-a="top" title="' + (isTop ? '추천 해제' : '추천으로 올리기') + '"'
+                  +     ' aria-label="' + (isTop ? '추천 해제' : '추천으로 올리기') + '">'
+                  +     (isTop ? '&#9733;' : '&#9734;') + '</button>'
                   +   '<button type="button" class="cu-mini" data-a="hide">' + (o.hidden ? '다시 보이기' : '감추기') + '</button>'
                   +   '<button type="button" class="cu-mini del" data-a="rm">지우기</button>'
                   + '</div>'
@@ -381,6 +398,46 @@
           Array.prototype.forEach.call(wrap.querySelectorAll('.cu-item'), function (el) {
             var id = el.getAttribute('data-id');
             var o = d.filter(function (x) { return String(x.id) === String(id); })[0];
+
+            /* ── 추천으로 올리기 · 해제 ─────────────────────────
+               ★ 먼저 <b>모두 0 으로 내리고</b> 이것만 1 로 올립니다.
+                 여러 개가 1 이면 「어느 것이 추천인지」 알 수 없습니다.
+               ★ 감춰 둔 강의는 추천할 수 없습니다 — 목록에 안 보이는
+                 것이 맨 위 큰 자리에 걸리면 회원이 눌러도 헛걸음입니다. */
+            el.querySelector('[data-a="top"]').addEventListener('click', function () {
+              var b = this;
+              var isTop = b.classList.contains('on');
+              if (!isTop && o.hidden) {
+                alert('감춰 둔 강의는 추천할 수 없습니다.\n먼저 「다시 보이기」로 올려 주십시오.');
+                return;
+              }
+              if (!isTop && o.status === 'draft') {
+                alert('준비중인 강의는 목록에 보이지 않아 추천할 수 없습니다.\n상태를 모집중으로 바꿔 주십시오.');
+                return;
+              }
+              b.disabled = true;
+
+              /* 지금 추천인 것들을 먼저 0 으로 */
+              var others = d.filter(function (x) { return (x.sort_order || 0) > 0; })
+                            .map(function (x) { return x.id; });
+              var step1 = others.length
+                ? c.from('lessons').update({ sort_order: 0 }).in('id', others).select('id')
+                : Promise.resolve({ data: [] });
+
+              step1.then(function () {
+                if (isTop) return { data: [1] };   /* 해제면 여기서 끝 */
+                return c.from('lessons').update({ sort_order: 1 }).eq('id', id).select('id');
+              }).then(function (rr) {
+                /* ★ 몇 줄이 바뀌었는지 <b>받아서</b> 확인합니다 —
+                   권한에 막히면 오류 없이 0줄이 됩니다. */
+                if (rr && rr.error) throw new Error(rr.error.message);
+                if (!isTop && !(rr.data || []).length) throw new Error('바뀌지 않았습니다.');
+                loadList(c);
+              })['catch'](function (e) {
+                b.disabled = false;
+                alert('바꾸지 못했습니다 — ' + (e.message || e));
+              });
+            });
 
             el.querySelector('[data-a="hide"]').addEventListener('click', function () {
               var b = this; b.disabled = true;
