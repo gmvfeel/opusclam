@@ -1105,11 +1105,34 @@
       if (!c || !applyState.me) return;
       nameEl.textContent = '올리는 중… ' + f.name;
 
+      /* ★ 2026-08-06 — <b>크기·종류 제한이 없었습니다.</b>
+         지원서 첨부는 줄일 수 없는 파일(PDF)이라 그대로 올라갑니다.
+         저장통(recruit)을 5MB · 이미지+PDF 로 조였으므로(sql/storage-01-limits.sql)
+         화면도 <b>같은 값</b>으로 맞춥니다. 화면이 더 너그러우면 회원이
+         고른 뒤에 서버가 거부해서 까닭을 알 수 없습니다.
+         ★ 예전에는 짐작 목록에 <b>mp3 · mp4 도</b> 있었습니다 —
+           동영상 한 개가 사진 백 장입니다. 이력서에 동영상을 받을 이유가
+           없으므로 뺐습니다. */
+      if (f.size > 5 * 1024 * 1024) {
+        nameEl.textContent = '';
+        alert('파일이 너무 큽니다 (' + (f.size/1024/1024).toFixed(1) + 'MB · 5MB까지).\n'
+            + 'PDF 는 스캔 품질을 낮추거나 쪽수를 줄이면 작아집니다.');
+        inp.value = '';
+        return;
+      }
+      if (!/^image\/(jpeg|png|webp|gif)$|^application\/pdf$/.test(String(f.type || ''))) {
+        nameEl.textContent = '';
+        alert('이 종류의 파일은 받지 않습니다 (' + (f.type || '알 수 없음') + ').\n'
+            + 'PDF 또는 이미지(JPG · PNG)로 올려 주십시오.');
+        inp.value = '';
+        return;
+      }
+
       /* 이름에 확장자가 없으면 종류에서 짐작합니다 (게시판에서 겪은 문제) */
       var mm = String(f.name || '').match(/\.([A-Za-z0-9]{1,8})$/);
       var ext = mm ? mm[1].toLowerCase() : ({
-        'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png',
-        'audio/mpeg': 'mp3', 'video/mp4': 'mp4',
+        'application/pdf': 'pdf', 'image/jpeg': 'jpg',
+        'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif',
       }[String(f.type || '')] || 'bin');
       var path = applyState.me.id + '/app_' + Date.now() + '.' + ext;
 

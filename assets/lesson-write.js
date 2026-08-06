@@ -290,7 +290,20 @@
       $('lwCoverPick').addEventListener('click', function () { $('lwCoverFile').click(); });
       $('lwCoverFile').addEventListener('change', function () {
         var f = this.files && this.files[0]; if (!f) return;
-        if (f.size > 10 * 1024 * 1024) { say('no', '10MB 넘는 파일은 받지 않습니다.'); return; }
+        /* ★ 표지는 1400px JPEG 로 <b>줄여서</b> 올리므로 원본이 커도
+           됩니다(결과는 대개 300KB 안쪽). 다만 아주 큰 사진은 브라우저가
+           읽다가 멈추므로 상한을 둡니다.
+           ※ 저장통(recruit)은 5MB · 이미지+PDF 로 조여 두었습니다
+             (sql/storage-01-limits.sql). 줄인 뒤라 넉넉히 통과합니다. */
+        if (f.size > 15 * 1024 * 1024) {
+          say('no', '사진이 너무 큽니다 (' + (f.size/1024/1024).toFixed(1) + 'MB · <b>15MB</b>까지). '
+                  + '휴대폰에서 크기를 줄여 다시 시도해 주십시오.');
+          return;
+        }
+        if (!/^image\//.test(f.type || '')) {
+          say('no', '표지는 <b>이미지</b>만 올릴 수 있습니다 (JPG · PNG).');
+          return;
+        }
         shrink(f, 1400, function (blob) {
           if (!blob) { say('no', '사진을 읽지 못했습니다.'); return; }
           var path = ME.id + '/lesson_cover_' + Date.now() + '.jpg';

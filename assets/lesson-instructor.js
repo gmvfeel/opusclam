@@ -48,6 +48,39 @@
        (sql/lesson-fields-01.sql 참고). */
   var FIELDS = ['PIANO', 'STRINGS', 'BRASS', 'WINDS', 'PERCUSSIONS', 'VOCAL', '작곡/이론', '기타'];
 
+  /* ══ 올릴 수 있는 파일 (2026-08-06) ═══════════════════════════
+     ★ <b>저장통 설정과 짝을 맞춰야 합니다.</b>
+       Supabase 의 recruit 버킷은 5MB · 이미지+PDF 로 조여 두었습니다
+       (sql/storage-01-limits.sql). 화면이 더 너그러우면 회원이 고른
+       뒤에 서버가 거부해서 <b>「올리지 못했습니다」만</b> 뜨고 까닭을
+       알 수 없습니다. 반대로 화면이 더 깐깐하면 올릴 수 있는 것을
+       못 올립니다.
+       ▶ 저장통 값을 바꾸면 <b>여기도 함께</b> 고치십시오.
+     ★ 사진은 예외입니다 — 줄여서 올리므로 원본이 커도 됩니다.
+       (다만 아주 큰 사진은 브라우저가 읽다가 멈추므로 상한을 둡니다) */
+  var MAX_DOC     = 5 * 1024 * 1024;    /* 줄일 수 없는 것 — 저장통과 같게 */
+  var MAX_IMG_SRC = 15 * 1024 * 1024;   /* 사진 원본 — 줄여 올리므로 넉넉히 */
+  var OK_TYPES    = /^image\/(jpeg|png|webp|gif)$|^application\/pdf$/;
+
+  function fmtSize(n) {
+    if (!n) return '0B';
+    if (n < 1024) return n + 'B';
+    if (n < 1024 * 1024) return Math.round(n / 1024) + 'KB';
+    return (n / 1024 / 1024).toFixed(1) + 'MB';
+  }
+  function docTooBig(f) {
+    return '파일이 너무 큽니다 (' + fmtSize(f.size) + ' · <b>5MB</b>까지). '
+         + 'PDF 는 스캔 품질을 낮추거나 쪽수를 줄이면 작아집니다.';
+  }
+  function imgTooBig(f) {
+    return '사진이 너무 큽니다 (' + fmtSize(f.size) + ' · <b>15MB</b>까지). '
+         + '휴대폰에서 크기를 줄여 다시 시도해 주십시오.';
+  }
+  function typeBad(f) {
+    return '이 종류의 파일은 받지 않습니다 (' + esc(f.type || '알 수 없음') + '). '
+         + '<b>이미지(JPG · PNG)</b> 또는 <b>PDF</b> 로 올려 주십시오.';
+  }
+
   /* ── 도우미 ─────────────────────────────────────────────── */
   function esc(v) {
     var d = document.createElement('div');
@@ -508,7 +541,12 @@
     $('fPhotoFile').addEventListener('change', function () {
       var f = this.files && this.files[0];
       if (!f) return;
-      if (f.size > 10 * 1024 * 1024) { say('no', '10MB 넘는 파일은 받지 않습니다.'); return; }
+      /* ★ 사진은 <b>줄여서</b> 올리므로 원본이 커도 됩니다 —
+         800px JPEG 로 바뀌면 200KB 안쪽이 됩니다. 요즘 휴대폰 사진이
+         8MB 를 넘는 일이 흔하므로 문 앞에서 막으면 회원이 헛걸음합니다.
+         (다만 너무 크면 브라우저가 읽다가 멈추므로 상한을 둡니다) */
+      if (f.size > MAX_IMG_SRC) { say('no', imgTooBig(f)); return; }
+      if (!/^image\//.test(f.type || '')) { say('no', '이미지 파일만 올릴 수 있습니다.'); return; }
       shrink(f, 800, function (blob) {
         if (!blob) { say('no', '사진을 읽지 못했습니다.'); return; }
         up(blob, 'lesson_ins_' + Date.now() + '.jpg', function (url) {
@@ -525,7 +563,11 @@
     $('fCertFile').addEventListener('change', function () {
       var f = this.files && this.files[0];
       if (!f) return;
-      if (f.size > 10 * 1024 * 1024) { say('no', '10MB 넘는 파일은 받지 않습니다.'); return; }
+      /* ★ 증명서는 PDF 일 수 있어 <b>줄일 수 없습니다</b> —
+         저장통(recruit)의 제한과 <b>같은 값</b>으로 둡니다. 화면이 더
+         너그러우면 서버가 거부하고 「올리지 못했습니다」만 뜹니다. */
+      if (f.size > MAX_DOC) { say('no', docTooBig(f)); return; }
+      if (!OK_TYPES.test(f.type || '')) { say('no', typeBad(f)); return; }
       up(f, 'lesson_cert_' + Date.now() + '_' + safeName(f.name), function (url) {
         if (!url) { say('no', '증명서를 올리지 못했습니다.'); return; }
         certUrl = url; certName = f.name;
@@ -542,7 +584,7 @@
       if (media.length + fs.length > 8) { say('no', '최대 여덟 개까지 올릴 수 있습니다.'); return; }
       var left = fs.length;
       fs.forEach(function (f) {
-        if (f.size > 10 * 1024 * 1024) {
+        if (f.size > MAX_IMG_SRC) {
           say('no', esc(f.name) + ' — 10MB 넘는 파일은 받지 않습니다.');
           if (--left === 0) drawMedia();
           return;

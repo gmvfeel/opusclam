@@ -486,6 +486,17 @@
   async function uploadPhoto(file) {
     if (!me || !me.user) { say('로그인이 필요합니다.', 'warn'); return; }
     if (!/^image\//.test(file.type)) { say('이미지 파일만 올릴 수 있습니다.', 'warn'); return; }
+    /* ★ 2026-08-06 — <b>크기 상한이 없었습니다.</b>
+       사진은 줄여서 올리므로(PHOTO_MAX) 원본이 커도 되지만, 아주 큰
+       사진은 브라우저가 읽다가 멈춥니다. 그때 화면이 「줄여 올리는 중…」
+       에서 <b>영원히 멈춘 것처럼</b> 보입니다.
+       ※ 저장통(recruit)은 5MB 로 조여 두었습니다
+         (sql/storage-01-limits.sql). 줄인 뒤라 넉넉히 통과합니다. */
+    if (file.size > 15 * 1024 * 1024) {
+      say('사진이 너무 큽니다 (' + (file.size/1024/1024).toFixed(1) + 'MB · 15MB까지). '
+        + '휴대폰에서 크기를 줄여 다시 시도해 주십시오.', 'warn');
+      return;
+    }
 
     var st = el('#rwPhotoState');
     if (st) { st.hidden = false; st.textContent = '사진을 줄여 올리는 중…'; }
