@@ -9,6 +9,8 @@
 <!-- ★ 편성 짐작은 공용 엔진을 씁니다 (score-check.html 과 같은 규칙) -->
 <script src="/assets/score-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ★ 관리자 로그인 지킴이 — 토큰이 만료되면 알려 주고 단추를 잠급니다 -->
+<script src="/assets/admin-guard.js"></script>
 
 <style>
   :root{ --bg:#0e0f16; --card:#161826; --line:rgba(255,255,255,.10);
@@ -183,28 +185,32 @@
     $('progBar').style.width=Math.max(0,Math.min(100,p))+'%'; if(l!=null) $('progLabel').textContent=l; }
   function progHide(){ $('prog').classList.remove('on'); $('progLabel').classList.remove('on'); }
 
-  /* ── 로그인 확인 ─────────────────────────────────────────── */
-  (async function(){
-    try {
-      var g = await sb.auth.getUser();
-      var u = g && g.data && g.data.user;
-      if (!u){
-        $('who').innerHTML = '★ <b>로그인하지 않았습니다.</b> '
-          + '<a href="/account/login.html" style="color:#e08a3c">로그인</a> 뒤에 쓸 수 있습니다.';
-        return;
+  /* ── 로그인 확인 (2026-08-06 · 크게 고쳤습니다) ─────────────
+     ★ 무엇이 잘못됐었나 (파트너가 겪은 일)
+       예전에는 화면을 열 때 <b>한 번만</b> 확인하고 그 결과를 그대로
+       띄워 두었습니다. 관리자 화면은 오래 열어 두고 쓰는데, 그 사이에
+       토큰이 만료되면 오른쪽 위에는 「슈퍼바이저 · 관리자」가 <b>그대로
+       남아</b> 있었습니다. 그래서 로그인된 줄 알고 담기를 눌렀다가
+       <b>106건이 모두 실패</b>했습니다.
+     ★ 이제 assets/admin-guard.js 가 <b>지켜봅니다</b> —
+       몇 분마다, 그리고 <b>다른 탭에 갔다 돌아올 때</b> 다시 봅니다
+       (오래 다른 일을 하다 돌아오는 그때가 가장 위험합니다).
+     ★ 풀리면 표시가 바뀌고 단추가 잠깁니다 — 헛고생을 막습니다. */
+  if (!window.OCAdminGuard){
+    $('who').innerHTML = '★ 지킴이(admin-guard.js)를 싣지 못했습니다. 새로 고쳐 주십시오.';
+  } else {
+    OCAdminGuard.watch(sb, $('who'), {
+      on: function(me){
+        ME = me;
+        $('run').disabled = false;
+      },
+      off: function(msg){
+        ME = null;
+        $('run').disabled = true;
+        $('save').disabled = true;
       }
-      var m = await sb.from('members').select('id,name,is_admin').eq('id', u.id).single();
-      ME = (m && m.data) ? m.data : { id:u.id, name:(u.email||'').split('@')[0] };
-      if (!ME.is_admin){
-        $('who').innerHTML = '★ <b>관리자만</b> 쓸 수 있습니다.';
-        return;
-      }
-      $('who').innerHTML = '<b>' + esc(ME.name || '-') + '</b> · 관리자';
-      $('run').disabled = false;
-    } catch (e){
-      $('who').innerHTML = '★ 로그인 확인 실패: ' + esc(String(e.message||e).slice(0,50));
-    }
-  })();
+    });
+  }
 
   /* ── 인물DB 에서 작곡가를 뽑습니다 ───────────────────────────
      ★ 널리 알려진 순서(sort_no 내림차순)로 뽑습니다. 정렬에 id 를
@@ -452,6 +458,24 @@
 
       log('■ 이미 담긴 악보를 확인합니다');
       have = await loadHave();
+      /* ★ 0건이면 <b>정말 없는 것인지</b> 확인합니다 (2026-08-06)
+         DB 에 873건이 있는데도 0건으로 온 일이 있었습니다 — 로그인이
+         풀려 읽기가 막힌 것이었습니다. 그것을 모르고 넘어가서
+         <b>이미 담긴 것까지 다시 담으려</b> 했습니다.
+         있어야 할 것이 0건으로 오면 <b>멈추는 편</b>이 낫습니다. */
+      if (window.OCAdminGuard){
+        var sn = await OCAdminGuard.sane(sb, {
+          table: 'spot', where: { section: '악보' },
+          got: Object.keys(have).length
+        });
+        if (!sn.ok){
+          log('  ★ ' + String(sn.msg).replace(/<[^>]+>/g, ''));
+          log('  ★ 여기서 멈춥니다. 다시 로그인한 뒤 처음부터 해 주십시오.');
+          progHide();
+          $('run').disabled = false;
+          return;
+        }
+      }
       log('  ' + Object.keys(have).length + '건');
 
       var byQ = {};
@@ -653,8 +677,26 @@
       + '바로 공개되어 목록에 나옵니다.\n\n진행할까요?')) return;
 
     $('save').disabled = true;
+
+    /* ★ 담기 <b>직전에</b> 로그인을 다시 확인합니다 (2026-08-06)
+       예전에는 확인 없이 시작해서, 토큰이 만료된 상태로 106건을 모두
+       시도하고 <b>모두 실패</b>했습니다. 시작조차 하지 않는 편이
+       낫습니다 — 실패한 106줄을 읽고 나서 아는 것보다요. */
+    if (window.OCAdminGuard){
+      var gate = await OCAdminGuard.check(sb);
+      if (!gate.ok){
+        log('★ ' + String(gate.msg).replace(/<[^>]+>/g, ''));
+        log('★ 담기를 시작하지 않았습니다. 다시 로그인한 뒤 해 주십시오.');
+        alert('★ ' + String(gate.msg).replace(/<[^>]+>/g, '')
+            + '\n\n담기를 시작하지 않았습니다.\n다시 로그인한 뒤 해 주십시오.');
+        $('save').disabled = false;
+        return;
+      }
+      ME = gate.me;   /* 되살아난 세션의 것으로 새로 둡니다 */
+    }
+
     log('■ ' + list.length + '건 담기');
-    var ok = 0, bad = 0;
+    var ok = 0, bad = 0, authLost = false;
     for (var k = 0; k < list.length; k++){
       var i = list[k], r = rows[i];
       var tr = document.querySelector('tr[data-i="' + i + '"]');
@@ -729,13 +771,32 @@
         if (tr){ tr.classList.add('done'); var c = tr.querySelector('.pick'); if (c) c.checked = false; }
       } catch (e){
         bad++;
-        log('  ✗ ' + (r._title || r.imslp) + ' — ' + String(e.message||e).slice(0,80));
+        var em = String(e.message || e);
+        log('  ✗ ' + (r._title || r.imslp) + ' — ' + em.slice(0,80));
+        /* ★ 로그인이 풀린 것이면 <b>첫 건에서 멈춥니다</b> (2026-08-06)
+           나머지도 다 실패할 것이 뻔한데, 예전에는 106번 같은 오류를
+           찍었습니다. 그 긴 목록에서 까닭을 알아내기 어려웠습니다. */
+        if (window.OCAdminGuard && OCAdminGuard.isAuthLost(em)){
+          authLost = true;
+          log('  ★ <b>로그인이 풀렸습니다.</b> 남은 ' + (list.length - k - 1) + '건은 시도하지 않습니다.');
+          break;
+        }
       }
       prog(Math.round((k+1)/list.length*100), (k+1) + '/' + list.length + ' 담음 ' + ok);
     }
     progHide();
     log('✅ 끝 — 담음 ' + ok + (bad ? ' · 실패 ' + bad : ''));
     if (ok) log('   정보SPOT → 각 분야별 악보 에서 보실 수 있습니다.');
+    /* ★ 풀렸으면 <b>한 번 더</b> 크게 알립니다 — 로그를 놓치더라도
+       상자로 뜨면 알아챌 수 있습니다. */
+    if (authLost){
+      $('who').innerHTML = '★ <b>로그인이 풀렸습니다.</b> '
+        + '<a href="/account/login.html?next=' + encodeURIComponent(location.pathname)
+        + '" style="color:#e08a3c">다시 로그인 &#8594;</a>';
+      alert('★ 로그인이 풀려 담기지 않았습니다.\n\n'
+          + '다시 로그인한 뒤, 고른 것을 그대로 다시 담아 주십시오.\n'
+          + '(담긴 것이 없으므로 같은 악보가 두 줄이 되지는 않습니다)');
+    }
     render();
   }
 
