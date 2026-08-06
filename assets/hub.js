@@ -227,7 +227,19 @@ window.OCHub = (function () {
           if (el) el.textContent = r.total.toLocaleString();
         }
       });
-      if (totalEl) countUp(totalEl, total);
+      /* ★ 전체 건수를 <b>바로 올리지 않고 담아 둘</b> 수 있습니다 (2026-08-06)
+         무엇이 문제였나 — 이 숫자는 표 일곱 개를 세는 것이라 <b>빨리</b>
+         끝나는데, 아래 「데이터 성장 추이」는 30일 집계라 <b>한참</b>
+         걸립니다. 그래서 숫자만 다 올라간 채 아래가 비어 있어
+         「멈춘 것」처럼 보였습니다(파트너 지적).
+         ▶ counterHold: true 를 주면 값만 담아 두고, 성장 추이가 끝날 때
+           OCHub.releaseCounter() 로 터뜨립니다.
+         ★ 성장 추이가 <b>실패해도</b> 숫자는 나옵니다 — 값은 이미 여기서
+           구해 두었고, 터뜨리는 일만 미루는 것입니다. */
+      if (totalEl) {
+        if (cfg.counterHold) totalEl.setAttribute('data-oc-total', String(total));
+        else countUp(totalEl, total);
+      }
     });
 
     /* ② 새로 등록된 항목 — 여러 표를 합쳐 최신순 */
@@ -321,6 +333,27 @@ window.OCHub = (function () {
       if (p < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
+  }
+
+  /* ── 담아 둔 전체 건수를 터뜨립니다 ─────────────────────────
+     counterHold 로 미뤄 둔 숫자를 올립니다. 아직 값이 없으면(건수 조회가
+     덜 끝났으면) 조금 기다렸다 다시 봅니다 — 최대 6초.
+     ★ 두 번 불러도 한 번만 올라갑니다. */
+  function releaseCounter(sel) {
+    var el = typeof sel === 'string' ? document.querySelector(sel) : sel;
+    if (!el || el.__ocReleased) return;
+    var n = 0;
+    (function wait() {
+      var v = el.getAttribute('data-oc-total');
+      if (v != null && v !== '') {
+        el.__ocReleased = true;
+        el.removeAttribute('data-oc-total');
+        countUp(el, Number(v) || 0);
+        return;
+      }
+      if (++n > 60) return;              /* 6초까지 기다립니다 */
+      setTimeout(wait, 100);
+    })();
   }
 
   /* 리스트 ↔ 카드 보기 전환 (버튼이 있을 때만) */
@@ -1509,7 +1542,27 @@ window.OCHub = (function () {
       + '.hb-fail-txt{margin:0;font-size:13px;color:#8a9099}'
       + '.hb-fail-btn{appearance:none;border:1px solid #d9dce2;background:#fff;color:#4b5563;'
       +   'font:600 12.5px/1 inherit;padding:9px 16px;border-radius:8px;cursor:pointer}'
-      + '.hb-fail-btn:hover{border-color:#9ca3af;color:#111827}';
+      + '.hb-fail-btn:hover{border-color:#9ca3af;color:#111827}'
+
+      /* ── 전체 건수 아래 진행 라인 (2026-08-06 · 파트너 요청) ──────
+         숫자만 먼저 끝나면 아래가 비어 있는 동안 「멈춘 것」처럼 보입니다.
+         그래서 성장 추이를 불러오는 <b>동안</b> 숫자 아래에 선이 흐르고,
+         다 되면 <b>가득 채운 뒤</b> 조용히 사라집니다.
+         ★ 이 선은 「아직 세고 있습니다」를 말해 줍니다 — 얼마나 남았는지는
+           알 수 없으므로(집계가 한 번에 옵니다) 좌우로 흐르게 둡니다. */
+      + '.hb-bar{display:block;position:relative;height:3px;margin-top:10px;border-radius:2px;'
+      +   'background:rgba(140,150,170,.18);overflow:hidden;opacity:0;'
+      +   'transition:opacity .3s ease}'
+      + '.hb-bar.on{opacity:1}'
+      + '.hb-bar i{position:absolute;inset:0 auto 0 0;width:40%;border-radius:2px;'
+      +   'background:linear-gradient(90deg,rgba(59,111,196,0),#3b6fc4,rgba(59,111,196,0));'
+      +   'animation:hbbar 1.15s ease-in-out infinite}'
+      + '.hb-bar.done i{animation:none;width:100%;'
+      +   'background:linear-gradient(90deg,#3b6fc4,#7c4f9d);'
+      +   'transition:width .5s cubic-bezier(.22,1,.36,1)}'
+      + '.hb-bar.fail i{animation:none;width:100%;background:#c98b8b}'
+      + '@keyframes hbbar{0%{left:-40%}100%{left:100%}}'
+      + '@media (prefers-reduced-motion:reduce){.hb-bar i{animation:none;width:100%}}';
     document.head.appendChild(st);
   }
 
@@ -1517,10 +1570,32 @@ window.OCHub = (function () {
     statsCss();
     var cv = cfg.curve ? document.querySelector(cfg.curve) : null;
     var bs = cfg.bars  ? document.querySelector(cfg.bars)  : null;
+    /* ★ 진행 라인 (2026-08-06) — 있으면 씁니다. 없으면 아무 일도 없습니다.
+       이 집계는 30일 치를 세므로 시간이 걸립니다. 그동안 「세고 있다」는
+       것을 알려 주지 않으면 화면이 멈춘 것처럼 보입니다. */
+    var bar = cfg.bar ? document.querySelector(cfg.bar) : null;
     var tries = 0;
+    var closed = false;
+
+    /* 끝났을 때 — 라인을 채우고 감추고, 담아 둔 숫자를 터뜨립니다.
+       ★ 성공이든 실패든 <b>한 번은 반드시</b> 부릅니다. 안 부르면 숫자가
+         영원히 0 으로 남습니다. */
+    function done(okFlag) {
+      if (closed) return;
+      closed = true;
+      if (bar) {
+        bar.classList.remove('on');
+        bar.classList.add(okFlag ? 'done' : 'fail');
+        bar.classList.add('on');
+        setTimeout(function () { bar.classList.remove('on'); }, okFlag ? 900 : 1600);
+      }
+      if (cfg.counter) releaseCounter(cfg.counter);
+      if (typeof cfg.onDone === 'function') { try { cfg.onDone(okFlag); } catch (e) {} }
+    }
 
     function run() {
       statsSkeleton(cv, bs, [cfg.week, cfg.today, cfg.upd]);
+      if (bar) { bar.classList.remove('done', 'fail'); bar.classList.add('on'); }
 
       var url = SB_URL + '/rest/v1/rpc/db_stats?p_days=' + (cfg.days || 30);
       fetch(url, { headers: HDR })
@@ -1584,6 +1659,7 @@ window.OCHub = (function () {
             console.warn('[성장 그래프] 구성비 건너뜀:', e3.message);
             bs.innerHTML = '';
           }
+          done(true);          /* 곡선·구성비를 다 그린 뒤 숫자를 올립니다 */
         })
         .catch(function (e) {
           tries++;
@@ -1593,13 +1669,16 @@ window.OCHub = (function () {
             setTimeout(run, tries === 1 ? 800 : 2400);
             return;
           }
-          statsFail(cv, function () { tries = 0; run(); });
+          statsFail(cv, function () { tries = 0; closed = false; run(); });
           if (bs) bs.innerHTML = '';
           [cfg.week, cfg.today, cfg.upd].forEach(function (sel) {
             if (!sel) return;
             var el = document.querySelector(sel);
             if (el) el.textContent = '—';
           });
+          /* ★ 실패해도 <b>숫자는 올립니다</b> — 값은 이미 구해 두었고,
+             그래프가 안 되는 것과 건수를 못 보는 것은 다른 일입니다. */
+          done(false);
         });
     }
 
@@ -1609,5 +1688,6 @@ window.OCHub = (function () {
   return { init: init, bindViewToggle: bindViewToggle, esc: esc, thumb: thumb,
            board: board, boardTabs: boardTabs, one: one,
            bindCarousel: bindCarousel, rotateBox: rotateBox, resize: resize,
-           stats: stats, insight: insight, qnaTop: qnaTop };
+           stats: stats, insight: insight, qnaTop: qnaTop,
+           releaseCounter: releaseCounter };
 })();
