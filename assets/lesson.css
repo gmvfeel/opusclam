@@ -582,7 +582,15 @@ html.ln-page .site-header:not(.solid) header.masthead{
    ★ 값을 <b>적지 않았습니다</b> — 가격 정책이 아직 정해지지 않았습니다.
      정해지면 화면 글자만 고치면 됩니다. */
 .ln-cta{
-  margin-top: 72px; padding: 26px 24px; text-align: center;
+  /* ★ 2026-08-06 — 띠 <b>위</b> 여백을 72px → 넉넉하게 (파트너 요청)
+     ▶ 이 한 줄이 레슨:ON <b>모든 화면</b>의 「본문 끝 ~ 보라 띠」 사이를
+       정합니다. 더 벌리려면 큰 쪽 숫자(140)를, 좁히려면 작은 쪽(72)을
+       움직이십시오. 가운데 vw 값은 화면 크기에 따라 부드럽게 변하는
+       몫입니다.
+     ▶ 목록 화면은 여기에 페이징 아래 여백이 <b>더해집니다</b>
+       (.ln-pager 의 margin-bottom 참고). */
+  margin-top: clamp(72px, 9.5vw, 140px);
+  padding: 26px 24px; text-align: center;
   background: linear-gradient(90deg, var(--ln-vi) 0%, #8a5fd0 46%, var(--ln-in) 100%);
 }
 .ln-cta-in{ display: inline-flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center; }
@@ -636,7 +644,16 @@ html.ln-page .site-header:not(.solid) header.masthead{
 }
 
 /* ══ 페이지 넘김 ═════════════════════════════════════════════ */
-.ln-pager{ display: flex; justify-content: center; gap: 6px; margin-top: 34px; }
+/* ★ 2026-08-06 — 페이징 <b>아래</b> 여백을 두었습니다 (파트너 요청)
+     페이징과 아래 보라 띠가 서로 붙어 답답했습니다. 목록을 다 본
+     사람에게 「여기서 끝」이라는 숨 쉴 자리를 줍니다.
+   ▶ 좁은 화면에서는 저절로 줄어듭니다 — 작은 화면에서 큰 여백은
+     그냥 빈 화면을 스크롤하게 만듭니다. */
+.ln-pager{
+  display: flex; justify-content: center; gap: 6px;
+  margin-top: 34px;
+  margin-bottom: clamp(30px, 4.4vw, 58px);
+}
 .ln-pager button{
   min-width: 32px; height: 32px; padding: 0 9px;
   background: transparent; border: 1px solid var(--ln-line2); border-radius: 6px;
