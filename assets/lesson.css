@@ -241,18 +241,32 @@ html.ln-page .site-header:not(.solid) header.masthead{
    ▶ 크기는 font-size 한 줄, 굵기는 font-weight 한 줄에서 고칩니다.
      더 얇게 가시려면 600 · 500 도 Pretendard 가 갖고 있습니다. */
 .ln-logo{
-  margin: 0;
-  font-family: var(--display, inherit);
-  font-size: clamp(52px, 8.4vw, 116px);
-  font-weight: 700; letter-spacing: .01em; line-height: 1;
-  /* ★ 재어 낸 자리 그대로 — 왼쪽 10% 까지는 같은 색을 유지하다가
-     가운데를 지나 남보라로 갑니다(이미지의 흐름과 같습니다). */
-  background: linear-gradient(90deg,
-    var(--ln-t1) 0%, var(--ln-t1) 10%,
-    var(--ln-t2) 52%,
-    var(--ln-t3) 100%);
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
+  /* ★ 2026-08-06 — <b>이미지 로고로 바꿨습니다</b> (파트너 제공)
+     ▶ 로고를 바꾸실 때: assets/lesson-logo.png 를 <b>같은 이름으로
+       덮어쓰기만</b> 하십시오. HTML 열세 곳을 고칠 필요가 없습니다.
+       ※ 다만 <b>가로세로 비율이 달라지면</b> 아래 aspect-ratio 를
+         새 이미지 크기로 맞춰 주십시오(지금은 690 × 104).
+     ▶ 크기는 width 한 줄로 정합니다 — 넓은 화면 690px, 좁은 화면 84vw.
+
+     ★ 글자(LESSON:ON)는 <b>지우지 않았습니다</b>. text-indent 로 화면
+       밖으로 밀어냈을 뿐이라 문서에는 그대로 남습니다 — 검색엔진과
+       화면 읽어 주는 프로그램은 여전히 「LESSON:ON」으로 읽습니다.
+       h1 을 <img> 로 바꾸면 HTML 열세 곳을 고쳐야 하고, alt 를 빠뜨리면
+       제목이 사라집니다. 그래서 CSS 로만 갈아 끼웁니다.
+
+     ★ 예전 그라데이션 글자에 쓰던 background-clip: text 를 <b>반드시
+       되돌려야</b> 합니다. 남겨 두면 이미지가 <b>글자 모양으로 잘려</b>
+       엉뚱하게 보입니다. */
+  margin: 0 auto;
+  width: min(690px, 84vw);
+  aspect-ratio: 690 / 104;
+
+  background: url('/assets/lesson-logo.png') center / contain no-repeat;
+  -webkit-background-clip: border-box; background-clip: border-box;
+
+  /* 글자를 화면 밖으로 — 문서에는 남깁니다 */
+  font-size: 0; line-height: 0; text-indent: -9999px;
+  white-space: nowrap; overflow: hidden; color: transparent;
 }
 /* ★ 히어로 글자 (2026-08-05 · 파트너 지시로 세 번 다듬었습니다)
      영문 굵기 400 → <b>200</b>  (Pretendard 는 200 을 갖고 있어 실제로
