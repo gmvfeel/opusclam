@@ -20,9 +20,15 @@
       <span class="brand-tag">CLASSIC PLATFORM</span>
       <h1>클래식의 모든 순간,<br><strong>OPUSCLAM</strong>과 함께</h1>
       <p class="bp">국내 최고의 클래식 음악 데이터베이스부터 레슨, 구인구직 커뮤니티까지. 오퍼스클램에서 전문적인 네트워크를 경험해보세요.</p>
+      <!-- ★ 소개 숫자 (2026-08-06 · 파트너 요청)
+           예전에는 「12,400+」 · 「8,500+」 를 <b>손으로 적어</b> 두었습니다.
+           실제로는 훨씬 늘었는데 그대로 남아 있어, 처음 들어오는 분께
+           오히려 작아 보였습니다. 이제 실제 건수를 받아 채웁니다.
+           ★ 여기 적힌 값은 <b>못 받았을 때 쓸 값</b>입니다 — 숫자를
+             불러오지 못해도 화면이 비어 보이지 않게 남겨 둡니다. -->
       <div class="stats">
-        <div><div class="num">12,400+</div><div class="label">클래식 DB</div></div>
-        <div><div class="num">8,500+</div><div class="label">아티스트 &amp; 회원</div></div>
+        <div><div class="num" id="stDb">12,400+</div><div class="label">클래식 DB</div></div>
+        <div><div class="num" id="stPeople">8,500+</div><div class="label">아티스트 &amp; 회원</div></div>
       </div>
     </div>
     <div class="auth-box">
@@ -46,6 +52,56 @@
 <div id="oc-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
+<script>
+  /* ══ 소개 숫자 채우기 (2026-08-06) ══════════════════════════════
+     ★ 요청 <b>한 번</b>으로 끝냅니다 — 표를 일곱 개 따로 물어보면
+       로그인 화면이 무거워집니다. 서버 함수가 한 번에 돌려줍니다
+       (sql/intro-stats-01.sql).
+     ★ 회원 수는 <b>총수만</b> 옵니다 — 누가 회원인지는 나오지 않습니다.
+     ★ 못 받으면 <b>아무 일도 하지 않습니다</b> — 화면에 적어 둔 값이
+       그대로 남습니다. 숫자 하나 때문에 로그인이 막히면 안 됩니다.
+     ★ 세는 조건은 DB 메인과 같습니다(hidden is false) — 두 화면의
+       숫자가 어긋나면 「어느 쪽이 맞나」 하고 헷갈립니다. */
+  (function(){
+    var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+    var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+    function put(el, to){
+      if (!el) return;
+      /* 0.9초에 걸쳐 올립니다 — 갑자기 바뀌면 눈에 안 띕니다 */
+      var dur = 900, t0 = 0;
+      function step(ts){
+        if (!t0) t0 = ts;
+        var p = Math.min((ts - t0) / dur, 1);
+        var e = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(to * e).toLocaleString() + '+';
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    try {
+      fetch(SB_URL + '/rest/v1/rpc/oc_intro_stats', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+                   'Content-Type': 'application/json' },
+        body: '{}'
+      })
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(d){
+        if (!d) return;
+        var db = Number(d.db_total) || 0;
+        var people = (Number(d.artists) || 0) + (Number(d.members) || 0);
+        if (db) put(document.getElementById('stDb'), db);
+        if (people) put(document.getElementById('stPeople'), people);
+      })
+      .catch(function(e){
+        /* 조용히 물러납니다 — 적어 둔 값이 그대로 남습니다 */
+        if (window.console) console.warn('[로그인 소개 숫자] 건너뜀:', e.message);
+      });
+    } catch (e) {}
+  })();
+</script>
 <script>
 (function(){
   var idEl=document.getElementById('user-id'), pwEl=document.getElementById('user-pw'), errEl=document.getElementById('lg-err');
