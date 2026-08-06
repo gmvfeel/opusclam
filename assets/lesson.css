@@ -267,6 +267,66 @@ html.ln-page .site-header:not(.solid) header.masthead{
   /* 글자를 화면 밖으로 — 문서에는 남깁니다 */
   font-size: 0; line-height: 0; text-indent: -9999px;
   white-space: nowrap; overflow: hidden; color: transparent;
+
+  /* ★ 2026-08-06 — <b>잔잔한 움직임</b>을 더했습니다 (파트너 요청)
+     ▶ 두 가지입니다
+        ① 들어올 때 — 아래에서 살짝 올라오며 나타납니다(0.9초, 한 번)
+        ② 그 뒤 — 글자 안으로 <b>광택이 천천히 지나갑니다</b>(7초마다)
+     ★ ::after 에 <b>같은 로고를 mask 로</b> 씌워, 광택이 글자 <b>모양
+       안에서만</b> 흐르게 했습니다. 네모난 띠가 지나가면 조잡합니다.
+     ★ 광택은 지나간 뒤 <b>한동안 쉽니다</b> — 계속 흐르면 눈이 피로하고
+       「로딩 중」처럼 보입니다. 7초에 한 번, 1.7초만 지나갑니다.
+     ★ position: relative 는 ::after 를 얹기 위해 필요합니다. */
+  position: relative;
+  animation: lnLogoIn .9s cubic-bezier(.22, 1, .36, 1) both;
+}
+.ln-logo::after{
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(100deg,
+    transparent 0%, rgba(255,255,255,.55) 48%, transparent 100%);
+  /* ★ 배경을 요소보다 <b>작게</b> 두어야 합니다 (2026-08-06 · 겪은 일)
+     처음에는 260% 로 크게 두고 background-position 을 130% → -30% 로
+     움직였습니다. 그런데 광택이 <b>보이지 않았습니다.</b>
+     까닭 — background-position 의 퍼센트는 「요소 폭」이 아니라
+     <b>(요소 폭 − 배경 폭)</b>을 기준으로 셉니다. 배경이 더 크면 그 값이
+     음수가 되어 <b>방향이 뒤집힙니다.</b> 130% 가 오른쪽 밖이 아니라
+     왼쪽 한참 밖이 되어, 지나가는 것을 볼 수 없었습니다.
+     ▶ 그래서 배경을 40% 로 <b>좁게</b> 두었습니다. 이제 0% 는 왼쪽 끝,
+       100% 는 오른쪽 끝이라 뜻대로 움직입니다. */
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  background-position: -60% 0;
+  -webkit-mask: url('/assets/lesson-logo.png') center / contain no-repeat;
+          mask: url('/assets/lesson-logo.png') center / contain no-repeat;
+  animation: lnLogoSheen 7s ease-in-out 1.2s infinite;
+}
+@keyframes lnLogoIn{
+  from{ opacity: 0; transform: translateY(12px) scale(.985); }
+  to  { opacity: 1; transform: none; }
+}
+/* 광택 — 왼쪽에서 오른쪽으로 지나간 뒤 <b>한동안 쉽니다</b>
+   (7초 가운데 1.7초만 움직입니다. 계속 흐르면 「로딩 중」처럼 보입니다) */
+@keyframes lnLogoSheen{
+  0%   { background-position: -60% 0; }
+  24%  { background-position: 165% 0; }
+  100% { background-position: 165% 0; }
+}
+
+/* ★ 히어로 글자도 <b>뒤따라</b> 나타납니다 —
+   로고만 움직이면 아래 글이 뚝 놓인 것처럼 보입니다. 차례로 올라오면
+   한 덩이로 읽힙니다. 로고보다 늦게, 더 작게 움직입니다. */
+.ln-hero-en{ animation: lnHeroIn .8s cubic-bezier(.22,1,.36,1) .18s both; }
+.ln-hero-ko{ animation: lnHeroIn .8s cubic-bezier(.22,1,.36,1) .32s both; }
+@keyframes lnHeroIn{
+  from{ opacity: 0; transform: translateY(8px); }
+  to  { opacity: 1; transform: none; }
+}
+
+/* ★ 움직임을 줄이도록 설정한 분에게는 <b>모두 끕니다</b> —
+   어지럼을 느끼는 분이 실제로 있습니다. 자리와 모양은 그대로 둡니다. */
+@media (prefers-reduced-motion: reduce){
+  .ln-logo, .ln-hero-en, .ln-hero-ko{ animation: none; }
+  .ln-logo::after{ display: none; }
 }
 /* ★ 히어로 글자 (2026-08-05 · 파트너 지시로 세 번 다듬었습니다)
      영문 굵기 400 → <b>200</b>  (Pretendard 는 200 을 갖고 있어 실제로
