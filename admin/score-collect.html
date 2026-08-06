@@ -687,6 +687,7 @@
       if (!gate.ok){
         log('★ ' + String(gate.msg).replace(/<[^>]+>/g, ''));
         log('★ 담기를 시작하지 않았습니다. 다시 로그인한 뒤 해 주십시오.');
+        OCAdminGuard.bar(String(gate.msg).replace(/<[^>]+>/g, ''));   /* 맨 위 띠 */
         alert('★ ' + String(gate.msg).replace(/<[^>]+>/g, '')
             + '\n\n담기를 시작하지 않았습니다.\n다시 로그인한 뒤 해 주십시오.');
         $('save').disabled = false;
@@ -793,6 +794,8 @@
       $('who').innerHTML = '★ <b>로그인이 풀렸습니다.</b> '
         + '<a href="/account/login.html?next=' + encodeURIComponent(location.pathname)
         + '" style="color:#e08a3c">다시 로그인 &#8594;</a>';
+      /* ★ 맨 위 띠도 띄웁니다 — 조작 줄의 작은 글씨는 놓치기 쉽습니다 */
+      if (window.OCAdminGuard) OCAdminGuard.bar('로그인이 풀려 담기지 않았습니다.');
       alert('★ 로그인이 풀려 담기지 않았습니다.\n\n'
           + '다시 로그인한 뒤, 고른 것을 그대로 다시 담아 주십시오.\n'
           + '(담긴 것이 없으므로 같은 악보가 두 줄이 되지는 않습니다)');

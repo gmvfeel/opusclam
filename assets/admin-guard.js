@@ -139,12 +139,57 @@
     });
   }
 
+  /* ── 화면 맨 위 경고 띠 ──────────────────────────────────────
+     ★ 왜 띠까지 두나 (2026-08-06 · 파트너 지적)
+       처음에는 화면의 「누구로 들어와 있나」 자리만 바꾸었습니다.
+       그런데 그 자리는 <b>작은 글씨로 조작 줄에 섞여</b> 있어서,
+       파트너가 「그게 어디 있지?」 하고 찾지 못했습니다.
+       바뀌어도 못 보면 없는 것과 같습니다.
+     ★ 그래서 화면 <b>맨 위에 고정</b>되는 띠를 띄웁니다. 스크롤해도
+       따라오고, 되살아나면 스스로 사라집니다.
+     ★ 짜임을 여기서 만들어 넣습니다 — 관리자 화면마다 CSS 를 손보게
+       하면 붙이기가 번거롭고, 어느 화면은 빠뜨립니다. */
+  var BAR_ID = 'ocAuthBar';
+
+  function bar(msg) {
+    var el = document.getElementById(BAR_ID);
+    if (!msg) { if (el) el.remove(); return; }
+
+    if (!document.getElementById('ocAuthBarCss')) {
+      var st = document.createElement('style');
+      st.id = 'ocAuthBarCss';
+      st.textContent =
+          '#' + BAR_ID + '{position:fixed;top:0;left:0;right:0;z-index:99999;'
+        + 'padding:13px 18px;background:#8a2f2f;color:#fff;'
+        + 'font-size:14px;font-weight:700;line-height:1.6;text-align:center;'
+        + 'box-shadow:0 4px 18px rgba(0,0,0,.4);}'
+        + '#' + BAR_ID + ' a{color:#ffd9a8;text-decoration:underline;margin-left:10px;}'
+        + '#' + BAR_ID + ' .x{position:absolute;right:12px;top:9px;width:30px;height:30px;'
+        + 'border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;'
+        + 'font-size:15px;line-height:1;cursor:pointer;}'
+        + 'body{transition:padding-top .15s ease;}';
+      document.head.appendChild(st);
+    }
+
+    if (!el) {
+      el = document.createElement('div');
+      el.id = BAR_ID;
+      document.body.appendChild(el);
+    }
+    el.innerHTML = '★ ' + msg
+      + '<a href="/account/login.html?next=' + encodeURIComponent(location.pathname) + '">다시 로그인 &#8594;</a>'
+      + '<button type="button" class="x" aria-label="닫기">&#10005;</button>';
+    var x = el.querySelector('.x');
+    if (x) x.addEventListener('click', function () { el.remove(); });
+  }
+
   /* ── 화면 표시를 살아있게 ────────────────────────────────────
      el     : 「누구로 들어와 있나」를 적는 자리
      opt.on : 살아 있을 때 부를 것 (me 를 받습니다)
      opt.off: 풀렸을 때 부를 것 (msg 를 받습니다)
      ★ 몇 분마다 다시 봅니다. 그리고 <b>탭으로 돌아올 때</b>도 봅니다 —
-       오래 다른 일을 하다 돌아오는 그때가 가장 위험합니다. */
+       오래 다른 일을 하다 돌아오는 그때가 가장 위험합니다.
+     ★ 풀리면 <b>화면 맨 위에 띠</b>도 띄웁니다(위 bar 참고). */
   function watch(sb, el, opt) {
     opt = opt || {};
     var every = (opt.everyMin || 5) * 60 * 1000;
@@ -157,6 +202,12 @@
             + '<a href="/account/login.html?next=' + encodeURIComponent(location.pathname)
             + '" style="color:#e08a3c">다시 로그인 &#8594;</a>';
       }
+      /* 관리자가 아닌 것(not-admin)은 띠까지 띄우지 않습니다 —
+         애초에 들어올 자리가 아니므로 화면 안내로 충분합니다.
+         띠는 <b>되던 일이 갑자기 안 되는</b> 경우를 위한 것입니다. */
+      if (r.ok) bar(null);
+      else if (r.why === 'expired' || r.why === 'no-session') bar(esc(r.msg));
+
       if (r.ok) { if (opt.on) opt.on(r.me); }
       else { if (opt.off) opt.off(r.msg, r.why); }
     }
@@ -179,6 +230,6 @@
   }
 
   window.OCAdminGuard = {
-    check: check, watch: watch, isAuthLost: isAuthLost, sane: sane
+    check: check, watch: watch, isAuthLost: isAuthLost, sane: sane, bar: bar
   };
 })();
