@@ -29,6 +29,46 @@ window.OCList = (function () {
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
 
   /* ── 공통 도우미 (renderRow 에서 ctx 로 사용 가능) ── */
+  /* ── 건수를 <b>세듯이</b> 올립니다 (2026-08-06 · 파트너 요청) ──
+     ★ 왜 — 「전체 1,267개」가 갑자기 나타나면 그냥 적어 둔 글자처럼
+       보입니다. 세면서 올라가면 <b>지금 센 것</b>이라는 느낌이 듭니다.
+       DB 메인의 전체 건수도 같은 방식입니다(assets/hub.js).
+     ★ <b>같은 값이면 아무 일도 하지 않습니다</b> — 쪽을 넘길 때는 총수가
+       그대로인데 매번 0 부터 다시 세면 눈이 어지럽습니다.
+     ★ 480ms 로 짧게 — 목록은 <b>자주</b> 다시 그려집니다(갈래·검색·정렬).
+       메인 화면처럼 900ms 를 쓰면 답답합니다.
+     ★ 움직임을 줄이도록 설정한 분에게는 <b>바로</b> 넣습니다. */
+  function countUp(el, to) {
+    if (!el) return;
+    to = Number(to) || 0;
+    var fmt = function (n) { return n.toLocaleString(); };
+
+    /* 지금 적힌 값과 같으면 건너뜁니다 */
+    var now = parseInt(String(el.textContent || '').replace(/[^\d]/g, ''), 10);
+    if (!isNaN(now) && now === to) return;
+
+    var reduce = false;
+    try {
+      reduce = window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch (e) {}
+    if (reduce || to === 0) { el.textContent = fmt(to); return; }
+
+    /* 앞선 애니메이션이 돌고 있으면 멈춥니다 — 두 개가 겹치면 숫자가 떱니다 */
+    if (el.__cuRaf) { cancelAnimationFrame(el.__cuRaf); el.__cuRaf = 0; }
+
+    var from = (!isNaN(now) ? now : 0), dur = 480, t0 = 0;
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min((ts - t0) / dur, 1);
+      var e = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(Math.round(from + (to - from) * e));
+      if (p < 1) el.__cuRaf = requestAnimationFrame(step);
+      else el.__cuRaf = 0;
+    }
+    el.__cuRaf = requestAnimationFrame(step);
+  }
+
   function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function nd(v) { return (v == null || String(v).trim() === '') ? '<span class="nd">\u2014</span>' : esc(v); }
   function ava(name) { var s = (name || '').trim(); return s ? esc(s.charAt(0)) : '?'; }
@@ -363,7 +403,7 @@ window.OCList = (function () {
         .then(function (rows) {
           if (!Array.isArray(rows)) return;
           cur = pg; ctx.cur = cur;
-          var cnt = document.querySelector('.pdb-count b'); if (cnt) cnt.textContent = (total || 0).toLocaleString();
+          var cnt = document.querySelector('.pdb-count b'); if (cnt) countUp(cnt, total || 0);
           if (rows.length === 0) {
             /* ★ 줄에 pdb-norow 표시를 붙입니다.
                표에는 「줄에 마우스를 올리면 짙어지는」 규칙이 있는데,
