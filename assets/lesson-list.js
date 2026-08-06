@@ -35,7 +35,12 @@
     master: {
       label: '마스터클래스', en: 'Master Class',
       lead: '세계적인 아티스트의 마스터클래스를 무제한으로 수강하세요.',
-      where: { tab: 'master' }
+      where: { tab: 'master' },
+      /* ★ 이 탭만 <b>추천 한 편</b>을 크게 보여 줍니다 (2026-08-06)
+         목록만 늘어놓으면 어디서 시작할지 막막합니다. 눈에 들어오는
+         하나가 있으면 바로 눌러 보게 됩니다.
+         ▶ 다른 탭에도 켜려면 그 탭에 featured: true 를 더하십시오. */
+      featured: true
     },
     open: {
       label: '공개레슨', en: 'Open Lesson',
@@ -217,7 +222,48 @@
       + '.oc-cv-note{margin:20px 0 0;padding-top:18px;'
       +   'border-top:1px solid var(--ln-line,rgba(255,255,255,.12));'
       +   'font-size:13px;line-height:1.85;color:var(--ln-tx3,#8a86a0);}'
-      + '.oc-cv-note b{color:var(--ln-tx2,#c9c6d6);font-weight:600;}';
+      + '.oc-cv-note b{color:var(--ln-tx2,#c9c6d6);font-weight:600;}'
+
+      /* ── 추천 한 편 (목록 맨 위) ─────────────────────────────
+         넓은 화면에서는 왼쪽 표지 · 오른쪽 글, 좁은 화면에서는 위아래.
+         ▶ 표지 크기를 바꾸려면 grid-template-columns 의 첫 값(1.35fr)을
+           키우거나 줄이십시오. */
+      + '.oc-ft-wrap{margin:30px 0 44px;}'
+      /* ★ 비었을 때는 <b>여백까지</b> 없앱니다 — 2페이지로 넘어가거나
+         분야를 고르면 추천이 사라지는데, 여백만 남으면 목록이 이유
+         없이 아래로 밀려 어색합니다. */
+      + '.oc-ft-wrap:empty{margin:0;}'
+      + '.oc-ft{display:grid;grid-template-columns:1.35fr 1fr;gap:32px;align-items:center;'
+      +   'padding:26px;border-radius:14px;'
+      +   'background:linear-gradient(120deg,rgba(162,78,167,.10),rgba(70,79,142,.10) 70%,transparent);'
+      +   'border:1px solid var(--ln-line,rgba(255,255,255,.12));}'
+      + '.oc-ft-ph{min-width:0;}'
+      /* 추천의 재생 단추는 목록 카드보다 <b>크게</b> — 눈에 먼저 들어와야 합니다 */
+      + '.oc-ft-ph .ln-play{width:78px;height:78px;font-size:26px;}'
+      + '.oc-ft-ph .ln-video{border-radius:10px;}'
+      + '.oc-ft-tx{min-width:0;}'
+      + '.oc-ft-lb{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:800;'
+      +   'letter-spacing:.2em;color:#c9a4e8;}'
+      + '.oc-ft-lb .cu{padding:2px 8px;border-radius:3px;letter-spacing:.02em;font-size:10px;'
+      +   'background:rgba(120,170,230,.18);color:#a8cdf0;}'
+      + '.oc-ft-t{margin:12px 0 0;font-family:var(--display,inherit);font-weight:300;'
+      +   'font-size:clamp(21px,2.1vw,30px);line-height:1.32;color:var(--ln-tx,#f2eff8);}'
+      + '.oc-ft-by{margin-top:10px;font-size:11.5px;letter-spacing:.1em;'
+      +   'color:var(--ln-tx3,#8a86a0);}'
+      + '.oc-ft-by b{color:var(--ln-tx2,#c9c6d6);letter-spacing:0;font-weight:600;}'
+      + '.oc-ft-d{margin:12px 0 0;font-size:13.5px;line-height:1.8;color:var(--ln-tx2,#c9c6d6);'
+      +   'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}'
+      + '.oc-ft-act{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:22px;}'
+      + '.oc-ft-go{height:44px;padding:0 24px;border:0;border-radius:5px;cursor:pointer;'
+      +   'font:inherit;font-size:13.5px;font-weight:700;color:#fff;'
+      +   'background:linear-gradient(90deg,#a24ea7,#7c4f9d);}'
+      + '.oc-ft-go:hover{filter:brightness(1.12);}'
+      + '.oc-ft-more{font-size:12.5px;color:#b79ad6;text-decoration:none;}'
+      + '.oc-ft-more:hover{text-decoration:underline;}'
+      + '@media (max-width:860px){'
+      +   '.oc-ft{grid-template-columns:1fr;gap:20px;padding:18px;}'
+      +   '.oc-ft-wrap{margin:22px 0 32px;}'
+      +   '.oc-ft-ph .ln-play{width:62px;height:62px;font-size:21px;}}';
     var s = document.createElement('style');
     s.setAttribute('data-oc', 'lightbox');
     s.textContent = css;
@@ -434,7 +480,77 @@
       });
     }
 
+    /* ══ 추천 한 편 ═══════════════════════════════════════════
+       ★ 무엇을 추천으로 뽑나 — <b>목록의 첫 자리와 같은 규칙</b>입니다
+           sort_order 큰 것 → 그다음 최근 등록
+         그래서 파트너가 아무것도 하지 않아도 <b>가장 최근에 올린 것</b>이
+         저절로 추천됩니다. 특정 영상을 고정하고 싶으시면 그 강의의
+         sort_order 를 1 이상으로 올리십시오(큐레이션 화면·SQL 어느 쪽이든).
+       ★ 영상이 있는 것만 추천합니다 — 눌러서 바로 보는 자리이므로
+         실시간 레슨이나 영상 없는 강의가 오면 헛클릭이 됩니다.
+       ★ <b>분야를 고르거나 2페이지로 넘어가면 감춥니다</b> —
+         걸러 보는 중인 사람에게 걸러지지 않은 추천을 계속 들이대면
+         방해가 되고, 2페이지에서 같은 것이 또 보이면 지루합니다.
+       ★ 재생은 <b>이미 만들어 둔 라이트박스</b>를 그대로 씁니다
+         (poster + bindLb) — 같은 것을 두 번 만들지 않습니다. */
+    var featBox = null;
+    function feature() {
+      /* 자리 만들기 — 목록 바로 앞에 둡니다(화면 HTML 은 손대지 않습니다) */
+      if (!featBox) {
+        if (!cfg.featured || !box.parentNode) return;
+        featBox = document.createElement('div');
+        featBox.className = 'oc-ft-wrap';
+        box.parentNode.insertBefore(featBox, box);
+      }
+      /* 걸러 보는 중이거나 2페이지면 감춥니다 */
+      if (field || page > 1) { featBox.innerHTML = ''; return; }
+
+      waitSb(function (c) {
+        if (!c) return;
+        var q = c.from('lessons_public').select('*')
+          .not('video_id', 'is', null)
+          .order('sort_order', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(1);
+        Object.keys(cfg.where).forEach(function (k) { q = q.eq(k, cfg.where[k]); });
+
+        q.then(function (r) {
+          var o = (r.data || [])[0];
+          if (r.error || !o) { featBox.innerHTML = ''; return; }
+          styleOnce();
+
+          var curated = (o.source === 'curated');
+          var by = curated ? (o.credit || '') : (o.instructor_name || '');
+
+          featBox.innerHTML =
+              '<section class="oc-ft">'
+            +   '<div class="oc-ft-ph">' + poster(o) + '</div>'
+            +   '<div class="oc-ft-tx">'
+            +     '<div class="oc-ft-lb">FEATURED'
+            +       (curated ? '<span class="cu">큐레이션</span>' : '') + '</div>'
+            +     '<h3 class="oc-ft-t">' + esc(o.title || '-') + '</h3>'
+            +     (by ? '<div class="oc-ft-by">' + (curated ? 'SOURCE' : 'INSTRUCTOR')
+                      + ' &middot; <b>' + esc(by) + '</b></div>' : '')
+            +     (o.summary ? '<p class="oc-ft-d">' + esc(o.summary) + '</p>' : '')
+            +     '<div class="oc-ft-act">'
+            +       '<button type="button" class="oc-ft-go" data-lb="1"'
+            +         ' data-p="' + esc(o.video_provider) + '" data-i="' + esc(o.video_id) + '"'
+            +         ' data-t="' + esc(o.title || '') + '"'
+            +         ' data-c="' + esc(by) + '"'
+            +         ' data-u="' + esc(o.credit_url || '') + '">&#9658; 지금 보기</button>'
+            +       '<a class="oc-ft-more" href="/lesson/lesson-view.html?id='
+            +         encodeURIComponent(o.id) + '">강의정보 &#8594;</a>'
+            +     '</div>'
+            +   '</div>'
+            + '</section>';
+
+          bindLb(featBox);   /* 표지와 「지금 보기」 둘 다 라이트박스로 */
+        });
+      });
+    }
+
     function draw() {
+      feature();
       box.innerHTML = '<div class="ln-msg">불러오는 중…</div>';
       waitSb(function (c) {
         if (!c) { box.innerHTML = '<div class="ln-none">자료를 불러오지 못했습니다.</div>'; return; }
