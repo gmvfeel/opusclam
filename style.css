@@ -153,6 +153,18 @@
   .fm-col a:last-child{border-bottom:0}
   .fm-col a:hover{color:#fff;transform:translateX(8px)}
   .fm-col a:hover::before{content:"";position:absolute;left:-13px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:var(--orange)}
+  /* ★ 2026-08-06 — 제목(h4) 안의 링크는 <b>본문 링크 짜임을 받지 않게</b>
+     (파트너 지적 — 「06 SHOPPING」만 크고 나머지는 작아 보였습니다)
+     왜 그랬나 — 대분류 제목은 대부분 <h4><a …>DATABASE</a></h4> 인데
+     SHOPPING 만 링크가 없는 <h4>SHOPPING</h4> 였습니다. 그런데 위
+     .fm-col a{font-size:15px} 가 <b>제목 안의 링크에도</b> 걸려서,
+     링크가 있는 제목은 15px 로 작아지고 없는 것만 20px 로 남았습니다.
+     ▶ 이제 여섯 제목이 모두 h4 크기(20px)로 같아집니다.
+     ※ 점수 — .fm-col h4 a 는 클래스1+태그2 로 .fm-col a(클래스1+태그1)를
+       이깁니다. 순서에 기대지 않습니다. */
+  .fm-col h4 a{font:inherit;color:inherit;display:inline;padding:0;border:0;text-decoration:none}
+  .fm-col h4 a:hover{color:inherit;transform:none}
+  .fm-col h4 a:hover::before{content:none}
   @media(max-width:980px){.fullmenu-grid{grid-template-columns:repeat(3,1fr);row-gap:42px}.fullmenu-body{align-items:flex-start}}
   @media(max-width:600px){.fullmenu-grid{grid-template-columns:repeat(2,1fr);gap:22px}.fullmenu-head .fm-logo{height:26px}}
   .m-actions{display:none}

@@ -340,9 +340,14 @@
      ★ 본 헤더를 쓰는 화면에서는 <b>조용히 지납니다</b> —
        .gnb 가 없으면 아무것도 하지 않습니다. */
   function authMenu() {
+    /* ★ <b>한 번만</b> — 창 단위로 표시를 둡니다.
+       .gnb 에 표시하는 것만으로는 헤더가 다시 끼워지면 풀립니다.
+       전체메뉴가 두 벌 붙으면 같은 id 가 둘이 되어 여는 손잡이가
+       엉뚱한 쪽에 걸립니다. */
+    if (window.__ocAuthMenu) return;
     var gnb = document.querySelector('.gnb');
     if (!gnb) return;                            /* 본 헤더 화면 */
-    if (gnb.getAttribute('data-ga')) return;     /* 두 번 하지 않습니다 */
+    window.__ocAuthMenu = true;
     gnb.setAttribute('data-ga', '1');
 
     /* ① 본 헤더를 받아 읽습니다 (동기 — 헤더가 이미 화면에 있어야 하므로) */
@@ -384,44 +389,18 @@
       });
     }
 
-    /* ③ 전체메뉴 이식 — 문서 끝에 둡니다(화면 전체를 덮으므로) */
-    var fm = doc.getElementById('fullMenu');
-    if (fm && !document.getElementById('fullMenu')) {
-      document.body.appendChild(document.importNode(fm, true));
-    }
-    fm = document.getElementById('fullMenu');
+    /* ★ 전체메뉴(≡)는 <b>여기서 만들지 않습니다.</b>
+       assets/auth.js 가 이미 같은 일을 하고 있습니다 —
+       partials/header.html 의 #fullMenu 를 가져와 붙이고, 처음 열 때
+       style.css 까지 <b>auth.css 앞에</b> 끼워 넣습니다(그 순서라야
+       회원 화면 꾸밈이 흐트러지지 않습니다).
+       여기서 또 만들면 같은 id 가 둘이 되어 여는 손잡이가 엉뚱한 쪽에
+       걸립니다 — 실제로 그렇게 되어 있던 것을 고쳤습니다(2026-08-06).
+       ▶ 이 함수가 맡는 것은 <b>하위 메뉴(드롭다운)뿐</b>입니다.
+         그것만 회원 헤더에 없던 기능입니다. */
 
     /* ④ 지금 보고 있는 곳 표시 — 위 큰 메뉴와 같은 규칙(폴더·파일 이름) */
     markAuthMenu();
-
-    /* ⑤ 열고 닫기 — 본 헤더(header.js)와 같은 몸짓으로 맞춥니다 */
-    var btn = gnb.querySelector('.burger');
-    if (!btn || !fm) return;
-
-    function openFm() {
-      fm.classList.add('open');
-      btn.setAttribute('aria-expanded', 'true');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeFm() {
-      fm.classList.remove('open');
-      btn.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
-    }
-    btn.addEventListener('click', function () {
-      fm.classList.contains('open') ? closeFm() : openFm();
-    });
-    [].forEach.call(fm.querySelectorAll('[data-fm-close]'), function (el) {
-      el.addEventListener('click', closeFm);
-    });
-    /* 메뉴를 고르면 닫습니다 — 새 화면으로 가는 동안 덮여 있으면
-       「멈춘 것」처럼 보입니다 */
-    [].forEach.call(fm.querySelectorAll('.fm-col a'), function (a) {
-      a.addEventListener('click', closeFm);
-    });
-    document.addEventListener('keydown', function (e) {
-      if ((e.key === 'Escape' || e.keyCode === 27) && fm.classList.contains('open')) closeFm();
-    });
   }
 
   /* 회원 헤더에서 지금 보고 있는 곳 표시
