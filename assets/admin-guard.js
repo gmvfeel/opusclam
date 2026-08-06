@@ -192,6 +192,9 @@
      ★ 풀리면 <b>화면 맨 위에 띠</b>도 띄웁니다(위 bar 참고). */
   function watch(sb, el, opt) {
     opt = opt || {};
+    /* ★ 화면이 <b>직접</b> 불렀다는 표시 — 아래 자동 모드가 비켜섭니다.
+       두 번 지켜보면 조회가 두 배가 되고, 띠도 두 번 그려집니다. */
+    window.__ocAdminGuardOn = true;
     var every = (opt.everyMin || 5) * 60 * 1000;
 
     function paint(r) {
@@ -232,4 +235,53 @@
   window.OCAdminGuard = {
     check: check, watch: watch, isAuthLost: isAuthLost, sane: sane, bar: bar
   };
+
+  /* ══ 스스로 붙습니다 (자동) ═══════════════════════════════════
+     ★ 왜 이렇게 하나
+       관리자 화면이 열세 개인데 로그인 확인 방식이 <b>제각각</b>이었습니다.
+         · 「누구로 들어와 있나」 자리가 있는 화면 넷 (id="who")
+         · 자리가 없는 화면 여덟
+         · <b>관리자 확인이 아예 없는</b> 화면 셋
+       열세 곳을 하나씩 손보면 반드시 몇 곳을 빠뜨립니다. 그래서
+       <b>이 파일만 실으면</b> 저절로 지켜보게 만듭니다.
+       ▶ 각 화면이 할 일: &lt;script src="/assets/admin-guard.js"&gt; 한 줄
+
+     ★ 단추를 잠그는 것까지 하고 싶으면 화면이 <b>직접</b> watch 를
+       부르면 됩니다(악보 담기 화면이 그렇게 합니다). 그때는 자동이
+       비켜섭니다 — 두 번 지켜보면 조회가 두 배가 됩니다.
+
+     ★ 접속 객체를 찾는 순서
+       ① window.__ocSb — 화면이 이미 만들어 둔 것
+       ② 없으면 우리가 만듭니다 — 세션은 브라우저에 담겨 있으므로
+         새로 만들어도 <b>같은 로그인</b>을 봅니다.
+     ★ /admin/ 밖에서는 아무 일도 하지 않습니다. */
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  function autoStart() {
+    if (window.__ocAdminGuardOn) return;             /* 화면이 직접 부른 경우 */
+    if (String(location.pathname).indexOf('/admin/') !== 0) return;
+
+    var n = 0;
+    (function tick() {
+      /* 접속 객체가 생길 때까지 잠깐 기다립니다 (최대 3초) */
+      var c = window.__ocSb;
+      if (!c && window.supabase && window.supabase.createClient) {
+        try { c = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) {}
+      }
+      if (!c) {
+        if (++n > 60) return;                        /* 못 찾으면 조용히 물러납니다 */
+        return setTimeout(tick, 50);
+      }
+      if (window.__ocAdminGuardOn) return;           /* 그 사이에 화면이 불렀으면 비켜섭니다 */
+      window.__ocAdminGuardOn = true;
+      watch(c, document.getElementById('who'), { everyMin: 5 });
+    })();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoStart);
+  } else {
+    autoStart();
+  }
 })();

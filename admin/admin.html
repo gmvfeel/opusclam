@@ -8,6 +8,10 @@
 <link rel="icon" type="image/png" href="/icon-192.png">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ★ 관리자 로그인 지킴이 (2026-08-06) — 토큰이 만료되면 화면 맨 위에
+     붉은 띠로 알려 줍니다. 예전에는 조용히 실패해서, 악보 담기에서
+     106건을 헛고생한 일이 있었습니다. 이 한 줄만 실으면 됩니다. -->
+<script src="/assets/admin-guard.js"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   :root{--violet-2:#7C63B0;--violet-3:#9C7FD6;--orange:#EC7A1C;--font:"Pretendard",-apple-system,system-ui,sans-serif}

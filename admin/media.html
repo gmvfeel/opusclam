@@ -119,6 +119,10 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ★ 관리자 로그인 지킴이 (2026-08-06) — 토큰이 만료되면 화면 맨 위에
+     붉은 띠로 알려 줍니다. 예전에는 조용히 실패해서, 악보 담기에서
+     106건을 헛고생한 일이 있었습니다. 이 한 줄만 실으면 됩니다. -->
+<script src="/assets/admin-guard.js"></script>
 <script>
 (function(){
   'use strict';
