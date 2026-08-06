@@ -488,20 +488,277 @@
                 + '<a class="ln-vd" style="margin-top:16px" href="/lesson/lesson-write.html">강의 등록 &#8594;</a></div>';
               return;
             }
-            box.innerHTML = '<ul class="lw-list">' + rows.map(function (o) {
-              var st = { draft: '준비중', open: '모집중', ongoing: '진행중', closed: '마감' }[o.status] || o.status;
-              return '<li>'
-                + '<span class="st ' + esc(o.status) + '">' + esc(st) + '</span>'
-                + '<span class="tb">' + esc({ master: '마스터클래스', open: '공개레슨', one: '1:1', group: '그룹' }[o.tab] || o.tab) + '</span>'
-                + (o.source === 'curated' ? '<span class="cu">큐레이션</span>' : '')
-                + '<a class="t" href="/lesson/lesson-view.html?id=' + encodeURIComponent(o.id) + '">'
-                +   esc(o.title || '-') + '</a>'
-                + '<a class="ed" href="/lesson/lesson-write.html?id=' + encodeURIComponent(o.id) + '">고치기</a>'
-                + '</li>';
-            }).join('') + '</ul>';
+            /* ★ 실시간 레슨(1:1 · 그룹)에만 신청이 들어옵니다 —
+               녹화(마스터클래스 · 공개레슨)는 신청 개념이 없습니다.
+               (표 정책 app_insert_mine 도 one · group 만 받습니다)
+               그래서 실시간 강의가 하나도 없으면 신청을 <b>세지도</b>
+               않습니다. 쓸데없는 물음을 서버에 보내지 않으려는 것입니다. */
+            var live = rows.filter(function (o) {
+              return o.kind === 'one' || o.kind === 'group';
+            });
+            if (!live.length) { draw(rows, {}); return; }
+
+            /* 신청을 한 번에 세어 옵니다 — 강의마다 따로 묻지 않습니다.
+               ★ 남의 강의 신청은 줄 보안(app_read_owner)이 걸러 줍니다. */
+            c.from('lesson_applications')
+              .select('lesson_id,status,read_at')
+              .in('lesson_id', live.map(function (o) { return o.id; }))
+              .then(function (ar) {
+                var tally = {};
+                (ar.data || []).forEach(function (a) {
+                  var t = tally[a.lesson_id] || (tally[a.lesson_id] = { all: 0, pending: 0, approved: 0, unread: 0 });
+                  t.all++;
+                  if (a.status === 'pending')  t.pending++;
+                  if (a.status === 'approved') t.approved++;
+                  if (!a.read_at)              t.unread++;
+                });
+                draw(rows, tally);
+              });
+
+            /* ── 목록 그리기 ─────────────────────────────────── */
+            function draw(rows, tally) {
+              apStyle();
+              box.innerHTML = '<ul class="lw-list">' + rows.map(function (o) {
+                var st = { draft: '준비중', open: '모집중', ongoing: '진행중', closed: '마감' }[o.status] || o.status;
+                var t = tally[o.id];
+                var isLive = (o.kind === 'one' || o.kind === 'group');
+
+                /* 신청 배지 — 실시간 레슨에만. 새 신청은 눈에 띄게 */
+                var badge = '';
+                if (isLive) {
+                  badge = t && t.all
+                    ? '<button type="button" class="ap-b' + (t.pending ? ' hot' : '') + '"'
+                      + ' data-ap="' + esc(o.id) + '"'
+                      + ' data-cap="' + esc(o.kind === 'group' ? (o.capacity || 0) : 0) + '">'
+                      + '신청 ' + t.all
+                      + (t.pending ? ' · <b>대기 ' + t.pending + '</b>' : '')
+                      + (o.kind === 'group' && o.capacity
+                          ? ' · 승인 ' + t.approved + '/' + o.capacity : '')
+                      + '</button>'
+                    : '<span class="ap-b off">신청 0</span>';
+                }
+
+                return '<li>'
+                  + '<span class="st ' + esc(o.status) + '">' + esc(st) + '</span>'
+                  + '<span class="tb">' + esc({ master: '마스터클래스', open: '공개레슨', one: '1:1', group: '그룹' }[o.tab] || o.tab) + '</span>'
+                  + (o.source === 'curated' ? '<span class="cu">큐레이션</span>' : '')
+                  + '<a class="t" href="/lesson/lesson-view.html?id=' + encodeURIComponent(o.id) + '">'
+                  +   esc(o.title || '-') + '</a>'
+                  + badge
+                  + '<a class="ed" href="/lesson/lesson-write.html?id=' + encodeURIComponent(o.id) + '">고치기</a>'
+                  + '<div class="ap-box" id="ap_' + esc(o.id) + '" hidden></div>'
+                  + '</li>';
+              }).join('') + '</ul>';
+
+              Array.prototype.forEach.call(box.querySelectorAll('[data-ap]'), function (b) {
+                b.addEventListener('click', function () {
+                  toggleAp(c, b.getAttribute('data-ap'), parseInt(b.getAttribute('data-cap'), 10) || 0, b);
+                });
+              });
+            }
           });
       });
     });
+  }
+
+  /* ══ ③ 강사에게 온 신청 ══════════════════════════════════════
+     ★ 왜 <b>내 강의 안에서</b> 펼치나 — 신청을 보려고 다른 화면으로
+       옮겨 다니면 「어느 강의의 신청이었지」를 잊습니다. 강의 줄 바로
+       아래에서 펼치면 무엇에 딸린 신청인지 헷갈리지 않습니다.
+     ★ 신청자 정보는 <b>서버 함수</b>로 받습니다 —
+       members 표는 「자기 것만」으로 막혀 있어 이름조차 못 읽습니다.
+       함수가 필요한 칸만 골라 넘기고, <b>연락처는 승인한 신청에만</b>
+       실어 줍니다(승인 전에는 브라우저에 오지 않습니다).
+     ★ 짜임은 <b>여기서 만들어 넣습니다</b> — lesson.css 는 레슨:ON
+       전체가 함께 쓰는 파일이라, 화면 하나 때문에 손대면 다른 데가
+       조용히 망가질 수 있습니다. */
+  function apStyle() {
+    if (window.__ocApCss) return;
+    window.__ocApCss = true;
+    var css = ''
+      + '.ap-b{flex:0 0 auto;padding:3px 10px;border-radius:3px;border:1px solid var(--ln-line);'
+      +   'background:none;color:var(--ln-tx2,#c9c6d6);font:inherit;font-size:11px;cursor:pointer;}'
+      + '.ap-b:hover{border-color:#a24ea7;color:#e8dcf5;}'
+      + '.ap-b.hot{border-color:#a24ea7;background:rgba(162,78,167,.18);color:#efe2f8;}'
+      + '.ap-b.hot b{color:#f3c9ff;}'
+      + '.ap-b.off{color:var(--ln-tx3,#8a86a0);cursor:default;border-style:dashed;}'
+      + '.ap-b.on{background:#a24ea7;border-color:#a24ea7;color:#fff;}'
+
+      /* ★ li 가 flex 라서 100% 를 주어야 <b>다음 줄 전체</b>를 씁니다 */
+      + '.ap-box{flex:1 1 100%;margin:12px 0 4px;padding:16px 18px;border-radius:10px;'
+      +   'background:rgba(255,255,255,.035);border:1px solid var(--ln-line,rgba(255,255,255,.12));}'
+      + '.ap-msg{font-size:12.5px;color:var(--ln-tx3,#8a86a0);line-height:1.7;}'
+      + '.ap-warn{margin:0 0 12px;padding:9px 12px;border-radius:7px;font-size:12px;line-height:1.6;'
+      +   'background:rgba(230,180,90,.12);border:1px solid rgba(230,180,90,.32);color:#f0dcb0;}'
+
+      + '.ap-row{display:flex;gap:13px;align-items:flex-start;padding:13px 0;'
+      +   'border-top:1px solid rgba(255,255,255,.08);}'
+      + '.ap-row:first-of-type{border-top:0;padding-top:0;}'
+      + '.ap-row.done{opacity:.55;}'
+      + '.ap-ph{flex:0 0 44px;width:44px;height:44px;border-radius:50%;overflow:hidden;'
+      +   'background:rgba(255,255,255,.07);display:grid;place-items:center;'
+      +   'font-size:15px;color:var(--ln-tx3,#8a86a0);}'
+      + '.ap-ph img{width:100%;height:100%;object-fit:cover;display:block;}'
+      + '.ap-in{flex:1 1 auto;min-width:0;}'
+      + '.ap-nm{font-size:13.5px;color:#f2eff8;font-weight:600;}'
+      + '.ap-nm .tag{margin-left:7px;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;'
+      +   'background:rgba(255,255,255,.10);color:var(--ln-tx2,#c9c6d6);vertical-align:1px;}'
+      + '.ap-nm .tag.ok{background:#3f7a4f;color:#fff;}'
+      + '.ap-nm .tag.no{background:#7a3f3f;color:#fff;}'
+      + '.ap-nm .tag.wait{background:#8a3ea0;color:#fff;}'
+      + '.ap-meta{margin-top:4px;font-size:12px;color:var(--ln-tx3,#8a86a0);line-height:1.6;}'
+      + '.ap-note{margin-top:7px;padding:9px 12px;border-radius:7px;font-size:12.5px;line-height:1.7;'
+      +   'background:rgba(255,255,255,.045);color:var(--ln-tx2,#c9c6d6);}'
+      + '.ap-ct{margin-top:7px;font-size:12.5px;color:#bfe6cd;}'
+      + '.ap-ct a{color:inherit;}'
+      + '.ap-act{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;}'
+      + '.ap-act button{padding:6px 13px;border-radius:5px;border:1px solid var(--ln-line);'
+      +   'background:none;color:var(--ln-tx2,#c9c6d6);font:inherit;font-size:11.5px;cursor:pointer;}'
+      + '.ap-act button.go{background:#3f7a4f;border-color:#3f7a4f;color:#fff;}'
+      + '.ap-act button.no:hover{border-color:#a55;color:#f0c3c3;}'
+      + '.ap-act button:disabled{opacity:.4;cursor:not-allowed;}'
+      + '@media (max-width:640px){.ap-row{flex-wrap:wrap;}'
+      +   '.ap-act{flex:1 1 100%;flex-direction:row;}}';
+    var s = document.createElement('style');
+    s.setAttribute('data-oc', 'applicants');
+    s.textContent = css;
+    document.head.appendChild(s);
+  }
+
+  function toggleAp(c, lessonId, capacity, btn) {
+    var box = $('ap_' + lessonId);
+    if (!box) return;
+    var open = !box.hasAttribute('hidden');
+    if (open) {
+      box.setAttribute('hidden', ''); box.style.display = 'none';
+      btn.classList.remove('on');
+      return;
+    }
+    box.removeAttribute('hidden'); box.style.display = '';
+    btn.classList.add('on');
+    loadAp(c, lessonId, capacity);
+  }
+
+  function loadAp(c, lessonId, capacity) {
+    var box = $('ap_' + lessonId);
+    if (!box) return;
+    box.innerHTML = '<div class="ap-msg">신청을 불러오는 중…</div>';
+
+    c.rpc('oc_lesson_applicants', { p_lesson: lessonId }).then(function (r) {
+      if (r.error) {
+        box.innerHTML = '<div class="ap-msg">불러오지 못했습니다 — ' + esc(r.error.message) + '</div>';
+        return;
+      }
+      var d = r.data || [];
+      if (!d.length) { box.innerHTML = '<div class="ap-msg">아직 신청이 없습니다.</div>'; return; }
+
+      /* 그룹레슨은 정원을 넘겨 승인할 수 없습니다 — 미리 알려 줍니다.
+         ★ 표에도 지키개가 있어 넘기면 저장이 막히지만, 누른 뒤에 알면
+           헛수고입니다. 그래서 화면에서 먼저 셉니다. */
+      var okN = d.filter(function (x) { return x.status === 'approved'; }).length;
+      var full = (capacity > 0 && okN >= capacity);
+      var warn = full
+        ? '<div class="ap-warn">정원 <b>' + capacity + '명</b>이 모두 찼습니다('
+          + okN + '명 승인). 더 승인하려면 정원을 늘리거나 승인한 사람을 되돌려야 합니다.</div>'
+        : '';
+
+      box.innerHTML = warn + d.map(function (x) {
+        var tag = { pending: '<span class="tag wait">대기</span>',
+                    approved: '<span class="tag ok">승인</span>',
+                    rejected: '<span class="tag no">거절</span>',
+                    canceled: '<span class="tag">신청 취소</span>' }[x.status]
+                 || '<span class="tag">' + esc(x.status) + '</span>';
+
+        var who = { major: '전공회원', general: '일반회원',
+                    industry: '업계회원', school: '학교회원' }[x.member_type] || x.member_type;
+
+        var meta = [];
+        if (who) meta.push(esc(who));
+        if (x.field) meta.push(esc(x.field));
+        if (x.school_name) meta.push(esc(x.school_name));
+        if (x.org_name) meta.push(esc(x.org_name));
+        meta.push(fmt(x.created_at) + ' 신청');
+
+        /* 연락처는 승인한 신청에만 옵니다 (서버가 판정합니다) */
+        var ct = '';
+        if (x.status === 'approved' && (x.email || x.phone)) {
+          ct = '<div class="ap-ct">'
+             + (x.email ? '<a href="mailto:' + esc(x.email) + '">' + esc(x.email) + '</a>' : '')
+             + (x.email && x.phone ? ' · ' : '')
+             + (x.phone ? esc(x.phone) : '')
+             + '</div>';
+        }
+
+        var act = '';
+        if (x.status === 'pending') {
+          act = '<div class="ap-act">'
+              + '<button type="button" class="go" data-ok="' + esc(x.app_id) + '"'
+              + (full ? ' disabled title="정원이 찼습니다"' : '') + '>승인</button>'
+              + '<button type="button" class="no" data-no="' + esc(x.app_id) + '">거절</button>'
+              + '</div>';
+        } else if (x.status === 'approved') {
+          act = '<div class="ap-act"><button type="button" class="no" data-back="'
+              + esc(x.app_id) + '">승인 취소</button></div>';
+        }
+
+        return '<div class="ap-row' + (x.status === 'pending' ? '' : ' done') + '">'
+          + '<div class="ap-ph">'
+          +   (x.photo_url ? '<img src="' + esc(x.photo_url) + '" alt="">' : '&#9834;')
+          + '</div>'
+          + '<div class="ap-in">'
+          +   '<div class="ap-nm">' + esc(x.name || '(이름 없음)') + tag + '</div>'
+          +   '<div class="ap-meta">' + meta.join(' · ') + '</div>'
+          +   (x.message ? '<div class="ap-note">' + esc(x.message) + '</div>' : '')
+          +   ct
+          + '</div>'
+          + act
+          + '</div>';
+      }).join('');
+
+      /* 승인 · 거절 · 되돌리기 */
+      function act(sel, next, ask) {
+        Array.prototype.forEach.call(box.querySelectorAll('[' + sel + ']'), function (b) {
+          b.addEventListener('click', function () {
+            if (ask && !confirm(ask)) return;
+            var id = b.getAttribute(sel);
+            b.disabled = true;
+            /* ★ 몇 줄이 바뀌었는지 <b>받아서</b> 봅니다 — 줄 보안이나
+               정원 지키개에 막히면 조용히 0줄이 됩니다. */
+            c.from('lesson_applications').update({ status: next }).eq('id', id).select('id')
+              .then(function (rr) {
+                if (rr.error) throw new Error(rr.error.message);
+                if (!(rr.data || []).length) throw new Error('바뀌지 않았습니다. 정원이나 권한을 확인해 주십시오.');
+                loadAp(c, lessonId, capacity);   /* 연락처를 새로 받으려면 다시 불러야 합니다 */
+                mine({ box: 'lwMine' });         /* 배지 숫자도 다시 셉니다 */
+              })['catch'](function (e) {
+                b.disabled = false;
+                alert(e.message || e);
+              });
+          });
+        });
+      }
+      act('data-ok', 'approved', null);
+      act('data-no', 'rejected', '이 신청을 거절합니다. 계속하시겠습니까?');
+      act('data-back', 'pending', '승인을 되돌립니다. 신청자에게 보이던 참여 링크가 사라집니다. 계속하시겠습니까?');
+
+      /* ★ <b>본 것으로</b> 표시합니다 — 「안 본 신청」을 세는 데 씁니다.
+         아직 안 본 것만 골라서 한 번에 적습니다. */
+      var unread = d.filter(function (x) { return !x.read_at; }).map(function (x) { return x.app_id; });
+      if (unread.length) {
+        c.from('lesson_applications')
+          .update({ read_at: new Date().toISOString() })
+          .in('id', unread).select('id')
+          .then(function () { /* 조용히 — 실패해도 보는 데는 지장이 없습니다 */ });
+      }
+    });
+  }
+
+  function fmt(s) {
+    if (!s) return '';
+    try {
+      var d = new Date(s);
+      return (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+    } catch (e) { return ''; }
   }
 
   window.OCLessonWrite = { form: form, mine: mine, parseVideo: parseVideo, KINDS: KINDS };

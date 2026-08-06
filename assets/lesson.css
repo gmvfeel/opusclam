@@ -750,6 +750,44 @@ html.ln-page .site-header:not(.solid) header.masthead{
 }
 .ln input:disabled, .ln select:disabled{ opacity: .55; cursor: not-allowed; }
 
+/* ══ 펼친 목록이 <b>안 보이던 문제</b> (2026-08-06 · 파트너 지적) ═══
+   무엇이 잘못됐었나
+     선택 상자를 열면 목록이 <b>흰 바탕에 밝은 글자</b>로 나와 거의
+     읽을 수 없었습니다. 레슨:ON 의 거의 모든 선택 상자가 그랬습니다.
+
+   왜 그랬나 — 두 가지가 겹쳤습니다
+     ① 위 공통 규칙이 배경을 <b>반투명</b>으로 둡니다
+          .ln select{ background: rgba(255,255,255,.04) }
+        반투명은 「뒤에 무엇이 있느냐」로 색이 정해집니다. 그런데
+        브라우저가 그리는 <b>펼친 목록의 뒤는 흰 바탕</b>이라 거의
+        흰색이 됩니다. 글자는 밝은 색(--ln-tx)이니 흰 위에 흰 글자가
+        됩니다.
+     ② option 색을 정한 곳이 <b>한 군데뿐</b>이었습니다 —
+          .ln select.ln-select option   (목록 화면의 분류선택)
+        그래서 그것만 제대로 보이고 나머지는 모두 안 보였습니다.
+
+   어떻게 고쳤나
+     · option 에 <b>불투명한</b> 색을 못박습니다 — 뒤가 무엇이든
+       똑같이 보입니다
+     · select 마다 color-scheme 을 <b>다시 적어</b> 줍니다. .ln 에 이미
+       있지만(상속) 상속에만 기대면, 어느 화면이 자기 배경을 다시
+       칠했을 때 조용히 풀립니다
+     · 날짜·시간 칸도 같은 사정이라 함께 넣습니다
+
+   ★ 점수를 건드리지 않았습니다 — .ln select option 은 클래스1+태그2,
+     기존 .ln select.ln-select option 은 클래스2+태그2 로 <b>더 높습니다</b>.
+     그래서 목록 화면의 분류선택은 예전 모습을 그대로 지킵니다. */
+.ln select,
+.ln input[type=date], .ln input[type=time], .ln input[type=number]{
+  color-scheme: dark;
+}
+.ln select option, .ln select optgroup{
+  background-color: #1c1c24;   /* 반투명 금지 — 뒤가 흰 바탕이어도 안전 */
+  color: #f2f2f5;
+}
+/* 고르지 못하게 막아 둔 줄(예: 「선택」 안내)은 흐리게 — 다만 <b>읽히게</b> */
+.ln select option:disabled{ color: #7a7a86; }
+
 /* 단추 */
 .ln-btn{
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
