@@ -224,6 +224,10 @@
       +   'font-size:13px;line-height:1.85;color:var(--ln-tx3,#8a86a0);}'
       + '.oc-cv-note b{color:var(--ln-tx2,#c9c6d6);font-weight:600;}'
 
+      /* 카드의 평점 배지 — 분야 옆에 작게 */
+      + '.ln-card-rv{margin-left:8px;color:#e0b34a;font-weight:700;letter-spacing:0;}'
+      + '.ln-card-rv i{font-style:normal;opacity:.62;margin-left:2px;font-weight:400;}'
+
       /* ── 추천 한 편 (목록 맨 위) ─────────────────────────────
          넓은 화면에서는 왼쪽 표지 · 오른쪽 글, 좁은 화면에서는 위아래.
          ▶ 표지 크기를 바꾸려면 grid-template-columns 의 첫 값(1.35fr)을
@@ -434,7 +438,15 @@
         +     (thumbOf(o) ? '<img src="' + esc(thumbOf(o)) + '" alt="">' : '')
         +   '</div>'
         +   '<div class="ln-card-body">'
-        +     '<div class="ln-card-cat">' + esc(o.field || cfg.en) + '</div>'
+        +     '<div class="ln-card-cat">' + esc(o.field || cfg.en)
+        /* ★ 평점은 <b>뷰가 세어 준 것</b>을 씁니다(review_avg · review_n) —
+           카드마다 따로 세면 한 판에 조회가 스물 번 늘어납니다.
+           큐레이션에는 리뷰를 받지 않으므로 나오지 않습니다. */
+        +       (o.review_n
+                  ? '<span class="ln-card-rv">&#9733; ' + esc(o.review_avg)
+                    + '<i>(' + esc(o.review_n) + ')</i></span>'
+                  : '')
+        +     '</div>'
         +     '<div class="ln-card-t">' + esc(o.title || '-') + '</div>'
         +     '<div class="ln-card-d">' + esc(o.summary || '') + '</div>'
         +     '<span class="ln-pill">CLASS INFORMATION &#8594;</span>'
@@ -742,12 +754,26 @@
           +   '</div>'
           + '</div>'
           + liveBox
-          + '</section>';
+          + '</section>'
+          /* ★ 리뷰 — 큐레이션이면 엔진이 <b>스스로 물러납니다</b>
+             (남이 공개한 영상에는 별점을 매기지 않습니다) */
+          + (o.source === 'curated' ? '' :
+              '<section class="ln-sec">'
+              + '<div class="ln-eyebrow">Reviews</div>'
+              + '<h3 class="ln-h2">수강 후기</h3>'
+              + '<div id="lnReview" style="margin-top:22px"></div>'
+              + '</section>');
 
         /* ★ 표지 단추에 손잡이를 겁니다 — innerHTML 로 그린 뒤라야
            요소가 실제로 생겨 있습니다. 이 줄을 빼면 눌러도 아무 일이
            일어나지 않습니다(조용한 고장이라 찾기 어렵습니다). */
         bindLb(box);
+
+        /* 리뷰 붙이기 — 엔진을 싣지 않은 화면에서는 조용히 지납니다 */
+        if (window.OCLessonReview) {
+          var rvBox = $('lnReview');
+          if (rvBox) OCLessonReview.mount(rvBox, o);
+        }
 
         if (live) drawApply(o, me);
         drawOthers(o);
