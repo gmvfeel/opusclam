@@ -1621,7 +1621,12 @@ html[data-theme="dark"] .rv-note-txt p b { color: #b9b4e0; }
   background: var(--paper);
   border: 3px solid #514a6b;
   border-radius: 12px;
-  padding: 34px 38px 36px;
+  /* ★ 2026-08-06 — 좌우 여백을 38 → 56px 로 넓혔습니다 (파트너 요청)
+     테두리와 안쪽 첫 상자가 붙어 답답했습니다. 위아래는 그대로 둡니다 —
+     세로가 늘면 첫 화면에 담기는 내용이 줄어듭니다.
+     ※ 이 값은 <b>리쿠르트 안내</b>와 <b>SHOPPING 입점 안내</b>가 함께
+       씁니다. 한쪽만 넓히면 두 화면의 결이 어긋납니다. */
+  padding: 34px 56px 36px;
   box-shadow: 0 3px 14px -4px rgba(30, 24, 60, .16);
 }
 html[data-theme="dark"] .rg-wrap {
@@ -1635,7 +1640,8 @@ html[data-theme="dark"] .rg-wrap {
 .rg-wrap > .rg-contact:last-child { margin-bottom: 0; }
 
 @media (max-width: 900px) {
-  .rg-wrap { padding: 24px 20px 26px; border-width: 2px; }
+  /* 좁은 화면에서는 조금만 — 여백이 크면 글이 담길 자리가 줄어듭니다 */
+  .rg-wrap { padding: 24px 24px 26px; border-width: 2px; }
 }
 
 /* ── 소개 ─────────────────────────────────────────────────*/
