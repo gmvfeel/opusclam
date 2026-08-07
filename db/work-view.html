@@ -398,7 +398,7 @@
           <h1 class="pdb-title">작품DB</h1>
         </div>
       </div>
-      <p class="pdb-lead">클래식 작품 아카이브 — 작곡가 · 갈래 · 시대로 찾고, IMSLP 악보로 바로 이어집니다.</p>
+      <p class="pdb-lead">클래식 작품 아카이브 — 작곡가 · 편성 · 시대로 찾고, IMSLP 악보로 바로 이어집니다.</p>
     </header>
 
     <!-- ===== 인물 상세(뷰) 본문 ===== -->
@@ -456,7 +456,7 @@
 
       <div class="pv-split">
         <section class="pv-block">
-          <h2 class="pv-h">편성 <span class="pv-h-en">Instrumentation</span></h2>
+          <h2 class="pv-h">악기 구성 <span class="pv-h-en">Instrumentation</span></h2>
           <ul class="pv-worklist pv-worklist--single">
             <li>베토벤 <em>Beethoven</em></li>
             <li>현악4중주 <em>String Quartet</em></li>
@@ -469,7 +469,7 @@
         <section class="pv-block">
           <h2 class="pv-h">작품 정보 <span class="pv-h-en">Work Info</span></h2>
           <dl class="pv-deflist">
-            <div><dt>갈래</dt><dd>관현악</dd></div>
+            <div><dt>편성</dt><dd>관현악</dd></div>
             <div><dt>작곡가</dt><dd><a class="pv-schoollink" href="person.html" title="작곡가 정보 보기">루트비히 판 베토벤 <span class="pv-schoolgo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h13M13 6l6 6-6 6"/></svg>작곡가 보기</span></a></dd></div>
             <div><dt>작품번호</dt><dd>Op.67 <span class="pv-en">Symphony No.5</span></dd></div>
             <div><dt>발행연도</dt><dd>2021년</dd></div>
@@ -1341,7 +1341,7 @@ if('serviceWorker' in navigator){
      document.title=nm+' · 작품DB · OPUSCLAM.COM';
      var crumb=document.querySelector('.pdb-crumb .on'); if(crumb)crumb.textContent=nm;
 
-     /* 왼쪽 동그라미 — 갈래 한 글자 */
+     /* 왼쪽 동그라미 — 편성 한 글자 */
      var por=document.querySelector('.pv-portrait span');
      if(por)por.textContent=GK[x.genre]||'작';
 
@@ -1356,7 +1356,7 @@ if('serviceWorker' in navigator){
        }
      }
 
-     /* 배지 — 갈래 · 널리 연주 · 권함 */
+     /* 배지 — 편성 · 널리 연주 · 권함 */
      var tg=document.querySelector('.pv-tags');
      if(tg){
        var html='';
@@ -1367,13 +1367,13 @@ if('serviceWorker' in navigator){
        tg.innerHTML=html;
      }
 
-     /* 요약 — 작곡가 · 갈래 · 작곡연도 · 작품번호 */
+     /* 요약 — 작곡가 · 편성 · 작곡 연도 · 작품번호 */
      var compName=(p.name_ko||p.name_en||'').trim();
      var fc=document.querySelector('.pv-facts');
      if(fc)fc.innerHTML=
         fact('작곡가',compName?esc(compName):'—')
-       +fact('갈래',x.genre?esc(GKO[x.genre]||x.genre):'—')
-       +fact('작곡',x.year_from?esc(x.year_from):(x.year_text?esc(x.year_text):'—'))
+       +fact('편성',x.genre?esc(GKO[x.genre]||x.genre):'—')
+       +fact('작곡 연도',x.year_from?esc(x.year_from):(x.year_text?esc(x.year_text):'—'))
        +fact('작품번호',cat?esc(cat):'—');
 
      /* 한 줄 설명 */
@@ -1405,7 +1405,7 @@ if('serviceWorker' in navigator){
          w=w.trim(); return w?'<li>'+esc(w)+'</li>':'';
        }).join('');
      }else{
-       hide('편성');
+       hide('악기 구성');
      }
 
      /* 작품 정보 */
@@ -1413,13 +1413,13 @@ if('serviceWorker' in navigator){
      if(dl){
        var add='';
        add+=fact('작곡가',compName?esc(compName):'—');
-       if(x.genre)add+=fact('갈래',esc(GKO[x.genre]||x.genre));
+       if(x.genre)add+=fact('편성',esc(GKO[x.genre]||x.genre));
        if(x.era)add+=fact('시대',esc(x.era));
        if(cat)add+=fact('작품번호',esc(cat));
        if(x.year_from)add+=fact('작곡 연도',esc(x.year_from));
        else if(x.year_text)add+=fact('작곡 연도',esc(x.year_text));
        if(x.subtitle)add+=fact('부제',esc(x.subtitle));
-       if(x.instrumentation)add+=fact('편성',esc(x.instrumentation));
+       if(x.instrumentation)add+=fact('악기 구성',esc(x.instrumentation));
        if(p.era_name)add+=fact('작곡가 시대',esc(p.era_name));
        dl.innerHTML=add;
      }

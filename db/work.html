@@ -124,7 +124,7 @@
           <h1 class="pdb-title">작품DB</h1>
         </div>
       </div>
-      <p class="pdb-lead">클래식 작품 아카이브 — 작곡가별 작품을 갈래·시대로 찾고, IMSLP 악보로 바로 이어집니다.</p>
+      <p class="pdb-lead">클래식 작품 아카이브 — 작곡가별 작품을 편성·시대로 찾고, IMSLP 악보로 바로 이어집니다.</p>
     </header>
 
     <div class="pdb-toolbar">
@@ -135,8 +135,8 @@
         <button class="pdb-searchbtn" type="button" aria-label="검색">검색</button>
       </div>
       <div class="pdb-selects">
-        <select aria-label="갈래">
-          <option>전체 갈래</option>
+        <select aria-label="편성">
+          <option>전체 편성</option>
         </select>
         <select aria-label="시대">
           <option>전체 시대</option>
@@ -174,7 +174,7 @@
     <div class="pdb-tablewrap">
       <table class="pdb-table">
         <thead>
-          <tr><th class="c-no">No</th><th class="c-ava"></th><th class="c-name">작품명</th><th class="c-nation">작곡가</th><th class="c-field">갈래</th><th class="c-era">시대</th><th class="c-life">작곡</th><th class="c-work">작품번호</th><th class="c-school">악보</th><th class="c-link">표시</th></tr>
+          <tr><th class="c-no">No</th><th class="c-ava"></th><th class="c-name">작품명</th><th class="c-nation">작곡가</th><th class="c-field">편성</th><th class="c-era">시대</th><th class="c-life">작곡 연도</th><th class="c-work">작품번호</th><th class="c-school">악보</th><th class="c-link">표시</th></tr>
         </thead>
         <tbody id="work-list">
           <tr><td class="c-no">3</td><td class="c-ava"><span class="ava">관</span></td><td class="c-name"><a href="work-view.html">교향곡 5번 <span class="c-name-en">Symphony No. 5, Op.67</span></a></td><td class="c-nation">루트비히 판 베토벤</td><td class="c-field"><span class="tag">Orchestral</span></td><td class="c-era">Romantic</td><td class="c-life">1808</td><td class="c-work">Op.67</td><td class="c-school">악보</td><td class="c-link"></td></tr>
@@ -587,7 +587,7 @@ if('serviceWorker' in navigator){
      그래서 select 에 조인을 씁니다: *,persons(name_ko,name_en)
      조인 결과는 o.persons 객체로 옵니다. */
 (function(){
-  /* 갈래를 한 글자로 — 표 왼쪽 동그라미에 넣습니다 */
+  /* 편성을 한 글자로 — 표 왼쪽 동그라미에 넣습니다 */
   var GK={Orchestral:'관',Keyboard:'건',Chamber:'실',Stage:'무',Vocal:'성'};
   var GKO={Orchestral:'관현악',Keyboard:'건반',Chamber:'실내악',Stage:'무대',Vocal:'성악'};
   var IC={score:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>'};
@@ -631,7 +631,7 @@ if('serviceWorker' in navigator){
       +'<td class="c-link">'+(o.wikidata_id?'<a href="https://www.wikidata.org/wiki/'+encodeURIComponent(o.wikidata_id)+'" class="lk" title="위키데이터" target="_blank" rel="noopener">W</a>':'')+'</td></tr>';
   }
   function buildFilters(sels){
-    /* 셀렉트 순서 · 0 갈래 · 1 시대 · 2 표시 · 3 정렬 */
+    /* 셀렉트 순서 · 0 편성 · 1 시대 · 2 표시 · 3 정렬 */
     var extra='';
     var g=sels[0]?sels[0].value:'';
     if(g && g.indexOf('전체')<0) extra+='&genre=eq.'+encodeURIComponent(g);
@@ -660,7 +660,7 @@ if('serviceWorker' in navigator){
       SK='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var GKO={Orchestral:'관현악',Keyboard:'건반',Chamber:'실내악',Stage:'무대 · 오페라',Vocal:'성악'};
   function fillFacets(){
-    var selG=document.querySelector('select[aria-label="갈래"]');
+    var selG=document.querySelector('select[aria-label="편성"]');
     var selE=document.querySelector('select[aria-label="시대"]');
     if(!selG&&!selE)return;
     fetch(SB+'/rest/v1/rpc/oc_work_facets',{
