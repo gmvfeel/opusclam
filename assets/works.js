@@ -327,21 +327,68 @@
     });
   }
 
+  /* ★ 수상 갈래를 보여줄 순서 — 콩쿠르가 맨 앞입니다.
+       연주자에게 <b>콩쿠르 입상이 가장 중요한 이력</b>이고,
+       훈장·명예칭호는 뒤에 오는 것이 자연스럽습니다.
+     ★ 값은 oc_award_kinds 표의 kind 와 같아야 합니다. */
+  var AW_ORDER = ['competition', 'prize', 'order', 'fellowship', 'honorary', 'other'];
+  var AW_KO = {
+    competition: '콩쿠르',
+    prize      : '수상',
+    order      : '훈장 · 기사단',
+    fellowship : '회원 · 펠로십',
+    honorary   : '명예직 · 칭호',
+    other      : '그 밖'
+  };
+
   function drawAwards(box, rows) {
     if (!box) return;
     if (!rows.length) { hideSection(box); return; }
-    rows.sort(function (a, b) {
-      var ya = a.year == null ? 9999 : a.year;
-      var yb = b.year == null ? 9999 : b.year;
-      return ya - yb;
+
+    /* ★ 2026-08-08 갈래별로 묶습니다.
+         한 인물에게 훈장 · 공로상 · 콩쿠르가 뒤섞여 수십 줄이 되면
+         무엇이 중요한 이력인지 알 수 없습니다.
+       ★ 갈래가 없는 것(사람이 손으로 적은 옛 자료)은 「그 밖」 으로
+         갑니다 — 버리지 않습니다. */
+    var bag = {};
+    rows.forEach(function (a) {
+      var k = String(a.kind || 'other').trim() || 'other';
+      if (AW_ORDER.indexOf(k) < 0) k = 'other';
+      (bag[k] = bag[k] || []).push(a);
     });
-    box.innerHTML = '<ul class="wk-aw">' + rows.map(function (a) {
-      return '<li>'
-        + '<span class="wk-ay">' + esc(a.year_text || a.year || '') + '</span>'
-        + '<span class="wk-at">' + esc(a.title_ko || a.title) + '</span>'
-        + (a.org ? '<span class="wk-ao">' + esc(a.org) + '</span>' : '')
-        + '</li>';
-    }).join('') + '</ul>';
+
+    /* 갈래 안에서는 연도 순 — 연도가 없는 것은 뒤로 */
+    Object.keys(bag).forEach(function (k) {
+      bag[k].sort(function (a, b) {
+        var ya = a.year == null ? 9999 : a.year;
+        var yb = b.year == null ? 9999 : b.year;
+        if (ya !== yb) return ya - yb;
+        return String(a.title || '').localeCompare(String(b.title || ''));
+      });
+    });
+
+    var out = [];
+    AW_ORDER.forEach(function (k) {
+      var list = bag[k];
+      if (!list || !list.length) return;
+      /* 갈래가 하나뿐이면 제목을 붙이지 않습니다 — 군더더기입니다 */
+      var only = Object.keys(bag).length === 1;
+      if (!only) {
+        out.push('<div class="wk-awh"><b>' + esc(AW_KO[k] || k) + '</b>'
+               + '<span class="wk-cnt">' + list.length + '</span></div>');
+      }
+      out.push('<ul class="wk-aw">' + list.map(function (a) {
+        /* ★ 한국어 이름이 있으면 그것을, 없으면 영문 그대로.
+             지어내지 않습니다. */
+        var t = a.title_ko || a.title;
+        return '<li>'
+          + '<span class="wk-ay">' + esc(a.year_text || a.year || '') + '</span>'
+          + '<span class="wk-at">' + esc(t) + '</span>'
+          + (a.org ? '<span class="wk-ao">' + esc(a.org) + '</span>' : '')
+          + '</li>';
+      }).join('') + '</ul>');
+    });
+    box.innerHTML = out.join('');
   }
 
   /* ── 이 작곡가의 악보 ─────────────────────────────────────
@@ -476,16 +523,18 @@
           + '&order=genre.asc,year_from.asc,id.asc');
       } catch (e) { console.error('작품을 불러오지 못했습니다:', e); }
       try {
-        /* ★ 수상은 <b>일부러 그대로 둡니다.</b> 200개 상한이 걸리지만
-             person_awards 는 지금 21건이고, 한 사람이 200개를 넘는
-             경우는 없습니다. 그리고 이 표에 id 칸이 있는지 확인하지
-             않았습니다 — 안정된 정렬 없이 나눠 받으면 바퀴마다 순서가
-             흔들려 <b>빠지거나 겹칩니다.</b> 칸을 짐작해서 쓰지
-             않습니다(2026-08-07 에 score_links.id 를 짐작해 오류를
-             냈습니다). 수상이 늘어나면 그때 확인하고 고칩니다. */
-        A = await get('person_awards?select=year,year_text,title,title_ko,org'
-          + '&person_id=eq.' + encodeURIComponent(pid)
-          + '&order=year.asc&limit=500');
+        /* ★ 2026-08-08 바뀐 곳
+             ① kind · kind_ko 를 함께 받습니다 — 훈장 · 콩쿠르 · 공로상을
+                갈라 보여주기 위해서입니다
+             ② hidden 을 걸러냅니다 — 어색한 한국어 라벨(「최하위
+                훈작사」 같은 것)을 감출 수 있게 칸을 두었습니다
+             ③ 나눠 받습니다 — 수상이 200줄을 넘는 인물이 있습니다.
+                쇼스타코비치는 스탈린상만 여섯 번입니다.
+                ★ order 에 id 를 넣어 바퀴마다 순서가 흔들리지 않게 합니다 */
+        A = await getAll('person_awards?select=year,year_text,title,title_ko,'
+          + 'org,kind,kind_ko&person_id=eq.' + encodeURIComponent(pid)
+          + '&hidden=not.is.true'
+          + '&order=year.asc,id.asc');
       } catch (e) { console.error('수상을 불러오지 못했습니다:', e); }
 
       /* 이 작곡가의 악보 — 정보SPOT 의 악보 게시판에서 가져옵니다.

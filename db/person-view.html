@@ -197,6 +197,12 @@
   .sc-more{color:#5b4b9e;text-decoration:none;font-weight:700}
   .sc-more:hover{text-decoration:underline}
   @media(max-width:560px){ .sc-a{margin-left:0;flex:1 1 100%} }
+  /* ★ 2026-08-08 수상을 갈래별로 묶어 보여줍니다(콩쿠르 · 훈장 · 공로상).
+     묶음 제목은 작품 목록의 .wk-ghead 를 그대로 씁니다 — 새 짜임을
+     만들지 않습니다. 두 번째 묶음부터 위에 틈을 둡니다. */
+  .wk-awh{display:flex;align-items:center;gap:9px;margin:0 0 10px}
+  .wk-awh b{font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:var(--tx,#2b2740)}
+  .wk-aw + .wk-awh{margin-top:22px}
   .wk-aw{list-style:none;margin:0;padding:0}
   .wk-aw li{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;
             padding:8px 0;border-bottom:1px solid rgba(0,0,0,.035);font-size:13.5px;line-height:1.6}
@@ -1404,7 +1410,7 @@ if('serviceWorker' in navigator){
 </script>
 <script src="/assets/photos.js"></script>
 <script src="/assets/score-dl.js"></script>
-<script src="/assets/works.js?v=20260808b"></script>
+<script src="/assets/works.js?v=20260808c"></script>
 <script>
 /* 인물 뷰: ?id 로 Supabase에서 해당 인물 로드 (id 없으면 기존 샘플 유지) */
 (function(){
@@ -1756,7 +1762,6 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
 })();
 </script>
 <script src="/assets/pv.js" defer></script>
-<script src="/assets/report.js?v=20260808" data-table="persons" data-label="인물" defer></script>
 <script src="/assets/links.js" defer></script>
 <!-- 관계 지도 · 뷰 아래에 접이식으로 붙습니다. links.js 의 조회를 함께 씁니다. -->
 <script src="/assets/network.js" defer></script>
