@@ -192,9 +192,9 @@
           <tr><th class="c-no">No</th><th class="c-ava"></th><th class="c-name">작품명</th><th class="c-nation">작곡가</th><th class="c-field">갈래</th><th class="c-era">시대</th><th class="c-life">작곡</th><th class="c-work">작품번호</th><th class="c-school">악보</th><th class="c-link">표시</th></tr>
         </thead>
         <tbody id="work-list">
-          <tr><td class="c-no">3</td><td class="c-ava"><span class="ava">관</span></td><td class="c-name"><a href="#">교향곡 5번 <span class="c-name-en">Symphony No. 5, Op.67</span></a></td><td class="c-nation">루트비히 판 베토벤</td><td class="c-field"><span class="tag">Orchestral</span></td><td class="c-era">Romantic</td><td class="c-life">1808</td><td class="c-work">Op.67</td><td class="c-school">악보</td><td class="c-link"></td></tr>
-          <tr><td class="c-no">2</td><td class="c-ava"><span class="ava">건</span></td><td class="c-name"><a href="#">발라드 1번 <span class="c-name-en">Ballade No. 1, Op.23</span></a></td><td class="c-nation">프레데리크 쇼팽</td><td class="c-field"><span class="tag">Keyboard</span></td><td class="c-era">Romantic</td><td class="c-life">1835</td><td class="c-work">Op.23</td><td class="c-school">악보</td><td class="c-link"></td></tr>
-          <tr><td class="c-no">1</td><td class="c-ava"><span class="ava">무</span></td><td class="c-name"><a href="#">마술피리 <span class="c-name-en">Die Zauberflöte, K.620</span></a></td><td class="c-nation">볼프강 아마데우스 모차르트</td><td class="c-field"><span class="tag">Stage</span></td><td class="c-era">Classical</td><td class="c-life">1791</td><td class="c-work">K.620</td><td class="c-school">악보</td><td class="c-link"></td></tr>
+          <tr><td class="c-no">3</td><td class="c-ava"><span class="ava">관</span></td><td class="c-name"><a href="work-view.html">교향곡 5번 <span class="c-name-en">Symphony No. 5, Op.67</span></a></td><td class="c-nation">루트비히 판 베토벤</td><td class="c-field"><span class="tag">Orchestral</span></td><td class="c-era">Romantic</td><td class="c-life">1808</td><td class="c-work">Op.67</td><td class="c-school">악보</td><td class="c-link"></td></tr>
+          <tr><td class="c-no">2</td><td class="c-ava"><span class="ava">건</span></td><td class="c-name"><a href="work-view.html">발라드 1번 <span class="c-name-en">Ballade No. 1, Op.23</span></a></td><td class="c-nation">프레데리크 쇼팽</td><td class="c-field"><span class="tag">Keyboard</span></td><td class="c-era">Romantic</td><td class="c-life">1835</td><td class="c-work">Op.23</td><td class="c-school">악보</td><td class="c-link"></td></tr>
+          <tr><td class="c-no">1</td><td class="c-ava"><span class="ava">무</span></td><td class="c-name"><a href="work-view.html">마술피리 <span class="c-name-en">Die Zauberflöte, K.620</span></a></td><td class="c-nation">볼프강 아마데우스 모차르트</td><td class="c-field"><span class="tag">Stage</span></td><td class="c-era">Classical</td><td class="c-life">1791</td><td class="c-work">K.620</td><td class="c-school">악보</td><td class="c-link"></td></tr>
         </tbody>
       </table>
     </div>
@@ -635,7 +635,8 @@ if('serviceWorker' in navigator){
       : '<span class="nd">\u2014</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
-      +'<td class="c-name">'+esc(main)+badge+en+sub+'</td>'
+      +'<td class="c-name"><a href="work-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'
+        +esc(main)+badge+en+sub+'</a></td>'
       +'<td class="c-nation">'+nd(comp)+'</td>'
       +'<td class="c-field">'+gl+'</td>'
       +'<td class="c-era">'+nd(o.era)+'</td>'
@@ -672,7 +673,8 @@ if('serviceWorker' in navigator){
       select:'*,persons(name_ko,name_en)',
       /* 작곡가 이름은 다른 표에 있어 or 검색에 넣을 수 없습니다.
          작곡가로 찾는 것은 인물DB 상세에서 작품 목록으로 들어가는 길을
-         두는 것이 맞습니다(다음 단계). */
+         두는 것이 맞습니다(다음 단계).
+         지금은 작품 상세에서 「같은 작곡가의 다른 작품」으로 이어집니다. */
       searchCols:['title','title_ko','opus','imslp_ref','note'],
       entity:'work',
       buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
