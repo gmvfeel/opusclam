@@ -1,0 +1,27 @@
+<!-- SHOPPING 공용 하위 메뉴
+     · 이 파일 한 곳만 고치면 모든 SHOPPING 화면에 반영됩니다
+     · 지금 보고 있는 화면 표시(active)는 assets/include.js 가 주소를 보고
+       자동으로 붙입니다
+     · 좁은 화면용 고르는 상자도 include.js 가 스스로 만듭니다
+     · 쓰는 법 — 화면에서 메뉴가 놓일 자리에 이 한 줄만 두시면 됩니다
+         <div id="oc-subnav" data-src="/partials/subnav-shop.html"></div>
+
+     ★ 「입점문의 · 안내」를 첫 자리에 둡니다.
+       SHOPPING 대메뉴를 누르면 이 화면이 먼저 뜨므로, 알약 순서도
+       그것과 같아야 「지금 어디에 있나」 가 헷갈리지 않습니다.
+       (리쿠르트가 「서비스안내」를 첫 자리에 두는 것과 같은 짜임입니다)
+
+     ★ LPSTOCK · LIFEPOP 은 <b>다른 사이트</b>입니다.
+       새 창으로 열고 이름 뒤에 ↗ 를 붙였습니다 — 누르면 오퍼스클램을
+       떠난다는 것을 미리 알려 주려는 것입니다. 그 표시가 없으면
+       「왜 갑자기 다른 데로 갔지?」 하고 당황합니다.
+       rel="noopener" 는 새 창이 이 창을 건드리지 못하게 막습니다.
+
+     ★ 진열 화면(SHOPPING 목록)이 생기면 이 파일에 한 줄 더하면 됩니다.
+       그때는 그 화면을 첫 자리로 옮기고 입점문의를 뒤로 보내는 편이
+       맞습니다 — 회원에게는 진열이, 입점하실 분께는 문의가 먼저입니다. -->
+<nav class="pdb-subnav" aria-label="SHOPPING 하위 메뉴">
+  <a href="/shop/apply.html">입점문의 · 안내</a>
+  <a href="https://lpstock.co.kr" target="_blank" rel="noopener">LPSTOCK &#8599;</a>
+  <a href="https://lpstock.co.kr/category/lifepop/90/" target="_blank" rel="noopener">LIFEPOP &#8599;</a>
+</nav>
