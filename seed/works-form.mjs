@@ -467,38 +467,78 @@ function pickForm(forms) {
 /* ============================================================
    3) 담기
 
-   ★ 200개씩 나눠 보냅니다. 묶음이 크면 하나가 실패할 때 전부
-     되돌려집니다.
-   ★ 형식이 이미 같으면 보내지 않습니다 — 쓸데없는 수정은
-     updated_at 만 흔듭니다.
+   ★★ 2026-08-08 이 함수를 통째로 고쳤습니다. 왜 고쳤는지 남깁니다.
+
+   처음에는 이렇게 보냈습니다.
+
+       POST person_works?on_conflict=id
+       Prefer: resolution=merge-duplicates
+       [{ id, form_raw, form_ko, form_qid }]
+
+   「id 가 같으면 이 네 칸만 고쳐라」 는 뜻으로 쓴 것인데,
+   PostgREST 의 이 방식은 <b>보내지 않은 칸을 전부 null 로 채웁니다.</b>
+   즉 <b>행 전체를 갈아치웁니다.</b>
+
+       Failing row contains (4387, null, null, null, … , 국가, Q23691)
+                                   ↑ person_id · title · opus 가 다 null
+
+   1,998건이 전부 실패했고 <b>person_id 의 not-null 제약이 막아
+   주었습니다.</b> 그 제약이 없었다면 작품 1,998개의 내용이 통째로
+   날아갔습니다.
+
+   ★ 교훈 — <b>「담는 방식이 무엇을 하는지」 를 확인하십시오.</b>
+     문법 · 괄호 · 전각문자 · 표 대조를 다 했지만 이것을 놓쳤습니다.
+     주석에 「다른 칸은 건드리지 않습니다」 라고 적어 두었는데
+     그 주석이 <b>틀렸습니다.</b> 적어 둔 것이 사실인지 확인해야 합니다.
+
+   ★ 지금은 oc_work_set_form() 을 부릅니다.
+     update 문이므로 적지 않은 칸은 손대지 않습니다.
+     함수 안에서도 <b>기존 편성을 절대 덮지 않습니다</b>(이중 안전장치).
+     ▶ 6-RUN-NOW-form-save-rpc.sql 을 먼저 실행하셔야 합니다.
    ============================================================ */
+/* ★ 함수가 돌려준 「고친 줄 수」 를 읽습니다.
+
+   ★ 왜 이렇게까지 하나 — <b>「담김 0개」 라는 로그가 오늘의 사고를
+     알려 주었습니다.</b> 셈이 부정확하면 무엇이 잘못됐는지 모릅니다.
+     PostgREST 가 스칼라를 그대로 줄 때도 있고 [{함수이름: 값}] 으로
+     싸서 줄 때도 있어 양쪽을 다 받습니다. */
+function countOf(r, fallback) {
+  if (typeof r === 'number') return r;
+  if (Array.isArray(r) && r.length && r[0] && typeof r[0] === 'object') {
+    const v = Object.values(r[0])[0];
+    if (typeof v === 'number') return v;
+  }
+  return fallback;
+}
+
 async function saveRows(rows) {
   let ok = 0;
   const fail = [];
-  for (let i = 0; i < rows.length; i += 200) {
-    const part = rows.slice(i, i + 200);
+
+  /* 500건씩 나눠 보냅니다. jsonb 로 싸서 보내므로 묶음이 크면
+     요청이 무거워집니다. 함수는 5,000건까지 받습니다. */
+  for (let i = 0; i < rows.length; i += 500) {
+    const part = rows.slice(i, i + 500);
     try {
-      /* ★ id 를 열쇠로 하는 upsert 입니다. 다른 칸은 건드리지
-         않습니다 — 보내지 않은 칸은 그대로 남습니다. */
-      await sb('person_works?on_conflict=id', {
+      const r = await sb('rpc/oc_work_set_form', {
         method: 'POST',
-        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify(part),
+        body: JSON.stringify({ p_rows: part }),
       });
-      ok += part.length;
+      ok += countOf(r, part.length);
     } catch (e) {
-      /* 묶음이 실패하면 한 건씩 다시 담습니다 */
+      /* 묶음이 실패하면 한 건씩 다시 담습니다 — 어느 것이 문제인지
+         알아야 하기 때문입니다. */
       console.log(`  [묶음 실패] ${i + 1}~${i + part.length}번째 — 한 건씩 다시 담습니다`);
-      for (const r of part) {
+      console.log(`    (${e.message})`);
+      for (const one of part) {
         try {
-          await sb('person_works?on_conflict=id', {
+          const r2 = await sb('rpc/oc_work_set_form', {
             method: 'POST',
-            headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-            body: JSON.stringify([r]),
+            body: JSON.stringify({ p_rows: [one] }),
           });
-          ok += 1;
+          ok += countOf(r2, 1);
         } catch (e2) {
-          fail.push({ id: r.id, why: e2.message });
+          fail.push({ id: one.id, why: e2.message });
         }
       }
     }
