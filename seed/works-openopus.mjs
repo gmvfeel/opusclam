@@ -186,23 +186,31 @@ async function loadOpenOpus() {
    2) 우리 작품 읽기 (쪽 나눠서)
    ============================================================ */
 async function loadOurWorks() {
-  /* ★ 2026-08-07 <b>여기서 200개만 읽고 멈추는 버그가 있었습니다.</b>
-     Range 머리글로 쪽을 넘기려 했는데 Supabase 가 기본 200개만 돌려주고,
-     끝냄 조건이 「받은 수 < 1000」이라 첫 바퀴에서 멈췄습니다.
-     limt · offset 로 바꾸고 한 번에 1000개씩 받습니다. */
+  /* ★ 2026-08-07 <b>여기서 200개만 읽고 멈추는 버그를 두 번 고쳤습니다.</b>
+
+     첫판  Range 머리글로 쪽을 넘기려 했습니다 → 200개만 왔습니다
+     둘째판 limit=1000 · offset 으로 바꿨습니다 → <b>그래도 200개</b>였습니다
+
+     까닭은 <b>서버 쪽 응답 상한</b>입니다. Supabase(PostgREST)는
+     한 번에 돌려주는 줄 수에 상한이 있고, 이 프로젝트는 <b>200</b>입니다.
+     limit 을 1000으로 줘도 200개만 옵니다.
+
+     그런데 끝냄 조건이 「받은 수 < 요청한 수」(200 < 1000)였습니다.
+     그래서 <b>첫 바퀴에서 참이 되어</b> 멈췄습니다.
+
+     ▶ 고침 — offset 을 <b>실제로 받은 수만큼</b> 넘깁니다.
+       서버가 몇 개를 주든 그만큼 나아가므로 상한과 무관합니다.
+       끝냄은 「0개가 왔을 때」로만 판단합니다. */
   const out = [];
-  const SIZE = 1000;
-  let off = 0;
-  for (let guard = 0; guard < 200; guard++) {
+  for (let guard = 0; guard < 500; guard++) {
     const rows = await sb(
       'person_works?select=id,person_id,title,title_ko,opus,imslp_ref,genre,subtitle'
       + '&source=eq.wikidata&order=id.asc'
-      + `&limit=${SIZE}&offset=${off}`
+      + `&limit=1000&offset=${out.length}`
     );
     if (!rows || !rows.length) break;
     out.push(...rows);
-    if (rows.length < SIZE) break;
-    off += SIZE;
+    if (guard === 0) console.log(`  (한 번에 ${rows.length}개씩 받습니다)`);
   }
   return out;
 }

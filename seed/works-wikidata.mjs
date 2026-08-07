@@ -181,7 +181,18 @@ async function pickComposers() {
     return rows || [];
   }
 
-  /* 악보가 많은 작곡가부터. score_count 가 빈 값인 분은 뒤로 갑니다. */
+  /* 악보가 많은 작곡가부터. score_count 가 빈 값인 분은 뒤로 갑니다.
+
+     ★ Supabase(PostgREST)는 한 번에 돌려주는 줄 수에 <b>상한</b>이 있습니다.
+       이 프로젝트는 <b>200</b>입니다. limit 을 300으로 줘도 200명만 옵니다.
+       (Open Opus 보강에서 이것 때문에 200개만 읽히는 버그가 있었습니다)
+       그래서 200명을 넘겨 달라고 하면 알려 드립니다. */
+  if (LIMIT > 200) {
+    console.log(`  ※ 한 번에 받을 수 있는 상한이 200명입니다 —`
+      + ` ${LIMIT}명을 달라고 하셨지만 200명까지만 옵니다.`);
+    console.log('    여러 번 나눠 돌리시면 이미 담긴 것은 건너뜁니다.');
+  }
+
   const rows = await sb(
     `persons?select=id,name_ko,name_en,wikidata_id,era_name,score_count` +
     `&field=like.*작곡*` +
