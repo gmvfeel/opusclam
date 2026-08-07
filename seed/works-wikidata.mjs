@@ -32,8 +32,14 @@
     쌓이면 「개수보다 충실도」 원칙을 해칩니다.
 
    ★ 중복이 쌓이지 않습니다
-    source_id 에 wd:Q188709 처럼 담고 그 칸이 <b>고유</b>로 묶여
-    있습니다. 여러 번 돌려도 같은 작품이 두 번 들어가지 않습니다.
+    source_id 에 <b>wd:Q254-Q188709</b>(작곡가 번호 - 작품 번호)로 담고
+    그 칸이 <b>고유</b>로 묶여 있습니다. 여러 번 돌려도 같은 작품이
+    두 번 들어가지 않습니다.
+
+    ※ 앞판은 wd:작품번호 만 담았습니다. 그러면 같은 작품이 여러
+      사람에게 걸려 있을 때(공동 작곡 · 편곡) 뒤쪽이 거부됩니다.
+      <b>이미 담긴 3,660개는 6·7번 SQL 로 새 모양으로 바꿔야 합니다</b> —
+      그러지 않으면 다시 돌릴 때 같은 작품이 두 번 들어갑니다.
 
    쓰는 법
      node seed/works-wikidata.mjs --dry              담지 않고 보기
@@ -374,12 +380,16 @@ async function main() {
 
     if (!usable.length) { console.log('   담을 것이 없습니다'); continue; }
 
-    const ids = usable.map((w) => `wd:${w.workQid}`);
+    /* ★ 2026-08-07 source_id 에 <b>작곡가 번호를 함께</b> 넣습니다.
+       같은 작품이 여러 사람에게 걸려 있으면(공동 작곡 · 편곡) 앞판은
+       두 줄이 같은 source_id 를 가져 뒤쪽이 거부됐습니다.
+       (Colonel Chabert · Heinrich 가 그렇게 실패했습니다) */
+    const ids = usable.map((w) => `wd:${w.composerQid}-${w.workQid}`);
     const have = await loadExisting(ids);
 
     const rows = [];
     for (const w of usable) {
-      const sid = `wd:${w.workQid}`;
+      const sid = `wd:${w.composerQid}-${w.workQid}`;
       if (have.has(sid)) { skipHave++; continue; }
       const c = byQid.get(w.composerQid);
       if (!c) continue;
