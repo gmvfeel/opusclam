@@ -64,6 +64,14 @@
   .sa-trap{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
 
   .sa-foot{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-top:22px; }
+
+  /* ★ 버튼 모양은 리쿠르트와 <b>같은 클래스</b>(rv-btn rv-btn--go)를 씁니다.
+     그런데 그 클래스는 recruit.css 에서 <b>&lt;a&gt; 태그를 위해</b> 만들어져
+     있어, 브라우저가 &lt;button&gt; 에 기본으로 주는 테두리·배경·글꼴을
+     지우지 않습니다. 그대로 두면 회색 네모 버튼으로 나옵니다.
+     ▶ 그 세 가지만 여기서 지웁니다. 색·크기·둥근 모서리는 rv-btn 이 정합니다. */
+  button.rv-btn{ border:0; cursor:pointer; font-family:inherit; }
+  button.rv-btn:disabled{ opacity:.55; cursor:not-allowed; }
   .sa-cnt{ margin-left:auto; font-size:12px; color:var(--text-3); }
   .sa-say{ margin-top:14px; padding:12px 15px; border-radius:8px;
            font-size:13.5px; line-height:1.75;
@@ -320,7 +328,7 @@
     </span>
 
     <div class="sa-foot">
-      <button type="button" class="rg-btn" id="saSend">문의 보내기</button>
+      <button type="button" class="rv-btn rv-btn--go" id="saSend">문의 보내기</button>
       <span class="sa-cnt"><b id="saMsgN">0</b> / 2,000</span>
     </div>
     <div id="saSay"></div>
