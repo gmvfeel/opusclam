@@ -112,8 +112,33 @@ html[data-theme="dark"] .board-row:hover{background:#000}
 /* 본문 위 대표 그림.
    예전에는 object-fit:cover 로 정해진 높이에 맞췄는데, 가로로 아주 넓은 그림
    (배너처럼 2.5:1 이 넘는 것)은 좌우가 심하게 잘렸습니다.
-   높이 제한만 두고 비율은 그림 그대로 두어 잘리지 않게 합니다. */
-.bv-thumb{width:100%;height:auto;max-height:460px;object-fit:contain;border-radius:14px;margin-bottom:26px;display:block}
+   그래서 비율은 그림 그대로 두고 높이만 460px 로 묶었습니다.
+
+   ★ 2026-08-06 — 그 높이 제한을 <b>풀었습니다</b> (파트너 지적)
+     공연 포스터는 <b>세로로 긴</b> 그림입니다(대개 3:4 나 그보다 길쭉).
+     460px 에 묶으니 폭이 820px 인데 그림은 그 안에 들어가려고 작아지고,
+     결과적으로 <b>아래쪽 정보(일시 · 장소 · 예매)가 안 보였습니다.</b>
+     공연정보에서 포스터는 곧 알림지이므로 <b>다 보여야</b> 합니다.
+
+   ▶ 대신 <b>화면 높이</b>로 묶습니다 — max-height:82vh.
+     · 아주 긴 그림도 한 화면에는 담깁니다(스크롤 없이 전체를 봅니다)
+     · 화면이 작은 기기에서는 그만큼 작아지므로 따로 손볼 것이 없습니다
+     · 픽셀(460px)로 묶으면 큰 모니터에서는 작고 작은 화면에서는 넘칩니다
+
+   ★ width:100% 도 <b>함께 풀었습니다</b> — 이것이 실은 더 큰 문제였습니다.
+     width:100% 는 그림 칸을 <b>본문 폭(820px)에 못박습니다.</b> 그러면
+     세로로 긴 포스터는 그 칸 안에서 작게 줄어들고 <b>좌우에 빈 자리</b>가
+     남습니다(가로 820 · 세로 738 칸 안에 553×738 짜리 그림).
+     object-fit:contain 이 잘리는 것만 막아 줄 뿐, 작아지는 것은 막지 못합니다.
+   ▶ width:auto 로 두면 칸이 <b>그림에 맞춰</b> 잡히므로 빈 자리가 없고,
+     포스터가 화면 높이만큼 <b>큼직하게</b> 나옵니다.
+     · max-width:100% — 넓은 그림이 본문을 넘지 않게
+     · margin:0 auto — 폭이 좁아진 포스터를 가운데에
+     · object-fit 은 이제 필요 없습니다(칸이 곧 그림 크기입니다)
+   ★ 작은 그림을 <b>늘리지 않는</b> 덤도 있습니다 — 예전에는 width:100% 가
+     작은 그림까지 820px 로 늘려 흐릿하게 만들었습니다. */
+.bv-thumb{display:block;width:auto;height:auto;max-width:100%;max-height:82vh;
+  margin:0 auto 26px;border-radius:14px}
 .bv-body{font-size:var(--bv-fs,15px);line-height:1.8;color:var(--text);word-break:break-word;white-space:normal}
 .bv-body p{margin:0 0 1em;font-size:.97em}
 .bv-body ul,.bv-body ol{margin:0 0 1em;padding-left:1.4em}
