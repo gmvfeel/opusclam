@@ -1,0 +1,378 @@
+/* ============================================================
+   OPUSCLAM 작품DB — Open Opus 보강  seed/works-openopus.mjs
+
+   무엇을 하나
+    · 이미 담긴 작품(위키데이터에서 온 것)에
+      <b>갈래 · 널리 연주되는지 · 권할 만한지 · 부제</b>를 채웁니다
+
+   왜 필요한가
+    위키데이터는 작품 QID 와 IMSLP 번호를 주지만 <b>갈래를 주지 않습니다.</b>
+    지금 담긴 작품의 genre 가 <b>모두 비어</b> 있습니다. 그러면
+      · 목록에서 「관현악 · 건반 · 실내악」으로 걸러낼 수 없고
+      · 바흐 칸타타 200곡이 목록 앞에 쏟아집니다
+
+    Open Opus 는 사람이 손질한 자료라
+      genre        Orchestral · Keyboard · Chamber · Stage · Vocal
+      popular      널리 연주되는 작품
+      recommended  입문자에게 권할 작품
+    를 줍니다. 그리고 <b>공개 자료(public domain)</b>입니다.
+
+   ★ 어떻게 맞추나 — <b>두 단계로만</b> 맞춥니다
+     ① 제목이 그대로 같으면 (대소문자 · 악센트 · 구두점 무시)
+          우리  Piano Concerto No.20 in D minor, K.466
+          OO    Piano Concerto no. 20 in D minor, K.466
+     ② 작품번호가 겹치고 <b>첫 낱말까지 같으면</b>
+          우리  Symphony No. 20        (IMSLP 에 K.133)
+          OO    Symphony no. 20 in D major, K.133
+
+     ★ 번호만 보면 안 됩니다 — op.10 하나가 에튀드 열두 곡에 다 걸립니다.
+       그래서 첫 낱말(symphony · concerto · sonata …)을 함께 봅니다.
+       애매하면 <b>맞추지 않습니다.</b> 갈래를 잘못 붙이는 것보다
+       비워 두는 편이 낫습니다.
+
+   ★ 지어내지 않습니다
+    갈래 · 추천 표시는 Open Opus 값을 그대로 옮깁니다.
+
+   ★ 이미 값이 있는 것은 건드리지 않습니다
+    genre 가 이미 채워진 줄은 넘어갑니다(--force 를 주면 덮어씁니다).
+
+   쓰는 법
+     node seed/works-openopus.mjs --dry          맞춘 결과만 보기
+     node seed/works-openopus.mjs --dry --debug  표본을 자세히
+     node seed/works-openopus.mjs                실제로 채우기
+     node seed/works-openopus.mjs --force        이미 있는 값도 덮어쓰기
+
+   옵션
+     --dry      채우지 않습니다
+     --debug    맞춘 표본 · 못 맞춘 표본을 보여 줍니다
+     --force    genre 가 이미 있어도 덮어씁니다
+     --limit=N  작곡가 몇 명까지 (기본 전체)
+
+   필요한 환경변수
+     SUPABASE_URL
+     SUPABASE_SERVICE_ROLE_KEY
+   ============================================================ */
+
+const SB_URL = process.env.SUPABASE_URL;
+const SB_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SB_URL || !SB_KEY) {
+  console.error('환경변수 SUPABASE_URL 과 SUPABASE_SERVICE_ROLE_KEY 가 필요합니다.');
+  process.exit(1);
+}
+
+const args = Object.fromEntries(
+  process.argv.slice(2).map((a) => {
+    const m = a.match(/^--([^=]+)=?(.*)$/);
+    return m ? [m[1], m[2] || true] : [a, true];
+  })
+);
+const DRY   = !!args.dry;
+const DEBUG = !!args.debug;
+const FORCE = !!args.force;
+const LIMIT = Number(args.limit) > 0 ? Number(args.limit) : 0;
+
+const OO_DUMP = 'https://api.openopus.org/work/dump.json';
+const UA = 'OpusclamWorksBot/1.0 (https://opusclam.com)';
+
+/* ============================================================
+   도구
+   ============================================================ */
+async function sb(path, opts = {}) {
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json', ...(opts.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status} ${await res.text()}`);
+  const t = await res.text();
+  return t ? JSON.parse(t) : null;
+}
+
+function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+/* ★ 알려진 카탈로그 약호만 씁니다. 조성 표기(in D minor)를
+     작품번호로 착각하지 않게 「알려진 이름」 방식을 씁니다. */
+const CATS = 'BWV|KV|K|Hob|WoO|Op|op|opus|D|S|RV|TWV|HWV|Wq|H|B|W|T|M|L|F'
+           + '|WAB|Sz|BB|CD|FP|MS|G|P|Z|SWV|BuxWV|Anh';
+
+/* ★ \b 를 쓰면 안 됩니다 — 밑줄이 「낱말 글자」로 취급되어
+     IMSLP 형식 _K.344 에서 경계가 생기지 않습니다. */
+const CAT_RE = new RegExp(
+  '(?<![A-Za-z0-9])(' + CATS + ')[\\s._]{0,3}(\\d{1,4})([a-zA-Z]?)'
+  + '((?:/\\d{1,4}[a-zA-Z]?)*)(?![\\d])', 'g');
+
+function cats(text) {
+  const out = new Set();
+  if (!text) return out;
+  const s = String(text);
+  CAT_RE.lastIndex = 0;
+  let m;
+  while ((m = CAT_RE.exec(s)) !== null) {
+    let a = m[1].toUpperCase();
+    if (a === 'OPUS') a = 'OP';
+    out.add(a + String(parseInt(m[2], 10)) + (m[3] || '').toLowerCase());
+    const tail = m[4] || '';
+    const alt = tail.match(/\/(\d{1,4})([a-zA-Z]?)/g) || [];
+    for (const one of alt) {
+      const mm = one.match(/\/(\d{1,4})([a-zA-Z]?)/);
+      if (mm) out.add(a + String(parseInt(mm[1], 10)) + (mm[2] || '').toLowerCase());
+    }
+  }
+  return out;
+}
+
+function deaccent(s) {
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function norm(s) {
+  if (!s) return '';
+  return deaccent(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+function firstWord(s) {
+  if (!s) return '';
+  const m = deaccent(s).match(/[a-zA-Z]{3,}/);
+  return m ? m[0].toLowerCase() : '';
+}
+
+/* ============================================================
+   1) Open Opus 전체 자료 받기
+   ============================================================ */
+async function loadOpenOpus() {
+  for (let t = 1; t <= 4; t++) {
+    try {
+      const res = await fetch(OO_DUMP, { headers: { 'User-Agent': UA } });
+      if (res.ok) {
+        const j = await res.json();
+        return (j && j.composers) || [];
+      }
+      console.log(`  · Open Opus 응답 ${res.status} — ${t}/4 다시 시도`);
+    } catch (e) {
+      console.log(`  · 통신 오류 — ${t}/4 다시 시도 (${e.message})`);
+    }
+    await sleep(2000 * t);
+  }
+  return null;
+}
+
+/* ============================================================
+   2) 우리 작품 읽기 (쪽 나눠서)
+   ============================================================ */
+async function loadOurWorks() {
+  const out = [];
+  const SIZE = 1000;
+  let from = 0;
+  while (true) {
+    const rows = await sb(
+      'person_works?select=id,person_id,title,title_ko,opus,imslp_ref,genre,subtitle'
+      + '&source=eq.wikidata&order=id.asc',
+      { headers: { Range: `${from}-${from + SIZE - 1}` } }
+    );
+    if (!rows || !rows.length) break;
+    out.push(...rows);
+    if (rows.length < SIZE) break;
+    from += SIZE;
+  }
+  return out;
+}
+
+async function loadComposers(ids) {
+  const map = new Map();
+  const CH = 150;
+  for (let i = 0; i < ids.length; i += CH) {
+    const part = ids.slice(i, i + CH);
+    const rows = await sb(
+      `persons?select=id,name_ko,name_en&id=in.(${part.join(',')})`
+    );
+    for (const r of (rows || [])) map.set(r.id, r);
+  }
+  return map;
+}
+
+/* ============================================================
+   3) 채우기
+   ============================================================ */
+async function savePatches(patches) {
+  let saved = 0;
+  const failed = [];
+  for (const p of patches) {
+    try {
+      await sb(`person_works?id=eq.${p.id}`, {
+        method: 'PATCH', headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify(p.set),
+      });
+      saved++;
+    } catch (e) {
+      failed.push({ id: p.id, why: String(e.message || '').slice(0, 120) });
+    }
+  }
+  return { saved, failed };
+}
+
+/* ============================================================
+   본줄기
+   ============================================================ */
+async function main() {
+  console.log('══ 작품DB Open Opus 보강 ══');
+  console.log(DRY ? '※ 채우지 않습니다 (--dry)' : '※ 실제로 채웁니다');
+  if (FORCE) console.log('※ 이미 있는 값도 덮어씁니다 (--force)');
+  console.log('');
+
+  console.log('Open Opus 자료를 받습니다…');
+  const ooComposers = await loadOpenOpus();
+  if (!ooComposers) { console.error('Open Opus 자료를 받지 못했습니다.'); process.exit(1); }
+  let ooWorkCount = 0;
+  for (const c of ooComposers) ooWorkCount += (c.works || []).length;
+  console.log(`  작곡가 ${ooComposers.length}명 · 작품 ${ooWorkCount}개`);
+
+  console.log('우리 작품을 읽습니다…');
+  const ours = await loadOurWorks();
+  console.log(`  ${ours.length}개`);
+  if (!ours.length) { console.log('채울 것이 없습니다.'); return; }
+
+  const personIds = [...new Set(ours.map((w) => w.person_id))];
+  const composers = await loadComposers(personIds);
+  console.log(`  작곡가 ${composers.size}명`);
+  console.log('');
+
+  /* Open Opus 작곡가를 이름으로 찾을 수 있게 정리합니다 */
+  const ooByName = new Map();
+  for (const c of ooComposers) {
+    const key = norm(c.complete_name);
+    if (key) ooByName.set(key, c);
+  }
+
+  /* 우리 작곡가별로 묶습니다 */
+  const byPerson = new Map();
+  for (const w of ours) {
+    if (!byPerson.has(w.person_id)) byPerson.set(w.person_id, []);
+    byPerson.get(w.person_id).push(w);
+  }
+
+  let personHit = 0, personMiss = 0;
+  const missNames = [];
+  let matched = 0, already = 0, noMatch = 0;
+  const patches = [];
+  const sampleHit = [], sampleMiss = [];
+  const byGenre = {};
+
+  let done = 0;
+  for (const [pid, works] of byPerson) {
+    if (LIMIT && done >= LIMIT) break;
+    done++;
+    const p = composers.get(pid);
+    if (!p) continue;
+
+    const oo = ooByName.get(norm(p.name_en));
+    if (!oo) {
+      personMiss++;
+      if (missNames.length < 20) missNames.push(p.name_en || p.name_ko || String(pid));
+      continue;
+    }
+    personHit++;
+
+    /* Open Opus 작품을 두 갈래 열쇠로 정리합니다 */
+    const ooByTitle = new Map();
+    const ooList = [];
+    for (const w of (oo.works || [])) {
+      const k = norm(w.title);
+      if (k && !ooByTitle.has(k)) ooByTitle.set(k, w);
+      ooList.push({
+        w,
+        cats: cats(w.title + ' ' + (w.searchterms || '')),
+        fw: firstWord(w.title),
+      });
+    }
+
+    for (const our of works) {
+      if (our.genre && !FORCE) { already++; continue; }
+
+      let hit = null, why = '';
+
+      /* ① 제목이 그대로 같은가 */
+      const k = norm(our.title);
+      if (k && ooByTitle.has(k)) { hit = ooByTitle.get(k); why = '제목 일치'; }
+
+      /* ② 작품번호가 겹치고 첫 낱말까지 같은가 */
+      if (!hit) {
+        const ourCats = new Set([
+          ...cats(our.title), ...cats(our.imslp_ref), ...cats(our.opus),
+        ]);
+        if (ourCats.size) {
+          const ourFw = firstWord(our.title);
+          for (const cand of ooList) {
+            if (!ourFw || cand.fw !== ourFw) continue;
+            let shared = false;
+            for (const c of ourCats) { if (cand.cats.has(c)) { shared = true; break; } }
+            if (shared) { hit = cand.w; why = '번호+첫 낱말'; break; }
+          }
+        }
+      }
+
+      if (!hit) {
+        noMatch++;
+        if (sampleMiss.length < 10) sampleMiss.push(our.title);
+        continue;
+      }
+
+      matched++;
+      byGenre[hit.genre || '(빈 값)'] = (byGenre[hit.genre || '(빈 값)'] || 0) + 1;
+      const set = {
+        genre: hit.genre || null,
+        is_popular: String(hit.popular) === '1',
+        is_recommended: String(hit.recommended) === '1',
+      };
+      if (hit.subtitle && !our.subtitle) set.subtitle = hit.subtitle;
+      patches.push({ id: our.id, set });
+      if (sampleHit.length < 12) {
+        sampleHit.push(`${our.title}  →  ${hit.genre}`
+          + (set.is_popular ? ' · 널리 연주' : '')
+          + (set.is_recommended ? ' · 권함' : '')
+          + `  (${why})`);
+      }
+    }
+  }
+
+  console.log('══ 맞춘 결과 ══');
+  console.log(`  작곡가  맞음 ${personHit}명 · 못 맞음 ${personMiss}명`);
+  if (missNames.length) {
+    console.log(`   └ 못 맞은 작곡가 표본 : ${missNames.slice(0, 12).join(' · ')}`);
+  }
+  console.log(`  작품    맞음 ${matched}개 · 못 맞음 ${noMatch}개`
+              + (already ? ` · 이미 갈래가 있어 넘김 ${already}개` : ''));
+
+  const gl = Object.keys(byGenre).sort((a, b) => byGenre[b] - byGenre[a])
+    .map((k) => `${k} ${byGenre[k]}`);
+  if (gl.length) console.log(`  갈래별 : ${gl.join(' · ')}`);
+
+  if (DEBUG) {
+    if (sampleHit.length) {
+      console.log('\n  [맞춘 표본]');
+      for (const s of sampleHit) console.log(`    · ${s}`);
+    }
+    if (sampleMiss.length) {
+      console.log('\n  [못 맞춘 표본]');
+      for (const s of sampleMiss) console.log(`    · ${s}`);
+    }
+  }
+
+  if (!DRY && patches.length) {
+    console.log('');
+    console.log(`채웁니다 — ${patches.length}개`);
+    const { saved, failed } = await savePatches(patches);
+    console.log(`  채워짐 ${saved}개` + (failed.length ? ` · 실패 ${failed.length}개` : ''));
+    for (const f of failed.slice(0, 10)) console.log(`    ✗ id ${f.id} — ${f.why}`);
+  }
+
+  if (DRY) {
+    console.log('');
+    console.log('※ --dry 였으므로 아무것도 채우지 않았습니다.');
+    console.log('  맞춘 결과가 알맞으면 --dry 를 떼고 다시 돌리십시오.');
+  }
+}
+
+main().catch((e) => {
+  console.error('멈췄습니다:', e.message);
+  process.exit(1);
+});

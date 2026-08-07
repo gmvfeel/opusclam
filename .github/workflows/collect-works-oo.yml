@@ -1,0 +1,118 @@
+name: 작품DB Open Opus 보강
+
+# ── 무엇을 하나 ──
+#  이미 담긴 작품(위키데이터에서 온 것)에 갈래·추천 표시·부제를 채웁니다.
+#
+# ── 왜 필요한가 ──
+#  위키데이터는 작품 QID 와 IMSLP 번호를 주지만 갈래를 주지 않습니다.
+#  지금 담긴 작품의 genre 가 모두 비어 있습니다. 그러면
+#    · 목록에서 「관현악·건반·실내악」으로 걸러낼 수 없고
+#    · 바흐 칸타타 200곡이 목록 앞에 쏟아집니다
+#
+#  Open Opus 는 사람이 손질한 자료라
+#    genre        Orchestral · Keyboard · Chamber · Stage · Vocal
+#    popular      널리 연주되는 작품
+#    recommended  입문자에게 권할 작품
+#  를 줍니다. 그리고 공개 자료(public domain)입니다.
+#
+# ── 어떻게 맞추나 ──
+#  Open Opus 는 위키데이터 번호가 없어 제목으로 맞춰야 합니다.
+#  두 단계만 씁니다.
+#    ① 제목이 그대로 같은 경우 (대소문자·악센트·구두점 무시)
+#    ② 작품번호가 겹치고 첫 낱말까지 같은 경우
+#
+#  ★ 번호만 보면 안 됩니다 — op.10 하나가 에튀드 열두 곡에 다 걸립니다.
+#    그래서 첫 낱말(symphony·concerto·sonata …)을 함께 봅니다.
+#    애매하면 맞추지 않습니다. 갈래를 잘못 붙이는 것보다 비워 두는 편이
+#    낫습니다.
+#
+#  이 규칙은 파이썬으로 29건·11건을 양방향 검증한 뒤 옮겼습니다.
+#
+# ── 언제 실행되나 ──
+#  손으로만 돌립니다. 위키데이터 수집을 늘린 뒤에 이어서 돌리면
+#  새로 담긴 작품에도 갈래가 붙습니다.
+#  ★ 처음에는 「실제로 채우기: no」 로 맞춘 결과를 먼저 보세요.
+on:
+  workflow_dispatch:
+    inputs:
+      save:
+        description: '실제로 채우기 (처음에는 no 로 맞춘 결과를 확인하세요)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      force:
+        description: '갈래가 이미 있어도 덮어쓰기 (보통은 no)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      debug:
+        description: '맞춘 표본·못 맞춘 표본 보기'
+        required: false
+        default: 'yes'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+# ★ 작품 표를 함께 쓰는 것들과 한 대기줄로 묶습니다.
+concurrency:
+  group: oc-persons
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Open Opus 보강 실행
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+
+          OPTS=""
+          if [ "${{ github.event.inputs.save }}" != "yes" ]; then OPTS="$OPTS --dry"; fi
+          if [ "${{ github.event.inputs.force }}" = "yes" ]; then OPTS="$OPTS --force"; fi
+          if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
+
+          echo "── 실행 : node seed/works-openopus.mjs $OPTS ──"
+          try2 node seed/works-openopus.mjs $OPTS
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  oc-notify-failure:
+    needs: enrich
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf 'Open Opus 보강이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi
