@@ -1,0 +1,137 @@
+name: 작품DB 위키데이터 수집
+
+# ── 무엇을 하나 ──
+#  인물DB 의 작곡가마다 위키데이터에서 작품 목록을 받아
+#  person_works 표에 담습니다.
+#
+# ── 왜 위키데이터부터인가 ──
+#  인물 9,332명 가운데 9,321명이 위키데이터 번호를 가지고 있습니다(99.9%).
+#  그래서 작품을 위키데이터에서 받으면 「이 작품은 누구 것인가」가
+#  문자열 짐작 없이 정해집니다. 이름으로 맞추면
+#  J.S. Bach 와 Johann Sebastian Bach 가 어긋납니다.
+#
+#  게다가 위키데이터는 P839(IMSLP 문서 이름)을 줍니다. 그 값이
+#  우리 악보 표(score_links.imslp_ref)와 같은 모양입니다.
+#
+#    Symphony_No.8,_Op.88_(Dvořák,_Antonín)
+#
+#  그러니 작품 ↔ 악보가 문자열 매칭 없이 그대로 이어집니다.
+#
+# ── 어떤 작곡가부터 담나 ──
+#  악보가 많이 담긴 작곡가부터입니다(persons.score_count 내림차순).
+#  그분들은 IMSLP 연결이 바로 확인되고, 널리 연주되는 작곡가이므로
+#  작품 정보도 충실합니다. 작곡가 6,860명을 한 번에 돌리지 않습니다.
+#
+# ── 언제 실행되나 ──
+#  손으로만 돌립니다. 한 번에 조금씩 늘려 가며 결과를 확인하는 편이
+#  알맞습니다.
+#  ★ 처음에는 「실제로 담기: no」 로 무엇이 들어올지 먼저 보세요.
+#
+# ── 중복이 쌓이지 않습니다 ──
+#  source_id 에 wd:Q188709 처럼 담고 그 칸이 고유로 묶여 있습니다.
+#  여러 번 돌려도 같은 작품이 두 번 들어가지 않습니다.
+on:
+  workflow_dispatch:
+    inputs:
+      save:
+        description: '실제로 담기 (처음에는 no 로 목록을 확인하세요)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      limit:
+        description: '작곡가 몇 명까지 (처음에는 5~20 을 권합니다)'
+        required: true
+        default: '10'
+        type: string
+      min_scores:
+        description: '악보가 몇 개 이상인 작곡가만 (0 이면 악보 없는 분도)'
+        required: true
+        default: '1'
+        type: string
+      composer:
+        description: '특정 작곡가만 (위키데이터 번호, 예 Q1339). 비우면 자동 선정'
+        required: false
+        default: ''
+        type: string
+      debug:
+        description: '받은 값을 자세히 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+# ★ persons 표를 함께 쓰는 것들과 한 대기줄로 묶습니다.
+#   같은 사람 줄을 서로 덮어쓰거나 위키데이터를 동시에 두드리는 것을 막습니다.
+concurrency:
+  group: oc-persons
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 작품 수집 실행
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+
+          OPTS=""
+          if [ "${{ github.event.inputs.save }}" != "yes" ]; then OPTS="$OPTS --dry"; fi
+          if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
+
+          LIM="${{ github.event.inputs.limit }}"
+          case "$LIM" in ''|*[!0-9]*) LIM=10 ;; esac
+          OPTS="$OPTS --limit=$LIM"
+
+          MS="${{ github.event.inputs.min_scores }}"
+          case "$MS" in ''|*[!0-9]*) MS=1 ;; esac
+          OPTS="$OPTS --min-scores=$MS"
+
+          CQ="${{ github.event.inputs.composer }}"
+          if [ -n "$CQ" ]; then OPTS="$OPTS --composer=$CQ"; fi
+
+          echo "── 실행 : node seed/works-wikidata.mjs $OPTS ──"
+          try2 node seed/works-wikidata.mjs $OPTS
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #  예약 실행이 아니어도, 손으로 돌린 것이 실패하면 이슈로 남깁니다.
+  #  ※ Settings → Actions → General → Workflow permissions 를
+  #    「Read and write permissions」 로 두셔야 이슈를 만들 수 있습니다.
+  oc-notify-failure:
+    needs: collect
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '작품 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi
