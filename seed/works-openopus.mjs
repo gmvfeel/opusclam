@@ -162,6 +162,56 @@ function firstWord(s) {
   return m ? m[0].toLowerCase() : '';
 }
 
+/* ★ 2026-08-07 <b>작곡가 이름 보조 맞추기</b>
+   첫판은 전체 이름만 비교했습니다. 그래서 일곱 분을 놓쳤습니다.
+       우리                          Open Opus
+       Joseph Haydn                  Franz Joseph Haydn
+       Modest Petrovich Mussorgsky   Modest Mussorgsky
+       Michael Glinka                Mikhail Glinka
+       Johann Strauss II             Johann Strauss Jr.
+   합치면 1,000곡이 넘습니다(요한 슈트라우스 2세 584 · 하이든 275 …).
+
+   ▶ 성(姓)으로 보조 맞추되 <b>애매하면 맞추지 않습니다.</b>
+     · 성이 <b>유일</b>하면 그것으로 (Mussorgsky · Glinka)
+     · 성이 여럿이면 <b>이름이 겹치는</b> 것 하나만 (Haydn 둘 → joseph)
+     · 그래도 여럿이면 <b>꼬리표</b>로 (Strauss 넷 → II = Jr. · I = Sr.)
+     · 끝까지 여럿이면 <b>포기</b>합니다 (Johann Bach 는 둘이라 모호) */
+const TAIL_MAP = {
+  ii:'jr', jr:'jr', junior:'jr', younger:'jr',
+  i:'sr', sr:'sr', senior:'sr', elder:'sr',
+  iii:'iii', iv:'iv', the:'',
+};
+function nameWords(s) {
+  return String(deaccent(s || '')).split(/[^A-Za-z]+/).filter(Boolean)
+    .map((w) => w.toLowerCase());
+}
+function tailOf(s) {
+  const ws = nameWords(s);
+  for (let i = ws.length - 1; i >= 0; i--) {
+    if (Object.prototype.hasOwnProperty.call(TAIL_MAP, ws[i])) return TAIL_MAP[ws[i]];
+    break;
+  }
+  return '';
+}
+function coreWords(s) {
+  const ws = nameWords(s);
+  while (ws.length && Object.prototype.hasOwnProperty.call(TAIL_MAP, ws[ws.length - 1])) ws.pop();
+  return ws;
+}
+function surnameOf(s) {
+  const ws = coreWords(s);
+  return ws.length ? ws[ws.length - 1] : '';
+}
+function givensOf(s) {
+  const ws = coreWords(s);
+  return new Set(ws.length > 1 ? ws.slice(0, -1) : []);
+}
+function shareGiven(a, b) {
+  const A = givensOf(a);
+  for (const w of givensOf(b)) if (A.has(w)) return true;
+  return false;
+}
+
 /* ============================================================
    1) Open Opus 전체 자료 받기
    ============================================================ */
@@ -274,11 +324,40 @@ async function main() {
   console.log(`  작곡가 ${composers.size}명`);
   console.log('');
 
-  /* Open Opus 작곡가를 이름으로 찾을 수 있게 정리합니다 */
+  /* Open Opus 작곡가를 이름 · 성 두 갈래로 정리합니다 */
   const ooByName = new Map();
+  const ooBySurname = new Map();
   for (const c of ooComposers) {
     const key = norm(c.complete_name);
     if (key) ooByName.set(key, c);
+    const sn = surnameOf(c.complete_name);
+    if (sn) {
+      if (!ooBySurname.has(sn)) ooBySurname.set(sn, []);
+      ooBySurname.get(sn).push(c);
+    }
+  }
+
+  /* 우리 작곡가 한 명에 맞는 Open Opus 작곡가를 찾습니다 */
+  function findComposer(ourName) {
+    if (!ourName) return null;
+    const exact = ooByName.get(norm(ourName));
+    if (exact) return { c: exact, why: '이름 일치' };
+    const sn = surnameOf(ourName);
+    if (!sn) return null;
+    const cands = ooBySurname.get(sn) || [];
+    if (cands.length === 1) return { c: cands[0], why: '성 ' + sn + ' 유일' };
+    if (cands.length > 1) {
+      const hit = cands.filter((c) => shareGiven(ourName, c.complete_name));
+      if (hit.length > 1) {
+        const t = tailOf(ourName);
+        if (t) {
+          const nar = hit.filter((c) => tailOf(c.complete_name) === t);
+          if (nar.length === 1) return { c: nar[0], why: '성+이름+꼬리표(' + t + ')' };
+        }
+      }
+      if (hit.length === 1) return { c: hit[0], why: '성 ' + sn + ' + 이름' };
+    }
+    return null;
   }
 
   /* 우리 작곡가별로 묶습니다 */
@@ -290,6 +369,7 @@ async function main() {
 
   let personHit = 0, personMiss = 0;
   const missNames = [];
+  const hitWhy = [];   /* 보조 규칙으로 맞춘 작곡가 — 눈으로 확인하시게 */
   let matched = 0, already = 0, noMatch = 0;
   const patches = [];
   const sampleHit = [], sampleMiss = [];
@@ -302,13 +382,17 @@ async function main() {
     const p = composers.get(pid);
     if (!p) continue;
 
-    const oo = ooByName.get(norm(p.name_en));
-    if (!oo) {
+    const found = findComposer(p.name_en);
+    if (!found) {
       personMiss++;
       if (missNames.length < 20) missNames.push(p.name_en || p.name_ko || String(pid));
       continue;
     }
+    const oo = found.c;
     personHit++;
+    if (DEBUG && found.why !== '이름 일치' && hitWhy.length < 12) {
+      hitWhy.push(`${p.name_en} → ${oo.complete_name}  (${found.why})`);
+    }
 
     /* Open Opus 작품을 두 갈래 열쇠로 정리합니다 */
     const ooByTitle = new Map();
@@ -394,6 +478,10 @@ async function main() {
   console.log(`  작곡가  맞음 ${personHit}명 · 못 맞음 ${personMiss}명`);
   if (missNames.length) {
     console.log(`   └ 못 맞은 작곡가 표본 : ${missNames.slice(0, 12).join(' · ')}`);
+  }
+  if (hitWhy.length) {
+    console.log('   └ 보조 규칙으로 맞춘 작곡가 (★눈으로 확인해 주십시오)');
+    for (const s of hitWhy) console.log(`      · ${s}`);
   }
   console.log(`  작품    맞음 ${matched}개 · 못 맞음 ${noMatch}개`
               + (already ? ` · 이미 갈래가 있어 넘김 ${already}개` : ''));
