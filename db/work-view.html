@@ -1341,9 +1341,19 @@ if('serviceWorker' in navigator){
      document.title=nm+' · 작품DB · OPUSCLAM.COM';
      var crumb=document.querySelector('.pdb-crumb .on'); if(crumb)crumb.textContent=nm;
 
-     /* 왼쪽 동그라미 — 편성 한 글자 */
-     var por=document.querySelector('.pv-portrait span');
-     if(por)por.textContent=GK[x.genre]||'작';
+     /* 왼쪽 큰 동그라미 — <b>작곡가 사진</b>이 있으면 그것으로,
+        없으면 편성 한 글자(관 · 건 · 실 · 무 · 성) */
+     (function(){
+       var por=document.querySelector('.pv-portrait span');
+       if(!por)return;
+       var fb=GK[x.genre]||'작';
+       if(p.image_url&&window.OCThumb&&OCThumb.img){
+         por.innerHTML=OCThumb.img(p.image_url,{size:96,fallback:fb,
+           alt:(p.name_ko||p.name_en||'')});
+       }else{
+         por.textContent=fb;
+       }
+     })();
 
      /* 제목 · 원어 제목 */
      var h=document.querySelector('.pv-name');
@@ -1472,8 +1482,13 @@ if('serviceWorker' in navigator){
        if(!p.id){ sec.style.display='none'; return; }
        var h=sec.querySelector('.pv-h');
        if(h)h.innerHTML='작곡가 <span class="pv-h-en">Composer</span>';
+       /* ★ 작곡가 사진 — 인물DB 의 image_url 을 씁니다.
+          없으면 이름 첫 글자로 갈음합니다(OCThumb 이 처리). */
+       var avaHtml=(window.OCThumb&&OCThumb.img)
+         ? OCThumb.img(p.image_url,{size:44,fallback:(compName||'?').trim().charAt(0),alt:compName})
+         : esc((compName||'?').trim().charAt(0));
        ppl.innerHTML='<a class="pv-person" href="/db/person-view.html?id='+encodeURIComponent(p.id)+'">'
-         +'<span class="ava">'+esc((compName||'?').trim().charAt(0))+'</span>'
+         +'<span class="ava">'+avaHtml+'</span>'
          +'<span><span class="pn">'+esc(compName)+'</span>'
          +'<span class="pf">'+esc([p.field,p.era_name].filter(Boolean).join(' · ')||'작곡가')+'</span></span></a>';
      })();
@@ -1526,6 +1541,7 @@ if('serviceWorker' in navigator){
    });
 })();
 </script>
+<script src="/assets/thumb.js" defer></script>
 <script src="/assets/pv.js" defer></script>
 <!-- 관계 표시 · 논문 ↔ 인물(subject · author) 이 이 엔진으로 나옵니다.
      2026-07-29 확인 · 이 태그가 없어 관계 1,048건이 화면에 나오지 않았습니다. -->
