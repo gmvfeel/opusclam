@@ -173,6 +173,7 @@ const FORM = {
   'rhapsody'                 : { ko: '랩소디',       genre: null,         kind: 'work' },
 
   'opera'                    : { ko: '오페라',       genre: 'Stage',      kind: 'work' },
+  'grand opera'              : { ko: '그랜드 오페라', genre: 'Stage',     kind: 'work' },
   'operetta'                 : { ko: '오페레타',     genre: 'Stage',      kind: 'work' },
   'ballet'                   : { ko: '발레',         genre: 'Stage',      kind: 'work' },
   /* ★ 극음악 · 서정음악극 — 위키데이터가 오페라 · 오페레타 ·
@@ -219,14 +220,29 @@ const FORM = {
   'fantasia'                 : { ko: '환상곡',       genre: null,         kind: 'work' },
   'toccata'                  : { ko: '토카타',       genre: null,         kind: 'work' },
   'instrumental composition' : { ko: '기악곡',       genre: null,         kind: 'work' },
+  /* ★ 가사 없는 곡 — 위키데이터가 기악 트랙에 붙이는 말입니다 */
+  'music track without lyrics': { ko: '기악곡',      genre: null,         kind: 'work' },
+  'canzone'                  : { ko: '칸초네',       genre: null,         kind: 'work' },
 
   /* ★ 잃어버린 작품 · 미완성 작품도 <b>작품입니다.</b>
      소실되었을 뿐 기록은 자료입니다. 감추지 않습니다. */
   'lost work'                : { ko: '잃어버린 작품',   genre: null, kind: 'work' },
   'lost musical work'        : { ko: '잃어버린 작품',   genre: null, kind: 'work' },
   'unfinished creative work' : { ko: '미완성 작품',     genre: null, kind: 'work' },
+  /* ★ 중단된 기획 — 착수했다가 그만둔 것. 미완성과 같이 봅니다 */
+  'abandoned project'        : { ko: '중단된 기획',     genre: null, kind: 'work' },
   /* ★ 편곡도 작품입니다(리스트의 베토벤 교향곡 편곡 등) */
   'arrangement'              : { ko: '편곡',           genre: null, kind: 'work' },
+
+  /* ── 작품의 일부 — 눈으로 봐야 함 ───────────────────────
+     ★ 2026-08-08 확인 실행에서 드러난 갈래입니다.
+       「발퀴레의 기행」 이 이것입니다 — 오페라 《발퀴레》 3막
+       도입부의 한 대목이고, 독립 작품이 아닙니다.
+     ★ 지우자는 뜻이 아닙니다. 사람들이 실제로 그 이름으로 찾으므로
+       있는 편이 낫습니다. 다만 <b>작품과 발췌를 구분해 보여주는 것</b>
+       이 정확한 포털의 모습입니다. */
+  'movement'                 : { ko: '악장',   genre: null, kind: 'part' },
+  'scene'                    : { ko: '장면',   genre: null, kind: 'part' },
 
   /* ── 영상물 — 「영화·방송」 으로 살립니다 ───────────────
      영화의 P86 은 영화음악 작곡가를 가리킵니다. */
@@ -237,7 +253,11 @@ const FORM = {
   'animated short film'      : { ko: '단편 애니메이션',   genre: '영화·방송', kind: 'video' },
   'animated television series': { ko: '애니메이션 시리즈', genre: '영화·방송', kind: 'video' },
   'television series'        : { ko: '텔레비전 시리즈',   genre: '영화·방송', kind: 'video' },
+  'television program'       : { ko: '텔레비전 프로그램', genre: '영화·방송', kind: 'video' },
   'documentary film'         : { ko: '다큐멘터리 영화',   genre: '영화·방송', kind: 'video' },
+  /* ★ 비디오 게임은 편성을 비웁니다 — 게임을 「영화·방송」 이라
+     하기는 어렵습니다. 형식만 적어 두고 판단을 미룹니다. */
+  'video game'               : { ko: '비디오 게임',       genre: null,        kind: 'video' },
 
   /* ── 묶음 항목 — 사람이 봐야 합니다 ────────────────────
      「6개의 브란덴부르크 협주곡」 처럼 정당한 것이 섞여 있습니다.
@@ -249,10 +269,22 @@ const FORM = {
   'opera cycle'              : { ko: '오페라 연작',      genre: null, kind: 'group' },
   'piano repertoire'         : { ko: '피아노 레퍼토리',  genre: null, kind: 'group' },
   'tetrad'                   : { ko: '4부작',            genre: null, kind: 'group' },
+  /* ★ heptadecad = hepta(7) + deca(10) → 17부작.
+     바흐 · 헨델의 큰 작품집에 붙는 드문 말입니다. */
+  'heptadecad'               : { ko: '17부작',           genre: null, kind: 'group' },
+  /* ★ 클라비어 위붕 — 바흐가 손수 묶어 낸 건반 작품집입니다.
+     낱낱의 곡이 아니라 묶음 이름입니다. */
+  'clavier-übung'            : { ko: '클라비어 위붕',    genre: null, kind: 'group' },
+  'chorale cantata cycle'    : { ko: '코랄 칸타타 연작', genre: null, kind: 'group' },
+  'album series'             : { ko: '음반 연작',        genre: null, kind: 'group' },
 
   /* ── 작품이 아님 — 감출 후보 (여기서 감추지 않습니다) ── */
   'version, edition or translation': { ko: '판본',       genre: null, kind: 'aside' },
   'album'                    : { ko: '음반',             genre: null, kind: 'aside' },
+  'album release'            : { ko: '음반 발매',        genre: null, kind: 'aside' },
+  'video album'              : { ko: '영상 음반',        genre: null, kind: 'aside' },
+  'discography'              : { ko: '음반 목록',        genre: null, kind: 'aside' },
+  'sheet music'              : { ko: '악보',             genre: null, kind: 'aside' },
   'manuscript'               : { ko: '필사본',           genre: null, kind: 'aside' },
   'music manuscript'         : { ko: '음악 필사본',      genre: null, kind: 'aside' },
   'printed sheet music'      : { ko: '인쇄 악보',        genre: null, kind: 'aside' },
@@ -271,6 +303,10 @@ const FORM = {
   'musical work'             : { ko: '', genre: null, kind: 'broad' },
   'composition'              : { ko: '', genre: null, kind: 'broad' },
   'creative work'            : { ko: '', genre: null, kind: 'broad' },
+  'work of art'              : { ko: '', genre: null, kind: 'broad' },
+  /* ★ 이것은 <b>형식 자체를 설명하는 항목</b>입니다(「소나타라는
+     형식」). 작품이 아니라 개념이라 화면에 쓸모없습니다. */
+  'type of musical work/composition': { ko: '', genre: null, kind: 'broad' },
   'artistic work'            : { ko: '', genre: null, kind: 'broad' },
   'written work'             : { ko: '', genre: null, kind: 'broad' },
   'work'                     : { ko: '', genre: null, kind: 'broad' },
@@ -280,6 +316,7 @@ const FORM = {
 const KIND_KO = {
   work : '음악 작품',
   video: '영상물 (영화·방송)',
+  part : '작품의 일부 — 눈으로 봐야 함',
   group: '묶음 항목 — 눈으로 봐야 함',
   aside: '작품이 아님 — 감출 후보',
   broad: '너무 넓음 — 화면에 안 보임',
@@ -414,7 +451,10 @@ function pickForm(forms) {
     if (e) return e.kind;
     return f.label ? '?' : 'none';
   };
-  const RANK = { work: 1, video: 2, group: 3, aside: 4, '?': 5, broad: 6, none: 7 };
+  /* ★ part(악장 · 장면)를 group 앞에 둡니다. 「발퀴레의 기행」 이
+     movement 와 musical work/composition 을 함께 가지고 올 때
+     movement 가 골라져야 발췌임을 알 수 있습니다. */
+  const RANK = { work: 1, video: 2, part: 3, group: 4, aside: 5, '?': 6, broad: 7, none: 8 };
 
   let best = null, bestRank = 99;
   for (const f of forms) {
@@ -584,7 +624,7 @@ async function main() {
 
   console.log('');
   console.log('══ 받은 형식 — 갈래별 ══');
-  for (const kd of ['work', 'video', 'group', 'aside', '?', 'broad']) {
+  for (const kd of ['work', 'video', 'part', 'group', 'aside', '?', 'broad']) {
     const items = bag.get(kd);
     if (!items || !items.length) continue;
     const sum = items.reduce((a, b) => a + b[1], 0);
@@ -621,7 +661,7 @@ async function main() {
   console.log(`  형식 가지수          ${formCount.size}가지`);
   console.log('');
   console.log('  ── 갈래 셈 ──');
-  for (const kd of ['work', 'video', 'group', 'aside', '?', 'broad']) {
+  for (const kd of ['work', 'video', 'part', 'group', 'aside', '?', 'broad']) {
     const n = kindCount.get(kd);
     if (!n) continue;
     console.log(`  ${String(n).padStart(6)}개  ${KIND_KO[kd] || kd}`);
