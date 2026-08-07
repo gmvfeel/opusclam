@@ -18,6 +18,14 @@
 
     그러니 작품 ↔ 악보가 문자열 매칭 없이 그대로 이어집니다.
 
+   ★ 2026-08-07 <b>제목 언어를 고쳤습니다</b>
+    첫판은 영어 라벨만 봤습니다. 그래서 첫 시험에서
+    <b>621개를 「이름 없음」으로 버렸습니다.</b> 그런데 클래식은
+    <b>원어가 정본</b>입니다.
+        Die Zauberflöte · Le nozze di Figaro · L'elisir d'amore
+    이제 en → de → it → fr → la → es → ru → ko 순으로 고릅니다.
+    (마술피리도 영어 라벨이 있어 살아남은 것입니다. 없었으면 버려졌습니다)
+
    ★ 지어내지 않습니다
     제목 · 작곡연도 · IMSLP 번호는 모두 위키데이터에서 받습니다.
     영어 이름조차 없는 항목은 <b>담지 않습니다</b> — 이름만 있는 껍데기가
@@ -129,6 +137,22 @@ function isEmptyLabel(s, qid) {
   return false;
 }
 
+/* ★ 제목을 어느 말에서 고를까 — <b>클래식은 원어가 정본입니다</b>
+   첫판은 영어 라벨만 봤습니다. 그래서
+       Die Zauberflöte · Le nozze di Figaro · L'elisir d'amore
+   처럼 <b>원어 제목만 있는 작품 621개를 버렸습니다.</b>
+   영어가 없으면 독일어 · 이탈리아어 · 프랑스어 · 라틴어를 씁니다.
+   그것마저 없으면 한국어라도 씁니다. */
+const TITLE_LANGS = ['en', 'de', 'it', 'fr', 'la', 'es', 'ru', 'ko'];
+
+function pickTitle(labels, qid) {
+  for (const lg of TITLE_LANGS) {
+    const v = labels[lg];
+    if (!isEmptyLabel(v, qid)) return { title: v, lang: lg };
+  }
+  return null;
+}
+
 /* 1685-01-01T00:00:00Z → 1685 */
 function yearOf(iso) {
   if (!iso) return null;
@@ -177,22 +201,26 @@ async function pickComposers() {
    ============================================================ */
 async function fetchWorks(qids) {
   const values = qids.map((q) => `wd:${q}`).join(' ');
+  const langs = TITLE_LANGS.map((l) => `"${l}"`).join(', ');
+
+  /* ★ 말마다 OPTIONAL 을 따로 두지 않습니다 — 여덟 개를 늘어놓으면
+     위키데이터가 무거워집니다. 한 번에 받아 아래에서 갈라 담습니다.
+     한 작품이 말 수만큼 여러 줄로 오지만 작품 번호로 다시 모읍니다. */
   const query = `
-SELECT ?composer ?work ?en ?ko ?imslp ?inception WHERE {
+SELECT ?composer ?work ?lbl ?imslp ?inception WHERE {
   VALUES ?composer { ${values} }
   ?work wdt:P86 ?composer .
-  OPTIONAL { ?work rdfs:label ?en . FILTER(lang(?en) = "en") }
-  OPTIONAL { ?work rdfs:label ?ko . FILTER(lang(?ko) = "ko") }
+  OPTIONAL { ?work rdfs:label ?lbl . FILTER(lang(?lbl) IN (${langs})) }
   OPTIONAL { ?work wdt:P839 ?imslp . }
   OPTIONAL { ?work wdt:P571 ?inception . }
 }
-LIMIT ${MAX_WORKS * qids.length}`;
+LIMIT ${MAX_WORKS * qids.length * (TITLE_LANGS.length + 2)}`;
 
   const rows = await sparql(query);
   if (rows === null) return null;
 
-  /* 같은 작품이 여러 줄로 올 수 있습니다(라벨이 여럿인 경우).
-     작품 번호를 열쇠로 하나로 모읍니다. */
+  /* 작품 번호를 열쇠로 하나로 모읍니다.
+     라벨은 말별로 labels 에 담습니다. */
   const byWork = new Map();
   for (const b of rows) {
     const cQid = String(b.composer.value).split('/').pop();
@@ -200,10 +228,12 @@ LIMIT ${MAX_WORKS * qids.length}`;
     const key = `${cQid}|${wQid}`;
     const cur = byWork.get(key) || {
       composerQid: cQid, workQid: wQid,
-      en: null, ko: null, imslp: null, inception: null,
+      labels: {}, imslp: null, inception: null,
     };
-    if (b.en && !cur.en) cur.en = b.en.value;
-    if (b.ko && !cur.ko) cur.ko = b.ko.value;
+    if (b.lbl && b.lbl.value) {
+      const lg = b.lbl['xml:lang'] || '';
+      if (lg && !cur.labels[lg]) cur.labels[lg] = b.lbl.value;
+    }
     if (b.imslp && !cur.imslp) cur.imslp = b.imslp.value;
     if (b.inception && !cur.inception) cur.inception = b.inception.value;
     byWork.set(key, cur);
@@ -316,15 +346,30 @@ async function main() {
     gotTotal += works.length;
     console.log(`   받은 작품 ${works.length}개`);
 
-    /* 충실도 컷오프 — 영어 이름조차 없는 항목은 담지 않습니다 */
+    /* 충실도 컷오프 — <b>어느 말로도</b> 이름이 없는 항목만 버립니다.
+       영어가 없어도 원어(독일어 · 이탈리아어 …)가 있으면 담습니다. */
     const usable = [];
+    const skipped = [];
     for (const w of works) {
-      if (isEmptyLabel(w.en, w.workQid) && isEmptyLabel(w.ko, w.workQid)) {
-        skipNoName++;
-        if (DEBUG) console.log(`     · 이름 없음 건너뜀 ${w.workQid}`);
-        continue;
-      }
+      const picked = pickTitle(w.labels, w.workQid);
+      if (!picked) { skipNoName++; skipped.push(w.workQid); continue; }
+      w.picked = picked;
       usable.push(w);
+    }
+    if (skipped.length) {
+      console.log(`   이름이 없어 건너뜀 ${skipped.length}개` +
+        (DEBUG ? ` : ${skipped.slice(0, 10).join(' ')}` +
+                 (skipped.length > 10 ? ` … 그 밖 ${skipped.length - 10}개` : '')
+               : ''));
+    }
+
+    /* 어느 말에서 제목을 골랐는지 — 원어 비율을 보여 줍니다 */
+    if (usable.length) {
+      const byLang = {};
+      for (const w of usable) byLang[w.picked.lang] = (byLang[w.picked.lang] || 0) + 1;
+      const parts = Object.keys(byLang).sort((a, b) => byLang[b] - byLang[a])
+        .map((k) => `${k} ${byLang[k]}`);
+      console.log(`   제목을 고른 말 : ${parts.join(' · ')}`);
     }
 
     if (!usable.length) { console.log('   담을 것이 없습니다'); continue; }
@@ -341,10 +386,12 @@ async function main() {
       const yr = yearOf(w.inception);
       const imslpRef = w.imslp ? String(w.imslp).replace(/\s/g, '_') : null;
       if (imslpRef) withImslp.push(imslpRef);
+      const koLabel = w.labels.ko;
       rows.push({
         person_id:   c.id,
-        title:       isEmptyLabel(w.en, w.workQid) ? w.ko : w.en,
-        title_ko:    isEmptyLabel(w.ko, w.workQid) ? null : w.ko,
+        title:       w.picked.title,
+        title_ko:    (w.picked.lang !== 'ko' && !isEmptyLabel(koLabel, w.workQid))
+                       ? koLabel : null,
         wikidata_id: w.workQid,
         imslp_ref:   imslpRef,
         year_from:   yr,
@@ -358,13 +405,13 @@ async function main() {
     console.log(`   새로 담을 것 ${rows.length}개 (이미 있음 ${have.size}개)`);
 
     if (DEBUG) {
-      for (const r of rows.slice(0, 5)) {
+      for (const r of rows.slice(0, 12)) {
         console.log(`     · ${r.title}` +
                     (r.title_ko ? ` / ${r.title_ko}` : '') +
                     (r.imslp_ref ? ` [IMSLP ${r.imslp_ref}]` : '') +
                     (r.year_from ? ` (${r.year_from})` : ''));
       }
-      if (rows.length > 5) console.log(`     … 그 밖 ${rows.length - 5}개`);
+      if (rows.length > 12) console.log(`     … 그 밖 ${rows.length - 12}개`);
     }
 
     if (!DRY && rows.length) {
