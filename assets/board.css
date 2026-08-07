@@ -533,8 +533,27 @@ html[data-theme="dark"] .oc-cell{background:rgba(255,255,255,.04)}
 
 /* 자료형 뷰: 학교 사진 */
 .bv-docphoto{margin:20px 0 4px;padding:0}
-.bv-docphoto img{display:block;width:100%;max-height:380px;object-fit:cover;border-radius:12px;background:var(--paper-3)}
-.bv-docphoto figcaption{margin-top:7px;font-size:11.5px;line-height:1.6;color:var(--text-3)}
+/* ★ 2026-08-06 — 그림이 <b>잘리던 것</b>을 고쳤습니다 (파트너 지적)
+   무엇이 잘못됐었나
+     width:100% + max-height:380px + object-fit:cover 였습니다.
+     cover 는 칸을 채우려고 <b>넘치는 부분을 잘라냅니다.</b> 그래서
+     세로로 긴 공연 포스터의 <b>위아래가 잘려</b> 일시·장소·예매 안내가
+     보이지 않았습니다. 공연정보에서 포스터는 곧 알림지이므로 다 보여야
+     합니다.
+   ▶ 세 가지를 바꿨습니다
+     · cover → 없앰   : 칸이 그림에 맞춰 잡히므로 자를 일이 없습니다
+     · width:100% → auto : 100% 는 칸을 본문 폭에 못박아, 세로로 긴 그림을
+                          작게 줄이고 좌우에 빈 자리를 남깁니다
+     · 380px → 82vh  : 픽셀로 묶으면 큰 화면에서 작고 작은 화면에서 넘칩니다.
+                       화면 높이 기준이면 어느 기기에서든 한 화면에 담깁니다
+   ★ margin:0 auto 로 가운데 둡니다 — 폭이 좁아진 포스터가 왼쪽에
+     쏠리지 않게 합니다.
+   ★ 같은 까닭으로 .bv-thumb 도 함께 고쳤습니다(위쪽 참고). 두 자리는
+     글의 갈래에 따라 갈라져 쓰이므로 <b>둘 다</b> 손봐야 합니다 —
+     한쪽만 고치면 「어떤 글은 되고 어떤 글은 안 되는」 일이 생깁니다. */
+.bv-docphoto img{display:block;width:auto;height:auto;max-width:100%;max-height:82vh;
+  margin:0 auto;border-radius:12px;background:var(--paper-3)}
+.bv-docphoto figcaption{margin-top:7px;font-size:11.5px;line-height:1.6;color:var(--text-3);text-align:center}
 
 /* 목록 로고칸: 학교 사진이 들어오면 꽉 차게 (로고는 contain 유지) */
 .doc-logo img[src*="wikimedia"],.doc-logo img[src*="supabase"],.doc-logo img[src*="picsum"]{object-fit:cover}
