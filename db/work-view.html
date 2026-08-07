@@ -360,7 +360,7 @@
 <body>
 <div id="pv-loading" aria-hidden="true"><div class="pv-load-spin"></div></div>
 <style>#pv-loading{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;transition:opacity .35s ease}#pv-loading.hide{opacity:0;pointer-events:none}#pv-loading .pv-load-spin{width:44px;height:44px;border-radius:50%;border:3px solid rgba(150,130,200,.25);border-top-color:var(--violet-2,#9C7FD6);animation:pvspin .8s linear infinite}@keyframes pvspin{to{transform:rotate(360deg)}}</style>
-<script>(function(){var l=document.getElementById("pv-loading");if(l){try{l.style.background=getComputedStyle(document.body).backgroundColor||"#0a0d24";}catch(e){l.style.background="#0a0d24";}}setTimeout(function(){var x=document.getElementById("pv-loading");if(x)x.classList.add("hide");},8000);})();</script>
+<script>(function(){var l=document.getElementById("pv-loading");if(l){try{l.style.background=getComputedStyle(document.body).backgroundColor||"#0a0d24";}catch(e){l.style.background="#0a0d24";}}setTimeout(function(){var x=document.getElementById("pv-loading");if(x)x.classList.add("hide");},3000);})();</script>
 
 <!-- ===== header (partials/header.html 에서 공통 관리) ===== -->
 <div id="oc-header"></div>
@@ -1290,6 +1290,15 @@ if('serviceWorker' in navigator){
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fact(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
 
+  /* ★ 로딩 덮개를 <b>작품 정보가 오는 즉시</b> 걷습니다.
+     이 화면은 아래쪽 배너 · 티커 자료도 아홉 번 물어봅니다. 그것까지
+     기다리면 덮개가 오래 남습니다(원래는 8초 고정이었습니다).
+     아래 배너는 스크롤해야 보이므로 먼저 걷어도 됩니다. */
+  function hideLoading(){
+    var l=document.getElementById('pv-loading');
+    if(l)l.classList.add('hide');
+  }
+
   /* 작품번호를 제목·IMSLP 에서 뽑습니다 (K.620 · Op.67 · BWV.1046)
      ★ \b 를 쓰면 안 됩니다 — 밑줄이 낱말 글자로 취급되어
        IMSLP 형식 _K.344 에서 경계가 생기지 않습니다. */
@@ -1319,7 +1328,8 @@ if('serviceWorker' in navigator){
   fetch(URL+'/rest/v1/person_works?select=*,persons(id,name_ko,name_en,field,era_name,image_url)&id=eq.'+encodeURIComponent(id),{headers:H})
    .then(function(r){return r.json();})
    .then(function(a){
-     if(!a||!a.length)return;
+     if(!a||!a.length){ hideLoading(); return; }
+     hideLoading();
      var x=a[0];
      var p=x.persons||{};
      var hasKo=!!(x.title_ko&&String(x.title_ko).trim());
@@ -1510,7 +1520,10 @@ if('serviceWorker' in navigator){
        hide('같은 작곡가의 다른 작품');
      }
    })
-   .catch(function(e){ if(window.console)console.log('작품을 불러오지 못했습니다', e); });
+   .catch(function(e){
+     hideLoading();
+     if(window.console)console.log('작품을 불러오지 못했습니다', e);
+   });
 })();
 </script>
 <script src="/assets/pv.js" defer></script>

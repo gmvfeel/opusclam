@@ -137,24 +137,9 @@
       <div class="pdb-selects">
         <select aria-label="갈래">
           <option>전체 갈래</option>
-          <option value="Orchestral">관현악 (Orchestral)</option>
-          <option value="Keyboard">건반 (Keyboard)</option>
-          <option value="Chamber">실내악 (Chamber)</option>
-          <option value="Stage">무대 · 오페라 (Stage)</option>
-          <option value="Vocal">성악 (Vocal)</option>
         </select>
         <select aria-label="시대">
           <option>전체 시대</option>
-          <option>Medieval</option>
-          <option>Renaissance</option>
-          <option>Baroque</option>
-          <option>Classical</option>
-          <option>Early Romantic</option>
-          <option>Romantic</option>
-          <option>Late Romantic</option>
-          <option>20th Century</option>
-          <option>Post-War</option>
-          <option>21st Century</option>
         </select>
         <select aria-label="표시">
           <option>전체 작품</option>
@@ -666,7 +651,43 @@ if('serviceWorker' in navigator){
     else if(sort.indexOf('늦은')>=0)ord='year_from.desc.nullslast';
     return ord;
   }
+  /* ★ 걸러내기 값을 <b>실제 자료에서</b> 읽어 채웁니다.
+       처음에는 시대를 영어(Baroque)로 적어 두었는데, 실제 값은
+       한국어(바로크)였습니다. era 는 persons.era_name 에서 옮겨
+       담기 때문입니다. 그래서 골라도 0건이 나왔습니다.
+       값을 짐작하지 않고 물어보는 편이 어긋나지 않습니다. */
+  var SB='https://ptdxzxkgddvkusamkiol.supabase.co',
+      SK='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var GKO={Orchestral:'관현악',Keyboard:'건반',Chamber:'실내악',Stage:'무대 · 오페라',Vocal:'성악'};
+  function fillFacets(){
+    var selG=document.querySelector('select[aria-label="갈래"]');
+    var selE=document.querySelector('select[aria-label="시대"]');
+    if(!selG&&!selE)return;
+    fetch(SB+'/rest/v1/rpc/oc_work_facets',{
+      method:'POST',
+      headers:{apikey:SK,Authorization:'Bearer '+SK,'Content-Type':'application/json'},
+      body:'{}'
+    }).then(function(r){return r.json();}).then(function(rows){
+      if(!rows||!rows.length)return;
+      function add(sel,list,label){
+        if(!sel)return;
+        list.forEach(function(o){
+          var op=document.createElement('option');
+          op.value=o.val;
+          op.textContent=(label?label(o.val):o.val)+' ('+o.n+')';
+          sel.appendChild(op);
+        });
+      }
+      add(selG,rows.filter(function(o){return o.kind==='genre';}),
+          function(v){return (GKO[v]||v)+' · '+v;});
+      add(selE,rows.filter(function(o){return o.kind==='era';}),null);
+    }).catch(function(){
+      /* 함수가 아직 없으면 조용히 넘어갑니다 — 목록은 그대로 나옵니다 */
+    });
+  }
+
   document.addEventListener('DOMContentLoaded',function(){
+    fillFacets();
     OCList.init({
       table:'person_works', pageSize:30, orderDefault:'id.desc',
       /* ★ 작곡가 이름을 함께 받으려면 조인이 필요합니다 */
