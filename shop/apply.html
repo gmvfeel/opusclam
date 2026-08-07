@@ -278,13 +278,18 @@
         <span class="hint">연락처와 쇼핑몰 주소 가운데 하나는 적어 주십시오.</span>
       </span>
 
-      <span class="sa-f full">
+      <!-- ★ 이 둘은 <b>한 줄에</b> 나란히 둡니다 (파트너 요청)
+           둘 다 짧은 칸이라 각각 한 줄을 차지하면 양식이 길어 보이고,
+           그만큼 「적을 것이 많다」는 느낌이 듭니다.
+           ★ 취급 분야에도 짧은 안내를 붙였습니다 — 옆 칸에는 안내가 있고
+             여기만 없으면 두 칸의 아래끝이 어긋나 보입니다. -->
+      <span class="sa-f">
         <label for="saSiteUrl">쇼핑몰 주소</label>
         <input type="text" id="saSiteUrl" maxlength="300" placeholder="example.co.kr">
         <span class="hint">무엇을 다루시는지 바로 볼 수 있어 상담이 빠릅니다.</span>
       </span>
 
-      <span class="sa-f full">
+      <span class="sa-f">
         <label for="saCategory">취급 분야</label>
         <select id="saCategory">
           <option value="">고르지 않음</option>
@@ -298,6 +303,7 @@
           <option>녹음 · 사진 · 기획</option>
           <option>그 밖</option>
         </select>
+        <span class="hint">여럿이면 대표 분야 하나만 고르셔도 됩니다.</span>
       </span>
 
       <span class="sa-f full">
