@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>작품DB 정제 · OPUSCLAM ADMIN</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 120px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+  .card h2 .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:#20223a;color:#fff;font-size:12px;align-items:center;justify-content:center}
+  .card p{margin:0 0 14px;color:#5c5e70;font-size:13px}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.danger{background:#dc2626}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input[type=number],input[type=search]{padding:9px 12px;border:1px solid #d8d8e2;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .log{display:none;margin-top:10px;max-height:220px;overflow:auto;background:#12131c;color:#d7d9e8;border-radius:7px;padding:12px 14px;font:12px/1.7 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+  .log.on{display:block}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
+  .stat{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .stat div{background:#f2f2f7;border-radius:7px;padding:8px 12px;font-size:12px}
+  .stat b{font-size:15px;display:block}
+  .lst{margin-top:14px;max-height:660px;overflow:auto;border:1px solid #eeeef4;border-radius:8px;background:#fff;display:none}
+  .lst.on{display:block}
+
+  /* 묶음 머리 — 형식마다 하나 */
+  .gh{display:flex;align-items:center;gap:9px;padding:9px 12px;background:#f4f4fa;border-top:1px solid #e6e6f0;border-bottom:1px solid #eeeef4;font-size:12px;font-weight:700;color:#4a4c60;position:sticky;top:0;z-index:1}
+  .gh:first-child{border-top:0}
+  .gh .risk{font-weight:600;color:#a01c1c}
+  .gh .ok{font-weight:600;color:#1a7f4b}
+  .gh .gsel{margin-left:auto;font-weight:600;font-size:11.5px;color:#5c5e70;background:#fff;border:1px solid #d8d8e2;border-radius:6px;padding:4px 9px;cursor:pointer}
+  .gh .gsel:hover{border-color:#7C63B0;color:#7C63B0}
+
+  /* 항목 한 줄 */
+  .it{display:grid;grid-template-columns:26px 1fr 150px 92px 74px 108px 58px;gap:10px;align-items:start;padding:9px 12px;border-bottom:1px solid #f4f4f8;font-size:12.5px}
+  .it:last-child{border-bottom:0}
+  .it:hover{background:#fafaff}
+  .it.pick{background:#fff5f5}
+  .it input[type=checkbox]{width:16px;height:16px;margin:2px 0 0;cursor:pointer}
+  .ti{font-weight:600;line-height:1.45}
+  .ti .og{display:block;font-weight:400;font-size:11.5px;color:#8a8c9e}
+  .au{color:#5c5e70;word-break:break-word}
+  .pu{color:#8a8c9e;word-break:break-all}
+  .id{color:#8a8c9e}
+  .bd{display:inline-block;border-radius:99px;padding:1px 8px;font-size:10.5px;font-weight:700;white-space:nowrap}
+  .bd-part{background:#fdeaf3;color:#a3186c}
+  .bd-group{background:#eaf0fd;color:#1a4aa5}
+  .bd-aside{background:#fdf0ea;color:#a35418}
+  .bd-sc{background:#eafdf0;color:#0f7a3d;margin-left:5px}
+
+  /* 아래 고정 바 */
+  .fixbar{position:fixed;left:0;right:0;bottom:0;background:#20223a;color:#fff;padding:12px 18px;display:none;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap;box-shadow:0 -3px 14px rgba(0,0,0,.16);z-index:30}
+  .fixbar.on{display:flex}
+  .fixbar b{font-size:16px}
+  .fixbar .sp{color:#a9abc4;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="admin.html">← 관리자 페이지</a>
+
+  <h1>작품DB 정제</h1>
+  <div class="sub">
+    작품이 아닌 것 · 묶음 항목 · 발췌를 형식별로 보여 줍니다.
+    <b>고르는 것은 사람이 합니다</b> — 화면은 판단하지 않고 표시만 합니다.
+  </div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <h2><span class="n">1</span> 감출 후보 불러오기</h2>
+    <p>
+      위키데이터가 알려 준 작품 형식으로 갈래를 나눕니다. 이미 감춘 것은 빠집니다.
+    </p>
+    <div class="row">
+      <select id="kind">
+        <option value="">전부 (발췌 · 묶음 · 작품 아님)</option>
+        <option value="aside">작품이 아님 — 판본 · 음반 · 필사본 · 공연</option>
+        <option value="group">묶음 항목 — 4부작 · 작품집</option>
+        <option value="part">작품의 일부 — 악장 · 장면</option>
+      </select>
+      <button id="load">후보 불러오기</button>
+      <button class="ghost" id="clr">체크 모두 풀기</button>
+    </div>
+    <div class="row" style="margin-top:9px">
+      <input type="search" id="find" placeholder="작곡가 · 제목 · 형식으로 걸러내기" style="flex:1 1 260px;min-width:0">
+      <span class="sp" id="fcnt" style="color:#8a8c9e;font-size:12px"></span>
+    </div>
+    <div class="stat" id="stat"></div>
+    <div class="log" id="log"></div>
+
+    <div class="note">
+      <b>⚠ 자동으로 체크해 주지 않습니다.</b> 일부러 그렇게 만들었습니다.
+      2026-08-07 학술DB 에서 자동 판정으로 세 번 오판했습니다
+      (「Organ Music」 13건이 실제로는 <b>각기 다른 악보</b>였습니다).
+      <br><br>
+      <b>갈래마다 위험이 다릅니다.</b>
+      <br>· <b>작품이 아님</b> — 판본 · 음반 · 필사본 · 특정 공연.
+        비교적 안전하지만 <b>「판본」 이 유일한 판인 경우</b>가 있습니다
+      <br>· <b>묶음 항목</b> — 「6개의 브란덴부르크 협주곡」 처럼
+        <b>정당한 묶음</b>이 섞여 있습니다. 낱낱의 곡이 따로 담겨 있는지 보십시오
+      <br>· <b>작품의 일부</b> — 「발퀴레의 기행」 은 <b>사람들이 그 이름으로 찾습니다.</b>
+        감추면 검색에서 사라집니다. 대개 <b>남겨 두는 편이 낫습니다</b>
+      <br><br>
+      <b>지우지 않고 감춥니다.</b> 화면 목록에서만 빠지고 자료는 남습니다.
+      수집기도 <code>source_id</code>로 알아보고 다시 넣지 않습니다.
+      언제든 아래 2번에서 되돌릴 수 있습니다.
+    </div>
+
+    <div class="lst" id="lst"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span> 감춰 둔 것 되돌리기</h2>
+    <p>지금까지 감춘 작품입니다. 체크해서 다시 보이게 할 수 있습니다.</p>
+    <div class="row">
+      <button class="ghost" id="loadH">감춘 목록 불러오기</button>
+      <button class="ghost" id="clrH">체크 모두 풀기</button>
+    </div>
+    <div class="stat" id="statH"></div>
+    <div class="log" id="logH"></div>
+    <div class="lst" id="lstH"></div>
+  </div>
+</div>
+
+<div class="fixbar" id="fixbar">
+  <span>고른 작품 <b id="cnt">0</b>건</span>
+  <span class="sp" id="what"></span>
+  <button class="danger" id="doHide">고른 것 감추기</button>
+  <button class="ghost" id="doShow" style="display:none">고른 것 되돌리기</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/admin-guard.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* ★ 싱글턴 — 인스턴스를 여러 개 만들면 RLS 가 어긋납니다.
+     admin-guard.js 도 window.__ocSb 를 먼저 찾습니다. */
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
+
+  function $(id){ return document.getElementById(id); }
+  function esc(t){
+    return (t==null?'':String(t))
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function warn(t){ var w=$('warn'); w.classList.add('on'); w.textContent=t; }
+  function mkLog(id){
+    var box=$(id);
+    return function(t){
+      box.classList.add('on');
+      box.textContent += t + '\n';
+      box.scrollTop = box.scrollHeight;
+    };
+  }
+  var log  = mkLog('log');
+  var logH = mkLog('logH');
+
+  var KIND_KO = {
+    part : '작품의 일부 — 악장 · 장면',
+    group: '묶음 항목',
+    aside: '작품이 아님'
+  };
+  /* ★ 갈래마다 위험이 다릅니다. 화면에 그대로 적어 둡니다 —
+     사람이 고르는 화면이므로 판단 근거가 눈앞에 있어야 합니다. */
+  var KIND_RISK = {
+    part : { cls:'risk', txt:'대개 남겨 두는 편이 낫습니다' },
+    group: { cls:'risk', txt:'정당한 묶음이 섞여 있습니다' },
+    aside: { cls:'ok',   txt:'비교적 안전합니다' }
+  };
+
+  /* ══ 1. 감출 후보 ══════════════════════════════════════════ */
+  var groups = [];   /* [{key, kind, form, items:[...]}] */
+  var picked = {};   /* id -> true */
+
+  async function load(){
+    $('load').disabled = true;
+    var kind = $('kind').value;
+    log('감출 후보를 불러옵니다…' + (kind ? ' (' + kind + ')' : ''));
+    try {
+      var r = await sb.rpc('oc_work_clean_list', {
+        p_kind: kind || null,
+        p_limit: 2000
+      });
+      if (r.error) throw new Error(r.error.message);
+      var rows = r.data || [];
+      log('  · ' + rows.length + '줄 받았습니다');
+
+      /* 형식마다 묶습니다 — 같은 형식은 같은 판단이 되기 쉽습니다 */
+      var map = {};
+      rows.forEach(function(x){
+        var k = (x.kind||'?') + '|' + (x.form_raw||'(없음)');
+        if (!map[k]) map[k] = {
+          key:k, kind:x.kind||'?', form:x.form_ko || x.form_raw || '(없음)',
+          raw:x.form_raw||'', items:[]
+        };
+        map[k].items.push(x);
+      });
+      var ORD = { aside:1, group:2, part:3 };
+      groups = Object.keys(map).map(function(k){ return map[k]; })
+        .sort(function(a,b){
+          var oa = ORD[a.kind]||9, ob = ORD[b.kind]||9;
+          if (oa !== ob) return oa - ob;
+          return b.items.length - a.items.length;
+        });
+
+      picked = {};
+      $('find').value = '';
+      render();
+      stats();
+      log('✅ 형식 ' + groups.length + '가지 · 작품 ' + rows.length + '건');
+      if (rows.length >= 2000) {
+        log('  ※ 2000줄에서 끊겼습니다. 이번 것을 처리하면 다음이 나옵니다.');
+      }
+      if (!rows.length) {
+        log('  후보가 없습니다. 형식 보강을 아직 담지 않으셨다면 먼저 돌려 주십시오.');
+      }
+    } catch (e){
+      var m = e.message || String(e);
+      if (window.OCAdminGuard && OCAdminGuard.isAuthLost(m)) {
+        warn('로그인이 풀렸습니다. 다시 로그인한 뒤 시도해 주십시오.');
+      } else if (/function .*does not exist|could not find/i.test(m)) {
+        warn('함수가 없습니다. 5-RUN-NOW-work-clean-rpc.sql 을 먼저 실행해 주십시오.');
+      } else {
+        warn('불러오지 못했습니다 — ' + m);
+      }
+      log('✗ ' + m);
+    }
+    $('load').disabled = false;
+  }
+
+  function itemRow(x){
+    var on = picked[x.id] ? ' pick' : '';
+    var sc = x.imslp_ref
+      ? '<a class="bd bd-sc" href="https://imslp.org/wiki/'
+        + encodeURIComponent(x.imslp_ref)
+        + '" target="_blank" rel="noopener">악보</a>' : '';
+    var wd = x.wikidata_id
+      ? '<a href="https://www.wikidata.org/wiki/' + encodeURIComponent(x.wikidata_id)
+        + '" target="_blank" rel="noopener">' + esc(x.wikidata_id) + '</a>'
+      : '<span class="id">—</span>';
+    /* 걸러내기에 쓸 글자 */
+    var s = [x.composer, x.title, x.title_orig, x.form_ko, x.form_raw, x.opus]
+      .filter(Boolean).join(' ').toLowerCase();
+
+    return '<div class="it' + on + '" data-id="' + esc(x.id) + '"'
+      + ' data-s="' + esc(s) + '">'
+      + '<input type="checkbox" data-ck="' + esc(x.id) + '"' + (picked[x.id]?' checked':'') + '>'
+      + '<div class="ti">' + esc(x.title) + sc
+      +   (x.title_orig ? '<span class="og">' + esc(x.title_orig) + '</span>' : '')
+      + '</div>'
+      + '<div class="au">' + esc(x.composer) + '</div>'
+      + '<div class="pu">' + esc(x.form_ko || x.form_raw || '') + '</div>'
+      + '<div class="pu">' + (x.opus ? esc(x.opus) : '—') + '</div>'
+      + '<div class="pu">' + wd + '</div>'
+      + '<div class="id">' + esc(x.id) + '</div>'
+      + '</div>';
+  }
+
+  function render(){
+    var box = $('lst');
+    if (!groups.length){ box.classList.remove('on'); box.innerHTML=''; return; }
+    var h = [];
+    groups.forEach(function(g){
+      var rk = KIND_RISK[g.kind] || { cls:'', txt:'' };
+      h.push('<div class="gh">'
+        + '<span class="bd bd-' + esc(g.kind) + '">' + esc(KIND_KO[g.kind]||g.kind) + '</span>'
+        + '<span>' + esc(g.form) + '</span>'
+        + '<span style="color:#8a8c9e;font-weight:600">' + g.items.length + '건</span>'
+        + '<span class="' + rk.cls + '">' + esc(rk.txt) + '</span>'
+        + '<button class="gsel" data-gsel="' + esc(g.key) + '">이 형식 전부 체크</button>'
+        + '</div>');
+      g.items.forEach(function(x){ h.push(itemRow(x)); });
+    });
+    box.innerHTML = h.join('');
+    box.classList.add('on');
+    bar();
+  }
+
+  function stats(){
+    var n = 0, byKind = {};
+    groups.forEach(function(g){
+      n += g.items.length;
+      byKind[g.kind] = (byKind[g.kind]||0) + g.items.length;
+    });
+    var h = ['<div><b>' + n + '</b>후보 전체</div>',
+             '<div><b>' + groups.length + '</b>형식 가지수</div>'];
+    ['aside','group','part'].forEach(function(k){
+      if (byKind[k]) h.push('<div><b>' + byKind[k] + '</b>' + (KIND_KO[k]||k) + '</div>');
+    });
+    $('stat').innerHTML = h.join('');
+  }
+
+  function bar(){
+    /* ★ pickedH 는 아래쪽에서 만들어집니다. 지금 흐름에서는 이 함수가
+       불릴 때 이미 만들어져 있지만, 나중에 순서가 바뀌어도 깨지지
+       않도록 빈 것으로 받아 둡니다. */
+    var pk  = picked  || {};
+    var pkH = (typeof pickedH !== 'undefined' && pickedH) ? pickedH : {};
+    var ids = Object.keys(pk).filter(function(k){ return pk[k]; });
+    $('cnt').textContent = ids.length;
+    var idsH = Object.keys(pkH).filter(function(k){ return pkH[k]; });
+    var any = ids.length || idsH.length;
+    $('fixbar').classList[any ? 'add' : 'remove']('on');
+    $('doHide').style.display = ids.length ? '' : 'none';
+    $('doShow').style.display = idsH.length ? '' : 'none';
+    if (idsH.length && !ids.length) {
+      $('cnt').textContent = idsH.length;
+      $('what').textContent = '되돌립니다';
+    } else {
+      $('what').textContent = ids.length ? '목록에서 감춥니다 (되돌릴 수 있습니다)' : '';
+    }
+  }
+
+  /* ── 걸러내기 — 서버에 다시 묻지 않습니다 ─────────────────
+     ★ 2,000건을 눈으로 훑을 수는 없습니다. 줄에 심어 둔 data-s 로
+       걸러냅니다. 형식 머리도 남는 것이 없으면 감춥니다. */
+  function runFind(){
+    var q = String($('find').value||'').trim().toLowerCase();
+    var box = $('lst'), hit = 0;
+    var kids = box.children, curHead = null, curShown = 0;
+    for (var i = 0; i < kids.length; i++) {
+      var el = kids[i];
+      if (el.classList.contains('gh')) {
+        if (curHead) curHead.style.display = curShown ? '' : 'none';
+        curHead = el; curShown = 0;
+        continue;
+      }
+      var ok = !q || (el.getAttribute('data-s')||'').indexOf(q) >= 0;
+      el.style.display = ok ? '' : 'none';
+      if (ok) { curShown++; hit++; }
+    }
+    if (curHead) curHead.style.display = curShown ? '' : 'none';
+    $('fcnt').textContent = q ? (hit + '건 보임') : '';
+  }
+
+  $('load').addEventListener('click', load);
+  $('kind').addEventListener('change', function(){
+    if (groups.length) load();
+  });
+  $('clr').addEventListener('click', function(){
+    picked = {}; render();
+  });
+  var ft = null;
+  $('find').addEventListener('input', function(){
+    if (ft) clearTimeout(ft);
+    ft = setTimeout(runFind, 120);
+  });
+
+  $('lst').addEventListener('click', function(e){
+    /* 형식 묶음 전부 체크 */
+    var gs = e.target.closest('[data-gsel]');
+    if (gs) {
+      var key = gs.getAttribute('data-gsel');
+      var g = groups.filter(function(x){ return x.key === key; })[0];
+      if (!g) return;
+      var allOn = g.items.every(function(x){ return picked[x.id]; });
+      g.items.forEach(function(x){
+        if (allOn) delete picked[x.id]; else picked[x.id] = true;
+      });
+      render();
+      runFind();
+      return;
+    }
+    /* 한 줄 체크 — 줄 아무 곳이나 눌러도 됩니다 */
+    var it = e.target.closest('.it');
+    if (!it) return;
+    if (e.target.tagName === 'A') return;   /* 링크는 그대로 열립니다 */
+    var id = it.getAttribute('data-id');
+    if (picked[id]) delete picked[id]; else picked[id] = true;
+    it.classList[picked[id] ? 'add' : 'remove']('pick');
+    var ck = it.querySelector('input[type=checkbox]');
+    if (ck) ck.checked = !!picked[id];
+    bar();
+  });
+
+  /* ══ 2. 감춰 둔 것 ═════════════════════════════════════════ */
+  var hidden = [];
+  var pickedH = {};
+
+  async function loadH(){
+    $('loadH').disabled = true;
+    logH('감춘 목록을 불러옵니다…');
+    try {
+      var r = await sb.rpc('oc_work_hidden_list', { p_limit: 1000 });
+      if (r.error) throw new Error(r.error.message);
+      hidden = r.data || [];
+      pickedH = {};
+      renderH();
+      logH('✅ ' + hidden.length + '건');
+    } catch (e){
+      var m = e.message || String(e);
+      if (window.OCAdminGuard && OCAdminGuard.isAuthLost(m))
+        warn('로그인이 풀렸습니다. 다시 로그인해 주십시오.');
+      else if (/function .*does not exist|could not find/i.test(m))
+        warn('함수가 없습니다. 5-RUN-NOW-work-clean-rpc.sql 을 먼저 실행해 주십시오.');
+      else warn('불러오지 못했습니다 — ' + m);
+      logH('✗ ' + m);
+    }
+    $('loadH').disabled = false;
+  }
+
+  function renderH(){
+    var box = $('lstH');
+    if (!hidden.length){
+      box.classList.remove('on'); box.innerHTML='';
+      $('statH').innerHTML = '<div><b>0</b>감춘 작품</div>';
+      bar(); return;
+    }
+    var h = ['<div class="gh"><span>감춘 작품</span>'
+      + '<span style="color:#8a8c9e;font-weight:600">' + hidden.length + '건</span></div>'];
+    hidden.forEach(function(x){
+      var on = pickedH[x.id] ? ' pick' : '';
+      h.push('<div class="it' + on + '" data-hid="' + esc(x.id) + '">'
+        + '<input type="checkbox"' + (pickedH[x.id]?' checked':'') + '>'
+        + '<div class="ti">' + esc(x.title) + '</div>'
+        + '<div class="au">' + esc(x.composer) + '</div>'
+        + '<div class="pu">' + esc(x.form_ko || x.form_raw || '') + '</div>'
+        + '<div class="pu">—</div>'
+        + '<div class="pu">' + esc(x.hidden_note || '') + '</div>'
+        + '<div class="id">' + esc(x.id) + '</div>'
+        + '</div>');
+    });
+    box.innerHTML = h.join('');
+    box.classList.add('on');
+    $('statH').innerHTML = '<div><b>' + hidden.length + '</b>감춘 작품</div>';
+    bar();
+  }
+
+  $('lstH').addEventListener('click', function(e){
+    var it = e.target.closest('[data-hid]');
+    if (!it) return;
+    if (e.target.tagName === 'A') return;
+    var id = it.getAttribute('data-hid');
+    if (pickedH[id]) delete pickedH[id]; else pickedH[id] = true;
+    it.classList[pickedH[id] ? 'add' : 'remove']('pick');
+    var ck = it.querySelector('input[type=checkbox]');
+    if (ck) ck.checked = !!pickedH[id];
+    bar();
+  });
+
+  $('loadH').addEventListener('click', loadH);
+  $('clrH').addEventListener('click', function(){ pickedH = {}; renderH(); });
+
+  /* ══ 실제로 바꾸기 ════════════════════════════════════════ */
+  async function apply(ids, toHide, logf){
+    if (!ids.length) return;
+    var msg = toHide
+      ? ids.length + '건을 감춥니다.\n\n지우는 것이 아니라 목록에서만 빠집니다. 되돌릴 수 있습니다.\n\n계속할까요?'
+      : ids.length + '건을 다시 보이게 합니다.\n\n계속할까요?';
+    if (!confirm(msg)) return;
+
+    /* ★ 담기 직전에 로그인을 다시 확인합니다 —
+       관리자 화면은 오래 열어 두므로 그 사이 풀릴 수 있습니다. */
+    if (window.OCAdminGuard) {
+      var g = await OCAdminGuard.check(sb);
+      if (!g.ok){
+        warn(g.msg || '로그인을 확인할 수 없습니다.');
+        logf('✗ 중단 — ' + (g.msg || ''));
+        return;
+      }
+    }
+
+    $('doHide').disabled = true; $('doShow').disabled = true;
+    logf((toHide ? '감추기' : '되돌리기') + ' ' + ids.length + '건 시작…');
+    try {
+      var r = await sb.rpc('oc_work_set_hidden', {
+        p_ids: ids.map(Number),
+        p_hidden: toHide,
+        p_note: toHide
+          ? '작품 아님 · 묶음 · 발췌 — 관리자 검토 · ' + new Date().toISOString().slice(0,10)
+          : null
+      });
+      if (r.error) throw new Error(r.error.message);
+      logf('✅ ' + r.data + '건 바뀌었습니다');
+      picked = {}; pickedH = {};
+      $('fixbar').classList.remove('on');
+      if (toHide) { await load(); } else { await loadH(); }
+    } catch (e){
+      var m = e.message || String(e);
+      logf('✗ ' + m);
+      if (/관리자만/.test(m)) warn('관리자만 쓸 수 있습니다.');
+      else if (/1000건까지/.test(m)) warn('한 번에 1000건까지만 됩니다. 나눠서 해 주십시오.');
+      else if (window.OCAdminGuard && OCAdminGuard.isAuthLost(m))
+        warn('로그인이 풀렸습니다. 다시 로그인해 주십시오.');
+      else warn('바꾸지 못했습니다 — ' + m);
+    }
+    $('doHide').disabled = false; $('doShow').disabled = false;
+  }
+
+  $('doHide').addEventListener('click', function(){
+    apply(Object.keys(picked).filter(function(k){ return picked[k]; }), true, log);
+  });
+  $('doShow').addEventListener('click', function(){
+    apply(Object.keys(pickedH).filter(function(k){ return pickedH[k]; }), false, logH);
+  });
+})();
+</script>
+</body>
+</html>
