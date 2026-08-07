@@ -128,6 +128,9 @@
        눌리지 않는 편이 낫습니다. */
   function workRow(w) {
     var meta = [];
+    /* ★ 형식을 맨 앞에 둡니다 — 「소나타」 「오페라」 처럼 무엇인지
+       알려주는 말이 작품번호보다 먼저 눈에 들어와야 합니다. */
+    if (w.form_ko)   meta.push(esc(w.form_ko));
     if (w.opus)      meta.push(esc(w.opus));
     if (w.year_text) meta.push(esc(w.year_text));
 
@@ -145,8 +148,14 @@
         + '" target="_blank" rel="noopener">악보</a>'
       : '';
 
+    /* ★ 찾기에 쓸 글자를 줄에 심어 둡니다.
+       1,266곡이 한 묶음에 있는 작곡가가 있어(헨델) 눈으로는 찾을
+       수 없습니다. 서버에 다시 묻지 않고 이 글자로 걸러냅니다. */
+    var s = [w.title_ko, w.title, w.opus, w.form_ko, w.note]
+      .filter(Boolean).join(' ').toLowerCase();
+
     return ''
-      + '<li class="wk-it">'
+      + '<li class="wk-it" data-s="' + esc(s) + '">'
       +   title
       +   (w.title_ko && w.title
           ? '<span class="wk-orig">' + esc(w.title) + '</span>' : '')
@@ -183,10 +192,20 @@
        ★ 묶기 전에 <b>한국어로 옮겨서</b> 묶습니다. 한 작곡가에게
          Orchestral 과 관현악이 함께 있을 수 있습니다(기존 자료 +
          Open Opus). 값대로 묶으면 <b>「관현악」 묶음이 두 개</b>
-         나옵니다. data-g 는 아무 곳에서도 읽지 않으므로 안전합니다. */
+         나옵니다. data-g 는 아무 곳에서도 읽지 않으므로 안전합니다.
+
+       ★ 2026-08-08 편성이 없으면 <b>형식</b>으로 묶습니다.
+         편성이 비어 있는 작품이 69% 입니다(Open Opus 가 널리 알려진
+         작곡가 백 명 남짓만 다루기 때문입니다). 그대로 두면 헨델이
+         「그 밖 1,266곡」 한 덩어리가 됩니다.
+         형식이라도 있으면 「오페라」 「판본」 으로 갈라집니다.
+         ※ 다만 형식도 31% 만 얻어지므로 이것으로 다 풀리지는
+           않습니다. 그래서 아래에 <b>찾기</b>를 함께 둡니다. */
     var bag = {};
     rows.forEach(function (w) {
-      var g = genreKo(w.genre) || '그 밖';
+      var g = genreKo(w.genre)
+           || (w.form_ko ? String(w.form_ko).trim() : '')
+           || '그 밖';
       (bag[g] = bag[g] || []).push(w);
     });
 
@@ -209,10 +228,23 @@
       });
     });
 
+    /* ★ 찾기 상자 — 곡이 많은 작곡가에게만 붙입니다.
+       헨델 1,370곡 · 바흐 884곡 · 모차르트 852곡. 눈으로는 찾을
+       수 없습니다. 서버에 다시 묻지 않고 이미 받은 것을 걸러내므로
+       비용이 들지 않고 곧바로 반응합니다. */
+    var withFind = rows.length > 30;
+
     box.innerHTML = ''
       + '<p class="wk-sum">모두 <b>' + rows.length + '</b>곡 · '
       +   names.map(function (n) { return esc(n) + ' ' + bag[n].length; }).join(' · ')
       + '</p>'
+      + (withFind
+        ? '<div class="wk-find">'
+          + '<input type="search" class="wk-fi" placeholder="곡 이름 · 작품번호 · 형식으로 찾기"'
+          + ' aria-label="이 작곡가의 작품 안에서 찾기">'
+          + '<span class="wk-fc" hidden></span>'
+          + '</div>'
+        : '')
       + names.map(function (n) { return group(n, bag[n]); }).join('');
 
     /* 「더 보기」 — 한 번만 붙입니다 */
@@ -231,6 +263,68 @@
         }
       });
     }
+
+    if (withFind) bindFind(box);
+  }
+
+  /* ── 작품 안에서 찾기 ─────────────────────────────────────
+     ★ 서버에 다시 묻지 않습니다. 이미 받은 줄에 심어 둔
+       data-s 글자로 걸러냅니다.
+     ★ 찾는 동안에는 <b>접힌 것을 펴야</b> 합니다. 그러지 않으면
+       접힌 자리에 있는 결과가 보이지 않아 「없다」 고 오해합니다.
+       찾기를 지우면 원래대로 접습니다.
+     ★ 사이 시간을 둡니다(120ms) — 1,300곡을 글자마다 훑으면
+       입력이 뻑뻑해집니다. */
+  function bindFind(box) {
+    var inp = box.querySelector('.wk-fi');
+    var cnt = box.querySelector('.wk-fc');
+    if (!inp) return;
+    var timer = null;
+
+    function run() {
+      var q = String(inp.value || '').trim().toLowerCase();
+      var groups = box.querySelectorAll('.wk-g');
+      var hitAll = 0;
+
+      groups.forEach(function (g) {
+        var shown = 0;
+        g.querySelectorAll('.wk-it').forEach(function (li) {
+          var hit = !q || (li.getAttribute('data-s') || '').indexOf(q) >= 0;
+          li.style.display = hit ? '' : 'none';
+          if (hit) shown += 1;
+        });
+
+        var more = g.querySelector('.wk-more');
+        var btn  = g.querySelector('[data-more]');
+        if (more) {
+          if (q) { more.hidden = false; if (btn) btn.style.display = 'none'; }
+          else {
+            more.hidden = true;
+            if (btn) {
+              btn.style.display = '';
+              btn.textContent = '나머지 ' + more.querySelectorAll('.wk-it').length + '곡 더 보기';
+            }
+          }
+        }
+
+        var head = g.querySelector('.wk-cnt');
+        if (head && q) head.textContent = shown;
+        else if (head) head.textContent = g.querySelectorAll('.wk-it').length;
+
+        g.style.display = shown ? '' : 'none';
+        hitAll += shown;
+      });
+
+      if (cnt) {
+        if (q) { cnt.hidden = false; cnt.textContent = hitAll + '곡'; }
+        else { cnt.hidden = true; cnt.textContent = ''; }
+      }
+    }
+
+    inp.addEventListener('input', function () {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(run, 120);
+    });
   }
 
   function drawAwards(box, rows) {
@@ -376,7 +470,7 @@
                  default false 라 지금은 같지만, 규칙을 지킵니다)
              ③ limit 을 빼고 나눠 받습니다 — 200개 상한 때문입니다 */
         W = await getAll('person_works?select=id,title,title_ko,opus,year_text,'
-          + 'year_from,year_to,genre,note,imslp_ref&person_id=eq.'
+          + 'year_from,year_to,genre,note,imslp_ref,form_ko&person_id=eq.'
           + encodeURIComponent(pid)
           + '&hidden=not.is.true'
           + '&order=genre.asc,year_from.asc,id.asc');

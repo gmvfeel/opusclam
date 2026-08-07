@@ -622,7 +622,18 @@ if('serviceWorker' in navigator){
     var av=(window.OCThumb&&OCThumb.img)
       ? OCThumb.img(p.image_url,{size:38,fallback:fb,alt:comp})
       : fb;
-    var gl=o.genre?('<span class="tag">'+esc(GKO[o.genre]||o.genre)+'</span>'):'<span class="nd">\u2014</span>';
+    /* ★ 2026-08-08 편성이 없으면 <b>형식</b>을 대신 보여줍니다.
+       편성이 빈 작품이 69% 입니다(Open Opus 가 널리 알려진 작곡가
+       백 명 남짓만 다루기 때문입니다). 「—」 보다 「소나타」 가
+       훨씬 낫습니다.
+       ★ 편성과 형식은 다른 것이므로 <b>모양을 달리</b> 합니다 —
+         편성은 태그 상자(.tag), 형식은 회색 글씨(.nd)입니다.
+         새 CSS 를 만들지 않고 이미 있는 두 클래스를 씁니다. */
+    var gl = o.genre
+      ? ('<span class="tag">'+esc(GKO[o.genre]||o.genre)+'</span>')
+      : (o.form_ko && String(o.form_ko).trim()
+        ? '<span class="nd">'+esc(o.form_ko)+'</span>'
+        : '<span class="nd">\u2014</span>');
     var yr=o.year_from?esc(o.year_from):(o.year_text?esc(o.year_text):'<span class="nd">\u2014</span>');
     var sc=o.imslp_ref
       ? '<a href="https://imslp.org/wiki/'+encodeURIComponent(o.imslp_ref)+'" class="lk" title="IMSLP 악보" target="_blank" rel="noopener">'+IC.score+'</a>'
@@ -718,7 +729,7 @@ if('serviceWorker' in navigator){
          작곡가 이름을 person_works 안에 옮겨 두었습니다
          (composer_ko · composer_en — 트리거가 지킵니다). */
       searchCols:['title','title_ko','opus','imslp_ref','note',
-                  'composer_ko','composer_en'],
+                  'composer_ko','composer_en','form_ko'],
       entity:'work',
       buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
     });

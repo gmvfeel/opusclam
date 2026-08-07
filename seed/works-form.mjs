@@ -26,10 +26,28 @@
     자동 판정으로 세 번 오판한 것이 이 지점입니다.
 
    ★ 처음에는 --dry 로 <b>무엇이 오는지</b> 보십시오
-    번역표(FORM_KO)를 미리 다 채울 수 없습니다. 어떤 형식이 올지
-    모르는데 채우면 지어내는 것이 됩니다. --dry 는 <b>받은 형식의
-    분포</b>와 <b>번역표에 없는 것</b>을 보여 줍니다. 그것을 보고
-    번역표를 채운 뒤 실제로 담습니다.
+   ★ 2026-08-08 확인 실행으로 알아낸 것 — 전제가 무너졌습니다
+    「클래식 작품에는 P31 이 잘 채워져 있다」고 보았는데,
+    2,000개를 물어보니 <b>1,375개(69%)가 musical work/composition</b>
+    — 그냥 「음악 작품」 이라는 가장 넓은 말뿐이었습니다.
+    구체적 형식을 얻은 것은 623개(31%)입니다.
+
+    ★ 그런데 더 중요한 것이 드러났습니다
+      형식을 얻은 623개 가운데 <b>개별 음악 작품이 아닌 것이 72%</b>
+      였습니다. 영화 228개 · 판본 93개 · 묶음 항목 85개 ·
+      음반과 필사본 37개. 그래서 이 도구의 값은 <b>형식 채우기보다
+      무엇이 작품이 아닌지 알아내는 것</b>에 있습니다.
+
+    ★ 영화가 왜 들어왔나
+      위키데이터에서 영화의 P86 은 <b>영화음악 작곡가</b>를
+      가리킵니다. 수집기가 P86 으로 작품을 찾으니 영화 자체가
+      「그 작곡가의 작품」 으로 들어왔습니다.
+      ★ 지우지 않습니다 — 편성을 「영화·방송」 으로 주어 살립니다.
+        존 윌리엄스 작품 목록에 「스타워즈」 가 있는 것이 맞습니다.
+
+   ★ 번역표(FORM)에 없는 형식은 <b>영문 그대로</b> 담고 편성은
+    건드리지 않습니다. 지어내지 않습니다. --dry 가 「번역표에 없는
+    형식」 을 보여 주므로 그것을 보고 채워 갑니다.
 
    쓰는 법
      node seed/works-form.mjs --dry            무엇이 오는지만 봅니다
@@ -74,103 +92,199 @@ const WDQS = 'https://query.wikidata.org/sparql';
 const UA   = 'OpusclamFormBot/1.0 (https://opusclam.com)';
 
 /* ============================================================
-   번역표 — 형식 이름을 한국어로
+   형식표 — 이름 · 한국어 · 편성 · 갈래
 
-   ★ 이것은 <b>번역</b>입니다. 추론이 아닙니다.
-     symphony 가 교향곡인 것은 정해진 사실입니다.
-   ★ 여기에 없는 형식은 <b>영문 그대로 남깁니다.</b> 지어내지
-     않습니다. --dry 가 「번역표에 없는 것」 을 보여 주므로 그것을
-     보고 채워 갑니다.
-   ★ 열쇠는 위키데이터 번호(QID)입니다. 라벨은 바뀔 수 있지만
-     번호는 바뀌지 않습니다. 다만 지금은 번호를 확인할 수 없으므로
-     <b>영문 라벨을 소문자로 낮춘 것</b>을 열쇠로 씁니다.
-     (QID 를 제 기억으로 적으면 지어내는 것이 됩니다)
+   ★ 2026-08-08 확인 실행 결과로 채웠습니다
+     2,000개를 물어보니 67가지가 왔습니다. 아래는 그 가운데
+     <b>뜻이 하나로 정해진 것</b>만 옮긴 것입니다.
+
+   ★ 제가 세운 전제가 무너졌습니다 — 적어 둡니다
+     「클래식 작품에는 P31 이 잘 채워져 있다」고 보았는데,
+     <b>2,000개 중 1,375개(69%)가 musical work/composition</b>
+     — 그냥 「음악 작품」 이라는 가장 넓은 말뿐이었습니다.
+     구체적 형식을 얻은 것은 623개(31%)입니다.
+
+   ★ 그런데 더 중요한 것이 드러났습니다
+     형식을 얻은 623개 가운데 <b>개별 음악 작품이 아닌 것이 72%</b>
+     였습니다. 영화 228개 · 판본 93개 · 묶음 항목 85개 ·
+     음반과 필사본 37개. 그래서 이 도구의 값은 형식 채우기보다
+     <b>무엇이 작품이 아닌지 알아내는 것</b>에 있습니다.
+
+   ── 갈래(kind) 가 하는 일 ────────────────────────────────
+     work   음악 작품 — 그대로 살립니다
+     video  영상물 — 편성을 「영화·방송」 으로 주어 살립니다.
+            영화의 P86 은 <b>영화음악 작곡가</b>를 가리킵니다.
+            수집기가 P86 으로 찾으니 영화 자체가 들어왔습니다.
+            ★ 지우지 않습니다 — 존 윌리엄스 작품 목록에
+              「스타워즈」 가 있는 것이 맞습니다
+     group  묶음 항목 — 「6개의 브란덴부르크 협주곡」 처럼 정당한
+            것이 섞여 있어 <b>사람이 봐야 합니다.</b> 자동으로
+            감추지 않습니다
+     aside  작품이 아님 — 음반 · 판본 · 필사본 · 특정 공연 ·
+            위키 안내문서. 감출 후보이지만 <b>여기서 감추지
+            않습니다.</b> 어드민 도구를 만들어 눈으로 고릅니다
+     broad  너무 넓어 화면에 쓸모없음 — form_ko 를 비웁니다.
+            ★ 다만 form_raw 에는 담습니다. 그러지 않으면 다음에
+              돌릴 때 <b>같은 1,375개를 또 물어봅니다</b>
+              (2026-08-07 함정 16번과 같은 낭비입니다)
+
+   ── 왜 자동으로 감추지 않는가 ────────────────────────────
+     2026-08-07 학술DB 에서 자동 판정으로 세 번 오판했습니다.
+     판단이 필요한 일은 <b>사람이 고를 화면</b>을 만드는 편이
+     맞습니다. 여기서는 <b>갈래만 적어 두고</b> 손대지 않습니다.
+
+   ── 편성(genre) 을 넣는 규칙 ─────────────────────────────
+     ★ 의심 없는 것만 넣습니다.
+         symphony → Orchestral   ○
+         sonata   → (비움)       ✗ 바이올린 소나타가 건반이 됩니다
+     ★ 이미 편성이 있으면 <b>건드리지 않습니다.</b>
+       Open Opus 가 넣은 값이 더 정확할 수 있습니다.
+     ★ 값의 모양에 주의하십시오. genre 칸에는 두 가지가 섞여
+       있습니다 — Open Opus 가 넣은 <b>영문</b> 다섯 가지
+       (Orchestral · Keyboard · Chamber · Stage · Vocal)와
+       기존 wixon 자료의 <b>한국어</b> 열세 가지입니다.
+       화면(works.js · work-view.html)이 영문을 한국어로 옮겨
+       보여주므로 둘 다 괜찮습니다. 「영화·방송」 은 영문 대응이
+       없어 <b>한국어 그대로</b> 씁니다(기존 값과 같은 모양입니다).
+
+   ── 열쇠에 대하여 ────────────────────────────────────────
+     열쇠는 <b>영문 라벨을 소문자로 낮춘 것</b>입니다.
+     위키데이터 번호(QID)가 더 튼튼하지만, 번호를 제 기억으로
+     적으면 지어내는 것이 됩니다. 번호는 form_qid 칸에 담아
+     두므로 뒤에 표를 번호로 옮길 수 있습니다.
+
+   ── 여기에 없는 형식은 ───────────────────────────────────
+     <b>영문 그대로 담고 편성은 건드리지 않습니다.</b>
+     지어내지 않습니다. --dry 가 「번역표에 없는 것」 을
+     보여 주므로 그것을 보고 채워 갑니다.
    ============================================================ */
-const FORM_KO = {
-  /* 아래는 클래식에서 뜻이 하나로 정해진 것들입니다.
-     --dry 결과를 보고 이어서 채웁니다. */
-  'symphony'              : '교향곡',
-  'opera'                 : '오페라',
-  'operetta'              : '오페레타',
-  'concerto'              : '협주곡',
-  'sonata'                : '소나타',
-  'string quartet'        : '현악사중주',
-  'mass'                  : '미사곡',
-  'requiem'               : '레퀴엠',
-  'oratorio'              : '오라토리오',
-  'cantata'               : '칸타타',
-  'motet'                 : '모테트',
-  'ballet'                : '발레',
-  'overture'              : '서곡',
-  'suite'                 : '조곡',
-  'symphonic poem'        : '교향시',
-  'song'                  : '가곡',
-  'lied'                  : '리트',
-  'aria'                  : '아리아',
-  'prelude'               : '전주곡',
-  'fugue'                 : '푸가',
-  'etude'                 : '연습곡',
-  'nocturne'              : '야상곡',
-  'waltz'                 : '왈츠',
-  'mazurka'               : '마주르카',
-  'polonaise'             : '폴로네즈',
-  'march'                 : '행진곡',
-  'serenade'              : '세레나데',
-  'divertimento'          : '디베르티멘토',
-  'rhapsody'              : '랩소디',
-  'variation'             : '변주곡',
-  'fantasia'              : '환상곡',
-  'toccata'               : '토카타',
-  'chorale'               : '코랄',
-  'hymn'                  : '찬가',
-  'psalm'                 : '시편',
-  'musical composition'   : '',   /* ★ 너무 넓어 쓸모없습니다 — 비웁니다 */
-  'composition'           : '',
-  'musical work'          : '',
-  'musical work/composition': '',
+const FORM = {
+
+  /* ── 음악 작품 ─────────────────────────────────────────
+     뜻이 하나로 정해진 것들입니다. */
+  'symphony'                 : { ko: '교향곡',       genre: 'Orchestral', kind: 'work' },
+  'symphonic poem'           : { ko: '교향시',       genre: 'Orchestral', kind: 'work' },
+  'overture'                 : { ko: '서곡',         genre: 'Orchestral', kind: 'work' },
+  'concerto'                 : { ko: '협주곡',       genre: 'Orchestral', kind: 'work' },
+  'sinfonia concertante'     : { ko: '신포니아 콘체르탄테', genre: 'Orchestral', kind: 'work' },
+  'suite'                    : { ko: '조곡',         genre: null,         kind: 'work' },
+  'serenade'                 : { ko: '세레나데',     genre: null,         kind: 'work' },
+  'divertimento'             : { ko: '디베르티멘토', genre: null,         kind: 'work' },
+  'rhapsody'                 : { ko: '랩소디',       genre: null,         kind: 'work' },
+
+  'opera'                    : { ko: '오페라',       genre: 'Stage',      kind: 'work' },
+  'operetta'                 : { ko: '오페레타',     genre: 'Stage',      kind: 'work' },
+  'ballet'                   : { ko: '발레',         genre: 'Stage',      kind: 'work' },
+  /* ★ 극음악 · 서정음악극 — 위키데이터가 오페라 · 오페레타 ·
+     뮤지컬을 아우를 때 쓰는 말입니다. 무대 작품이 확실합니다. */
+  'dramatico-musical work'   : { ko: '극음악',       genre: 'Stage',      kind: 'work' },
+  'lyrico-musical work'      : { ko: '서정음악극',   genre: 'Stage',      kind: 'work' },
+  'choreographic work'       : { ko: '무용 작품',    genre: 'Stage',      kind: 'work' },
+
+  'string quartet'           : { ko: '현악사중주',   genre: 'Chamber',    kind: 'work' },
+
+  'mass'                     : { ko: '미사곡',       genre: 'Vocal',      kind: 'work' },
+  'requiem'                  : { ko: '레퀴엠',       genre: 'Vocal',      kind: 'work' },
+  'oratorio'                 : { ko: '오라토리오',   genre: 'Vocal',      kind: 'work' },
+  'cantata'                  : { ko: '칸타타',       genre: 'Vocal',      kind: 'work' },
+  'motet'                    : { ko: '모테트',       genre: 'Vocal',      kind: 'work' },
+  'aria'                     : { ko: '아리아',       genre: 'Vocal',      kind: 'work' },
+  'lied'                     : { ko: '리트',         genre: 'Vocal',      kind: 'work' },
+  'psalm'                    : { ko: '시편',         genre: 'Vocal',      kind: 'work' },
+  /* ★ 수난곡 — 바흐 마태수난곡 · 요한수난곡입니다.
+     위키데이터 라벨이 복수형(passions)으로 옵니다. */
+  'passions'                 : { ko: '수난곡',       genre: 'Vocal',      kind: 'work' },
+  'passion'                  : { ko: '수난곡',       genre: 'Vocal',      kind: 'work' },
+  'christian hymn'           : { ko: '찬송가',       genre: 'Vocal',      kind: 'work' },
+  'hymn'                     : { ko: '찬가',         genre: null,         kind: 'work' },
+  /* ★ 국가(國歌) — 안익태 애국가처럼 한국 자료에 걸립니다 */
+  'national anthem'          : { ko: '국가',         genre: 'Vocal',      kind: 'work' },
+  'regional hymn'            : { ko: '지역 찬가',    genre: null,         kind: 'work' },
+  'song'                     : { ko: '가곡',         genre: null,         kind: 'work' },
+  'chorale'                  : { ko: '코랄',         genre: null,         kind: 'work' },
+  'vocal trio'               : { ko: '성악 삼중창',  genre: null,         kind: 'work' },
+
+  /* ★ 아래는 편성을 비웁니다 — 악기를 모르면 정할 수 없습니다.
+     소나타는 피아노 · 바이올린 · 첼로 · 플루트가 모두 있습니다. */
+  'sonata'                   : { ko: '소나타',       genre: null,         kind: 'work' },
+  'prelude'                  : { ko: '전주곡',       genre: null,         kind: 'work' },
+  'fugue'                    : { ko: '푸가',         genre: null,         kind: 'work' },
+  'etude'                    : { ko: '연습곡',       genre: null,         kind: 'work' },
+  'nocturne'                 : { ko: '야상곡',       genre: null,         kind: 'work' },
+  'waltz'                    : { ko: '왈츠',         genre: null,         kind: 'work' },
+  'mazurka'                  : { ko: '마주르카',     genre: null,         kind: 'work' },
+  'polonaise'                : { ko: '폴로네즈',     genre: null,         kind: 'work' },
+  'march'                    : { ko: '행진곡',       genre: null,         kind: 'work' },
+  'variation'                : { ko: '변주곡',       genre: null,         kind: 'work' },
+  'fantasia'                 : { ko: '환상곡',       genre: null,         kind: 'work' },
+  'toccata'                  : { ko: '토카타',       genre: null,         kind: 'work' },
+  'instrumental composition' : { ko: '기악곡',       genre: null,         kind: 'work' },
+
+  /* ★ 잃어버린 작품 · 미완성 작품도 <b>작품입니다.</b>
+     소실되었을 뿐 기록은 자료입니다. 감추지 않습니다. */
+  'lost work'                : { ko: '잃어버린 작품',   genre: null, kind: 'work' },
+  'lost musical work'        : { ko: '잃어버린 작품',   genre: null, kind: 'work' },
+  'unfinished creative work' : { ko: '미완성 작품',     genre: null, kind: 'work' },
+  /* ★ 편곡도 작품입니다(리스트의 베토벤 교향곡 편곡 등) */
+  'arrangement'              : { ko: '편곡',           genre: null, kind: 'work' },
+
+  /* ── 영상물 — 「영화·방송」 으로 살립니다 ───────────────
+     영화의 P86 은 영화음악 작곡가를 가리킵니다. */
+  'film'                     : { ko: '영화',              genre: '영화·방송', kind: 'video' },
+  'television film'          : { ko: '텔레비전 영화',     genre: '영화·방송', kind: 'video' },
+  'short film'               : { ko: '단편 영화',         genre: '영화·방송', kind: 'video' },
+  'animated film'            : { ko: '애니메이션 영화',   genre: '영화·방송', kind: 'video' },
+  'animated short film'      : { ko: '단편 애니메이션',   genre: '영화·방송', kind: 'video' },
+  'animated television series': { ko: '애니메이션 시리즈', genre: '영화·방송', kind: 'video' },
+  'television series'        : { ko: '텔레비전 시리즈',   genre: '영화·방송', kind: 'video' },
+  'documentary film'         : { ko: '다큐멘터리 영화',   genre: '영화·방송', kind: 'video' },
+
+  /* ── 묶음 항목 — 사람이 봐야 합니다 ────────────────────
+     「6개의 브란덴부르크 협주곡」 처럼 정당한 것이 섞여 있습니다.
+     자동으로 감추지 않습니다. */
+  'group of works'           : { ko: '작품 묶음',        genre: null, kind: 'group' },
+  'group of musical works'   : { ko: '음악 작품 묶음',   genre: null, kind: 'group' },
+  'musical series'           : { ko: '음악 연작',        genre: null, kind: 'group' },
+  'series of creative works' : { ko: '연작',             genre: null, kind: 'group' },
+  'opera cycle'              : { ko: '오페라 연작',      genre: null, kind: 'group' },
+  'piano repertoire'         : { ko: '피아노 레퍼토리',  genre: null, kind: 'group' },
+  'tetrad'                   : { ko: '4부작',            genre: null, kind: 'group' },
+
+  /* ── 작품이 아님 — 감출 후보 (여기서 감추지 않습니다) ── */
+  'version, edition or translation': { ko: '판본',       genre: null, kind: 'aside' },
+  'album'                    : { ko: '음반',             genre: null, kind: 'aside' },
+  'manuscript'               : { ko: '필사본',           genre: null, kind: 'aside' },
+  'music manuscript'         : { ko: '음악 필사본',      genre: null, kind: 'aside' },
+  'printed sheet music'      : { ko: '인쇄 악보',        genre: null, kind: 'aside' },
+  'ballet production'        : { ko: '발레 공연',        genre: null, kind: 'aside' },
+  'dance production'         : { ko: '무용 공연',        genre: null, kind: 'aside' },
+  'theatrical production'    : { ko: '연극 공연',        genre: null, kind: 'aside' },
+  'operatic production'      : { ko: '오페라 공연',      genre: null, kind: 'aside' },
+  'literary fragment'        : { ko: '문학 단편',        genre: null, kind: 'aside' },
+  'wikimedia disambiguation page': { ko: '위키 안내문서', genre: null, kind: 'aside' },
+
+  /* ── 너무 넓음 — form_ko 를 비우되 form_raw 는 담습니다 ──
+     ★ ko 를 빈 글자로 둡니다. 담지 않는 것과 다릅니다 —
+       form_raw 가 채워지므로 다음에 다시 묻지 않습니다. */
+  'musical work/composition' : { ko: '', genre: null, kind: 'broad' },
+  'musical composition'      : { ko: '', genre: null, kind: 'broad' },
+  'musical work'             : { ko: '', genre: null, kind: 'broad' },
+  'composition'              : { ko: '', genre: null, kind: 'broad' },
+  'creative work'            : { ko: '', genre: null, kind: 'broad' },
+  'artistic work'            : { ko: '', genre: null, kind: 'broad' },
+  'written work'             : { ko: '', genre: null, kind: 'broad' },
+  'work'                     : { ko: '', genre: null, kind: 'broad' },
 };
 
-/* ============================================================
-   편성 채우기 — <b>의심 없는 것만</b>
-
-   ★ 여기에 없는 형식은 편성을 <b>건드리지 않습니다.</b>
-     sonata · etude · prelude · fantasia 는 악기를 모르면
-     정할 수 없습니다. 비워 두는 것이 틀리게 넣는 것보다 낫습니다.
-   ★ 값은 db/work-view.html 의 GKO 와 같아야 합니다.
-     (Orchestral 관현악 · Keyboard 건반 · Chamber 실내악 ·
-      Stage 무대 · 오페라 · Vocal 성악)
-     ★ 표에 담는 값은 <b>영문</b>입니다 — 기존 Open Opus 값과
-       같은 모양이어야 필터(oc_work_facets)가 어긋나지 않습니다.
-   ============================================================ */
-const FORM_GENRE = {
-  'symphony'       : 'Orchestral',
-  'symphonic poem' : 'Orchestral',
-  'overture'       : 'Orchestral',
-  'concerto'       : 'Orchestral',
-  'opera'          : 'Stage',
-  'operetta'       : 'Stage',
-  'ballet'         : 'Stage',
-  'string quartet' : 'Chamber',
-  'mass'           : 'Vocal',
-  'requiem'        : 'Vocal',
-  'oratorio'       : 'Vocal',
-  'cantata'        : 'Vocal',
-  'motet'          : 'Vocal',
-  'aria'           : 'Vocal',
-  'lied'           : 'Vocal',
-  'psalm'          : 'Vocal',
+/* 갈래 이름 — 로그에 보여줄 때 씁니다 */
+const KIND_KO = {
+  work : '음악 작품',
+  video: '영상물 (영화·방송)',
+  group: '묶음 항목 — 눈으로 봐야 함',
+  aside: '작품이 아님 — 감출 후보',
+  broad: '너무 넓음 — 화면에 안 보임',
+  '?'  : '번역표에 없음',
 };
-
-/* ★ 형식이 여러 개 올 때 어느 것을 고르나
-     한 작품에 P31 이 둘 이상 붙는 일이 잦습니다
-     (오페라이면서 무대작품, 교향곡이면서 음악작품).
-     구체적인 것을 골라야 합니다. 아래에 가까울수록 넓은 말이라
-     <b>뒤로 밀립니다.</b> */
-const TOO_BROAD = new Set([
-  'musical composition', 'composition', 'musical work',
-  'musical work/composition', 'work', 'artistic work',
-  'creative work', 'written work',
-]);
 
 /* ============================================================
    도구
@@ -278,23 +392,36 @@ LIMIT ${qids.length * 12}`;
   return byWork;
 }
 
-/* ★ 여러 형식 가운데 <b>가장 구체적인 것</b>을 고릅니다.
-     넓은 말(musical composition)은 뒤로 밀고, 번역표에 있는 것을
-     먼저 고릅니다 — 우리가 아는 말이 곧 구체적인 말입니다. */
+/* ★ 여러 형식 가운데 <b>가장 알맞은 것</b>을 고릅니다.
+
+   한 작품에 P31 이 둘 이상 붙는 일이 잦습니다 — 오페라이면서
+   극음악이면서 음악 작품, 영화이면서 창작물처럼.
+
+   고르는 순서
+     ① 우리가 아는 음악 작품 형식 (교향곡 · 오페라 …)
+     ② 우리가 아는 영상물 (영화 …)
+     ③ 우리가 아는 묶음 · 작품 아님 (판본 · 음반 …)
+     ④ 번역표에 없지만 이름이 있는 것 — 영문 그대로 담습니다
+     ⑤ 너무 넓은 말 (musical work/composition)
+
+   ★ ⑤ 를 <b>버리지 않고 마지막으로 고릅니다.</b> 버리면 form_raw
+     가 비어 다음에 돌릴 때 같은 것을 또 물어봅니다. */
 function pickForm(forms) {
   if (!forms || !forms.length) return null;
   const norm = (s) => String(s || '').trim().toLowerCase();
+  const kindOf = (f) => {
+    const e = FORM[norm(f.label)];
+    if (e) return e.kind;
+    return f.label ? '?' : 'none';
+  };
+  const RANK = { work: 1, video: 2, group: 3, aside: 4, '?': 5, broad: 6, none: 7 };
 
-  const narrow = forms.filter((f) => !TOO_BROAD.has(norm(f.label)));
-  const pool   = narrow.length ? narrow : forms;
-
-  /* 번역표에 있고 빈 값이 아닌 것 우선 */
-  const known = pool.find((f) => FORM_KO[norm(f.label)]);
-  if (known) return known;
-
-  /* 그다음은 라벨이 있는 것 */
-  const labeled = pool.find((f) => f.label);
-  return labeled || pool[0];
+  let best = null, bestRank = 99;
+  for (const f of forms) {
+    const r = RANK[kindOf(f)] || 9;
+    if (r < bestRank) { best = f; bestRank = r; }
+  }
+  return best || forms[0];
 }
 
 /* ============================================================
@@ -369,6 +496,7 @@ async function main() {
 
   /* 셈 */
   const formCount   = new Map();   /* 영문 라벨 → 몇 개 */
+  const kindCount   = new Map();   /* 갈래 → 몇 개 */
   const noTrans     = new Map();   /* 번역표에 없는 것 */
   const rows        = [];          /* 담을 것 */
   let gotForm = 0, noForm = 0, noLabel = 0, genreFilled = 0;
@@ -395,24 +523,27 @@ async function main() {
 
       formCount.set(key, (formCount.get(key) || 0) + works.length);
 
-      /* 번역표에 있으면 한국어, 없으면 <b>영문 그대로</b>.
+      /* 번역표를 찾아봅니다. 없으면 <b>영문 그대로</b> 담습니다.
          지어내지 않습니다. */
-      const hasKo = Object.prototype.hasOwnProperty.call(FORM_KO, key);
-      if (!hasKo) noTrans.set(key, (noTrans.get(key) || 0) + works.length);
+      const ent = FORM[key];
+      if (!ent) noTrans.set(key, (noTrans.get(key) || 0) + works.length);
 
-      /* FORM_KO 에 빈 문자열로 적힌 것은 「너무 넓어 쓸모없음」 입니다.
-         그런 것은 담지 않습니다. */
-      const ko = hasKo ? FORM_KO[key] : picked.label;
-      if (!ko) { noLabel += works.length; continue; }
+      const kind = ent ? ent.kind : '?';
+      /* ★ 갈래가 broad(너무 넓음)이면 화면에 보일 값은 비웁니다.
+           그래도 form_raw · form_qid 는 담습니다 — 그러지 않으면
+           다음에 돌릴 때 <b>같은 것을 또 물어봅니다.</b>
+           2026-08-07 함정 16번과 같은 낭비입니다. */
+      const ko    = ent ? ent.ko : picked.label;
+      const genre = ent ? (ent.genre || null) : null;
 
-      const genre = FORM_GENRE[key] || null;
+      kindCount.set(kind, (kindCount.get(kind) || 0) + works.length);
 
       for (const w of works) {
         gotForm += 1;
         const row = {
           id       : w.id,
           form_raw : picked.label,
-          form_ko  : ko,
+          form_ko  : ko || null,
           form_qid : picked.qid,
         };
         /* ★ 편성은 <b>비어 있을 때만</b>, 그리고 의심 없는 것만
@@ -434,25 +565,50 @@ async function main() {
     await sleep(1200);
   }
 
-  console.log('');
-  console.log('══ 받은 형식 분포 ══');
-  const sorted = [...formCount.entries()].sort((a, b) => b[1] - a[1]);
-  for (const [k, v] of sorted.slice(0, 40)) {
-    const ko = Object.prototype.hasOwnProperty.call(FORM_KO, k)
-      ? (FORM_KO[k] || '(비움)') : '★ 번역표에 없음';
-    console.log(`  ${String(v).padStart(6)}  ${k}  →  ${ko}`);
+  /* ── 갈래별로 묶어 보여줍니다 ─────────────────────────────
+     ★ 형식 이름을 한 줄씩 늘어놓으면 예순 줄이 넘어 판단이 안 됩니다.
+       갈래로 묶으면 <b>무엇이 작품이고 무엇이 아닌지</b>가 한눈에
+       보입니다. 이 도구의 값은 형식 채우기보다 정제에 있습니다. */
+  const norm2 = (s) => String(s || '').trim().toLowerCase();
+  const kindOfKey = (k) => (FORM[norm2(k)] ? FORM[norm2(k)].kind : '?');
+
+  const bag = new Map();
+  for (const [k, v] of formCount.entries()) {
+    const kd = kindOfKey(k);
+    if (!bag.has(kd)) bag.set(kd, []);
+    bag.get(kd).push([k, v]);
   }
-  if (sorted.length > 40) console.log(`  … 그 밖 ${sorted.length - 40}가지`);
+
+  const total = [...formCount.values()].reduce((a, b) => a + b, 0) || 1;
+  const pct = (n) => Math.round((n / total) * 1000) / 10;
+
+  console.log('');
+  console.log('══ 받은 형식 — 갈래별 ══');
+  for (const kd of ['work', 'video', 'group', 'aside', '?', 'broad']) {
+    const items = bag.get(kd);
+    if (!items || !items.length) continue;
+    const sum = items.reduce((a, b) => a + b[1], 0);
+    console.log('');
+    console.log(`[${KIND_KO[kd] || kd}]  ${sum}개 (${pct(sum)}%)`);
+    items.sort((a, b) => b[1] - a[1]);
+    for (const [k, v] of items.slice(0, 25)) {
+      const e = FORM[norm2(k)];
+      const ko = e ? (e.ko || '(화면에 안 보임)') : '(영문 그대로)';
+      const g  = e && e.genre ? ` · 편성 ${e.genre}` : '';
+      console.log(`  ${String(v).padStart(6)}  ${k}  →  ${ko}${g}`);
+    }
+    if (items.length > 25) console.log(`         … 그 밖 ${items.length - 25}가지`);
+  }
 
   if (noTrans.size) {
     console.log('');
     console.log('★ 번역표에 없는 형식 — 이것을 알려 주십시오');
+    console.log('  (지금은 영문 그대로 담기고 편성은 건드리지 않습니다)');
     const nt = [...noTrans.entries()].sort((a, b) => b[1] - a[1]);
-    for (const [k, v] of nt.slice(0, 40)) {
+    for (const [k, v] of nt.slice(0, 60)) {
       console.log(`  ${String(v).padStart(6)}  ${k}`);
     }
-    if (nt.length > 40) console.log(`  … 그 밖 ${nt.length - 40}가지`);
-    console.log('  (지금은 영문 그대로 담깁니다 — 지어내지 않습니다)');
+    if (nt.length > 60) console.log(`  … 그 밖 ${nt.length - 60}가지`);
   }
 
   console.log('');
@@ -463,6 +619,13 @@ async function main() {
   console.log(`  이름이 없어 건너뜀   ${noLabel}개`);
   console.log(`  편성도 함께 채울 것  ${genreFilled}개`);
   console.log(`  형식 가지수          ${formCount.size}가지`);
+  console.log('');
+  console.log('  ── 갈래 셈 ──');
+  for (const kd of ['work', 'video', 'group', 'aside', '?', 'broad']) {
+    const n = kindCount.get(kd);
+    if (!n) continue;
+    console.log(`  ${String(n).padStart(6)}개  ${KIND_KO[kd] || kd}`);
+  }
 
   if (DRY) {
     console.log('');

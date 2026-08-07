@@ -156,6 +156,16 @@
   .wk-sc{flex:0 0 auto;font-size:11px;font-weight:700;line-height:1;padding:3px 7px;border-radius:20px;
          text-decoration:none;color:#5b4b9e;background:rgba(91,75,158,.08);transition:background .15s}
   .wk-sc:hover{background:rgba(91,75,158,.18)}
+  /* ★ 2026-08-08 작품 안에서 찾기. 곡이 30개를 넘는 작곡가에게만
+     붙습니다(헨델 1,370 · 바흐 884 · 모차르트 852곡).
+     서버에 다시 묻지 않고 이미 받은 것을 걸러냅니다. */
+  .wk-find{display:flex;align-items:center;gap:10px;margin:0 0 18px}
+  .wk-fi{flex:1 1 auto;min-width:0;font-family:inherit;font-size:13px;color:var(--tx,#2b2740);
+         padding:9px 13px;border:1px solid var(--line,#e6e3ef);border-radius:9px;background:#fff;
+         transition:border-color .15s,box-shadow .15s}
+  .wk-fi:focus{outline:none;border-color:#5b4b9e;box-shadow:0 0 0 3px rgba(91,75,158,.1)}
+  .wk-fi::placeholder{color:var(--tx3,#8a8798)}
+  .wk-fc{flex:0 0 auto;font-size:12px;font-weight:700;color:#5b4b9e}
   .wk-orig{font-size:12px;color:var(--tx3,#8a8798)}
   .wk-m{font-size:12px;color:var(--tx2,#5f5c70);white-space:nowrap}
   .wk-n{flex:1 1 100%;font-size:11.5px;color:var(--tx3,#8a8798)}
@@ -1394,7 +1404,7 @@ if('serviceWorker' in navigator){
 </script>
 <script src="/assets/photos.js"></script>
 <script src="/assets/score-dl.js"></script>
-<script src="/assets/works.js"></script>
+<script src="/assets/works.js?v=20260808b"></script>
 <script>
 /* 인물 뷰: ?id 로 Supabase에서 해당 인물 로드 (id 없으면 기존 샘플 유지) */
 (function(){
