@@ -211,6 +211,17 @@ function shareGiven(a, b) {
   for (const w of givensOf(b)) if (A.has(w)) return true;
   return false;
 }
+/* 이름 첫 글자 — Michael 과 Mikhail 은 같은 이름의 다른 표기입니다 */
+function initialsOf(s) {
+  const o = new Set();
+  for (const w of givensOf(s)) if (w) o.add(w.charAt(0));
+  return o;
+}
+function shareInitial(a, b) {
+  const A = initialsOf(a);
+  for (const c of initialsOf(b)) if (A.has(c)) return true;
+  return false;
+}
 
 /* ============================================================
    1) Open Opus 전체 자료 받기
@@ -345,7 +356,32 @@ async function main() {
     const sn = surnameOf(ourName);
     if (!sn) return null;
     const cands = ooBySurname.get(sn) || [];
-    if (cands.length === 1) return { c: cands[0], why: '성 ' + sn + ' 유일' };
+
+    /* ★ 2026-08-07 <b>성이 유일해도 이름을 확인합니다.</b>
+       Clara Schumann 을 Robert Schumann 으로 맞춘 사고가 있었습니다.
+       부부지만 다른 사람이고, Open Opus 에는 로베르트만 있습니다.
+       그대로 채웠으면 클라라 슈만 작품에 로베르트의 편성이 붙었습니다.
+
+       판단 — 아래 셋 가운데 하나면 같은 사람으로 봅니다.
+         · 이름이 겹침            Modest ↔ Modest
+         · 이름 첫 글자가 같음     Michael ↔ Mikhail
+         · 한쪽에 이름 정보가 없음  (성만 있는 자료)
+       Clara(C) ↔ Robert(R) 는 어느 것도 아니므로 <b>거부</b>합니다. */
+    if (cands.length === 1) {
+      const c = cands[0];
+      const gOurs = givensOf(ourName);
+      const gOo = givensOf(c.complete_name);
+      if (!gOurs.size || !gOo.size) {
+        return { c: c, why: '성 ' + sn + ' 유일 (이름 정보 없음)' };
+      }
+      if (shareGiven(ourName, c.complete_name)) {
+        return { c: c, why: '성 ' + sn + ' 유일 + 이름 겹침' };
+      }
+      if (shareInitial(ourName, c.complete_name)) {
+        return { c: c, why: '성 ' + sn + ' 유일 + 이름 첫 글자' };
+      }
+      return null;    /* 이름이 명백히 다릅니다 */
+    }
     if (cands.length > 1) {
       const hit = cands.filter((c) => shareGiven(ourName, c.complete_name));
       if (hit.length > 1) {
