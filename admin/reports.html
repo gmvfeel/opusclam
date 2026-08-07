@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>데이터 신고 처리 · OPUSCLAM ADMIN</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 120px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+  .card p{margin:0 0 14px;color:#5c5e70;font-size:13px}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.ok{background:#0f7a3d}
+  button.drop{background:#8a8c9e}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input[type=search],input[type=text]{padding:9px 12px;border:1px solid #d8d8e2;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .log{display:none;margin-top:10px;max-height:200px;overflow:auto;background:#12131c;color:#d7d9e8;border-radius:7px;padding:12px 14px;font:12px/1.7 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+  .log.on{display:block}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
+  .stat{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .stat div{background:#f2f2f7;border-radius:7px;padding:8px 12px;font-size:12px;cursor:pointer}
+  .stat div:hover{background:#e8e8f2}
+  .stat div.on{background:#20223a;color:#fff}
+  .stat b{font-size:15px;display:block}
+  .lst{margin-top:14px;border:1px solid #eeeef4;border-radius:8px;background:#fff;display:none}
+  .lst.on{display:block}
+
+  .it{display:grid;grid-template-columns:26px 1fr 150px 96px 88px 92px;gap:12px;align-items:start;padding:13px 14px;border-bottom:1px solid #f4f4f8;font-size:12.5px}
+  .it:last-child{border-bottom:0}
+  .it:hover{background:#fafaff}
+  .it.pick{background:#f5f3ff}
+  .it input[type=checkbox]{width:16px;height:16px;margin:2px 0 0;cursor:pointer}
+  .bd{display:block;font-weight:700;line-height:1.5;margin-bottom:5px}
+  .bd a{color:#20223a;text-decoration:none;border-bottom:1px solid #dcdce8}
+  .bd a:hover{color:#5b4b9e;border-bottom-color:currentColor}
+  .rp{color:#3d3f52;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+  .mt{color:#8a8c9e;font-size:11.5px;margin-top:6px}
+  .tg{display:inline-block;border-radius:99px;padding:2px 9px;font-size:10.5px;font-weight:700;white-space:nowrap}
+  .tg-wrong{background:#fff1f1;color:#a01c1c}
+  .tg-missing{background:#fff8e8;color:#8a5a10}
+  .tg-dup{background:#eaf0fd;color:#1a4aa5}
+  .tg-other{background:#f2f2f7;color:#5c5e70}
+  .tg-open{background:#fff1f1;color:#a01c1c}
+  .tg-doing{background:#fff8e8;color:#8a5a10}
+  .tg-done{background:#eafdf0;color:#0f7a3d}
+  .tg-drop{background:#f2f2f7;color:#8a8c9e}
+  .an{color:#5c5e70;font-size:11.5px;line-height:1.6}
+
+  .fixbar{position:fixed;left:0;right:0;bottom:0;background:#20223a;color:#fff;padding:12px 18px;display:none;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;box-shadow:0 -3px 14px rgba(0,0,0,.16);z-index:30}
+  .fixbar.on{display:flex}
+  .fixbar b{font-size:16px}
+  .fixbar input[type=text]{min-width:220px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="admin.html">← 관리자 페이지</a>
+
+  <h1>데이터 신고 처리</h1>
+  <div class="sub">
+    상세 화면의 <b>「정보 오류 신고」</b>로 들어온 것입니다.
+    회원과 손님이 알려 준 내용이니 <b>먼저 확인하고 고친 뒤</b> 처리로 옮기십시오.
+  </div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <h2>신고 목록</h2>
+    <p>
+      제목을 누르면 <b>그 항목의 화면</b>이 새 창에서 열립니다.
+      고친 뒤 「반영했음」으로 옮기십시오.
+    </p>
+    <div class="row">
+      <select id="status">
+        <option value="open">아직 안 본 것</option>
+        <option value="doing">보는 중</option>
+        <option value="done">반영했음</option>
+        <option value="drop">반영 안 함</option>
+        <option value="">전부</option>
+      </select>
+      <button id="load">불러오기</button>
+      <button class="ghost" id="clr">체크 모두 풀기</button>
+    </div>
+    <div class="row" style="margin-top:9px">
+      <input type="search" id="find" placeholder="내용 · 제목 · 자료 이름으로 걸러내기" style="flex:1 1 260px;min-width:0">
+      <span id="fcnt" style="color:#8a8c9e;font-size:12px"></span>
+    </div>
+    <div class="stat" id="stat"></div>
+    <div class="log" id="log"></div>
+
+    <div class="note">
+      <b>신고는 자료가 아니라 단서입니다.</b> 알려 준 내용이 맞는지 반드시 직접
+      확인하십시오. 「이게 맞다」는 주장이 틀릴 수도 있습니다.
+      <br><br>
+      <b>고치는 것은 여기서 하지 않습니다.</b> 이 화면은 신고를 <b>읽고 상태를
+      옮기는 곳</b>입니다. 자료를 고치는 것은 해당 DB 관리 화면이나 SQL 로 하십시오.
+      한 화면이 너무 많은 일을 하면 실수가 늘어납니다.
+      <br><br>
+      <b>손님도 신고할 수 있습니다.</b> 회원이 적은 지금 로그인을 요구하면 아무
+      신고도 들어오지 않습니다. 대신 같은 항목에 10분 안에 다시 넣지 못하게
+      막아 두었습니다.
+    </div>
+
+    <div class="lst" id="lst"></div>
+  </div>
+</div>
+
+<div class="fixbar" id="fixbar">
+  <span>고른 신고 <b id="cnt">0</b>건</span>
+  <input type="text" id="note" placeholder="관리자 쪽지 (없어도 됩니다)">
+  <button class="ghost" id="toDoing">보는 중</button>
+  <button class="ok" id="toDone">반영했음</button>
+  <button class="drop" id="toDrop">반영 안 함</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/admin-guard.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* ★ 싱글턴 — 인스턴스가 두 개면 RLS 가 어긋납니다.
+     admin-guard.js 도 window.__ocSb 를 먼저 찾습니다. */
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
+
+  function $(id){ return document.getElementById(id); }
+  function esc(t){
+    return (t==null?'':String(t))
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function warn(t){ var w=$('warn'); w.classList.add('on'); w.textContent=t; }
+  function log(t){
+    var b=$('log'); b.classList.add('on');
+    b.textContent += t + '\n'; b.scrollTop = b.scrollHeight;
+  }
+
+  var KIND_KO   = { wrong:'틀림', missing:'빠짐', dup:'중복', other:'그 밖' };
+  var STATUS_KO = { open:'안 봄', doing:'보는 중', done:'반영했음', drop:'반영 안 함' };
+
+  /* ★ 표 이름 → 어느 화면으로 가는지.
+     assets/report.js 의 data-table 값과 <b>같아야 합니다.</b>
+     한쪽만 고치면 링크가 엉뚱한 곳으로 갑니다. */
+  var PAGE = {
+    academic        : ['/db/academic-view.html',   '학술'],
+    foundations     : ['/db/foundation-view.html', '기관·재단'],
+    modern_composers: ['/db/modern-view.html',     '한국 근현대'],
+    orgs            : ['/db/org-view.html',        '단체'],
+    persons         : ['/db/person-view.html',     '인물'],
+    schools         : ['/db/school-view.html',     '학교'],
+    venues          : ['/db/venue-view.html',      '공연장'],
+    person_works    : ['/db/work-view.html',       '작품']
+  };
+
+  var rows = [], picked = {};
+
+  /* ── 나눠 받기 ────────────────────────────────────────────
+     ★ PostgREST 는 <b>RPC 반환도 200줄까지만</b> 내보냅니다.
+       2026-08-08 에 이 함정을 네 번 밟았습니다.
+     ★ 끝냄은 0개일 때만, offset 은 실제로 받은 수만큼. */
+  async function fetchAll(status){
+    var PAGE_N = 200, out = [], off = 0, guard = 0;
+    while (guard++ < 40) {
+      var r = await sb.rpc('oc_report_list', {
+        p_status: status, p_limit: PAGE_N, p_offset: off
+      });
+      if (r.error) throw new Error(r.error.message);
+      var got = r.data || [];
+      if (!got.length) break;
+      out = out.concat(got);
+      off += got.length;
+    }
+    return out;
+  }
+
+  async function load(){
+    $('load').disabled = true;
+    $('log').textContent = '';
+    var st = $('status').value;
+    log('신고를 불러옵니다…' + (st ? ' (' + (STATUS_KO[st]||st) + ')' : ' (전부)'));
+    try {
+      rows = await fetchAll(st === '' ? null : st);
+      picked = {};
+      $('find').value = '';
+      render();
+      await counts();
+      log('✅ ' + rows.length + '건');
+      if (!rows.length) log('  들어온 신고가 없습니다.');
+    } catch (e){
+      var m = e.message || String(e);
+      if (window.OCAdminGuard && OCAdminGuard.isAuthLost(m))
+        warn('로그인이 풀렸습니다. 다시 로그인해 주십시오.');
+      else if (/function .*does not exist|could not find/i.test(m))
+        warn('함수가 없습니다. 11-RUN-NOW-reports.sql 을 먼저 실행해 주십시오.');
+      else warn('불러오지 못했습니다 — ' + m);
+      log('✗ ' + m);
+    }
+    $('load').disabled = false;
+  }
+
+  async function counts(){
+    try {
+      var r = await sb.rpc('oc_report_count');
+      if (r.error) throw new Error(r.error.message);
+      var by = {}; (r.data||[]).forEach(function(x){ by[x.status] = Number(x.n)||0; });
+      var cur = $('status').value;
+      var h = [];
+      ['open','doing','done','drop'].forEach(function(k){
+        h.push('<div class="' + (cur===k?'on':'') + '" data-st="' + k + '">'
+             + '<b>' + (by[k]||0) + '</b>' + STATUS_KO[k] + '</div>');
+      });
+      $('stat').innerHTML = h.join('');
+    } catch (e) { /* 셈이 안 되어도 목록은 봅니다 */ }
+  }
+
+  function render(){
+    var box = $('lst');
+    if (!rows.length){ box.classList.remove('on'); box.innerHTML=''; bar(); return; }
+    box.innerHTML = rows.map(function(x){
+      var p = PAGE[x.target_table];
+      var title = x.target_title || '(제목 없음)';
+      var link = (p && x.target_id)
+        ? '<a href="' + p[0] + '?id=' + encodeURIComponent(x.target_id)
+          + '" target="_blank" rel="noopener">' + esc(title) + '</a>'
+        : esc(title);
+      var where = p ? p[1] : x.target_table;
+      var s = [x.body, x.target_title, x.target_table, where, x.reporter_name]
+        .filter(Boolean).join(' ').toLowerCase();
+      var when = String(x.created_at||'').slice(0,16).replace('T',' ');
+      return ''
+        + '<div class="it' + (picked[x.id]?' pick':'') + '" data-id="' + esc(x.id) + '"'
+        + ' data-s="' + esc(s) + '">'
+        +   '<input type="checkbox"' + (picked[x.id]?' checked':'') + '>'
+        +   '<div>'
+        +     '<span class="bd">' + link + '</span>'
+        +     '<div class="rp">' + esc(x.body) + '</div>'
+        +     '<div class="mt">' + esc(where) + ' · id ' + esc(x.target_id == null ? '—' : x.target_id)
+        +       ' · ' + esc(when)
+        +       (x.reporter_name ? ' · ' + esc(x.reporter_name) : ' · 손님')
+        +     '</div>'
+        +   '</div>'
+        +   '<div class="an">' + (x.admin_note ? esc(x.admin_note) : '') + '</div>'
+        +   '<div><span class="tg tg-' + esc(x.kind) + '">' + esc(KIND_KO[x.kind]||x.kind) + '</span></div>'
+        +   '<div><span class="tg tg-' + esc(x.status) + '">' + esc(STATUS_KO[x.status]||x.status) + '</span></div>'
+        +   '<div class="mt">' + esc(x.target_table) + '</div>'
+        + '</div>';
+    }).join('');
+    box.classList.add('on');
+    bar();
+  }
+
+  function bar(){
+    var ids = Object.keys(picked).filter(function(k){ return picked[k]; });
+    $('cnt').textContent = ids.length;
+    $('fixbar').classList[ids.length ? 'add' : 'remove']('on');
+  }
+
+  /* 걸러내기 — 서버에 다시 묻지 않습니다 */
+  var ft = null;
+  $('find').addEventListener('input', function(){
+    if (ft) clearTimeout(ft);
+    ft = setTimeout(function(){
+      var q = String($('find').value||'').trim().toLowerCase();
+      var hit = 0;
+      $('lst').querySelectorAll('.it').forEach(function(el){
+        var ok = !q || (el.getAttribute('data-s')||'').indexOf(q) >= 0;
+        el.style.display = ok ? '' : 'none';
+        if (ok) hit++;
+      });
+      $('fcnt').textContent = q ? (hit + '건 보임') : '';
+    }, 120);
+  });
+
+  $('lst').addEventListener('click', function(e){
+    if (e.target.tagName === 'A') return;   /* 링크는 그대로 열립니다 */
+    var it = e.target.closest('.it');
+    if (!it) return;
+    var id = it.getAttribute('data-id');
+    if (picked[id]) delete picked[id]; else picked[id] = true;
+    it.classList[picked[id] ? 'add' : 'remove']('pick');
+    var ck = it.querySelector('input[type=checkbox]');
+    if (ck) ck.checked = !!picked[id];
+    bar();
+  });
+
+  $('stat').addEventListener('click', function(e){
+    var d = e.target.closest('[data-st]');
+    if (!d) return;
+    $('status').value = d.getAttribute('data-st');
+    load();
+  });
+
+  $('load').addEventListener('click', load);
+  $('clr').addEventListener('click', function(){ picked = {}; render(); });
+  $('status').addEventListener('change', function(){ if (rows.length) load(); });
+
+  async function setStatus(st){
+    var ids = Object.keys(picked).filter(function(k){ return picked[k]; }).map(Number);
+    if (!ids.length) return;
+    if (!confirm(ids.length + '건을 「' + STATUS_KO[st] + '」 으로 옮깁니다.\n\n계속할까요?')) return;
+
+    /* ★ 바꾸기 직전에 로그인을 다시 확인합니다 — 관리자 화면은
+       오래 열어 두므로 그 사이 풀릴 수 있습니다. */
+    if (window.OCAdminGuard) {
+      var g = await OCAdminGuard.check(sb);
+      if (!g.ok){ warn(g.msg || '로그인을 확인할 수 없습니다.'); return; }
+    }
+
+    ['toDoing','toDone','toDrop'].forEach(function(k){ $(k).disabled = true; });
+    try {
+      var r = await sb.rpc('oc_report_set', {
+        p_ids: ids, p_status: st,
+        p_note: String($('note').value||'').trim() || null
+      });
+      if (r.error) throw new Error(r.error.message);
+      log('✅ ' + r.data + '건을 「' + STATUS_KO[st] + '」 으로 옮겼습니다');
+      $('note').value = '';
+      picked = {};
+      await load();
+    } catch (e){
+      var m = e.message || String(e);
+      if (/관리자만/.test(m)) warn('관리자만 쓸 수 있습니다.');
+      else if (window.OCAdminGuard && OCAdminGuard.isAuthLost(m))
+        warn('로그인이 풀렸습니다. 다시 로그인해 주십시오.');
+      else warn('바꾸지 못했습니다 — ' + m);
+      log('✗ ' + m);
+    }
+    ['toDoing','toDone','toDrop'].forEach(function(k){ $(k).disabled = false; });
+  }
+
+  $('toDoing').addEventListener('click', function(){ setStatus('doing'); });
+  $('toDone').addEventListener('click',  function(){ setStatus('done'); });
+  $('toDrop').addEventListener('click',  function(){ setStatus('drop'); });
+
+  /* 열자마자 안 본 것을 보여 줍니다 — 관리자가 가장 자주 볼 것입니다 */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', load);
+  } else { load(); }
+})();
+</script>
+</body>
+</html>
