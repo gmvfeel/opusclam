@@ -116,6 +116,15 @@ Disallow: /*?edit=
 Disallow: /search.html?
 Disallow: /*?q=
 Disallow: /*?page=
+# ★ 2026-08-07 보탬 — 폴더 규칙이 놓치던 개별 화면
+#   /lesson/ 안에 회원·관리자 전용 화면이 섞여 있어 폴더로는 막히지 않습니다.
+Disallow: /lesson/my-lessons.html
+Disallow: /lesson/instructor-apply.html
+Disallow: /lesson/curate.html
+# ★ 상세 화면 — 내용을 자바스크립트로 불러오므로 봇에게는 빈 껍데기입니다.
+#   빈 페이지가 색인되는 것을 막습니다. 나중에 서버에서 미리 그려 주게 되면
+#   아래 줄을 지우면 풀립니다.
+Disallow: /*-view.html
 # 예의상 요청 사이를 띄워 주십시오
 Crawl-delay: 1
 
@@ -137,6 +146,15 @@ Disallow: /*?edit=
 Disallow: /search.html?
 Disallow: /*?q=
 Disallow: /*?page=
+# ★ 2026-08-07 보탬 — 폴더 규칙이 놓치던 개별 화면
+#   /lesson/ 안에 회원·관리자 전용 화면이 섞여 있어 폴더로는 막히지 않습니다.
+Disallow: /lesson/my-lessons.html
+Disallow: /lesson/instructor-apply.html
+Disallow: /lesson/curate.html
+# ★ 상세 화면 — 내용을 자바스크립트로 불러오므로 봇에게는 빈 껍데기입니다.
+#   빈 페이지가 색인되는 것을 막습니다. 나중에 서버에서 미리 그려 주게 되면
+#   아래 줄을 지우면 풀립니다.
+Disallow: /*-view.html
 Crawl-delay: 5
 
 
