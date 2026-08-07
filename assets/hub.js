@@ -187,6 +187,46 @@ window.OCHub = (function () {
     var s = ''; for (var i = 0; i < n; i++) s += one; return s;
   }
 
+  /* ── 게시판 자리표 (2026-08-06 · 파트너 요청) ────────────────
+     ★ 왜 만들었나
+       정보SPOT 메인의 「공연정보」는 포스터 넉 장이 들어가는 자리인데,
+       기다리는 동안 <b>짧은 회색 막대 두 개</b>만 보였습니다. 그래서
+       화면이 비어 보이고, 자료가 오는 순간 <b>갑자기 늘어났습니다.</b>
+     ★ 실제 카드와 <b>같은 클래스</b>(bd-card · bd-cardimg · bd-cardbody)를
+       씁니다. 그러면 포스터 비율(3/4)이나 칸 간격을 여기서 다시 적지
+       않아도 <b>저절로 맞습니다.</b> 자리가 바뀌지 않으니 자료가 와도
+       화면이 튀지 않습니다.
+     ★ 갈래마다 모양이 다릅니다 — 포스터는 카드, 목록은 줄. */
+  function skelBoard(kind, n) {
+    n = n || 4;
+    var one;
+    if (kind === 'cards') {
+      one = '<span class="bd-card bd-skelc" aria-hidden="true">'
+          +   '<span class="bd-cardimg"><span class="hub-skel full"></span></span>'
+          +   '<span class="bd-cardbody">'
+          +     '<span class="hub-skel w2"></span>'
+          +     '<span class="hub-skel w7"></span>'
+          +     '<span class="hub-skel w4"></span>'
+          +   '</span>'
+          + '</span>';
+    } else if (kind === 'feature') {
+      one = '<div class="bd-skelf" aria-hidden="true">'
+          +   '<span class="hub-skel w3"></span>'
+          +   '<span class="hub-skel w8"></span>'
+          +   '<span class="hub-skel w6"></span>'
+          + '</div>';
+      n = 1;
+    } else {
+      one = '<div class="bd-loading" aria-hidden="true">'
+          +   '<span class="hub-skel w5"></span><span class="hub-skel w7"></span>'
+          + '</div>';
+      n = Math.min(n, 5);
+    }
+    var out = '';
+    for (var i = 0; i < n; i++) out += one;
+    return out;
+  }
+
   /* ── 영역 카드 (7개 DB 등) ── */
   function drawCards(box, sources) {
     box.innerHTML = sources.map(function (s) {
@@ -531,7 +571,9 @@ window.OCHub = (function () {
   function board(cfg) {
     var box = document.querySelector(cfg.el);
     if (!box) return;
-    box.innerHTML = '<div class="bd-loading"><span class="hub-skel w5"></span><span class="hub-skel w7"></span></div>';
+    /* ★ 갈래에 맞는 자리표를 먼저 놓습니다 — 예전에는 갈래와 상관없이
+       짧은 막대 두 개만 두어, 포스터 자리가 비어 보였습니다. */
+    box.innerHTML = skelBoard(cfg.kind, cfg.skelN || 4);
     askBoard(cfg).then(function (res) {
       if (!res || !res.rows.length) {
         box.innerHTML = '<p class="bd-empty">' + esc(cfg.emptyText || '아직 등록된 글이 없습니다.') + '</p>';

@@ -636,7 +636,39 @@
     background-size:400% 100%;animation:hbsk 1.3s ease infinite}
   .hub-skel.w2{width:74px;height:19px;border-radius:6px}
   .hub-skel.w4{width:46%}.hub-skel.w5{width:58%}.hub-skel.w7{width:80%}
+  /* ★ 2026-08-06 — 게시판 자리표에 쓰는 폭들을 더했습니다 (파트너 요청)
+     w3·w6·w8 은 큰 글 자리표, full 은 포스터 자리 전체를 채웁니다. */
+  .hub-skel.w3{width:34%}.hub-skel.w6{width:66%}.hub-skel.w8{width:92%}
+  .hub-skel.full{width:100%;height:100%;border-radius:0}
   .hub-skelrow,.hub-skelcard{pointer-events:none}
+
+  /* ── 게시판 자리표 (assets/hub.js 의 skelBoard) ─────────────
+     ★ 실제 카드와 <b>같은 클래스</b>(bd-card 등)를 쓰므로 비율·간격은
+       그쪽 규칙이 정합니다. 여기서는 「자리표라서 다른 점」만 적습니다 —
+       누를 수 없고, 글자 자리에 막대가 세로로 쌓이는 것뿐입니다.
+     ★ 자리가 실제 카드와 같아야 자료가 왔을 때 <b>화면이 튀지 않습니다.</b> */
+  .bd-skelc{pointer-events:none;cursor:default}
+  .bd-skelc .bd-cardbody{display:flex;flex-direction:column;gap:8px}
+  .bd-skelf{padding:18px 0;display:flex;flex-direction:column;gap:11px}
+  /* ★ 자리표를 <b>보이게</b> 만듭니다 (2026-08-06)
+     처음에는 .hub-skel 의 색(var(--paper-2))을 그대로 썼는데, 카드 바탕도
+     같은 계열이라 <b>거의 안 보였습니다.</b> 「로딩 중」을 알리려고 둔
+     것인데 안 보이면 없는 것과 같습니다.
+     ▶ 회색을 <b>반투명(rgba)</b>으로 씁니다 — 밝은 모드에서는 옅은 회색,
+       어두운 모드에서는 옅은 흰색이 되어 <b>두 모드 모두</b> 적당히
+       드러납니다. 색을 두 번 적지 않아도 됩니다. */
+  .bd-skelc .bd-cardimg{background:rgba(125,125,155,.08)}
+  .bd-skelc .hub-skel,
+  .bd-skelf .hub-skel{
+    background:linear-gradient(90deg,
+      rgba(125,125,155,.10) 25%, rgba(125,125,155,.20) 37%, rgba(125,125,155,.10) 63%);
+    background-size:400% 100%}
+  html[data-theme="dark"] .bd-skelc .bd-cardimg{background:rgba(255,255,255,.05)}
+  html[data-theme="dark"] .bd-skelc .hub-skel,
+  html[data-theme="dark"] .bd-skelf .hub-skel{
+    background:linear-gradient(90deg,
+      rgba(255,255,255,.06) 25%, rgba(255,255,255,.13) 37%, rgba(255,255,255,.06) 63%);
+    background-size:400% 100%}
   @keyframes hbsk{0%{background-position:100% 0}100%{background-position:0 0}}
 
   @media (max-width:1040px){
