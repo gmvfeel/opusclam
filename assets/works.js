@@ -36,9 +36,35 @@
   var H   = { apikey: KEY, Authorization: 'Bearer ' + KEY };
 
   /* 분야를 보여 줄 순서 — 규모가 큰 것부터, 그리고 서로 가까운 것끼리 */
-  var ORDER = ['관현악', '교향악', '협주곡', '실내악', '피아노', '독주', '기타',
-               '전자음악', '성악', '합창', '오르간·교회음악', '무대', '관악', '영화·방송'];
+  var ORDER = ['관현악', '교향악', '협주곡', '실내악', '건반', '피아노', '독주', '기타',
+               '전자음악', '성악', '합창', '오르간·교회음악', '무대 · 오페라', '무대',
+               '관악', '영화·방송'];
   var FIRST = 8;          /* 분야마다 처음 몇 곡을 보여 줄지 */
+
+  /* ★ 2026-08-08 분야 값이 두 가지 말로 섞여 있습니다 ──────────
+     · 기존 wixon 자료 1,022개 → 한국어 (관현악 · 교향악 …)
+     · Open Opus 로 채운 것    → 영어  (Orchestral · Keyboard …)
+
+     한국어 화면에 영어 제목이 그대로 뜨고 있었습니다. 그리고 위
+     ORDER 는 한국어라서 영어 분야는 모두 순서 뒤로 밀렸습니다.
+
+     ★ 값을 고치지 않고 <b>보일 때만</b> 옮깁니다. 표의 값을 손대면
+       work.html 의 필터(실제 값으로 채우는 oc_work_facets)와
+       어긋납니다. 화면에서만 한국어로 보이면 됩니다.
+     ★ 이 표는 db/work-view.html 의 GKO 와 같은 값이어야 합니다.
+       한쪽만 고치면 두 화면의 분야 이름이 달라집니다. */
+  var GKO = {
+    Orchestral: '관현악',
+    Keyboard  : '건반',
+    Chamber   : '실내악',
+    Stage     : '무대 · 오페라',
+    Vocal     : '성악'
+  };
+  function genreKo(g) {
+    if (!g) return '';
+    g = String(g).trim();
+    return GKO[g] || g;
+  }
 
   function esc(v) {
     return String(v == null ? '' : v)
@@ -61,17 +87,71 @@
     return r.json();
   }
 
-  /* ── 작품 한 줄 ──────────────────────────────────────────── */
+  /* ── 나눠 받기 ───────────────────────────────────────────────
+     ★ PostgREST 는 <b>한 번에 200개까지만</b> 줍니다. limit=2000 을
+       줘도 200개만 옵니다. 그래서 바흐(1,000곡 넘음) 상세에서
+       <b>작품이 200곡만 보이고 있었습니다.</b> 화면에는 「전체
+       목록」 이라 적혀 있어 사실과 달랐습니다.
+
+     ★ 끝냄 조건을 <b>0개일 때만</b> 으로 둡니다.
+       「받은 수 &lt; 요청한 수」 로 하면 200개를 받은 첫 바퀴에서
+       바로 멈춥니다(2026-08-07 에 이 실수를 두 번 했습니다).
+     ★ offset 은 <b>실제로 받은 수만큼</b> 넘깁니다.
+
+     guard 30 바퀴 = 6,000곡까지. 가장 많은 바흐가 1,000곡대이므로
+     넉넉합니다. 끝없이 도는 것을 막는 안전장치입니다. */
+  var PAGE = 200;
+  async function getAll(base) {
+    var out = [], off = 0, guard = 0;
+    while (guard++ < 30) {
+      var rows = await get(base + '&limit=' + PAGE + '&offset=' + off);
+      if (!rows || !rows.length) break;      /* 0개일 때만 끝냅니다 */
+      out = out.concat(rows);
+      off += rows.length;                    /* 실제로 받은 수만큼 */
+    }
+    return out;
+  }
+
+  /* ── 작품 한 줄 ──────────────────────────────────────────────
+     ★ 2026-08-08 <b>제목을 작품DB 상세로 가는 문</b>으로 바꿨습니다.
+       그 전에는 글자만 있어서 눌러도 아무 일이 없었습니다. 어제
+       db/work-view.html 을 만들었는데 <b>인물DB 쪽에는 들어가는 길이
+       없었습니다.</b> 이제 인물 → 작품 → IMSLP 악보로 이어집니다.
+
+     ★ 왜 줄 전체가 아니라 <b>제목만</b> 링크인가
+       .wk-it 은 &lt;li&gt; 에 붙은 flex 짜임입니다. 줄 전체를 &lt;a&gt; 로
+       바꾸면 &lt;ul&gt; 의 자식이 &lt;li&gt; 가 아니게 되어 규칙에 어긋나고,
+       기존 CSS 를 손대야 합니다. 제목만 링크로 하면 <b>짜임을 하나도
+       건드리지 않습니다.</b>
+
+     ★ id 가 없으면 글자로 남깁니다 — 링크가 깨진 곳으로 가는 것보다
+       눌리지 않는 편이 낫습니다. */
   function workRow(w) {
     var meta = [];
     if (w.opus)      meta.push(esc(w.opus));
     if (w.year_text) meta.push(esc(w.year_text));
+
+    var t = esc(w.title_ko || w.title);
+    var title = w.id
+      ? '<a class="wk-t" href="/db/work-view.html?id='
+        + encodeURIComponent(w.id) + '">' + t + '</a>'
+      : '<span class="wk-t">' + t + '</span>';
+
+    /* IMSLP 번호가 있으면 악보로 바로 갑니다. 위키데이터 P839 값이
+       그대로 IMSLP 문서 이름입니다 — 검색을 거치지 않습니다. */
+    var sc = w.imslp_ref
+      ? '<a class="wk-sc" href="https://imslp.org/wiki/'
+        + encodeURIComponent(w.imslp_ref)
+        + '" target="_blank" rel="noopener">악보</a>'
+      : '';
+
     return ''
       + '<li class="wk-it">'
-      +   '<span class="wk-t">' + esc(w.title_ko || w.title) + '</span>'
+      +   title
       +   (w.title_ko && w.title
           ? '<span class="wk-orig">' + esc(w.title) + '</span>' : '')
       +   (meta.length ? '<span class="wk-m">' + meta.join(' · ') + '</span>' : '')
+      +   sc
       +   (w.note ? '<span class="wk-n">' + esc(w.note) + '</span>' : '')
       + '</li>';
   }
@@ -98,10 +178,15 @@
   function drawWorks(box, rows) {
     if (!rows.length) { hideSection(box); return; }
 
-    /* 분야별로 묶습니다. 분야가 없는 것은 마지막에 「그 밖」 으로 */
+    /* 분야별로 묶습니다. 분야가 없는 것은 마지막에 「그 밖」 으로
+
+       ★ 묶기 전에 <b>한국어로 옮겨서</b> 묶습니다. 한 작곡가에게
+         Orchestral 과 관현악이 함께 있을 수 있습니다(기존 자료 +
+         Open Opus). 값대로 묶으면 <b>「관현악」 묶음이 두 개</b>
+         나옵니다. data-g 는 아무 곳에서도 읽지 않으므로 안전합니다. */
     var bag = {};
     rows.forEach(function (w) {
-      var g = w.genre || '그 밖';
+      var g = genreKo(w.genre) || '그 밖';
       (bag[g] = bag[g] || []).push(w);
     });
 
@@ -280,11 +365,30 @@
       /* 작품과 수상을 함께 물어봅니다. 한쪽이 실패해도 다른 쪽은 그립니다 */
       var W = [], A = [];
       try {
-        W = await get('person_works?select=title,title_ko,opus,year_text,year_from,'
-          + 'year_to,genre,note&person_id=eq.' + encodeURIComponent(pid)
-          + '&order=genre.asc,year_from.asc&limit=2000');
+        /* ★ 2026-08-08 바뀐 곳 세 가지
+             ① id · imslp_ref 를 함께 받습니다 — 제목을 작품DB 상세로
+                가는 링크로 만들고, 악보로 바로 가는 단추를 붙이려면
+                이 두 칸이 있어야 합니다
+             ② hidden=not.is.true — 어제 person_works 에 hidden 칸을
+                넣었는데 이 파일은 그것을 몰랐습니다. 어드민에서 감춘
+                작품이 인물 상세에는 그대로 보이고 있었습니다.
+                (is.false 로 쓰면 null 을 놓칩니다. 이 표는 not null
+                 default false 라 지금은 같지만, 규칙을 지킵니다)
+             ③ limit 을 빼고 나눠 받습니다 — 200개 상한 때문입니다 */
+        W = await getAll('person_works?select=id,title,title_ko,opus,year_text,'
+          + 'year_from,year_to,genre,note,imslp_ref&person_id=eq.'
+          + encodeURIComponent(pid)
+          + '&hidden=not.is.true'
+          + '&order=genre.asc,year_from.asc,id.asc');
       } catch (e) { console.error('작품을 불러오지 못했습니다:', e); }
       try {
+        /* ★ 수상은 <b>일부러 그대로 둡니다.</b> 200개 상한이 걸리지만
+             person_awards 는 지금 21건이고, 한 사람이 200개를 넘는
+             경우는 없습니다. 그리고 이 표에 id 칸이 있는지 확인하지
+             않았습니다 — 안정된 정렬 없이 나눠 받으면 바퀴마다 순서가
+             흔들려 <b>빠지거나 겹칩니다.</b> 칸을 짐작해서 쓰지
+             않습니다(2026-08-07 에 score_links.id 를 짐작해 오류를
+             냈습니다). 수상이 늘어나면 그때 확인하고 고칩니다. */
         A = await get('person_awards?select=year,year_text,title,title_ko,org'
           + '&person_id=eq.' + encodeURIComponent(pid)
           + '&order=year.asc&limit=500');
@@ -299,11 +403,16 @@
           /* ★ link_url 은 묻지 않습니다 — 악보 링크는 score_links 표로
              옮겼고, 그 표는 회원만 읽습니다. 여기서는 <b>링크가 있는지</b>만
              score_links 를 세어 확인합니다(비회원은 0으로 나옵니다). */
-          S = await get('spot?select=id,title,title_ko,category,score_opus,score_pages,'
+          /* ★ 2026-08-08 limit=200 은 <b>상한과 똑같은 수</b>였습니다.
+             그래서 악보가 200개를 넘는 작곡가는 <b>조용히 잘려</b>
+             있었는데, 잘린 것인지 원래 그만큼인지 알 수 없었습니다.
+             나눠 받기로 바꿉니다. order 에 id 가 붙어 있어 바퀴마다
+             순서가 흔들리지 않습니다. */
+          S = await getAll('spot?select=id,title,title_ko,category,score_opus,score_pages,'
             + 'file_url,file_name,score_links(spot_id)&section=eq.' + encodeURIComponent('악보')
             + '&review_status=eq.approved&hidden=is.false'
             + '&person_id=eq.' + encodeURIComponent(pid)
-            + '&order=created_at.desc,id.asc&limit=200');
+            + '&order=created_at.desc,id.asc');
         } catch (e) { console.error('악보를 불러오지 못했습니다:', e); }
       }
 
