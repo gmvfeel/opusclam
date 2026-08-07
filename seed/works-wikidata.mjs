@@ -56,9 +56,13 @@
      --composer=Q1339   그 작곡가만 (여러 개는 쉼표로)
      --max-works=N      한 작곡가당 최대 작품 수 (기본 800)
      --debug            받은 값을 자세히
+     --redo             이미 작품이 담긴 작곡가도 다시 훑습니다
+                        (기본은 건너뜁니다 — 그러지 않으면 상위 몇 명만
+                         되풀이하고 새 작곡가에게 가지 못합니다)
 
    ★ 대상을 고르는 순서
-     악보가 많이 담긴 작곡가부터입니다(persons.score_count 내림차순).
+     악보가 많이 담긴 작곡가부터이고, <b>이미 작품이 담긴 분은 넘깁니다.</b>
+     (persons.score_count 내림차순)
      그분들은 IMSLP 연결이 바로 확인되고, 널리 연주되는 작곡가이므로
      작품 정보도 충실합니다. 6,860명을 한 번에 돌리지 않습니다.
 
@@ -89,6 +93,8 @@ const MAX_WORKS  = Number(args['max-works']) > 0 ? Number(args['max-works']) : 8
 const ONLY_QIDS  = typeof args.composer === 'string'
   ? args.composer.split(',').map((s) => s.trim()).filter(Boolean)
   : null;
+/* 이미 작품이 담긴 작곡가를 건너뜁니다 (--redo 를 주면 건너뛰지 않습니다) */
+const SKIP_DONE = !args.redo;
 
 const WDQS = 'https://query.wikidata.org/sparql';
 const UA   = 'OpusclamWorksBot/1.0 (https://opusclam.com)';
@@ -181,27 +187,59 @@ async function pickComposers() {
     return rows || [];
   }
 
-  /* 악보가 많은 작곡가부터. score_count 가 빈 값인 분은 뒤로 갑니다.
+  /* ★ 2026-08-07 <b>이미 작품이 담긴 작곡가를 건너뜁니다.</b>
 
-     ★ Supabase(PostgREST)는 한 번에 돌려주는 줄 수에 <b>상한</b>이 있습니다.
-       이 프로젝트는 <b>200</b>입니다. limit 을 300으로 줘도 200명만 옵니다.
-       (Open Opus 보강에서 이것 때문에 200개만 읽히는 버그가 있었습니다)
-       그래서 200명을 넘겨 달라고 하면 알려 드립니다. */
-  if (LIMIT > 200) {
-    console.log(`  ※ 한 번에 받을 수 있는 상한이 200명입니다 —`
-      + ` ${LIMIT}명을 달라고 하셨지만 200명까지만 옵니다.`);
-    console.log('    여러 번 나눠 돌리시면 이미 담긴 것은 건너뜁니다.');
+     앞판은 악보가 많은 순으로 뽑기만 했습니다. 그래서 몇 번을 돌려도
+     <b>베토벤 · 모차르트 · 쇼팽… 같은 상위 30명만 되풀이</b>했습니다.
+     로그가 「이미 있음 1,559개 / 새로 담을 것 14개」로 나온 까닭입니다.
+     새 작곡가에게 도달하지 못했습니다.
+
+     ▶ 먼저 담긴 작곡가를 모아 두고, 후보를 쪽 단위로 받으며
+       담긴 분은 넘기고 필요한 수만큼 채웁니다. */
+  const done = new Set();
+  if (SKIP_DONE) {
+    /* ★ 상한을 숫자로 못박지 않습니다 — offset 을 <b>실제 받은 수만큼</b>
+       넘깁니다. 서버가 몇 개를 주든 맞아떨어지고, 상한이 바뀌어도
+       그대로 돕니다. (Open Opus 보강에서 같은 함정을 겪었습니다) */
+    let off = 0;
+    for (let guard = 0; guard < 500; guard++) {
+      const rows = await sb(
+        `person_works?select=person_id&source=eq.wikidata`
+        + `&limit=1000&offset=${off}`
+      );
+      if (!rows || !rows.length) break;
+      for (const r of rows) done.add(r.person_id);
+      off += rows.length;
+    }
+    console.log(`   이미 작품이 담긴 작곡가 ${done.size}명은 건너뜁니다`
+      + ` (작품 ${off}개를 훑었습니다)`);
   }
 
-  const rows = await sb(
-    `persons?select=id,name_ko,name_en,wikidata_id,era_name,score_count` +
-    `&field=like.*작곡*` +
-    `&wikidata_id=not.is.null` +
-    `&score_count=gte.${MIN_SCORES}` +
-    `&order=score_count.desc.nullslast,id.asc` +
-    `&limit=${LIMIT}`
-  );
-  return rows || [];
+  const out = [];
+  let seen = 0;
+  for (let guard = 0; guard < 60 && out.length < LIMIT; guard++) {
+    const rows = await sb(
+      `persons?select=id,name_ko,name_en,wikidata_id,era_name,score_count` +
+      `&field=like.*작곡*` +
+      `&wikidata_id=not.is.null` +
+      `&score_count=gte.${MIN_SCORES}` +
+      `&order=score_count.desc.nullslast,id.asc` +
+      `&limit=1000&offset=${seen}`
+    );
+    if (!rows || !rows.length) break;
+    seen += rows.length;
+    for (const r of rows) {
+      if (done.has(r.id)) continue;
+      out.push(r);
+      if (out.length >= LIMIT) break;
+    }
+  }
+  if (!out.length && SKIP_DONE && done.size) {
+    console.log('   ※ 조건에 맞는 <b>새</b> 작곡가가 없습니다.');
+    console.log('     · --min-scores=0 으로 낮춰 악보 없는 분까지 넓히거나');
+    console.log('     · --redo 를 주어 이미 담긴 분을 다시 훑을 수 있습니다');
+  }
+  return out;
 }
 
 /* ============================================================
