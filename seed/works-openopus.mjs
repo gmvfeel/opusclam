@@ -123,6 +123,32 @@ function cats(text) {
   return out;
 }
 
+/* ★ 2026-08-07 작품번호를 <b>두 종류로</b> 나눕니다
+     강한 번호  K.525 · BWV.1046 · D.969 · RV.269 …
+                작곡가별 고유 목록이라 <b>한 곡을 유일하게</b> 가리킵니다
+                → 번호만 같으면 맞춥니다
+     약한 번호  Op.10
+                묶음 번호라 <b>여러 곡에 걸립니다</b>(op.10 = 에튀드 12곡)
+                → 번호 + 첫 낱말이 함께 같아야 합니다
+
+   앞판은 모두 「번호 + 첫 낱말」을 요구했습니다. 그래서
+       우리  Eine kleine Nachtmusik   (IMSLP 에 K.525)
+       OO    Serenade no. 13 in G major, K.525
+   가 첫 낱말이 달라(eine / serenade) 거부됐습니다.
+   The Marriage of Figaro ↔ Le nozze di Figaro 도 같은 경우입니다. */
+const WEAK_RE = /^OP\d/;
+function isWeak(c) { return WEAK_RE.test(c); }
+function strongOf(set) {
+  const o = new Set();
+  for (const c of set) if (!isWeak(c)) o.add(c);
+  return o;
+}
+function weakOf(set) {
+  const o = new Set();
+  for (const c of set) if (isWeak(c)) o.add(c);
+  return o;
+}
+
 function deaccent(s) {
   return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -160,19 +186,23 @@ async function loadOpenOpus() {
    2) 우리 작품 읽기 (쪽 나눠서)
    ============================================================ */
 async function loadOurWorks() {
+  /* ★ 2026-08-07 <b>여기서 200개만 읽고 멈추는 버그가 있었습니다.</b>
+     Range 머리글로 쪽을 넘기려 했는데 Supabase 가 기본 200개만 돌려주고,
+     끝냄 조건이 「받은 수 < 1000」이라 첫 바퀴에서 멈췄습니다.
+     limt · offset 로 바꾸고 한 번에 1000개씩 받습니다. */
   const out = [];
   const SIZE = 1000;
-  let from = 0;
-  while (true) {
+  let off = 0;
+  for (let guard = 0; guard < 200; guard++) {
     const rows = await sb(
       'person_works?select=id,person_id,title,title_ko,opus,imslp_ref,genre,subtitle'
-      + '&source=eq.wikidata&order=id.asc',
-      { headers: { Range: `${from}-${from + SIZE - 1}` } }
+      + '&source=eq.wikidata&order=id.asc'
+      + `&limit=${SIZE}&offset=${off}`
     );
     if (!rows || !rows.length) break;
     out.push(...rows);
     if (rows.length < SIZE) break;
-    from += SIZE;
+    off += SIZE;
   }
   return out;
 }
@@ -278,9 +308,12 @@ async function main() {
     for (const w of (oo.works || [])) {
       const k = norm(w.title);
       if (k && !ooByTitle.has(k)) ooByTitle.set(k, w);
+      const cs = cats(w.title + ' ' + (w.searchterms || ''));
       ooList.push({
         w,
-        cats: cats(w.title + ' ' + (w.searchterms || '')),
+        cats: cs,
+        strong: strongOf(cs),
+        weak: weakOf(cs),
         fw: firstWord(w.title),
       });
     }
@@ -294,18 +327,33 @@ async function main() {
       const k = norm(our.title);
       if (k && ooByTitle.has(k)) { hit = ooByTitle.get(k); why = '제목 일치'; }
 
-      /* ② 작품번호가 겹치고 첫 낱말까지 같은가 */
+      /* ② 강한 번호(K.525 · BWV.1046 …)는 <b>그것만으로</b> 충분합니다
+            — 한 곡을 유일하게 가리키므로 제목이 아주 달라도 됩니다 */
+      const ourCats = new Set([
+        ...cats(our.title), ...cats(our.imslp_ref), ...cats(our.opus),
+      ]);
+      const ourStrong = strongOf(ourCats);
+      if (!hit && ourStrong.size) {
+        for (const cand of ooList) {
+          let shared = null;
+          for (const c of ourStrong) { if (cand.strong.has(c)) { shared = c; break; } }
+          if (shared) { hit = cand.w; why = '강한 번호 ' + shared; break; }
+        }
+      }
+
+      /* ③ 약한 번호(Op.10)는 <b>첫 낱말까지</b> 같아야 합니다
+            — 그러지 않으면 op.10 하나가 에튀드 열두 곡에 다 걸립니다 */
       if (!hit) {
-        const ourCats = new Set([
-          ...cats(our.title), ...cats(our.imslp_ref), ...cats(our.opus),
-        ]);
-        if (ourCats.size) {
+        const ourWeak = weakOf(ourCats);
+        if (ourWeak.size) {
           const ourFw = firstWord(our.title);
-          for (const cand of ooList) {
-            if (!ourFw || cand.fw !== ourFw) continue;
-            let shared = false;
-            for (const c of ourCats) { if (cand.cats.has(c)) { shared = true; break; } }
-            if (shared) { hit = cand.w; why = '번호+첫 낱말'; break; }
+          if (ourFw) {
+            for (const cand of ooList) {
+              if (cand.fw !== ourFw) continue;
+              let shared = null;
+              for (const c of ourWeak) { if (cand.weak.has(c)) { shared = c; break; } }
+              if (shared) { hit = cand.w; why = '약한 번호 ' + shared + '+첫 낱말'; break; }
+            }
           }
         }
       }
