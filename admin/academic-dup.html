@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>학술DB 중복 검토 · OPUSCLAM ADMIN</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 120px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+  .card h2 .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:#20223a;color:#fff;font-size:12px;align-items:center;justify-content:center}
+  .card p{margin:0 0 14px;color:#5c5e70;font-size:13px}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.danger{background:#dc2626}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input[type=number]{padding:9px 12px;border:1px solid #d8d8e2;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .log{display:none;margin-top:10px;max-height:220px;overflow:auto;background:#12131c;color:#d7d9e8;border-radius:7px;padding:12px 14px;font:12px/1.7 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+  .log.on{display:block}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
+  .stat{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .stat div{background:#f2f2f7;border-radius:7px;padding:8px 12px;font-size:12px}
+  .stat b{font-size:15px;display:block}
+  .lst{margin-top:14px;max-height:660px;overflow:auto;border:1px solid #eeeef4;border-radius:8px;background:#fff;display:none}
+  .lst.on{display:block}
+
+  /* 묶음 머리 */
+  .gh{display:flex;align-items:center;gap:9px;padding:9px 12px;background:#f4f4fa;border-top:1px solid #e6e6f0;border-bottom:1px solid #eeeef4;font-size:12px;font-weight:700;color:#4a4c60;position:sticky;top:0;z-index:1}
+  .gh:first-child{border-top:0}
+  .gh .risk{font-weight:600;color:#a01c1c}
+  .gh .ok{font-weight:600;color:#1a7f4b}
+
+  /* 항목 한 줄 */
+  .it{display:grid;grid-template-columns:26px 62px 1fr 168px 52px 190px 60px;gap:10px;align-items:start;padding:9px 12px;border-bottom:1px solid #f4f4f8;font-size:12.5px}
+  .it:last-child{border-bottom:0}
+  .it:hover{background:#fafaff}
+  .it.pick{background:#fff5f5}
+  .it input[type=checkbox]{width:16px;height:16px;margin:2px 0 0;cursor:pointer}
+  .ti{font-weight:600;line-height:1.45}
+  .au{color:#5c5e70;word-break:break-all}
+  .pu{color:#8a8c9e;word-break:break-all}
+  .id{color:#8a8c9e}
+  .bd{display:inline-block;border-radius:99px;padding:1px 8px;font-size:10.5px;font-weight:700;white-space:nowrap}
+  .bd-pre{background:#fdeaf3;color:#a3186c}
+  .bd-jr{background:#eaf0fd;color:#1a4aa5}
+  .bd-doi{background:#eafdf0;color:#0f7a3d;margin-left:5px}
+
+  /* 아래 고정 바 */
+  .fixbar{position:fixed;left:0;right:0;bottom:0;background:#20223a;color:#fff;padding:12px 18px;display:none;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap;box-shadow:0 -3px 14px rgba(0,0,0,.16);z-index:30}
+  .fixbar.on{display:flex}
+  .fixbar b{font-size:16px}
+  .fixbar .sp{color:#a9abc4;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="admin.html">← 관리자 페이지</a>
+
+  <h1>학술DB 중복 검토</h1>
+  <div class="sub">
+    제목이 같은 자료를 묶음으로 보여 줍니다. <b>고르는 것은 사람이 합니다</b> —
+    화면은 판단하지 않고 표시만 합니다.
+  </div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <h2><span class="n">1</span> 중복 후보 불러오기</h2>
+    <p>
+      제목(대소문자·앞뒤 공백 무시)이 같은 자료를 묶습니다.
+      이미 감춘 것은 빠집니다.
+    </p>
+    <div class="row">
+      <button id="load">후보 불러오기</button>
+      <button class="ghost" id="rec">추천 자동 체크</button>
+      <button class="ghost" id="clr">체크 모두 풀기</button>
+      <span class="sp" style="color:#8a8c9e;font-size:12px">
+        추천 = 묶음이 <b>2건</b>이고 한쪽만 프리프린트·리포지토리인 경우
+      </span>
+    </div>
+    <div class="stat" id="stat"></div>
+    <div class="log" id="log"></div>
+
+    <div class="note">
+      <b>⚠ 3건 이상인 묶음은 추천하지 않습니다.</b>
+      「Organ Music」 13건이 실제로는 리스트·프랑크·바흐의 <b>각기 다른 악보</b>였습니다.
+      「The Psychology of Music」 9건도 1882년 Mind부터 2002년 캠브리지까지 <b>전부 다른 문헌</b>입니다.
+      제목만 같은 별개 자료가 흔하므로 <b>저자와 발행처를 반드시 보십시오.</b>
+      <br><br>
+      <b>지우지 않고 감춥니다.</b> 화면 목록에서만 빠지고 자료는 남습니다.
+      수집기도 <code>source_id</code>로 알아보고 다시 넣지 않습니다.
+      언제든 아래 2번에서 되돌릴 수 있습니다.
+    </div>
+
+    <div class="lst" id="lst"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span> 감춰 둔 것 되돌리기</h2>
+    <p>지금까지 감춘 학술 자료입니다. 체크해서 다시 보이게 할 수 있습니다.</p>
+    <div class="row">
+      <button class="ghost" id="loadH">감춘 목록 불러오기</button>
+      <button class="ghost" id="clrH">체크 모두 풀기</button>
+    </div>
+    <div class="stat" id="statH"></div>
+    <div class="log" id="logH"></div>
+    <div class="lst" id="lstH"></div>
+  </div>
+</div>
+
+<div class="fixbar" id="fixbar">
+  <span>고른 자료 <b id="cnt">0</b>건</span>
+  <span class="sp" id="what"></span>
+  <button class="danger" id="doHide">고른 것 감추기</button>
+  <button class="ghost" id="doShow" style="display:none">고른 것 되돌리기</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/admin-guard.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* ★ 싱글턴 — 인스턴스를 여러 개 만들면 RLS 가 어긋납니다.
+     admin-guard.js 도 window.__ocSb 를 먼저 찾습니다. */
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
+
+  function $(id){ return document.getElementById(id); }
+  function esc(t){
+    return (t==null?'':String(t))
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function warn(t){ var w=$('warn'); w.classList.add('on'); w.textContent=t; }
+  function mkLog(id){
+    var box=$(id);
+    return function(t){
+      box.classList.add('on');
+      box.textContent += t + '\n';
+      box.scrollTop = box.scrollHeight;
+    };
+  }
+  var log  = mkLog('log');
+  var logH = mkLog('logH');
+
+  /* ══ 1. 중복 후보 ══════════════════════════════════════════ */
+  var groups = [];   /* [{no, n, items:[...]}] */
+  var picked = {};   /* id -> true */
+
+  async function load(){
+    $('load').disabled = true;
+    log('중복 후보를 불러옵니다…');
+    try {
+      var r = await sb.rpc('oc_academic_dup_groups', { p_limit: 500 });
+      if (r.error) throw new Error(r.error.message);
+      var rows = r.data || [];
+      log('  · ' + rows.length + '줄 받았습니다');
+
+      /* 묶음으로 정리 */
+      var map = {};
+      rows.forEach(function(x){
+        if (!map[x.grp_no]) map[x.grp_no] = { no:x.grp_no, n:x.n, items:[] };
+        map[x.grp_no].items.push(x);
+      });
+      groups = Object.keys(map)
+        .sort(function(a,b){ return map[a].no - map[b].no; })
+        .map(function(k){ return map[k]; });
+
+      picked = {};
+      render();
+      stats();
+      log('✅ 묶음 ' + groups.length + '개');
+      if (rows.length >= 500) {
+        log('  ※ 500줄에서 끊겼습니다. 이번 것을 처리하면 다음 묶음이 나옵니다.');
+      }
+    } catch (e){
+      var m = e.message || String(e);
+      if (window.OCAdminGuard && OCAdminGuard.isAuthLost(m)) {
+        warn('로그인이 풀렸습니다. 다시 로그인한 뒤 시도해 주십시오.');
+      } else if (/function .*does not exist|could not find/i.test(m)) {
+        warn('함수가 없습니다. sql-academic-dup-rpc.sql 을 먼저 실행해 주십시오.');
+      } else {
+        warn('불러오지 못했습니다 — ' + m);
+      }
+      log('✗ ' + m);
+    }
+    $('load').disabled = false;
+  }
+
+  /* 묶음이 2건 · 한쪽만 프리프린트일 때만 추천 */
+  function isRec(g){
+    if (g.items.length !== 2) return false;
+    var pre = g.items.filter(function(x){ return x.kind === 'pre'; }).length;
+    return pre === 1;
+  }
+
+  function render(){
+    var box = $('lst');
+    if (!groups.length){ box.classList.remove('on'); box.innerHTML=''; return; }
+    var h = [];
+    groups.forEach(function(g){
+      var rec  = isRec(g);
+      var many = g.items.length > 2;
+      h.push('<div class="gh">묶음 ' + g.no + ' · ' + g.items.length + '건'
+        + (many ? ' <span class="risk">⚠ 3건 이상 — 별개 문헌일 수 있으니 직접 확인하십시오</span>'
+                : (rec ? ' <span class="ok">추천 가능</span>' : ''))
+        + '</div>');
+      g.items.forEach(function(x){
+        var on = picked[x.id] ? ' checked' : '';
+        h.push('<label class="it' + (picked[x.id] ? ' pick' : '') + '" data-id="' + x.id + '">'
+          + '<input type="checkbox" data-id="' + x.id + '"' + on + '>'
+          + '<span class="id">' + x.id + '</span>'
+          + '<span class="ti">' + esc(x.title) + '</span>'
+          + '<span class="au">' + esc(x.author || '(저자 없음)') + '</span>'
+          + '<span class="id">' + esc(x.pub_year || '') + '</span>'
+          + '<span class="pu">' + esc(x.publisher || '(발행처 없음)') + '</span>'
+          + '<span>'
+          + (x.kind === 'pre'
+              ? '<span class="bd bd-pre">리포지토리</span>'
+              : '<span class="bd bd-jr">저널</span>')
+          + (x.doi ? '<span class="bd bd-doi">DOI</span>' : '')
+          + '</span>'
+          + '</label>');
+      });
+    });
+    box.innerHTML = h.join('');
+    box.classList.add('on');
+  }
+
+  function stats(){
+    var items = 0, recN = 0, manyN = 0;
+    groups.forEach(function(g){
+      items += g.items.length;
+      if (isRec(g)) recN++;
+      if (g.items.length > 2) manyN++;
+    });
+    $('stat').innerHTML =
+        '<div>묶음<b>' + groups.length + '</b></div>'
+      + '<div>항목<b>' + items + '</b></div>'
+      + '<div>추천 가능한 묶음<b>' + recN + '</b></div>'
+      + '<div>⚠ 3건 이상<b>' + manyN + '</b></div>';
+  }
+
+  function bar(){
+    var ids = Object.keys(picked).filter(function(k){ return picked[k]; });
+    $('cnt').textContent = ids.length;
+    $('what').textContent = ids.length ? '감추면 목록에서 빠집니다 (되돌릴 수 있습니다)' : '';
+    $('fixbar').classList.toggle('on', ids.length > 0);
+    $('doHide').style.display = '';
+    $('doShow').style.display = 'none';
+    return ids;
+  }
+
+  $('lst').addEventListener('change', function(e){
+    var cb = e.target;
+    if (!cb || cb.type !== 'checkbox') return;
+    var id = cb.getAttribute('data-id');
+    picked[id] = cb.checked;
+    var row = cb.closest('.it');
+    if (row) row.classList.toggle('pick', cb.checked);
+    bar();
+  });
+
+  $('rec').addEventListener('click', function(){
+    var n = 0;
+    groups.forEach(function(g){
+      if (!isRec(g)) return;
+      g.items.forEach(function(x){
+        if (x.kind === 'pre'){ picked[x.id] = true; n++; }
+      });
+    });
+    render(); bar();
+    log('추천 ' + n + '건에 체크했습니다. ★반드시 눈으로 확인하고 고쳐 주십시오.');
+  });
+
+  $('clr').addEventListener('click', function(){
+    picked = {}; render(); bar();
+  });
+
+  $('load').addEventListener('click', load);
+
+  /* ══ 2. 감춘 것 되돌리기 ═══════════════════════════════════ */
+  var hidden = [];
+  var pickedH = {};
+
+  async function loadH(){
+    $('loadH').disabled = true;
+    logH('감춘 목록을 불러옵니다…');
+    try {
+      var r = await sb.rpc('oc_academic_hidden_list', { p_limit: 300 });
+      if (r.error) throw new Error(r.error.message);
+      hidden = r.data || [];
+      pickedH = {};
+      renderH();
+      $('statH').innerHTML = '<div>감춘 자료<b>' + hidden.length + '</b></div>';
+      logH('✅ ' + hidden.length + '건');
+    } catch (e){
+      var m = e.message || String(e);
+      logH('✗ ' + m);
+      warn('감춘 목록을 불러오지 못했습니다 — ' + m);
+    }
+    $('loadH').disabled = false;
+  }
+
+  function renderH(){
+    var box = $('lstH');
+    if (!hidden.length){ box.classList.remove('on'); box.innerHTML=''; return; }
+    var h = hidden.map(function(x){
+      var on = pickedH[x.id] ? ' checked' : '';
+      return '<label class="it' + (pickedH[x.id] ? ' pick' : '') + '">'
+        + '<input type="checkbox" data-id="' + x.id + '"' + on + '>'
+        + '<span class="id">' + x.id + '</span>'
+        + '<span class="ti">' + esc(x.title) + '</span>'
+        + '<span class="au">' + esc(x.author || '(저자 없음)') + '</span>'
+        + '<span class="id">' + esc(x.pub_year || '') + '</span>'
+        + '<span class="pu">' + esc(x.publisher || '') + '</span>'
+        + '<span class="pu" style="font-size:11px">' + esc(x.hidden_note || '') + '</span>'
+        + '</label>';
+    });
+    box.innerHTML = h.join('');
+    box.classList.add('on');
+  }
+
+  $('lstH').addEventListener('change', function(e){
+    var cb = e.target;
+    if (!cb || cb.type !== 'checkbox') return;
+    pickedH[cb.getAttribute('data-id')] = cb.checked;
+    var row = cb.closest('.it');
+    if (row) row.classList.toggle('pick', cb.checked);
+    var ids = Object.keys(pickedH).filter(function(k){ return pickedH[k]; });
+    $('cnt').textContent = ids.length;
+    $('what').textContent = ids.length ? '되돌리면 목록에 다시 나옵니다' : '';
+    $('fixbar').classList.toggle('on', ids.length > 0);
+    $('doHide').style.display = 'none';
+    $('doShow').style.display = '';
+  });
+
+  $('clrH').addEventListener('click', function(){
+    pickedH = {}; renderH();
+    $('fixbar').classList.remove('on');
+  });
+
+  $('loadH').addEventListener('click', loadH);
+
+  /* ══ 실제로 바꾸기 ════════════════════════════════════════ */
+  async function apply(ids, toHide, logf){
+    if (!ids.length) return;
+    var msg = toHide
+      ? ids.length + '건을 감춥니다.\n\n지우는 것이 아니라 목록에서만 빠집니다. 되돌릴 수 있습니다.\n\n계속할까요?'
+      : ids.length + '건을 다시 보이게 합니다.\n\n계속할까요?';
+    if (!confirm(msg)) return;
+
+    /* ★ 담기 직전에 로그인을 다시 확인합니다 —
+       관리자 화면은 오래 열어 두므로 그 사이 풀릴 수 있습니다. */
+    if (window.OCAdminGuard) {
+      var g = await OCAdminGuard.check(sb);
+      if (!g.ok){
+        warn(g.msg || '로그인을 확인할 수 없습니다.');
+        logf('✗ 중단 — ' + (g.msg || ''));
+        return;
+      }
+    }
+
+    $('doHide').disabled = true; $('doShow').disabled = true;
+    logf((toHide ? '감추기' : '되돌리기') + ' ' + ids.length + '건 시작…');
+    try {
+      var r = await sb.rpc('oc_academic_set_hidden', {
+        p_ids: ids.map(Number),
+        p_hidden: toHide,
+        p_note: toHide ? '중복 — 관리자 검토 · ' + new Date().toISOString().slice(0,10) : null
+      });
+      if (r.error) throw new Error(r.error.message);
+      logf('✅ ' + r.data + '건 바뀌었습니다');
+      picked = {}; pickedH = {};
+      $('fixbar').classList.remove('on');
+      if (toHide) { await load(); } else { await loadH(); }
+    } catch (e){
+      var m = e.message || String(e);
+      logf('✗ ' + m);
+      if (/관리자만/.test(m)) warn('관리자만 쓸 수 있습니다.');
+      else if (window.OCAdminGuard && OCAdminGuard.isAuthLost(m))
+        warn('로그인이 풀렸습니다. 다시 로그인해 주십시오.');
+      else warn('바꾸지 못했습니다 — ' + m);
+    }
+    $('doHide').disabled = false; $('doShow').disabled = false;
+  }
+
+  $('doHide').addEventListener('click', function(){
+    apply(Object.keys(picked).filter(function(k){ return picked[k]; }), true, log);
+  });
+  $('doShow').addEventListener('click', function(){
+    apply(Object.keys(pickedH).filter(function(k){ return pickedH[k]; }), false, logH);
+  });
+})();
+</script>
+</body>
+</html>
