@@ -1,0 +1,115 @@
+name: 콩쿠르 수상 조사 (담지 않음)
+
+# ── 무엇을 하나 ──
+#  인물DB 의 위키데이터 번호로 P166(받은 상)을 물어보고,
+#  무엇이 오는지 세어서 로그로 보여 줍니다.
+#
+# ★ 담지 않습니다. 이 워크플로우에는 담는 기능이 없습니다.
+#   일부러 그렇게 만들었습니다.
+#
+# ── 왜 담지 않나 ──
+#  2026-08-08 위키데이터 P31(작품 형식)을 두고 「클래식 작품에는 잘
+#  채워져 있을 것」 이라 짐작했다가 전제가 두 번 무너졌습니다
+#  (2,000개 중 69%가 「음악 작품」 이라는 넓은 말뿐이었습니다).
+#
+#  수상 기록도 얼마나 있는지 모릅니다. 담는 코드를 먼저 만들면
+#  쓸모없다고 밝혀졌을 때 그대로 버려집니다. 먼저 보고 나서 만듭니다.
+#
+# ── 무엇을 보나 ──
+#  · 상이 하나라도 있는 인물이 몇 명인지
+#  · 그 가운데 「콩쿠르로 보이는 것」 이 몇 줄인지
+#  · 연도가 함께 오는지 (연도가 없으면 경력 추적이 안 됩니다)
+#  · 한국어 이름이 있는지
+#  · 우리가 담아 둔 콩쿠르 28개와 이어지는 것이 몇 줄인지
+#
+#  ★ 「콩쿠르로 보이는 것」 과 「연도가 있는 것」 이 적으면
+#    이 방식은 값이 낮습니다. 그때는 다른 길을 찾습니다.
+#
+# ── 언제 실행되나 ──
+#  손으로만 돌립니다.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '인물 몇 명까지 (처음에는 1000 이면 넉넉합니다)'
+        required: true
+        default: '1000'
+        type: string
+      kr:
+        description: '한국 인물만 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      debug:
+        description: '받은 값을 한 줄씩 자세히 (로그가 매우 길어집니다)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+# ★ persons 를 읽는 것들과 한 대기줄로 묶습니다.
+concurrency:
+  group: oc-persons
+  cancel-in-progress: false
+
+jobs:
+  look:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 수상 조사 실행
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+
+          OPTS=""
+          if [ "${{ github.event.inputs.kr }}"    = "yes" ]; then OPTS="$OPTS --kr"; fi
+          if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
+
+          LIM="${{ github.event.inputs.limit }}"
+          case "$LIM" in ''|*[!0-9]*) LIM=1000 ;; esac
+          OPTS="$OPTS --limit=$LIM"
+
+          echo "── 실행 : node seed/awards-wikidata.mjs $OPTS ──"
+          try2 node seed/awards-wikidata.mjs $OPTS
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #  ※ Settings → Actions → General → Workflow permissions 를
+  #    「Read and write permissions」 로 두셔야 이슈를 만들 수 있습니다.
+  oc-notify-failure:
+    needs: look
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '콩쿠르 수상 조사가 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n※ 이 워크플로는 자료를 담지 않으므로, 실패해도 자료에는 영향이 없습니다.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi
