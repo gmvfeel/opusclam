@@ -1,0 +1,146 @@
+name: 작품DB 형식 보강
+
+# ── 무엇을 하나 ──
+#  이미 담긴 작품의 위키데이터 번호로 P31(이것은 무엇인가)을 물어
+#  작품 형식을 채웁니다 — 교향곡 · 오페라 · 협주곡 · 소나타 · 미사곡 …
+#
+# ── 왜 필요한가 ──
+#  작품 16,043개 가운데 11,046개(69%)의 편성이 비어 있습니다.
+#  편성을 채우는 Open Opus 가 널리 알려진 작곡가 백 명 남짓만
+#  다루기 때문입니다.
+#
+#  그래서 인물 상세에서 헨델을 열면 「그 밖 1,300곡」 묶음 하나가
+#  생깁니다. 목록이 다 보이기는 하지만 찾을 수가 없습니다.
+#
+# ── ★ 형식과 편성을 섞지 않습니다 ──
+#  P31 은 형식(교향곡 · 소나타)이고 genre 는 편성(관현악 · 건반)입니다.
+#  형식을 편성으로 바꾸려면 추론이 들어갑니다.
+#
+#      symphony → 관현악   ○ 의심 없습니다
+#      sonata   → 건반     ✗ 바이올린 소나타가 건반이 됩니다
+#
+#  그래서 형식은 형식 칸(form_ko)에 담고, 편성은 의심 없는 것만
+#  채웁니다. 애매한 것은 비워 둡니다.
+#
+# ── ★ 처음에는 「실제로 담기: no」 로 돌리십시오 ──
+#  번역표를 미리 다 채울 수 없습니다. 어떤 형식이 올지 모르는데
+#  채우면 지어내는 것이 됩니다. no 로 돌리면 「받은 형식 분포」와
+#  「번역표에 없는 것」 을 보여 줍니다. 그 로그를 알려 주시면
+#  번역표를 채워 드립니다.
+#
+# ── 왜 별도 워크플로우인가 ──
+#  수집기(works-wikidata)를 고치면 앞으로 담기는 것만 채워집니다.
+#  이미 담긴 11,046개는 영원히 빈칸입니다. 전체를 다시 훑는 것은
+#  너무 무겁습니다. 그래서 형식만 채우는 도구를 따로 둡니다.
+#
+# ── 선행 조건 ──
+#  ★ 3-지금돌리세요-작품형식칸.sql 을 먼저 실행하셔야 합니다.
+#    form_raw · form_ko · form_qid 칸이 없으면 담을 때 실패합니다.
+#
+# ── 언제 실행되나 ──
+#  손으로만 돌립니다.
+on:
+  workflow_dispatch:
+    inputs:
+      save:
+        description: '실제로 담기 (처음에는 no 로 어떤 형식이 오는지 보십시오)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      limit:
+        description: '작품 몇 개까지 (처음 확인은 2000 이면 넉넉합니다)'
+        required: true
+        default: '2000'
+        type: string
+      all:
+        description: '편성이 채워진 작품도 대상에 넣기 (기본은 빈 것부터)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      redo:
+        description: '형식이 이미 있는 작품도 다시 물어보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      debug:
+        description: '받은 값을 자세히 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+# ★ person_works 를 함께 쓰는 것들과 한 대기줄로 묶습니다.
+#   같은 줄을 서로 덮어쓰는 것을 막습니다.
+concurrency:
+  group: oc-persons
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 형식 보강 실행
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+
+          OPTS=""
+          if [ "${{ github.event.inputs.save }}" != "yes" ]; then OPTS="$OPTS --dry"; fi
+          if [ "${{ github.event.inputs.all }}"  = "yes" ]; then OPTS="$OPTS --all"; fi
+          if [ "${{ github.event.inputs.redo }}" = "yes" ]; then OPTS="$OPTS --redo"; fi
+          if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
+
+          LIM="${{ github.event.inputs.limit }}"
+          case "$LIM" in ''|*[!0-9]*) LIM=2000 ;; esac
+          OPTS="$OPTS --limit=$LIM"
+
+          echo "── 실행 : node seed/works-form.mjs $OPTS ──"
+          try2 node seed/works-form.mjs $OPTS
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #  ※ Settings → Actions → General → Workflow permissions 를
+  #    「Read and write permissions」 로 두셔야 이슈를 만들 수 있습니다.
+  oc-notify-failure:
+    needs: collect
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '작품 형식 보강이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi

@@ -703,11 +703,22 @@ if('serviceWorker' in navigator){
       table:'person_works', pageSize:30, orderDefault:'id.desc',
       /* ★ 작곡가 이름을 함께 받으려면 조인이 필요합니다 */
       select:'*,persons(id,name_ko,name_en,image_url)',
-      /* 작곡가 이름은 다른 표에 있어 or 검색에 넣을 수 없습니다.
-         작곡가로 찾는 것은 인물DB 상세에서 작품 목록으로 들어가는 길을
-         두는 것이 맞습니다(다음 단계).
-         지금은 작품 상세에서 「같은 작곡가의 다른 작품」으로 이어집니다. */
-      searchCols:['title','title_ko','opus','imslp_ref','note'],
+      /* ★ 2026-08-08 작곡가 이름으로 찾을 수 있게 됐습니다.
+         그 전에는 「헨델」 로 찾으면 한 줄만 나왔습니다. 「Handel」 로
+         찾으면 여러 줄이 나왔는데, 작곡가로 찾는 기능이 있어서가
+         아니라 <b>imslp_ref 에 작곡가 이름이 들어 있어서</b>
+         우연히 걸린 것이었습니다.
+
+             Concerti_grossi,_Op.6_(Handel,_George_Frideric)
+
+         그래서 IMSLP 번호가 있는 6,009개(37%)만 나왔습니다.
+
+         PostgREST 는 or 검색에 <b>다른 표의 칸을 넣을 수 없습니다.</b>
+         조인해서 보여주는 것은 되지만 찾는 것은 안 됩니다. 그래서
+         작곡가 이름을 person_works 안에 옮겨 두었습니다
+         (composer_ko · composer_en — 트리거가 지킵니다). */
+      searchCols:['title','title_ko','opus','imslp_ref','note',
+                  'composer_ko','composer_en'],
       entity:'work',
       buildFilters:buildFilters, buildOrder:buildOrder, renderRow:renderRow
     });
