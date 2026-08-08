@@ -144,21 +144,111 @@ export function sparqlStrictAnyJob(v = '?item') {
      이미 담긴 것을 <b>다시 살펴볼 때</b>만 씁니다.
    ============================================================ */
 
-/* 장르 글자 — wd_genre 에 저장된 값을 봅니다 */
-const G_CLASSIC = /classical|\bopera\b|operatic|baroque|romantic music|renaissance music|medieval music|early music|contemporary classical|art music|orchestral|symphon|chamber music|choral|sacred music|lied\b|art song|oratorio|cantata|\bmass\b|requiem|concerto|sonata|\bfugue\b|\betude\b|클래식|고전음악|오페라|관현악|교향|실내악|합창|가곡|성가/i;
+/* ════════════════════════════════════════════════════════
+   2026-08-08 · 두 번째 판 — 첫 판이 크게 틀려서 다시 짰습니다
 
-const G_POP = /\bpop\b|pop music|\brock\b|\bjazz\b|hip hop|\brap\b|\bfunk\b|\bsoul\b|\bblues\b|\brhythm and blues\b|\br&b\b|\bmetal\b|\bpunk\b|\breggae\b|\bska\b|\bdisco\b|\btechno\b|\bhouse music\b|\bedm\b|electronic dance|\btrance\b|\bdubstep\b|country music|\bfolk\b|bluegrass|k-?pop|j-?pop|c-?pop|\benka\b|\btrot\b|new-?age|crossover|\bworld music\b|\bchanson\b|\blatin pop\b|\bsalsa\b|\btango\b|\bmusical theat|\bvideo game music\b|\banime\b|가요|트로트|힙합|록\b/i;
+   [첫 판] 「클래식 장르가 있어야 받는다」
+     ▶ 실제로 돌려 보니 <b>브람스가 빠졌습니다.</b>
+       위키데이터에 장르가 적힌 작곡가는 5.5% 뿐입니다(133,412 중 7,391).
+       장르를 필수로 두면 대부분이 탈락합니다.
+     ▶ 클래식 장르 목록도 너무 좁았습니다 —
+       operetta · motet · mass · impressionism · minimalist ·
+       symphonic poem · ballet · art song 이 전부 빠져 있었습니다.
+     ▶ chanson 을 대중음악으로 넣은 탓에 <b>조스캥 데프레</b>가 걸렸습니다.
+       샹송은 르네상스 성악곡이기도 합니다.
+     ▶ 「대중음악이 섞이면 배제」가 너무 세서 거슈윈·번스타인·
+       필립 글래스·윈턴 마살리스가 전부 빠졌습니다.
 
-/* 직업 글자 */
-/* ★ 직업으로만 받을 수 있는 것 — <b>클래식 밖에는 거의 없는 직업</b>입니다.
-   composer · conductor · pianist · violinist · organist … 는 <b>넣지 않았습니다.</b>
-   뉴에이지·영화음악·게임음악·재즈에도 같은 이름의 직업이 있습니다.
-     2026-08-08 시험에서 야니(new-age · keyboardist, composer)가
-     composer 때문에 통과했습니다. 그래서 뺀 것입니다.
-   ▶ 그런 직업은 <b>장르로 판단</b>합니다. */
-const O_CLASSIC = /opera singer|\bharpsichordist\b|\bviolist\b|\boboist\b|\bbassoonist\b|musicolog|music theorist|kapellmeister|chapelmaster|concertmaster|r[eé]p[eé]titeur|opera director|voice teacher|opera vocal coach/i;
+   [두 번째 판] <b>직업을 중심축</b>으로 씁니다
+     장르는 5.5%만 적혀 있지만 직업은 대부분 적혀 있습니다.
 
-const O_POP = /\bsinger-songwriter\b|\brapper\b|\bdj\b|\bdisc jockey\b|\bjazz musician\b|\brock musician\b|\bpop singer\b|\bidol\b|\bactor\b|\bactress\b|\bmodel\b|\bpolitician\b|\byoutuber\b|\bstreamer\b|\binfluencer\b|\bcomedian\b/i;
+     ① 클래식 장르가 하나라도 있으면        → 받음
+        (대중음악이 섞여 있어도 받습니다 — 거슈윈·마살리스)
+     ② 대중음악 장르만 있으면              → 뺌
+     ③ 대중음악 전용 직업이면              → 뺌
+     ④ 클래식 직업이 있으면                → 받음
+        (장르가 비어 있어도 — 브람스·진은숙·백병동)
+     ⑤ 장르도 직업도 없으면                → <b>그대로 둡니다</b>
+        판정할 근거가 없으므로 건드리지 않습니다 (스티브 라이히)
+
+   ★ 파트너 결정 (2026-08-08) — 다음은 모두 <b>넣습니다</b>
+     영화음악 · 오페레타 · 클래식＋재즈 · 탱고/민속 계열
+   ════════════════════════════════════════════════════════ */
+
+/* ── 클래식으로 인정하는 장르 ──────────────────────────────
+   ★ 갈래·형식·사조를 모두 넣었습니다. 위키데이터는 장르 칸에
+     「motet」「symphony」「minimalist music」처럼 형식을 적기도 합니다. */
+const G_CLASSIC = new RegExp([
+  // 큰 갈래
+  'classical', 'art music', 'concert music', 'orchestral', 'symphon',
+  '\\bopera\\b', 'operatic', 'operetta', 'singspiel', 'zarzuela',
+  'chamber music', 'choral', 'sacred music', 'church music', 'liturgical',
+  // 시대·사조
+  'baroque', 'renaissance music', 'medieval music', 'early music',
+  'romantic music', 'romanticism', 'classicism', 'impressionism',
+  'expressionism', 'minimalis', 'serialism', 'twelve-tone', 'atonal',
+  'neoclassic', 'avant-?garde', 'contemporary classical', 'new music',
+  'experimental music', 'electroacoustic', 'musique concr',
+  // 형식
+  'motet', '\\bmass\\b', 'requiem', 'oratorio', 'cantata', 'passion',
+  'chorale', 'madrigal', '\\bchanson\\b', '\\blied\\b', 'art song',
+  'concerto', 'sonata', '\\bfugue\\b', '\\betude\\b', 'prelude',
+  'nocturne', 'symphonic poem', 'tone poem', 'overture', 'suite',
+  '\\bballet\\b', 'incidental music', 'chamber opera',
+  // 영화·무대 음악 (★ 파트너 결정으로 포함)
+  'film score', 'film music', 'soundtrack', 'score music',
+  // 한국어
+  '클래식', '고전음악', '현대음악', '오페라', '오페레타', '관현악', '교향',
+  '실내악', '합창', '가곡', '성가', '미사', '칸타타', '협주곡', '소나타',
+  '발레', '영화음악', '창작음악', '국악'
+].join('|'), 'i');
+
+/* ── 대중음악 전용 장르 ────────────────────────────────────
+   ★ 클래식 장르가 <b>하나도 없을 때만</b> 쓰입니다.
+     거슈윈처럼 클래식과 재즈를 함께 하는 사람은 ①에서 이미 받습니다.
+   ★ chanson 은 뺐습니다 — 르네상스 성악곡이기도 합니다. */
+const G_POP = new RegExp([
+  '\\bpop\\b', 'pop music', 'k-?pop', 'j-?pop', 'c-?pop',
+  '\\brock\\b', 'punk', 'metal', 'grunge', 'indie rock',
+  'hip.?hop', '\\brap\\b', 'r&b', 'rhythm and blues', '\\bsoul\\b',
+  '\\bfunk\\b', '\\bdisco\\b', '\\bblues\\b',
+  '\\bjazz\\b', 'bebop', 'swing music', 'dixieland', 'ragtime', 'boogie',
+  'electronic dance', '\\bedm\\b', 'techno', 'trance', 'dubstep',
+  'house music', 'drum and bass', 'ambient', 'new-?age',
+  'country music', 'bluegrass', 'reggae', '\\bska\\b', 'reggaeton',
+  '\\benka\\b', '\\btrot\\b', 'schlager',
+  'classical crossover', 'operatic pop', 'popera',
+  '가요', '트로트', '힙합', '아이돌', '댄스음악'
+].join('|'), 'i');
+
+/* ── 클래식 직업 ───────────────────────────────────────────
+   ★ 장르가 비어 있어도 이것으로 받습니다.
+     브람스(장르 없음 · pianist, conductor, composer)가 살아나는 길입니다.
+   ★ 「가끔 클래식」을 막는 일은 위 ②③이 맡습니다. */
+const O_CLASSIC = new RegExp([
+  'composer', 'conductor', 'kapellmeister', 'chapelmaster',
+  'opera singer', 'opera director', 'opera vocal coach', 'voice teacher',
+  'pianist', 'organist', 'harpsichordist', 'fortepianist',
+  'violinist', 'violist', 'cellist', 'double-?bassist', 'harpist',
+  'flautist', 'flutist', 'oboist', 'clarinetist', 'bassoonist',
+  'trumpeter', 'trombonist', 'tubist', 'french horn',
+  'concertmaster', 'r[eé]p[eé]titeur', 'orchestrator',
+  'musicolog', 'music theorist', 'music historian', 'ethnomusicolog',
+  'lutenist', 'viol player', 'carillonist', 'church musician',
+  'choir director', 'chorus master', 'music director'
+].join('|'), 'i');
+
+/* ── 대중음악 전용 직업 ────────────────────────────────────
+   ★ 여기 걸리면 클래식 직업이 함께 있어도 뺍니다.
+     단, 클래식 <b>장르</b>가 있으면 ①에서 이미 받았으므로 안전합니다. */
+const O_POP = new RegExp([
+  '\\brapper\\b', '\\bdj\\b', 'disc jockey', 'turntablist',
+  'singer-songwriter', 'pop singer', 'rock musician', 'idol\\b',
+  'beatboxer', 'street artist', 'busker',
+  '\\bactor\\b', '\\bactress\\b', '\\bmodel\\b',
+  '\\bpolitician\\b', 'youtuber', 'streamer', 'influencer',
+  '\\bcomedian\\b', 'television presenter', 'radio personality'
+].join('|'), 'i');
 
 /**
  * 이미 담긴 자료가 클래식인지 다시 봅니다.
@@ -174,33 +264,40 @@ const O_POP = /\bsinger-songwriter\b|\brapper\b|\bdj\b|\bdisc jockey\b|\bjazz mu
  *   ⑤ 그 밖                          → 「근거 없음」으로 뺌
  */
 export function checkClassic(p) {
-  const g = String((p && p.wd_genre) || '');
-  const o = String((p && p.wd_occupation) || '');
+  const g = String((p && p.wd_genre) || (p && p.genre) || '');
+  const o = String((p && p.wd_occupation) || (p && p.occupation) || '');
 
-  const gc = G_CLASSIC.test(g);
-  const gp = G_POP.test(g);
-  const oc = O_CLASSIC.test(o);
-  const op = O_POP.test(o);
+  const hasG = !!g.trim();
+  const hasO = !!o.trim();
 
-  /* ① ★ 대중음악 표시가 <b>하나라도</b> 있으면 뺍니다.
-        클래식 낱말이 함께 있어도 뺍니다 —
-          「pop music, classical crossover」 같은 크로스오버 가수가
-          classical 이라는 낱말 때문에 들어오던 것을 막습니다.
-        파트너 원칙 : 「대중음악 하는 사람이 가끔 클래식도 한다」는 받지 않습니다. */
-  if (gp) return { ok: false, why: '장르에 대중음악이 섞임' };
+  /* ⑤ 장르도 직업도 없으면 판정하지 않습니다 —
+        근거 없이 빼면 스티브 라이히·다케미쓰가 사라집니다. */
+  if (!hasG && !hasO) return { ok: true, why: '근거 없음 · 그대로 둠' };
 
-  /* ② 장르가 클래식이면 받습니다 — 출처에 직접 물은 값이라 가장 믿을 만합니다 */
-  if (gc) return { ok: true, why: '장르가 클래식' };
+  /* ★ 「classical crossover」·「operatic pop」은 클래식이 아닙니다.
+        그런데 낱말 안에 classical 이 들어 있어 그냥 두면 통과해 버립니다.
+        그래서 <b>그 낱말을 걷어낸 뒤</b> 클래식이 남는지 봅니다.
+          크로스오버 가수 「pop music, classical crossover」 → 남는 것 없음 → 뺌
+          에이나우디   「20th-century classical music, operatic pop,
+                        minimalist music」                    → 남음 → 받음 */
+  const gClean = g.replace(/classical\s+crossover|operatic\s+pop|popera|크로스오버/gi, ' ');
 
-  /* ③ 직업이 클래식 전용이면 받습니다
-        (opera singer · harpsichordist 처럼 대중음악에 없는 직업) */
-  if (oc && !op) return { ok: true, why: '직업이 클래식' };
+  /* ① 클래식 장르가 하나라도 있으면 받습니다.
+        대중음악이 섞여 있어도 받습니다 — 거슈윈·번스타인·윈턴 마살리스. */
+  if (G_CLASSIC.test(gClean)) return { ok: true, why: '장르가 클래식' };
 
-  /* ④ 대중·연기·정치 쪽 직업 */
-  if (op) return { ok: false, why: '직업이 대중·연기 쪽' };
+  /* ② 대중음악 장르만 있으면 뺍니다 — 야니·이루마·크로스오버 가수 */
+  if (G_POP.test(g)) return { ok: false, why: '대중음악 장르만 있음' };
 
-  /* ⑤ 근거가 없으면 뺍니다 — 애매하면 버립니다 */
-  return { ok: false, why: g || o ? '클래식 근거 없음' : '장르·직업 정보 없음' };
+  /* ③ 대중음악 전용 직업 — 래퍼·DJ·아이돌·배우·정치인 */
+  if (O_POP.test(o)) return { ok: false, why: '대중·연기 쪽 직업' };
+
+  /* ④ 클래식 직업이면 받습니다 — 장르가 비어 있어도.
+        브람스 · 진은숙 · 백병동 · Alma Deutscher 가 여기서 살아납니다. */
+  if (O_CLASSIC.test(o)) return { ok: true, why: '클래식 직업' };
+
+  /* 그 밖 — 음악과 무관해 보입니다 */
+  return { ok: false, why: '음악 직업이 아님' };
 }
 
 /** 직업 글자에서 분야를 고릅니다 (JOBS 표를 씁니다) */
