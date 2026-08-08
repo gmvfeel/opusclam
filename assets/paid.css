@@ -1,0 +1,64 @@
+/* ============================================================
+   OPUSCLAM 유료 등재 — assets/paid.css
+   ------------------------------------------------------------
+   콩쿨 상단 등재 안내·신청 화면(spot/concours-price.html)이 씁니다.
+
+   ★ 안내 글의 모양(rg-*)은 assets/recruit.css 를 그대로 씁니다.
+     여기에는 <b>요금 카드</b>와 <b>신청 양식</b>만 두었습니다.
+   ★ 색·글꼴은 새로 정하지 않고 기존 변수(--paper, --line-2 …)를 씁니다.
+     그래야 밝은 화면·어두운 화면이 저절로 맞습니다.
+   ============================================================ */
+
+/* ── 요금 카드 ─────────────────────────────────────────── */
+.pf-plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:14px}
+.pf-empty{grid-column:1/-1;color:var(--text-2);font-size:.95rem;padding:18px 0}
+
+.pf-plan{position:relative;display:block;padding:22px 22px 18px;border:1px solid var(--line-2);border-radius:16px;background:var(--paper);cursor:pointer;transition:border-color .16s,box-shadow .16s,transform .16s}
+.pf-plan:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.07)}
+.pf-plan.on{border-color:rgba(201,169,78,.75);box-shadow:0 0 0 2px rgba(201,169,78,.22)}
+.pf-plan input{position:absolute;opacity:0;pointer-events:none}
+
+.pf-plan-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pf-plan-name{font-size:1.12rem;font-weight:800;letter-spacing:-.01em}
+.pf-plan-badge{flex:none}
+.pf-plan-price{display:block;margin-top:12px;font-size:1.7rem;font-weight:800;letter-spacing:-.03em}
+.pf-plan-days{display:block;margin-top:2px;color:var(--text-2);font-size:.92rem}
+.pf-plan-perks{list-style:none;margin:14px 0 0;padding:14px 0 0;border-top:1px dashed var(--line-2)}
+.pf-plan-perks li{position:relative;padding-left:16px;margin:6px 0;font-size:.93rem;color:var(--text-2);line-height:1.55}
+.pf-plan-perks li::before{content:"";position:absolute;left:2px;top:.62em;width:5px;height:5px;border-radius:50%;background:rgba(201,169,78,.85)}
+
+/* ── 신청 양식 ─────────────────────────────────────────── */
+.pf-form{margin-top:16px;padding:26px 28px;border:1px solid var(--line-2);border-radius:16px;background:var(--paper)}
+.pf-row{display:grid;grid-template-columns:1fr 1fr;gap:18px 20px}
+.pf-f{display:flex;flex-direction:column;min-width:0}
+.pf-f.full{grid-column:1/-1}
+.pf-f label{font-size:.92rem;font-weight:700;margin-bottom:7px}
+.pf-f label i{color:#c0392b;font-style:normal;margin-left:3px}
+.pf-f input,.pf-f select,.pf-f textarea{width:100%;box-sizing:border-box;padding:11px 13px;border:1px solid var(--line-2);border-radius:10px;background:var(--bg);color:var(--text);font-family:inherit;font-size:.97rem;transition:border-color .16s,box-shadow .16s}
+.pf-f textarea{min-height:112px;resize:vertical;line-height:1.6}
+.pf-f input:focus,.pf-f select:focus,.pf-f textarea:focus{outline:none;border-color:rgba(156,127,214,.8);box-shadow:0 0 0 3px rgba(156,127,214,.16)}
+.pf-f input[readonly]{background:var(--paper);color:var(--text-2)}
+.pf-f .hint{margin-top:6px;font-size:.85rem;color:var(--text-2);line-height:1.5}
+
+.pf-send-row{flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap;margin-top:4px}
+.pf-send{padding:13px 30px;border:0;border-radius:10px;background:linear-gradient(135deg,#9C7FD6,#C9A94E);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;transition:filter .16s,opacity .16s}
+.pf-send:hover{filter:brightness(1.06)}
+.pf-send:disabled{opacity:.55;cursor:default}
+.pf-msg{font-size:.92rem;line-height:1.5}
+.pf-msg.err{color:#c0392b}
+.pf-msg.ok{color:var(--text-2)}
+
+.pf-done{padding:14px 4px;line-height:1.7}
+.pf-done b{display:block;font-size:1.15rem;margin-bottom:8px}
+.pf-done p{margin:4px 0;color:var(--text-2)}
+.pf-done-s{font-size:.88rem}
+
+.pf-contact{margin-top:26px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:22px 26px}
+
+/* ── 좁은 화면 ─────────────────────────────────────────── */
+@media (max-width:720px){
+  .pf-row{grid-template-columns:1fr}
+  .pf-plan-price{font-size:1.5rem}
+  .pf-form{padding:20px 18px}
+  .pf-send{width:100%}
+}

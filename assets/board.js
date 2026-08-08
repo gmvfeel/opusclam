@@ -441,7 +441,7 @@ window.OCBoard = (function () {
       return '<a class="board-item' + pin + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur + '">'
         + '<span class="board-item-no">' + noText(no) + '</span>'
         + '<span class="board-cat ' + catClass(rec.category) + '">' + esc(rec.category || '') + '</span>'
-        + '<span class="board-title">' + esc(rec.title || '') + linkIcon + '</span>'
+        + '<span class="board-title">' + paidHtml(rec) + esc(rec.title || '') + linkIcon + '</span>'
         + '<span class="board-meta"><span class="board-date">' + fmtDate(rec.created_at) + '</span>'
         + '<span class="board-views">\uc870\ud68c ' + (rec.view_count || 0) + '</span></span>'
         + '</a>';
@@ -564,6 +564,29 @@ window.OCBoard = (function () {
         + '</div>';
     }
 
+    /* ★ 유료 등재 배지 ───────────────────────────
+       spot.paid_plan 이 들어 있는 공고에 「후원 공고」 같은 표시를 달아 줍니다.
+       배지 글자는 요금표(oc_paid_plans.badge_ko)에서 가져옵니다 —
+       글자를 바꾸실 때 DB 한 곳만 고치면 되고 배포가 필요 없습니다.
+       요금표는 목록당 한 번만 읽습니다(두 줄짜리라 가볍습니다).
+       paidBadge 를 켜지 않은 게시판은 조회도 하지 않습니다. */
+    var paidMap = null;
+    function fetchPaidPlans() {
+      if (!cfg.paidBadge || paidMap) return Promise.resolve();
+      return fetch(SB_URL + '/rest/v1/oc_paid_plans?select=code,badge_ko', { headers: HDR })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (rows) {
+          paidMap = {};
+          (rows || []).forEach(function (p) { if (p && p.code) paidMap[p.code] = p.badge_ko || ''; });
+        })
+        .catch(function () { paidMap = {}; });
+    }
+    function paidHtml(rec) {
+      if (!cfg.paidBadge || !rec || !rec.paid_plan) return '';
+      var t = (paidMap && paidMap[rec.paid_plan]) || '후원 공고';
+      return '<span class="board-tag board-paid" data-plan="' + esc(rec.paid_plan) + '">' + esc(t) + '</span>';
+    }
+
     function docRowHtml(rec, no) {
       /* 표시 순서
          1) 글의 사진   2) 글의 로고   3) 학교 이름 약칭(색상 배경)   4) 빈 자리
@@ -594,8 +617,10 @@ window.OCBoard = (function () {
       var home = rec.link_url ? '<div class="doc-home">관련홈페이지 <a href="' + esc(rec.link_url) + '" target="_blank" rel="noopener">' + esc(rec.link_url) + '</a></div>' : '';
       var dl = fileAnchor(cfg, rec, 'doc-dl', '원문');
       var vp = cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur;
-      var badges = (rec.region || rec.category)
+      var paidTag = paidHtml(rec);
+      var badges = (paidTag || rec.region || rec.category)
         ? '<span class="doc-cat">'
+          + paidTag
           + (rec.region ? '<span class="board-tag" data-cat="' + esc(rec.region) + '">' + esc(rec.region) + '</span>' : '')
           + (rec.category ? '<span class="board-tag" data-cat="' + esc(rec.category) + '">' + esc(rec.category) + '</span>' : '')
           + '</span>'
@@ -726,7 +751,7 @@ window.OCBoard = (function () {
             if (listEl) listEl.innerHTML = '<div class="board-empty">아직 등록된 글이 없습니다.</div>';
             if (pager) pager.innerHTML = '';
           } else {
-            return fetchExtLogos(rows).then(function () {
+            return Promise.all([fetchExtLogos(rows), fetchPaidPlans()]).then(function () {
               if (listEl) {
                 /* 카드형은 두 칸으로 놓이므로 목록 자리에 표시를 달아 둡니다 */
                 listEl.classList.toggle('as-cards', !!cfg.cardStyle);

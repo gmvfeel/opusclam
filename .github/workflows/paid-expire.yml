@@ -1,0 +1,97 @@
+name: 콩쿨 유료 등재 기간 정리
+
+# ── 무엇을 하나 ──
+#  게재 기간(paid_until)이 지난 콩쿨 공고의 상단 고정을 풉니다.
+#  판단은 전부 DB 함수(oc_paid_expire)가 합니다.
+#
+# ── 무엇을 건드리지 않나 ──
+#  ★ 손으로 고정해 두신 무료 공지는 건드리지 않습니다.
+#    함수 조건에 paid_plan is not null 이 들어 있어,
+#    「돈을 받고 올린 것」만 대상이 됩니다.
+#  ★ 공고 자체는 지우지 않습니다. 고정만 풀리고 목록에 그대로 남습니다.
+#
+# ── 선행 조건 ──
+#  ★ 16-RUN-NOW-paid-listing.sql 을 먼저 실행하셔야 합니다.
+#
+# ── 언제 실행되나 ──
+#  매일 새벽 4시 10분(한국시간)에 저절로 돕니다.
+#  손으로도 돌릴 수 있습니다 (Actions → 이 워크플로우 → Run workflow).
+#
+#  ※ 어드민 화면(admin/paid.html)의 「기간 끝난 것 정리」 단추로도
+#    같은 일을 할 수 있습니다. 둘 다 있어도 서로 방해하지 않습니다
+#    (이미 내려간 것은 조건에 걸리지 않아 그냥 지나갑니다).
+
+on:
+  schedule:
+    # UTC 19:10 = 한국시간 다음날 04:10
+    - cron: '10 19 * * *'
+  workflow_dispatch:
+    inputs:
+      save:
+        description: '실제로 내리기 (no 로 두면 무엇이 내려갈지 보기만 합니다)'
+        required: true
+        default: 'yes'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
+
+concurrency:
+  group: oc-paid-expire
+  cancel-in-progress: false
+
+jobs:
+  expire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 기간 지난 유료 등재 정리
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          OPTS=""
+          # 저절로 도는 경우(schedule)에는 입력값이 없으므로 기본이 '실제로 내리기'입니다
+          if [ "${{ github.event.inputs.save }}" = "no" ]; then
+            OPTS=""
+            echo "── 확인만 합니다 ──"
+          else
+            OPTS="--save"
+          fi
+
+          echo "── 실행 : node seed/paid-expire.mjs $OPTS ──"
+          node seed/paid-expire.mjs $OPTS
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #  ※ Settings → Actions → General → Workflow permissions 를
+  #    「Read and write permissions」 로 두셔야 이슈를 만들 수 있습니다.
+  oc-notify-failure:
+    needs: expire
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동정리 실패] $WF"
+          B=$(printf '유료 등재 기간 정리가 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n★ 게재 기간이 지난 공고가 계속 맨 위에 남아 있을 수 있습니다.\n  급하면 관리자 페이지 → 콩쿨 유료 등재 처리 → 「기간 끝난 것 정리」 를 눌러 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi

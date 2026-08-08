@@ -906,3 +906,18 @@ img.oc-imgload{
   z-index:9999;pointer-events:none;max-width:86vw;text-align:center;
 }
 .oc-lk-toast.go{ opacity:1;transform:translate(-50%,0) }
+
+/* ── 유료 등재 배지 ────────────────────────────────────────
+   콩쿨 목록에서 「후원 공고」·「대표 공고」를 알아보게 합니다.
+   기존 .board-tag 를 그대로 쓰고 색만 덧입혔습니다 — 새 모양을 만들지
+   않았으므로 목록의 다른 배지와 크기·간격이 저절로 맞습니다. */
+.board-tag.board-paid{font-weight:700;color:#8a6d1f;border-color:rgba(201,169,78,.55);background:linear-gradient(180deg,rgba(201,169,78,.16),rgba(201,169,78,.06))}
+.board-tag.board-paid[data-plan="premium"]{color:#6d55a3;border-color:rgba(124,99,176,.55);background:linear-gradient(180deg,rgba(124,99,176,.16),rgba(124,99,176,.06))}
+[data-theme="dark"] .board-tag.board-paid{color:#e3c877;border-color:rgba(201,169,78,.5)}
+[data-theme="dark"] .board-tag.board-paid[data-plan="premium"]{color:#c3aef0;border-color:rgba(124,99,176,.55)}
+.board-row:hover .board-tag.board-paid{color:#fff}
+
+/* 목록 설명글 옆의 안내 링크 (콩쿨 → 상단 등재 안내) */
+.pdb-lead-link{display:inline-block;margin-left:10px;font-size:.93em;font-weight:700;color:#8a6d1f;text-decoration:none;border-bottom:1px solid rgba(201,169,78,.5);white-space:nowrap}
+.pdb-lead-link:hover{color:#6d55a3;border-bottom-color:currentColor}
+[data-theme="dark"] .pdb-lead-link{color:#e3c877}

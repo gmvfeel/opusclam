@@ -97,7 +97,7 @@
       + '</div><input type="file" id="f-imgfile" multiple style="display:none"></div>'
       + docRows
       + '<div class="bf-row"><label>검색어 <span style="color:var(--text-3);font-weight:400">(선택)</span></label><input type="text" id="f-keywords" placeholder="쉼표(,)로 구분"></div>'
-      + '<label class="bf-consent"><span class="bf-consent-t">등록하신 콘텐츠가 성격에 맞지 않거나 비속어 등이 사용된 것으로 판단된 경우, 예고 없이 등록하신 데이터가 삭제될 수 있습니다.<br>데이터 등록이 승인된 경우, 모든 유료서비스에 사용할 수 있는 액티브포인트가 적립됩니다.(등록한 데이터별 100 액티브포인트 제공)</span>'
+      + '<label class="bf-consent"><span class="bf-consent-t">등록하신 콘텐츠가 성격에 맞지 않거나 비속어 등이 사용된 것으로 판단된 경우, 예고 없이 등록하신 데이터가 삭제될 수 있습니다.<br>올려 주신 자료는 오퍼스클램이 감사히 쓰겠습니다. 기여해 주신 분께 드릴 혜택을 준비하고 있습니다.</span>'
       + '<span class="bf-consent-c"><input type="checkbox" id="f-agree"> 동의</span></label>'
       + '<div class="bf-actions"><button type="button" class="bf-submit" id="bwSubmit">작성완료</button><a class="bf-cancel" href="' + esc(cfg.listPage) + '">취소</a></div>'
       + '<div class="bf-msg" id="bwMsg"></div>'
