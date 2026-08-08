@@ -131,6 +131,7 @@ const GROUPS = {
 const BLOCK = new RegExp([
   '\\bedition\\b',                    // 개별 회차
   'eurovision', 'song contest',
+  'sweet adelines', 'barbershop',    // 여성 바버샵 합창 — 갈래 이름으로만 119건
   'sopot international song',        // 폴란드 대중가요제 (갈래 이름으로 43건)
   'melodifestivalen', 'melodi grand prix', 'dansk melodi',
   'evrovizijska', 'sanremo', 'uta gassen',
@@ -142,7 +143,7 @@ const BLOCK = new RegExp([
 ].join('|'), 'i');
 
 /* 대중음악 — 장르나 이름에 있으면 뺍니다 */
-const NOT_CLASSIC = /\brock\b|\bpop\b|\bpop music\b|\bhip.?hop\b|\brap\b|\bjazz\b|\bmetal\b|\bpunk\b|\breggae\b|\breggaeton\b|\btechno\b|\bhouse music\b|\bedm\b|\belectronic dance\b|\bcountry music\b|\bfolk\b|\bblues\b|\bk-?pop\b|\bidol\b|\btrot\b|\bschlager\b|\bchanson fran|\breggaeton\b|\bbeach fest|\bopen air\b|\bspring sing\b|volksmusik|\bflamenco\b|accord[ée]on|accordion|\betno\b|\beurodance\b|grand prix\b(?!.*(?:chartres|piano|violin))/i;
+const NOT_CLASSIC = /\brock\b|\bpop\b|\bpop music\b|\bhip.?hop\b|\brap\b|\bjazz\b|\bmetal\b|\bpunk\b|\breggae\b|\breggaeton\b|\btechno\b|\bhouse music\b|\bedm\b|\belectronic dance\b|\bcountry music\b|\bfolk\b|\bblues\b|\bk-?pop\b|\bidol\b|\btrot\b|\bschlager\b|\bchanson fran|\breggaeton\b|\bbeach fest|\bopen air\b|\bspring sing\b|volksmusik|\bflamenco\b|accord[ée]on|accordion|\betno\b|\beurodance\b|s[aá]mi grand prix/i;
 
 /* ★ 이름에만 있는 회차 — 갈래에 edition 이 없어도 걸러냅니다.
      첫 조사에서 이런 것들이 남았습니다.
@@ -212,7 +213,7 @@ const CAT_CONCOURS = [
   [/\uad6d\uc545|\ud310\uc18c\ub9ac|\uac00\uc57c\uae08|\uac70\ubb38\uace0|\ud574\uae08|\ub300\uae08|\uc815\uac00|\uc0ac\uc2b5|korean traditional|gugak|pansori/i, '\uad6d\uc545'],
   [/conduct|\uc9c0\ud718|dirigent|dirigenten|kapellmeister|direction d.orchestre/i, '\uc9c0\ud718'],
   [/composition|composer|\uc791\uacf1|\uc791\uace1|komposition|kompositions|composizione|composici[oó]n/i, '\uc791\uace1'],
-  [/voice|vocal|opera sing|\bsinging\b|\bsinger\b|\bsong\b|soprano|mezzo|tenor|baritone|\uc131\uc545|gesang|canto\b|chant\b|vokal|lied\b|aria\b|choral|choir|chor\b|coro\b/i, '\uc131\uc545'],
+  [/voice|vocal|opera sing|\bsinging\b|\bsinger\b|\bsong\b|soprano|mezzo|tenor|baritone|\uc131\uc545|gesang|canto\b|chant\b|vokal|lieder|lied\b|aria\b|choral|choir|chor\b|coro\b/i, '\uc131\uc545'],
   [/piano|pianist|pianistico|harpsichord|\borgan\b|organist|organ competition|fortepiano|klavier|klav[ií]r|clavier|\ud53c\uc544\ub178|\uc624\ub974\uac04|\ucf40\ubc1c\ub85c/i, '\ud53c\uc544\ub178'],
   [/violin|violino|violon|violine|geige|viola|\bcello\b|violoncell|double bass|contrabass|\bharp\b|guitar|guitarra|chitarra|string quartet|\bstrings?\b|\ud604\uc545|\ubc14\uc774\uc62c\ub9b0|\ube44\uc62c\ub77c|\uccbc\ub85c|\ud558\ud504|\uae30\ud0c0/i, '\ud604\uc545'],
   [/flute|fl[uû]te|fl\u00f6te|oboe|clarinet|klarinette|bassoon|fagott|\bhorn\b|trumpet|trompete|tromba|trombon|tuba|saxophon|\bwind\b|blasmusik|brass band|percussion|schlagzeug|timpani|marimba|\uad00\uc545|\uae08\uad00|\ubaa9\uad00|\ud0c0\uc545|\ud50c\ub8e8\ud2b8|\uc624\ubcf4\uc5d0|\ud074\ub77c\ub9ac\ub137|\ubc14\uc21c|\ud638\ub978|\ud2b8\ub7fc\ud3ab/i, '\uad00\uc545']
@@ -223,7 +224,7 @@ const CAT_FESTIVAL = [
   [/contemporary|new music|neue musik|avant-?garde|modern music|\ud604\ub300\uc74c\uc545|\uc2e0\uc74c\uc545/i, '\ud604\ub300\uc74c\uc545'],
   [/chamber|kammermusik|musique de chambre|quartet|quintet|\uc2e4\ub0b4\uc545|\uc0ac\uc911\uc8fc/i, '\uc2e4\ub0b4\uc545'],
   [/piano|klavier|pianist|\ud53c\uc544\ub178|\uac74\ubc18/i, '\ud53c\uc544\ub178'],
-  [/voice|vocal|choral|choir|\bchor\b|lied\b|gesang|\uc131\uc545|\ud569\ucc3d|\uac00\uace1/i, '\uc131\uc545']
+  [/voice|vocal|choral|choir|chorus|\bchor\b|lieder|lied\b|gesang|\uc131\uc545|\ud569\ucc3d|\uac00\uace1/i, '\uc131\uc545']
 ];
 
 /* ── 도우미 ─────────────────────────────────────────────── */
