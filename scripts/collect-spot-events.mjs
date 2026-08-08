@@ -132,7 +132,23 @@ const BLOCK = new RegExp([
 ].join('|'), 'i');
 
 /* 대중음악 — 장르나 이름에 있으면 뺍니다 */
-const NOT_CLASSIC = /\brock\b|\bpop\b|\bpop music\b|\bhip.?hop\b|\brap\b|\bjazz\b|\bmetal\b|\bpunk\b|\breggae\b|\breggaeton\b|\btechno\b|\bhouse music\b|\bedm\b|\belectronic dance\b|\bcountry music\b|\bfolk\b|\bblues\b|\bk-?pop\b|\bidol\b|\btrot\b|\bschlager\b|\bchanson fran/i;
+const NOT_CLASSIC = /\brock\b|\bpop\b|\bpop music\b|\bhip.?hop\b|\brap\b|\bjazz\b|\bmetal\b|\bpunk\b|\breggae\b|\breggaeton\b|\btechno\b|\bhouse music\b|\bedm\b|\belectronic dance\b|\bcountry music\b|\bfolk\b|\bblues\b|\bk-?pop\b|\bidol\b|\btrot\b|\bschlager\b|\bchanson fran|\breggaeton\b|\bbeach fest|\bopen air\b|\bspring sing\b|volksmusik|\bflamenco\b|accord[ée]on|accordion|\betno\b|\beurodance\b|grand prix\b(?!.*(?:chartres|piano|violin))/i;
+
+/* ★ 이름에만 있는 회차 — 갈래에 edition 이 없어도 걸러냅니다.
+     첫 조사에서 이런 것들이 남았습니다.
+       XVI · XVII · XVIII · XIX · XX International Chopin Piano Competition
+       2015 Leeds · 2018 Queen Elisabeth · Basel … 2025 · Schapira, 1981
+       제1회 시대 악기 국제 쇼팽 콩쿠르 · 43th Kladrubé léto
+     대회 이름에 해마다 달라지는 숫자가 붙어 있으면 회차입니다.
+     ★ 로마숫자는 두 글자 이상만 봅니다 — 「I」·「V」는 영어 낱말과 엉길립니다. */
+const EDITION_NAME = new RegExp([
+  '^[IVXLCDM]{2,7}\\s+\\S',            // XIX International Chopin…
+  '^\\d{1,3}(?:st|nd|rd|th)\\s',        // 43th Kladrubé…
+  '^(?:19|20)\\d{2}\\s',                // 2015 Leeds…
+  '\\b(?:19|20)\\d{2}\\s*$',          // … Competition 2025
+  ',\\s*(?:19|20)\\d{2}\\s*$',        // … competition, 1981
+  '^\\uc81c\\s*\\d+\\s*\\ud68c'   // 제1회 …
+].join('|'), 'i');
 
 /* ② 확실 — 갈래 이름 자체가 클래식인 것 */
 const STRONG_TYPE = new RegExp([
@@ -183,21 +199,21 @@ const CLASSIC_NAME = new RegExp([
      페스티벌: 종합 · 오페라 · 현대음악 · 피아노 · 고음악 · 실내악 · 성악
    ★ 애매하면 「종합」으로 둡니다. 지어내지 않습니다. */
 const CAT_CONCOURS = [
-  [/국악|판소리|가야금|거문고|해금|대금|정가|korean traditional|gugak/i, '국악'],
-  [/conduct|지휘|dirigent|kapellmeister/i,                                '지휘'],
-  [/composition|composer|작곡|komposition/i,                              '작곡'],
-  [/voice|vocal|singing|singer|opera sing|성악|voix|gesang|canto/i,        '성악'],
-  [/piano|pianist|harpsichord|organ|fortepiano|피아노|오르간|쳄발로/i,      '피아노'],
-  [/violin|viola|cello|violoncell|double bass|contrabass|harp|guitar|string|현악|바이올린|비올라|첼로|하프|기타|콘트라베이스/i, '현악'],
-  [/flute|oboe|clarinet|bassoon|horn|trumpet|trombone|tuba|saxophon|wind|brass|percussion|timpani|marimba|관악|금관|목관|타악|플루트|오보에|클라리넷|바순|호른|트럼펫|트롬본|색소폰/i, '관악']
+  [/\uad6d\uc545|\ud310\uc18c\ub9ac|\uac00\uc57c\uae08|\uac70\ubb38\uace0|\ud574\uae08|\ub300\uae08|\uc815\uac00|\uc0ac\uc2b5|korean traditional|gugak|pansori/i, '\uad6d\uc545'],
+  [/conduct|\uc9c0\ud718|dirigent|dirigenten|kapellmeister|direction d.orchestre/i, '\uc9c0\ud718'],
+  [/composition|composer|\uc791\uacf1|\uc791\uace1|komposition|kompositions|composizione|composici[oó]n/i, '\uc791\uace1'],
+  [/voice|vocal|opera sing|\bsinging\b|\bsinger\b|\bsong\b|soprano|mezzo|tenor|baritone|\uc131\uc545|gesang|canto\b|chant\b|vokal|lied\b|aria\b|choral|choir|chor\b|coro\b/i, '\uc131\uc545'],
+  [/piano|pianist|pianistico|harpsichord|\borgan\b|organist|organ competition|fortepiano|klavier|klav[ií]r|clavier|\ud53c\uc544\ub178|\uc624\ub974\uac04|\ucf40\ubc1c\ub85c/i, '\ud53c\uc544\ub178'],
+  [/violin|violino|violon|violine|geige|viola|\bcello\b|violoncell|double bass|contrabass|\bharp\b|guitar|guitarra|chitarra|string quartet|\bstrings?\b|\ud604\uc545|\ubc14\uc774\uc62c\ub9b0|\ube44\uc62c\ub77c|\uccbc\ub85c|\ud558\ud504|\uae30\ud0c0/i, '\ud604\uc545'],
+  [/flute|fl[uû]te|fl\u00f6te|oboe|clarinet|klarinette|bassoon|fagott|\bhorn\b|trumpet|trompete|tromba|trombon|tuba|saxophon|\bwind\b|blasmusik|brass band|percussion|schlagzeug|timpani|marimba|\uad00\uc545|\uae08\uad00|\ubaa9\uad00|\ud0c0\uc545|\ud50c\ub8e8\ud2b8|\uc624\ubcf4\uc5d0|\ud074\ub77c\ub9ac\ub137|\ubc14\uc21c|\ud638\ub978|\ud2b8\ub7fc\ud3ab/i, '\uad00\uc545']
 ];
 const CAT_FESTIVAL = [
-  [/opera|operatic|오페라|음악극|lyric/i,                                  '오페라'],
-  [/early music|baroque|renaissance|medieval|고음악|바로크|르네상스/i,      '고음악'],
-  [/contemporary|new music|avant-?garde|modern music|현대음악|신음악/i,     '현대음악'],
-  [/chamber|quartet|quintet|실내악|사중주/i,                               '실내악'],
-  [/piano|pianist|keyboard|피아노|건반/i,                                  '피아노'],
-  [/voice|vocal|choral|choir|lied|song|성악|합창|가곡/i,                    '성악']
+  [/\bopera\b|operatic|opernfest|op[ée]ra|\uc624\ud398\ub77c|\uc74c\uc545\uadf9/i, '\uc624\ud398\ub77c'],
+  [/early music|alte musik|musique ancienne|baroque|barock|renaissance|medieval|h[aä]ndel|\uace0\uc74c\uc545|\ubc14\ub85c\ud06c|\ub974\ub124\uc0c1\uc2a4/i, '\uace0\uc74c\uc545'],
+  [/contemporary|new music|neue musik|avant-?garde|modern music|\ud604\ub300\uc74c\uc545|\uc2e0\uc74c\uc545/i, '\ud604\ub300\uc74c\uc545'],
+  [/chamber|kammermusik|musique de chambre|quartet|quintet|\uc2e4\ub0b4\uc545|\uc0ac\uc911\uc8fc/i, '\uc2e4\ub0b4\uc545'],
+  [/piano|klavier|pianist|\ud53c\uc544\ub178|\uac74\ubc18/i, '\ud53c\uc544\ub178'],
+  [/voice|vocal|choral|choir|\bchor\b|lied\b|gesang|\uc131\uc545|\ud569\ucc3d|\uac00\uace1/i, '\uc131\uc545']
 ];
 
 /* ── 도우미 ─────────────────────────────────────────────── */
@@ -339,6 +355,9 @@ function classify(o) {
   if (BLOCK.test(types) || BLOCK.test(name)) {
     return { ok: false, why: '\ub9c9\uc74c(\ud68c\ucc28\u00b7\uac00\uc694\uc81c\u00b7\ubc29\uc1a1)' };
   }
+  if (EDITION_NAME.test(name.trim())) {
+    return { ok: false, why: '\ub9c9\uc74c(\uc774\ub984\uc774 \ud68c\ucc28)' };
+  }
   if (NOT_CLASSIC.test(genres) || NOT_CLASSIC.test(name)) {
     return { ok: false, why: '\ub9c9\uc74c(\ub300\uc911\uc74c\uc545)' };
   }
@@ -447,12 +466,23 @@ async function runGroup(g, have) {
 
     /* 이미 있는 것 — 위키데이터 번호로도, 제목으로도 봅니다.
        사람이 쓴 29건에는 번호가 없어서 제목으로만 걸러집니다. */
+    /* ★ 이미 있는 것 · 이번에 이미 담기로 한 것 둘 다 거릅니다.
+       첫 조사에서 Carl Flesch · NZCT Chamber Music 이 두 번씩 나왔고,
+       Wieniawski · Grand Prix de Chartres 는 콩쿨과 페스티벌 양쪽에 있었습니다. */
     const key = title.replace(/\s+/g, '').toLowerCase();
     if (have.qids.has(o.qid) || have.titles.has(key)) { skip++; continue; }
+    have.qids.add(o.qid);
+    have.titles.add(key);
 
     const isKR  = /^(South Korea|Korea)$/i.test(o.country || '') || o.cc === 'KR';
-    const text  = [o.en, o.ko, o.descEn, o.descKo, [...o.types].join(' ')].filter(Boolean).join(' ');
-    const cat   = pickCat(g.section === '콩쿨' ? CAT_CONCOURS : CAT_FESTIVAL, text);
+    /* ★ 부문은 <b>이름을 먼저</b> 봅니다.
+       설명이 이름을 이기면 「Dallas International Violin Competition」이
+       설명 속 piano 때문에 피아노가 됩니다. 이름에서 못 찾을 때만 설명을 봅니다. */
+    const rules = g.section === '콩쿨' ? CAT_CONCOURS : CAT_FESTIVAL;
+    const nameT = [o.en, o.ko].filter(Boolean).join(' ');
+    const restT = [o.descEn, o.descKo, [...o.types].join(' ')].filter(Boolean).join(' ');
+    let cat = pickCat(rules, nameT);
+    if (cat === '종합') cat = pickCat(rules, restT);
     const year  = /^(\d{4})/.exec(o.inception || '');
     const img   = commons(o.logo) || commons(o.photo);
 
