@@ -1,4 +1,4 @@
-name: Resolve orphan links (monthly)
+name: 연결 · 끊긴 것 잇기 (월간)
 
 on:
   schedule:

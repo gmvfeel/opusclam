@@ -1,4 +1,4 @@
-name: Collect persons KR (weekly)
+name: 인물 · 국내 수집 (주3회)
 
 on:
   schedule:

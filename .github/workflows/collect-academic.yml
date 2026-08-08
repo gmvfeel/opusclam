@@ -1,4 +1,4 @@
-name: Collect academic (weekly)
+name: 학술 · 수집 (주3회)
 
 on:
   schedule:

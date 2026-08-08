@@ -1,4 +1,4 @@
-name: Collect schools (weekly)
+name: 단체 · 학교 수집 (주간)
 
 on:
   schedule:

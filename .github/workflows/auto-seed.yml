@@ -1,4 +1,4 @@
-name: auto-seed community
+name: 운영 · 커뮤니티 자동시드 (매일)
 
 on:
   schedule:

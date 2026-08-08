@@ -1,4 +1,4 @@
-name: Collect orgs (weekly)
+name: 단체 · 단체 수집 (주간)
 
 on:
   schedule:
