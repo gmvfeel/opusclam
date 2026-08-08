@@ -161,6 +161,12 @@ const EDITION_NAME = new RegExp([
   '^\\uc81c\\s*\\d+\\s*\\ud68c'   // 제1회 …
 ].join('|'), 'i');
 
+/* 전통예술 종합 경연 — 판소리·농악·무용을 함께 겨루는 대회입니다.
+   국악 자체를 막는 것은 아니고, 「음악 콩쿠르」 목록과 결이 다릅니다.
+   ★ 파트너가 직접 빼달라고 하신 것입니다(전주대사습놀이).
+   다른 것도 빼시려면 어드민 「차단 목록」을 쓰시는 편이 낫습니다. */
+const FOLK_CONTEST = /\ub300\uc0ac\uc2b5|\ub18d\uc545|\uc0ac\ubb3c\ub180\uc774|\uc804\ud1b5\uc608\uc220|\ubbfc\uc18d\uc608\uc220|\uad6d\uc545\uacbd\uc5f0|folk arts contest/i;
+
 /* ② 확실 — 갈래 이름 자체가 클래식인 것 */
 const STRONG_TYPE = new RegExp([
   'classical music',
@@ -200,7 +206,7 @@ const CLASSIC_NAME = new RegExp([
   // 한국어
   '클래식', '고전음악', '현대음악', '오페라', '관현악', '교향', '실내악',
   '성악', '합창', '피아노', '바이올린', '비올라', '첼로', '하프',
-  '플루트', '오보에', '클라리넷', '지휘', '작곡', '국악', '정가', '판소리',
+  '플루트', '오보에', '클라리넷', '지휘', '작곡', 
   '음악콩쿠르', '음악 콩쿠르', '콩쿠르', '콩쿨'
 ].join('|'), 'i');
 
@@ -273,6 +279,27 @@ async function getAll(path) {
     if (rows.length < 200) break;
   }
   return out;
+}
+
+/* ★ 차단 목록 — 지운 것이 다음 수집에 되돌아오지 않게 합니다.
+   어드민의 「삭제 + 차단」은 blocklist 표에 위키데이터 번호를 남깁니다.
+   그 목록을 읽지 않으면 지운 항목이 그대로 돌아옵니다.
+   — 전주대사습놀이가 자꾸 들어오던 까닭입니다.
+   다른 수집기 열둘은 이미 이 목록을 봅니다. */
+async function loadBlocked() {
+  try {
+    const rows = await getAll('blocklist?select=wikidata_id&order=wikidata_id.asc');
+    const set = new Set();
+    for (const r of rows || []) {
+      if (r && r.wikidata_id) set.add(String(r.wikidata_id).trim());
+    }
+    console.log('■ 차단 목록 ' + set.size + '건 읽음');
+    return set;
+  } catch (e) {
+    console.log('■ 차단 목록을 읽지 못했습니다 · 걸러내지 않고 이어갑니다 · '
+      + String(e.message || '').slice(0, 60));
+    return new Set();
+  }
 }
 
 /* ── 분류 번호가 맞는지 확인 ─────────────────────────────── */
@@ -369,6 +396,9 @@ function classify(o) {
   if (EDITION_NAME.test(name.trim())) {
     return { ok: false, why: '\ub9c9\uc74c(\uc774\ub984\uc774 \ud68c\ucc28)' };
   }
+  if (FOLK_CONTEST.test(name) || FOLK_CONTEST.test(desc)) {
+    return { ok: false, why: '\ub9c9\uc74c(\uc804\ud1b5\uc608\uc220 \uacbd\uc5f0)' };
+  }
   if (NOT_CLASSIC.test(genres) || NOT_CLASSIC.test(name)) {
     return { ok: false, why: '\ub9c9\uc74c(\ub300\uc911\uc74c\uc545)' };
   }
@@ -412,7 +442,7 @@ function makeBody(o, section) {
 }
 
 /* ── 한 갈래 처리 ────────────────────────────────────────── */
-async function runGroup(g, have) {
+async function runGroup(g, have, blocked) {
   console.log('\n════════════════════════════════════════════');
   console.log(' ' + g.label + '  (' + g.section + ')');
   console.log('════════════════════════════════════════════');
@@ -473,6 +503,14 @@ async function runGroup(g, have) {
 
   for (const o of all) {
     for (const t of o.types) typeCount.set(t, (typeCount.get(t) || 0) + 1);
+
+    /* ★ 차단 목록에 있으면 무조건 건너뜁니다 — 다른 잣대보다 먼저입니다. */
+    if (blocked && blocked.has(o.qid)) {
+      whyCount.set('차단 목록', (whyCount.get('차단 목록') || 0) + 1);
+      drop++;
+      if (DEBUG) console.log('   [차단] ' + (o.en || o.ko || o.qid));
+      continue;
+    }
 
     const c = classify(o);
     whyCount.set(c.why, (whyCount.get(c.why) || 0) + 1);
@@ -637,8 +675,10 @@ async function main() {
     console.log('   ' + g.section + ' : ' + rows.length + '건');
   }
 
+  const blocked = await loadBlocked();
+
   const results = [];
-  for (const g of groups) results.push(await runGroup(g, have));
+  for (const g of groups) results.push(await runGroup(g, have, blocked));
 
   console.log('\n╔══════════════════════════════════════════════╗');
   console.log('║  마무리                                      ║');
