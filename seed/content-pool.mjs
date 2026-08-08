@@ -14,6 +14,11 @@
           ★ 자동시드가 다섯 게시판만 다뤄 현대음악·태교음악이
             8건에서 멈춰 있었습니다. 게시판 설정도 함께 넣었습니다.
      5차  utility-2(12) · news-2(8) · qna-4(12)    = 32
+     6차  admission-4(12) · hottopic-4(12)
+          modern-2(6) · prenatal-2(6)              = 36
+          ★ 2026-08-08 · 런칭 전이라 모든 게시판을 채워 둡니다.
+            그때 남은 양 — 입시 1개 · 핫토픽 7개 · 현대음악 4개
+            태교음악 2개. 입시가 거의 바닥이었습니다.
           ★ 2026-08-08 · 풀이 바닥나 만든 것입니다.
             그때 상태 — 풀 150개 · 담긴 것 295건
             utility · news · qna 는 이미 소진돼 「남은 글 없음」이
@@ -44,6 +49,10 @@ import { UTILITY } from './pool/utility.mjs';
 import { UTILITY2 } from './pool/utility-2.mjs';
 import { NEWS2 } from './pool/news-2.mjs';
 import { QNA4 } from './pool/qna-4.mjs';
+import { ADMISSION4 } from './pool/admission-4.mjs';
+import { HOTTOPIC4 } from './pool/hottopic-4.mjs';
+import { MODERN2 } from './pool/modern-2.mjs';
+import { PRENATAL2 } from './pool/prenatal-2.mjs';
 // 사진 준비 뒤: import { GALLERY } from './pool/gallery.mjs';
 
 /* 일반 게시판용 닉네임 풀 (글에 author 가 지정돼 있으면 그것을 씁니다)
@@ -78,6 +87,10 @@ export const POOL = {
     ...UTILITY2,
     ...NEWS2,
     ...QNA4,
+    ...ADMISSION4,
+    ...HOTTOPIC4,
+    ...MODERN2,
+    ...PRENATAL2,
     // ...GALLERY,
   ],
 };
