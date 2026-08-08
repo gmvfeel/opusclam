@@ -235,20 +235,31 @@ const O_CLASSIC = new RegExp([
   'concertmaster', 'r[eé]p[eé]titeur', 'orchestrator',
   'musicolog', 'music theorist', 'music historian', 'ethnomusicolog',
   'lutenist', 'viol player', 'carillonist', 'church musician',
-  'choir director', 'chorus master', 'music director'
+  'choir director', 'chorus master', 'music director',
+  'music educator', 'music teacher', 'piano teacher', 'violin teacher',
+  'music arranger', 'librettist', 'chapelmaster', 'court musician',
+  'musical instrument maker', 'luthier', 'organ builder', 'piano maker',
+  'classical composer', 'film score composer', 'accompanist'
 ].join('|'), 'i');
 
-/* ── 대중음악 전용 직업 ────────────────────────────────────
-   ★ 여기 걸리면 클래식 직업이 함께 있어도 뺍니다.
-     단, 클래식 <b>장르</b>가 있으면 ①에서 이미 받았으므로 안전합니다. */
+/* ── 대중음악 <b>전용</b> 직업 ────────────────────────────
+   ★ 2026-08-08 두 번째 고침 — 첫 판에서 <b>오페라 가수가 대거 빠졌습니다.</b>
+       마르타 에게르트  film actor, opera singer, stage actor
+       김주택          opera singer, musical theatre actor, singer
+     오페라 가수는 무대에 서니 stage actor 가 붙는 것이 당연합니다.
+     그런데 배우·정치인 검사를 클래식 직업보다 앞에 두어
+     opera singer 가 있어도 actor 때문에 빠졌습니다.
+
+   ▶ 이제 여기에는 <b>대중음악 전용 직업만</b> 둡니다.
+     배우·정치인·방송인 같은 「음악 밖 직업」은 여기 넣지 않습니다.
+     그런 사람은 <b>음악 직업이 하나도 없을 때</b> 걸러집니다. */
 const O_POP = new RegExp([
-  '\\brapper\\b', '\\bdj\\b', 'disc jockey', 'turntablist',
+  '\\brapper\\b', '\\bdj\\b', 'disc jockey', 'turntablist', 'beatboxer',
   'singer-songwriter', 'pop singer', 'rock musician', 'idol\\b',
-  'beatboxer', 'street artist', 'busker',
-  '\\bactor\\b', '\\bactress\\b', '\\bmodel\\b',
-  '\\bpolitician\\b', 'youtuber', 'streamer', 'influencer',
-  '\\bcomedian\\b', 'television presenter', 'radio personality'
+  'jazz musician', 'jazz pianist', 'jazz guitarist', 'jazz singer',
+  'session musician', 'backing vocalist'
 ].join('|'), 'i');
+
 
 /**
  * 이미 담긴 자료가 클래식인지 다시 봅니다.
@@ -289,14 +300,16 @@ export function checkClassic(p) {
   /* ② 대중음악 장르만 있으면 뺍니다 — 야니·이루마·크로스오버 가수 */
   if (G_POP.test(g)) return { ok: false, why: '대중음악 장르만 있음' };
 
-  /* ③ 대중음악 전용 직업 — 래퍼·DJ·아이돌·배우·정치인 */
-  if (O_POP.test(o)) return { ok: false, why: '대중·연기 쪽 직업' };
+  /* ③ 대중음악 <b>전용</b> 직업이면 뺍니다 — 래퍼·DJ·재즈 뮤지션 */
+  if (O_POP.test(o)) return { ok: false, why: '대중음악 전용 직업' };
 
   /* ④ 클래식 직업이면 받습니다 — 장르가 비어 있어도.
-        브람스 · 진은숙 · 백병동 · Alma Deutscher 가 여기서 살아납니다. */
+        ★ 배우·정치인이 함께 적혀 있어도 받습니다.
+          오페라 가수에게 stage actor 가 붙는 것은 당연한 일입니다.
+        브람스 · 진은숙 · 백병동 · 마르타 에게르트가 여기서 살아납니다. */
   if (O_CLASSIC.test(o)) return { ok: true, why: '클래식 직업' };
 
-  /* 그 밖 — 음악과 무관해 보입니다 */
+  /* ⑤ 음악 직업이 하나도 없습니다 — 배우·정치인·방송인만 있는 경우 */
   return { ok: false, why: '음악 직업이 아님' };
 }
 
