@@ -10,6 +10,8 @@
 //  - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY, (선택) DAILY_LIMIT
 // ============================================================
 
+import { guessField } from './lib/field.mjs';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) { console.error('환경변수 필요: SUPABASE_URL / SUPABASE_SERVICE_KEY'); process.exit(1); }
@@ -115,21 +117,14 @@ async function wikiExtracts(host, titles) {
 
 /* ---------- 파생값 계산 ---------- */
 // 분야 — 위키데이터 직업 기준. 우선순위: 작곡 > 성악 > 지휘 > 연주 > 음악학 > 음악교육 > 편곡 > 평론
-const FIELD_RULES = [
-  [/\bcomposer\b|songwriter/i, '작곡'],
-  [/opera singer|\bsinger\b|soprano|mezzo|contralto|\btenor\b|baritone|countertenor|\bbass\b|vocalist|chanteuse/i, '성악'],
-  [/conductor|kapellmeister|choir director|music director/i, '지휘'],
-  [/pianist|violinist|cellist|violist|organist|flautist|flutist|oboist|clarinet|bassoon|trumpet|trombon|tubist|harpist|percussion|guitarist|bassist|drummer|harpsichord|instrumentalist|accompanist|concertmaster|luthier|violin maker/i, '연주'],
-  [/musicolog|music theorist|music historian/i, '음악학'],
-  [/music educator|music teacher|pedagogue|university teacher/i, '음악교육'],
-  [/arranger|orchestrator/i, '편곡'],
-  [/music critic|critic/i, '평론'],
-];
-function guessField(occ) {
-  const t = occ || '';
-  for (const [re, label] of FIELD_RULES) if (re.test(t)) return label;
-  return '';
-}
+/* ★ 분야 판정 규칙은 scripts/lib/field.mjs 로 옮겼습니다.
+   여기와 fix-person-field.mjs 두 곳에 같은 규칙을 두면 반드시 어긋납니다
+   (작품 형식표를 하루에 두 번 늘렸던 일과 같습니다).
+
+   2026-08-08 고침 — 예전에는 규칙을 위에서부터 훑어 처음 맞는 것을 썼습니다.
+   `composer` 가 맨 앞이라 폴리니(concertmaster, pianist, ... composer)가
+   「작곡」이 되었습니다. 이제는 직업 목록에 적힌 순서를 따릅니다. */
+
 // 시대 — 출생년 기준 (음악사 통용 시기)
 function guessEra(birthYear) {
   const y = parseInt(birthYear, 10);
