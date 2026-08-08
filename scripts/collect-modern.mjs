@@ -9,6 +9,11 @@
 //  - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
 // ============================================================
 
+/* ★ 클래식·현대음악 판정은 scripts/lib/classic.mjs 한 곳에만 둡니다.
+   이 파일이 자기 정규식(CLASS_KW · POPFILM_KW)과 이름 목록(EXCLUDE)을
+   따로 가지고 있어서 야니가 들어왔습니다 — 그 목록에 없었기 때문입니다. */
+import { checkModern } from './lib/classic.mjs';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) { console.error('환경변수 필요: SUPABASE_URL / SUPABASE_SERVICE_KEY'); process.exit(1); }
@@ -236,6 +241,27 @@ function excluded(r) {
 // 컷오프 B(중간): 실질 정보가 있어야 포함
 function keep(r) {
   if (excluded(r)) return false;                      // 이 표에 넣지 않기로 한 사람
+
+  /* ★ 2026-08-08 — 공용 잣대를 먼저 봅니다 (scripts/lib/classic.mjs)
+       ① 클래식인가   ② 작곡가인가(연주자·지휘자 제외)   ③ 현대인가
+       ★ 영화·게임음악은 <b>현대음악DB 에서만</b> 뺍니다.
+         인물DB 에는 넣습니다 — 모리코네도 클래식 음악인이니까요.
+         자리의 성격이 달라서 잣대도 다릅니다 (파트너 결정).
+       ★ 손열음·정명훈·조성진을 이름으로 막던 것을 이것이 대신합니다.
+         이름을 하나씩 적는 방식은 늘 뒤늦습니다. */
+  const m = checkModern({
+    wd_genre:      r._genres,
+    /* ★ 이 수집기의 SPARQL 은 이미 P106 = 작곡가(Q36834) 로 한정합니다.
+       그래서 직업 검사는 통과한 셈이라 'composer' 를 넣어 줍니다.
+       (예전에 여기에 r._occupations 를 썼는데 <b>그런 칸이 없었습니다</b> —
+        짐작으로 적은 것이라 검사가 조용히 안 돌 뻔했습니다) */
+    wd_occupation: 'composer',
+    description:   r.description,
+    life:          r.life,
+    school_style:  r.school_style
+  });
+  if (!m.ok) return false;
+
   const { hasClassical, hasPop } = classify(r);
   if (hasPop && !hasClassical) return false;        // 명백히 클래식 무관 배제
   if (bioOK(r)) return true;                          // 실제 소개(전기) 있으면 충실

@@ -22,7 +22,7 @@
      SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY
    ============================================================ */
 
-import { checkClassic } from './lib/classic.mjs';
+import { checkClassic, checkModern } from './lib/classic.mjs';
 
 const SB_URL = process.env.SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -56,7 +56,12 @@ const TABLES = [
   /* ★ 현대음악DB 는 자기 장르·직업 칸이 없습니다.
      대신 wikidata_id 로 인물DB 와 이어져 있으므로 그 판정을 물려받습니다.
      (2026-08-08 · 표에 직접 물어 확인한 구조입니다) */
-  { name: 'modern_composers', label: '현대음악DB', viaPersons: true }
+  /* ★ 현대음악DB 는 <b>자기 잣대</b>가 따로 있습니다 (2026-08-08 파트너 결정)
+       인물DB     영화·게임음악을 넣습니다 (모리코네·히사이시 조)
+       현대음악DB  영화·게임음악을 뺍니다 (진은숙·윤이상 계열만)
+     같은 사람이 인물DB 에는 있고 여기에는 없는 것이 정상입니다.
+     자기 장르·직업 칸이 없으므로 인물DB 에서 근거를 빌려 옵니다. */
+  { name: 'modern_composers', label: '현대음악DB', viaPersons: true, modern: true }
 ];
 
 /* ★ 표마다 칸이 다릅니다 — 있는 칸만 골라 씁니다.
@@ -66,7 +71,8 @@ const TABLES = [
 const WANT_COLS = [
   'id', 'name_ko', 'name_en', 'title', 'field',
   'wd_genre', 'wd_occupation', 'genre', 'occupation',
-  'description', 'description_en', 'wikidata_id', 'hidden'
+  'description', 'description_en', 'wikidata_id', 'hidden',
+  'life', 'school_style'
 ];
 
 /** 그 표에 실제로 있는 칸만 돌려줍니다 */
@@ -118,15 +124,19 @@ let personVerdict = null;
 async function loadPersonVerdict() {
   if (personVerdict) return personVerdict;
   const rows = await getAll(
-    'persons?select=wikidata_id,name_ko,wd_genre,wd_occupation&order=id.asc');
+    'persons?select=wikidata_id,name_ko,wd_genre,wd_occupation,description,description_en&order=id.asc');
   const byWid = new Map();
   const byName = new Map();
+  const rawWid = new Map();
+  const rawName = new Map();
   for (const p of rows) {
     const c = checkClassic(p);
-    if (p.wikidata_id) byWid.set(String(p.wikidata_id).trim(), c);
-    if (p.name_ko) byName.set(String(p.name_ko).trim(), c);
+    if (p.wikidata_id) { byWid.set(String(p.wikidata_id).trim(), c);
+                         rawWid.set(String(p.wikidata_id).trim(), p); }
+    if (p.name_ko)     { byName.set(String(p.name_ko).trim(), c);
+                         rawName.set(String(p.name_ko).trim(), p); }
   }
-  personVerdict = { byWid, byName, n: rows.length };
+  personVerdict = { byWid, byName, rawWid, rawName, n: rows.length };
   return personVerdict;
 }
 
@@ -141,16 +151,29 @@ async function auditOne(t) {
   /* ★ 인물DB 에 기대는 표 */
   if (t.viaPersons) {
     const v = await loadPersonVerdict();
-    console.log('인물DB 판정 ' + v.n + '명을 불러왔습니다 (번호·이름으로 맞춰 봅니다)');
+    console.log('인물DB 자료 ' + v.n + '명을 불러왔습니다 (번호·이름으로 맞춰 봅니다)');
+    if (t.modern) console.log('※ 현대음악DB 전용 잣대로 봅니다 — 영화·게임음악은 뺍니다');
 
     const rows = await getAll(t.name + '?select=' + cols.join(',') + '&order=id.asc');
     console.log('담긴 것 : ' + rows.length + '줄        ');
 
     const keep = [], drop = [], why = new Map();
     for (const r of rows) {
+      /* 인물DB 에서 장르·직업을 빌려 옵니다 */
+      let base = null;
+      if (r.wikidata_id) base = v.rawWid.get(String(r.wikidata_id).trim()) || null;
+      if (!base && r.name_ko) base = v.rawName.get(String(r.name_ko).trim()) || null;
+
       let c = null;
-      if (r.wikidata_id) c = v.byWid.get(String(r.wikidata_id).trim()) || null;
-      if (!c && r.name_ko) c = v.byName.get(String(r.name_ko).trim()) || null;
+      if (base) {
+        /* ★ 현대음악DB 는 자기 잣대로 봅니다.
+           현대음악DB 쪽 자료(소개문·사조·생몰)도 함께 넘깁니다. */
+        c = t.modern
+          ? checkModern({ ...base,
+              description: r.description || base.description,
+              life: r.life, school_style: r.school_style })
+          : checkClassic(base);
+      }
 
       if (!c) {
         /* 인물DB 에 짝이 없습니다 — 판정 근거가 없으므로 건드리지 않습니다 */
@@ -159,7 +182,7 @@ async function auditOne(t) {
         continue;
       }
       why.set(c.why, (why.get(c.why) || 0) + 1);
-      (c.ok ? keep : drop).push({ ...r, _why: '인물DB 판정 · ' + c.why });
+      (c.ok ? keep : drop).push({ ...r, _why: c.why });
     }
 
     const already = drop.filter(x => x.hidden === true).length;
