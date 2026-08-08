@@ -102,7 +102,20 @@ export function sparqlClassicRequired(v = '?item') {
        + v + ' wdt:P136/wdt:P279* ?ocFam . ';
 }
 
-/** 대중음악·연기 쪽을 걸러내는 조각 */
+/** 대중음악 쪽을 걸러내는 조각
+ *
+ *  ★ 2026-08-08 — <b>기본으로는 쓰지 마십시오.</b>
+ *    SPARQL 로 미리 빼면 우리 잣대와 어긋납니다.
+ *      SPARQL   재즈 장르가 있으면 → 배제   ← 거슈윈이 여기서 빠집니다
+ *      우리 잣대  클래식이 있으면 → 받음
+ *    또 singer · actor 를 빼면 <b>오페라 가수 대부분이 빠집니다</b> —
+ *    오페라 가수는 P106 에 opera singer 와 singer 를 함께 갖고,
+ *    무대에 서므로 actor 가 붙습니다(마르타 에게르트 사례).
+ *
+ *  ▶ <b>클래식 장르를 필수로 두면 그것만으로 충분합니다.</b>
+ *    받아온 뒤 checkClassic() 이 한 곳에서 판단합니다.
+ *    (조사용으로만 남겨 둡니다 — count-classic.mjs)
+ */
 export function sparqlPopExcluded(v = '?item') {
   let q = '';
   POP_FAM.forEach(f => {
