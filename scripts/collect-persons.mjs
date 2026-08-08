@@ -168,21 +168,32 @@ LIMIT ${page} OFFSET ${offset}`;
 /* ── 상세 쿼리 ─────────────────────────────────────────── */
 function detailQuery(qids) {
   const vs = qids.map(q => 'wd:' + q).join(' ');
-  return `SELECT ?item ?en ?ko ?birth ?death ?sl ?countryLabel
+  /* ★ 2026-08-08 고침 — 사람 하나가 여러 줄로 오던 문제
+       예전에는 GROUP BY 에 ?birth ?death ?countryLabel 을 넣었습니다.
+       위키데이터는 한 사람에게 <b>출처가 다른 생몰일을 여럿</b> 갖습니다.
+       그러면 조합 수만큼 줄이 늘어납니다 —
+         Momo Kodama 1972~ · 1967~ · 1972~ · 1967~  (네 줄)
+       ▶ 값이 여럿일 수 있는 것은 SAMPLE() 로 하나만 뽑고,
+         GROUP BY 는 ?item 하나로만 묶습니다. */
+  return `SELECT ?item
+       (SAMPLE(?enL)  AS ?en)
+       (SAMPLE(?koL)  AS ?ko)
+       (MIN(?birthV)  AS ?birth)
+       (MIN(?deathV)  AS ?death)
+       (SAMPLE(?slV)  AS ?sl)
        (GROUP_CONCAT(DISTINCT ?gL;separator=", ")  AS ?genres)
        (GROUP_CONCAT(DISTINCT ?oL;separator=", ")  AS ?occs)
 WHERE {
   VALUES ?item { ${vs} }
-  OPTIONAL { ?item rdfs:label ?en FILTER(lang(?en)="en") }
-  OPTIONAL { ?item rdfs:label ?ko FILTER(lang(?ko)="ko") }
-  OPTIONAL { ?item wdt:P569 ?birth }
-  OPTIONAL { ?item wdt:P570 ?death }
-  OPTIONAL { ?item wikibase:sitelinks ?sl }
-  OPTIONAL { ?item wdt:P27 ?country . ?country rdfs:label ?countryLabel FILTER(lang(?countryLabel)="ko") }
+  OPTIONAL { ?item rdfs:label ?enL FILTER(lang(?enL)="en") }
+  OPTIONAL { ?item rdfs:label ?koL FILTER(lang(?koL)="ko") }
+  OPTIONAL { ?item wdt:P569 ?birthV }
+  OPTIONAL { ?item wdt:P570 ?deathV }
+  OPTIONAL { ?item wikibase:sitelinks ?slV }
   OPTIONAL { ?item wdt:P136 ?g . ?g rdfs:label ?gL FILTER(lang(?gL)="en") }
   OPTIONAL { ?item wdt:P106 ?o . ?o rdfs:label ?oL FILTER(lang(?oL)="en") }
 }
-GROUP BY ?item ?en ?ko ?birth ?death ?sl ?countryLabel`;
+GROUP BY ?item`;
 }
 
 const year = (s) => { const m = /^(-?\d{4})/.exec(s || ''); return m ? m[1].replace(/^-/, '기원전 ') : ''; };
@@ -217,8 +228,10 @@ async function runJob(job, have, blocked) {
     if (rows.length < PAGE) break;
     await sleep(1500);
   }
+  const hitLimit = qids.length >= LIMIT;
   console.log('위키데이터에서 받은 항목 : ' + qids.length + '명'
-    + (stopped ? '  ※ 속도 제한으로 중간에 멈췄습니다' : ''));
+    + (stopped ? '  ※ 속도 제한으로 중간에 멈췄습니다' : '')
+    + (hitLimit ? '  ★ 상한(' + LIMIT + ')에 닿았습니다 — 더 있습니다' : ''));
 
   /* 이미 담긴 것·차단된 것 먼저 걸러 상세 요청을 줄입니다 */
   const fresh = qids.filter(q => !have.has(q) && !blocked.has(q));
@@ -228,6 +241,7 @@ async function runJob(job, have, blocked) {
 
   const add = [];
   const why = new Map();
+  let dup = 0;
 
   for (let i = 0; i < fresh.length; i += 150) {
     const part = fresh.slice(i, i + 150);
@@ -243,6 +257,10 @@ async function runJob(job, have, blocked) {
     for (const b of rows) {
       const qid = qidOf(val(b, 'item'));
       if (!qid) continue;
+
+      /* ★ 같은 번호가 두 번 오면 건너뜁니다.
+         SPARQL 을 고쳐 두었지만 안전장치를 하나 더 둡니다. */
+      if (have.has(qid)) { dup++; continue; }
 
       const en = val(b, 'en');
       const ko = val(b, 'ko');
@@ -280,6 +298,7 @@ async function runJob(job, have, blocked) {
   console.log('\n── 걸러낸 까닭 ──');
   [...why.entries()].sort((a, b) => b[1] - a[1])
     .forEach(([k, v]) => console.log('   ' + String(v).padStart(6) + '  ' + k));
+  if (dup) console.log('   ' + String(dup).padStart(6) + '  같은 번호가 두 번 옴(건너뜀)');
 
   const withKo = add.filter(a => a.name_ko).length;
   console.log('\n  새로 담을 수 있는 것 : ' + add.length + '명 (한국어 이름 ' + withKo + '명)');
@@ -295,7 +314,7 @@ async function runJob(job, have, blocked) {
     });
   }
 
-  return { job, add, stopped };
+  return { job, add, stopped, hitLimit };
 }
 
 /* ── 담기 ───────────────────────────────────────────────
@@ -387,6 +406,14 @@ async function main() {
   if (anyStopped) {
     console.log('\n※ 위키데이터가 속도 제한을 걸어 다 받지 못했습니다.');
     console.log('  20~30분 뒤에 다시 돌리시면 이어서 받습니다.');
+  }
+  const over = results.filter(r => r.hitLimit);
+  if (over.length) {
+    console.log('\n★ 상한(' + LIMIT + ')에 닿은 직업이 ' + over.length + '가지 있습니다 —');
+    console.log('  ' + over.map(r => r.job.en).join(' · '));
+    console.log('  이 직업들은 <b>아직 더 남아 있습니다.</b>'.replace(/<[^>]+>/g, ''));
+    console.log('  담으신 뒤 같은 설정으로 다시 돌리면 이어서 받습니다');
+    console.log('  (이미 담긴 사람은 건너뜁니다).');
   }
 
   if (!SAVE) {
