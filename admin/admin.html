@@ -238,11 +238,25 @@
            ③ 은 지우지 않고 남겨 둡니다. 자동이 왜 안 돌았는지 확인할 때,
            또는 급히 지금 돌려야 할 때 쓸 길이 됩니다. -->
 
-      <h2 class="dash-h">손으로 하는 일</h2>
-      <p class="dash-sub">사람이 판단해야 하는 일입니다. 자동화할 수 없습니다.</p>
+      <h2 class="dash-h">매일 보는 일</h2>
+      <p class="dash-sub">사람이 보낸 것에 답하고, 밖으로 내보내는 자리입니다.</p>
       <div class="cards">
         <div class="card clickable" id="cardMembers"><span class="cbadge" id="badgeMembers"></span><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
         <div class="card clickable" id="cardReview"><span class="cbadge" id="badgeReview"></span><h3>제출 검수</h3><p>자격 회원이 등록·보강 제출한 내용을 확인하고, 승인 시 실제 DB에 반영합니다.</p><span class="go">검수하기 →</span></div>
+        <a class="card clickable tool" href="reports.html">
+          <span class="tag">데이터 도구</span>
+          <h3>데이터 신고 처리</h3>
+          <p>상세 화면의 <b>「정보 오류 신고」</b>로 들어온 것을 봅니다. 제목을 누르면 그 항목 화면이 열리고, 고친 뒤 상태를 옮깁니다.</p>
+          <span class="when">자동수집으로 채운 자료에는 <b>틀린 것이 섞입니다</b>(위키데이터가 「발퀴레의 기행」을 「기승」으로 적어 두었습니다). 사람이 16,000개를 다 볼 수는 없으니 <b>보는 사람이 알려줄 길</b>이 있어야 합니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+        <a class="card clickable tool" href="paid.html">
+          <span class="tag">수익</span>
+          <h3>콩쿨 유료 등재 처리</h3>
+          <p>「콩쿨 공고 상단 등재」로 들어온 신청을 봅니다. 입금을 확인하신 뒤 <b>게재 시작</b>을 누르면 그 공고가 목록 맨 위로 올라갑니다.</p>
+          <span class="when">결제대행(PG) 없이 <b>계좌이체 + 승인 버튼</b>으로 운영합니다. 기간이 끝난 것은 저절로 내려오며, 손으로 고정해 둔 무료 공지는 건드리지 않습니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
         <a class="card clickable tool" href="score-review.html">
           <span class="tag">정보SPOT</span>
           <h3>악보 검수</h3>
@@ -250,9 +264,6 @@
           <span class="when">「저작권 자동 검사」 로 출판사·판권 표시를 찾아 줍니다. 사람의 판단을 돕는 것이고 법률 자문은 아닙니다.</span>
           <span class="go">검수하기 →</span>
         </a>
-        <div class="card clickable" id="cardHero"><h3>콘텐츠 · 광고 관리</h3><p>메인 히어로 슬라이드(상단 큰 배너)의 문구·이미지·링크를 수정합니다.</p><span class="go">관리하기 →</span></div>
-        <div class="card clickable" id="cardManage"><h3>DB 관리 · 정제</h3><p>음악과 무관해 보이는 인물을 <b>비음악 점수</b>로 표시합니다. 점수가 높을수록 무관할 가능성이 큽니다.</p><span class="when">자동화에 없는 일입니다 — 지울지 말지는 사람이 정합니다.</span><span class="go">관리하기 →</span></div>
-        <div class="card clickable" id="cardRel"><h3>관계 관리 · 네트워킹</h3><p>인물의 사사관계·소속·출신학교를 직접 추가·삭제합니다.</p><span class="when">위키데이터에 <b>없는</b> 국내 인물 관계를 채웁니다. 자동이 못 하는 일입니다.</span><span class="go">관리하기 →</span></div>
         <a class="card clickable tool" href="media.html">
           <span class="tag">정보SPOT</span>
           <h3>음원·동영상 검토</h3>
@@ -260,11 +271,68 @@
           <span class="when">수집은 자동(매일 07:47)이고, <b>고르는 일은 사람 몫</b>입니다.</span>
           <span class="go">도구 열기 →</span>
         </a>
+        <div class="card clickable" id="cardHero"><h3>콘텐츠 · 광고 관리</h3><p>메인 히어로 슬라이드(상단 큰 배너)의 문구·이미지·링크를 수정합니다.</p><span class="go">관리하기 →</span></div>
       </div>
 
-      <h2 class="dash-h">정제 · 점검 도구</h2>
-      <p class="dash-sub">자동화에 없는 기능이 들어 있습니다. 필요할 때 쓰십시오.</p>
+      <h2 class="dash-h">자료 손질</h2>
+      <p class="dash-sub">담긴 자료를 다듬습니다. 필요할 때만 열면 됩니다.</p>
       <div class="cards">
+        <div class="card clickable" id="cardManage"><h3>DB 관리 · 정제</h3><p>음악과 무관해 보이는 인물을 <b>비음악 점수</b>로 표시합니다. 점수가 높을수록 무관할 가능성이 큽니다.</p><span class="when">자동화에 없는 일입니다 — 지울지 말지는 사람이 정합니다.</span><span class="go">관리하기 →</span></div>
+        <a class="card clickable tool" href="work-clean.html">
+          <span class="tag">데이터 도구</span>
+          <h3>작품DB 정제</h3>
+          <p>위키데이터가 알려 준 <b>작품 형식</b>으로 갈래를 나눠, 판본·음반·필사본·묶음·발췌를 형식별로 보여 줍니다. 체크박스로 골라 감춥니다.</p>
+          <span class="when">작품DB 에 <b>영화·판본·음반이 섞여</b> 있습니다(위키데이터에서 영화의 작곡가 정보를 함께 받기 때문입니다). 「발퀴레의 기행」 같은 발췌는 대개 남기는 편이 낫습니다. 지우지 않고 감추므로 언제든 되돌립니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+        <a class="card clickable tool" href="academic-dup.html">
+          <span class="tag">데이터 도구</span>
+          <h3>학술DB 중복 검토</h3>
+          <p>제목이 같은 자료를 <b>묶음으로 나란히</b> 보여 줍니다. 저자·연도·발행처를 비교해 체크박스로 골라 감춥니다.</p>
+          <span class="when">「Organ Music」 13건처럼 <b>제목만 같은 별개 악보</b>가 흔합니다. 3건 이상은 추천하지 않고 ⚠ 를 띄웁니다. 지우지 않고 감추므로 언제든 되돌립니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+        <a class="card clickable tool" href="modern-clean.html">
+          <span class="tag tag--auto">정제</span>
+          <h3>현대음악DB 정제</h3>
+          <p>현대음악DB 에 섞인 <b>클래식이 아닌 사람</b>을 찾아 내보냅니다 — 이루마·홍상수·아이돌 등.</p>
+          <span class="when">인물DB 와 안 이어진 사람만 봅니다. 위키데이터에서 직업·장르를 읽어 판정하고, 내보낼 때 차단 목록에 함께 올립니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+        <a class="card clickable tool" href="db-audit.html">
+          <span class="tag">데이터 도구</span>
+          <h3>데이터 점검 · 보강</h3>
+          <p>저명도 · 장르 · 직업 수집, 한국어 소개문 · 영문 원문 · 초상 이미지 확보, 노이즈 검토.</p>
+          <span class="when"><b>군사·경찰 걸러내기 · 분류 조회 · 삭제 SQL 만들기</b>는 자동화에 없습니다. 소개문·초상은 자동으로도 돕니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+        <a class="card clickable tool" href="blocklist.html">
+          <span class="tag">데이터 도구</span>
+          <h3>차단 목록 검토</h3>
+          <p>차단 목록에 든 위키데이터 번호를 조회해 <b>잘못 차단된 음악인</b>을 찾습니다.</p>
+          <span class="when">지운 사람은 이름조차 알 수 없습니다. 박영근(클래식 음악 교육인)처럼 잘못 지워진 분을 되살릴 수 있습니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+        <a class="card clickable tool" href="score-check.html">
+          <span class="tag">데이터 도구</span>
+          <h3>악보 PDF 저작권 검사</h3>
+          <p>악보 PDF 를 읽어 <b>올려도 되는지</b> 가려 줍니다. 출판사·판권 표시와 작곡가 사망연도를 봅니다.</p>
+          <span class="when">파일은 브라우저 밖으로 나가지 않습니다. 폴더를 끌어다 놓으면 됩니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
+      </div>
+
+      <h2 class="dash-h">수집기 거들기</h2>
+      <p class="dash-sub">자동수집이 채우지 못한 것을 사람이 거듭니다.</p>
+      <div class="cards">
+        <div class="card clickable" id="cardRel"><h3>관계 관리 · 네트워킹</h3><p>인물의 사사관계·소속·출신학교를 직접 추가·삭제합니다.</p><span class="when">위키데이터에 <b>없는</b> 국내 인물 관계를 채웁니다. 자동이 못 하는 일입니다.</span><span class="go">관리하기 →</span></div>
+        <a class="card clickable tool" href="link-build.html">
+          <span class="tag tag--auto">자동</span>
+          <h3>관계 자동 연결</h3>
+          <p>위키데이터에서 사사관계 · 소속 단체 · 출신학교를 가져와 연결합니다.</p>
+          <span class="when"><b>link-persons</b> 가 매주 월 15:23, <b>link-resolve-orphans</b> 가 매월 05:17 에 같은 일을 합니다. 자동 쪽이 <b>fellow_of 분리</b>와 <b>이름만 있던 관계 승격</b>까지 더 합니다.</span>
+          <span class="go">도구 열기 →</span>
+        </a>
         <a class="card clickable tool" href="photo-fill.html">
           <span class="tag tag--auto">보강</span>
           <h3>사진 채우기</h3>
@@ -279,11 +347,11 @@
           <span class="when">기관·재단 · 음악단체 · 공연장 · 음악학교 · 인물 · 현대음악 여섯 DB 에 함께 씁니다. 기계가 정하지 않고 후보를 보여 드립니다.</span>
           <span class="go">도구 열기 →</span>
         </a>
-        <a class="card clickable tool" href="modern-clean.html">
-          <span class="tag tag--auto">정제</span>
-          <h3>현대음악DB 정제</h3>
-          <p>현대음악DB 에 섞인 <b>클래식이 아닌 사람</b>을 찾아 내보냅니다 — 이루마·홍상수·아이돌 등.</p>
-          <span class="when">인물DB 와 안 이어진 사람만 봅니다. 위키데이터에서 직업·장르를 읽어 판정하고, 내보낼 때 차단 목록에 함께 올립니다.</span>
+        <a class="card clickable tool" href="kr-collect.html">
+          <span class="tag tag--auto">자동</span>
+          <h3>국내 인물 수집</h3>
+          <p>한국어 위키백과 분류에서 국내 클래식 음악가를 찾아 인물DB에 담습니다.</p>
+          <span class="when">수집은 <b>collect-persons-kr</b> 이 매주 목·금·토 05:43 에, 한글 이름 보강은 <b>hangulize-persons</b> 가 매일 14:07 에 합니다.</span>
           <span class="go">도구 열기 →</span>
         </a>
         <a class="card clickable tool" href="score-collect.html">
@@ -293,82 +361,17 @@
           <span class="when">파일을 가져오지 않고 <b>링크만</b> 담으므로 저장소를 쓰지 않습니다. 작곡가는 위키데이터 번호로 인물DB와 이어 줍니다.</span>
           <span class="go">도구 열기 →</span>
         </a>
-        <a class="card clickable tool" href="score-check.html">
-          <span class="tag">데이터 도구</span>
-          <h3>악보 PDF 저작권 검사</h3>
-          <p>악보 PDF 를 읽어 <b>올려도 되는지</b> 가려 줍니다. 출판사·판권 표시와 작곡가 사망연도를 봅니다.</p>
-          <span class="when">파일은 브라우저 밖으로 나가지 않습니다. 폴더를 끌어다 놓으면 됩니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-        <a class="card clickable tool" href="blocklist.html">
-          <span class="tag">데이터 도구</span>
-          <h3>차단 목록 검토</h3>
-          <p>차단 목록에 든 위키데이터 번호를 조회해 <b>잘못 차단된 음악인</b>을 찾습니다.</p>
-          <span class="when">지운 사람은 이름조차 알 수 없습니다. 박영근(클래식 음악 교육인)처럼 잘못 지워진 분을 되살릴 수 있습니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-        <a class="card clickable tool" href="reports.html">
-          <span class="tag">데이터 도구</span>
-          <h3>데이터 신고 처리</h3>
-          <p>상세 화면의 <b>「정보 오류 신고」</b>로 들어온 것을 봅니다. 제목을 누르면 그 항목 화면이 열리고, 고친 뒤 상태를 옮깁니다.</p>
-          <span class="when">자동수집으로 채운 자료에는 <b>틀린 것이 섞입니다</b>(위키데이터가 「발퀴레의 기행」을 「기승」으로 적어 두었습니다). 사람이 16,000개를 다 볼 수는 없으니 <b>보는 사람이 알려줄 길</b>이 있어야 합니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-
-        <a class="card clickable tool" href="paid.html">
-          <span class="tag">수익</span>
-          <h3>콩쿨 유료 등재 처리</h3>
-          <p>「콩쿨 공고 상단 등재」로 들어온 신청을 봅니다. 입금을 확인하신 뒤 <b>게재 시작</b>을 누르면 그 공고가 목록 맨 위로 올라갑니다.</p>
-          <span class="when">결제대행(PG) 없이 <b>계좌이체 + 승인 버튼</b>으로 운영합니다. 기간이 끝난 것은 저절로 내려오며, 손으로 고정해 둔 무료 공지는 건드리지 않습니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-
-        <a class="card clickable tool" href="work-clean.html">
-          <span class="tag">데이터 도구</span>
-          <h3>작품DB 정제</h3>
-          <p>위키데이터가 알려 준 <b>작품 형식</b>으로 갈래를 나눠, 판본·음반·필사본·묶음·발췌를 형식별로 보여 줍니다. 체크박스로 골라 감춥니다.</p>
-          <span class="when">작품DB 에 <b>영화·판본·음반이 섞여</b> 있습니다(위키데이터에서 영화의 작곡가 정보를 함께 받기 때문입니다). 「발퀴레의 기행」 같은 발췌는 대개 남기는 편이 낫습니다. 지우지 않고 감추므로 언제든 되돌립니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-
-        <a class="card clickable tool" href="academic-dup.html">
-          <span class="tag">데이터 도구</span>
-          <h3>학술DB 중복 검토</h3>
-          <p>제목이 같은 자료를 <b>묶음으로 나란히</b> 보여 줍니다. 저자·연도·발행처를 비교해 체크박스로 골라 감춥니다.</p>
-          <span class="when">「Organ Music」 13건처럼 <b>제목만 같은 별개 악보</b>가 흔합니다. 3건 이상은 추천하지 않고 ⚠ 를 띄웁니다. 지우지 않고 감추므로 언제든 되돌립니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-        <a class="card clickable tool" href="db-audit.html">
-          <span class="tag">데이터 도구</span>
-          <h3>데이터 점검 · 보강</h3>
-          <p>저명도 · 장르 · 직업 수집, 한국어 소개문 · 영문 원문 · 초상 이미지 확보, 노이즈 검토.</p>
-          <span class="when"><b>군사·경찰 걸러내기 · 분류 조회 · 삭제 SQL 만들기</b>는 자동화에 없습니다. 소개문·초상은 자동으로도 돕니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-        <div class="card"><h3>DB 관리</h3><p>인물·단체·공연장 등 7개 데이터베이스의 항목을 직접 추가·수정합니다.</p><span class="when">위 「데이터 점검 · 보강」 과 겹치는 부분이 많아, 정말 필요한 것만 뒤에 만듭니다.</span><span class="soon">준비 중</span></div>
       </div>
 
-      <h2 class="dash-h dash-h--auto">자동으로 도는 일</h2>
+<h2 class="dash-h dash-h--auto">자동으로 도는 일</h2>
       <p class="dash-sub">아래는 <b>GitHub Actions 가 예약대로 저절로</b> 합니다.
         평소에는 <b>누를 필요가 없습니다.</b> 자동이 멈춘 것 같을 때, 또는
         급히 지금 돌려야 할 때만 쓰십시오.
         (급할 때는 GitHub → Actions → 해당 워크플로 → Run workflow 로도 됩니다)</p>
       <div class="cards cards--auto">
         <div class="card clickable" id="cardCollect"><span class="tag tag--auto">자동</span><h3>데이터 수집</h3><p>위키데이터에서 분야별로 인물을 가져옵니다.</p><span class="when"><b>collect-persons-kr</b> 이 매주 목·금·토 05:43 에 한국어 위키 기준으로 돕니다. 이 화면은 <b>위키데이터 분야 전체</b>를 훑으므로 목적이 조금 다릅니다 — 인물 수를 크게 늘릴 때만 쓰십시오.</span><span class="go">수집하기 →</span></div>
-        <a class="card clickable tool" href="link-build.html">
-          <span class="tag tag--auto">자동</span>
-          <h3>관계 자동 연결</h3>
-          <p>위키데이터에서 사사관계 · 소속 단체 · 출신학교를 가져와 연결합니다.</p>
-          <span class="when"><b>link-persons</b> 가 매주 월 15:23, <b>link-resolve-orphans</b> 가 매월 05:17 에 같은 일을 합니다. 자동 쪽이 <b>fellow_of 분리</b>와 <b>이름만 있던 관계 승격</b>까지 더 합니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
-        <a class="card clickable tool" href="kr-collect.html">
-          <span class="tag tag--auto">자동</span>
-          <h3>국내 인물 수집</h3>
-          <p>한국어 위키백과 분류에서 국내 클래식 음악가를 찾아 인물DB에 담습니다.</p>
-          <span class="when">수집은 <b>collect-persons-kr</b> 이 매주 목·금·토 05:43 에, 한글 이름 보강은 <b>hangulize-persons</b> 가 매일 14:07 에 합니다.</span>
-          <span class="go">도구 열기 →</span>
-        </a>
+        
+        
       </div>
     </div>
   </div>
