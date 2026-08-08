@@ -354,6 +354,94 @@ export function checkClassic(p) {
   return { ok: false, why: hasO ? '음악 직업이 아님' : '클래식 근거 없음' };
 }
 
+/* ════════════════════════════════════════════════════════
+   현대음악DB 전용 판정 — checkModern()
+   ------------------------------------------------------------
+   ★ 왜 따로 두나 (2026-08-08 · 파트너 결정)
+
+   현대음악DB 는 <b>「현대음악 작곡가」라는 좁은 자리</b>입니다.
+   인물DB 와 조건이 다릅니다.
+
+     인물DB      영화·게임음악을 <b>넣습니다</b>
+                 (모리코네 · 히사이시 조도 클래식 음악인입니다)
+     현대음악DB   영화·게임음악을 <b>뺍니다</b>
+                 (진은숙 · 윤이상 · 펜데레츠키 계열만)
+
+   ★ 같은 사람이 인물DB 에는 있고 현대음악DB 에는 없는 것이 정상입니다.
+
+   ★ 세 층을 쌓습니다
+     ① 클래식인가       checkClassic() — 공용
+     ② 작곡가인가       연주자 · 지휘자는 뺍니다
+                        (손열음 · 정명훈 · 조성진을 이름으로 막던 것을 대체)
+     ③ 현대인가         1900년 이후에 활동한 사람
+
+   ★ 예전 방식의 문제
+     collect-modern.mjs 는 이름을 손으로 30명 적어 막았습니다.
+       '손열음','정명훈','조성진','이루마','길옥윤',…
+     <b>야니는 그 목록에 없어서 통과했습니다.</b>
+     이름을 하나씩 적는 방식은 늘 뒤늦습니다.
+   ════════════════════════════════════════════════════════ */
+
+/* 영화 · 게임 · 방송 음악 — 현대음악DB 에서만 뺍니다 */
+const MEDIA_MUSIC = /film score|film music|soundtrack|film composer|video game|game music|anime|television (?:music|soundtrack)|영화음악|게임음악|드라마음악/i;
+
+/* 연주자 · 지휘자 전용 직업 — 작곡가가 아닌 사람 */
+const PERFORMER_ONLY = /\bpianist\b|\bviolinist\b|\bcellist\b|\bviolist\b|\borganist\b|\bharpsichordist\b|\bflautist\b|\bflutist\b|\boboist\b|\bclarinetist\b|\bbassoonist\b|\btrumpeter\b|\btrombonist\b|\bharpist\b|\bconductor\b|opera singer|concertmaster/i;
+
+/**
+ * 현대음악DB 에 넣을 사람인지 봅니다.
+ *
+ * @param {object} p { wd_genre, wd_occupation, description, description_en,
+ *                     life, school_style }
+ * @returns {{ ok:boolean, why:string }}
+ */
+export function checkModern(p) {
+  /* ① 먼저 클래식이어야 합니다 (공용 잣대) */
+  const c = checkClassic(p);
+  if (!c.ok) return { ok: false, why: c.why };
+
+  const g = String((p && p.wd_genre) || (p && p.genre) || '');
+  const o = String((p && p.wd_occupation) || (p && p.occupation) || '');
+  const d = String((p && p.description) || '') + ' ' + String((p && p.description_en) || '');
+  const sty = String((p && p.school_style) || '');
+  const all = g + ' ' + d + ' ' + sty;
+
+  /* ② 영화 · 게임 · 방송 음악은 뺍니다.
+        ★ 단, 순수 현대음악 근거가 함께 있으면 남깁니다 —
+          현대음악 작곡가가 영화음악을 한 편 쓴 경우입니다. */
+  if (MEDIA_MUSIC.test(all)) {
+    const pure = /contemporary classical|new music|avant-?garde|serialism|twelve-tone|atonal|minimalis|spectral|electroacoustic|musique concr|microtonal|experimental music|현대음악|전위/i;
+    if (!pure.test(all)) return { ok: false, why: '영화·게임·방송 음악' };
+  }
+
+  /* ③ 작곡가여야 합니다.
+        연주자 · 지휘자만인 사람은 뺍니다 —
+        손열음 · 정명훈 · 조성진을 이름으로 막던 것을 이것으로 대신합니다. */
+  const items = o.split(/[,;·\/|]/).map(x => x.trim()).filter(Boolean);
+  const isComposer = /composer|작곡가/i.test(o) || /작곡가/.test(d);
+  if (!isComposer) {
+    const onlyPerformer = items.length > 0
+      && items.some(x => PERFORMER_ONLY.test(x))
+      && !items.some(x => /composer/i.test(x));
+    if (onlyPerformer) return { ok: false, why: '연주자·지휘자 (작곡가가 아님)' };
+    if (!o.trim() && !/작곡/.test(d)) return { ok: false, why: '작곡가인지 알 수 없음' };
+  }
+
+  /* ④ 현대여야 합니다 — 1900년 이후 */
+  const life = String((p && p.life) || '');
+  const ys = life.match(/(\d{4})/g);
+  if (ys && ys.length) {
+    const born = Number(ys[0]);
+    const died = ys.length > 1 ? Number(ys[1]) : null;
+    /* 1900년 전에 죽은 사람은 현대음악이 아닙니다 */
+    if (died && died < 1900) return { ok: false, why: '1900년 전 사람' };
+    /* 1850년 전에 태어나 활동 시기를 알 수 없으면 뺍니다 */
+    if (!died && born < 1850) return { ok: false, why: '현대 이전 사람' };
+  }
+
+  return { ok: true, why: '현대음악 작곡가' };
+}
+
 /** 직업 글자에서 분야를 고릅니다 (JOBS 표를 씁니다) */
 export function fieldFromOccupation(occ) {
   const t = String(occ == null ? '' : occ).toLowerCase();
