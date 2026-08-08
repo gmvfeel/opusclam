@@ -261,6 +261,18 @@ const O_POP = new RegExp([
 ].join('|'), 'i');
 
 
+/* ── 소개문으로 보는 마지막 근거 ──────────────────────────
+   ★ 2026-08-08 세 번째 고침 — 한국 근현대 음악가가 대거 빠졌습니다.
+       김자경(한국 최초 오페라단) · 김천애(봉선화) · 금수현(그네)
+       안병원(우리의 소원) · 박태준(오빠생각)
+     위키데이터에 opera singer 가 아니라 그냥 singer · academic 으로만
+     적혀 있어 직업으로는 살릴 길이 없었습니다.
+   ▶ 소개문(위키백과)에 「성악가」「작곡가」가 적혀 있으면 살립니다. */
+const D_CLASSIC = /성악가|작곡가|지휘자|피아니스트|바이올리니스트|첼리스트|비올리스트|오르가니스트|음악학자|국악인|명창|클래식|고전음악|현대음악|오페라|관현악|교향악|실내악|합창단|소프라노|메조|알토|테너|바리톤|베이스\s*가수|음악\s*교육자|음악가|作曲家|classical|opera singer|\bcomposer\b|\bconductor\b|\bpianist\b|\bviolinist\b|\bcellist\b|musicolog/i;
+
+/* 소개문에 대중음악 표시가 뚜렷하면 살리지 않습니다 */
+const D_POP = /대중가수|아이돌|가요|트로트|힙합|래퍼|록\s*밴드|재즈\s*(?:뮤지션|연주자|가수)|싱어송라이터|k-?pop|\brapper\b|\bidol\b|rock band|pop singer/i;
+
 /**
  * 이미 담긴 자료가 클래식인지 다시 봅니다.
  *
@@ -277,20 +289,18 @@ const O_POP = new RegExp([
 export function checkClassic(p) {
   const g = String((p && p.wd_genre) || (p && p.genre) || '');
   const o = String((p && p.wd_occupation) || (p && p.occupation) || '');
+  const d = String((p && p.description) || '') + ' ' + String((p && p.description_en) || '');
 
   const hasG = !!g.trim();
   const hasO = !!o.trim();
+  const hasD = !!d.trim();
 
-  /* ⑤ 장르도 직업도 없으면 판정하지 않습니다 —
-        근거 없이 빼면 스티브 라이히·다케미쓰가 사라집니다. */
-  if (!hasG && !hasO) return { ok: true, why: '근거 없음 · 그대로 둠' };
+  /* 장르도 직업도 소개문도 없으면 판정하지 않습니다 —
+     근거 없이 빼면 스티브 라이히·다케미쓰가 사라집니다. */
+  if (!hasG && !hasO && !hasD) return { ok: true, why: '근거 없음 · 그대로 둠' };
 
   /* ★ 「classical crossover」·「operatic pop」은 클래식이 아닙니다.
-        그런데 낱말 안에 classical 이 들어 있어 그냥 두면 통과해 버립니다.
-        그래서 <b>그 낱말을 걷어낸 뒤</b> 클래식이 남는지 봅니다.
-          크로스오버 가수 「pop music, classical crossover」 → 남는 것 없음 → 뺌
-          에이나우디   「20th-century classical music, operatic pop,
-                        minimalist music」                    → 남음 → 받음 */
+     낱말 안에 classical 이 있어 그냥 두면 통과해 버리므로 걷어낸 뒤 봅니다. */
   const gClean = g.replace(/classical\s+crossover|operatic\s+pop|popera|크로스오버/gi, ' ');
 
   /* ① 클래식 장르가 하나라도 있으면 받습니다.
@@ -300,17 +310,28 @@ export function checkClassic(p) {
   /* ② 대중음악 장르만 있으면 뺍니다 — 야니·이루마·크로스오버 가수 */
   if (G_POP.test(g)) return { ok: false, why: '대중음악 장르만 있음' };
 
-  /* ③ 대중음악 <b>전용</b> 직업이면 뺍니다 — 래퍼·DJ·재즈 뮤지션 */
-  if (O_POP.test(o)) return { ok: false, why: '대중음악 전용 직업' };
+  /* ③ 직업을 <b>항목마다 따로</b> 봅니다.
+        ★ 통째로 보면 「jazz pianist」의 pianist 가 클래식으로 잡힙니다.
+          쉼표로 나눠 항목별로 보면 그 항목은 재즈로 제대로 걸립니다.
+        ★ 클래식 항목이 하나라도 있으면 받습니다 —
+          「conductor, DJ producer, composer」(센주 아키라) 같은 겸업을
+          대중음악 직업 하나 때문에 버리지 않기 위해서입니다. */
+  const items = o.split(/[,;·\/|]/).map(x => x.trim()).filter(Boolean);
+  const classicItems = items.filter(x => O_CLASSIC.test(x) && !O_POP.test(x));
+  const popItems     = items.filter(x => O_POP.test(x));
 
-  /* ④ 클래식 직업이면 받습니다 — 장르가 비어 있어도.
-        ★ 배우·정치인이 함께 적혀 있어도 받습니다.
-          오페라 가수에게 stage actor 가 붙는 것은 당연한 일입니다.
-        브람스 · 진은숙 · 백병동 · 마르타 에게르트가 여기서 살아납니다. */
-  if (O_CLASSIC.test(o)) return { ok: true, why: '클래식 직업' };
+  if (classicItems.length) return { ok: true, why: '클래식 직업' };
+  if (popItems.length)     return { ok: false, why: '대중음악 전용 직업' };
 
-  /* ⑤ 음악 직업이 하나도 없습니다 — 배우·정치인·방송인만 있는 경우 */
-  return { ok: false, why: '음악 직업이 아님' };
+  /* ④ 마지막으로 소개문을 봅니다.
+        직업이 그냥 「singer」·「academic」으로만 적힌 한국 근현대
+        음악가를 살리는 길입니다. */
+  if (hasD && !D_POP.test(d) && D_CLASSIC.test(d)) {
+    return { ok: true, why: '소개문이 클래식' };
+  }
+
+  /* ⑤ 음악 직업도 근거도 없습니다 */
+  return { ok: false, why: hasO ? '음악 직업이 아님' : '클래식 근거 없음' };
 }
 
 /** 직업 글자에서 분야를 고릅니다 (JOBS 표를 씁니다) */
