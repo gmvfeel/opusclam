@@ -31,7 +31,7 @@
      SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY
    ============================================================ */
 
-import { decideField } from './lib/field.mjs';
+import { decideField, hasEvidence } from './lib/field.mjs';
 
 const SB_URL = process.env.SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -106,7 +106,7 @@ async function main() {
   const change = [];   // 값이 있는데 틀린 것 (소개문 근거만)
   const fill = [];     // 빈칸을 채울 수 있는 것
   const fromCount = new Map();
-  let same = 0, noBase = 0, cannot = 0;
+  let same = 0, noBase = 0, cannot = 0, keep = 0;
 
   for (const p of rows) {
     const d = decideField(p);
@@ -118,9 +118,18 @@ async function main() {
     if (!cur) { fill.push({ ...p, to: d.field, from: d.from }); continue; }
     if (d.field === cur) { same++; continue; }
 
-    /* ★ 이미 값이 있는 사람은 소개문 근거가 있을 때만 고칩니다.
+    /* ★ 이미 값이 있는 사람은 소개문 근거가 있을 때만 봅니다.
        직업 목록만으로 고치면 모차르트가 음악교육자가 됩니다. */
     if (d.from === '직업목록') { noBase++; continue; }
+
+    /* ★★ 가장 중요한 울타리
+       지금 적힌 분야가 소개문에 나온다면 그대로 둡니다.
+         힌데미트  「바이올리니스트, 비올리스트 및 작곡가」 → 작곡가가 있으니 그대로
+         체르니    「피아니스트, 교사이자 작곡가」          → 그대로
+         폴리니    「이탈리아의 피아니스트」                → 작곡가가 없으니 고침
+       소개문에서 먼저 나온 직업이 대표 직업이라는 보장이 없기 때문입니다. */
+    const base = (d.from === 'ko소개') ? p.description : p.description_en;
+    if (hasEvidence(cur, base)) { keep++; continue; }
 
     change.push({ ...p, to: d.field, from: d.from });
   }
@@ -129,6 +138,7 @@ async function main() {
   console.log('   그대로              : ' + same + '명');
   console.log('   ★ 바뀔 것          : ' + change.length + '명   (소개문에 근거가 있는 것만)');
   console.log('   빈칸을 채울 수 있음  : ' + fill.length + '명' + (FILL ? '  (함께 고칩니다)' : '  (--fill 을 주시면 함께)'));
+  console.log('   지금 값도 근거 있음  : ' + keep + '명   (소개문에 지금 분야가 함께 적혀 있습니다)');
   console.log('   근거가 없어 그냥 둠  : ' + noBase + '명   (소개문이 없어 확신할 수 없습니다)');
   console.log('   정할 수 없음        : ' + cannot + '명');
 

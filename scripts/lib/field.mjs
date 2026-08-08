@@ -43,7 +43,7 @@
 const TEXT_RULES = [
   ['작곡', /작곡가|\bcomposer\b/i],
   ['지휘', /지휘자|\bconductor\b|kapellmeister|dirigent/i],
-  ['성악', /성악가|소프라노|메조|알토|테너|바리톤|오페라\s*가수|\bsoprano\b|\bmezzo|\bcontralto\b|\btenor\b|\bbaritone\b|countertenor|opera singer|\bsinger\b|vocalist/i],
+  ['성악', /성악가|보컬리스트|소프라노|메조|알토|테너|바리톤|오페라\s*가수|\bsoprano\b|\bmezzo|\bcontralto\b|\btenor\b|\bbaritone\b|countertenor|opera singer|\bsinger\b|vocalist/i],
   ['연주', /피아니스트|바이올리니스트|첼리스트|비올리스트|오르가니스트|하피스트|플루티스트|기타리스트|연주자|\bpianist\b|\bviolinist\b|\bcellist\b|\bviolist\b|\borganist\b|\bharpsichordist\b|\bflautist\b|\bflutist\b|\boboist\b|\bclarinetist\b|\bbassoonist\b|\btrumpeter\b|\btrombonist\b|\bharpist\b|\bguitarist\b|percussionist|concertmaster|instrumentalist|\bvirtuoso\b/i],
   ['음악학', /음악학자|음악\s*이론가|음악\s*사학자|musicolog|music theorist|music historian/i],
   ['국악', /국악인|판소리|명창|가야금|거문고|해금|대금|정가|gugak|pansori/i],
@@ -89,6 +89,40 @@ export function fieldFromText(text) {
     if (hit && hit.index < bestAt) { best = label; bestAt = hit.index; }
   }
   return best;
+}
+
+/**
+ * 지금 적힌 분야가 소개문에 나오는지 봅니다.
+ *
+ *  ★ 2026-08-08 세 번째 고침 — 가장 중요한 부분입니다.
+ *    소개문의 처음에 나오는 직업이 그 사람의 대표 직업이라고
+ *    짐작했는데 틀렸습니다.
+ *      힌데미트  「독일의 바이올리니스트, 비올리스트 및 작곡가」
+ *      체르니    「오스트리아의 피아니스트, 교사이자 작곡가」
+ *    둘 다 작곡가로 기억되는 사람인데 연주가 먼저 적혀 있습니다.
+ *
+ *  ▶ 그래서 「무엇으로 바꿀까」가 아니라
+ *    「지금 값이 틀렸다고 확신할 수 있나」를 봅니다.
+ *    지금 값이 소개문에 <b>아예 나오지 않을 때만</b> 고칩니다.
+ *      폴리니  「이탈리아의 피아니스트」 — 작곡가가 없음 → 고침
+ *      힌데미트 작곡가가 있음 → 그대로 둡니다
+ *    애매한 것은 손대지 않습니다. 틀리게 고치느니 그대로 두고
+ *    신고를 받아 하나씩 고치는 편이 낫습니다.
+ *
+ * @returns {boolean} 근거가 있으면 true · 규칙이 없는 분야도 true(건들지 않음)
+ */
+export function hasEvidence(field, text) {
+  const f = String(field == null ? '' : field).trim();
+  if (!f) return false;
+
+  const rule = TEXT_RULES.find(r => r[0] === f);
+  /* 「음악교육」·「평론」처럼 소개문 규칙이 없는 분야는
+     틀렸다고 단정할 수 없으므로 그대로 둡니다. */
+  if (!rule) return true;
+
+  const raw = String(text == null ? '' : text).trim();
+  if (!raw) return false;
+  return rule[1].test(raw.slice(0, 400));
 }
 
 /** 직업 목록에서 분야를 고릅니다 (소개문이 없을 때만). */
