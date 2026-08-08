@@ -76,7 +76,17 @@ const SPARQL = 'https://query.wikidata.org/sparql';
 const UA = 'OpusclamSpotBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
 const MARK = 'oc-wd';
 
-const getJSON = makeGetJSON({ ua: UA, accept: 'application/sparql-results+json', tries: 5 });
+/* ★ 위키데이터는 짧은 동안 많이 물으면 「몇 분 뒤에 오라」고 합니다(HTTP 429).
+   공용 모듈의 기본 기다림 상한은 90초라 「2분 뒤」에서 멈춰 버렸습니다.
+   이 수집기는 하루에 한번 돌리는 것이라 더 기다려도 괜찮습니다. */
+const getJSON = makeGetJSON({
+  ua: UA,
+  accept: 'application/sparql-results+json',
+  tries: 6,
+  maxWaitMs: 200 * 1000,        /* 자료원이 3분까지 기다리라 하면 기다립니다 */
+  budgetMs: 45 * 60 * 1000,     /* 워크플로 제한(60분)보다 안쪽 */
+  backoff: [5000, 20000, 45000, 90000, 150000, 200000]
+});
 
 const HDR = {
   apikey: SB_KEY,
@@ -409,12 +419,13 @@ async function runGroup(g, have) {
   /* 목록 받기 */
   const PAGE = 400;
   const qids = [];
+  let stopped = false;   /* 속도 제한으로 멈췄는지 */
   for (let off = 0; off < LIMIT; off += PAGE) {
     let rows;
     try {
       rows = await sparql(listQuery(g.qid, off, Math.min(PAGE, LIMIT - off)));
     } catch (e) {
-      if (isStop(e)) { console.log('  ※ ' + e.message); break; }
+      if (isStop(e)) { stopped = true; console.log('  ※ ' + e.message); break; }
       throw e;
     }
     if (!rows.length) break;
@@ -423,12 +434,17 @@ async function runGroup(g, have) {
       if (q) qids.push(q);
     }
     if (rows.length < PAGE) break;
-    await sleep(700);
+    await sleep(1500);
   }
   console.log('\n위키데이터에서 받은 항목 : ' + qids.length + '개');
   if (!qids.length) {
-    console.log('  ★ 0개입니다. 분류 번호를 의심하십시오 (위의 이름 확인을 보십시오).');
-    return { section: g.section, add: [], skip: 0, drop: 0, typeCount: new Map() };
+    if (stopped) {
+      console.log('  ※ 자료가 없어서가 아닙니다 — 위키데이터가 속도 제한을 걸었습니다.');
+      console.log('    잠시(20~30분) 뒤에 다시 돌려 주십시오. 분류 번호는 위에서 확인되었습니다.');
+    } else {
+      console.log('  ★ 0개입니다. 분류 번호를 의심하십시오 (위의 이름 확인을 보십시오).');
+    }
+    return { section: g.section, add: [], skip: 0, drop: 0, typeCount: new Map(), stopped };
   }
 
   /* 상세 받기 */
@@ -439,12 +455,12 @@ async function runGroup(g, have) {
     try {
       rows = await sparql(detailQuery(part));
     } catch (e) {
-      if (isStop(e)) { console.log('  ※ ' + e.message + ' — 여기까지 모은 것으로 진행합니다'); break; }
+      if (isStop(e)) { stopped = true; console.log('  ※ ' + e.message + ' — 여기까지 모은 것으로 진행합니다'); break; }
       console.log('  · 상세 ' + (i + 1) + '~ 실패 · 건너뜁니다 (' + (e.message || '').slice(0, 60) + ')');
       continue;
     }
     all.push(...merge(rows));
-    await sleep(700);
+    await sleep(1500);
   }
   console.log('상세를 받은 항목     : ' + all.length + '개');
 
@@ -626,8 +642,16 @@ async function main() {
   console.log('\n╔══════════════════════════════════════════════╗');
   console.log('║  마무리                                      ║');
   console.log('╚══════════════════════════════════════════════╝');
+  let anyStopped = false;
   for (const r of results) {
-    console.log('   ' + r.section + ' : 새로 담을 수 있는 것 ' + r.add.length + '개');
+    console.log('   ' + r.section + ' : 새로 담을 수 있는 것 ' + r.add.length + '개'
+      + (r.stopped ? '   ※ 속도 제한으로 중간에 멈췄습니다' : ''));
+    if (r.stopped) anyStopped = true;
+  }
+  if (anyStopped) {
+    console.log('\n※ 위키데이터가 속도 제한을 걸어 다 받지 못했습니다.');
+    console.log('  20~30분 뒤에 다시 돌리시면 이어서 받습니다.');
+    console.log('  급하시면 「한 갈래씩」(콩쿨만 → 페스티벌만) 나눠 돌리셔도 됩니다.');
   }
 
   if (!SAVE) {
