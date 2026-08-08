@@ -62,6 +62,39 @@ const TYPE  = typeof args.type === 'string' ? args.type : 'person';
 const UA = 'OpusclamPhotoBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
 const getJSON = makeGetJSON({ ua: UA, accept: 'application/json', tries: 4 });
 
+/* ★ 2026-08-08 · 위키백과 요약은 <b>공용 모듈을 쓰지 않습니다.</b>
+   왜 —
+     문서가 없는 사람에게 요약을 물으면 위키백과는 404 를 줍니다.
+     그것은 「없다」는 <b>정상 답</b>인데, 공용 모듈(scripts/lib/http.mjs)은
+     r.ok 가 아니면 오류로 세고, 그런 요청이 세 건 쌓이면
+     「자료원이 막혔다」고 판단해 전체를 멈춥니다.
+       ■ 요청 3건이 재시도를 모두 소진했습니다
+     그래서 250명 중 3명만 보고 멈췄습니다.
+   ▶ 여기서는 404 를 그냥 「없음」으로 받고, 429·5xx 만 기다립니다.
+     공용 모듈은 다른 수집기도 쓰므로 건드리지 않습니다. */
+async function wikiGet(url) {
+  for (let i = 0; i < 3; i++) {
+    let r;
+    try {
+      r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' } });
+    } catch (e) {
+      await sleep(2000);
+      continue;
+    }
+    if (r.status === 404) return null;          // 문서 없음 — 정상
+    if (r.status === 429 || r.status >= 500) {  // 속도 제한·서버 문제
+      const wait = Number(r.headers.get('retry-after')) * 1000 || (5000 * (i + 1));
+      if (wait > 60000) throw new Error('RATE_LIMIT');
+      console.log('   (' + r.status + ' · ' + Math.round(wait / 1000) + '초 기다립니다)');
+      await sleep(wait);
+      continue;
+    }
+    if (!r.ok) return null;
+    try { return await r.json(); } catch (e) { return null; }
+  }
+  throw new Error('RATE_LIMIT');
+}
+
 const HDR = {
   apikey: SB_KEY,
   Authorization: 'Bearer ' + SB_KEY,
@@ -110,17 +143,10 @@ async function getAll(path) {
 async function summaryPhoto(lang, title) {
   const url = 'https://' + lang + '.wikipedia.org/api/rest_v1/page/summary/'
             + encodeURIComponent(title);
-  let j;
-  try {
-    j = await getJSON(url);
-  } catch (e) {
-    /* ★ 속도 제한은 위로 올려야 합니다.
-       여기서 null 로 삼키면 「사진 없음」으로 세어져,
-       막힌 것인지 정말 없는 것인지 알 수 없게 됩니다.
-       (첫 실행에서 400명이 전부 「없음」으로 나온 까닭입니다) */
-    if (isStop(e)) throw e;
-    return null;
-  }
+  /* 404 는 「문서 없음」으로 조용히 넘어갑니다.
+     속도 제한만 위로 올려 수집을 멈춥니다. */
+  const j = await wikiGet(url);
+  if (!j) return null;
   const src = (j && j.originalimage && j.originalimage.source)
            || (j && j.thumbnail && j.thumbnail.source);
   if (!src) return null;
@@ -250,14 +276,14 @@ async function main() {
       try {
         got = await summaryPhoto(c.lang, c.title);
       } catch (e) {
-        if (isStop(e)) { stopped = true; break; }
+        if (isStop(e) || String(e.message) === 'RATE_LIMIT') { stopped = true; break; }
       }
       /* ★ 2026-08-08 · 0.22초는 너무 촘촘해서 위키백과가 막았습니다.
          첫 실행에서 400명 전부 「문서·사진 없음」으로 나왔는데,
          사진이 없어서가 아니라 물어보지도 못한 것이었습니다.
            ■ 요청 3건이 재시도를 모두 소진했습니다
-         1초로 늘립니다. 250명이면 5~8분쯤 걸립니다. */
-      await sleep(1000);
+         0.35초면 넉넉합니다. 250명이면 2~3분쯤 걸립니다. */
+      await sleep(350);
       if (got) break;
     }
     if (stopped) {
