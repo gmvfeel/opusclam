@@ -11,6 +11,7 @@
 <!-- ★ 관리자 로그인 지킴이 (2026-08-06) — 토큰이 만료되면 화면 맨 위에
      붉은 띠로 알려 줍니다. 예전에는 조용히 실패해서, 악보 담기에서
      106건을 헛고생한 일이 있었습니다. 이 한 줄만 실으면 됩니다. -->
+<script src="/assets/admin-person-delete.js?v=20260808"></script>
 <script src="/assets/admin-guard.js"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -704,108 +705,30 @@
              ON CONFLICT DO UPDATE command cannot affect row a second time
            한 문장 안에서 같은 줄을 두 번 고칠 수 없기 때문입니다.
            <b>같은 인물이 인물DB 에 중복으로 담겨 있으면</b> 이 일이 납니다. */
-      var seen={}, wids=[], dupCount=0;
-      mgData.forEach(function(p){
-        if(ids.indexOf(p.id)<0 || !p.wikidata_id) return;
-        if(seen[p.wikidata_id]){ dupCount++; return; }
-        seen[p.wikidata_id]=1; wids.push({wikidata_id:p.wikidata_id});
+      /* ★ 지우는 차례는 assets/admin-person-delete.js 한 곳에만 둡니다.
+         이 화면과 db-audit.html 이 따로 지우던 탓에
+         2026-08-08 야니가 현대음악DB 에 남는 일이 있었습니다.
+         예전에 이 자리에 있던 설명(차단 먼저 · 현대음악DB 먼저 ·
+         .select('id') 로 실제 지워진 줄 확인)은 그 파일에 옮겼습니다. */
+      var picked = mgData.filter(function(p){ return ids.indexOf(p.id) >= 0; });
+      var noWid  = picked.filter(function(p){ return !p.wikidata_id; }).length;
+
+      var res = await OCPersonDelete.run(sb, picked, {
+        log: function(t){ console.log(t); }
       });
-      if(dupCount) console.log('같은 위키데이터 번호 '+dupCount+'개를 한 번으로 묶었습니다');
 
-      /* ★ 순서를 뒤집었습니다 — <b>차단을 먼저, 삭제를 나중에</b>.
-
-         예전에는 삭제를 먼저 하고 차단을 나중에 했습니다. 그래서 차단이
-         실패하면 <b>인물은 지워졌는데 차단은 안 된</b> 상태가 남고,
-         다음 수집에서 그 인물이 <b>그대로 다시 들어왔습니다.</b>
-         되돌릴 방법도 없었습니다(지운 번호를 이미 잃었으므로).
-
-         이제 차단이 실패하면 <b>삭제하지 않고 멈춥니다.</b>
-         지우지 않는 것이 「지웠는데 또 들어오는」 것보다 낫습니다. */
-      if(wids.length){
-        var br=await sb.from('blocklist').upsert(wids,{onConflict:'wikidata_id'});
-        if(br.error){
-          alert('차단 목록 등록에 실패해서 <b>삭제하지 않았습니다.</b>\n\n'
-            .replace(/<[^>]+>/g,'')
-            + br.error.message
-            + '\n\n지우기만 하면 다음 수집에서 다시 들어옵니다.\n'
-            + '먼저 이 문제를 고쳐야 합니다. 파트너에게 이 메시지를 알려 주십시오.');
-          return;
-        }
-      }
-      /* ★ 인물을 지우기 <b>전에</b> 현대음악DB 에서도 지웁니다.
-
-         왜 필요한가 (2026-08-04 · 파트너 지적)
-           현대음악DB(modern_composers)는 인물의 <b>복사본</b>입니다.
-           이름·생몰·국적·사진을 자기가 갖고 있습니다. 그래서 인물DB 에서
-           지워도 현대음악DB 에는 그대로 남아, <b>사용자단에 계속
-           보였습니다.</b>
-
-           「인물DB 에서 지웠는데 안 지워진다」 는 것은 사용자 관점에서
-           당연히 이상합니다. 둘 다 <b>같은 사람</b>이니까요.
-           표가 둘이라는 것은 우리 사정이고, 그것을 사람이 알아야 할
-           이유는 없습니다.
-
-         ★ <b>지우는 순서가 중요합니다.</b>
-           modern_composers.person_id 는 on delete set null 입니다.
-           인물을 먼저 지우면 person_id 가 null 이 되어 <b>어느 줄이
-           그 사람인지 알 수 없게</b> 됩니다. 그러니 먼저 지웁니다.
-
-         ★ 두 가지로 찾습니다 —
-           ① person_id 로 이어진 줄 (357명이 이어져 있습니다)
-           ② 이름이 같은 줄 (이어지지 않은 92명을 위해)
-
-         ★ 뒤에 구조를 고칠 것 — modern_composers 가 이름·생몰을 스스로
-           갖는 것이 문제의 뿌리입니다. 인물에 <b>붙는 정보</b>(사조·기법·
-           계보)만 갖게 바꾸면 이런 손질이 필요 없어집니다. */
-      var mcGone = 0;
-      try {
-        var mc1 = await sb.from('modern_composers').delete()
-          .in('person_id', ids).select('id');
-        if (!mc1.error) mcGone += (mc1.data && mc1.data.length) || 0;
-
-        /* 이어지지 않은 줄은 이름으로 찾습니다 */
-        var names = [];
-        mgData.forEach(function(p){
-          if (ids.indexOf(p.id) < 0) return;
-          var nm = (p.name_ko || '').trim();
-          if (nm && names.indexOf(nm) < 0) names.push(nm);
-        });
-        if (names.length){
-          var mc2 = await sb.from('modern_composers').delete()
-            .in('name_ko', names).select('id');
-          if (!mc2.error) mcGone += (mc2.data && mc2.data.length) || 0;
-        }
-      } catch (e){
-        console.error('현대음악DB 삭제 실패:', e);
-      }
-
-      /* ★ <b>실제로 몇 줄이 지워졌는지 받아서 확인합니다.</b>
-         Supabase 는 줄 보안(RLS)이 막으면 <b>오류 없이 0줄</b>을 지웁니다.
-         그러면 「삭제했습니다」 라고 알려도 그대로 남아 있습니다.
-         .select('id') 를 붙이면 지워진 줄을 돌려주므로 알 수 있습니다.
-         (2026-08-04 · 현대음악DB 정제에서 이 함정을 겪었습니다) */
-      var r=await sb.from('persons').delete().in('id',ids).select('id');
-      if(r.error){
-        alert('차단 목록에는 등록됐으나 삭제에 실패했습니다.\n'+r.error.message
-          + '\n\n차단은 되어 있으니 다시 들어오지는 않습니다. 삭제만 다시 시도해 주십시오.');
+      if(!res.ok){
+        alert(res.error || '삭제하지 못했습니다.');
         return;
       }
-      var gone=(r.data&&r.data.length)||0;
-      if(gone===0){
-        alert('삭제가 한 줄도 되지 않았습니다.\n\n'
-          + '오류는 없었지만 0줄이 지워졌습니다 — 줄 보안(RLS)이 막은 것입니다.\n'
-          + 'Supabase 는 지우기 정책이 없으면 오류 없이 0줄을 지웁니다.\n\n'
-          + '차단 목록에는 올라갔으므로 다음 수집에서는 안 들어옵니다.');
-        return;
-      }
-      var goneSet={}; r.data.forEach(function(x){goneSet[x.id]=1;});
-      mgData=mgData.filter(function(p){return !goneSet[p.id];});
+
+      mgData = mgData.filter(function(p){ return ids.indexOf(p.id) < 0; });
       renderManage();
-      alert(gone+'명을 차단 목록에 등록하고 삭제했습니다.'
-        + (mcGone ? '\n· 현대음악DB 에서도 '+mcGone+'명 지웠습니다.' : '')
-        + (gone<ids.length ? '\n★ 고른 것은 '+ids.length+'명인데 '+gone+'명만 지워졌습니다.' : '')
-        + (wids.length<ids.length ? '\n(위키데이터 번호가 없는 '+(ids.length-wids.length)
-            +'명은 차단 목록에 담을 수 없어 재수집 때 다시 들어올 수 있습니다)' : ''));
+      alert(res.gone + '명을 차단 목록에 등록하고 삭제했습니다.'
+        + (res.mcGone ? '\n· 현대음악DB 에서도 ' + res.mcGone + '줄 지웠습니다.' : '')
+        + (res.gone < ids.length ? '\n★ 고른 것은 ' + ids.length + '명인데 ' + res.gone + '명만 지워졌습니다.' : '')
+        + (noWid ? '\n(위키데이터 번호가 없는 ' + noWid
+            + '명은 차단 목록에 담을 수 없어 재수집 때 다시 들어올 수 있습니다)' : ''));
     }
     function setWho(e){e=e||'';['who','who2','who3','who4','who5'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=e;});}
     var msg=document.getElementById('msg'), btn=document.getElementById('loginBtn');

@@ -189,6 +189,7 @@
 <!-- ★ 관리자 로그인 지킴이 (2026-08-06) — 토큰이 만료되면 화면 맨 위에
      붉은 띠로 알려 줍니다. 예전에는 조용히 실패해서, 악보 담기에서
      106건을 헛고생한 일이 있었습니다. 이 한 줄만 실으면 됩니다. -->
+<script src="/assets/admin-person-delete.js?v=20260808"></script>
 <script src="/assets/admin-guard.js"></script>
 <script>
 (function(){
@@ -370,7 +371,9 @@
     $('btnScan').disabled=true;
     try{
       L.log('■ 메타가 저장된 인물 로드');
-      var rows=await loadAll('persons','id,name_ko,name_en,field,era_name,life,description,wd_links,wd_genre,wd_occupation',
+      /* ★ wikidata_id 를 반드시 가져옵니다 — 이것이 없으면
+   차단 목록에 넣을 수 없어 지워도 다음 수집에 다시 들어옵니다. */
+      var rows=await loadAll('persons','id,wikidata_id,name_ko,name_en,field,era_name,life,description,wd_links,wd_genre,wd_occupation',
         function(q){ return q.not('wd_links','is',null); }, L);
       L.log('  '+rows.length+'명 검사');
       if(!rows.length){ L.log('먼저 1번 메타 수집을 실행해 주세요.'); $('btnScan').disabled=false; return; }
@@ -419,22 +422,23 @@
       if(b.checked) picked.push(cands[+b.getAttribute('data-i')]);
     });
     if(!picked.length){ alert('선택된 항목이 없습니다.'); return; }
-    if(!confirm(picked.length+'명을 삭제합니다. 관계 정보도 함께 지워집니다. 되돌릴 수 없습니다. 진행할까요?')) return;
+    if(!confirm(picked.length+'명을 삭제합니다.\n\n· 관계 정보도 함께 지워집니다\n· 현대음악DB 에 같은 사람이 있으면 함께 지워집니다\n· 차단 목록에 올라 다음 수집에 다시 들어오지 않습니다\n\n되돌릴 수 없습니다. 진행할까요?')) return;
     var L=mkLog('logS');
     $('btnDel').disabled=true;
     var ids=picked.map(function(p){ return p.id; });
     L.log('■ 삭제 시작 ('+ids.length+'명)');
-    var okL=0, okP=0;
-    for(var i=0;i<ids.length;i+=200){
-      var part=ids.slice(i,i+200);
-      var d1=await sb.from('entity_links').delete().eq('from_type','person').in('from_id',part);
-      var d2=await sb.from('entity_links').delete().eq('to_type','person').in('to_id',part);
-      if(!d1.error&&!d2.error) okL++;
-      var d3=await sb.from('persons').delete().in('id',part);
-      if(d3.error) L.log('  ✗ '+d3.error.message);
-      else okP+=part.length;
+
+    /* ★ 지우는 차례는 assets/admin-person-delete.js 한 곳에만 둡니다.
+       예전에는 이 화면과 admin.html 이 따로 지웠고, 그래서
+       여기서 지운 사람이 현대음악DB 에 그대로 남았습니다(야니).
+       차단 목록 등록도 이 화면에는 빠져 있었습니다. */
+    var res = await OCPersonDelete.run(sb, picked, { log: L.log });
+    if (!res.ok) {
+      L.log('✗ ' + (res.error || '삭제하지 못했습니다'));
+      alert(res.error || '삭제하지 못했습니다.');
+      $('btnDel').disabled=false;
+      return;
     }
-    L.log('✅ 인물 '+okP+'명 삭제 · 관계 정리 완료');
     cands=cands.filter(function(p){ return ids.indexOf(p.id)<0; });
     render();
     $('btnDel').disabled=false;
