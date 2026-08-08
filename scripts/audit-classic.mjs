@@ -52,17 +52,33 @@ const HDR = {
    ★ 클래식 여부를 물을 수 있는 자료(장르·직업이 있는 것)만 넣었습니다.
      공연장·학교는 「클래식 음악인인가」를 물을 대상이 아니므로 뺐습니다. */
 const TABLES = [
-  {
-    name: 'persons',
-    label: '인물DB',
-    cols: 'id,name_ko,name_en,field,wd_genre,wd_occupation,hidden'
-  },
-  {
-    name: 'modern_composers',
-    label: '현대음악DB',
-    cols: 'id,name_ko,name_en,wd_genre,wd_occupation,hidden'
-  }
+  { name: 'persons',          label: '인물DB' },
+  { name: 'modern_composers', label: '현대음악DB' }
 ];
+
+/* ★ 표마다 칸이 다릅니다 — 있는 칸만 골라 씁니다.
+   2026-08-08 에 modern_composers.wd_genre 가 없어서 도구가 죽었습니다.
+   인물DB 와 같은 칸을 가졌으리라 짐작한 것이 잘못이었습니다.
+   이제 표에 <b>먼저 물어보고</b> 있는 칸만 읽습니다. */
+const WANT_COLS = [
+  'id', 'name_ko', 'name_en', 'title', 'field',
+  'wd_genre', 'wd_occupation', 'genre', 'occupation',
+  'description', 'description_en', 'wikidata_id', 'hidden'
+];
+
+/** 그 표에 실제로 있는 칸만 돌려줍니다 */
+async function realCols(table) {
+  /* 한 줄만 받아 보면 어떤 칸이 있는지 알 수 있습니다 */
+  const rows = await rest(table + '?select=*&limit=1');
+  if (!Array.isArray(rows) || !rows.length) {
+    /* 줄이 하나도 없으면 id 만 씁니다 */
+    return ['id'];
+  }
+  const have = Object.keys(rows[0]);
+  const use = WANT_COLS.filter(c => have.indexOf(c) >= 0);
+  if (use.indexOf('id') < 0) use.unshift('id');
+  return use;
+}
 
 async function rest(path, init = {}) {
   const r = await fetch(SB_URL + '/rest/v1/' + path, {
@@ -98,7 +114,19 @@ async function auditOne(t) {
   console.log(' ' + t.label + '  (' + t.name + ')');
   console.log('════════════════════════════════════════════');
 
-  const rows = await getAll(t.name + '?select=' + t.cols + '&order=id.asc');
+  const cols = await realCols(t.name);
+  console.log('읽는 칸 : ' + cols.join(', '));
+
+  const noBase = ['wd_genre', 'genre', 'wd_occupation', 'occupation']
+    .every(c => cols.indexOf(c) < 0);
+  if (noBase) {
+    console.log('\n★ 이 표에는 장르·직업 칸이 없습니다.');
+    console.log('  글자로 클래식 여부를 판정할 근거가 없으므로 건너뜁니다.');
+    console.log('  (판정하려면 먼저 그 칸을 채우는 수집기가 있어야 합니다)');
+    return { table: t, keep: 0, drop: [], toHide: [], skipped: true };
+  }
+
+  const rows = await getAll(t.name + '?select=' + cols.join(',') + '&order=id.asc');
   console.log('담긴 것 : ' + rows.length + '줄        ');
 
   const keep = [];
@@ -141,7 +169,7 @@ async function auditOne(t) {
     });
   }
 
-  return { table: t, keep: keep.length, drop, toHide };
+  return { table: t, keep: keep.length, drop, toHide, cols };
 }
 
 async function setHidden(table, ids, v) {
@@ -180,6 +208,11 @@ async function main() {
   /* 되돌리기 */
   if (UNHIDE) {
     for (const t of tables) {
+      const cols = await realCols(t.name);
+      if (cols.indexOf('hidden') < 0) {
+        console.log('\n' + t.label + ' : hidden 칸이 없어 건너뜁니다');
+        continue;
+      }
       const rows = await getAll(t.name + '?select=id&hidden=is.true&order=id.asc');
       console.log('\n' + t.label + ' : 감춰진 ' + rows.length + '줄을 되돌립니다');
       if (rows.length) {
@@ -198,6 +231,10 @@ async function main() {
   console.log('╚══════════════════════════════════════════════════════╝');
   let total = 0;
   for (const r of results) {
+    if (r.skipped) {
+      console.log('   ' + r.table.label.padEnd(14) + '건너뜀 (장르·직업 칸이 없습니다)');
+      continue;
+    }
     console.log('   ' + r.table.label.padEnd(14)
       + '남음 ' + String(r.keep).padStart(6)
       + ' · 걸림 ' + String(r.toHide.length).padStart(6));
@@ -213,6 +250,7 @@ async function main() {
 
   /* 울타리 — 너무 많이 걸리면 멈춥니다 */
   for (const r of results) {
+    if (r.skipped) continue;
     const all = r.keep + r.drop.length;
     if (all && r.toHide.length > all * 0.7) {
       console.error('\n★ 멈췄습니다 — ' + r.table.label + ' 의 70%가 넘는 '
@@ -223,7 +261,16 @@ async function main() {
   }
 
   for (const r of results) {
-    if (!r.toHide.length) continue;
+    if (r.skipped || !r.toHide.length) continue;
+    /* ★ hidden 칸이 없는 표는 감출 수 없습니다 */
+    if (r.cols.indexOf('hidden') < 0) {
+      console.log('\n── ' + r.table.label + ' ──');
+      console.log('   ★ 이 표에는 hidden 칸이 없어 감출 수 없습니다.');
+      console.log('     먼저 칸을 만드셔야 합니다 :');
+      console.log('       alter table public.' + r.table.name
+        + ' add column if not exists hidden boolean not null default false;');
+      continue;
+    }
     console.log('\n── ' + r.table.label + ' 감추는 중 ──');
     const n = await setHidden(r.table.name, r.toHide.map(x => x.id), true);
     console.log('   ' + n + '줄 감췄습니다        ');
