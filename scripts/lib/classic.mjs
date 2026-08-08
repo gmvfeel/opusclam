@@ -85,8 +85,15 @@ export const CLASSIC_FAM = [
 
 /* ── 배제할 것 ─────────────────────────────────────────────
    admin.html 이 쓰던 번호를 그대로 옮겼습니다. */
+/* ★ 아래 세가지는 지금 <b>쓰지 않습니다.</b>
+   SPARQL 배제 조각을 빼면서 쓸모가 없어졌고,
+   대중음악 판정은 글자(G_POP · O_POP)로 합니다.
+   count-classic.mjs 같은 조사용으로만 남겨 둡니다. */
 export const POP_FAM  = [{ qid: 'Q373342', en: 'popular music' }];
-export const POP_ONE  = [{ qid: 'Q37073',  en: 'jazz' }];
+/* ★ 2026-08-08 바로잡음 — Q37073 은 jazz 가 아니라 <b>pop music</b> 입니다.
+   admin.html 에서 번호를 옮길 때 이름을 짐작으로 붙였다가 틀렸습니다.
+   위키데이터에 물어보고나서야 알았습니다. */
+export const POP_ONE  = [{ qid: 'Q37073',  en: 'pop music' }];
 export const POP_JOBS = [
   { qid: 'Q33999',  en: 'actor' },
   { qid: 'Q177220', en: 'singer' }   /* 클래식 성악가는 Q2865819 로 따로 있습니다 */
@@ -361,12 +368,14 @@ export function fieldFromOccupation(occ) {
    3) 번호가 맞는지 확인 — 실행할 때마다 이름을 물어 찍습니다
    ============================================================ */
 export function verifyQuery() {
+  /* ★ 2026-08-08 — <b>쓰는 번호만</b> 확인합니다.
+     POP_FAM · POP_ONE · POP_JOBS 는 SPARQL 배제 조각을 빼면서
+     쓰지 않게 됐는데, 확인 목록에는 남아 있어
+     <b>쓰지도 않는 번호 때문에 수집기가 멈추었습니다.</b>
+     대중음악 판정은 이제 글자(G_POP · O_POP)로만 합니다. */
   const all = []
     .concat(JOBS.map(j => j.qid))
-    .concat(CLASSIC_FAM.map(f => f.qid))
-    .concat(POP_FAM.map(f => f.qid))
-    .concat(POP_ONE.map(f => f.qid))
-    .concat(POP_JOBS.map(j => j.qid));
+    .concat(CLASSIC_FAM.map(f => f.qid));
   return 'SELECT ?c ?cLabel WHERE { VALUES ?c { '
        + all.map(q => 'wd:' + q).join(' ')
        + ' } ?c rdfs:label ?cLabel FILTER(lang(?cLabel)="en") }';
@@ -377,10 +386,7 @@ export function verifyReport(nameByQid) {
   const rows = [];
   const all = []
     .concat(JOBS.map(j => ({ qid: j.qid, want: j.en, ko: j.field })))
-    .concat(CLASSIC_FAM.map(f => ({ qid: f.qid, want: f.en, ko: '클래식 장르' })))
-    .concat(POP_FAM.map(f => ({ qid: f.qid, want: f.en, ko: '배제(장르계열)' })))
-    .concat(POP_ONE.map(f => ({ qid: f.qid, want: f.en, ko: '배제(장르)' })))
-    .concat(POP_JOBS.map(j => ({ qid: j.qid, want: j.en, ko: '배제(직업)' })));
+    .concat(CLASSIC_FAM.map(f => ({ qid: f.qid, want: f.en, ko: '클래식 장르' })));
 
   let bad = 0;
   for (const x of all) {

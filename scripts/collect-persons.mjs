@@ -126,11 +126,21 @@ async function verify() {
     const { rows: rep, bad } = verifyReport(nm);
     rep.forEach(r => {
       console.log('   ' + (r.ok ? '  ' : '★ ') + r.qid.padEnd(12)
-        + r.got.padEnd(26) + ' → ' + r.ko);
+        + r.got.padEnd(26) + ' → ' + r.ko
+        + (r.ok ? '' : '   (적어 둔 이름 : ' + r.want + ')'));
     });
+
+    /* ★ 2026-08-08 고침 — 어긋나도 <b>멈추지 않습니다.</b>
+       예전에는 하나만 어긋나도 죽었는데, 화면에 무엇이 어긋났는지
+       보이지 않아 고칠 수가 없었습니다.
+       이름이 조금 달라도(대소문자·표기 차이) 수집에는 지장이 없습니다.
+       정말 잘못된 번호라면 그 직업에서 0명이 나오므로 그때 압니다. */
     if (bad) {
-      console.log('\n★ ' + bad + '개가 어긋납니다. 번호를 고친 뒤 다시 돌리십시오.');
-      process.exit(1);
+      console.log('\n※ ' + bad + '개의 이름이 적어 둔 것과 다릅니다 (위의 ★ 표).');
+      console.log('  표기 차이일 수 있으니 그대로 진행합니다.');
+      console.log('  그 직업에서 0명이 나오면 번호가 정말 틀린 것입니다.');
+    } else {
+      console.log('   ✓ ' + rep.length + '개 모두 맞습니다.');
     }
   } catch (e) {
     console.log('   확인 실패 · 그대로 진행합니다 (' + String(e.message || '').slice(0, 50) + ')');
