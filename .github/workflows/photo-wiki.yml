@@ -29,6 +29,10 @@ name: 사진 · 위키백과 대표사진 (주간)
 
 on:
   schedule:
+    # ★ 2026-08-08 · 자동으로 돌 때는 담습니다(--save 가 붙습니다).
+    #   사진 없는 사람이 4,518명입니다.
+    #   한 번에 800명씩 보면 6주쯤에 한 바퀴 됩니다.
+    #   그 뒤에는 새로 들어온 사람만 보게 되어 금방 끝납니다.
     - cron: '17 3 * * 6'   # KST 매주 토 12:17
   workflow_dispatch:
     inputs:
@@ -90,7 +94,8 @@ jobs:
           OPTS="$OPTS --type=$T"
 
           L="${{ github.event.inputs.limit }}"
-          case "$L" in ''|*[!0-9]*) L=250 ;; esac
+          # 저절로 도는 경우에는 입력값이 없으므로 800명을 봅니다 (10~12분)
+          case "$L" in ''|*[!0-9]*) L=800 ;; esac
           OPTS="$OPTS --limit=$L"
 
           echo "── 실행 : node seed/photo-wiki.mjs $OPTS ──"

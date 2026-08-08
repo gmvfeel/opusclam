@@ -172,6 +172,17 @@ async function summaryPhoto(lang, title) {
    ★ 이것을 확인하지 못하면 담지 않습니다. */
 async function commonsInfo(files) {
   if (!files.length) return new Map();
+
+  /* ★ 2026-08-08 · <b>이름을 맞추는 방식을 고쳤습니다.</b>
+     첫 실행에서 11장 중 10장의 라이선스를 못 읽었습니다.
+     까닭은 커먼즈가 <b>파일 이름을 다듬어</b> 돌려주기 때문입니다.
+       물을 때   Bazilea Schlink.jpg
+       답할 때   Bazilea_Schlink.jpg     ← 빈칸이 밑줄로
+     그런데 저는 물어본 이름 그대로 찾았습니다.
+     ▶ 빈칸과 밑줄을 같게 보고, 첫 글자 대소문자도 무시합니다.
+     ▶ normalized 응답도 함께 읽습니다 — 커먼즈가 직접 알려 줍니다. */
+  const key = v => String(v || '').replace(/^File:/i, '').replace(/_/g, ' ').trim().toLowerCase();
+
   const titles = files.map(f => 'File:' + f).join('|');
   const url = 'https://commons.wikimedia.org/w/api.php'
     + '?action=query&format=json&origin=*'
@@ -179,34 +190,47 @@ async function commonsInfo(files) {
     + '&iiurlwidth=400'
     + '&titles=' + encodeURIComponent(titles);
 
-  let j;
-  try {
-    j = await getJSON(url);
-  } catch (e) {
-    return new Map();
-  }
-  const pages = (j && j.query && j.query.pages) || {};
+  /* ★ 여기도 공용 모듈을 쓰지 않습니다 — 같은 404 문제가 있습니다. */
+  const j = await wikiGet(url);
+  if (!j) return new Map();
+
   const out = new Map();
   const strip = v => String(v || '').replace(/<[^>]+>/g, '').trim();
 
+  /* 커먼즈가 이름을 바꿈 때 알려 주는 짝 */
+  const norm = new Map();
+  const nz = (j.query && j.query.normalized) || [];
+  nz.forEach(x => norm.set(key(x.to), key(x.from)));
+
+  const pages = (j.query && j.query.pages) || {};
   for (const k of Object.keys(pages)) {
     const p = pages[k];
     if (!p.imageinfo || !p.imageinfo[0]) continue;
     const ii = p.imageinfo[0];
     const meta = ii.extmetadata || {};
     const lic = strip(meta.LicenseShortName && meta.LicenseShortName.value);
-    /* 라이선스를 못 읽으면 건너뜁니다 */
     if (!lic) continue;
-    out.set(String(p.title).replace(/^File:/, ''), {
+
+    const d = {
       src: ii.url,
       thumb: ii.thumburl || ii.url,
       page: ii.descriptionurl || '',
       license: lic,
       author: strip(meta.Artist && meta.Artist.value).slice(0, 200),
       caption: strip(meta.ImageDescription && meta.ImageDescription.value).slice(0, 400),
-    });
+    };
+
+    /* 돌아온 이름과 물어본 이름 둘 다로 찾을 수 있게 넣습니다 */
+    const got = key(p.title);
+    out.set(got, d);
+    if (norm.has(got)) out.set(norm.get(got), d);
   }
   return out;
+}
+
+/* 물어본 이름으로 찾을 때도 같은 잣대를 씁니다 */
+function fileKey(v) {
+  return String(v || '').replace(/^File:/i, '').replace(/_/g, ' ').trim().toLowerCase();
 }
 
 /* 위키백과 주소에서 언어와 제목을 뽑습니다 */
@@ -312,7 +336,7 @@ async function main() {
     const part = found.slice(i, i + 40);
     const info = await commonsInfo(part.map(x => x.file));
     for (const x of part) {
-      const d = info.get(x.file);
+      const d = info.get(fileKey(x.file));
       if (!d) { noLic++; continue; }
       rowsToSave.push({
         entity_type: TYPE,
