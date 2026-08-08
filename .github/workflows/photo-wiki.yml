@@ -1,0 +1,122 @@
+name: 사진 · 위키백과 대표사진 (주간)
+
+# ── 무엇을 하나 ──────────────────────────────────────────────
+#  위키백과 문서 첫머리에 걸린 <b>대표 사진</b>을 가져옵니다.
+#
+# ── 왜 필요한가 (2026-08-08) ─────────────────────────────────
+#  인물DB 가 15,250명으로 늘면서 사진 있는 사람이 29.3%로 떨어졌습니다.
+#    사진 있음  4,464명 · 사진 없음 10,775명
+#
+#  지금 있는 두 길은 이렇습니다.
+#    사진 · 인물·단체(주간)  위키데이터 P18 을 봅니다
+#    사진 · 커먼즈(주간)     커먼즈 카테고리를 훑습니다 (성공률 3.3%)
+#
+#  그런데 <b>위키백과 문서에는 사진이 있는데</b> P18 이 비어 있고
+#  커먼즈 카테고리도 없는 경우가 많습니다. 그 사이를 메웁니다.
+#
+# ── ★ 저작권 ─────────────────────────────────────────────────
+#  · 커먼즈 파일만 받습니다 (upload.wikimedia.org/wikipedia/commons/)
+#    언어판에 직접 올린 파일은 공정이용이 섞여 있어 밖에서 쓸 수 없습니다.
+#  · 라이선스와 저작자를 함께 저장합니다.
+#  · 라이선스를 읽지 못한 것은 담지 않습니다.
+#
+# ── 언제 도나 ──
+#  매주 토요일 12:17(KST). 다른 사진 수집과 날을 달리 둡니다.
+#    사진 · 인물·단체   월 13:17
+#    사진 · 공연 갤러리 월 11:31
+#    사진 · 커먼즈      목 12:43
+#  같은 날 몰리면 위키미디어가 속도 제한을 걸 수 있습니다.
+
+on:
+  schedule:
+    - cron: '17 3 * * 6'   # KST 매주 토 12:17
+  workflow_dispatch:
+    inputs:
+      save:
+        description: '실제로 담기 (처음에는 no 로 몇 장이 나오는지 보십시오)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      type:
+        description: '무엇을 채울까요'
+        required: false
+        default: 'person'
+        type: choice
+        options:
+          - 'person'
+          - 'org'
+          - 'school'
+          - 'venue'
+      limit:
+        description: '한 번에 볼 수 (400 이면 15~20분)'
+        required: false
+        default: '400'
+        type: string
+
+concurrency:
+  group: oc-photo
+  cancel-in-progress: false
+
+jobs:
+  photo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 위키백과 대표사진 수집
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          OPTS=""
+          # 저절로 도는 경우(schedule)에는 입력값이 없으므로 기본이 '담기'입니다
+          if [ "${{ github.event.inputs.save }}" = "no" ]; then
+            echo "── 담지 않고 봅니다 ──"
+          else
+            OPTS="$OPTS --save"
+          fi
+
+          T="${{ github.event.inputs.type }}"
+          case "$T" in person|org|school|venue) ;; *) T=person ;; esac
+          OPTS="$OPTS --type=$T"
+
+          L="${{ github.event.inputs.limit }}"
+          case "$L" in ''|*[!0-9]*) L=400 ;; esac
+          OPTS="$OPTS --limit=$L"
+
+          echo "── 실행 : node seed/photo-wiki.mjs $OPTS ──"
+          node seed/photo-wiki.mjs $OPTS
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  oc-notify-failure:
+    needs: photo
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '위키백과 대표사진 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다"
+          fi
