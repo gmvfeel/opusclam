@@ -44,13 +44,13 @@ on:
           - 'no'
           - 'yes'
       list:
-        description: '바뀔 사람을 전부 찍기'
+        description: '바뀔 사람을 전부 찍기 (로그가 아주 길어집니다 — 보통은 no)'
         required: false
-        default: 'yes'
+        default: 'no'
         type: choice
         options:
-          - 'yes'
           - 'no'
+          - 'yes'
       only:
         description: '지금 값이 이것인 사람만 (비우면 전부 · 예: 작곡)'
         required: false

@@ -10,7 +10,7 @@
 //  - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY, (선택) DAILY_LIMIT
 // ============================================================
 
-import { guessField } from './lib/field.mjs';
+import { decideField } from './lib/field.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
@@ -338,7 +338,17 @@ async function main() {
 
     // 파생값
     const occNow = patch.wd_occupation || cur.wd_occupation || '';
-    if (isEmpty(cur.field)) { const f = guessField(occNow); if (f) patch.field = f; }
+    /* ★ 분야는 소개문을 먼저 봅니다.
+       직업 목록만 보면 모차르트(music educator, … composer)가
+       「음악교육」이 됩니다. 실제로 그러했습니다. */
+    if (isEmpty(cur.field)) {
+      const d = decideField({
+        description:    patch.description    || cur.description,
+        description_en: patch.description_en || cur.description_en,
+        wd_occupation:  occNow
+      });
+      if (d.field) patch.field = d.field;
+    }
     if (isEmpty(cur.era_name)) {
       const era = guessEra(m.birth || yr(cur.life));
       if (era) { patch.era_name = era; if (eraYr[era]) patch.era_yr = eraYr[era]; }

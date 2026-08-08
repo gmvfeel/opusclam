@@ -1,36 +1,58 @@
 /* ============================================================
    OPUSCLAM 인물 분야 판정 — scripts/lib/field.mjs
    ------------------------------------------------------------
-   ★ 이 파일이 <b>정본</b>입니다.
-     분야를 정하는 규칙은 여기에만 둡니다. 여러 곳에 적으면
-     반드시 어긋납니다 (작품 형식표를 하루에 두 번 늘렸던 일).
+   ★ 이 파일이 정본입니다. 규칙을 여러 곳에 두면 반드시 어긋납니다.
+     쓰는 곳 — enrich-persons.mjs · fix-person-field.mjs
 
-     쓰는 곳
-       scripts/enrich-persons.mjs    새로 들어오는 인물
-       scripts/fix-person-field.mjs  이미 담긴 인물 다시 판정
+   ────────────────────────────────────────────────────────────
+   ★★ 2026-08-08 · 두 번 틀리고 세 번째입니다. 기록해 둡니다.
 
-   ★ 2026-08-08 고침 — 무엇이 잘못이었나
-     예전에는 <b>규칙을 위에서부터</b> 훑어 처음 맞는 것을 썼습니다.
-     `composer` 가 맨 앞이라, 직업 목록에 composer 가 하나라도 있으면
-     무조건 「작곡」이 되었습니다.
+   [처음]  규칙 차례대로 훑어 처음 맞는 것 — `composer` 가 맨 앞
+     폴리니(concertmaster, pianist, … composer) → 「작곡」  ✗
 
-       마우리치오 폴리니
-         concertmaster, pianist, musician, conductor, composer
-         → 맨 뒤의 composer 때문에 「작곡」  ✗  (피아니스트입니다)
+   [두 번째] 직업 목록에 적힌 차례를 따름
+     ▶ 「위키데이터는 주업을 앞에 적는다」고 짐작했는데 틀렸습니다.
+       모차르트  music educator, violinist, organist, pianist, musician, composer
+       폴리니    concertmaster, pianist, musician, conductor, composer
+     둘 다 composer 가 맨 뒤입니다. 차례에 뜻이 없습니다.
+     실제로 돌려 보니 5,946명이 바뀌는데 그 안에
+       모차르트·바흐 → 음악교육 · 바그너 → 평론 · 쇼팽 → 연주
+     가 들어 있었습니다.
+     ▶ 제가 만든 시험 15가지로만 확인하고 실제 자료로 확인하지 않은 것이
+       원인입니다. 어제 문서에 「표본을 먼저 뽑으라」고 적어 놓고 어겼습니다.
 
-     위키데이터는 연주자에게도 composer 를 자주 붙입니다.
-     그래서 <b>직업 목록에 적힌 순서</b>를 따르도록 바꿨습니다.
-     위키데이터는 대체로 주업을 앞에 적습니다.
+   [지금] 소개문의 첫 대목을 봅니다
+     description(한국어 위키백과)·description_en(영문 위키백과)은
+     그 사람이 무엇으로 알려졌는지를 첫 문장에 적습니다.
+       모차르트  「… 오스트리아의 작곡가이다」      → 작곡
+       폴리니    「… 이탈리아의 피아니스트이다」    → 연주
+       카라얀    「… 오스트리아의 지휘자이다」      → 지휘
+     여러 직업이 나오면 문장에서 먼저 나온 것을 씁니다.
+       「작곡가 겸 피아니스트」 → 작곡
+       「피아니스트 겸 작곡가」 → 연주
 
-       폴리니        concertmaster 가 첫 번째 → 연주  ✓
-       라흐마니노프   composer 가 첫 번째      → 작곡  ✓
-
-   ★ 그래도 완벽하지는 않습니다.
-     위키데이터 편집자가 순서를 아무렇게나 넣은 경우도 있습니다.
-     그래서 <b>데이터 신고 통로</b>가 필요합니다. 사람이 알려주면 고칩니다.
+   ★ 소개문이 없으면 아무것도 바꾸지 않습니다.
+     짐작으로 고치느니 그대로 두는 편이 낫습니다.
    ============================================================ */
 
-/* 직업 하나가 어느 분야인지 — 순서는 「한 직업 안에서만」 씁니다 */
+/* ── 소개문에서 찾을 말 ─────────────────────────────────────
+   ★ 문장에서 먼저 나온 것이 이깁니다. 아래 차례는 뜻이 없습니다.
+   ★ 「음악교육」·「평론」은 일부러 넣지 않았습니다.
+     첫 문장에 「교육자」·「평론가」가 먼저 오는 일은 드물고,
+     넣으면 모차르트가 음악교육자가 되는 일이 또 생깁니다. */
+const TEXT_RULES = [
+  ['작곡', /작곡가|\bcomposer\b/i],
+  ['지휘', /지휘자|\bconductor\b|kapellmeister|dirigent/i],
+  ['성악', /성악가|소프라노|메조|알토|테너|바리톤|오페라\s*가수|\bsoprano\b|\bmezzo|\bcontralto\b|\btenor\b|\bbaritone\b|countertenor|opera singer|\bsinger\b|vocalist/i],
+  ['연주', /피아니스트|바이올리니스트|첼리스트|비올리스트|오르가니스트|하피스트|플루티스트|기타리스트|연주자|\bpianist\b|\bviolinist\b|\bcellist\b|\bviolist\b|\borganist\b|\bharpsichordist\b|\bflautist\b|\bflutist\b|\boboist\b|\bclarinetist\b|\bbassoonist\b|\btrumpeter\b|\btrombonist\b|\bharpist\b|\bguitarist\b|percussionist|concertmaster|instrumentalist|\bvirtuoso\b/i],
+  ['음악학', /음악학자|음악\s*이론가|음악\s*사학자|musicolog|music theorist|music historian/i],
+  ['국악', /국악인|판소리|명창|가야금|거문고|해금|대금|정가|gugak|pansori/i],
+  ['편곡', /편곡자|\barranger\b|orchestrator/i]
+];
+
+/* ── 소개문이 없을 때 쓰는 직업 목록 규칙 ────────────────────
+   ★ 처음 방식(규칙 차례대로)을 그대로 둡니다.
+     빈칸을 채울 때만 씁니다 — 이미 들어 있는 값을 이것으로 고치지 않습니다. */
 export const FIELD_RULES = [
   [/\bcomposer\b|songwriter/i, '작곡'],
   [/opera singer|\bsinger\b|soprano|mezzo|contralto|\btenor\b|baritone|countertenor|\bbass\b|vocalist|chanteuse/i, '성악'],
@@ -39,43 +61,58 @@ export const FIELD_RULES = [
   [/musicolog|music theorist|music historian/i, '음악학'],
   [/music educator|music teacher|pedagogue|university teacher/i, '음악교육'],
   [/arranger|orchestrator/i, '편곡'],
-  [/music critic|critic/i, '평론'],
+  [/music critic|critic/i, '평론']
 ];
 
-/* 분야를 정할 수 없는 너무 넓은 직업 — 건너뜁니다.
-   ★ 이런 것을 근거로 삼으면 안 됩니다. 작품DB에서 「musical work」가
-     69%를 차지하고도 쓸모없었던 것과 같은 이유입니다. */
-const TOO_BROAD = /^(musician|artist|performer|music artist|recording artist|singer-songwriter\?|person|human)$/i;
+/**
+ * 소개문에서 분야를 고릅니다.
+ *  ★ 문장에서 가장 먼저 나온 직업어를 씁니다.
+ *  ★ 첫머리만 봅니다 — 뒤쪽의 「작곡가의 아들로 태어나」에 걸리지 않게.
+ */
+export function fieldFromText(text) {
+  const raw = String(text == null ? '' : text).trim();
+  if (!raw) return '';
+
+  /* 첫 문장까지만. 문장이 길면 앞 170자.
+     ★ 「J. S. Bach」처럼 이름 안의 마침표를 문장 끝으로 보지 않도록
+       한 글자 약자는 미리 지워 두고 위치를 찾습니다. */
+  let head = raw.slice(0, 400);
+  const probe = head.replace(/\b[A-Z]\.\s?/g, 'XX');
+  const m = /[.。!?](?:\s|$)/.exec(probe);
+  if (m && m.index > 20) head = head.slice(0, m.index + 1);
+  if (head.length > 170) head = head.slice(0, 170);
+
+  let best = '';
+  let bestAt = Infinity;
+  for (const [label, re] of TEXT_RULES) {
+    const hit = re.exec(head);
+    if (hit && hit.index < bestAt) { best = label; bestAt = hit.index; }
+  }
+  return best;
+}
+
+/** 직업 목록에서 분야를 고릅니다 (소개문이 없을 때만). */
+export function guessField(occ) {
+  const t = String(occ == null ? '' : occ);
+  if (!t.trim()) return '';
+  for (const [re, label] of FIELD_RULES) if (re.test(t)) return label;
+  return '';
+}
 
 /**
- * 직업 목록에서 분야를 고릅니다.
- *
- *  ★ 목록에 적힌 순서를 먼저 봅니다 (주업이 앞에 오는 경향).
- *    한 직업이 여러 분야에 걸리면 그때만 위 규칙 순서를 씁니다.
- *
- * @param {string} occ  예) "concertmaster, pianist, musician, conductor, composer"
- * @returns {string}    예) "연주"  · 정할 수 없으면 빈 문자열
+ * 인물 한 명의 분야를 정합니다.
+ * @returns {{field:string, from:string}}
+ *   from — 'ko소개' · 'en소개' · '직업목록' · '' (정할 수 없음)
  */
-export function guessField(occ) {
-  const raw = String(occ == null ? '' : occ);
-  if (!raw.trim()) return '';
+export function decideField(p) {
+  const ko = fieldFromText(p && p.description);
+  if (ko) return { field: ko, from: 'ko소개' };
 
-  const list = raw.split(/[,;·\/|]/).map(s => s.trim()).filter(Boolean);
+  const en = fieldFromText(p && p.description_en);
+  if (en) return { field: en, from: 'en소개' };
 
-  for (const one of list) {
-    if (TOO_BROAD.test(one)) continue;
-    for (const [re, label] of FIELD_RULES) {
-      if (re.test(one)) return label;
-    }
-  }
+  const oc = guessField(p && p.wd_occupation);
+  if (oc) return { field: oc, from: '직업목록' };
 
-  /* 쉼표로 나뉘지 않은 한 덩어리일 수도 있습니다 (예전 자료).
-     그때는 예전처럼 통째로 봅니다 — 없는 것보다는 낫습니다. */
-  if (list.length <= 1) {
-    for (const [re, label] of FIELD_RULES) {
-      if (re.test(raw)) return label;
-    }
-  }
-
-  return '';
+  return { field: '', from: '' };
 }
