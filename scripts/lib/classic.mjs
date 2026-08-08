@@ -420,11 +420,18 @@ export function checkModern(p) {
   const items = o.split(/[,;·\/|]/).map(x => x.trim()).filter(Boolean);
   const isComposer = /composer|작곡가/i.test(o) || /작곡가/.test(d);
   if (!isComposer) {
+    /* 연주자·지휘자라고 <b>적혀 있는</b> 사람만 뺍니다 */
     const onlyPerformer = items.length > 0
       && items.some(x => PERFORMER_ONLY.test(x))
       && !items.some(x => /composer/i.test(x));
     if (onlyPerformer) return { ok: false, why: '연주자·지휘자 (작곡가가 아님)' };
-    if (!o.trim() && !/작곡/.test(d)) return { ok: false, why: '작곡가인지 알 수 없음' };
+
+    /* ★ 2026-08-08 고침 — 아무 근거가 없을 때는 빼지 않습니다.
+       스티브 라이히·토루 다케미쓰가 「작곡가인지 알 수 없음」으로 걸렸습니다.
+       위키데이터에 장르도 직업도 비어 있었기 때문입니다.
+       그런데 <b>현대음악DB 에 담겨 있다는 것 자체가 근거</b>입니다 —
+       그 표는 P106 = 작곡가로만 수집하니까요.
+       근거가 없으면 그대로 두고, 사람이 신고로 알려주는 편이 낫습니다. */
   }
 
   /* ④ 현대여야 합니다 — 1900년 이후 */
