@@ -53,7 +53,10 @@ const HDR = {
      공연장·학교는 「클래식 음악인인가」를 물을 대상이 아니므로 뺐습니다. */
 const TABLES = [
   { name: 'persons',          label: '인물DB' },
-  { name: 'modern_composers', label: '현대음악DB' }
+  /* ★ 현대음악DB 는 자기 장르·직업 칸이 없습니다.
+     대신 wikidata_id 로 인물DB 와 이어져 있으므로 그 판정을 물려받습니다.
+     (2026-08-08 · 표에 직접 물어 확인한 구조입니다) */
+  { name: 'modern_composers', label: '현대음악DB', viaPersons: true }
 ];
 
 /* ★ 표마다 칸이 다릅니다 — 있는 칸만 골라 씁니다.
@@ -109,6 +112,24 @@ function short(s, n) {
   return t.length > n ? t.slice(0, n) + '…' : t;
 }
 
+/* ★ 인물DB 의 판정 결과를 위키데이터 번호로 찾아볼 수 있게 만듭니다.
+   현대음악DB 처럼 자기 근거가 없는 표가 이것을 씁니다. */
+let personVerdict = null;
+async function loadPersonVerdict() {
+  if (personVerdict) return personVerdict;
+  const rows = await getAll(
+    'persons?select=wikidata_id,name_ko,wd_genre,wd_occupation&order=id.asc');
+  const byWid = new Map();
+  const byName = new Map();
+  for (const p of rows) {
+    const c = checkClassic(p);
+    if (p.wikidata_id) byWid.set(String(p.wikidata_id).trim(), c);
+    if (p.name_ko) byName.set(String(p.name_ko).trim(), c);
+  }
+  personVerdict = { byWid, byName, n: rows.length };
+  return personVerdict;
+}
+
 async function auditOne(t) {
   console.log('\n════════════════════════════════════════════');
   console.log(' ' + t.label + '  (' + t.name + ')');
@@ -116,6 +137,54 @@ async function auditOne(t) {
 
   const cols = await realCols(t.name);
   console.log('읽는 칸 : ' + cols.join(', '));
+
+  /* ★ 인물DB 에 기대는 표 */
+  if (t.viaPersons) {
+    const v = await loadPersonVerdict();
+    console.log('인물DB 판정 ' + v.n + '명을 불러왔습니다 (번호·이름으로 맞춰 봅니다)');
+
+    const rows = await getAll(t.name + '?select=' + cols.join(',') + '&order=id.asc');
+    console.log('담긴 것 : ' + rows.length + '줄        ');
+
+    const keep = [], drop = [], why = new Map();
+    for (const r of rows) {
+      let c = null;
+      if (r.wikidata_id) c = v.byWid.get(String(r.wikidata_id).trim()) || null;
+      if (!c && r.name_ko) c = v.byName.get(String(r.name_ko).trim()) || null;
+
+      if (!c) {
+        /* 인물DB 에 짝이 없습니다 — 판정 근거가 없으므로 건드리지 않습니다 */
+        why.set('인물DB에 짝이 없음(그대로 둠)', (why.get('인물DB에 짝이 없음(그대로 둠)') || 0) + 1);
+        keep.push(r);
+        continue;
+      }
+      why.set(c.why, (why.get(c.why) || 0) + 1);
+      (c.ok ? keep : drop).push({ ...r, _why: '인물DB 판정 · ' + c.why });
+    }
+
+    const already = drop.filter(x => x.hidden === true).length;
+    const toHide = drop.filter(x => x.hidden !== true);
+
+    console.log('\n── 인물DB 판정을 물려받으면 ──');
+    console.log('   클래식으로 남음   : ' + keep.length + '줄');
+    console.log('   ★ 걸리는 것      : ' + drop.length + '줄'
+      + (already ? '  (그중 ' + already + '줄은 이미 감춰져 있습니다)' : ''));
+    console.log('   실제로 손댈 것    : ' + toHide.length + '줄');
+
+    console.log('\n── 걸린 까닭 ──');
+    [...why.entries()].sort((a, b) => b[1] - a[1])
+      .forEach(([k, n]) => console.log('   ' + String(n).padStart(6) + '  ' + k));
+
+    const show2 = LIST ? toHide.length : Math.min(30, toHide.length);
+    if (toHide.length) {
+      console.log('\n── ' + (LIST ? '걸린 것 전부' : '표본 ' + show2 + '줄') + ' ──');
+      toHide.slice(0, show2).forEach((x, i) => {
+        console.log('   ' + String(i + 1).padStart(5) + '. '
+          + (x.name_ko || x.name_en || ('#' + x.id)) + '   [' + x._why + ']');
+      });
+    }
+    return { table: t, keep: keep.length, drop, toHide, cols };
+  }
 
   const noBase = ['wd_genre', 'genre', 'wd_occupation', 'occupation']
     .every(c => cols.indexOf(c) < 0);
