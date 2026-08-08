@@ -49,10 +49,18 @@ on:
           - 'concours'
           - 'festival'
       limit:
-        description: '한 갈래에서 최대 몇 개까지 볼까요 (처음에는 1200 이면 넉넉합니다)'
+        description: '한 갈래에서 최대 몇 개까지 볼까요 (3000 을 권합니다)'
         required: true
-        default: '1200'
+        default: '3000'
         type: string
+      list:
+        description: '받기로 한 것을 전부 찍기 (담기 전에 눈으로 보실 때)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
       loose:
         description: '클래식 잣대를 느슨하게 (근거가 없어도 받습니다 — 처음에는 no)'
         required: false
@@ -96,6 +104,7 @@ jobs:
 
           OPTS=""
           if [ "${{ github.event.inputs.save }}"  = "yes" ]; then OPTS="$OPTS --save"; fi
+          if [ "${{ github.event.inputs.list }}"  = "yes" ]; then OPTS="$OPTS --list";  fi
           if [ "${{ github.event.inputs.loose }}" = "yes" ]; then OPTS="$OPTS --loose"; fi
           if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
 
@@ -104,7 +113,7 @@ jobs:
           OPTS="$OPTS --kind=$K"
 
           LIM="${{ github.event.inputs.limit }}"
-          case "$LIM" in ''|*[!0-9]*) LIM=1200 ;; esac
+          case "$LIM" in ''|*[!0-9]*) LIM=3000 ;; esac
           OPTS="$OPTS --limit=$LIM"
 
           echo "── 실행 : node scripts/collect-spot-events.mjs $OPTS ──"

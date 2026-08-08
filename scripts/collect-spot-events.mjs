@@ -68,7 +68,8 @@ const args = Object.fromEntries(
 const SAVE  = !!args.save;
 const DEBUG = !!args.debug;
 const LOOSE = !!args.loose;
-const LIMIT = Number(args.limit) > 0 ? Number(args.limit) : 1200;
+const LIST  = !!args.list;   /* \ubc1b\uae30\ub85c \ud55c \uac83\uc744 \uc804\ubd80 \ucc0d\uc2b5\ub2c8\ub2e4 */
+const LIMIT = Number(args.limit) > 0 ? Number(args.limit) : 3000;
 const KIND  = (args.kind === 'concours' || args.kind === 'festival') ? args.kind : 'both';
 
 const SPARQL = 'https://query.wikidata.org/sparql';
@@ -93,17 +94,88 @@ const GROUPS = {
   festival: { qid: 'Q868557',  section: '페스티벌',  label: '음악 축제(페스티벌)' }
 };
 
-/* ── 클래식 판정 ─────────────────────────────────────────────
-   ★ 이름만 보고 판정하지 않습니다.
-     ① 갈래 이름(P31 → 라벨)에 클래식 계열이 있으면 → 받습니다
-     ② 장르(P136)가 클래식·오페라 계열이면 → 받습니다   ← 출처에 직접 물은 것
-     ③ 이름·설명의 낱말                                  ← 마지막 보조 수단
-   어느 근거로 받았는지 로그에 남깁니다. */
-const CLASSIC_WORD = /classical|baroque|renaissance|early music|opera|operatic|orchestral|orchestra|symphon|chamber music|choral|choir|lied|art song|recital|conducting|conductor|composition|organ|harpsichord|fortepiano|violin|viola|cello|double bass|piano|voice|vocal|singing|string quartet|contemporary classical|new music|avant-?garde|클래식|고전음악|현대음악|오페라|관현악|교향|실내악|성악|합창|피아노|바이올린|첼로|지휘|작곡|국악|정가|판소리/i;
+/* ── 무엇을 받고 무엇을 뺄지 ────────────────────────────────
+   ★ 2026-08-08 첫 조사에서 드러난 것을 반영했습니다.
+     1,200개를 훑었더니 절반 가까이가 <b>유로비전 송 콘테스트 예선</b>과
+     <b>일본 홍백가합전</b>이었습니다. 「singing competition」이라는 갈래로
+     적혀 있어서, 낱말 `singing` 하나로 전부 클래식이 되어 버렸습니다.
+       53 Eurovision Song Contest edition   53 Kohaku Uta Gassen
+       47 Eurovision selection event        43 Sopot International Song Festival
+       40 German preliminary rounds         36 Melodifestivalen edition
+      101 television program                50 entertainment television program
+     또 219개가 「annual music competition <b>edition</b>」 — 대회가 아니라
+     <b>개별 회차</b>(제57회 … 2021)였습니다. 어제 작품DB에서 판본·묶음을
+     걸러낸 것과 같은 문제입니다.
 
-/* 클래식이 아닌 것이 확실한 표시 — 클래식 근거보다 먼저 걸러냅니다.
-   ★ 「rock」이 「Rockefeller」에 걸리지 않도록 낱말 경계를 씁니다. */
-const NOT_CLASSIC = /\brock\b|\bpop\b|\bhip.?hop\b|\brap\b|\bjazz fusion\b|\bmetal\b|\bpunk\b|\breggae\b|\btechno\b|\bhouse music\b|\bedm\b|\bcountry music\b|\bfolk rock\b|\bblues\b|\bk-?pop\b|\bidol\b|\btrot\b|댄스|아이돌|힙합|트로트|록 페스티벌|락 페스티벌/i;
+   ★ 그래서 잣대를 셋으로 나눕니다.
+     ① 막음   — 회차 · 가요제 · 방송 프로그램 · 대중음악
+     ② 확실   — 갈래 이름 자체가 클래식인 것 (classical music competition …)
+     ③ 넓음   — music competition / music festival 처럼 <b>너무 넓은 갈래</b>.
+                이것만으로는 받지 않고 <b>이름·설명에 클래식 근거</b>가 있어야 합니다.
+
+   ★ 어제 배운 것을 그대로 지킵니다.
+     「musical work/composition」이 69%를 차지하고도 쓸모없었던 것과 같습니다.
+     넓은 값은 근거가 아닙니다. */
+
+/* ① 막음 — 무엇보다 먼저 봅니다 */
+const BLOCK = new RegExp([
+  '\\bedition\\b',                    // 개별 회차
+  'eurovision', 'song contest',
+  'sopot international song',        // 폴란드 대중가요제 (갈래 이름으로 43건)
+  'melodifestivalen', 'melodi grand prix', 'dansk melodi',
+  'evrovizijska', 'sanremo', 'uta gassen',
+  'preliminary round', 'selection event', 'national final',
+  'nation in the',
+  'television program', 'television series', 'entertainment television',
+  'talent show', 'reality (?:television|show)', 'game show',
+  'beauty pageant', 'eisteddfod'          // 아이스테드바드는 웨일스 문화축제
+].join('|'), 'i');
+
+/* 대중음악 — 장르나 이름에 있으면 뺍니다 */
+const NOT_CLASSIC = /\brock\b|\bpop\b|\bpop music\b|\bhip.?hop\b|\brap\b|\bjazz\b|\bmetal\b|\bpunk\b|\breggae\b|\breggaeton\b|\btechno\b|\bhouse music\b|\bedm\b|\belectronic dance\b|\bcountry music\b|\bfolk\b|\bblues\b|\bk-?pop\b|\bidol\b|\btrot\b|\bschlager\b|\bchanson fran/i;
+
+/* ② 확실 — 갈래 이름 자체가 클래식인 것 */
+const STRONG_TYPE = new RegExp([
+  'classical music',
+  'opera (?:festival|competition|house)', 'operatic',
+  'chamber music', 'early music', 'baroque', 'renaissance music',
+  'contemporary classical', 'new music',
+  '(?:piano|violin|cello|viola|organ|harpsichord|guitar|harp|flute|oboe|clarinet|bassoon|horn|trumpet|conducting|composition|choral|vocal)\\s+(?:competition|festival|contest)',
+  'orchestra', 'symphon', 'philharmon', 'concerto',
+  'lied', 'art song', 'oratorio', 'cantata'
+].join('|'), 'i');
+
+/* ③ 넓음 — 이것만으로는 받지 않습니다 */
+const BROAD_TYPE = /^(?:music competition|music festival|annual music competition|annual event|recurring event|singing competition|song competition|festival|music award|organization|competition|contest)$/i;
+
+/* 이름·설명에서 찾는 클래식 근거
+   ★ 영어 singing · song 은 넣지 않습니다 — 유로비전이 전부 그 낱말입니다.
+   ★ 대신 다른 나라 말을 넉넉히 넣었습니다. 「Bundeswettbewerb Gesang」처럼
+     진짜 클래식 대회가 영어가 아니어서 걸러지면 안 됩니다. */
+const CLASSIC_NAME = new RegExp([
+  // 영어
+  'classical', 'baroque', 'renaissance', 'early music', 'opera', 'operatic',
+  'orchestr', 'symphon', 'philharmon', 'chamber music', 'string quartet',
+  'choral', 'choir', 'lied', 'art song', 'oratorio', 'cantata', 'recital',
+  'conservator', 'conducting', 'conductor', 'composition',
+  'piano', 'pianist', 'organ', 'harpsichord', 'fortepiano',
+  'violin', 'viola', 'cello', 'violoncello', 'double bass', 'contrabass', 'harp',
+  'flute', 'oboe', 'clarinet', 'bassoon', 'saxophon',
+  'horn', 'trumpet', 'trombone', 'tuba', 'percussion', 'marimba',
+  // 독일어
+  'wettbewerb', 'gesang', 'klavier', 'geige', 'violine', 'musikfest',
+  'kammermusik', 'chor\\b', 'orchester', 'dirigent',
+  // 프랑스어
+  'concours', 'chant\\b', 'violon', 'orchestre', 'musique ancienne',
+  // 이탈리아어 · 스페인어 · 폴란드어 · 체코어
+  'concorso', 'pianoforte', 'canto\\b', 'lirico',
+  'concurso', 'konkurs', 'soutěž',
+  // 한국어
+  '클래식', '고전음악', '현대음악', '오페라', '관현악', '교향', '실내악',
+  '성악', '합창', '피아노', '바이올린', '비올라', '첼로', '하프',
+  '플루트', '오보에', '클라리넷', '지휘', '작곡', '국악', '정가', '판소리',
+  '음악콩쿠르', '음악 콩쿠르', '콩쿠르', '콩쿨'
+].join('|'), 'i');
 
 /* ── 부문 고르기 ─────────────────────────────────────────────
    화면의 갈래와 <b>글자 하나까지</b> 같아야 합니다.
@@ -257,20 +329,35 @@ function merge(rows) {
 
 /* ── 클래식인지 판정 ─────────────────────────────────────── */
 function classify(o) {
-  const types  = [...o.types].join(' · ');
-  const genres = [...o.genres].join(' · ');
+  const types  = [...o.types].join(' \u00b7 ');
+  const genres = [...o.genres].join(' \u00b7 ');
   const name   = [o.en, o.ko].filter(Boolean).join(' ');
   const desc   = [o.descEn, o.descKo].filter(Boolean).join(' ');
+  const all    = [name, desc].join(' ');
 
-  if (NOT_CLASSIC.test(genres) || NOT_CLASSIC.test(name)) {
-    return { ok: false, why: '클래식 아님 표시', types, genres };
+  /* ① 막음이 가장 먼저입니다 */
+  if (BLOCK.test(types) || BLOCK.test(name)) {
+    return { ok: false, why: '\ub9c9\uc74c(\ud68c\ucc28\u00b7\uac00\uc694\uc81c\u00b7\ubc29\uc1a1)' };
   }
-  if (CLASSIC_WORD.test(types))  return { ok: true, why: '갈래',   types, genres };
-  if (CLASSIC_WORD.test(genres)) return { ok: true, why: '장르',   types, genres };
-  if (CLASSIC_WORD.test(name))   return { ok: true, why: '이름',   types, genres };
-  if (CLASSIC_WORD.test(desc))   return { ok: true, why: '설명',   types, genres };
-  if (LOOSE)                     return { ok: true, why: '느슨',   types, genres };
-  return { ok: false, why: '클래식 근거 없음', types, genres };
+  if (NOT_CLASSIC.test(genres) || NOT_CLASSIC.test(name)) {
+    return { ok: false, why: '\ub9c9\uc74c(\ub300\uc911\uc74c\uc545)' };
+  }
+
+  /* ② 갈래 이름 자체가 클래식이면 받습니다 */
+  if (STRONG_TYPE.test(types)) return { ok: true, why: '\uac08\ub798(\ud655\uc2e4)' };
+
+  /* 장르를 출처에 직접 물은 것 — 다음으로 믿을 만합니다 */
+  if (/classical|opera|baroque|chamber music|early music|contemporary classical/i.test(genres)) {
+    return { ok: true, why: '\uc7a5\ub974' };
+  }
+
+  /* ③ 넓은 갈래뿐이면 이름\u00b7설명에 근거가 있어야 합니다 */
+  if (CLASSIC_NAME.test(all)) return { ok: true, why: '\uc774\ub984\u00b7\uc124\uba85' };
+
+  const onlyBroad = [...o.types].every(t => BROAD_TYPE.test(t.trim()));
+  if (LOOSE && onlyBroad) return { ok: true, why: '\ub290\uc2ac(--loose)' };
+
+  return { ok: false, why: onlyBroad ? '\ub108\ubb34 \ub113\uc740 \uac08\ub798\ub9cc \uc788\uc74c' : '\ud074\ub798\uc2dd \uadfc\uac70 \uc5c6\uc74c' };
 }
 
 /* ── 본문 만들기 ─────────────────────────────────────────
@@ -389,7 +476,8 @@ async function runGroup(g, have) {
       source_url:   'https://www.wikidata.org/wiki/' + o.qid,
       keywords:     [MARK, g.section, cat, o.country, o.city].filter(Boolean).join(' '),
       author_name:  'OPUSCLAM 자동수집',
-      hidden:       false
+      hidden:       false,
+      why:          c.why          /* 로그에만 씁니다 — 담기 전에 지웁니다 */
     });
   }
 
@@ -422,12 +510,15 @@ async function runGroup(g, have) {
   [...catCount.entries()].sort((a, b) => b[1] - a[1])
     .forEach(([k, v]) => console.log('   ' + String(v).padStart(5) + '  ' + k));
 
-  console.log('\n── 표본 20개 (이 모양으로 담깁니다) ──');
-  add.slice(0, 20).forEach((a, i) => {
+  const show = LIST ? add.length : 20;
+  console.log('\n── ' + (LIST ? '받기로 한 것 전부' : '표본 20개') + ' (이 모양으로 담깁니다) ──');
+  if (!LIST && add.length > 20) console.log('   ※ 전부 보시려면 --list 를 붙이십시오.');
+  add.slice(0, show).forEach((a, i) => {
     console.log('   ' + String(i + 1).padStart(2) + '. ' + a.title
       + '  [' + a.region + '·' + a.category + ']'
       + (a.country ? ' · ' + a.country : '')
-      + (a.link_url ? ' · 홈피O' : ' · 홈피X'));
+      + (a.link_url ? ' · 홈피O' : ' · 홈피X')
+      + (a.why ? ' · ' + a.why : ''));
   });
 
   return { section: g.section, add, skip, drop, typeCount };
@@ -518,7 +609,8 @@ async function main() {
   for (const r of results) {
     if (!r.add.length) continue;
     console.log('\n── ' + r.section + ' 담기 ──');
-    await save(r.add);
+    /* 로그용으로만 쓰던 칸은 빼고 담습니다 (spot 에 없는 칸입니다) */
+    await save(r.add.map(x => { const y = { ...x }; delete y.why; return y; }));
   }
   console.log('\n끝났습니다.');
   console.log('※ 되돌리시려면:');
