@@ -1,0 +1,81 @@
+name: 클래식 재검사 (담긴 자료)
+
+# ── 무엇을 하나 ──────────────────────────────────────────────
+#  이미 담긴 인물DB · 현대음악DB 를 <b>새 잣대</b>로 다시 봅니다.
+#  판정 규칙은 scripts/lib/classic.mjs 한 곳에만 있습니다.
+#
+# ── 새 잣대 (2026-08-08 · 파트너 결정) ───────────────────────
+#  「클래식과 연관이 있는가」가 아니라 「클래식 음악인인가」를 묻습니다.
+#    · 장르에 대중음악이 <b>섞이기만 해도</b> 뺍니다
+#      (「pop music, classical crossover」 같은 크로스오버 가수)
+#    · composer · pianist 같은 <b>넓은 직업</b>만으로는 받지 않습니다
+#      (뉴에이지·영화음악·게임음악에도 같은 직업이 있습니다 — 야니)
+#    · 애매하면 버립니다
+#
+# ── ★ 지우지 않습니다 ──
+#  「감추기」를 켜도 hidden = true 로 바꿀 뿐입니다.
+#  「되돌리기」로 언제든 원래대로 돌립니다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '무엇을 할까요'
+        required: true
+        default: 'look'
+        type: choice
+        options:
+          - 'look'      # 살펴보기만 (아무것도 바꾸지 않습니다)
+          - 'hide'      # 걸린 것 감추기 (지우지 않습니다)
+          - 'unhide'    # 감춘 것 되돌리기
+      table:
+        description: '어느 표를 볼까요 (비우면 전부)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - 'persons'
+          - 'modern_composers'
+      list:
+        description: '걸린 것을 전부 찍기 (로그가 아주 길어집니다)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+concurrency:
+  group: oc-persons
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 클래식 재검사
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          OPTS=""
+          case "${{ github.event.inputs.mode }}" in
+            hide)   OPTS="$OPTS --hide" ;;
+            unhide) OPTS="$OPTS --unhide" ;;
+          esac
+          if [ "${{ github.event.inputs.list }}" = "yes" ]; then OPTS="$OPTS --list"; fi
+
+          T="${{ github.event.inputs.table }}"
+          if [ -n "$T" ]; then OPTS="$OPTS --table=$T"; fi
+
+          echo "── 실행 : node scripts/audit-classic.mjs $OPTS ──"
+          node scripts/audit-classic.mjs $OPTS
