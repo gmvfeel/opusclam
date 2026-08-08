@@ -13,6 +13,13 @@
      4차  modern(14) · prenatal(12) · utility(12) = 38
           ★ 자동시드가 다섯 게시판만 다뤄 현대음악·태교음악이
             8건에서 멈춰 있었습니다. 게시판 설정도 함께 넣었습니다.
+     5차  utility-2(12)                            = 12
+          ★ 2026-08-08 · 풀이 바닥나 만든 것입니다.
+            그때 상태 — 풀 150개 · 담긴 것 295건
+            utility · news · qna 는 이미 소진돼 「남은 글 없음」이
+            뜨기 직전이었습니다.
+          ★ 자동시드를 하루 두 번에서 <b>한 번</b>으로 줄였습니다.
+            남은 것으로 두 배 오래 갑니다.
 
    ★ 사진 게시판(gallery)은 아직 넣지 않았습니다.
      requireThumb 설정 때문에 그림 주소가 있어야 올라가는데,
@@ -34,6 +41,7 @@ import { NEWS } from './pool/news.mjs';
 import { MODERN } from './pool/modern.mjs';
 import { PRENATAL } from './pool/prenatal.mjs';
 import { UTILITY } from './pool/utility.mjs';
+import { UTILITY2 } from './pool/utility-2.mjs';
 // 사진 준비 뒤: import { GALLERY } from './pool/gallery.mjs';
 
 /* 일반 게시판용 닉네임 풀 (글에 author 가 지정돼 있으면 그것을 씁니다)
@@ -65,6 +73,7 @@ export const POOL = {
     ...MODERN,
     ...PRENATAL,
     ...UTILITY,
+    ...UTILITY2,
     // ...GALLERY,
   ],
 };
