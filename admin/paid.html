@@ -46,6 +46,9 @@
   .tg-done{background:#f0f0f5;color:#6b6d80}
   .tg-cancel{background:#fff1f1;color:#a01c1c}
   .tg-plan{background:#f5f0ff;color:#5b4b9e}
+  .tg-free{background:#eef7f0;color:#2f6b45}
+  .tg-sec{background:#f2f2f7;color:#4a4c60}
+  .it-free{background:#fcfdfc}
   .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:4px 16px;color:#3d3f52;margin:6px 0}
   .kv span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kv i{color:#8a8c9e;font-style:normal;margin-right:5px}
@@ -102,6 +105,12 @@
       관리자 페이지의 <b>히어로 슬라이드</b> 카드에서 넣습니다. 자동이 아닙니다.
       <br><br>
       <b>연락처는 이 화면에만 보입니다.</b> 공고 화면에는 나가지 않습니다.
+      <br><br>
+      <b>「무료 제보」는 목록에서 보내 주신 등록 요청입니다.</b>
+      돈이 오가지 않았으므로 <b>상단 고정이 걸리지 않습니다</b> —
+      「공고와 잇고 끝내기」를 눌러도 맨 위로 올라가지 않으니 안심하셔도 됩니다.
+      제보 내용은 아래 메모에 적혀 있습니다. 확인하신 뒤 콩쿨·페스티벌 목록에
+      공고를 만들어 주십시오.
     </div>
   </div>
 </div>
@@ -184,12 +193,17 @@
 
     var until = a.paid_until ? ('게재 종료 ' + fmt(a.paid_until)) : '';
 
-    return '<div class="it" data-id="' + a.id + '">'
+    var free = !Number(a.plan_price);
+
+    return '<div class="it' + (free ? ' it-free' : '') + '" data-id="' + a.id + '">'
       + '<div class="ih">'
       +   '<b>' + esc(a.title || '') + '</b>'
+      +   '<span class="tg tg-sec">' + esc(a.section || '콩쿨') + '</span>'
       +   '<span class="tg tg-' + st + '">' + (LABEL[st] || st) + '</span>'
-      +   '<span class="tg tg-plan">' + esc(a.plan_name || a.plan_code || '') + ' · '
-      +     won(a.plan_price) + ' · ' + (a.plan_days || 0) + '일</span>'
+      +   '<span class="tg ' + (free ? 'tg-free' : 'tg-plan') + '">'
+      +     esc(a.plan_name || a.plan_code || '')
+      +     (free ? ' · 무료 제보' : ' · ' + won(a.plan_price) + ' · ' + (a.plan_days || 0) + '일')
+      +   '</span>'
       +   (until ? '<span class="tg tg-live">' + until + '</span>' : '')
       + '</div>'
       + '<div class="kv">'
@@ -209,8 +223,8 @@
       +   '<button class="ghost bPaid">입금확인</button>'
       +   '<span style="width:10px"></span>'
       +   '<input type="number" class="sid" placeholder="공고번호" value="' + (a.spot_id || '') + '" style="width:100px">'
-      +   '<input type="number" class="dys" placeholder="' + (a.plan_days || 30) + '일" style="width:80px">'
-      +   '<button class="gold bGrant">게재 시작</button>'
+      +   (free ? '' : '<input type="number" class="dys" placeholder="' + (a.plan_days || 30) + '일" style="width:80px">')
+      +   '<button class="gold bGrant">' + (free ? '공고와 잇고 끝내기' : '게재 시작') + '</button>'
       +   '<span style="width:10px"></span>'
       +   '<button class="drop bStop">내리기</button>'
       +   '<button class="drop bCancel">취소</button>'
