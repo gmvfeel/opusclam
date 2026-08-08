@@ -56,7 +56,7 @@ const args = Object.fromEntries(
 );
 const SAVE  = !!args.save;
 const DEBUG = !!args.debug;
-const LIMIT = Number(args.limit) > 0 ? Number(args.limit) : 400;
+const LIMIT = Number(args.limit) > 0 ? Number(args.limit) : 250;
 const TYPE  = typeof args.type === 'string' ? args.type : 'person';
 
 const UA = 'OpusclamPhotoBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
@@ -114,6 +114,11 @@ async function summaryPhoto(lang, title) {
   try {
     j = await getJSON(url);
   } catch (e) {
+    /* ★ 속도 제한은 위로 올려야 합니다.
+       여기서 null 로 삼키면 「사진 없음」으로 세어져,
+       막힌 것인지 정말 없는 것인지 알 수 없게 됩니다.
+       (첫 실행에서 400명이 전부 「없음」으로 나온 까닭입니다) */
+    if (isStop(e)) throw e;
     return null;
   }
   const src = (j && j.originalimage && j.originalimage.source)
@@ -240,14 +245,25 @@ async function main() {
     if (!cand.length) { why.set('이름 없음', (why.get('이름 없음') || 0) + 1); continue; }
 
     let got = null;
+    let stopped = false;
     for (const c of cand) {
       try {
         got = await summaryPhoto(c.lang, c.title);
       } catch (e) {
-        if (isStop(e)) { console.log('\n  ※ ' + e.message); n = todo.length; break; }
+        if (isStop(e)) { stopped = true; break; }
       }
-      await sleep(220);
+      /* ★ 2026-08-08 · 0.22초는 너무 촘촘해서 위키백과가 막았습니다.
+         첫 실행에서 400명 전부 「문서·사진 없음」으로 나왔는데,
+         사진이 없어서가 아니라 물어보지도 못한 것이었습니다.
+           ■ 요청 3건이 재시도를 모두 소진했습니다
+         1초로 늘립니다. 250명이면 5~8분쯤 걸립니다. */
+      await sleep(1000);
       if (got) break;
+    }
+    if (stopped) {
+      console.log('\n★ 위키백과가 요청을 막았습니다. 여기까지만 모읍니다.');
+      console.log('  20~30분 뒤에 다시 돌리시면 이어서 받습니다.');
+      break;
     }
 
     if (!got) { why.set('문서·사진 없음', (why.get('문서·사진 없음') || 0) + 1); continue; }

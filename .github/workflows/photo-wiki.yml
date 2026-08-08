@@ -51,9 +51,9 @@ on:
           - 'school'
           - 'venue'
       limit:
-        description: '한 번에 볼 수 (400 이면 15~20분)'
+        description: '한 번에 볼 수 (250 이면 5~8분)'
         required: false
-        default: '400'
+        default: '250'
         type: string
 
 concurrency:
@@ -90,7 +90,7 @@ jobs:
           OPTS="$OPTS --type=$T"
 
           L="${{ github.event.inputs.limit }}"
-          case "$L" in ''|*[!0-9]*) L=400 ;; esac
+          case "$L" in ''|*[!0-9]*) L=250 ;; esac
           OPTS="$OPTS --limit=$L"
 
           echo "── 실행 : node seed/photo-wiki.mjs $OPTS ──"
