@@ -1,0 +1,55 @@
+name: 클래식 인물 규모 조사
+
+# ── 무엇을 하나 ──────────────────────────────────────────────
+#  위키데이터에 클래식 음악인이 <b>실제로 몇 명</b> 있는지 셉니다.
+#  ★ 아무것도 담지 않습니다. 세기만 합니다. DB 를 건드리지 않습니다.
+#
+# ── 왜 필요한가 (2026-08-08 · 파트너 물음) ───────────────────
+#  「엄격하게 조여도 9,025명밖에 안 될까?」
+#
+#  지금 인물 수집 조건에 두 가지 문제가 있습니다.
+#    ① FILTER(?sl > 8) — 위키백과 문서가 8개 언어 이상인 사람만 받습니다.
+#       유명인만 들어옵니다. 수가 적은 진짜 까닭입니다.
+#    ② 「지휘자」 단추에는 클래식 조건이 없습니다.
+#       직업만 보고 받으므로 대중음악 쪽 사람도 들어옵니다.
+#
+#  넓으면서 동시에 좁습니다. 순도는 낮고 수는 적습니다.
+#  이 조사로 <b>어느 쪽이 얼마나 손해인지</b> 숫자로 봅니다.
+#
+# ── 걸리는 시간 ──
+#  20~30분. 위키데이터가 무거워 한 줄에 10~20초씩 걸립니다.
+#  급하시면 「빠르게」를 켜십시오 (주요 6개 직업만).
+
+on:
+  workflow_dispatch:
+    inputs:
+      quick:
+        description: '빠르게 (주요 6개 직업만 · 5분)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+concurrency:
+  group: oc-wd-count
+  cancel-in-progress: false
+
+jobs:
+  count:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 클래식 인물 규모 조사
+        run: |
+          OPTS=""
+          if [ "${{ github.event.inputs.quick }}" = "yes" ]; then OPTS="--quick"; fi
+          echo "── 실행 : node scripts/count-classic.mjs $OPTS ──"
+          node scripts/count-classic.mjs $OPTS
