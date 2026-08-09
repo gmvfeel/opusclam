@@ -26,11 +26,23 @@
 
 <style>
   .bs{max-width:1180px;margin:0 auto;padding:0 20px 90px}
-  .bs-hero{background:var(--hero-grad);color:#fff;padding:64px 0 56px;margin-bottom:44px}
+  /* ★ 제목이 위아래로 잘리던 것을 고쳤습니다.
+     까닭 — 한글은 로마자보다 글자 상자가 큽니다. 그래서 line-height 를
+     1 안팎으로 좁히면 획이 잘립니다(기존 .pdb-title 도 line-height:1 이라
+     같은 위험이 있습니다). 여유를 1.4 로 두고 위아래 여백도 넉넉히 잡았습니다.
+     겹침을 막기 위해 z-index 도 올려 둡니다. */
+  .bs-hero{background:var(--hero-grad);color:#fff;padding:72px 0 60px;margin-bottom:44px;
+    position:relative;z-index:1;overflow:visible}
   .bs-hero .in{max-width:1180px;margin:0 auto;padding:0 20px}
-  .bs-eyebrow{font-size:10.5px;letter-spacing:.34em;color:rgba(255,255,255,.5);font-weight:700;margin-bottom:14px}
-  .bs-hero h1{font-size:34px;font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
-  .bs-hero p{font-size:14px;line-height:1.85;color:rgba(255,255,255,.72);max-width:640px}
+  .bs-eyebrow{font-size:10.5px;line-height:1.6;letter-spacing:.34em;color:rgba(255,255,255,.5);
+    font-weight:700;margin:0 0 16px}
+  .bs-hero h1{font-size:34px;font-weight:800;letter-spacing:-.02em;
+    line-height:1.4;margin:0 0 14px;padding:2px 0;color:#fff}
+  .bs-hero p{font-size:14px;line-height:1.85;color:rgba(255,255,255,.72);max-width:640px;margin:0}
+  @media(max-width:880px){
+    .bs-hero{padding:52px 0 44px}
+    .bs-hero h1{font-size:26px}
+  }
 
   .bs-nav{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line);
     margin-bottom:40px;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -39,8 +51,8 @@
   .bs-nav a:hover{color:var(--violet-2);border-bottom-color:var(--violet-3)}
 
   .bs-sec{margin-bottom:64px;scroll-margin-top:60px}
-  .bs-sec > h2{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px;
-    display:flex;align-items:baseline;gap:10px}
+  .bs-sec > h2{font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1.5;
+    margin:0 0 6px;padding:1px 0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
   .bs-sec > h2 .num{font-size:11px;color:var(--violet-2);font-weight:800;letter-spacing:.12em}
   .bs-sec > .lead{font-size:13px;line-height:1.9;color:var(--text-2);margin-bottom:24px;max-width:760px}
   .bs-sub{font-size:14px;font-weight:700;margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
