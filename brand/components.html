@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>부품 · 디자인 시스템 · OPUSCLAM.COM</title>
+<meta name="description" content="OPUSCLAM 디자인 시스템 부품 — 딱지 · 동그라미 · 단추 · 입력 · 표. 실제 클래스로 그려 보여 줍니다.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<!-- ★ 이 문서의 핵심 —
+     흉내 낸 스타일이 아니라 <b>실제로 쓰는 파일</b>을 그대로 불러옵니다.
+     그래서 style.css 를 고치면 이 안내도 저절로 바뀝니다.
+     디자인 안내가 죽는 가장 흔한 까닭이 「문서와 실제가 달라지는 것」입니다. -->
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/brand.css">
+</head>
+<body class="bd">
+
+<div id="oc-header"></div>
+<div class="bd-hero" style="padding:52px 0 44px">
+  <div class="in">
+    <div class="bd-eyebrow">COMPONENTS</div>
+    <h1>부품</h1>
+    <p>
+      아래 부품은 <b style="color:#fff">실제 클래스를 그대로 써서</b> 그렸습니다.
+      화면에 보이는 그대로가 실제 모습입니다.
+    </p>
+  </div>
+</div>
+<div class="bd-tabs">
+  <div class="in">
+    <a href="/brand/index.html">개요</a>
+    <a href="/brand/foundations.html">기초</a>
+    <a href="/brand/components.html" class="on">부품</a>
+    <a href="/brand/patterns.html">짜임새</a>
+  </div>
+</div>
+<div class="bd-body">
+  <aside class="bd-side">
+    <div class="ttl">이 장의 차례</div>
+    <a href="#tag">표시 딱지</a>
+    <a href="#ava">동그라미</a>
+    <a href="#btn">단추</a>
+    <a href="#inp">입력</a>
+    <a href="#table">표</a>
+    <a href="#empty">빈 자리</a>
+    <a href="#ad">광고 자리</a>
+  </aside>
+
+  <main class="bd-main">
+
+    <section class="bd-sec" id="tag">
+      <h2><span class="num">01</span> 표시 딱지</h2>
+      <p class="lead">항목의 성격을 짧게 알려 줍니다. 세 가지가 있고 쓰임이 다릅니다.</p>
+
+      <div class="bd-box">
+        <div class="bd-row">
+          <span class="tag">관현악</span>
+          <span class="tag">바로크</span>
+          <span class="tag">국악</span>
+          <span class="oc-badge">널리</span>
+          <span class="oc-badge">새것</span>
+          <span class="nd">— 값 없음</span>
+        </div>
+        <div class="cap">.tag · .oc-badge · .nd</div>
+      </div>
+
+      <table class="bd-tb" style="margin-top:18px">
+        <tr><th style="width:120px">클래스</th><th style="width:190px">쓰임</th><th>규칙</th></tr>
+        <tr><td><code>.tag</code></td><td>분류 — 갈래 · 시대 · 분야</td>
+          <td>여러 개 붙어도 됩니다. 옅은 바탕이라 시선을 뺏지 않습니다</td></tr>
+        <tr><td><code>.oc-badge</code></td><td>눈에 띄어야 하는 것</td>
+          <td>주황 바탕. <b>한 줄에 둘 이상 붙이지 않습니다</b></td></tr>
+        <tr><td><code>.nd</code></td><td>값이 없을 때</td>
+          <td>「—」로 채웁니다. <b>빈칸으로 두지 않습니다</b></td></tr>
+      </table>
+
+      <div class="bd-note">
+        <b>왜 빈칸을 두지 않나</b> — 표에서 빈칸은 「자료를 아직 안 넣었다」와
+        「원래 없다」를 구별할 수 없습니다. 「—」를 넣으면 <b>확인한 결과 없다</b>는 뜻이 됩니다.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="ava">
+      <h2><span class="num">02</span> 동그라미</h2>
+      <p class="lead">목록 왼쪽에 놓아 항목을 한눈에 구별하게 합니다.</p>
+
+      <div class="bd-box">
+        <div class="bd-row">
+          <span class="ava">베</span><span class="ava">모</span><span class="ava">쇼</span>
+          <span class="ava">관</span><span class="ava">건</span><span class="ava">실</span>
+        </div>
+        <div class="cap">.ava — 사진이 있으면 사진, 없으면 글자 한 자</div>
+      </div>
+
+      <div class="bd-note">
+        <b>사진은 반드시 OCThumb 으로</b><br>
+        <code>OCThumb.img(url, {size, fallback, alt})</code> — <code>/assets/thumb.js</code><br>
+        위키미디어 주소를 알맞은 크기로 줄이고, <code>http</code> 를 <code>https</code> 로 올리고,
+        못 받으면 글자로 갈음합니다.<br>
+        <b>직접 &lt;img&gt; 를 쓰지 마십시오.</b> 큰 원본을 그대로 불러오면 화면이 느려집니다.
+      </div>
+
+      <div class="bd-note">
+        <b>글자를 고르는 순서</b> — ① 이름 첫 자 → ② 갈래 한 자(관 · 건 · 실 · 무 · 성)
+        → ③ 그것도 없으면 종류 한 자. 빈 동그라미를 두지 않습니다.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="btn">
+      <h2><span class="num">03</span> 단추</h2>
+      <p class="lead">한 화면에 <b>기본 단추는 하나</b>입니다. 둘 이상이면 무엇을 눌러야 할지 흐려집니다.</p>
+
+      <div class="bd-box">
+        <div class="bd-row">
+          <button class="btn primary">기본 단추</button>
+          <button class="btn ghost">테두리 단추</button>
+          <button class="btn danger">위험한 일</button>
+          <button class="btn primary" disabled>못 누름</button>
+        </div>
+        <div class="cap">.btn.primary · .btn.ghost · .btn.danger · [disabled]</div>
+      </div>
+
+      <table class="bd-tb" style="margin-top:18px">
+        <tr><th style="width:150px">클래스</th><th>쓰는 자리</th></tr>
+        <tr><td><code>.btn.primary</code></td><td>이 화면에서 <b>가장 하고 싶은 일</b> 하나</td></tr>
+        <tr><td><code>.btn.ghost</code></td><td>보조 — 취소 · 되돌리기 · 더 보기</td></tr>
+        <tr><td><code>.btn.danger</code></td><td>지우기 · 되돌릴 수 없는 일. <b>확인 창을 함께</b></td></tr>
+        <tr><td><code>.btn.block</code></td><td>가로로 꽉 채움 (모바일 · 폼 아래)</td></tr>
+      </table>
+
+      <div class="bd-note warn">
+        <b>이름이 흔들리고 있습니다</b> — <code>.btn.primary</code> 가 12곳인데
+        <code>.btn-primary</code> 도 1곳 있습니다. <b>붙임표(-)를 쓰지 않고</b>
+        <code>.btn</code> 다음에 <b>띄어서</b> 붙입니다.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="inp">
+      <h2><span class="num">04</span> 입력</h2>
+      <p class="lead">글 입력과 고르기 모두 같은 클래스를 씁니다.</p>
+
+      <div class="bd-box">
+        <div class="bd-row">
+          <input class="inp" placeholder="작품명 · 작품번호로 검색" style="min-width:250px">
+          <select class="inp"><option>전체 편성</option><option>관현악</option><option>건반</option></select>
+          <button class="btn primary">검색</button>
+        </div>
+        <div class="cap">.inp — input · select 공통</div>
+      </div>
+
+      <div class="bd-note">
+        <b>안내 글(placeholder)에 예를 넣습니다</b> — 「검색어를 입력하세요」보다
+        <b>「작품명 · 작품번호(K.620 · Op.67)로 검색」</b>이 훨씬 낫습니다.
+        무엇을 넣어야 할지 바로 압니다.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="table">
+      <h2><span class="num">05</span> 표</h2>
+      <p class="lead">
+        DB 목록은 모두 같은 표를 씁니다. 칸 이름이 정해져 있어
+        <b>화면이 달라도 같은 자리에 같은 것</b>이 옵니다.
+      </p>
+
+      <table class="bd-tb">
+        <tr><th style="width:130px">칸</th><th style="width:110px">폭(기본)</th><th>담는 것</th></tr>
+        <tr><td><code>c-no</code></td><td>3.5%</td><td>번호</td></tr>
+        <tr><td><code>c-ava</code></td><td>4.5%</td><td>동그라미 (사진 · 글자)</td></tr>
+        <tr><td><code>c-name</code></td><td>28%</td><td>이름 · 제목</td></tr>
+        <tr><td><code>c-name-en</code></td><td>—</td><td>원어 이름 (<code>c-name</code> 안에 들어갑니다)</td></tr>
+        <tr><td><code>c-nation</code></td><td></td><td>나라 · 작곡가</td></tr>
+        <tr><td><code>c-field</code></td><td></td><td>분야 · 편성</td></tr>
+        <tr><td><code>c-era</code></td><td></td><td>시대</td></tr>
+        <tr><td><code>c-life</code></td><td></td><td>생몰 · 연도</td></tr>
+        <tr><td><code>c-org</code> · <code>c-school</code></td><td></td><td>소속 · 학교</td></tr>
+        <tr><td><code>c-work</code></td><td></td><td>대표작 · 작품번호</td></tr>
+        <tr><td><code>c-link</code></td><td></td><td>바깥 링크 (<code>.lk</code> 아이콘)</td></tr>
+      </table>
+
+      <div class="bd-note">
+        <b>폭은 화면마다 조정합니다</b> — 위 값은 인물DB 기준입니다.
+        각 화면 위쪽 <code>&lt;style&gt;</code> 에서 <code>.pdb-table th.c-name{width:28%}</code>
+        처럼 덮어씁니다.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="empty">
+      <h2><span class="num">06</span> 빈 자리</h2>
+      <p class="lead">
+        찾은 것이 없을 때 <b>그냥 비워 두지 않습니다.</b>
+        왜 없는지 알려 주고, 다음에 할 일을 권합니다.
+      </p>
+
+      <div class="bd-box">
+        <div style="text-align:center;padding:26px 10px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:8px">찾으시는 작품이 없습니다</div>
+          <div style="font-size:12.5px;color:var(--text-2);line-height:1.8;margin-bottom:16px">
+            작품번호(K.620 · Op.67)로 찾아보시거나,<br>편성 · 시대를 넓혀 보십시오.
+          </div>
+          <div class="bd-row" style="justify-content:center">
+            <button class="btn ghost">걸러내기 지우기</button>
+            <button class="btn primary">자료 알려 주기</button>
+          </div>
+        </div>
+        <div class="cap">.pdb-none · .pdb-none-t · .pdb-none-tip · .pdb-none-btn</div>
+      </div>
+
+      <div class="bd-note">
+        <b>「자료 알려 주기」를 함께 둡니다</b> — 없는 자료를 회원이 알려 주면
+        데이터가 늘어납니다. 빈 화면이 <b>기회</b>가 됩니다.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="ad">
+      <h2><span class="num">07</span> 광고 자리</h2>
+      <p class="lead">광고는 <b>광고임을 반드시 밝힙니다.</b> 내용처럼 보이게 하지 않습니다.</p>
+
+      <table class="bd-tb">
+        <tr><th style="width:150px">클래스</th><th>무엇</th></tr>
+        <tr><td><code>.ad-slot</code></td><td>광고가 들어가는 자리</td></tr>
+        <tr><td><code>.ad-badge</code></td><td><b>「광고」 표시</b> — 반드시 붙입니다</td></tr>
+        <tr><td><code>.ad-desc</code></td><td>광고 설명</td></tr>
+        <tr><td><code>.ad-mark</code></td><td>구별 표시</td></tr>
+        <tr><td><code>.bigban-ad</code></td><td>큰 띠 광고</td></tr>
+      </table>
+
+      <div class="bd-note">
+        <b>왜 밝히나</b> — 오퍼스클램은 <b>정보를 믿을 수 있어야</b> 값이 있습니다.
+        광고와 정보가 섞이면 그 믿음이 무너집니다. 표시는 작아도 되지만 <b>반드시 있어야</b> 합니다.
+      </div>
+    </section>
+
+    <div class="bd-next">
+      <a href="/brand/patterns.html">
+        <div class="k">다음</div><div class="t">짜임새</div>
+        <div class="d">페이지 골격 · 공용 엔진 · 정리할 것</div>
+      </a>
+      <a href="/brand/foundations.html">
+        <div class="k">앞으로</div><div class="t">기초</div>
+        <div class="d">색 · 글자 · 짜임 · 아이콘</div>
+      </a>
+    </div>
+
+  </main>
+</div>
+
+<div id="oc-footer"></div>
+
+<script src="/assets/include.js"></script>
+<script>
+/* 왼쪽 차례 — 지금 보고 있는 구역을 표시합니다 */
+(function(){
+  var links = [].slice.call(document.querySelectorAll('.bd-side a[href^="#"]'));
+  if(!links.length) return;
+  var secs = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function mark(){
+    var y = window.scrollY + 120, hit = 0;
+    secs.forEach(function(s,i){ if(s && s.offsetTop <= y) hit = i; });
+    links.forEach(function(a,i){ a.classList.toggle('on', i === hit); });
+  }
+  window.addEventListener('scroll', mark, {passive:true});
+  mark();
+})();
+</script>
+</body>
+</html>

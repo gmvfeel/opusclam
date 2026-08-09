@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>짜임새 · 디자인 시스템 · OPUSCLAM.COM</title>
+<meta name="description" content="OPUSCLAM 디자인 시스템 짜임새 — 페이지 골격 · 공용 엔진 · 화면 만드는 순서 · 정리할 것.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<!-- ★ 이 문서의 핵심 —
+     흉내 낸 스타일이 아니라 <b>실제로 쓰는 파일</b>을 그대로 불러옵니다.
+     그래서 style.css 를 고치면 이 안내도 저절로 바뀝니다.
+     디자인 안내가 죽는 가장 흔한 까닭이 「문서와 실제가 달라지는 것」입니다. -->
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/brand.css">
+</head>
+<body class="bd">
+
+<div id="oc-header"></div>
+<div class="bd-hero" style="padding:52px 0 44px">
+  <div class="in">
+    <div class="bd-eyebrow">PATTERNS</div>
+    <h1>짜임새</h1>
+    <p>
+      화면 종류마다 뼈대가 정해져 있습니다. 새 화면을 만들 때는
+      <b style="color:#fff">가장 비슷한 화면을 골라 그 뼈대를 따르십시오.</b> 새로 짜지 않습니다.
+    </p>
+  </div>
+</div>
+<div class="bd-tabs">
+  <div class="in">
+    <a href="/brand/index.html">개요</a>
+    <a href="/brand/foundations.html">기초</a>
+    <a href="/brand/components.html">부품</a>
+    <a href="/brand/patterns.html" class="on">짜임새</a>
+  </div>
+</div>
+<div class="bd-body">
+  <aside class="bd-side">
+    <div class="ttl">이 장의 차례</div>
+    <a href="#skeleton">페이지 골격</a>
+    <a href="#engine">공용 엔진</a>
+    <a href="#flow">화면 만드는 순서</a>
+    <a href="#todo">정리할 것</a>
+  </aside>
+
+  <main class="bd-main">
+
+    <section class="bd-sec" id="skeleton">
+      <h2><span class="num">01</span> 페이지 골격</h2>
+      <p class="lead">이름 앞머리를 보면 어떤 화면인지 알 수 있습니다.</p>
+
+      <div class="bd-sub">pdb-* — 목록 화면</div>
+      <table class="bd-tb">
+        <tr><th style="width:170px">클래스</th><th>무엇</th></tr>
+        <tr><td><code>pdb-bg</code></td><td>머리 바탕 (옅은 무늬)</td></tr>
+        <tr><td><code>pdb-inner</code></td><td>안쪽 폭 맞춤</td></tr>
+        <tr><td><code>pdb-crumb</code></td><td>길안내 (홈 › DATABASE › 작품DB)</td></tr>
+        <tr><td><code>pdb-eyebrow</code></td><td>영문 작은 제목 (WORKS · DATABASE)</td></tr>
+        <tr><td><code>pdb-title</code></td><td>큰 제목</td></tr>
+        <tr><td><code>pdb-lead</code></td><td>한 줄 설명</td></tr>
+        <tr><td><code>pdb-search</code> · <code>pdb-selects</code></td><td>검색 · 걸러내기</td></tr>
+        <tr><td><code>pdb-table</code></td><td>목록 표 (<code>c-*</code> 칸)</td></tr>
+        <tr><td><code>pdb-pager</code></td><td>쪽 넘김</td></tr>
+        <tr><td><code>pdb-none</code></td><td>결과 없음</td></tr>
+        <tr><td><code>pdb-skel</code></td><td>불러오는 동안 보이는 뼈대</td></tr>
+      </table>
+
+      <div class="bd-sub">pv-* — 상세 화면</div>
+      <table class="bd-tb">
+        <tr><th style="width:170px">클래스</th><th>무엇</th></tr>
+        <tr><td><code>pv-portrait</code></td><td>왼쪽 큰 동그라미 (사진)</td></tr>
+        <tr><td><code>pv-name</code> · <code>pv-name-sub</code></td><td>제목 · 원어 제목</td></tr>
+        <tr><td><code>pv-tags</code></td><td>딱지 줄</td></tr>
+        <tr><td><code>pv-facts</code></td><td>요약 넷 (dt/dd)</td></tr>
+        <tr><td><code>pv-lead</code></td><td>한 줄 설명</td></tr>
+        <tr><td><code>pv-actions</code> · <code>pv-link</code></td><td>바깥으로 가는 단추 넷</td></tr>
+        <tr><td><code>pv-sec</code> · <code>pv-block</code></td><td>구역</td></tr>
+        <tr><td><code>pv-h</code> · <code>pv-h-en</code></td><td>구역 제목 · 영문</td></tr>
+        <tr><td><code>pv-prose</code></td><td>긴 글</td></tr>
+        <tr><td><code>pv-deflist</code></td><td>항목표 (dt/dd)</td></tr>
+        <tr><td><code>pv-worklist</code></td><td>목록 (대표작 · 키워드)</td></tr>
+        <tr><td><code>pv-people</code> · <code>pv-person</code></td><td>관련 사람 · 항목 카드</td></tr>
+        <tr><td><code>pv-list</code> · <code>pv-lirow</code></td><td>링크 줄 목록 (출처 등)</td></tr>
+      </table>
+
+      <div class="bd-note">
+        <b>자료가 없는 구역은 숨깁니다.</b> 빈 제목만 남기지 마십시오.
+        구역을 <b>제목으로 찾아</b> <code>display:none</code> 하는 방식을 씁니다.<br>
+        ⚠ <code>.pv-people</code> 은 <b>두 곳</b>에 있습니다(관련 사람 · 관련 항목).
+        <code>querySelector</code> 로 찾으면 하나를 덮어씁니다.
+        <b>구역을 먼저 찾고 그 안에서</b> 찾으십시오.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="engine">
+      <h2><span class="num">02</span> 공용 엔진</h2>
+      <p class="lead">
+        <b>새로 짜지 마십시오.</b> 아래 파일이 이미 하고 있습니다.
+        새 화면은 <b>설정만 적어</b> 붙이면 됩니다.
+      </p>
+
+      <table class="bd-tb">
+        <tr><th style="width:200px">파일</th><th>하는 일</th></tr>
+        <tr><td><code>assets/db-list.js</code></td>
+          <td>DB 목록 — 검색 · 걸러내기 · 쪽 넘김 · 뼈대 화면.
+            <code>OCList.init({table, select, searchCols, renderRow, …})</code></td></tr>
+        <tr><td><code>assets/board.js</code></td><td>게시판 — 목록 · 글쓰기 · 댓글</td></tr>
+        <tr><td><code>assets/pv.js</code></td><td>상세 화면의 단추 동작 (저장 · 나눔 · 펼침)</td></tr>
+        <tr><td><code>assets/thumb.js</code></td><td>사진 — <code>OCThumb.img()</code></td></tr>
+        <tr><td><code>assets/search.js</code></td><td>통합검색</td></tr>
+        <tr><td><code>assets/network.js</code></td><td>관계 지도</td></tr>
+        <tr><td><code>assets/links.js</code></td><td>관계 표시</td></tr>
+        <tr><td><code>assets/include.js</code></td><td>머리 · 바닥 넣기 · 서브메뉴</td></tr>
+        <tr><td><code>assets/hub.js</code></td><td>DATABASE · 커뮤니티 첫 화면</td></tr>
+        <tr><td><code>assets/admin-guard.js</code></td><td>관리자 화면 지킴이 (<code>/admin/</code> 이면 저절로)</td></tr>
+        <tr><td><code>partials/header.html</code></td>
+          <td>머리 — <b>여기 한 곳만 고치면 모든 화면에 반영</b></td></tr>
+        <tr><td><code>partials/subnav-db.html</code></td>
+          <td>DB 서브메뉴 — <b>여기 한 곳만 고치면 아홉 화면에 반영</b></td></tr>
+      </table>
+
+      <div class="bd-note ok">
+        <b>실제로 그렇게 하고 있습니다</b> — 2026-08-07 작품DB를 만들 때
+        목록 화면은 <code>db-list.js</code> 에 설정만 적어 붙였고,
+        서브메뉴는 <code>subnav-db.html</code> 한 곳만 고쳐 아홉 화면에 반영했습니다.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="flow">
+      <h2><span class="num">03</span> 화면 만드는 순서</h2>
+      <p class="lead">순서를 지키면 어긋나지 않습니다.</p>
+
+      <table class="bd-tb">
+        <tr><th style="width:34px"></th><th style="width:220px">무엇</th><th>왜</th></tr>
+        <tr><td><b>1</b></td><td>가장 비슷한 화면을 찾습니다</td>
+          <td>목록이면 <code>db/person.html</code>, 상세면 <code>db/work-view.html</code>,
+            게시판이면 <code>community/news.html</code></td></tr>
+        <tr><td><b>2</b></td><td>그 화면을 복사합니다</td>
+          <td>뼈대 · 머리 · 바닥이 이미 맞춰져 있습니다</td></tr>
+        <tr><td><b>3</b></td><td><b>글과 설정만</b> 바꿉니다</td>
+          <td>구조를 바꾸면 다른 화면과 어긋납니다</td></tr>
+        <tr><td><b>4</b></td><td>서브메뉴에 넣습니다</td>
+          <td><code>partials/</code> 한 곳만 고칩니다</td></tr>
+        <tr><td><b>5</b></td><td>sitemap 에 넣습니다</td>
+          <td>검색에 나오려면 필요합니다</td></tr>
+        <tr><td><b>6</b></td><td>관리자 · 회원 화면이면 <b>noindex</b></td>
+          <td><code>robots.txt</code> 만으로는 색인을 막지 못합니다</td></tr>
+      </table>
+
+      <div class="bd-note warn">
+        <b>복사할 때 꼭 확인할 것</b><br>
+        · <b>「목록으로」 링크</b> — 원래 화면을 가리킨 채 남습니다
+          (실제로 작품DB를 만들 때 <code>academic.html</code> 을 가리키는 링크가 5곳 남아 있었습니다)<br>
+        · <b>제목 · 설명 · 서브메뉴 표시</b> — 자바스크립트가 덮어쓰지 않는 자리입니다<br>
+        · <b>표 칸 이름</b> — 담는 것이 달라지면 <code>c-*</code> 도 맞춰 바꿉니다
+      </div>
+    </section>
+
+    <section class="bd-sec" id="todo">
+      <h2><span class="num">04</span> 정리할 것</h2>
+      <p class="lead">
+        지금 어긋나 있는 곳을 <b>숨기지 않고</b> 적어 둡니다.
+        화면 정리 작업을 할 때 이 목록이 기준이 됩니다.
+      </p>
+
+      <div class="bd-note warn">
+        <b>① 부품 스타일이 화면마다 복사돼 있습니다</b><br>
+        <code>.tag</code> 가 <b>16개 화면</b>에 따로 적혀 있고 값이 조금씩 다릅니다.
+        <b>공용 파일 한 곳으로 모아야</b> 합니다.
+      </div>
+
+      <div class="bd-note warn">
+        <b>② 단추 이름이 흔들립니다</b><br>
+        <code>.btn.primary</code> 가 12곳인데 <code>.btn-primary</code> 도 1곳 있습니다.
+        <b><code>.btn</code> + 띄어쓰기</b> 로 통일합니다.
+      </div>
+
+      <div class="bd-note warn">
+        <b>③ 화면 글이 코드 안에 박혀 있습니다 — 가장 급합니다</b><br>
+        「작품DB」 · 「전체 편성」 같은 말이 화면마다 직접 적혀 있습니다.
+        <b>영문 · 일문판</b>을 만들려면 글을 따로 뽑아내야 합니다.
+        화면이 백 장을 넘으므로 <b>두 번 손대지 않으려면 정리 작업과 함께</b> 해야 합니다.
+      </div>
+
+      <div class="bd-note warn">
+        <b>④ 상세 화면이 무겁습니다</b><br>
+        한 장에 80~110KB 이고, 아래쪽 띠 자료를 <b>아홉 번</b> 물어봅니다.
+        스타일과 자료 불러오기를 <b>바깥 파일로 빼야</b> 합니다.
+      </div>
+
+      <div class="bd-note warn">
+        <b>⑤ 경고 색이 공용 변수에 없습니다</b><br>
+        「틀렸습니다」 · 「확인이 필요합니다」를 나타낼 붉은 계열이
+        <code>style.css</code> 에 정해져 있지 않습니다. 그래서 화면마다 직접 적고 있습니다
+        (이 문서도 처음에 그랬습니다).
+        <b><code>--warn-bg</code> · <code>--warn-line</code> · <code>--warn-text</code></b> 를
+        공용으로 올려야 합니다. 어두운 화면 값도 함께 정해야 합니다.
+      </div>
+
+      <div class="bd-note warn">
+        <b>⑥ 제목 line-height 가 1 입니다</b><br>
+        <code>.pdb-title</code> 이 <code>line-height:1</code> 입니다.
+        지금은 괜찮아 보이지만 <b>한글은 이 값에서 획이 잘립니다.</b>
+        글꼴이 바뀌거나 굵기를 올리면 드러납니다. <b>1.3 이상</b>으로 올려야 합니다.
+      </div>
+
+      <div class="bd-note warn">
+        <b>⑦ Supabase 접속이 한 곳으로 모이지 않았습니다</b><br>
+        <code>db-audit.html</code> · <code>kr-collect.html</code> 등이
+        <code>createClient</code> 를 직접 부릅니다.
+        <code>window.__ocSb</code> <b>싱글턴</b>으로 통일해야 합니다.
+        인스턴스가 둘이 되면 권한 규칙이 어긋납니다.
+      </div>
+
+      <div class="bd-note">
+        <b>언제 하나</b> — ①②③⑤⑥ 은 <b>같은 작업</b>입니다.
+        어차피 화면 백 장을 손대야 하므로 <b>한 번에</b> 하는 것이 맞습니다.
+        ③(다국어 준비)이 가장 급하므로 그것을 축으로 잡습니다.
+      </div>
+    </section>
+
+    <div class="bd-next">
+      <a href="/brand/index.html">
+        <div class="k">처음으로</div><div class="t">개요</div>
+        <div class="d">브랜드 · 로고 · 이름 표기</div>
+      </a>
+      <a href="/brand/components.html">
+        <div class="k">앞으로</div><div class="t">부품</div>
+        <div class="d">딱지 · 단추 · 입력 · 동그라미</div>
+      </a>
+    </div>
+
+  </main>
+</div>
+
+<div id="oc-footer"></div>
+
+<script src="/assets/include.js"></script>
+<script>
+/* 왼쪽 차례 — 지금 보고 있는 구역을 표시합니다 */
+(function(){
+  var links = [].slice.call(document.querySelectorAll('.bd-side a[href^="#"]'));
+  if(!links.length) return;
+  var secs = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function mark(){
+    var y = window.scrollY + 120, hit = 0;
+    secs.forEach(function(s,i){ if(s && s.offsetTop <= y) hit = i; });
+    links.forEach(function(a,i){ a.classList.toggle('on', i === hit); });
+  }
+  window.addEventListener('scroll', mark, {passive:true});
+  mark();
+})();
+</script>
+</body>
+</html>

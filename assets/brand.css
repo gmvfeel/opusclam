@@ -1,0 +1,143 @@
+/* ============================================================
+   OPUSCLAM 디자인 시스템 문서 — 공통 스타일
+   assets/brand.css
+
+   ★ 왜 파일로 뺐나
+     이 문서가 「부품 스타일을 화면마다 복사하지 마십시오」라고 말하면서
+     스스로 네 장에 복사하면 앞뒤가 맞지 않습니다.
+     한 곳만 고치면 네 장에 함께 반영됩니다.
+
+   ★ 색은 반드시 변수로
+     여기서 새로 정하는 값은 <b>문서 화면에만 쓰는 것</b>뿐입니다.
+     서비스 색은 style.css 의 변수를 그대로 씁니다.
+   ============================================================ */
+
+.bd{
+  /* 문서 화면에서만 쓰는 값 — 서비스에는 없는 것들입니다 */
+  --bd-side: 232px;          /* 왼쪽 차례 폭 */
+  --bd-max: 1180px;
+  --warn-bg:#fff6f6; --warn-line:#f3caca; --warn-text:#8a2020;
+  --ok-bg:#f2fbf5; --ok-line:#cfe9d8; --ok-text:#1c6b3a;
+}
+html[data-theme="dark"] .bd{
+  --warn-bg:#241414; --warn-line:#4a2020; --warn-text:#e88888;
+  --ok-bg:#12211a; --ok-line:#24402f; --ok-text:#7fc79b;
+}
+
+/* ── 머리 띠 ─────────────────────────────────────────────── */
+.bd-hero{background:var(--hero-grad);color:#fff;padding:64px 0 56px;position:relative;z-index:1}
+.bd-hero .in{max-width:var(--bd-max);margin:0 auto;padding:0 20px}
+.bd-eyebrow{font-size:10.5px;line-height:1.6;letter-spacing:.34em;
+  color:rgba(255,255,255,.5);font-weight:700;margin:0 0 16px}
+/* ★ 한글은 로마자보다 글자 상자가 큽니다. line-height 를 1 안팎으로
+   좁히면 획이 잘립니다. 넉넉히 1.4 를 줍니다. */
+.bd-hero h1{font-size:34px;font-weight:800;letter-spacing:-.02em;
+  line-height:1.4;margin:0 0 14px;padding:2px 0;color:#fff}
+.bd-hero p{font-size:14px;line-height:1.85;color:rgba(255,255,255,.72);max-width:660px;margin:0}
+
+/* ── 위 차례 ─────────────────────────────────────────────── */
+.bd-tabs{background:var(--paper);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.bd-tabs .in{max-width:var(--bd-max);margin:0 auto;padding:0 20px;display:flex;gap:2px;white-space:nowrap}
+.bd-tabs a{padding:15px 14px;font-size:13px;font-weight:700;color:var(--text-2);
+  border-bottom:2px solid transparent;transition:color .18s,border-color .18s}
+.bd-tabs a:hover{color:var(--violet-2)}
+.bd-tabs a.on{color:var(--violet-2);border-bottom-color:var(--violet-2)}
+
+/* ── 본문 짜임 ───────────────────────────────────────────── */
+.bd-body{max-width:var(--bd-max);margin:0 auto;padding:36px 20px 90px;
+  display:grid;grid-template-columns:var(--bd-side) 1fr;gap:40px;align-items:start}
+.bd-side{position:sticky;top:70px}
+.bd-side .ttl{font-size:11px;font-weight:800;letter-spacing:.16em;
+  color:var(--text-3);margin:0 0 12px;padding-left:11px}
+.bd-side a{display:block;padding:7px 11px;font-size:12.5px;color:var(--text-2);
+  border-left:2px solid var(--line);transition:color .18s,border-color .18s}
+.bd-side a:hover{color:var(--violet-2);border-left-color:var(--violet-3)}
+.bd-side a.on{color:var(--violet-2);border-left-color:var(--violet-2);font-weight:700}
+.bd-main{min-width:0}
+
+@media(max-width:980px){
+  .bd-body{grid-template-columns:1fr;gap:0}
+  .bd-side{position:static;margin-bottom:26px;padding-bottom:20px;border-bottom:1px solid var(--line);
+    display:flex;flex-wrap:wrap;gap:4px}
+  .bd-side .ttl{width:100%;padding-left:0}
+  .bd-side a{border-left:0;border:1px solid var(--line);border-radius:99px;padding:6px 12px}
+  .bd-side a.on{border-color:var(--violet-2)}
+}
+@media(max-width:880px){
+  .bd-hero{padding:52px 0 44px}
+  .bd-hero h1{font-size:26px}
+}
+
+/* ── 구역 ────────────────────────────────────────────────── */
+.bd-sec{margin-bottom:60px;scroll-margin-top:76px}
+.bd-sec > h2{font-size:20px;font-weight:800;letter-spacing:-.01em;line-height:1.5;
+  margin:0 0 8px;padding:1px 0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.bd-sec > h2 .num{font-size:11px;color:var(--violet-2);font-weight:800;letter-spacing:.12em}
+.bd-sec > .lead{font-size:13.5px;line-height:1.95;color:var(--text-2);margin:0 0 24px;max-width:760px}
+.bd-sub{font-size:14px;font-weight:700;margin:32px 0 13px;padding-bottom:9px;
+  border-bottom:1px solid var(--line)}
+
+/* ── 상자 · 격자 ─────────────────────────────────────────── */
+.bd-grid{display:grid;gap:14px}
+.bd-grid.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.bd-grid.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.bd-grid.g4{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}
+
+.bd-box{border:1px solid var(--line);border-radius:10px;padding:20px;background:var(--paper)}
+.bd-box + .bd-box{margin-top:12px}
+.bd-box .cap{font-size:11px;color:var(--text-3);margin-top:15px;padding-top:12px;
+  border-top:1px dashed var(--line);font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+.bd-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* ── 알림 상자 ───────────────────────────────────────────── */
+.bd-note{background:var(--paper-3);border:1px solid var(--line);border-radius:10px;
+  padding:16px 18px;font-size:12.5px;line-height:1.95;color:var(--text-2);margin-top:16px}
+.bd-note b{color:var(--text)}
+.bd-note code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--violet-2)}
+.bd-note.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn-text)}
+.bd-note.warn b{color:var(--warn-text)}
+.bd-note.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--ok-text)}
+.bd-note.ok b{color:var(--ok-text)}
+
+/* ── 표 ──────────────────────────────────────────────────── */
+.bd-tb{width:100%;border-collapse:collapse;font-size:12.5px}
+.bd-tb th,.bd-tb td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.bd-tb th{color:var(--text-3);font-weight:700;font-size:11.5px;letter-spacing:.02em}
+.bd-tb code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--violet-2)}
+
+/* ── 색 조각 ─────────────────────────────────────────────── */
+.bd-sw{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
+.bd-sw .chip{height:74px}
+.bd-sw .meta{padding:10px 12px 13px}
+.bd-sw .nm{font-size:12.5px;font-weight:700;margin-bottom:3px}
+.bd-sw .var,.bd-sw .hex{font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
+.bd-sw .var{color:var(--text-3)}
+.bd-sw .hex{color:var(--text-2);margin-top:2px}
+
+/* ── 글자 보기 ───────────────────────────────────────────── */
+.bd-type{display:flex;align-items:baseline;gap:16px;padding:13px 0;
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bd-type .lbl{font-size:11px;color:var(--text-3);
+  font-family:ui-monospace,Menlo,Consolas,monospace;min-width:126px}
+
+/* ── 로고 상자 ───────────────────────────────────────────── */
+.bd-logo{background:var(--ink);border-radius:10px;padding:34px;display:grid;place-items:center}
+.bd-logo img{max-width:220px}
+.bd-logo.light{background:var(--paper-3)}
+
+/* ── 아이콘 ──────────────────────────────────────────────── */
+.bd-ico{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px}
+.bd-ico div{border:1px solid var(--line);border-radius:9px;padding:15px 6px;text-align:center}
+.bd-ico svg{width:20px;height:20px;stroke:var(--violet-2);fill:none;stroke-width:1.7}
+.bd-ico span{display:block;font-size:10.5px;color:var(--text-3);margin-top:8px}
+
+/* ── 다음 장으로 ─────────────────────────────────────────── */
+.bd-next{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;
+  margin-top:50px;padding-top:30px;border-top:1px solid var(--line)}
+.bd-next a{border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+  transition:border-color .18s,background .18s}
+.bd-next a:hover{border-color:var(--violet-3);background:var(--paper-2)}
+.bd-next .k{font-size:10.5px;letter-spacing:.16em;color:var(--text-3);font-weight:700}
+.bd-next .t{font-size:14px;font-weight:700;margin-top:5px}
+.bd-next .d{font-size:12px;color:var(--text-2);margin-top:4px;line-height:1.7}

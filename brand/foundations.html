@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기초 · 디자인 시스템 · OPUSCLAM.COM</title>
+<meta name="description" content="OPUSCLAM 디자인 시스템 기초 — 색 · 글자 · 짜임 · 아이콘. 실제 스타일 파일에서 값을 읽어 보여 줍니다.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<!-- ★ 이 문서의 핵심 —
+     흉내 낸 스타일이 아니라 <b>실제로 쓰는 파일</b>을 그대로 불러옵니다.
+     그래서 style.css 를 고치면 이 안내도 저절로 바뀝니다.
+     디자인 안내가 죽는 가장 흔한 까닭이 「문서와 실제가 달라지는 것」입니다. -->
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/brand.css">
+</head>
+<body class="bd">
+
+<div id="oc-header"></div>
+<div class="bd-hero" style="padding:52px 0 44px">
+  <div class="in">
+    <div class="bd-eyebrow">FOUNDATIONS</div>
+    <h1>기초</h1>
+    <p>색 · 글자 · 짜임 · 아이콘. 모든 화면이 딛고 서는 바탕입니다.</p>
+  </div>
+</div>
+<div class="bd-tabs">
+  <div class="in">
+    <a href="/brand/index.html">개요</a>
+    <a href="/brand/foundations.html" class="on">기초</a>
+    <a href="/brand/components.html">부품</a>
+    <a href="/brand/patterns.html">짜임새</a>
+  </div>
+</div>
+<div class="bd-body">
+  <aside class="bd-side">
+    <div class="ttl">이 장의 차례</div>
+    <a href="#color">색</a>
+    <a href="#grad">큰 띠</a>
+    <a href="#type">글자</a>
+    <a href="#layout">짜임</a>
+    <a href="#icon">아이콘</a>
+    <a href="#dark">어두운 화면</a>
+  </aside>
+
+  <main class="bd-main">
+
+    <section class="bd-sec" id="color">
+      <h2><span class="num">01</span> 색</h2>
+      <p class="lead">
+        아래 색값은 <b>지금 이 순간 브라우저가 읽은 실제 값</b>입니다.
+        손으로 적어 둔 것이 아니라 <code>style.css</code> 에서 그대로 가져옵니다.
+      </p>
+
+      <div class="bd-sub">바탕 · 중심</div>
+      <div class="bd-grid g4" id="sw-ink"></div>
+
+      <div class="bd-sub">자주 — 주 강조</div>
+      <div class="bd-grid g4" id="sw-violet"></div>
+
+      <div class="bd-sub">금 · 주황 — 눈길</div>
+      <div class="bd-grid g4" id="sw-accent"></div>
+
+      <div class="bd-sub">종이 · 선</div>
+      <div class="bd-grid g4" id="sw-paper"></div>
+
+      <div class="bd-sub">글자</div>
+      <div class="bd-grid g4" id="sw-text"></div>
+
+      <div class="bd-note">
+        <b>쓰는 규칙</b><br>
+        · 큰 바탕은 <code>--ink</code>, 그 위 글은 흰색<br>
+        · 누를 수 있는 것 · 지금 있는 자리는 <code>--violet-2</code><br>
+        · <code>--gold</code> 는 격을 나타낼 때, <code>--orange</code> 는 알림 · 새것에만.
+          <b>둘 다 넓게 칠하지 않습니다</b><br>
+        · 본문 바탕은 흰색, 상자 안은 <code>--paper-3</code>
+      </div>
+
+      <div class="bd-note warn">
+        <b>주의</b> — 자주 계열 셋(<code>--violet</code> · <code>--violet-2</code> ·
+        <code>--violet-3</code>)은 밝기만 다릅니다. <b>2번이 기본</b>이고,
+        1번은 더 진하게, 3번은 옅게 쓸 때만 씁니다. 아무거나 골라 쓰면 화면마다 달라집니다.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="grad">
+      <h2><span class="num">02</span> 큰 띠</h2>
+      <p class="lead">머리 띠와 큰 배너에 쓰는 그러데이션입니다. 남색에서 자주로 흐릅니다.</p>
+      <div class="bd-box" style="padding:0;overflow:hidden">
+        <div style="height:130px;background:var(--hero-grad)"></div>
+        <div style="padding:15px 18px">
+          <b style="font-size:12.5px">--hero-grad</b>
+          <div class="cap" id="grad-val">읽는 중…</div>
+        </div>
+      </div>
+      <div class="bd-note">
+        <b>한 화면에 하나만</b> 씁니다. 두 개 이상 쓰면 시선이 흩어집니다.
+      </div>
+    </section>
+
+    <section class="bd-sec" id="type">
+      <h2><span class="num">03</span> 글자</h2>
+      <p class="lead">
+        <b>Pretendard</b> 한 벌만 씁니다. 한글과 로마자가 함께 잘 어울리고,
+        굵기가 넉넉해 제목부터 잔글씨까지 이 한 벌로 해결됩니다.
+      </p>
+
+      <div class="bd-box">
+        <div class="bd-type"><span class="lbl">34px · 800</span>
+          <span style="font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.4">오퍼스클램 Opusclam</span></div>
+        <div class="bd-type"><span class="lbl">24px · 800</span>
+          <span style="font-size:24px;font-weight:800;letter-spacing:-.01em;line-height:1.4">페이지 제목 Page Title</span></div>
+        <div class="bd-type"><span class="lbl">19px · 800</span>
+          <span style="font-size:19px;font-weight:800;line-height:1.5">구역 제목 Section</span></div>
+        <div class="bd-type"><span class="lbl">14px · 400 (본문)</span>
+          <span style="font-size:14px">클래식 음악 전문 플랫폼 오퍼스클램입니다.</span></div>
+        <div class="bd-type"><span class="lbl">12.5px · 400</span>
+          <span style="font-size:12.5px;color:var(--text-2)">설명글 · 표 안쪽에 씁니다.</span></div>
+        <div class="bd-type"><span class="lbl">11px · 400</span>
+          <span style="font-size:11px;color:var(--text-3)">잔글씨 · 덧붙이는 말</span></div>
+        <div class="bd-type" style="border-bottom:0"><span class="lbl">10.5px · 700 · 자간</span>
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:.34em;color:var(--violet-2)">EYEBROW LABEL</span></div>
+        <div class="cap">--sans · --serif · --display 는 모두 Pretendard 를 가리킵니다</div>
+      </div>
+
+      <div class="bd-note warn">
+        <b>★ 한글은 line-height 를 좁히면 획이 잘립니다.</b><br>
+        로마자보다 글자 상자가 커서, <code>line-height:1</code> 안팎을 주면
+        위아래가 잘립니다. <b>제목도 1.3 아래로 내리지 마십시오.</b><br>
+        (이 문서를 만들 때도 실제로 잘렸습니다. 기존 <code>.pdb-title</code> 이
+        <code>line-height:1</code> 이라 같은 위험이 있습니다 — 「짜임새」 장의 정리 목록 참고)
+      </div>
+
+      <div class="bd-note">
+        <b>자간을 넓히는 자리</b> — 로마자 작은 대문자 표기(EYEBROW · 메뉴 영문)에만
+        <code>letter-spacing:.34em</code> 안팎을 씁니다. <b>한글에는 쓰지 않습니다.</b>
+      </div>
+    </section>
+
+    <section class="bd-sec" id="layout">
+      <h2><span class="num">04</span> 짜임</h2>
+      <p class="lead">
+        가운데 정렬 한 벌로 통일합니다. <b>좌우 사이드바를 쓰지 않습니다.</b>
+        포털처럼 보이는 것보다 읽기 좋은 쪽을 택했습니다.
+      </p>
+
+      <table class="bd-tb">
+        <tr><th style="width:190px">무엇</th><th style="width:150px">값</th><th>쓰는 자리</th></tr>
+        <tr><td>본문 최대 폭</td><td><code>--wrap</code> 1180px</td><td>모든 화면</td></tr>
+        <tr><td>좌우 여백</td><td>20px</td><td><code>.wrap</code></td></tr>
+        <tr><td>관리자 화면 폭</td><td>1900px</td><td>관리자만 · 카드가 많아서</td></tr>
+        <tr><td>모바일 갈림점</td><td>880px</td><td>메뉴가 서랍으로 바뀜</td></tr>
+        <tr><td>부품 사이</td><td>10 · 14 · 18px</td><td>좁게 · 보통 · 넓게</td></tr>
+        <tr><td>구역 사이</td><td>44 · 60px</td><td></td></tr>
+        <tr><td>모서리</td><td>7 · 9 · 10px</td><td>작은 · 보통 · 상자</td></tr>
+      </table>
+    </section>
+
+    <section class="bd-sec" id="icon">
+      <h2><span class="num">05</span> 아이콘</h2>
+      <p class="lead">선 아이콘 한 벌로 통일합니다. 채워진 아이콘을 섞지 않습니다.</p>
+
+      <div class="bd-ico">
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>검색</span></div>
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg><span>악보 · 음악</span></div>
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 012-2h9l5 5v10a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M15 4v5h5"/></svg><span>문서</span></div>
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>사람</span></div>
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.6-7-10a7 7 0 0114 0c0 5.4-7 10-7 10z"/><circle cx="12" cy="11" r="2.6"/></svg><span>장소</span></div>
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><span>일정</span></div>
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h7v7"/><path d="M21 3l-9 9"/><path d="M19 14v5a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h5"/></svg><span>바깥 링크</span></div>
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg><span>더하기</span></div>
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4M10 6l-6 6 6 6"/></svg><span>뒤로</span></div>
+        <div><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M6 11l6 6 6-6M4 21h16"/></svg><span>내려받기</span></div>
+      </div>
+
+      <table class="bd-tb" style="margin-top:20px">
+        <tr><th style="width:160px">무엇</th><th>값</th></tr>
+        <tr><td>선 굵기</td><td><code>stroke-width: 1.7</code></td></tr>
+        <tr><td>끝 모양</td><td><code>stroke-linecap: round</code> · <code>linejoin: round</code></td></tr>
+        <tr><td>채우기</td><td><code>fill: none</code> — 채우지 않습니다</td></tr>
+        <tr><td>크기</td><td>15 · 18 · 20px <b>셋만</b></td></tr>
+        <tr><td>색</td><td><code>currentColor</code> — 글자색을 따라갑니다</td></tr>
+        <tr><td>viewBox</td><td><code>0 0 24 24</code></td></tr>
+      </table>
+    </section>
+
+    <section class="bd-sec" id="dark">
+      <h2><span class="num">06</span> 어두운 화면</h2>
+      <p class="lead">
+        어두운 화면에서는 <b>색을 빼고 밝기만 남깁니다.</b>
+        자주와 금색이 회색 계열로 바뀝니다. 밤에 눈이 편하도록 한 선택입니다.
+      </p>
+      <div class="bd-grid g3" id="sw-dark"></div>
+      <div class="bd-note">
+        바뀌는 것 — <code>--paper</code> · <code>--line</code> · <code>--text</code> 계열과
+        <code>--violet</code> · <code>--gold</code>.
+        <b>--orange 는 그대로 둡니다</b>(알림은 어두운 화면에서도 눈에 띄어야 합니다).<br>
+        바꾸는 곳은 <code>style.css</code> 의 <code>html[data-theme="dark"]</code> <b>한 곳</b>입니다.
+        화면마다 따로 적지 마십시오.
+      </div>
+    </section>
+
+    <div class="bd-next">
+      <a href="/brand/components.html">
+        <div class="k">다음</div><div class="t">부품</div>
+        <div class="d">딱지 · 단추 · 입력 · 동그라미 · 표</div>
+      </a>
+      <a href="/brand/index.html">
+        <div class="k">앞으로</div><div class="t">개요</div>
+        <div class="d">브랜드 · 로고 · 이름 표기</div>
+      </a>
+    </div>
+
+  </main>
+</div>
+<script>
+/* ★ 색값을 손으로 적지 않습니다 — 지금 브라우저가 읽은 실제 값을 보여 줍니다.
+   그래서 style.css 를 고치면 이 화면도 저절로 따라옵니다. */
+(function(){
+  function val(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function chip(list, box){
+    var el = document.getElementById(box); if(!el) return;
+    el.innerHTML = list.map(function(o){
+      var v = val(o.v) || '(없음)';
+      return '<div class="bd-sw"><div class="chip" style="background:'+v+';'
+        + (o.border ? 'box-shadow:inset 0 0 0 1px var(--line)' : '') + '"></div>'
+        + '<div class="meta"><div class="nm">'+o.n+'</div>'
+        + '<div class="var">'+o.v+'</div><div class="hex">'+v+'</div></div></div>';
+    }).join('');
+  }
+  chip([{n:'깊은 남색',v:'--ink'},{n:'남색 2',v:'--ink-2'}], 'sw-ink');
+  chip([{n:'자주',v:'--violet'},{n:'자주 2 (기본)',v:'--violet-2'},{n:'자주 3 (옅음)',v:'--violet-3'}], 'sw-violet');
+  chip([{n:'금색',v:'--gold'},{n:'주황',v:'--orange'}], 'sw-accent');
+  chip([{n:'흰 종이',v:'--paper',border:1},{n:'종이 2',v:'--paper-2',border:1},
+        {n:'종이 3',v:'--paper-3',border:1},{n:'선',v:'--line',border:1},{n:'선 2',v:'--line-2',border:1}], 'sw-paper');
+  chip([{n:'본문',v:'--text'},{n:'설명',v:'--text-2'},{n:'잔글씨',v:'--text-3'},
+        {n:'링크 (쉼)',v:'--link-idle'},{n:'링크 (닿음)',v:'--link-hover'}], 'sw-text');
+  chip([{n:'종이',v:'--paper',border:1},{n:'선',v:'--line',border:1},{n:'본문 글자',v:'--text'},
+        {n:'자주 → 회색',v:'--violet-2'},{n:'금색 → 회색',v:'--gold'},{n:'주황 (그대로)',v:'--orange'}], 'sw-dark');
+  var g = document.getElementById('grad-val');
+  if(g) g.textContent = val('--hero-grad') || '(없음)';
+  /* 어두운 화면으로 바꾸면 색값을 다시 읽습니다 */
+  new MutationObserver(function(){ location.reload(); })
+    .observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+})();
+</script>
+
+<div id="oc-footer"></div>
+
+<script src="/assets/include.js"></script>
+<script>
+/* 왼쪽 차례 — 지금 보고 있는 구역을 표시합니다 */
+(function(){
+  var links = [].slice.call(document.querySelectorAll('.bd-side a[href^="#"]'));
+  if(!links.length) return;
+  var secs = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function mark(){
+    var y = window.scrollY + 120, hit = 0;
+    secs.forEach(function(s,i){ if(s && s.offsetTop <= y) hit = i; });
+    links.forEach(function(a,i){ a.classList.toggle('on', i === hit); });
+  }
+  window.addEventListener('scroll', mark, {passive:true});
+  mark();
+})();
+</script>
+</body>
+</html>
