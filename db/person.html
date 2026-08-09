@@ -232,6 +232,20 @@
         <!-- ★ 악보 걸러내기 — persons.score_count 를 봅니다.
              그 값은 악보를 담거나 지울 때 방아쇠가 그 자리에서 다시 셉니다.
              목록이 열릴 때마다 세지 않으므로 느려지지 않습니다. -->
+        <!-- ★ 2026-08-09 · 시대 상자를 더했습니다.
+             정렬에는 「사조·시대순」이 있었는데 <거르기>가 없었습니다.
+             음악사 연표에서 시대별로 넘어올 때도 이 상자를 씁니다.
+             값은 persons.era_name 에 실제로 든 것 그대로입니다. -->
+        <select aria-label="시대">
+          <option>시대 전체</option>
+          <option>중세</option>
+          <option>르네상스</option>
+          <option>바로크</option>
+          <option>고전주의</option>
+          <option>낭만주의</option>
+          <option>근·현대</option>
+          <option>현대</option>
+        </select>
         <select aria-label="악보">
           <option>악보 전체</option>
           <option>악보 있음</option>
@@ -1053,10 +1067,14 @@ if('serviceWorker' in navigator){
   }
   function buildFilters(sels){
     var region=sels[0]?sels[0].value:'', field=sels[1]?sels[1].value:'';
-    /* ★ 악보 걸러내기 — 상자를 하나 더했으므로 <b>정렬은 sels[3]</b> 으로
-       밀렸습니다. buildOrder 도 함께 고쳐야 합니다(안 고치면 정렬이
-       악보 상자를 읽어 늘 기본값이 됩니다). */
-    var sc = sels[2] ? sels[2].value : '';
+    /* ★ 2026-08-09 · 시대 상자를 sels[2] 로 더했습니다.
+       그래서 악보는 sels[3], 정렬은 <b>sels[4]</b> 로 밀렸습니다.
+       buildOrder 도 함께 고쳤습니다 — 안 고치면 정렬이 엉뚱한 상자를
+       읽어 늘 기본값이 됩니다. */
+    var era = sels[2] ? sels[2].value : '';
+    var eraParam = (era && era !== '시대 전체')
+      ? '&era_name=eq.' + encodeURIComponent(era) : '';
+    var sc = sels[3] ? sels[3].value : '';
     var scParam = '';
     if (sc === '악보 있음')          scParam = '&score_count=gt.0';
     else if (sc === '악보 5건 이상') scParam = '&score_count=gte.5';
@@ -1069,11 +1087,11 @@ if('serviceWorker' in navigator){
     var GROUPS={'작곡·지휘·이론 전체':{c:'field',v:['작곡','편곡','지휘','음악학','음악교육','평론']},'연주 전체':{c:'field',v:['연주']},'건반 전체':{c:'instrument',v:['피아노','오르간','하프시코드','아코디언','건반악기']},'현악 전체':{c:'instrument',v:['바이올린','비올라','첼로','콘트라베이스','하프','기타','류트','비올족']},'목관 전체':{c:'instrument',v:['플루트','오보에','클라리넷','바순','색소폰','리코더']},'금관 전체':{c:'instrument',v:['호른','트럼펫','트롬본','튜바']}};
     var fieldParam='';
     if(field&&field!=='전체 분야'){ if(GROUPS[field]){ var g=GROUPS[field]; fieldParam='&'+g.c+'=in.('+g.v.map(function(x){return encodeURIComponent(x);}).join(',')+')'; } else if(ROLES.indexOf(field)>=0){ fieldParam='&field=eq.'+encodeURIComponent(field); } else { fieldParam='&instrument=eq.'+encodeURIComponent(field); } }
-    return regionParam+fieldParam+scParam;
+    return regionParam+fieldParam+eraParam+scParam;
   }
   function buildOrder(sels){
-    /* ★ 악보 상자가 sels[2] 로 들어왔으므로 정렬은 sels[3] 입니다 */
-    var sort=sels[3]?sels[3].value:'';
+    /* ★ 시대(sels[2]) · 악보(sels[3]) 가 앞에 있으므로 정렬은 sels[4] 입니다 */
+    var sort=sels[4]?sels[4].value:'';
     /* 기본은 정보 충실도순 — 사진·소개문·생몰 등이 채워진 항목이 앞에 옵니다 */
     var ord='quality.desc,sort_no.desc';
     if(sort.indexOf('충실도')>=0)          ord='quality.desc,sort_no.desc';

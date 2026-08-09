@@ -469,6 +469,41 @@ window.OCList = (function () {
     var _sp = parseInt(new URLSearchParams(location.search).get('p'), 10) || 1;
     var _q = new URLSearchParams(location.search).get('q') || '';
 
+    /* ★ 2026-08-09 · 주소로 <고르는 상자>를 미리 골라 주는 기능
+       ------------------------------------------------------------
+       왜 필요한가
+         음악사 연표에서 「인물DB 더 보기」를 누르면 그 시대의 인물만
+         보여야 합니다. 그런데 ?q=바로크 로 넘기면 아무것도 안 나옵니다 —
+         인물DB 검색은 이름·학교·소개문만 뒤지고 era_name 은 안 보기 때문입니다.
+
+         고르는 상자로는 걸러지는데, 그 상자를 <주소로 미리 고를 길>이
+         없었습니다. 그것을 여기서 만듭니다.
+
+       쓰는 법
+         ?sel=바로크            첫 상자를 「바로크」로
+         ?sel1=관현악           둘째 상자를 「관현악」으로 (0부터 셉니다)
+         ?sel=바로크&sel2=작곡   여럿을 함께
+
+       ★ 그 상자에 그 값이 <실제로 있을 때만> 고릅니다.
+         없는 값을 넣으면 조용히 지나갑니다 — 빈 목록이 되지 않습니다.
+         (연표에서 「근·현대」를 보내는데 인물DB 상자에 그 말이 없다면
+          거르지 않고 전체를 보여 주는 편이 낫습니다) */
+    (function applyUrlSelects(){
+      var sp = new URLSearchParams(location.search);
+      var sels = document.querySelectorAll('.pdb-selects select');
+      if (!sels.length) return;
+      for (var i = 0; i < sels.length; i++) {
+        var v = sp.get(i === 0 ? 'sel' : ('sel' + i));
+        if (v === null) v = sp.get('sel' + i);
+        if (!v) continue;
+        var opts = sels[i].options, hit = null;
+        for (var k = 0; k < opts.length; k++) {
+          if (opts[k].value === v || opts[k].textContent.trim() === v) { hit = opts[k].value; break; }
+        }
+        if (hit !== null) sels[i].value = hit;
+      }
+    })();
+
     /* 뷰에서 '리스트로' 눌러 돌아온 경우 (주소에 focus 가 붙어 있다)
        담아 둔 검색어 · 고른 항목 · 페이지를 되돌린 뒤 그 쪽을 연다. */
     var _spot = focusId ? readSpot(focusId) : null;

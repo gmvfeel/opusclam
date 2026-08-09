@@ -86,11 +86,10 @@
      숫자가 틀린 것처럼 보입니다. */
   .tl-col h3 em{font-style:normal;font-size:11px;color:var(--text-3);font-weight:400;
     white-space:nowrap}
-  .tl-more{display:block;width:100%;margin-top:12px;padding:9px;font-family:inherit;
-    font-size:12.5px;color:var(--text-2);background:var(--paper);cursor:pointer;
+  .tl-more{display:block;margin-top:14px;padding:10px;text-align:center;
+    font-size:12.5px;color:var(--text-2);background:var(--paper);text-decoration:none;
     border:1px solid var(--line-2);border-radius:9px;transition:border-color .15s,color .15s}
   .tl-more:hover{border-color:var(--violet-2);color:var(--violet-2)}
-  .tl-more[disabled]{opacity:.5;cursor:default}
 
   .tl-item{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;
     border-bottom:1px solid var(--line);text-decoration:none}
@@ -179,17 +178,17 @@
       <section class="tl-col">
         <h3>이 시대의 음악가 <em>태어난 해 기준</em></h3>
         <div id="tlPersons"></div>
-        <button type="button" class="tl-more" id="tlMoreP" hidden>더 보기</button>
+        <a class="tl-more" id="tlMoreP" href="/db/person.html">인물DB 에서 더 보기 &rarr;</a>
       </section>
       <section class="tl-col">
         <h3>이 시대의 작품 <em>작곡 연도 기준</em></h3>
         <div id="tlWorks"></div>
-        <button type="button" class="tl-more" id="tlMoreW" hidden>더 보기</button>
+        <a class="tl-more" id="tlMoreW" href="/db/work.html">작품DB 에서 더 보기 &rarr;</a>
       </section>
       <section class="tl-col">
         <h3>이 시대의 용어 <em>표시된 시대 기준</em></h3>
         <div id="tlTerms"></div>
-        <button type="button" class="tl-more" id="tlMoreT" hidden>더 보기</button>
+        <a class="tl-more" id="tlMoreT" href="/db/terms.html">용어사전 에서 더 보기 &rarr;</a>
       </section>
     </div>
 
@@ -249,25 +248,25 @@
   /* 시대 — 인물DB 의 era_yr 에 실제로 들어 있는 범위를 그대로 씁니다.
      terms 는 용어사전에서 찾을 낱말입니다(era 가 자유로운 글이라). */
   var ERAS = [
-    { key:'medieval', color:'#6b5c4a',    name:'중세',     y0:YR_MIN, y1:1400,
+    { key:'medieval', pSel:'중세', tSel:'중세', color:'#6b5c4a',    name:'중세',     y0:YR_MIN, y1:1400,
       terms:['중세','9세기','11세기','12세기','13세기','14세기'],
       sum:'단선율 성가에서 여러 성부가 갈라져 나온 시대입니다. 기보법이 이때 생겼습니다.' },
-    { key:'renaissance', color:'#8a7a4e', name:'르네상스', y0:1400, y1:1600,
+    { key:'renaissance', pSel:'르네상스', tSel:'르네상스', color:'#8a7a4e', name:'르네상스', y0:1400, y1:1600,
       terms:['르네상스','15세기','16세기'],
       sum:'여러 성부가 대등하게 얽히는 다성음악이 무르익었습니다. 인쇄술로 악보가 널리 퍼졌습니다.' },
-    { key:'baroque', color:'#b8923e',     name:'바로크',   y0:1600, y1:1750,
+    { key:'baroque', pSel:'바로크', tSel:'바로크', color:'#b8923e',     name:'바로크',   y0:1600, y1:1750,
       terms:['바로크','17세기'],
       sum:'통주저음과 조성이 자리 잡고 오페라가 태어났습니다. 협주곡과 푸가도 이때 틀을 갖췄습니다.' },
-    { key:'classical', color:'#a8735c',   name:'고전주의', y0:1750, y1:1820,
+    { key:'classical', pSel:'고전주의', tSel:'고전', color:'#a8735c',   name:'고전주의', y0:1750, y1:1820,
       terms:['고전','18세기'],
       sum:'균형과 또렷한 짜임을 앞세웠습니다. 소나타 형식 · 교향곡 · 현악사중주가 이 시대에 완성됩니다.' },
-    { key:'romantic', color:'#8f5580',    name:'낭만주의', y0:1820, y1:1900,
+    { key:'romantic', pSel:'낭만주의', tSel:'낭만', color:'#8f5580',    name:'낭만주의', y0:1820, y1:1900,
       terms:['낭만','19세기'],
       sum:'감정과 개성을 앞세우고 형식을 넓혔습니다. 가곡과 교향시 같은 새 갈래가 자랐습니다.' },
-    { key:'modern', color:'#6b4a86',      name:'근·현대',  y0:1900, y1:1945,
+    { key:'modern', pSel:'근·현대', tSel:'20세기', color:'#6b4a86',      name:'근·현대',  y0:1900, y1:1945,
       terms:['20세기 초','20세기 전반','1920','1930','1940'],
       sum:'조성이 흔들리고 여러 길이 동시에 갈라졌습니다. 무조 · 12음 기법 · 신고전주의가 함께 갑니다.' },
-    { key:'contemporary', color:'#3f5f8a',name:'현대',     y0:1945, y1:YR_MAX,
+    { key:'contemporary', pSel:'현대', tSel:'20세기', color:'#3f5f8a',name:'현대',     y0:1945, y1:YR_MAX,
       terms:['20세기 중반','20세기 후반','1945','1950','1960','1970','1980','1990','21세기'],
       sum:'총렬주의 · 우연성 · 전자음악 · 음향 덩어리가 잇달아 나왔습니다. 지금도 이어지고 있습니다.' }
   ];
@@ -372,8 +371,7 @@
        ▶ 깨진 링크를 없애고, 이 자리에서 <더 불러오는> 방식으로 바꿨습니다.
          연표가 세는 기준과 보여 주는 것이 언제나 같아집니다. */
   var cur = null;
-  var STEP = 8;                    /* 한 번에 더 부르는 수 */
-  var shown = { p:STEP, w:STEP, t:STEP };
+  var LIST_N = 10;                 /* 이 화면에서 보여 줄 수. 더 보려면 각 DB 로 갑니다 */
 
   function drawPersons(e, n){
     return rowsOf(qPersons(e, n)).then(function(rows){
@@ -421,23 +419,11 @@
     });
   }
 
-  /* 더 부를 것이 남았는지 보고 단추를 켜고 끕니다.
-     받아온 수가 부른 수보다 적으면 그것이 끝입니다. */
-  function setMore(btnId, rows, want){
-    var b = $(btnId);
-    if(!b) return;
-    var has = Array.isArray(rows) && rows.length >= want;
-    b.hidden = !has;
-    b.disabled = false;
-    b.textContent = '더 보기';
-  }
-
   function pick(key){
     var e = null;
     for(var i=0;i<ERAS.length;i++) if(ERAS[i].key === key) e = ERAS[i];
     if(!e) return;
     cur = key;
-    shown = { p:STEP, w:STEP, t:STEP };
 
     Array.prototype.forEach.call($('tlBand').querySelectorAll('.tl-seg'), function(b){
       b.classList.toggle('on', b.getAttribute('data-k') === key);
@@ -446,47 +432,39 @@
 
     $('tlName').textContent = e.name;
     $('tlName').style.color = e.color;      /* 제목 색을 그 시대 색으로 */
+
+    /* ★ 더 보기 — 각 DB 목록으로 넘기되 <고르는 상자를 미리 골라> 줍니다.
+       assets/db-list.js 가 주소의 sel · sel1 · sel2 … 를 읽어
+       그 상자를 고른 채로 화면을 엽니다(2026-08-09 에 더한 기능).
+
+       ★ 왜 ?q= 를 안 쓰는가
+         인물DB 검색은 이름·학교·소개문만 뒤집니다. ?q=바로크 로 보내면
+         「바로크」라는 글자가 이름에 든 사람만 나와 거의 0건이 됩니다.
+         상자를 고르는 편이 실제로 그 시대를 거릅니다.
+
+       ★ 상자 자리
+         인물DB    0 국내외 · 1 분야 · 2 시대 · 3 악보 · 4 정렬
+         작품DB    0 편성 · 1 시대 · 2 표시 · 3 정렬
+         용어사전  0 구분 · 1 갈래 · 2 시대 · 3 정렬
+       ★ 그 상자에 그 값이 없으면 db-list.js 가 조용히 건너뜁니다 —
+         빈 목록이 되지 않고 전체가 나옵니다. */
+    $('tlMoreP').href = '/db/person.html?sel2=' + encodeURIComponent(e.pSel);
+    $('tlMoreW').href = '/db/work.html?sel1='   + encodeURIComponent(e.name);
+    $('tlMoreT').href = '/db/terms.html?sel2='  + encodeURIComponent(e.tSel);
     $('tlYr').textContent = (e.y0 === YR_MIN ? '~' + e.y1 : e.y0 + (e.y1 === YR_MAX ? '년 이후' : '–' + e.y1)) + '년';
     $('tlSum').textContent = e.sum;
-
-    ['tlMoreP','tlMoreW','tlMoreT'].forEach(function(id){ var b=$(id); if(b) b.hidden = true; });
 
     $('tlPersons').innerHTML = skel(5);
     $('tlWorks').innerHTML   = skel(5);
     $('tlTerms').innerHTML   = skel(5);
 
-    drawPersons(e, shown.p).then(function(r){ setMore('tlMoreP', r, shown.p); });
-    drawWorks(e,   shown.w).then(function(r){ setMore('tlMoreW', r, shown.w); });
-    drawTerms(e,   shown.t).then(function(r){ setMore('tlMoreT', r, shown.t); });
-  }
-
-  function eraOf(key){
-    for(var i=0;i<ERAS.length;i++) if(ERAS[i].key === key) return ERAS[i];
-    return null;
-  }
-
-  /* ★ 두 번 불려도 안전하게 막아 둡니다.
-     한 단추에 동작이 두 개 붙으면 한 번 눌렀는데 두 번 더 불러옵니다.
-     지금은 한 번만 불리지만, 나중에 코드가 바뀌어도 탈이 없게 둡니다. */
-  var bound = false;
-  function bindMore(){
-    if(bound) return;
-    bound = true;
-    [['tlMoreP','p',drawPersons],['tlMoreW','w',drawWorks],['tlMoreT','t',drawTerms]]
-      .forEach(function(x){
-        var b = $(x[0]); if(!b) return;
-        b.addEventListener('click', function(){
-          var e = eraOf(cur); if(!e) return;
-          b.disabled = true; b.textContent = '부르는 중…';
-          shown[x[1]] += 24;
-          x[2](e, shown[x[1]]).then(function(r){ setMore(x[0], r, shown[x[1]]); });
-        });
-      });
+    drawPersons(e, LIST_N);
+    drawWorks(e,   LIST_N);
+    drawTerms(e,   LIST_N);
   }
 
   /* ── 시작 ── */
   document.addEventListener('DOMContentLoaded', function(){
-    bindMore();
     /* 띠를 먼저 뼈대만 그려 둡니다 — 숫자를 기다리는 동안 화면이 비지 않게 */
     drawBand({});
 
