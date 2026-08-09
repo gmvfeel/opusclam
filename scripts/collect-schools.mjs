@@ -7,6 +7,8 @@
 //  - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
 // ============================================================
 
+import { readJson } from './lib/json.mjs';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) { console.error('환경변수 필요: SUPABASE_URL / SUPABASE_SERVICE_KEY'); process.exit(1); }
@@ -178,7 +180,7 @@ async function sparql(query, tries = 3) {
       const res = await fetch(url, { headers: { Accept: 'application/sparql-results+json', 'User-Agent': UA } });
       if (res.status === 429 || res.status >= 500) { await sleep(3000 * (i + 1)); continue; }
       if (!res.ok) throw new Error('SPARQL ' + res.status);
-      return (await res.json()).results.bindings;
+      return (await readJson(res)).results.bindings;
     } catch (e) { if (i === tries - 1) throw e; await sleep(3000 * (i + 1)); }
   }
   return [];
@@ -191,7 +193,7 @@ async function wikiFetch(host, title) {
   try {
     const r = await fetch(u, { headers: { 'User-Agent': UA } });
     if (!r.ok) return { text: '', image: '' };
-    const j = await r.json();
+    const j = await readJson(r);
     const pages = j && j.query && j.query.pages;
     if (!pages) return { text: '', image: '' };
     const pg = Object.values(pages)[0] || {};
@@ -351,7 +353,7 @@ async function sbGetAll(table, select) {
   while (true) {
     const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + orderFor(table), { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
-    const batch = await r.json(); out.push(...batch);
+    const batch = await readJson(r); out.push(...batch);
     if (!batch.length) break;              // 더 없으면 끝
     from += batch.length;                 // ★ 받은 만큼만 나아갑니다
   }

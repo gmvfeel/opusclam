@@ -32,6 +32,7 @@
 
 import { sleep, makeGetJSON, isStop, stopReason, budgetLeftMin } from './lib/http.mjs';
 
+import { readJson } from './lib/json.mjs';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const DAILY_LIMIT  = parseInt(process.env.DAILY_LIMIT || '1500', 10);
@@ -87,7 +88,7 @@ async function sbGetAll(table, select, filter) {
       console.error('  ✗ 조회 실패 ' + r.status + ' — ' + (await r.text()).slice(0, 200));
       throw new Error('GET ' + r.status);
     }
-    const batch = await r.json();
+    const batch = await readJson(r);
     if (!batch.length) break;
     out.push(...batch);
     from += batch.length;

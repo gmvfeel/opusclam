@@ -26,6 +26,7 @@
 //   이 정책을 고치려면 http.mjs 한 곳만 고치면 모든 수집기에 반영됩니다.
 import { makeGetJSON, isStop, sleep } from './lib/http.mjs';
 
+import { readJson } from './lib/json.mjs';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -146,7 +147,7 @@ async function sbGetAll(table, select, extra) {
     const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + (extra || '') + orderFor(table),
       { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
     if (!r.ok) throw new Error('GET ' + table + ' ' + r.status + ' ' + await r.text());
-    const b = await r.json();
+    const b = await readJson(r);
     out.push(...b);
     if (!b.length) break;              // 더 없으면 끝
     from += b.length;                     // ★ 받은 만큼만 나아갑니다
@@ -159,7 +160,7 @@ async function sbInsertOne(table, row) {
   const r = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
     method: 'POST', headers: { ...H, Prefer: 'return=representation' }, body: JSON.stringify([row]),
   });
-  if (r.ok) { const a = await r.json(); return (a && a[0]) ? a[0].id : null; }
+  if (r.ok) { const a = await readJson(r); return (a && a[0]) ? a[0].id : null; }
   const t = await r.text();
   if (r.status === 409 || t.indexOf('23505') >= 0) return 'dup';
   throw new Error('INSERT ' + table + ' ' + r.status + ' ' + t.slice(0, 160));

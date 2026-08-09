@@ -7,6 +7,8 @@
 //  - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
 // ============================================================
 
+import { readJson } from './lib/json.mjs';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) { console.error('환경변수 필요: SUPABASE_URL / SUPABASE_SERVICE_KEY'); process.exit(1); }
@@ -165,7 +167,7 @@ async function wikiFetch(host, title) {
   try {
     const r = await fetch(u, { headers: { 'User-Agent': UA } });
     if (!r.ok) return { text: '', image: '' };
-    const j = await r.json();
+    const j = await readJson(r);
     const pages = j && j.query && j.query.pages;
     if (!pages) return { text: '', image: '' };
     const pg = Object.values(pages)[0] || {};
@@ -242,7 +244,7 @@ function richness(r) {
 }
 
 const H = { apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY, 'Content-Type': 'application/json' };
-async function sbGet(p) { const r = await fetch(SUPABASE_URL + '/rest/v1/' + p, { headers: H }); if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text()); return r.json(); }
+async function sbGet(p) { const r = await fetch(SUPABASE_URL + '/rest/v1/' + p, { headers: H }); if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text()); return readJson(r); }
 async function sbInsert(rows) {
   if (!rows.length) return;
   const post = (batch) => fetch(SUPABASE_URL + '/rest/v1/venues', {
@@ -285,7 +287,7 @@ async function sbGetAll(table, select) {
     const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + orderFor(table),
       { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
-    const batch = await r.json();
+    const batch = await readJson(r);
     out.push(...batch);
     if (!batch.length) break;              // 더 없으면 끝
     from += batch.length;                 // ★ 받은 만큼만 나아갑니다

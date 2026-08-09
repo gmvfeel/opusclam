@@ -6,6 +6,8 @@
 //  - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
 // ============================================================
 
+import { readJson } from './lib/json.mjs';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) { console.error('환경변수 필요: SUPABASE_URL / SUPABASE_SERVICE_KEY'); process.exit(1); }
@@ -163,7 +165,7 @@ async function wikiExtract(url) {
   try {
     const r = await fetch('https://ko.wikipedia.org/api/rest_v1/page/summary/' + title, { headers: { 'User-Agent': UA } });
     if (!r.ok) return '';
-    const j = await r.json();
+    const j = await readJson(r);
     return (j.extract || '').trim();
   } catch (e) { return ''; }
 }
@@ -221,7 +223,7 @@ function richness(r) {
 }
 
 const H = { apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY, 'Content-Type': 'application/json' };
-async function sbGet(p) { const r = await fetch(SUPABASE_URL + '/rest/v1/' + p, { headers: H }); if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text()); return r.json(); }
+async function sbGet(p) { const r = await fetch(SUPABASE_URL + '/rest/v1/' + p, { headers: H }); if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text()); return readJson(r); }
 /* ★ 나눠받기 — 「받은 만큼만 나아가고, 아무것도 오지 않을 때 끝냅니다」
    예전에는 「1000개 달라 하고 1000보다 적게 오면 끝」 이었습니다.
    그런데 Supabase 의 Max rows 가 200 이라 서버가 200에서 잘라 줍니다.
@@ -232,7 +234,7 @@ async function sbGetAll(table, select) {
   while (true) {
     const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + orderFor(table), { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
-    const batch = await r.json(); out.push(...batch);
+    const batch = await readJson(r); out.push(...batch);
     if (!batch.length) break;              // 더 없으면 끝
     from += batch.length;                 // ★ 받은 만큼만 나아갑니다
   }

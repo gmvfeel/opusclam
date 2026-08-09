@@ -10,6 +10,8 @@
 //  - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY, (선택) BATCH_LIMIT
 // ============================================================
 
+import { readJson } from './lib/json.mjs';
+
 const VERSION      = 'v1.0';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
@@ -74,7 +76,7 @@ async function sbGetAll(table, select, filter, maxRows) {
       console.error('    응답: ' + body.slice(0, 300));
       throw new Error('GET ' + r.status);
     }
-    const batch = await r.json(); out.push(...batch);
+    const batch = await readJson(r); out.push(...batch);
     if (!batch.length) break;              // 더 없으면 끝
     from += batch.length;                 // ★ 받은 만큼만 나아갑니다
   }
@@ -83,7 +85,7 @@ async function sbGetAll(table, select, filter, maxRows) {
 async function sbProbe(table) {
   const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=*&limit=1', { headers: H });
   if (!r.ok) { console.log('  ⚠ ' + table + ' 조회 불가 (' + r.status + ') — 이름만 저장합니다'); return null; }
-  const rows = await r.json();
+  const rows = await readJson(r);
   if (!rows.length) { console.log('  ⚠ ' + table + ' 가 비어 있습니다'); return []; }
   return Object.keys(rows[0]);
 }
@@ -108,7 +110,7 @@ async function sparql(query, tries = 3) {
       const res = await fetch(url, { headers: { Accept: 'application/sparql-results+json', 'User-Agent': UA } });
       if (res.status === 429 || res.status >= 500) { await sleep(3000 * (i + 1)); continue; }
       if (!res.ok) throw new Error('SPARQL ' + res.status);
-      return (await res.json()).results.bindings;
+      return (await readJson(res)).results.bindings;
     } catch (e) { if (i === tries - 1) { console.log('    (SPARQL 배치 오류, 계속):', e.message); return []; } await sleep(3000 * (i + 1)); }
   }
   return [];

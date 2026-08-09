@@ -34,6 +34,8 @@
 //    });
 // ============================================================
 
+import { readJson } from './json.mjs';
+
 export const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 const MAX_WAIT_MS   = 90 * 1000;            // ① 대기 상한
@@ -130,7 +132,7 @@ export function makeGetJSON(opt = {}) {
         }
 
         if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + (await r.text()).slice(0, 200));
-        return await r.json();
+        return await readJson(r);
 
       } catch (e) {
         if (isStop(e)) throw e;             // 멈춤 신호는 그대로 위로 올립니다

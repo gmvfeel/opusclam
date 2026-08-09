@@ -56,6 +56,7 @@ function dedupKey(r) {
 //   이 정책을 고치려면 http.mjs 한 곳만 고치면 모든 수집기에 반영됩니다.
 import { makeGetJSON, isStop, sleep } from './lib/http.mjs';
 
+import { readJson } from './lib/json.mjs';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -576,7 +577,7 @@ async function sbGetAll(table, select, extra) {
     const url = SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + (extra || '') + orderFor(table);
     const r = await fetch(url, { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
-    const batch = await r.json();
+    const batch = await readJson(r);
     out.push(...batch);
     if (!batch.length) break;              // 더 없으면 끝
     from += batch.length;                 // ★ 받은 만큼만 나아갑니다
@@ -737,7 +738,7 @@ async function main() {
       method: 'POST', headers: H, body: '{}',
     });
     if (r.ok) {
-      const n = await r.json();
+      const n = await readJson(r);
       console.log('■ 재정렬 완료 · sort_no 갱신', n, '행');
     } else {
       const t = await r.text();

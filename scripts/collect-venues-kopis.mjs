@@ -6,6 +6,8 @@
 //  - 환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY, KOPIS_KEY
 // ============================================================
 
+import { readJson } from './lib/json.mjs';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const KOPIS_KEY    = process.env.KOPIS_KEY;
@@ -109,7 +111,7 @@ async function sbGetAll(table, select) {
   while (true) {
     const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + orderFor(table), { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
-    const batch = await r.json(); out.push(...batch);
+    const batch = await readJson(r); out.push(...batch);
     if (batch.length < STEP) break; from += STEP;
   }
   return out;
