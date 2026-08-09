@@ -351,44 +351,114 @@
 
        https://www.youtube.com/watch_videos?video_ids=ID1,ID2,...
 
-     ★ 곡과 영상은 「작곡가」로 맞춥니다. 작품DB 의 곡에는 영상 번호가
-       없고, 음원영상에는 person_ids(작곡가)가 붙어 있기 때문입니다.
-       곡 하나하나가 정확히 그 연주라고 말하지 않습니다 —
-       「이 작곡가의 확인된 연주」를 이어 트는 것입니다.
+     ★ 2026-08-09 — 찾는 방식을 고쳤습니다
+       처음에는 작곡가 이름(matched_names)으로 찾았는데,
+       그 칸은 「프레데리크 쇼팽」처럼 <전체 이름>이 제목에 나와야
+       채워집니다. 유튜브 제목은 대개 「Chopin」만 씁니다.
+       실제로 담긴 205개 중 인물 이름이 붙은 것은 서너 개뿐이었습니다.
 
-     ★ 셋 미만이면 아예 그리지 않습니다. 두 곡짜리 「이어서 듣기」는
-       이름값을 못 합니다.
+       ▶ 이제 <곡의 갈래 낱말>로 찾습니다. 목록을 고를 때 쓴 것과
+         같은 낱말입니다(야상곡·자장가·명상·간주곡…).
+         「Thaïs: Méditation」·「Bach - Adagio from Violin concerto」
+         처럼 제목만 보아도 무슨 곡인지 알 수 있는 것들이 걸립니다.
+
+       ▶ 거기에 <작곡가 성>으로 찾은 것을 보탭니다.
+         「프레데리크 쇼팽」의 성만 떼어 「쇼팽」·「Chopin」으로 봅니다.
+
+     ★ 두 번 거릅니다 — Supabase 에는 ilike 로 넉넉히 묻고,
+       받아온 뒤 낱말 경계로 정확히 거릅니다(목록 만들 때와 같은 방식).
+
+     ★ 셋 미만이면 아예 그리지 않습니다. 두 곡짜리는 이름값을 못 합니다.
      ★ 유튜브가 한 번에 받는 수가 제한적이라 50개까지만 넘깁니다. */
   var PLAY_MIN = 3, PLAY_MAX = 50;
 
+  /* 「프레데리크 쇼팽」 → 「쇼팽」 · 「Frédéric Chopin」 → 「Chopin」
+     마지막 낱말을 성으로 봅니다. 너무 짧으면 오탐이 나므로 버립니다. */
+  function surname(full, minLen) {
+    var t = String(full || '').trim().split(/\s+/);
+    var last = t[t.length - 1] || '';
+    return last.length >= minLen ? last : '';
+  }
+
   function addPlayAll(cfg, rows) {
-    var names = [];
+    /* ① 갈래 낱말 (목록을 고를 때 쓴 것과 같습니다) */
+    var words = (cfg.like || []).slice();
+
+    /* ② 작곡가 성 — 목록에 많이 나온 순으로 열 명까지 */
+    var cnt = {}, ko = {}, en = {};
     rows.forEach(function (r) {
-      var n = r.composer_ko || r.composer_en;
-      if (n && names.indexOf(n) < 0 && names.length < 12) names.push(n);
+      var k = r.composer_ko || r.composer_en || '';
+      if (!k) return;
+      cnt[k] = (cnt[k] || 0) + 1;
+      if (r.composer_ko) ko[k] = r.composer_ko;
+      if (r.composer_en) en[k] = r.composer_en;
     });
-    if (!names.length) return;
+    Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; })
+      .slice(0, 10).forEach(function (k) {
+        var a = surname(ko[k], 2);      /* 한글 성은 두 글자부터 (쇼팽·라벨·포레) */
+        var b = surname(en[k], 5);      /* 로마자는 다섯 글자부터 (Chopin·Ravel) */
+        if (a && words.indexOf(a) < 0) words.push(a);
+        if (b && words.indexOf(b) < 0) words.push(b);
+      });
+    if (!words.length) return;
 
-    var ors = names.map(function (n) {
-      return 'matched_names.ilike.*' + encodeURIComponent(n) + '*';
-    }).join(',');
+    /* 낱말이 많으면 주소가 길어집니다 — 스물넷까지만 씁니다 */
+    words = words.slice(0, 24);
 
-    var url = SB + '/rest/v1/spot?select=video_id,matched_names,duration_sec'
+    var ors = [];
+    words.forEach(function (w) {
+      var e = encodeURIComponent(w);
+      ors.push('title.ilike.*' + e + '*');
+      ors.push('title_ko.ilike.*' + e + '*');
+    });
+
+    var url = SB + '/rest/v1/spot?select=video_id,title,title_ko,matched_names,duration_sec'
             + '&section=eq.' + encodeURIComponent('음원영상')
             + '&hidden=is.false&video_id=not.is.null'
-            + '&or=(' + ors + ')'
-            + '&order=duration_sec.asc.nullslast&limit=' + PLAY_MAX;
+            + '&or=(' + ors.join(',') + ')'
+            + '&order=duration_sec.asc.nullslast&limit=200';
 
     fetch(url, { headers: HDR })
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (vs) {
         if (!Array.isArray(vs)) return;
-        var ids = [];
+
+        /* 성으로 찾을 때 쓸 정규식 — 낱말 경계를 지킵니다 */
+        var surRx = null;
+        var lat = words.filter(function (w) { return /^[A-Za-zÀ-ÿ]/.test(w); });
+        if (lat.length) {
+          try {
+            surRx = new RegExp('(?:^|[^\\p{L}\\p{N}])(?:'
+                  + lat.map(function (w) { return w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|')
+                  + ')(?=$|[^\\p{L}\\p{N}])', 'iu');
+          } catch (e) { surRx = null; }
+        }
+        var kr = words.filter(function (w) { return !/^[A-Za-zÀ-ÿ]/.test(w); });
+
+        var ids = [], seen = {};
         vs.forEach(function (v) {
-          if (v.video_id && ids.indexOf(v.video_id) < 0) ids.push(v.video_id);
+          if (!v.video_id || seen[v.video_id]) return;
+          var hay = (v.title || '') + ' ' + (v.title_ko || '') + ' ' + (v.matched_names || '');
+          var hit = cfg.rx.test(hay);
+          if (!hit && cfg.kr) {
+            for (var q = 0; q < cfg.kr.length; q++) {
+              if (hay.indexOf(cfg.kr[q]) > -1) { hit = true; break; }
+            }
+          }
+          if (!hit && surRx) hit = surRx.test(hay);
+          if (!hit) {
+            for (var w = 0; w < kr.length; w++) {
+              if (hay.indexOf(kr[w]) > -1) { hit = true; break; }
+            }
+          }
+          if (!hit) return;
+          seen[v.video_id] = 1;
+          ids.push(v.video_id);
         });
+
         if (ids.length < PLAY_MIN) return;      /* 조용히 물러납니다 */
-        if (cur !== cfg.key) return;            /* 그 사이 다른 탭으로 옮겼으면 그만둡니다 */
+        if (cur !== cfg.key) return;            /* 그 사이 탭을 옮겼으면 그만둡니다 */
+        ids = ids.slice(0, PLAY_MAX);
 
         var a = document.createElement('a');
         a.className = 'plw-play';
