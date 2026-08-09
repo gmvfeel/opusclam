@@ -305,7 +305,13 @@
         { key:'work', label:'작품DB', table:'person_works',
           list:'/db/work.html', view:'/db/work-view.html',
           name:'title_ko', name2:'title', desc:'note',
-          meta:['genre','era','year_from'] }
+          meta:['genre','era','year_from'] },
+        /* ★ 용어사전 — 이름 칸이 term_ko / term_en 입니다.
+             설명은 한 줄 뜻(summary)을 씁니다. */
+        { key:'terms', label:'음악 용어사전', table:'oc_terms',
+          list:'/db/terms.html', view:'/db/terms-view.html',
+          name:'term_ko', name2:'term_en', desc:'summary',
+          meta:['category','genre','era'] }
       ]
     });
     OCHub.bindViewToggle('#latestView', '#latestBox');

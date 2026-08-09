@@ -977,9 +977,11 @@ window.OCHub = (function () {
                    modern:'현대음악', foundations:'기관재단', academic:'학술' };
   /* DB 종류별 빛깔 · 위 팔레트와 같은 결로 맞췄습니다.
      구성비 막대와 성장 곡선에서 함께 쓰입니다. */
+  /* ★ 2026-08-09 · work · terms 를 더했습니다.
+       없으면 회색(#8b95a8)으로 떨어져 다른 카드와 어울리지 않았습니다. */
   var DB_COLOR = { persons:'#3b6fc4', academic:'#8b95a8', schools:'#0f9b8e',
                    orgs:'#c08a3e',   venues:'#5a7fa8',  foundations:'#7c63b0',
-                   modern:'#d93a4c' };
+                   modern:'#d93a4c', work:'#2f8f5b',    terms:'#b0763e' };
 
   /* 누적 성장 곡선
      · 컨테이너 실제 폭(W)을 받아 그린다 (고정 폭으로 그려 늘리면 눌린다)
