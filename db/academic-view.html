@@ -1032,6 +1032,10 @@ if('serviceWorker' in navigator){
 (function(){
   var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',H={apikey:KEY,Authorization:'Bearer '+KEY};
   var id=new URLSearchParams(location.search).get('id'); if(!id) return;
+  /* DB보강 버튼 — 어느 항목인지 알려 줍니다.
+     이 한 줄이 없으면 write.html 이 <b>신규 등록</b>으로 열립니다.
+     (2026-08-10 · 인물DB 말고는 모두 빠져 있었습니다) */
+  if(id){ var _eb=document.querySelector('.pv-enhance'); if(_eb) _eb.setAttribute('href','write.html?mode=enhance&db=academic&id='+encodeURIComponent(id)); }
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fact(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
   fetch(URL+'/rest/v1/academic?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})

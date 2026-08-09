@@ -1050,13 +1050,13 @@ if('serviceWorker' in navigator){
     {l:'대표작',t:'text',k:'works',h:'full'},
     {l:'소개 · 이력',t:'textarea',k:'description',h:'full'},
     {l:'대표 이미지',t:'image',k:'image_url',h:'half'},{l:'링크 (위키·음원·영상·악보 URL)',t:'text',k:'link_wiki',h:'half',ph:'쉼표로 구분'}]},
-   org:{label:'음악단체DB',f:[
+   org:{label:'음악단체DB',t:'orgs',f:[
     {l:'단체명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'단체명 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'유형',t:'select',o:['오케스트라','실내악','합창단','오페라단','크로스오버','음악관계사','기타'],h:'half'},
     {l:'소재지',t:'text',h:'half'},{l:'창단',t:'text',h:'half'},{l:'대표 · 지휘자',t:'text',h:'half'},
     {l:'연고 공연장',t:'text',h:'half'},{l:'홈페이지',t:'url',h:'half'},
     {l:'대표 활동 · 공연',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
-   venue:{label:'공연장DB',f:[
+   venue:{label:'공연장DB',t:'venues',f:[
     {l:'공연장명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'공연장명 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'유형',t:'select',o:['콘서트홀','오페라하우스','다목적홀','실내악홀','야외공연장','복합공연장','기타'],h:'half'},
     {l:'소재지',t:'text',h:'half'},{l:'개관',t:'text',h:'half'},{l:'좌석수',t:'text',h:'half'},
@@ -1070,20 +1070,20 @@ if('serviceWorker' in navigator){
     {l:'대표 학과',t:'text',k:'departments',h:'full'},{l:'저명 동문',t:'text',k:'alumni',h:'full'},
     {l:'로고',t:'image',k:'logo_url',h:'half'},{l:'홈페이지',t:'url',k:'link_home',h:'half'},
     {l:'소개',t:'textarea',k:'description',h:'full'}]},
-   modern:{label:'현대음악DB',f:[
+   modern:{label:'현대음악DB',t:'modern_composers',f:[
     {l:'작곡가명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'작곡가명 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'사조·유파',t:'select',o:['표현주의·12음','총렬주의','미니멀리즘','전자음악','우연성·실험','스펙트럴','음향주의','신고전주의','동서 융합','다원주의·포스트모던','기타'],h:'half'},
     {l:'국적',t:'text',h:'half'},{l:'생몰',t:'text',h:'half'},{l:'대표 기법',t:'text',h:'half'},
     {l:'사사 (계보)',t:'text',h:'half'},{l:'활동시기',t:'text',h:'half'},
     {l:'대표작',t:'text',h:'full'},{l:'사진',t:'image',h:'half'},{l:'링크',t:'text',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
-   foundation:{label:'관련기관·재단DB',f:[
+   foundation:{label:'관련기관·재단DB',t:'foundations',f:[
     {l:'기관·재단명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'기관·재단명 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'유형',t:'select',o:['재단','협회','공공기관','기획사','음반사','콩쿠르·시상','지원기관','기타'],h:'half'},
     {l:'소재지',t:'text',h:'half'},{l:'설립',t:'text',h:'half'},
     {l:'설립구분',t:'select',o:['공공','민간','민간(기업)'],h:'half'},
     {l:'산하 · 운영',t:'text',h:'half'},{l:'관련 분야',t:'text',h:'half'},
     {l:'주요 사업',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
-   academic:{label:'학술DB',f:[
+   academic:{label:'학술DB',t:'academic',f:[
     {l:'제목 (국문)',t:'text',k:'title',h:'full'},{l:'제목 (영문)',t:'text',k:'title_en',h:'full'},
     {l:'유형',t:'select',o:['학술논문','학위논문','저널·학술지','연구서','평론','자료','기타'],h:'half'},
     {l:'저자',t:'text',h:'half'},{l:'발행처',t:'text',h:'half'},{l:'발행연도',t:'text',h:'half'},
