@@ -34,64 +34,71 @@
        연수대로 하면 중세가 400년이라 너무 넓고,
        인물 수대로 하면 중세 36명이 손톱만해져 누를 수 없습니다. */
   .tl-wrap{margin:0 0 8px}
-  .tl-band{display:flex;height:104px;border-radius:14px;overflow:hidden;
-    box-shadow:0 2px 14px -6px rgba(20,22,50,.28)}
-  .tl-seg{flex:1 1 0;min-width:54px;position:relative;display:flex;flex-direction:column;
-    justify-content:flex-end;gap:2px;padding:0 12px 13px;cursor:pointer;border:0;
+  /* ★ 2026-08-09 · 숨통을 텄습니다.
+     처음에는 높이 104px 에 글자가 아래쪽에 몰려 빡빡했습니다.
+     띠를 키우고, 조각 사이를 벌리고, 위아래 여백을 넉넉히 두었습니다. */
+  .tl-band{display:flex;height:132px;border-radius:16px;overflow:hidden;
+    box-shadow:0 3px 20px -8px rgba(20,22,50,.3)}
+  .tl-seg{flex:1 1 0;min-width:62px;position:relative;display:flex;flex-direction:column;
+    justify-content:flex-end;gap:5px;padding:0 15px 18px;cursor:pointer;border:0;
     font-family:inherit;text-align:left;color:#fff;overflow:hidden;
     transition:flex-grow .28s ease}
   .tl-seg::before{content:'';position:absolute;inset:0;background:var(--c);
     transition:filter .18s ease}
   .tl-seg::after{content:'';position:absolute;inset:0;
     background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(0,0,0,.22))}
+  /* ★ 조각 사이는 <붙여> 둡니다. 틈을 두면 흰 줄이 생겨
+     한 줄로 이어진 띠가 아니라 상자 일곱 개로 보입니다.
+     대신 옅은 세로선으로만 나눕니다. */
+  .tl-seg + .tl-seg{box-shadow:inset 1px 0 0 rgba(255,255,255,.16)}
   .tl-seg > *{position:relative;z-index:1}
   .tl-seg:hover::before{filter:brightness(1.12)}
   .tl-seg.on::before{filter:brightness(1.18)}
   .tl-seg.on{flex-grow:1.5}
-  .tl-seg .yr{font-family:var(--display);font-size:10.5px;opacity:.82;letter-spacing:.02em;
-    white-space:nowrap}
-  .tl-seg .nm{font-size:15px;font-weight:700;line-height:1.2;word-break:keep-all;
+  .tl-seg .yr{font-family:var(--display);font-size:11px;opacity:.8;letter-spacing:.03em;
+    white-space:nowrap;margin-bottom:1px}
+  .tl-seg .nm{font-size:16px;font-weight:700;line-height:1.25;word-break:keep-all;
     text-shadow:0 1px 3px rgba(0,0,0,.3)}
-  .tl-seg .cnt{font-size:11px;opacity:.85;white-space:nowrap}
+  .tl-seg .cnt{font-size:11.5px;opacity:.85;white-space:nowrap;margin-top:1px}
   /* 고른 시대에 아래쪽 표시 */
-  .tl-seg.on .nm::after{content:'';display:block;width:22px;height:2px;background:#fff;
-    margin-top:6px;border-radius:2px;opacity:.9}
+  .tl-seg.on .nm::after{content:'';display:block;width:26px;height:2px;background:#fff;
+    margin-top:9px;border-radius:2px;opacity:.9}
 
   /* 눈금 — 띠 아래 연도 */
-  .tl-axis{position:relative;height:20px;margin:6px 0 0}
+  .tl-axis{position:relative;height:22px;margin:11px 0 0}
   .tl-axis i{position:absolute;top:0;transform:translateX(-50%);font-style:normal;
     font-size:10.5px;color:var(--text-3);font-family:var(--display);white-space:nowrap}
   .tl-axis i::before{content:'';display:block;width:1px;height:5px;background:var(--line-2);
     margin:0 auto 3px}
 
-  .tl-note{font-size:11.5px;color:var(--text-3);line-height:1.6;margin:14px 0 30px;
+  .tl-note{font-size:11.5px;color:var(--text-3);line-height:1.75;margin:20px 0 44px;
     word-break:keep-all}
 
   /* ── 고른 시대의 내용 ────────────────────────────────── */
-  .tl-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
-    border-bottom:2px solid var(--ink);padding-bottom:12px;margin:0 0 22px}
+  .tl-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    border-bottom:2px solid var(--ink);padding-bottom:15px;margin:0 0 28px}
   .tl-head h2{font-family:var(--display);font-size:26px;font-weight:800;color:var(--text);margin:0;
     transition:color .2s ease}
   .tl-head .yr{font-size:13px;color:var(--text-3);font-family:var(--display)}
-  .tl-head .sum{font-size:13px;color:var(--text-2);flex:1 1 100%;line-height:1.6;
-    word-break:keep-all;margin-top:2px}
+  .tl-head .sum{font-size:13.5px;color:var(--text-2);flex:1 1 100%;line-height:1.75;
+    word-break:keep-all;margin-top:5px}
 
-  .tl-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:26px}
-  .tl-col h3{font-family:var(--display);font-size:14px;color:var(--text);margin:0 0 12px;
-    display:flex;align-items:baseline;justify-content:space-between;gap:8px;
-    padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .tl-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:34px}
+  .tl-col h3{font-family:var(--display);font-size:14px;color:var(--text);margin:0 0 14px;
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    padding-bottom:10px;border-bottom:1px solid var(--line)}
   /* ★ 무엇을 기준으로 셌는지 밝힙니다.
      연표는 <태어난 해>로 세고, 인물DB 화면은 <era_name>으로 거릅니다.
      둘 다 맞는 숫자인데 재는 자가 다릅니다. 밝혀 두지 않으면
      숫자가 틀린 것처럼 보입니다. */
   .tl-col h3 em{font-style:normal;font-size:11px;color:var(--text-3);font-weight:400;
     white-space:nowrap}
-  .tl-more{display:block;margin-top:14px;padding:10px;text-align:center;
+  .tl-more{display:block;margin-top:18px;padding:12px;text-align:center;
     font-size:12.5px;color:var(--text-2);background:var(--paper);text-decoration:none;
     border:1px solid var(--line-2);border-radius:9px;transition:border-color .15s,color .15s}
   .tl-more:hover{border-color:var(--violet-2);color:var(--violet-2)}
 
-  .tl-item{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;
+  .tl-item{display:flex;gap:12px;align-items:flex-start;padding:12px 2px;
     border-bottom:1px solid var(--line);text-decoration:none}
   .tl-item:last-child{border-bottom:0}
   .tl-item:hover .t{color:var(--violet-2)}
@@ -110,17 +117,17 @@
   @keyframes tlsk{0%,100%{opacity:.55}50%{opacity:.9}}
 
   @media(max-width:900px){
-    .tl-cols{grid-template-columns:1fr;gap:30px}
-    .tl-band{height:86px}
-    .tl-seg{padding:0 8px 10px;min-width:44px}
-    .tl-seg .nm{font-size:13px}
-    .tl-seg .yr,.tl-seg .cnt{font-size:9.5px}
+    .tl-cols{grid-template-columns:1fr;gap:34px}
+    .tl-band{height:108px}
+    .tl-seg{padding:0 11px 14px;min-width:50px;gap:4px}
+    .tl-seg .nm{font-size:14px}
+    .tl-seg .yr,.tl-seg .cnt{font-size:10px}
     .tl-axis{display:none}
   }
   /* 아주 좁으면 띠를 세로로 세웁니다 — 가로로는 글자가 안 들어갑니다 */
   @media(max-width:560px){
     .tl-band{flex-direction:column;height:auto}
-    .tl-seg{min-height:52px;justify-content:center;padding:9px 14px;flex-grow:1 !important}
+    .tl-seg{min-height:60px;justify-content:center;padding:13px 16px;flex-grow:1 !important;gap:3px}
     .tl-seg.on .nm::after{display:none}
     .tl-seg .nm{font-size:14px}
     .tl-head h2{font-size:22px}
