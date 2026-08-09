@@ -1012,6 +1012,31 @@ window.OCHub = (function () {
       return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.c).toFixed(1);
     }).join(' ');
 
+    /* ★ 2026-08-09 · 날마다의 신규를 막대로 함께 그립니다.
+       왜 — 누적 곡선만으로는 「어느 날 얼마나 들어왔는지」가 안 보입니다.
+       곡선이 평평해 보여도 실은 조금씩 늘고 있는 날이 있고,
+       계단이 진 날은 크게 들어온 날입니다. 막대가 그것을 바로 보여 줍니다.
+
+       ★ 누적과 신규는 자릿수가 크게 다릅니다(누적 5만 · 하루 수백).
+       같은 자로 재면 막대가 보이지 않으므로, 막대는 <자기들끼리>
+       가장 큰 날을 기준으로 그립니다. 아래쪽 40% 만 씁니다. */
+    var maxN = 0;
+    series.forEach(function (p) { if ((p.n || 0) > maxN) maxN = p.n; });
+    var bars = '';
+    if (maxN > 0) {
+      var bh = ih * 0.40;                                  /* 막대가 쓸 높이 */
+      var bw = Math.max(2, Math.min(14, iw / series.length * 0.62));
+      series.forEach(function (p, i) {
+        var v = p.n || 0;
+        if (!v) return;
+        var h = Math.max(1.5, bh * v / maxN);
+        bars += '<rect x="' + (x(i) - bw / 2).toFixed(1) + '" y="' + (PT + ih - h).toFixed(1) + '"'
+             +  ' width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '"'
+             +  ' rx="' + Math.min(2, bw / 3).toFixed(1) + '"'
+             +  ' fill="' + C_HI + '" fill-opacity=".30"/>';
+      });
+    }
+
     var grid = '';
     [0.5, 1].forEach(function (r) {
       var gy = y(max * r);
@@ -1033,6 +1058,7 @@ window.OCHub = (function () {
     var svg = '<svg class="cv" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '"'
       + ' role="img" aria-label="누적 등록 추이">'
       + grid
+      + bars                                    /* 막대를 먼저 — 곡선이 위에 오게 */
       + '<path d="' + line + '" fill="none" stroke="' + C_MAIN + '" stroke-width="2.4"'
       +   ' stroke-linejoin="round" stroke-linecap="round"/>'
       + '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="9" fill="' + C_HI + '" fill-opacity=".22"/>'
