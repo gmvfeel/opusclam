@@ -688,6 +688,41 @@
   .dl li a:hover{color:var(--link-hover)}
 
   /* ---------- big banners ---------- */
+  /* ── 입시요강 가로 띠 (2026-08-10) ─────────────────────────
+     아래 3칸 중 셋째 칸에 있던 것을 가로 한 줄로 폈습니다.
+
+     ★ 버튼 모양을 새로 짓지 않았습니다
+       .grid-region 규칙을 그대로 물려받고 <b>열 수만</b> 바꿉니다.
+       모양을 두 벌 두면 나중에 한쪽만 고치는 일이 생깁니다.
+
+     ★ 두 덩이의 키를 맞추는 법
+       지역 칸과 「입시커뮤니티」 는 안에 든 글이 달라 그냥 두면 키가
+       어긋납니다. 줄(.eb-row)을 stretch 로 두고 버튼의 위아래 여백을
+       없애, <b>줄 높이에 맞춰 늘어나게</b> 했습니다. */
+  .exam-band{padding:0 0 38px}
+  .eb-row{display:flex;align-items:stretch;gap:10px;margin-top:6px}
+  .eb-row>*{margin-top:0}
+  .eb-row .eb-regions{flex:1 1 auto;grid-template-columns:repeat(16,1fr)}
+  /* ★ 312px 인 까닭 — 재어 보고 정했습니다
+       「입시커뮤니티 + 입시·진로 이야기를 나누는 자리 →」 가 한 줄에 들어가려면
+       307px 가 필요합니다. 좁게 잡았더니 글이 세로로 쌓이면서
+       줄 전체가 122px 로 부풀고 지역 버튼까지 함께 늘어났습니다. */
+  .eb-row .eb-comm{flex:0 0 312px;padding:0 15px;white-space:nowrap}
+
+  @media(max-width:1180px){ .eb-row .eb-regions{grid-template-columns:repeat(8,1fr)} }
+  @media(max-width:760px){
+    .eb-row{flex-direction:column;gap:8px}
+    .eb-row .eb-regions{grid-template-columns:repeat(4,1fr)}
+    .eb-row .eb-comm{flex:1 1 auto;padding:13px 15px}
+  }
+
+  /* 입시요강이 빠진 자리에 들어간 광고 —
+     옆 두 칸(리쿠르트·유틸리티)과 키를 비슷하게 맞춥니다.
+     ★ align-self:start — 늘어나면 이미지 광고의 크기가 흐트러집니다.
+       2026-08-09 에 같은 까닭으로 다른 광고 자리도 start 로 바꿨습니다. */
+  .lower-ad{min-height:284px;align-self:start}
+  @media(max-width:1080px){ .lower-ad{min-height:220px} }
+
   .bigban{padding:6px 0 50px}
   .bigban .wrap{display:grid;grid-template-columns:1.5fr 1fr;gap:24px}
   .bigban-ad{min-height:190px}
@@ -1298,10 +1333,34 @@
       </ul>
     </div>
 
-    <!-- entrance exam region -->
+    <!-- ★ 2026-08-10 · 이 자리에 있던 <b>입시요강</b>을 아래 가로 띠로 옮기고
+         빈자리를 광고 영역으로 바꿨습니다.
+         까닭 — 지역이 16곳이라 세로 칸에서는 4줄로 쌓였습니다.
+         가로로 펴면 한 줄에 들어가고, 아낀 칸을 광고로 쓸 수 있습니다. -->
     <div>
-      <div class="sec-head"><div class="t"><span class="en-s">Entrance Exam</span><span class="ko">전국 예중·고·대학 입시요강</span></div><a class="more en" href="/community/admission.html">VIEW MORE +</a></div>
-      <div class="grid-region">
+      <a class="ad-slot lower-ad" href="#">
+        <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+        <span class="ad-badge">Advertisement</span>
+        <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== entrance exam band ===== -->
+<!-- ★ 2026-08-10 · 아래 3칸 중 셋째에 있던 것을 가로 한 줄로 옮겼습니다.
+     지역 16곳이 넓은 화면에서는 한 줄에, 태블릿에서는 8개씩 두 줄에,
+     휴대전화에서는 4개씩 네 줄에 들어갑니다.
+     버튼 모양은 .grid-region 규칙을 그대로 쓰고 <b>열 수만</b> 바꿉니다 —
+     같은 모양을 두 벌 두지 않기 위해서입니다. -->
+<section class="exam-band">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="t"><span class="en-s">Entrance Exam</span><span class="ko">전국 예중·고·대학 입시요강</span></div>
+      <a class="more en" href="/community/admission.html">VIEW MORE +</a>
+    </div>
+    <div class="eb-row">
+      <div class="grid-region eb-regions">
         <a href="/community/admission.html?q=서울">서울</a>
         <a href="/community/admission.html?q=경기">경기</a>
         <a href="/community/admission.html?q=인천">인천</a>
@@ -1319,7 +1378,7 @@
         <a href="/community/admission.html?q=전북">전북</a>
         <a class="rg-abroad" href="/community/admission.html?region=해외">해외</a>
       </div>
-      <a class="exam-comm" href="/community/admission-community.html"><span>입시커뮤니티</span><em>입시·진로 이야기를 나누는 자리 &rarr;</em></a>
+      <a class="exam-comm eb-comm" href="/community/admission-community.html"><span>입시커뮤니티</span><em>입시·진로 이야기를 나누는 자리 &rarr;</em></a>
     </div>
   </div>
 </section>
