@@ -282,6 +282,9 @@ window.OCBoard = (function () {
   function list(cfg) {
     var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '', yr = '', region = '', era = '';
     var sortCol = cfg.defaultSort || 'created_at';
+    /* 날짜 탭 — 「진행중·예정 / 지난 / 전체」처럼 오늘을 기준으로 나눕니다.
+       cfg.dateTabs 를 주지 않은 게시판에서는 늘 빈 값이라 아무 일도 하지 않습니다. */
+    var dtab = (cfg.dateTabs && cfg.dateTabs.def) || '';
     var listEl = document.querySelector('.board-list');
     var pager = document.querySelector('.board-pager');
     if (pager) pager.classList.add('pdb-pager');
@@ -309,6 +312,60 @@ window.OCBoard = (function () {
         return '<option value="' + esc(c.value) + '">' + esc(c.label) + '</option>';
       }).join('');
       catSel.addEventListener('change', function () { cat = catSel.value || ''; loadPage(1); });
+    }
+
+    /* ── 날짜 탭 (cfg.dateTabs) ──
+       기한이 있는 목록에 씁니다 — 공연정보·콩쿨·페스티벌·지원금처럼
+       「이미 지난 것」이 섞여 있으면 목록이 못 쓰게 되는 자리입니다.
+
+       설정 보기
+         dateTabs:{
+           col:'date_to',                                  // 기준 칸
+           def:'upcoming',                                 // 처음에 켜질 탭
+           tabs:[{value:'upcoming', label:'진행중·예정', dir:'asc'},
+                 {value:'past',     label:'지난 공연',   dir:'desc'},
+                 {value:'all',      label:'전체',        dir:'desc'}]
+         }
+
+       value 는 셋만 알아봅니다 — 'upcoming'(오늘 이후) · 'past'(오늘 이전) · 'all'(전부).
+       dir 은 그 탭에서 쓸 정렬 방향입니다. 예정은 가까운 날부터(asc)가 맞습니다.
+
+       놓을 자리는 화면의 <div class="board-datetabs"></div> 입니다.
+       그 칸이 없으면 아무것도 그리지 않습니다(거르기는 그대로 됩니다). */
+    var dtEl = document.querySelector('.board-datetabs');
+    if (dtEl && cfg.dateTabs && cfg.dateTabs.tabs && cfg.dateTabs.tabs.length) {
+      if (!dtab) dtab = cfg.dateTabs.tabs[0].value || '';
+      dtEl.innerHTML = cfg.dateTabs.tabs.map(function (c) {
+        return '<button type="button" class="board-cat-tab' + (c.value === dtab ? ' on' : '')
+             + '" data-dtab="' + esc(c.value) + '">' + esc(c.label) + '</button>';
+      }).join('');
+      dtEl.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('.board-cat-tab'); if (!b) return;
+        dtab = b.getAttribute('data-dtab') || '';
+        dtEl.querySelectorAll('.board-cat-tab').forEach(function (x) { x.classList.toggle('on', x === b); });
+        loadPage(1);
+      });
+    }
+
+    /* 오늘 날짜 — 서울 기준으로 고정합니다.
+       보는 분의 시계가 어느 나라로 맞춰져 있든 같은 결과가 나오게 합니다. */
+    function todayKST() {
+      return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+    }
+
+    /* 정렬 방향 — 기본은 지금까지와 똑같이 내림차순(최신 먼저)입니다.
+       ① cfg.sortDir:'asc' 로 게시판 전체를 바꿀 수 있고
+       ② 날짜 탭에 dir 이 적혀 있으면 그것이 이깁니다.
+       다만 보는 분이 정렬 상자를 직접 골라 다른 칸으로 바꾸면
+       탭의 방향은 쓰지 않습니다 — 인기순을 오름차순으로 볼 이유가 없습니다. */
+    function sortDir() {
+      if (cfg.dateTabs && cfg.defaultSort && sortCol === cfg.defaultSort) {
+        var tabs = cfg.dateTabs.tabs || [];
+        for (var i = 0; i < tabs.length; i++) {
+          if (tabs[i].value === dtab && tabs[i].dir) return tabs[i].dir === 'asc' ? 'asc' : 'desc';
+        }
+      }
+      return cfg.sortDir === 'asc' ? 'asc' : 'desc';
     }
 
     /* 년도 선택 (자료형 게시판용, cfg.yearFilter) — 제목에 해당 연도 포함으로 필터 */
@@ -363,10 +420,16 @@ window.OCBoard = (function () {
       if (yr) u += '&title=ilike.*' + encodeURIComponent(yr) + '*';
       if (region) u += '&region=eq.' + encodeURIComponent(region);
       if (era) u += '&era=eq.' + encodeURIComponent(era);
+      /* 날짜 탭 — 오늘을 기준으로 앞뒤를 가릅니다 ('all' 이면 거르지 않습니다) */
+      if (cfg.dateTabs && (dtab === 'upcoming' || dtab === 'past')) {
+        var _dc = cfg.dateTabs.col || 'date_from';
+        u += '&' + _dc + (dtab === 'upcoming' ? '=gte.' : '=lt.') + todayKST();
+      }
       /* 페이지가 지정한 고정 조건 (예: 지식나눔의 갈래 → '&track=eq.음악지식')
          쓰지 않는 게시판에는 영향이 없습니다 */
       if (cfg.where) u += cfg.where;
-      u += '&order=' + (cfg.pinnedFirst ? 'is_pinned.desc,' + sortCol + '.desc' : sortCol + '.desc');
+      var _dir = sortDir();
+      u += '&order=' + (cfg.pinnedFirst ? 'is_pinned.desc,' + sortCol + '.' + _dir : sortCol + '.' + _dir);
       u += '&limit=' + PAGE + '&offset=' + off;
       return u;
     }
@@ -686,7 +749,7 @@ window.OCBoard = (function () {
     function saveSpot(id) {
       try {
         sessionStorage.setItem(SKEY, JSON.stringify({
-          id: String(id), page: cur, cat: cat, q: q, yr: yr, region: region, era: era, sort: sortCol
+          id: String(id), page: cur, cat: cat, q: q, yr: yr, region: region, era: era, sort: sortCol, dtab: dtab
         }));
       } catch (e) {}
     }
@@ -757,9 +820,13 @@ window.OCBoard = (function () {
                 listEl.classList.toggle('as-cards', !!cfg.cardStyle);
                 /* 공연 목록도 두 칸으로 — 목록 폭이 넓어 한 줄에 하나면 비어 보입니다 */
                 listEl.classList.toggle('as-concert', !!cfg.concertStyle);
-                /* 번호는 전체 건수에서 거꾸로 셉니다 — 최신 글이 가장 큰 번호입니다 */
+                /* 번호는 전체 건수에서 거꾸로 셉니다 — 최신 글이 가장 큰 번호입니다.
+                   다만 오름차순으로 보고 있을 때(예: 「진행중·예정」 공연)는
+                   맨 위가 1번이라야 읽힙니다. 방향을 따라갑니다. */
                 var off = (pg - 1) * PAGE;
-                var numOf = function (i) { return total - off - i; };
+                var numOf = sortDir() === 'asc'
+                  ? function (i) { return off + i + 1; }
+                  : function (i) { return total - off - i; };
                 listEl.innerHTML = cfg.concertStyle
                   ? rows.map(function (r, i) { return conRowHtml(r, numOf(i)); }).join('')
                   : (cfg.cardStyle
@@ -831,9 +898,17 @@ window.OCBoard = (function () {
         if (typeof regionSel !== 'undefined' && regionSel) regionSel.value = region;
         if (typeof eraSel !== 'undefined' && eraSel) eraSel.value = era;
         if (sortEl) sortEl.value = sortCol;
-        if (catsEl) {
+        /* cfg.categories 를 쓰는 게시판에서만 손댑니다.
+           날짜 탭은 data-cat 이 없어 여기서 건드리면 모두 켜져 버립니다. */
+        if (catsEl && cfg.categories && cfg.categories.length) {
           catsEl.querySelectorAll('.board-cat-tab').forEach(function (x) {
             x.classList.toggle('on', (x.getAttribute('data-cat') || '') === cat);
+          });
+        }
+        if (dtEl && typeof _sp.dtab === 'string') {
+          dtab = _sp.dtab;
+          dtEl.querySelectorAll('.board-cat-tab').forEach(function (x) {
+            x.classList.toggle('on', (x.getAttribute('data-dtab') || '') === dtab);
           });
         }
         loadPage(_sp.page || 1);

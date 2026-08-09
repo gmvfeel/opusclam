@@ -64,10 +64,13 @@
       <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
     </div>
     <div class="pdb-selects">
-      <select class="board-regionsel" aria-label="국내/해외"></select>
-      <select class="board-catsel" aria-label="구분"></select>
+      <!-- 국내/해외 · 구분 상자를 뺐습니다.
+           수집된 870건이 전부 region='국내' · category='클래식' 이라
+           어느 것을 골라도 빈 화면이 됐습니다.
+           해외 공연이 들어오기 시작하면 그때 다시 답니다. -->
       <select class="board-sort" aria-label="정렬">
-        <option value="created_at">최신순</option>
+        <option value="date_from">공연일순</option>
+        <option value="created_at">등록순</option>
         <option value="view_count">인기순</option>
       </select>
     </div>
@@ -78,6 +81,9 @@
       <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
     </div>
   </div>
+
+  <!-- 날짜 탭 — 내용은 board.js 가 cfg.dateTabs 를 보고 채웁니다 -->
+  <div class="board-datetabs"></div>
 
   <div class="board-count pdb-count">전체 <b>0</b>건</div>
   <div class="board-list"></div>
@@ -118,8 +124,20 @@
       viewPage:'spot-view.html', writePage:'spot-write-concert.html',
       where:'&section=eq.' + encodeURIComponent('공연정보') + '&hidden=is.false',
       searchCols:['title','title_en','body','keywords','country','city','organizer','venue_name'],
-      categories:[{"value": "", "label": "구분선택"}, {"value": "국내공연", "label": "국내공연"}, {"value": "내한공연", "label": "내한공연"}, {"value": "해외공연", "label": "해외공연"}],
-      regions:[{"value":"","label":"국내/해외"},{"value":"국내","label":"국내"},{"value":"해외","label":"해외"}],
+      /* 구분·지역 상자는 뺐습니다 — 위 마크업의 주석을 보십시오.
+
+         대신 날짜로 나눕니다. 공연 목록에서 정작 중요한 것은
+         「지금 갈 수 있는가」이지 갈래가 아닙니다.
+
+         기준 칸을 date_to(끝나는 날)로 잡은 까닭 —
+         여러 날 하는 공연은 시작일이 지났어도 오늘 하고 있습니다.
+         date_from 으로 자르면 그런 공연이 「지난 공연」으로 밀립니다. */
+      dateTabs:{
+        col:'date_to', def:'upcoming',
+        tabs:[{value:'upcoming', label:'진행중·예정', dir:'asc'},
+              {value:'past',     label:'지난 공연',   dir:'desc'},
+              {value:'all',      label:'전체',        dir:'desc'}]
+      },
       /* 공연은 「무엇을·언제·어디서」 가 한눈에 보여야 하므로
          포스터와 일시·장소를 함께 보여 주는 모양을 씁니다 (시안 04_공연정보) */
       concertStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'date_from',

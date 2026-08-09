@@ -16,6 +16,10 @@
    board.js 훅(.board-cats/.board-search/.board-searchbtn/.board-count b/.board-actions)은 유지.
    분류탭은 인물DB에 없는 뉴스 전용 요소라 여기서 스타일 유지. */
 .board-cats{display:flex;gap:6px;flex-wrap:wrap}
+/* 날짜 탭 (board.js 의 cfg.dateTabs) — 알약 모양은 위 .board-cat-tab 을 그대로 씁니다.
+   새로 만든 이름이라 지금 있는 화면에는 아무 영향이 없습니다. */
+.board-datetabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px 2px}
+.board-datetabs:empty{display:none;margin:0}
 .board-cat-tab{font-family:var(--display);font-size:14px;font-weight:600;color:var(--text-3);background:none;border:1px solid var(--line-2);border-radius:999px;padding:7px 16px;cursor:pointer;transition:all .15s ease}
 .board-cat-tab:hover{color:var(--text);border-color:var(--text-3)}
 .board-cat-tab.on{color:#fff;background:var(--violet-2);border-color:var(--violet-2)}
