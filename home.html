@@ -517,6 +517,27 @@
 
   .col-block{margin-bottom:38px}
 
+  /* ---------- 오늘의 작품 / 이주의 음악가 (2026-08-09) ----------
+     이 구역에서만 쓰는 것들입니다. 모두 .dp- 로 시작하므로
+     다른 자리에는 영향이 없습니다. */
+  .dp-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .dp-card{display:flex;flex-direction:column;gap:7px;padding:14px 15px;
+    border:1px solid var(--line);border-radius:12px;text-decoration:none;
+    background:var(--paper);transition:border-color .18s ease}
+  .dp-card:hover{border-color:var(--text-3)}
+  .dp-tag{font-family:var(--display);font-size:10.5px;font-weight:700;letter-spacing:.04em;
+    color:var(--violet-2);text-transform:uppercase}
+  .dp-t{font-size:14px;font-weight:600;color:var(--text);line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .dp-card:hover .dp-t{color:var(--violet-2)}
+  .dp-s{font-size:11.5px;color:var(--text-3);line-height:1.5}
+  .dp-p{display:flex;gap:11px;align-items:flex-start}
+  .dp-pb{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .dp-th{flex:0 0 46px;width:46px;height:46px;border-radius:50%;overflow:hidden;
+    background:var(--line);display:block}
+  .dp-th img{width:100%;height:100%;object-fit:cover;display:block}
+  @media(max-width:880px){.dp-wrap{grid-template-columns:1fr}}
+
   /* ---------- ad slots ---------- */
   .ad-slot{border:1px dashed var(--line-2);border-radius:10px;
     background:repeating-linear-gradient(45deg,#f5f3fa 0 16px,#efedf7 16px 32px);
@@ -1017,6 +1038,32 @@
 
     <!-- column 1 -->
     <div class="col-1">
+
+      <!-- ★ 2026-08-09 · 오늘의 작품 / 이주의 음악가
+           날짜를 씨앗 삼아 작품DB · 인물DB 에서 골라 옵니다.
+           새 표도 워크플로우도 없습니다 — 자정이 지나면 저절로 바뀝니다.
+           내용은 아래 스크립트가 채웁니다. 자료를 못 받으면 통째로 숨깁니다. -->
+      <div class="col-block dp-block" id="dpBlock" hidden>
+        <div class="sec-head"><div class="t"><span class="en-s">Today's Pick</span><span class="ko">오늘의 작품 / 이주의 음악가</span></div></div>
+        <div class="dp-wrap">
+          <a class="dp-card" id="dpWork" href="#">
+            <span class="dp-tag">오늘의 작품</span>
+            <span class="dp-t" id="dpWorkT">—</span>
+            <span class="dp-s" id="dpWorkS"></span>
+          </a>
+          <a class="dp-card" id="dpPerson" href="#">
+            <span class="dp-tag">이주의 음악가</span>
+            <span class="dp-p">
+              <span class="dp-th" id="dpPersonTh"></span>
+              <span class="dp-pb">
+                <span class="dp-t" id="dpPersonT">—</span>
+                <span class="dp-s" id="dpPersonS"></span>
+              </span>
+            </span>
+          </a>
+        </div>
+      </div>
+
       <div class="col-block">
         <div class="sec-head"><div class="t"><span class="en-s">News</span><span class="ko">뉴스</span></div><a class="more en" href="/community/news.html">VIEW MORE +</a></div>
         <article class="lead" id="card-notice-lead">
@@ -1766,6 +1813,111 @@ if('serviceWorker' in navigator){
   }
 
   // 지원금 — 제목 + 마감일(텍스트)
+  /* ============================================================
+     오늘의 작품 / 이주의 음악가   (2026-08-09)
+
+     ── 어떻게 고르는가 ────────────────────────────────────
+     새 표를 만들지 않았습니다. 날짜를 씨앗 삼아
+     작품DB · 인물DB 에서 <차례대로> 하나를 집어 옵니다.
+
+       오늘의 작품    1970-01-01 부터 며칠째인가  →  그 번째 작품
+       이주의 음악가  1970-01-01 부터 몇 주째인가  →  그 번째 사람
+
+     ★ 그래서 자정이 지나면 저절로 바뀌고, 누가 봐도 같은 것이 나옵니다.
+       돌아가는 것이 없으니 비용도 0 입니다.
+
+     ★ 왜 order=id.asc 인가
+       차례가 늘 같아야 「몇 번째」가 뜻을 가집니다.
+       최신순으로 두면 자료가 하나 늘 때마다 전부 밀립니다.
+
+     ── 고르는 조건 ────────────────────────────────────────
+       작품   시대(era)가 적혀 있는 것        약 15,600건 · 42년치
+       인물   소개문 · 사진이 있고 수상 경력이 하나라도 있는 것
+              약 531명 · 10년치
+
+     ★ 자료를 못 받으면 구역을 통째로 숨깁니다(hidden).
+       빈 카드를 보여 주지 않으려는 것입니다.
+     ============================================================ */
+  const DP_EPOCH = Date.UTC(1970, 0, 1);
+
+  /* 서울 기준으로 셉니다 — 보는 분의 시계가 어디에 맞춰져 있든
+     같은 날에는 같은 것이 나오게 합니다. */
+  function dpDayNo(){
+    const kst = Date.now() + 9 * 3600 * 1000;
+    return Math.floor((kst - DP_EPOCH) / 86400000);
+  }
+
+  /* 전체 건수를 먼저 받아 그 안에서 자리를 정합니다.
+     content-range 머리글로 오므로 자료를 한 줄만 받아도 알 수 있습니다. */
+  async function dpCount(query){
+    const res = await fetch(SUPABASE_URL + '/rest/v1/' + query + '&limit=1',
+      { headers: Object.assign({ Prefer: 'count=exact' }, H) });
+    if(!res.ok) return 0;
+    const cr = res.headers.get('content-range') || '';
+    const t = cr.split('/')[1];
+    return (t && t !== '*') ? (parseInt(t, 10) || 0) : 0;
+  }
+
+  async function loadDailyPick(){
+    const box = document.getElementById('dpBlock');
+    if(!box) return;
+    try{
+      const day  = dpDayNo();
+      const week = Math.floor(day / 7);
+
+      /* ── 오늘의 작품 ── */
+      const wq = 'person_works?select=id,title,title_ko,composer_ko,composer_en,'
+               + 'era,opus,year_text,imslp_ref&era=not.is.null&order=id.asc';
+      const wn = await dpCount(wq);
+      if(!wn) return;
+      const wrows = await sbGet(wq + '&limit=1&offset=' + (day % wn));
+      const w = Array.isArray(wrows) && wrows[0];
+      if(!w) return;
+
+      /* ── 이주의 음악가 ──
+         person_awards!inner 를 쓰면 수상 경력이 있는 사람만 옵니다. */
+      const pq = 'persons?select=id,name_ko,name_en,field,life,image_url,'
+               + 'person_awards!inner(title,title_ko,year,org)'
+               + '&hidden=is.false&description=not.is.null&image_url=not.is.null'
+               + '&name_ko=not.is.null&order=id.asc';
+      const pn = await dpCount(pq);
+      const prows = pn ? await sbGet(pq + '&limit=1&offset=' + (week % pn)) : [];
+      const p = Array.isArray(prows) && prows[0];
+
+      /* ── 그리기 ── */
+      const $ = (id) => document.getElementById(id);
+
+      const wTitle = w.title_ko || w.title || '(제목 없음)';
+      const wSub = [w.composer_ko || w.composer_en, w.era, w.opus || w.year_text]
+                     .filter(Boolean).join(' · ')
+                   + (w.imslp_ref ? '  ·  악보' : '');
+      $('dpWorkT').textContent = wTitle;
+      $('dpWorkS').textContent = wSub;
+      $('dpWork').href = '/db/work-view.html?id=' + encodeURIComponent(w.id);
+
+      if(p){
+        const aw = Array.isArray(p.person_awards) ? p.person_awards : [];
+        const one = aw[0] || null;
+        const awText = one
+          ? ((one.title_ko || one.title || '') + (one.year ? ' (' + one.year + ')' : ''))
+          : '';
+        $('dpPersonT').textContent = p.name_ko || p.name_en || '';
+        $('dpPersonS').textContent = [p.field, p.life, awText].filter(Boolean).join(' · ');
+        $('dpPerson').href = '/db/person-view.html?id=' + encodeURIComponent(p.id);
+        if(p.image_url){
+          const im = document.createElement('img');
+          im.src = p.image_url; im.alt = ''; im.loading = 'lazy';
+          $('dpPersonTh').appendChild(im);
+        }
+      } else {
+        const el = document.getElementById('dpPerson');
+        if(el) el.remove();
+      }
+
+      box.hidden = false;
+    }catch(e){ console.error('오늘의 작품 로드 실패:', e); }
+  }
+
   async function loadFunding(n){
     const list = document.getElementById('funding-list');
     if(!list) return;
@@ -2731,6 +2883,7 @@ if('serviceWorker' in navigator){
     /* ★ 왼쪽 칸 세 목록을 <b>4줄씩</b>으로 맞췄습니다 —
        네 묶음(콩쿨·페스티벌·악보)이 나란히 놓이므로 줄 수를 같게 두면
        칸이 고르게 보입니다. */
+    loadDailyPick();          /* 오늘의 작품 / 이주의 음악가 (2026-08-09) */
     loadDateList('concours-list', 'concours', 4);
     loadDateList('festival-list', 'festival', 4);
     loadScoreList(4);
