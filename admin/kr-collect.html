@@ -119,7 +119,8 @@
 
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
 
   // 분류 판정 — 클래식만 골라내기 위해 3단계로 나눕니다
   //  BLACK : 대중음악·인물 아님 → 목록에서 제외

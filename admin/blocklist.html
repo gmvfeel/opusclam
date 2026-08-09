@@ -147,7 +147,8 @@
     document.getElementById('load').disabled = true;
     return;
   }
-  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
 
   var $ = function(id){ return document.getElementById(id); };
   var rows = [];          /* {qid, name_ko, name_en, occ, gen, desc, score, flag, noBasis, reason} */

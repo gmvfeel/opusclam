@@ -38,7 +38,8 @@
     if (window.__ocSb) return window.__ocSb;
     if (_sb) return _sb;
     if (!window.supabase || !window.supabase.createClient) return null;
-    _sb = window.supabase.createClient(SB_URL, SB_KEY);
+    _sb = window.__ocSb ||
+          (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
     window.__ocSb = _sb;
     return _sb;
   }

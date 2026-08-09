@@ -534,7 +534,8 @@
   <script>
     var SUPABASE_URL='https://ptdxzxkgddvkusamkiol.supabase.co';
     var SUPABASE_KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-    var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    var sb = window.__ocSb ||
+             (window.__ocSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY));
     var views={login:document.getElementById('loginWrap'),dash:document.getElementById('dash'),hero:document.getElementById('hero'),collect:document.getElementById('collect'),manage:document.getElementById('manage'),members:document.getElementById('members'),review:document.getElementById('review')};
     function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');if(v==='dash'){if(typeof updateDashBadges==='function')updateDashBadges();if(typeof loadDashStats==='function')loadDashStats();}}
     async function loadDashStats(){

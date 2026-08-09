@@ -197,7 +197,8 @@
 
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
 
   var CHUNK = 150, UP = 400;
 

@@ -32,7 +32,8 @@
 <script>
 (function(){
   var URL="https://ptdxzxkgddvkusamkiol.supabase.co", KEY="sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu";
-  var sb=window.supabase.createClient(URL,KEY);
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(URL, KEY));
   var body=document.getElementById('wd-body');
   function needLogin(){ body.innerHTML='<div class="wd-msg">로그인이 필요합니다.<br><br><a class="btn primary block" href="/account/login.html">로그인하기</a></div>'; }
   function form(){

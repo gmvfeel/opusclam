@@ -148,7 +148,8 @@
       + '  인터넷 연결이나 광고 차단 확장을 확인해 주십시오.';
     $('load').disabled = true; return;
   }
-  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
 
   var state = 'pending';
   var rows = [];

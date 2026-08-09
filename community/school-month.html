@@ -673,7 +673,8 @@
      ============================================================ */
   var sbClient = null;
   function client() {
-    if (!sbClient && window.supabase) sbClient = window.supabase.createClient(SB_URL, SB_KEY);
+    if (!sbClient && window.supabase) sbClient = window.__ocSb ||
+      (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
     return sbClient;
   }
 

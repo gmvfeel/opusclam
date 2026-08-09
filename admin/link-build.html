@@ -74,7 +74,8 @@
 
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
 
   var NAME_KEYS = ['name_ko','name','name_kr','title','org_name','school_name','name_en'];
   var CHUNK = 200;      // SPARQL 한 번에 조회할 인물 수

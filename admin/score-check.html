@@ -446,7 +446,8 @@
       $('upWho').innerHTML = '★ Supabase 라이브러리를 불러오지 못해 올릴 수 없습니다.';
       return;
     }
-    SB2 = window.supabase.createClient(SB_URL, SB_KEY);
+    SB2 = window.__ocSb ||
+          (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
     try {
       var g = await SB2.auth.getUser();
       var u = g && g.data && g.data.user;
