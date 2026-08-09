@@ -1052,16 +1052,16 @@ if('serviceWorker' in navigator){
     {l:'대표 이미지',t:'image',k:'image_url',h:'half'},{l:'링크 (위키·음원·영상·악보 URL)',t:'text',k:'link_wiki',h:'half',ph:'쉼표로 구분'}]},
    org:{label:'음악단체DB',t:'orgs',f:[
     {l:'단체명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'단체명 (영문)',t:'text',k:'name_en',h:'half'},
-    {l:'유형',t:'select',o:['오케스트라','실내악','합창단','오페라단','크로스오버','음악관계사','기타'],h:'half'},
-    {l:'소재지',t:'text',h:'half'},{l:'창단',t:'text',h:'half'},{l:'대표 · 지휘자',t:'text',h:'half'},
-    {l:'연고 공연장',t:'text',h:'half'},{l:'홈페이지',t:'url',h:'half'},
-    {l:'대표 활동 · 공연',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+    {l:'유형',t:'select',k:'type',o:['오케스트라','실내악','합창단','오페라단','크로스오버','음악관계사','기타'],h:'half'},
+    {l:'소재지',t:'text',k:'location',h:'half'},{l:'창단',t:'text',k:'founded',h:'half'},{l:'대표 · 지휘자',t:'text',k:'leader',h:'half'},
+    {l:'연고 공연장',t:'text',k:'home_venue',h:'half'},{l:'홈페이지',t:'url',k:'link_home',h:'half'},
+    {l:'대표 활동 · 공연',t:'text',k:'activities',h:'full'},{l:'로고',t:'image',k:'logo_url',h:'half'},{l:'소개',t:'textarea',k:'description',h:'full'}]},
    venue:{label:'공연장DB',t:'venues',f:[
     {l:'공연장명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'공연장명 (영문)',t:'text',k:'name_en',h:'half'},
-    {l:'유형',t:'select',o:['콘서트홀','오페라하우스','다목적홀','실내악홀','야외공연장','복합공연장','기타'],h:'half'},
-    {l:'소재지',t:'text',h:'half'},{l:'개관',t:'text',h:'half'},{l:'좌석수',t:'text',h:'half'},
-    {l:'운영주체',t:'text',h:'half'},{l:'상주단체',t:'text',h:'half'},
-    {l:'대표 프로그램',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+    {l:'유형',t:'select',k:'type',o:['콘서트홀','오페라하우스','다목적홀','실내악홀','야외공연장','복합공연장','기타'],h:'half'},
+    {l:'소재지',t:'text',k:'location',h:'half'},{l:'개관',t:'text',k:'opened',h:'half'},{l:'좌석수',t:'text',k:'seats',h:'half'},
+    {l:'운영주체',t:'text',k:'operator',h:'half'},{l:'상주단체',t:'text',k:'resident',h:'half'},
+    {l:'대표 프로그램',t:'text',k:'programs',h:'full'},{l:'로고',t:'image',k:'logo_url',h:'half'},{l:'홈페이지',t:'url',k:'link_home',h:'half'},{l:'소개',t:'textarea',k:'description',h:'full'}]},
    school:{label:'음악학교DB',t:'schools',f:[
     {l:'학교명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'학교명 (영문)',t:'text',k:'name_en',h:'half'},
     {l:'구분',t:'select',k:'category',o:['예술중학교','예술고등학교','음악대학','예술대학','대학원','음악원','음악학교','기타'],h:'half'},
@@ -1072,23 +1072,23 @@ if('serviceWorker' in navigator){
     {l:'소개',t:'textarea',k:'description',h:'full'}]},
    modern:{label:'현대음악DB',t:'modern_composers',f:[
     {l:'작곡가명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'작곡가명 (영문)',t:'text',k:'name_en',h:'half'},
-    {l:'사조·유파',t:'select',o:['표현주의·12음','총렬주의','미니멀리즘','전자음악','우연성·실험','스펙트럴','음향주의','신고전주의','동서 융합','다원주의·포스트모던','기타'],h:'half'},
-    {l:'국적',t:'text',h:'half'},{l:'생몰',t:'text',h:'half'},{l:'대표 기법',t:'text',h:'half'},
-    {l:'사사 (계보)',t:'text',h:'half'},{l:'활동시기',t:'text',h:'half'},
-    {l:'대표작',t:'text',h:'full'},{l:'사진',t:'image',h:'half'},{l:'링크',t:'text',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+    {l:'사조·유파',t:'select',k:'school_style',o:['표현주의·12음','총렬주의','미니멀리즘','전자음악','우연성·실험','스펙트럴','음향주의','신고전주의','동서 융합','다원주의·포스트모던','기타'],h:'half'},
+    {l:'국적',t:'text',k:'nationality',h:'half'},{l:'생몰',t:'text',k:'life',h:'half'},{l:'대표 기법',t:'text',k:'technique',h:'half'},
+    {l:'사사 (계보)',t:'text',k:'lineage',h:'half'},{l:'활동시기',t:'text',k:'active_period',h:'half'},
+    {l:'대표작',t:'text',k:'works',h:'full'},{l:'사진',t:'image',k:'image_url',h:'half'},{l:'위키 링크',t:'url',k:'link_wiki',h:'half'},{l:'음원 링크',t:'url',k:'link_audio',h:'half'},{l:'영상 링크',t:'url',k:'link_video',h:'half'},{l:'소개',t:'textarea',k:'description',h:'full'}]},
    foundation:{label:'관련기관·재단DB',t:'foundations',f:[
     {l:'기관·재단명 (국문)',t:'text',k:'name_ko',h:'half'},{l:'기관·재단명 (영문)',t:'text',k:'name_en',h:'half'},
-    {l:'유형',t:'select',o:['재단','협회','공공기관','기획사','음반사','콩쿠르·시상','지원기관','기타'],h:'half'},
-    {l:'소재지',t:'text',h:'half'},{l:'설립',t:'text',h:'half'},
-    {l:'설립구분',t:'select',o:['공공','민간','민간(기업)'],h:'half'},
-    {l:'산하 · 운영',t:'text',h:'half'},{l:'관련 분야',t:'text',h:'half'},
-    {l:'주요 사업',t:'text',h:'full'},{l:'로고',t:'image',h:'half'},{l:'홈페이지',t:'url',h:'half'},{l:'소개',t:'textarea',h:'full'}]},
+    {l:'유형',t:'select',k:'type',o:['재단','협회','공공기관','기획사','음반사','콩쿠르·시상','지원기관','기타'],h:'half'},
+    {l:'소재지',t:'text',k:'location',h:'half'},{l:'설립',t:'text',k:'founded',h:'half'},
+    {l:'설립구분',t:'select',k:'estab_type',o:['공공','민간','민간(기업)'],h:'half'},
+    {l:'산하 · 운영',t:'text',k:'subsidiary',h:'half'},{l:'관련 분야',t:'text',k:'field',h:'half'},
+    {l:'주요 사업',t:'text',k:'business',h:'full'},{l:'로고',t:'image',k:'logo_url',h:'half'},{l:'홈페이지',t:'url',k:'link_home',h:'half'},{l:'소개',t:'textarea',k:'description',h:'full'}]},
    academic:{label:'학술DB',t:'academic',f:[
-    {l:'제목 (국문)',t:'text',k:'title',h:'full'},{l:'제목 (영문)',t:'text',k:'title_en',h:'full'},
-    {l:'유형',t:'select',o:['학술논문','학위논문','저널·학술지','연구서','평론','자료','기타'],h:'half'},
-    {l:'저자',t:'text',h:'half'},{l:'발행처',t:'text',h:'half'},{l:'발행연도',t:'text',h:'half'},
-    {l:'분야',t:'text',h:'half'},{l:'언어',t:'select',o:['국문','영문','독문','기타'],h:'half'},
-    {l:'키워드',t:'tags',h:'full'},{l:'원문 링크',t:'url',h:'full'},{l:'초록',t:'textarea',h:'full'}]}
+    {l:'제목 (국문)',t:'text',k:'name_ko',h:'full'},{l:'제목 (영문)',t:'text',k:'name_en',h:'full'},
+    {l:'유형',t:'select',k:'type',o:['학술논문','학위논문','저널·학술지','연구서','평론','자료','기타'],h:'half'},
+    {l:'저자',t:'text',k:'author',h:'half'},{l:'발행처',t:'text',k:'publisher',h:'half'},{l:'발행연도',t:'text',k:'pub_year',h:'half'},
+    {l:'분야',t:'text',k:'field',h:'half'},{l:'언어',t:'select',k:'language',o:['국문','영문','독문','기타'],h:'half'},
+    {l:'키워드',t:'tags',k:'keywords',h:'full'},{l:'원문 링크',t:'url',k:'link_full',h:'full'},{l:'초록',t:'textarea',k:'description',h:'full'}]}
   };
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fld(f,rec){
