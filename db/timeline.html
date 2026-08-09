@@ -40,6 +40,8 @@
   .tl-axis{display:flex;gap:3px;margin:0 0 34px}
   .tl-axis span{flex:1 1 0;text-align:center;font-size:10.5px;color:var(--text-3);
     font-family:var(--display)}
+  .tl-note{font-size:11.5px;color:var(--text-3);line-height:1.6;margin:0 0 30px;
+    word-break:keep-all}
 
   /* ── 고른 시대의 내용 ────────────────────────────────── */
   .tl-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
@@ -53,8 +55,17 @@
   .tl-col h3{font-family:var(--display);font-size:14px;color:var(--text);margin:0 0 12px;
     display:flex;align-items:baseline;justify-content:space-between;gap:8px;
     padding-bottom:8px;border-bottom:1px solid var(--line)}
-  .tl-col h3 a{font-size:11.5px;color:var(--violet-2);text-decoration:none;font-weight:400}
-  .tl-col h3 a:hover{text-decoration:underline}
+  /* ★ 무엇을 기준으로 셌는지 밝힙니다.
+     연표는 <태어난 해>로 세고, 인물DB 화면은 <era_name>으로 거릅니다.
+     둘 다 맞는 숫자인데 재는 자가 다릅니다. 밝혀 두지 않으면
+     숫자가 틀린 것처럼 보입니다. */
+  .tl-col h3 em{font-style:normal;font-size:11px;color:var(--text-3);font-weight:400;
+    white-space:nowrap}
+  .tl-more{display:block;width:100%;margin-top:12px;padding:9px;font-family:inherit;
+    font-size:12.5px;color:var(--text-2);background:var(--paper);cursor:pointer;
+    border:1px solid var(--line-2);border-radius:9px;transition:border-color .15s,color .15s}
+  .tl-more:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  .tl-more[disabled]{opacity:.5;cursor:default}
 
   .tl-item{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;
     border-bottom:1px solid var(--line);text-decoration:none}
@@ -124,6 +135,7 @@
     <!-- 시대 띠 -->
     <div class="tl-band" id="tlBand" role="tablist" aria-label="시대 고르기"></div>
     <div class="tl-axis" id="tlAxis" aria-hidden="true"></div>
+    <p class="tl-note">사람 수는 <b>태어난 해</b>로 세었습니다. 인물DB 화면에서 시대로 거른 것과 숫자가 조금 다를 수 있습니다 — 그쪽은 등록된 시대 이름으로 거르기 때문입니다.</p>
 
     <!-- 고른 시대 -->
     <div class="tl-head">
@@ -134,16 +146,19 @@
 
     <div class="tl-cols">
       <section class="tl-col">
-        <h3>이 시대의 음악가 <a id="tlMoreP" href="/db/person.html">인물DB &rarr;</a></h3>
+        <h3>이 시대의 음악가 <em>태어난 해 기준</em></h3>
         <div id="tlPersons"></div>
+        <button type="button" class="tl-more" id="tlMoreP" hidden>더 보기</button>
       </section>
       <section class="tl-col">
-        <h3>이 시대의 작품 <a id="tlMoreW" href="/db/work.html">작품DB &rarr;</a></h3>
+        <h3>이 시대의 작품 <em>작곡 연도 기준</em></h3>
         <div id="tlWorks"></div>
+        <button type="button" class="tl-more" id="tlMoreW" hidden>더 보기</button>
       </section>
       <section class="tl-col">
-        <h3>이 시대의 용어 <a id="tlMoreT" href="/db/terms.html">용어사전 &rarr;</a></h3>
+        <h3>이 시대의 용어 <em>표시된 시대 기준</em></h3>
         <div id="tlTerms"></div>
+        <button type="button" class="tl-more" id="tlMoreT" hidden>더 보기</button>
       </section>
     </div>
 
@@ -299,35 +314,23 @@
     });
   }
 
-  /* ── 고른 시대 그리기 ── */
-  function pick(key){
-    var e = null;
-    for(var i=0;i<ERAS.length;i++) if(ERAS[i].key === key) e = ERAS[i];
-    if(!e) return;
-    cur = key;
+  /* ── 고른 시대 그리기 ──────────────────────────────────
+     ★ 2026-08-09 고침
+       처음에는 「인물DB →」 같은 링크를 각 DB 의 검색(?q=바로크)으로
+       걸었습니다. 그런데 작품DB 검색은 <제목과 작곡가만> 뒤지므로
+       「바로크」라는 글자가 든 작품이 없어 늘 0건이 나왔습니다.
+       용어사전도 era 를 검색 칸에 넣지 않아 마찬가지였습니다.
 
-    Array.prototype.forEach.call($('tlBand').querySelectorAll('.tl-seg'), function(b){
-      b.classList.toggle('on', b.getAttribute('data-k') === key);
-      b.setAttribute('aria-selected', b.getAttribute('data-k') === key ? 'true' : 'false');
-    });
+       ▶ 깨진 링크를 없애고, 이 자리에서 <더 불러오는> 방식으로 바꿨습니다.
+         연표가 세는 기준과 보여 주는 것이 언제나 같아집니다. */
+  var cur = null;
+  var STEP = 8;                    /* 한 번에 더 부르는 수 */
+  var shown = { p:STEP, w:STEP, t:STEP };
 
-    $('tlName').textContent = e.name;
-    $('tlYr').textContent = (e.y0 === YR_MIN ? '~' + e.y1 : e.y0 + (e.y1 === YR_MAX ? '년 이후' : '–' + e.y1)) + '년';
-    $('tlSum').textContent = e.sum;
-
-    /* 더 보기 링크 — 각 DB 의 검색으로 넘깁니다 */
-    $('tlMoreP').href = '/db/person.html?q=' + encodeURIComponent(e.name);
-    $('tlMoreW').href = '/db/work.html?q='   + encodeURIComponent(e.name);
-    $('tlMoreT').href = '/db/terms.html?q='  + encodeURIComponent(e.name);
-
-    $('tlPersons').innerHTML = skel(5);
-    $('tlWorks').innerHTML   = skel(5);
-    $('tlTerms').innerHTML   = skel(5);
-
-    /* 인물 */
-    rowsOf(qPersons(e, 8)).then(function(rows){
-      if(cur !== key) return;
-      if(!rows.length){ $('tlPersons').innerHTML = '<div class="tl-empty">아직 등록된 인물이 없습니다.</div>'; return; }
+  function drawPersons(e, n){
+    return rowsOf(qPersons(e, n)).then(function(rows){
+      if(cur !== e.key) return;
+      if(!rows.length){ $('tlPersons').innerHTML = '<div class="tl-empty">아직 등록된 인물이 없습니다.</div>'; return rows; }
       $('tlPersons').innerHTML = rows.map(function(p){
         var nm = p.name_ko || p.name_en || '';
         var av = p.image_url
@@ -338,12 +341,14 @@
              + '<span class="bd"><span class="t">' + esc(nm) + '</span>'
              + '<span class="s">' + esc([p.field, p.life].filter(Boolean).join(' · ')) + '</span></span></a>';
       }).join('');
+      return rows;
     });
+  }
 
-    /* 작품 */
-    rowsOf(qWorks(e, 8)).then(function(rows){
-      if(cur !== key) return;
-      if(!rows.length){ $('tlWorks').innerHTML = '<div class="tl-empty">작곡 연도가 적힌 작품이 아직 없습니다.</div>'; return; }
+  function drawWorks(e, n){
+    return rowsOf(qWorks(e, n)).then(function(rows){
+      if(cur !== e.key) return;
+      if(!rows.length){ $('tlWorks').innerHTML = '<div class="tl-empty">작곡 연도가 적힌 작품이 아직 없습니다.</div>'; return rows; }
       $('tlWorks').innerHTML = rows.map(function(w){
         var t = w.title_ko || w.title || '';
         var c = w.composer_ko || w.composer_en || '';
@@ -351,22 +356,88 @@
              + '<span class="bd"><span class="t">' + esc(t) + '</span>'
              + '<span class="s">' + esc([c, w.year_from].filter(Boolean).join(' · ')) + '</span></span></a>';
       }).join('');
+      return rows;
     });
+  }
 
-    /* 용어 */
-    rowsOf(qTerms(e, 8)).then(function(rows){
-      if(cur !== key) return;
-      if(!rows.length){ $('tlTerms').innerHTML = '<div class="tl-empty">이 시대로 표시된 용어가 아직 없습니다.</div>'; return; }
+  function drawTerms(e, n){
+    return rowsOf(qTerms(e, n)).then(function(rows){
+      if(cur !== e.key) return;
+      if(!rows.length){ $('tlTerms').innerHTML = '<div class="tl-empty">이 시대로 표시된 용어가 아직 없습니다.</div>'; return rows; }
       $('tlTerms').innerHTML = rows.map(function(t){
         return '<a class="tl-item" href="/db/terms-view.html?id=' + encodeURIComponent(t.id) + '">'
              + '<span class="bd"><span class="t">' + esc(t.term_ko || '') + '</span>'
              + '<span class="s">' + esc([t.category, t.era].filter(Boolean).join(' · ')) + '</span></span></a>';
       }).join('');
+      return rows;
     });
+  }
+
+  /* 더 부를 것이 남았는지 보고 단추를 켜고 끕니다.
+     받아온 수가 부른 수보다 적으면 그것이 끝입니다. */
+  function setMore(btnId, rows, want){
+    var b = $(btnId);
+    if(!b) return;
+    var has = Array.isArray(rows) && rows.length >= want;
+    b.hidden = !has;
+    b.disabled = false;
+    b.textContent = '더 보기';
+  }
+
+  function pick(key){
+    var e = null;
+    for(var i=0;i<ERAS.length;i++) if(ERAS[i].key === key) e = ERAS[i];
+    if(!e) return;
+    cur = key;
+    shown = { p:STEP, w:STEP, t:STEP };
+
+    Array.prototype.forEach.call($('tlBand').querySelectorAll('.tl-seg'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-k') === key);
+      b.setAttribute('aria-selected', b.getAttribute('data-k') === key ? 'true' : 'false');
+    });
+
+    $('tlName').textContent = e.name;
+    $('tlYr').textContent = (e.y0 === YR_MIN ? '~' + e.y1 : e.y0 + (e.y1 === YR_MAX ? '년 이후' : '–' + e.y1)) + '년';
+    $('tlSum').textContent = e.sum;
+
+    ['tlMoreP','tlMoreW','tlMoreT'].forEach(function(id){ var b=$(id); if(b) b.hidden = true; });
+
+    $('tlPersons').innerHTML = skel(5);
+    $('tlWorks').innerHTML   = skel(5);
+    $('tlTerms').innerHTML   = skel(5);
+
+    drawPersons(e, shown.p).then(function(r){ setMore('tlMoreP', r, shown.p); });
+    drawWorks(e,   shown.w).then(function(r){ setMore('tlMoreW', r, shown.w); });
+    drawTerms(e,   shown.t).then(function(r){ setMore('tlMoreT', r, shown.t); });
+  }
+
+  function eraOf(key){
+    for(var i=0;i<ERAS.length;i++) if(ERAS[i].key === key) return ERAS[i];
+    return null;
+  }
+
+  /* ★ 두 번 불려도 안전하게 막아 둡니다.
+     한 단추에 동작이 두 개 붙으면 한 번 눌렀는데 두 번 더 불러옵니다.
+     지금은 한 번만 불리지만, 나중에 코드가 바뀌어도 탈이 없게 둡니다. */
+  var bound = false;
+  function bindMore(){
+    if(bound) return;
+    bound = true;
+    [['tlMoreP','p',drawPersons],['tlMoreW','w',drawWorks],['tlMoreT','t',drawTerms]]
+      .forEach(function(x){
+        var b = $(x[0]); if(!b) return;
+        b.addEventListener('click', function(){
+          var e = eraOf(cur); if(!e) return;
+          b.disabled = true; b.textContent = '부르는 중…';
+          shown[x[1]] += 24;
+          x[2](e, shown[x[1]]).then(function(r){ setMore(x[0], r, shown[x[1]]); });
+        });
+      });
   }
 
   /* ── 시작 ── */
   document.addEventListener('DOMContentLoaded', function(){
+    bindMore();
     /* 띠를 먼저 뼈대만 그려 둡니다 — 숫자를 기다리는 동안 화면이 비지 않게 */
     drawBand({});
 
