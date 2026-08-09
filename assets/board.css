@@ -55,8 +55,11 @@
      읽기 어렵고 목록이 지저분해 보였습니다.
      신문과 책이 한 줄을 짧게 잡는 것과 같은 까닭입니다.
      ★ em 으로 둔 것은 글자 크기 조절(가– 가 가+)을 따라
-       함께 늘고 줄게 하기 위해서입니다. */
-.board-prev{font-size:.87em;color:var(--text-2);line-height:1.6;margin:0;max-width:62em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+       함께 늘고 줄게 하기 위해서입니다.
+     ★ 80em 은 약 1040px 입니다. 목록 안쪽 폭이 1312px 이므로
+       오른쪽에 150px 쯤 숨통을 두는 정도입니다.
+       (처음 62em 으로 두었더니 380px 이나 남아 너무 휑했습니다) */
+.board-prev{font-size:.87em;color:var(--text-2);line-height:1.6;margin:0;max-width:80em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .board-tag{display:inline-flex;align-items:center;font-size:.8em;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--paper);color:var(--text-2);border:1px solid var(--line-2);white-space:nowrap}
 .board-cc{color:var(--violet-2);font-size:.87em;margin-left:5px;font-weight:600}
 
@@ -435,7 +438,7 @@ html[data-theme="dark"] .doc-row:hover{background:#000}
 .doc-title{display:inline-block;font-size:16px;font-weight:700;color:var(--text);text-decoration:none;letter-spacing:-.01em}
 .doc-title:hover{color:var(--violet-2)}
 /* 자료형 목록(악보·유틸리티)의 설명 — 같은 까닭으로 폭을 둡니다 */
-.doc-desc{font-size:13.5px;color:var(--text-2);line-height:1.55;margin:5px 0 6px;max-width:62em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.doc-desc{font-size:13.5px;color:var(--text-2);line-height:1.55;margin:5px 0 6px;max-width:80em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .doc-home{font-size:12.5px;color:var(--text-3)}
 .doc-home a{color:var(--text-3);text-decoration:none}
 .doc-home a:hover{color:var(--violet-2);text-decoration:underline}
