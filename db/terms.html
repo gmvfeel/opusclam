@@ -105,20 +105,24 @@
         <button type="button" class="pdb-searchbtn" aria-label="검색">검색</button>
       </div>
       <div class="pdb-selects">
-        <select aria-label="구분">
+        <!-- ★ 구분과 갈래는 <이어져> 있습니다.
+             구분을 고르면 그 구분에 실제로 있는 갈래만 남습니다.
+             목록은 화면이 열릴 때 자료에서 직접 세어 채웁니다 —
+             배치를 더할 때마다 이 파일을 고칠 일이 없게 하려는 것입니다. -->
+        <select aria-label="구분" id="tmCat">
           <option value="">구분 전체</option>
-          <option value="형식">형식</option>
-          <option value="현대음악">현대음악</option>
         </select>
-        <select aria-label="편성">
-          <option value="">편성 전체</option>
-          <option value="관현악">관현악</option>
-          <option value="실내악">실내악</option>
-          <option value="건반">건반</option>
-          <option value="성악">성악</option>
-          <option value="현악">현악</option>
-          <option value="기악">기악</option>
-          <option value="무대">무대</option>
+        <select aria-label="갈래" id="tmGenre">
+          <option value="">갈래 전체</option>
+        </select>
+        <select aria-label="시대">
+          <option value="">시대 전체</option>
+          <option value="중세">중세</option>
+          <option value="르네상스">르네상스</option>
+          <option value="바로크">바로크</option>
+          <option value="고전">고전</option>
+          <option value="낭만">낭만</option>
+          <option value="20세기">20세기 이후</option>
         </select>
         <select aria-label="정렬">
           <option value="ord">기본순</option>
@@ -204,6 +208,10 @@
      work_form 이 없는 항목(현대음악 기법 등)에는 단추를 그리지 않습니다.
    ============================================================ */
 (function(){
+  var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var HDR = { apikey: KEY, Authorization: 'Bearer ' + KEY };
+
   function esc(s){
     return String(s==null?'':s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -213,13 +221,25 @@
     return t ? esc(t) : '<span class="nd">\u2014</span>';
   }
 
-  /* 고르는 상자 → 조회 조건 */
+  /* 고르는 상자 → 조회 조건
+     ★ 시대는 글자가 제각각입니다 — 「바로크」·「바로크 이후」·「약 1600~1750」.
+       그래서 <꼭 같은지>가 아니라 <들어 있는지>로 봅니다(ilike).
+       「20세기」는 20세기·21세기 표기를 함께 잡습니다. */
   function buildFilters(sels){
     var f='';
     var cat=(sels[0]&&sels[0].value)||'';
     var gen=(sels[1]&&sels[1].value)||'';
+    var era=(sels[2]&&sels[2].value)||'';
     if(cat) f+='&category=eq.'+encodeURIComponent(cat);
     if(gen) f+='&genre=eq.'+encodeURIComponent(gen);
+    if(era){
+      if(era==='20세기'){
+        f+='&or=(era.ilike.*20세기*,era.ilike.*21세기*,era.ilike.*19'
+         + '0*,era.ilike.*195*,era.ilike.*196*,era.ilike.*197*,era.ilike.*198*)';
+      } else {
+        f+='&era=ilike.*'+encodeURIComponent(era)+'*';
+      }
+    }
     /* 감춘 항목은 목록에 넣지 않습니다 */
     f+='&hidden=is.false';
     return f;
@@ -229,7 +249,7 @@
      기본순은 sort_order 를 따릅니다. 비어 있으면 표제어 가나다순으로
      떨어지도록 뒤에 term_ko 를 붙여 둡니다. */
   function buildOrder(sels){
-    var v=(sels[2]&&sels[2].value)||'ord';
+    var v=(sels[3]&&sels[3].value)||'ord';   /* 시대 상자가 늘어 자리가 밀렸습니다 */
     if(v==='ko')   return 'term_ko.asc';
     if(v==='en')   return 'term_en.asc.nullslast';
     if(v==='view') return 'view_count.desc,term_ko.asc';
@@ -292,7 +312,80 @@
       + '</tr>';
   }
 
+  /* ── 구분·갈래 상자를 자료에서 채웁니다 ──────────────────
+     ★ 왜 코드에 적어 두지 않는가
+       배치를 더할 때마다 새 구분과 갈래가 생깁니다. 코드에 적어 두면
+       그때마다 이 파일을 고쳐야 하고, 빠뜨리면 고를 수 없게 됩니다.
+       화면이 열릴 때 한 번 세어 오면 그럴 일이 없습니다.
+
+     ★ 왜 이어 두는가
+       「악기」를 골랐는데 갈래에 「빠르기」가 남아 있으면 아무것도
+       안 나옵니다. 구분을 고르면 그 구분에 <실제로 있는> 갈래만 남깁니다.
+
+     ★ 건수도 함께 보여 줍니다 — 「악기 (150)」 처럼.
+     ★ 조회에 실패하면 조용히 물러납니다. 상자는 「전체」만 남고
+       목록은 그대로 나옵니다. */
+  function fillSelects(){
+    var cat = document.getElementById('tmCat');
+    var gen = document.getElementById('tmGenre');
+    if(!cat || !gen) return;
+
+    fetch(SB + '/rest/v1/oc_terms?select=category,genre&hidden=is.false&limit=5000',
+          { headers: HDR })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){
+        if(!Array.isArray(rows) || !rows.length) return;
+
+        /* 구분마다 어떤 갈래가 몇 건씩 있는지 셉니다 */
+        var byCat = {}, catN = {};
+        rows.forEach(function(x){
+          var c = (x.category || '').trim(); if(!c) return;
+          catN[c] = (catN[c] || 0) + 1;
+          var g = (x.genre || '').trim();
+          if(!g) return;
+          (byCat[c] = byCat[c] || {});
+          byCat[c][g] = (byCat[c][g] || 0) + 1;
+        });
+
+        /* 구분 — 건수 많은 순 */
+        var cats = Object.keys(catN).sort(function(a,b){ return catN[b] - catN[a]; });
+        cat.innerHTML = '<option value="">구분 전체</option>'
+          + cats.map(function(c){
+              return '<option value="' + esc(c) + '">' + esc(c) + ' (' + catN[c] + ')</option>';
+            }).join('');
+
+        /* 갈래 — 고른 구분에 맞춰 다시 채웁니다 */
+        function drawGenres(){
+          var picked = cat.value;
+          var tally = {};
+          if(picked){
+            tally = byCat[picked] || {};
+          } else {
+            /* 구분을 안 골랐으면 모든 갈래를 합쳐 보여 줍니다 */
+            Object.keys(byCat).forEach(function(c){
+              Object.keys(byCat[c]).forEach(function(g){
+                tally[g] = (tally[g] || 0) + byCat[c][g];
+              });
+            });
+          }
+          var keep = gen.value;
+          var list = Object.keys(tally).sort(function(a,b){ return tally[b] - tally[a]; });
+          gen.innerHTML = '<option value="">갈래 전체</option>'
+            + list.map(function(g){
+                return '<option value="' + esc(g) + '">' + esc(g) + ' (' + tally[g] + ')</option>';
+              }).join('');
+          /* 고르고 있던 갈래가 새 목록에도 있으면 그대로 둡니다 */
+          if(keep && list.indexOf(keep) > -1) gen.value = keep;
+        }
+
+        drawGenres();
+        cat.addEventListener('change', drawGenres);
+      })
+      .catch(function(){});
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
+    fillSelects();
     OCList.init({
       table:'oc_terms', pageSize:30,
       orderDefault:'sort_order.asc.nullslast,term_ko.asc',
