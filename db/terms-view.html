@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>음악 용어사전 · OPUSCLAM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<style>
+  /* 이 화면에서만 쓰는 것들입니다. 모두 .tv- 로 시작합니다. */
+  .tv-wrap{max-width:820px;margin:0 auto;padding:0 20px 60px}
+  .tv-crumb{margin:0 0 26px}
+
+  .tv-head{border-bottom:2px solid var(--ink);padding-bottom:18px;margin:0 0 24px}
+  .tv-cat{display:inline-block;font-size:11.5px;padding:3px 11px;border-radius:999px;
+    border:1px solid var(--line-2);color:var(--text-3);margin:0 0 12px}
+  .tv-cat.is-modern{color:var(--violet-2);border-color:var(--violet-2)}
+  .tv-t{font-family:var(--display);font-size:34px;font-weight:700;color:var(--text);
+    margin:0 0 6px;line-height:1.25;word-break:keep-all}
+  .tv-en{font-family:var(--display);font-size:15px;color:var(--text-3);letter-spacing:.01em}
+
+  .tv-sum{font-size:16px;line-height:1.75;color:var(--text);margin:0 0 26px;
+    padding:16px 18px;border-left:3px solid var(--violet-2);background:var(--paper);
+    border-radius:0 10px 10px 0;word-break:keep-all}
+
+  .tv-body{font-size:15px;line-height:1.9;color:var(--text-2);word-break:keep-all}
+  .tv-body p{margin:0 0 16px}
+  .tv-body b{color:var(--text);font-weight:600}
+
+  .tv-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:0;margin:30px 0;border-top:1px solid var(--line)}
+  .tv-fact{padding:13px 4px;border-bottom:1px solid var(--line)}
+  .tv-fact dt{font-size:11.5px;color:var(--text-3);margin:0 0 4px}
+  .tv-fact dd{font-size:14px;color:var(--text);margin:0}
+
+  .tv-links{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 0}
+  .tv-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;
+    padding:9px 16px;border-radius:999px;border:1px solid var(--line-2);
+    color:var(--text-2);text-decoration:none;transition:all .15s ease}
+  .tv-link:hover{color:var(--text);border-color:var(--text-3)}
+  .tv-link.is-main{color:#fff;background:var(--violet-2);border-color:var(--violet-2)}
+  .tv-link.is-main:hover{opacity:.86;color:#fff}
+
+  .tv-rel{margin:34px 0 0;padding-top:22px;border-top:1px solid var(--line)}
+  .tv-rel h2{font-family:var(--display);font-size:15px;color:var(--text);margin:0 0 12px}
+  .tv-relwrap{display:flex;gap:7px;flex-wrap:wrap}
+  .tv-relitem{display:inline-block;font-size:13px;padding:7px 14px;border-radius:999px;
+    border:1px solid var(--line);color:var(--text-2);text-decoration:none;
+    transition:all .15s ease}
+  .tv-relitem:hover{color:var(--violet-2);border-color:var(--violet-2)}
+  .tv-relitem em{font-style:normal;color:var(--text-3);font-size:11.5px;margin-left:5px}
+
+  .tv-empty{padding:60px 0;text-align:center;color:var(--text-3)}
+  @media(max-width:640px){ .tv-t{font-size:26px} .tv-sum{font-size:15px} }
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+
+<main class="tv-wrap" style="padding-top:120px">
+
+  <nav class="pdb-crumb tv-crumb" aria-label="위치">
+    <a href="/home.html">홈</a><span>/</span><a href="/db/index.html">DATABASE</a><span>/</span><a href="/db/terms.html">음악 용어사전</a><span>/</span><span class="on" id="tvCrumb">—</span>
+  </nav>
+
+  <div class="pv-utility">
+    <div class="pv-tools">
+      <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.5 9.7l5.9-.9z"/></svg>즐겨찾기</button>
+      <button type="button" class="pv-tool" data-toggle aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v18l-6-4-6 4z"/></svg>킵</button>
+      <button type="button" class="pv-tool" data-share><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.1 10.9l7.8-4.7M8.1 13.1l7.8 4.7"/></svg>공유</button>
+    </div>
+  </div>
+
+  <article id="tvBody">
+    <div class="tv-empty">불러오는 중…</div>
+  </article>
+
+</main>
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script>
+/* ============================================================
+   음악 용어사전 — 상세
+
+   ★ 무엇을 보여 주는가
+     표제어 · 원어 · 한 줄 뜻 · 본문 · 갈래/편성/시대 ·
+     작품DB 로 가는 고리 · 함께 보면 좋은 말
+
+   ★ 함께 보면 좋은 말(related)
+     oc_terms.related 에 slug 를 쉼표로 적어 두었습니다.
+     그 slug 들을 한 번에 받아 표제어를 붙여 보여 줍니다.
+     아직 없는 slug 는 조용히 건너뜁니다 — 사전이 자라는 중이므로
+     앞으로 넣을 말을 미리 적어 두어도 화면이 깨지지 않습니다.
+
+   ★ 작품DB 로 가는 고리
+     work_form 이 person_works.form_ko 와 글자가 같습니다.
+     없는 항목(현대음악 기법 등)에는 단추를 그리지 않습니다.
+   ============================================================ */
+(function(){
+  var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var HDR = { apikey: KEY, Authorization: 'Bearer ' + KEY };
+
+  function esc(s){
+    return String(s==null?'':s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  var id = new URLSearchParams(location.search).get('id') || '';
+  var box = document.getElementById('tvBody');
+
+  if(!id){ box.innerHTML = '<div class="tv-empty">주소에 항목이 없습니다.</div>'; return; }
+
+  fetch(SB + '/rest/v1/oc_terms?select=*&id=eq.' + encodeURIComponent(id) + '&limit=1',
+        { headers: HDR })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(rows){
+      var o = Array.isArray(rows) && rows[0];
+      if(!o){ box.innerHTML = '<div class="tv-empty">찾는 항목이 없습니다.</div>'; return; }
+      draw(o);
+      return related(o);
+    })
+    .catch(function(){
+      box.innerHTML = '<div class="tv-empty">불러오지 못했습니다.</div>';
+    });
+
+  function draw(o){
+    document.title = (o.term_ko || '') + ' · 음악 용어사전 · OPUSCLAM';
+    var cr = document.getElementById('tvCrumb');
+    if(cr) cr.textContent = o.term_ko || '';
+
+    var en = [];
+    if(o.term_en) en.push(esc(o.term_en));
+    if(o.reading) en.push(esc(o.reading));
+
+    var facts = '';
+    function fact(k,v){
+      if(!v || !String(v).trim()) return;
+      facts += '<div class="tv-fact"><dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd></div>';
+    }
+    fact('갈래', o.category);
+    fact('편성', o.genre);
+    fact('주로 쓰인 때', o.era);
+    fact('작품DB 형식', o.work_form);
+
+    var links = '';
+    if(o.work_form){
+      links += '<a class="tv-link is-main" href="/db/work.html?q='
+             + encodeURIComponent(o.work_form) + '">이 형식의 작품 보기 \u2192</a>';
+    }
+    links += '<a class="tv-link" href="/db/terms.html">용어사전 목록</a>';
+    if(o.category === '현대음악'){
+      links += '<a class="tv-link" href="/db/modern.html">현대음악DB</a>';
+    }
+
+    box.innerHTML =
+        '<header class="tv-head">'
+      +   '<span class="tv-cat'+(o.category==='현대음악'?' is-modern':'')+'">'+esc(o.category||'')+'</span>'
+      +   '<h1 class="tv-t">'+esc(o.term_ko||'')+'</h1>'
+      +   (en.length ? '<div class="tv-en">'+en.join(' · ')+'</div>' : '')
+      + '</header>'
+      + (o.summary ? '<div class="tv-sum">'+esc(o.summary)+'</div>' : '')
+      + (o.body ? '<div class="tv-body">'+o.body+'</div>' : '')
+      + (facts ? '<dl class="tv-facts">'+facts+'</dl>' : '')
+      + '<div class="tv-links">'+links+'</div>'
+      + '<section class="tv-rel" id="tvRel" hidden>'
+      +   '<h2>함께 보면 좋은 말</h2><div class="tv-relwrap" id="tvRelWrap"></div>'
+      + '</section>';
+  }
+
+  /* 함께 보면 좋은 말 — slug 로 찾아 표제어를 붙입니다 */
+  function related(o){
+    var raw = (o.related || '').split(',')
+      .map(function(s){ return s.trim(); })
+      .filter(Boolean);
+    if(!raw.length) return;
+
+    var q = raw.map(function(s){ return '"' + s.replace(/"/g,'') + '"'; }).join(',');
+    return fetch(SB + '/rest/v1/oc_terms?select=id,slug,term_ko,term_en,category'
+                 + '&hidden=is.false&slug=in.(' + encodeURIComponent(q) + ')&limit=20',
+                 { headers: HDR })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(list){
+        if(!Array.isArray(list) || !list.length) return;
+        /* 적어 둔 차례대로 보여 줍니다 */
+        var by = {};
+        list.forEach(function(x){ by[x.slug] = x; });
+        var html = '';
+        raw.forEach(function(s){
+          var x = by[s];
+          if(!x) return;      /* 아직 없는 말은 조용히 건너뜁니다 */
+          html += '<a class="tv-relitem" href="terms-view.html?id='+encodeURIComponent(x.id)+'">'
+                + esc(x.term_ko)
+                + (x.term_en ? '<em>'+esc(x.term_en)+'</em>' : '')
+                + '</a>';
+        });
+        if(!html) return;
+        document.getElementById('tvRelWrap').innerHTML = html;
+        document.getElementById('tvRel').hidden = false;
+      })
+      .catch(function(){});
+  }
+})();
+</script>
+<script src="/assets/pv.js" defer></script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
