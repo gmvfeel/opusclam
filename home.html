@@ -558,10 +558,38 @@
   .ad-slot .ad-desc{font-size:12px;color:var(--text-3)}
   .ad-slot .ad-mark{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;color:var(--violet-2);margin-bottom:2px}
   .ad-slot .ad-mark svg{width:17px;height:17px}
+  /* ── 광고 자리는 <b>크기가 고정</b>입니다 (2026-08-10) ──────────
+     ★ 왜 고정인가
+       광고 소재는 정해진 크기로 만들어 받습니다. 자리가 화면 따라
+       늘었다 줄었다 하면 같은 소재가 사람마다 다르게 보이고,
+       광고주에게 크기를 제시할 수도 없습니다.
+
+     ★ 어떻게 고정하나
+       본문 틀(.wrap)이 최대 1180px 이므로 화면이 1200px 만 넘으면
+       아래 값 그대로 나옵니다. 요즘 데스크톱은 대부분 여기에 듭니다.
+
+       그보다 좁아지면 670px 배너가 390px 화면에 물리적으로 들어가지
+       않습니다. 이때만 <b>비율을 지킨 채</b> 줄어듭니다 —
+       찌그러지지 않으므로 소재는 한 벌이면 됩니다.
+       (aspect-ratio 가 그 비율을 붙들어 줍니다)
+
+     ★ 내용이 넘칠 때
+       작아지면 안내 글이 상자를 넘길 수 있어 overflow 로 잘라 둡니다.
+       실제 광고 이미지가 들어가면 해당되지 않습니다. */
+  /* ★ 너비를 min(고정값, 100%) 로 적습니다
+       max-width:100% 만으로는 모자랍니다. 격자 칸은 <b>자식 크기에 맞춰
+       늘어나므로</b>, 756px 짜리를 넣으면 칸이 756px 이 되고 100% 도
+       756px 이 되어 결국 화면을 밀어냅니다. 390px 화면에서 문서 폭이
+       776px 이 되어 가로 스크롤이 생겼습니다.
+       min() 은 부모 크기를 되묻지 않으므로 이런 되돌이가 없습니다. */
+  .ad-slot{min-width:0;overflow:hidden;margin-left:auto;margin-right:auto}
+
   .ad-tall{min-height:430px}
   .ad-mid{min-height:350px}
-  .board-ad{min-height:310px;margin-top:8px}
-  @media(max-width:880px){.ad-tall{min-height:260px}.board-main{grid-template-columns:1fr;grid-template-areas:'c1' 'c2' 'ad'}.board-ad{min-height:200px}}
+
+  /* 게시판 옆 — 756 × 310 */
+  .board-ad{width:min(756px,100%);aspect-ratio:756/310;margin-top:8px}
+  @media(max-width:880px){.ad-tall{min-height:260px}.board-main{grid-template-columns:1fr;grid-template-areas:'c1' 'c2' 'ad'}}
 
   .split{display:flex;gap:14px;align-items:flex-start}
   .split .thumb{width:120px;flex:0 0 120px;aspect-ratio:4/3;border-radius:7px}
@@ -699,7 +727,7 @@
        지역 칸과 「입시커뮤니티」 는 안에 든 글이 달라 그냥 두면 키가
        어긋납니다. 줄(.eb-row)을 stretch 로 두고 버튼의 위아래 여백을
        없애, <b>줄 높이에 맞춰 늘어나게</b> 했습니다. */
-  .exam-band{padding:0 0 38px}
+  .exam-band{padding:0 0 16px}   /* 2026-08-10 · 아래 배너와 너무 벌어져 38→16px */
   .eb-row{display:flex;align-items:stretch;gap:10px;margin-top:6px}
   .eb-row>*{margin-top:0}
   .eb-row .eb-regions{flex:1 1 auto;grid-template-columns:repeat(16,1fr)}
@@ -720,13 +748,18 @@
      옆 두 칸(리쿠르트·유틸리티)과 키를 비슷하게 맞춥니다.
      ★ align-self:start — 늘어나면 이미지 광고의 크기가 흐트러집니다.
        2026-08-09 에 같은 까닭으로 다른 광고 자리도 start 로 바꿨습니다. */
-  .lower-ad{min-height:284px;align-self:start}
-  @media(max-width:1080px){ .lower-ad{min-height:220px} }
+  .lower-ad{width:min(357px,100%);aspect-ratio:357/284;align-self:start;justify-self:center}
 
   .bigban{padding:6px 0 50px}
-  .bigban .wrap{display:grid;grid-template-columns:1.5fr 1fr;gap:24px}
-  .bigban-ad{min-height:190px}
-  @media(max-width:900px){.bigban .wrap{grid-template-columns:1fr}}
+  /* 670 + 24 + 446 = 1140 — 본문 틀 안쪽 너비와 정확히 맞습니다 */
+  .bigban .wrap{display:grid;grid-template-columns:670px 446px;gap:24px;justify-content:center}
+  .bigban-ad{width:min(670px,100%);aspect-ratio:670/190}
+  .bigban .ad-slot:nth-child(2){width:min(446px,100%);aspect-ratio:446/190}
+  /* 틀이 1140px 보다 좁아지면 두 칸이 <b>같은 비율로</b> 함께 줄어듭니다 */
+  @media(max-width:1199px){ .bigban .wrap{grid-template-columns:minmax(0,670fr) minmax(0,446fr)} }
+  /* 한 줄로 내려온 뒤에는 원래 크기보다 커지지 않게 합니다 —
+     늘리면 190px 짜리 배너가 366px 로 부풀어 소재가 흐려집니다 */
+  @media(max-width:900px){ .bigban .wrap{grid-template-columns:minmax(0,1fr)} }
   .bb{border-radius:12px;overflow:hidden;position:relative;color:#fff;min-height:180px;display:flex;align-items:flex-end}
   .bb .bb-in{position:relative;z-index:2;padding:26px 28px}
   .bb .en-s{font-family:var(--serif);letter-spacing:.2em;font-size:11px;color:var(--violet-3)}
