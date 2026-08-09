@@ -2434,7 +2434,7 @@ if('serviceWorker' in navigator){
       const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/random_self_pr', {
         method: 'POST',
         headers: Object.assign({ 'Content-Type': 'application/json' }, H),
-        body: JSON.stringify({ p_n: 3 }),
+        body: JSON.stringify({ p_n: 2 }),   /* 2026-08-09 · 3 → 2 */
       });
       if(!res.ok) return null;
       const rows = await res.json();
@@ -2455,15 +2455,16 @@ if('serviceWorker' in navigator){
     const box = document.getElementById('artists-list');
     if(!box) return;
     try{
-      /* 세 명을 보여 줍니다.
+      /* 두 명을 보여 줍니다 (2026-08-09 · 세 명에서 줄였습니다).
          전용 표(artists)에 등록된 것이 있으면 그것을 먼저 쓰고,
          비어 있으면 인물DB에서 무작위로 고릅니다.
-         어느 쪽으로 오든 세 명이 되도록 두 곳 모두 개수를 맞춰 둡니다. */
+         어느 쪽으로 오든 두 명이 되도록 세 곳 모두 개수를 맞춰 둡니다
+         — 전용 표 조회 · 무작위 개수(p_n) · 아래 잘라내기. */
       let rows = await sbGet('artists?select=name,role,bio,image_url,link'
-        + '&order=sort_order.asc&limit=3');
+        + '&order=sort_order.asc&limit=2');
       /* 전용 표가 비어 있으면 인물DB에서 무작위로 */
       if(!Array.isArray(rows) || !rows.length) rows = await feedRandomArtists();
-      if(Array.isArray(rows) && rows.length > 3) rows = rows.slice(0, 3);
+      if(Array.isArray(rows) && rows.length > 2) rows = rows.slice(0, 2);
       if(!Array.isArray(rows) || !rows.length) return;
       box.innerHTML = '';
       rows.forEach(function(r, i){
