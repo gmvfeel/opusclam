@@ -973,13 +973,20 @@ if('serviceWorker' in navigator){
     const list = document.getElementById('funding-list');
     if(!list) return;
     try{
-      const rows = await sbGet('funding?select=title,link,deadline&order=sort_order.asc');
+      /* ★ 2026-08-09 — 지원금을 spot 표 하나로 모았습니다.
+         전에는 funding 이라는 사본 표를 읽었는데, 아르코 수집기는 spot 만
+         갱신합니다. 그래서 이 화면과 정보SPOT 이 서로 다른 것을 보여주고
+         있었습니다. funding 표는 지우지 않고 남겨 둡니다 — 되돌릴 수 있게.
+         감춘 것(hidden)은 빼고, 순서는 sort_order → 제목 차례로 봅니다. */
+      const rows = await sbGet('spot?select=title,link_url,deadline_text'
+        + '&section=eq.' + encodeURIComponent('지원금') + '&hidden=is.false'
+        + '&order=sort_order.asc.nullslast,title.asc');
       if(!Array.isArray(rows) || !rows.length) return;
       list.innerHTML = '';
       rows.forEach(function(r){
         const li = document.createElement('li');
-        const a = document.createElement('a'); a.href = r.link || '#'; a.textContent = r.title || '';
-        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.deadline || '';
+        const a = document.createElement('a'); a.href = r.link_url || '#'; a.textContent = r.title || '';
+        const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.deadline_text || '';
         li.appendChild(a); li.appendChild(dt);
         list.appendChild(li);
       });
