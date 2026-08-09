@@ -320,7 +320,16 @@
   .board-main{display:grid;min-width:0;grid-template-columns:1fr 1fr;column-gap:34px;grid-template-areas:'c1 c2' 'ad ad'}
   .col-1{grid-area:c1;min-width:0}
   .col-2{grid-area:c2;min-width:0}
-  .board-ad{grid-area:ad;align-self:stretch}
+  /* ★ 2026-08-09 · align-self:stretch 를 뺐습니다.
+       왜 — 이 자리에는 <이미지 광고>가 들어갑니다.
+       stretch 였을 때는 오른쪽 칸(aside)이 길어지면 왼쪽 덩어리가 늘어나고,
+       그 남는 높이를 광고가 통째로 흡수했습니다.
+       그래서 컨텐츠가 늘고 줄 때마다 광고 자리가 300~500px 사이를 오갔습니다.
+       ▶ 이미지가 뭉개지거나 위아래에 빈 띠가 생기고,
+         무엇보다 「이 자리는 몇 픽셀입니다」라고 말할 수 없어
+         단가를 매길 수 없습니다.
+       start 로 두면 아래 min-height 값으로 고정됩니다. */
+  .board-ad{grid-area:ad;align-self:start}
   @media(max-width:1080px){.board .wrap{grid-template-columns:1fr}.side{grid-column:1/-1;min-width:0}}
 
   .sec-head{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:9px;margin-bottom:16px}
