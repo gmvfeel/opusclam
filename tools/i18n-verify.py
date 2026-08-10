@@ -89,6 +89,18 @@ for i, l in enumerate(_clean):
     if m: _bad.append(f'{i+1}행 var {m.group(1)}')
 chk(not _bad,
     '값(var)이 모두 조기 return 위에 있음' + (f' → 아래에 있는 것: {_bad}' if _bad else ''))
+if _bad:
+    # ★ 여기서 <b>멈춥니다.</b> 이 실수를 2026-08-10 하루에 세 번 했습니다.
+    #   뒤의 브라우저 검사를 계속 돌리면 결과가 길어져 이 줄을 놓칩니다.
+    #   실제로 세 번째는 결과 끝만 보다가 놓쳤습니다.
+    print()
+    print('=' * 52)
+    print('★ 여기서 멈춥니다 — 아래 값들을 파일 맨 위 붙박이 구역으로 옮기세요.')
+    for b in _bad: print('   ', b)
+    print('  한국어 화면은 조기 return 으로 되돌아가므로 그 아래 var 는')
+    print('  영영 담기지 않습니다. 바깥의 try 가 오류를 삼켜 조용합니다.')
+    print('=' * 52)
+    sys.exit(1)
 
 with sync_playwright() as p:
     br = p.chromium.launch()
@@ -247,25 +259,48 @@ with sync_playwright() as p:
     pg.close()
 
 
-    # ── ⑥ 화면 폭이 달라져도 고르개가 보이는가 (모바일 포함) ──
-    print('\n[6] 화면 폭별 고르개')
-    for w in (1440, 1200, 1024, 900, 860, 768, 640, 480, 390, 360):
-        pg = br.new_page(viewport={'width': w, 'height': 800})
-        pg.goto('http://127.0.0.1:8801/en/db/person.html', wait_until='networkidle')
-        pg.wait_for_timeout(600)
-        r = pg.evaluate("""()=>{
-          const all=[...document.querySelectorAll('.oc-lang')];
-          const vis=all.filter(e=>{const b=e.getBoundingClientRect();return b.width>0&&b.height>0
-            && getComputedStyle(e).display!=='none'});
-          return {total:all.length, visible:vis.length,
-                  where: vis.map(e=>e.parentElement.className||e.parentElement.tagName).join(',')}}""")
-        ok = r['visible'] == 1
-        chk(ok, f'{w}px — 보이는 고르개 1개 → {r["visible"]}개 ({r["where"]})')
-        if ok:   # 실제로 눌러 열리는지
-            pg.locator('.oc-lang > button').locator('visible=true').first.click(); pg.wait_for_timeout(200)
-            chk(pg.evaluate("()=>[...document.querySelectorAll('.oc-lang')].some(e=>e.classList.contains('open'))"),
-                f'{w}px — 눌러서 열림')
-        pg.close()
+    # ── ⑥ 폭·화면·테마별 — 고르개가 하나만, 눈에 띄게, 제자리에 ──
+    print('\n[6] 폭·화면·테마별 고르개')
+
+    BTN = """()=>{
+      const all=[...document.querySelectorAll('.oc-lang')];
+      const vis=all.filter(e=>{const b=e.getBoundingClientRect();
+        return b.width>0&&b.height>0&&getComputedStyle(e).display!=='none'});
+      if(vis.length!==1) return {visible:vis.length};
+      const box=vis[0], btn=box.querySelector('button');
+      const rgb=t=>{const m=(t||'').match(/[\\d.]+/g)||[];return m.slice(0,3).map(Number).concat(m.length>3?+m[3]:1)};
+      const lum=c=>{const a=c.slice(0,3).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});
+        return .2126*a[0]+.7152*a[1]+.0722*a[2]};
+      let e=btn, bg=[255,255,255,1];
+      while(e&&e!==document.documentElement){const b=rgb(getComputedStyle(e).backgroundColor);
+        if(b[3]>0.2){bg=b;break} e=e.parentElement}
+      if(e===document.documentElement||!e){const b=rgb(getComputedStyle(document.body).backgroundColor);
+        if(b[3]>0.2) bg=b}
+      const fg=rgb(getComputedStyle(btn).color);
+      const L1=lum(fg),L2=lum(bg);
+      const r=(Math.max(L1,L2)+.05)/(Math.min(L1,L2)+.05);
+      const bb=btn.getBoundingClientRect();
+      // 화면 밖으로 밀려나지 않았는가
+      const inside = bb.left>=0 && bb.right<=innerWidth+1 && bb.top>=0;
+      return {visible:1, ratio:Math.round(r*10)/10, where:box.parentElement.className,
+              inside, right:Math.round(innerWidth-bb.right)};
+    }"""
+
+    for path in ['/en/db/person.html', '/en/home.html', '/en/index.html', '/en/community/news.html']:
+        for w in (1440, 1024, 860, 768, 640, 480, 390, 360):
+            for dark in (False, True):
+                pg = br.new_page(viewport={'width': w, 'height': 800})
+                if dark: pg.add_init_script("try{localStorage.setItem('oc-theme','dark')}catch(e){}")
+                pg.goto('http://127.0.0.1:8801' + path, wait_until='networkidle')
+                pg.wait_for_timeout(500)
+                r = pg.evaluate(BTN)
+                tag = f'{path} {w}px {"어둡게" if dark else "밝게"}'
+                if r.get('visible') != 1:
+                    chk(False, f'{tag} — 보이는 고르개 1개 → {r.get("visible")}개')
+                else:
+                    chk(r['ratio'] >= 3.0, f'{tag} — 단추가 바탕과 구별됨 → 대비 {r["ratio"]} ({r["where"]})')
+                    chk(r['inside'], f'{tag} — 화면 안에 있음 (오른쪽 여백 {r["right"]}px)')
+                pg.close()
 
     br.close()
 

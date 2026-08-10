@@ -41,7 +41,7 @@
 
   /* 사전 파일 판(버전) — 사전을 고치면 이 숫자를 올립니다.
      ★ 안 올리면 브라우저가 옛 사전을 계속 씁니다. */
-  var V = '20260810f';
+  var V = '20260810i';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -98,6 +98,14 @@
     '.gnb .auth',                  /* 회원 화면 헤더 */
     '.gnb nav.nav'
   ];
+
+  /* 어느 자식 <b>앞</b>에 끼울지 — 자리마다 다릅니다.
+     ★ 헤더 도구 줄(.mast-tools)에서는 <b>테마·전체메뉴 단추 앞</b>에 둡니다.
+       그냥 뒤에 붙였더니 ≡ 바깥으로 밀려나 화면 끝에 걸쳤습니다
+       (2026-08-10 · 파트너가 휴대폰 그림으로 찾음). */
+  var BEFORE = {
+    '.site-header .mast-tools': '.theme-toggle, .fullmenu-btn, .burger'
+  };
 
   /* 사전과 살림살이 — ★ 반드시 조기 return 위에 두어야 합니다 */
   var DICT = null;
@@ -502,9 +510,26 @@
          어느 화면에 놓이든 같게 보이려면 못박아야 합니다. */
     var css =
       '.oc-lang{position:relative;display:inline-flex;align-items:center;margin-left:14px;font-family:inherit}' +
-      '.oc-lang>button{background:none;border:0;padding:2px 6px;cursor:pointer;font:inherit;font-size:11px;' +
-      'font-weight:700;letter-spacing:.06em;color:inherit;opacity:.62;display:inline-flex;align-items:center;gap:4px;line-height:1.4}' +
-      '.oc-lang>button:hover{opacity:1}' +
+      /* ★★ 단추는 <b>스스로 바탕을 가집니다</b> ★★
+         ─────────────────────────────────────────────────────
+         처음에는 「놓인 자리의 바탕을 재어 글자색을 정하는」 방식을
+         썼습니다. 그런데 헤더 맨 윗줄은 background 에 0.35초짜리
+         <b>전환(transition)</b>이 걸려 있어, 재는 <b>시점</b>에 따라
+         「밝다/어둡다」 가 뒤집혔습니다. 실제로 넓은 화면에서
+         어두운 헤더를 밝다고 잘못 보아 어두운 글씨를 썼습니다.
+         스크롤·테마 전환에도 같은 일이 납니다.
+
+         ▶ 그래서 재지 않습니다. 반투명 검정 알약에 흰 글씨를
+           고정하면 <b>어느 바탕 위에서든</b> 읽힙니다.
+             · 짙은 헤더 위 — 알약은 묻히고 흰 글씨만 또렷합니다
+             · 밝은 바탕 위 — 알약이 드러나 흰 글씨를 받쳐 줍니다
+           재지 않으니 흔들릴 일도 없습니다. */
+      '.oc-lang>button{border:0;cursor:pointer;font:inherit;font-size:11px;font-weight:700;' +
+      'letter-spacing:.06em;line-height:1;display:inline-flex;align-items:center;gap:4px;' +
+      'padding:5px 9px;border-radius:13px;background:rgba(16,14,32,.42) !important;' +
+      'color:#fff !important;opacity:1;transition:background .2s ease}' +
+      '.oc-lang>button:hover{background:rgba(16,14,32,.68) !important}' +
+      '.mast-tools .oc-lang{margin-left:0}' +
       '.oc-lang>button::after{content:"";width:0;height:0;border-left:3px solid transparent;' +
       'border-right:3px solid transparent;border-top:4px solid currentColor;opacity:.7}' +
       '.oc-lang ul{position:absolute;top:100%;right:0;margin:4px 0 0;padding:5px 0;list-style:none;' +
@@ -543,7 +568,8 @@
      ▶ 그래서 <b>여러 자리에 만들어 두고, 실제로 눈에 보이는 것</b>
        하나만 남깁니다. 재어 보고 고르므로 어떤 화면·어떤 폭에서도
        반드시 하나는 보입니다. 창 크기를 바꾸면 다시 고릅니다. */
-  function buildPicker(host) {
+
+  function buildPicker(host, beforeSel) {
     if (!host || host.querySelector('.oc-lang')) return null;
 
     var box = document.createElement('div');
@@ -585,9 +611,14 @@
 
     box.appendChild(btn);
     box.appendChild(ul);
-    host.appendChild(box);
+
+    var pin = beforeSel ? host.querySelector(beforeSel) : null;
+    if (pin && pin.parentNode === host) host.insertBefore(box, pin);
+    else host.appendChild(box);
+
     return box;
   }
+
 
   /* 눈에 보이는가 — 재어서 판단합니다 (CSS 를 짐작하지 않습니다) */
   function shown(el) {
@@ -628,7 +659,7 @@
   function mountPicker() {
     HOSTS.forEach(function (sel) {
       var host = document.querySelector(sel);
-      if (host) buildPicker(host);
+      if (host) buildPicker(host, BEFORE[sel]);
     });
     syncPickers();
 
@@ -644,6 +675,7 @@
         if (_pk) return;
         _pk = setTimeout(function () { _pk = null; mountPicker(); }, 160);
       });
+
       /* 헤더가 늦게 들어오는 화면도 있으므로 한 번 더 확인합니다 */
       window.addEventListener('load', function () { mountPicker(); });
     }
