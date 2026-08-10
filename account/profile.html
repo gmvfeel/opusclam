@@ -418,7 +418,7 @@
       var g = await sb.auth.getSession();
       SESS = g && g.data && g.data.session;
       if (!SESS){
-        location.href = '/account/login.html?next=' + encodeURIComponent('/account/profile.html');
+        ocGo('/account/login.html?next=' + encodeURIComponent('/account/profile.html'));
         return;
       }
       var r = await sb.from('members').select('*').eq('id', SESS.user.id).single();

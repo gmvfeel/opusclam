@@ -1,3 +1,5 @@
+/* i18n 이 없을 때를 위한 폴백 — 언어를 붙이지 못해도 이동은 됩니다 */
+if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) location.replace(u); else location.href = u; }; }
 /* ============================================================
    OPUSCLAM  관심분야                    assets/interests.js
    2026-08-04
@@ -337,8 +339,8 @@
     b.addEventListener('click', async function () {
       var m = await me();
       if (!m) {
-        location.href = '/account/login.html?next='
-          + encodeURIComponent(location.pathname + location.search);
+        ocGo('/account/login.html?next='
+          + encodeURIComponent(location.pathname + location.search));
         return;
       }
       b.disabled = true;

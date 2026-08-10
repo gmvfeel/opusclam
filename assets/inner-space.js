@@ -1,3 +1,5 @@
+/* i18n 이 없을 때를 위한 폴백 — 언어를 붙이지 못해도 이동은 됩니다 */
+if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) location.replace(u); else location.href = u; }; }
 /* ============================================================
    OPUSCLAM  INNER SPACE            assets/inner-space.js
    2026-08-04
@@ -480,7 +482,7 @@
     if (toMy) toMy.addEventListener('click', function (e) {
       e.preventDefault();
       try { sessionStorage.setItem('oc-main-mode', 'my'); } catch (e2) {}
-      location.href = '/home.html?inner=1';
+      ocGo('/home.html?inner=1');
     });
   }
 
@@ -1071,8 +1073,8 @@
     var g = await c.auth.getSession();
     var sess = g && g.data && g.data.session;
     if (!sess) {
-      location.href = '/account/login.html?next='
-        + encodeURIComponent(location.pathname + location.search);
+      ocGo('/account/login.html?next='
+        + encodeURIComponent(location.pathname + location.search));
       return;
     }
 
@@ -1204,7 +1206,7 @@
     if (fm) fm.addEventListener('click', function () {
       /* ★ 표시 <b>없이</b> 메인으로 갑니다 — 표시가 없으면 기존 메인입니다 */
       try { sessionStorage.removeItem('oc-main-mode'); } catch (e) {}
-      location.replace('/home.html');
+      ocGo('/home.html', true);
     });
 
     /* 자료를 한꺼번에 받아 옵니다 — 하나씩 기다리면 느립니다 */

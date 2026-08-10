@@ -50,7 +50,7 @@
     if(!window.ocAuth){err.textContent='초기화 중입니다. 잠시 후 다시 시도해 주세요.';return;}
     var r=await window.ocAuth.formSignup(document, TYPE);
     if(!r||!r.ok){err.textContent=(r&&r.msg)||'가입 처리 중 오류가 발생했습니다.';return;}
-    location.href='/account/join-complete.html';
+    ocGo('/account/join-complete.html');
   });
 })();
 </script>

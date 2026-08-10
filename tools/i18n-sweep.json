@@ -1,0 +1,1295 @@
+{
+ "03993 서울특별시 마포구 동교로 215-1(동교동) 스튜디오한사 406 | Tel : 02-3141-1305 | Fax : 02-3141-1335": {
+  "쓰인수": 108,
+  "자리": [
+   "footer<div.wrap<div.addr"
+  ],
+  "화면": [
+   "/account/change-password.html",
+   "/account/find-id-result.html",
+   "/account/find-id.html"
+  ]
+ },
+ "대한민국 · 서울": {
+  "쓰인수": 3,
+  "자리": [
+   "dl.pv-facts<div<dd"
+  ],
+  "화면": [
+   "/db/foundation-view.html",
+   "/db/school-view.html",
+   "/db/venue-view.html"
+  ]
+ },
+ "루트비히 판 베토벤": {
+  "쓰인수": 3,
+  "자리": [
+   "dl.pv-facts<div<dd",
+   "div<dd<a.pv-schoollink"
+  ],
+  "화면": [
+   "/db/work-view.html",
+   "/spot/spot-write-score.html"
+  ]
+ },
+ "베를린 필하모닉": {
+  "쓰인수": 3,
+  "자리": [
+   "div.pdb-inner<nav.pdb-crumb<span.on",
+   "header.pv-hero<div.pv-headinfo<h2.pv-name"
+  ],
+  "화면": [
+   "/db/org-view.html",
+   "/spot/spot-write-media.html"
+  ]
+ },
+ "베토벤 후기 현악4중주의 화성 연구": {
+  "쓰인수": 3,
+  "자리": [
+   "header.pv-hero<div.pv-headinfo<h2.pv-name",
+   "div.pdb-inner<nav.pdb-crumb<span.on"
+  ],
+  "화면": [
+   "/db/academic-view.html",
+   "/db/work-view.html"
+  ]
+ },
+ "2021년": {
+  "쓰인수": 2,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/academic-view.html",
+   "/db/work-view.html"
+  ]
+ },
+ "과": {
+  "쓰인수": 2,
+  "자리": [
+   "ol.rg-steps<li<p",
+   "div.rg-privacy<ul<li"
+  ],
+  "화면": [
+   "/recruit/guide.html"
+  ]
+ },
+ "금": {
+  "쓰인수": 2,
+  "자리": [
+   "header.pv-hero<div.pv-portrait<span",
+   "div.sp-calbox<div.sp-caldow<span"
+  ],
+  "화면": [
+   "/db/foundation-view.html",
+   "/spot/index.html"
+  ]
+ },
+ "금호아시아나문화재단": {
+  "쓰인수": 2,
+  "자리": [
+   "div.pdb-inner<nav.pdb-crumb<span.on",
+   "header.pv-hero<div.pv-headinfo<h2.pv-name"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "김서연": {
+  "쓰인수": 2,
+  "자리": [
+   "dl.pv-facts<div<dd",
+   "div<dd<a.pv-schoollink"
+  ],
+  "화면": [
+   "/db/academic-view.html"
+  ]
+ },
+ "논": {
+  "쓰인수": 2,
+  "자리": [
+   "header.pv-hero<div.pv-portrait<span"
+  ],
+  "화면": [
+   "/db/academic-view.html",
+   "/db/work-view.html"
+  ]
+ },
+ "대한민국 · 독일": {
+  "쓰인수": 2,
+  "자리": [
+   "dl.pv-facts<div<dd",
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/modern-view.html"
+  ]
+ },
+ "레슨": {
+  "쓰인수": 2,
+  "자리": [
+   "div.bf-row<select<option",
+   "div.pdb-selects<select.board-catsel<option"
+  ],
+  "화면": [
+   "/community/admission-community-write.html",
+   "/community/admission-community.html"
+  ]
+ },
+ "문화예술교육형 사회적기업 육성 지원사업": {
+  "쓰인수": 2,
+  "자리": [
+   "ul.fund<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "베를린 필하모니": {
+  "쓰인수": 2,
+  "자리": [
+   "dl.pv-facts<div<dd",
+   "div<dd<a.pv-schoollink"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "서울대학교 음악대학": {
+  "쓰인수": 2,
+  "자리": [
+   "div.pdb-inner<nav.pdb-crumb<span.on",
+   "header.pv-hero<div.pv-headinfo<h2.pv-name"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "서울시립교향악단": {
+  "쓰인수": 2,
+  "자리": [
+   "div<dd<a.pv-schoollink",
+   "input[placeholder]"
+  ],
+  "화면": [
+   "/db/venue-view.html",
+   "/spot/spot-write-concert.html"
+  ]
+ },
+ "예술의전당": {
+  "쓰인수": 2,
+  "자리": [
+   "div.pdb-inner<nav.pdb-crumb<span.on",
+   "header.pv-hero<div.pv-headinfo<h2.pv-name"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "예술의전당재단": {
+  "쓰인수": 2,
+  "자리": [
+   "dl.pv-facts<div<dd",
+   "div<dd<a.pv-schoollink"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "유틸리티": {
+  "쓰인수": 2,
+  "자리": [
+   "div.bf-row<select<option",
+   "div.pdb-selects<select.board-catsel<option"
+  ],
+  "화면": [
+   "/community/utility-write.html",
+   "/community/utility.html"
+  ]
+ },
+ "음색 · 리듬 · 관현악법": {
+  "쓰인수": 2,
+  "자리": [
+   "dl.pv-facts<div<dd",
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/modern-view.html"
+  ]
+ },
+ "작곡 · 기악 · 성악 · 국악": {
+  "쓰인수": 2,
+  "자리": [
+   "dl.pv-facts<div<dd",
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "조**": {
+  "쓰인수": 2,
+  "자리": [
+   "li<p<b",
+   "ul<li<b"
+  ],
+  "화면": [
+   "/recruit/guide.html"
+  ]
+ },
+ "진은숙": {
+  "쓰인수": 2,
+  "자리": [
+   "div.pdb-inner<nav.pdb-crumb<span.on",
+   "header.pv-hero<div.pv-headinfo<h2.pv-name"
+  ],
+  "화면": [
+   "/db/modern-view.html"
+  ]
+ },
+ "콘서트홀 2,505석": {
+  "쓰인수": 2,
+  "자리": [
+   "dl.pv-facts<div<dd",
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "11시 콘서트": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "1600–1750년": {
+  "쓰인수": 1,
+  "자리": [
+   "div.pdb-inner<div.tl-head<span.yr"
+  ],
+  "화면": [
+   "/db/timeline.html"
+  ]
+ },
+ "1882년": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "1946년": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "1961년 –": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/modern-view.html"
+  ]
+ },
+ "1977년": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "1988년": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "1997년 세계무대에서 활약하는 국내 실내악 최정상 기인의 음악인을 한 무대에 모아 클래식계의…": {
+  "쓰인수": 1,
+  "자리": [
+   "div.selfpic<div<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "2011 공연영상주예술단체육성지원사업 심사결과": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.fund<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "2011 문학창작활성화_작가활동지원신청": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.fund<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "2011『문화공간 활성화지원사업』지원신청공고": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.fund<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "2012년 강원문화예술진흥사업": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.fund<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "2013.8.3 ~ 8.24 · 예술의전당 신세계스퀘어 야외무대 · 무료입장. 서울사이버대학교와 하나은행이 함께하는 우리가곡 야외음악회.": {
+  "쓰인수": 1,
+  "자리": [
+   "div.card<div.cap<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "2016 대한민국 신인음악콩쿠르": {
+  "쓰인수": 1,
+  "자리": [
+   "div.split<div.body<h4"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "2016 대한민국 신인음악콩쿠르 안내": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.list<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "2026년 7월": {
+  "쓰인수": 1,
+  "자리": [
+   "div.pdb-meta-right<div.pdb-updated<b"
+  ],
+  "화면": [
+   "/db/foundation.html"
+  ]
+ },
+ "2026년 7월 20일 ~ 8월 31일": {
+  "쓰인수": 1,
+  "자리": [
+   "input[placeholder]"
+  ],
+  "화면": [
+   "/spot/spot-write-festival.html"
+  ]
+ },
+ "2026년 8월 공연 0건": {
+  "쓰인수": 1,
+  "자리": [
+   "div.sp-cal<div.sp-calside<div.sp-calsidehead"
+  ],
+  "화면": [
+   "/spot/index.html"
+  ]
+ },
+ "2026년 9월 12일 오후 7시 30분": {
+  "쓰인수": 1,
+  "자리": [
+   "input[placeholder]"
+  ],
+  "화면": [
+   "/spot/spot-write-concert.html"
+  ]
+ },
+ "3월 30일과 4월 2일은 파비오 루이지": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.list<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "60 Lincoln Center Plaza New York, New York 10023 U.S.A. 미국 뉴욕음악에 위치한 줄리어드 음대는 한국 유학생이 많은 걸로 유명하다. 국내에서 왕성한 활동을 하고 있는 음악인들 중에도 유독…": {
+  "쓰인수": 1,
+  "자리": [
+   "div.split<div.body<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "<제3탄> 미국 뉴욕 줄리어드음대": {
+  "쓰인수": 1,
+  "자리": [
+   "div.split<div.body<h4"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "IMSLP #12345 · Breitkopf 1862년 전집판": {
+  "쓰인수": 1,
+  "자리": [
+   "input[placeholder]"
+  ],
+  "화면": [
+   "/spot/spot-write-score.html"
+  ]
+ },
+ "IMSLP 퍼블릭 도메인 (작곡가 1827년 사망)": {
+  "쓰인수": 1,
+  "자리": [
+   "input[placeholder]"
+  ],
+  "화면": [
+   "/spot/spot-write-score.html"
+  ]
+ },
+ "International piano competition 전체대상 400만원": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.list<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "MIKHAIL PLETNEV — 피아니스트의 재해석": {
+  "쓰인수": 1,
+  "자리": [
+   "div.col-block<article.lead<h4"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "[15명 한정 도슨트전시+공연초청] 2015 HPF": {
+  "쓰인수": 1,
+  "자리": [
+   "div.split<div.body<h4"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "[15명 한정 도슨트전시+공연초청] 2015 HPF 스페이스프로젝트": {
+  "쓰인수": 1,
+  "자리": [
+   "div.col-block<article.lead<h4"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "‘복구의 쇼팽’이라 불리며 섬세한 시정 넘치는 많은 피아노 작품들을 남겼던 ‘에드바르트 그리그’ 그의 작품세계를 한눈에 풀어볼 수 있는 음반으로, 그리그의 유일한 피아노 소나타를 비롯, 작곡자가…": {
+  "쓰인수": 1,
+  "자리": [
+   "div.col-block<article.lead<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "‘복구의 쇼팽’이라 불리며 섬세한 시정 넘치는 많은 피아노 작품들을 남겼던 ‘에드바르트 그리그’ 그의 작품세계를 한눈에 풀어볼 수 있는 음반으로, 그리그의 유일한 피아노 소나타를 비롯…": {
+  "쓰인수": 1,
+  "자리": [
+   "div.split<div.body<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "강석희 · 죄르지 리게티": {
+  "쓰인수": 1,
+  "자리": [
+   "div<dd<a.pv-schoollink"
+  ],
+  "화면": [
+   "/db/modern-view.html"
+  ]
+ },
+ "개관 30주년 특집": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "고전주의 1750–1820 · 0명": {
+  "쓰인수": 1,
+  "자리": [
+   "button[aria-label]"
+  ],
+  "화면": [
+   "/db/timeline.html"
+  ]
+ },
+ "교향악축제 하이라이트": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "국내 주요 콩쿠르 일정과 접수 안내를 한곳에서 확인하세요. 참가 부문·심사 기준·시상 내역을 정리했습니다.": {
+  "쓰인수": 1,
+  "자리": [
+   "div.split<div.body<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "국악과 공연": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "근·현대 1900–1945 · 0명": {
+  "쓰인수": 1,
+  "자리": [
+   "button[aria-label]"
+  ],
+  "화면": [
+   "/db/timeline.html"
+  ]
+ },
+ "금호아트홀": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-facts<div<dd"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "금호아트홀 실황": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "금호아트홀 연세": {
+  "쓰인수": 1,
+  "자리": [
+   "div<dd<a.pv-schoollink"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "금호영재콘서트": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "낭만주의 1820–1900 · 0명": {
+  "쓰인수": 1,
+  "자리": [
+   "button[aria-label]"
+  ],
+  "화면": [
+   "/db/timeline.html"
+  ]
+ },
+ "다큐": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-cs"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "독일 · 베를린": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-facts<div<dd"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "독일 베를린": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "독일 아이제나흐": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/person-view.html"
+  ]
+ },
+ "동문 음악회": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "라이프치히 성토마스교회": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-facts<div<dd"
+  ],
+  "화면": [
+   "/db/person-view.html"
+  ]
+ },
+ "라이프치히 성토마스교회 (칸토르)": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/person-view.html"
+  ]
+ },
+ "뤼네부르크 성 미하엘 학교": {
+  "쓰인수": 1,
+  "자리": [
+   "div<dd<a.pv-schoollink"
+  ],
+  "화면": [
+   "/db/person-view.html"
+  ]
+ },
+ "르네상스 1400–1600 · 0명": {
+  "쓰인수": 1,
+  "자리": [
+   "button[aria-label]"
+  ],
+  "화면": [
+   "/db/timeline.html"
+  ]
+ },
+ "말러 교향곡 2번": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "매너스음대졸업 · 광원디/에워학교졸업 · KBS교향악단 정기연주회 협연": {
+  "쓰인수": 1,
+  "자리": [
+   "div.artist<div<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "바로크 1600–1750 · 0명": {
+  "쓰인수": 1,
+  "자리": [
+   "button[aria-label]"
+  ],
+  "화면": [
+   "/db/timeline.html"
+  ]
+ },
+ "바이마르 · 쾨텐 궁정": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/person-view.html"
+  ]
+ },
+ "발트뷔네 콘서트 실황": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "베를리너 필하모니커 재단": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "베를린": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/modern-view.html"
+  ]
+ },
+ "베토벤 교향곡 5번": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "부산시립교향악단 2016 신년음악회 안내": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.list<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "부활": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-cs"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "서": {
+  "쓰인수": 1,
+  "자리": [
+   "header.pv-hero<div.pv-portrait<span"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "서울 관악구": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "서울 서초구": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "서울 종로구": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "서울대학교": {
+  "쓰인수": 1,
+  "자리": [
+   "div<dd<a.pv-schoollink"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "소개 · 이력": {
+  "쓰인수": 1,
+  "자리": [
+   "div.wr-fields<div.wr-f<label.wr-l"
+  ],
+  "화면": [
+   "/db/write.html"
+  ]
+ },
+ "신예 연주": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-cs"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "신윤경": {
+  "쓰인수": 1,
+  "자리": [
+   "div.artist<div<h4"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "아름다운 목요일": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "악기 후원 스토리": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다. 공연 전 부대행사인 도슨트 투어부터 관람하실 수 있도록…": {
+  "쓰인수": 1,
+  "자리": [
+   "div.split<div.body<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "안녕하세요, 2015 화음 프로젝트 페스티벌 Day 7 스페이스프로젝트는 전시와 공연이 함께 어우러집니다. 지금 2015년 11월 18일(수) 오후 4시 공연 전 부대행사인 도슨트 투어부터 공연까지 관람하실 수 있도록…": {
+  "쓰인수": 1,
+  "자리": [
+   "div.col-block<article.lead<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "야외 콘서트": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-cs"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "약 128명": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "여름음악축제": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "역사적 실황": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-cs"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "연주 · 제작": {
+  "쓰인수": 1,
+  "자리": [
+   "form.board-form<div.bf-row<label"
+  ],
+  "화면": [
+   "/spot/spot-write-media.html"
+  ]
+ },
+ "영아티스트 콘서트": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "영재 연주": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-cs"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "영재 육성 · 악기 후원": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "예": {
+  "쓰인수": 1,
+  "자리": [
+   "header.pv-hero<div.pv-portrait<span"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "예술의전당 콘서트홀": {
+  "쓰인수": 1,
+  "자리": [
+   "input[placeholder]"
+  ],
+  "화면": [
+   "/spot/spot-write-concert.html"
+  ]
+ },
+ "예원학교, 서울예고, 서울대학교 음악대학 우등 졸업 · New England Conservatory NEC Scholarship 장학생 우등 졸업": {
+  "쓰인수": 1,
+  "자리": [
+   "div.artist<div<p"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "예중·예고, 음대 입시생들을 위한 2017 음악입시": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.list<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "오페라 시즌": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-cs"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "오페라극장 공연": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "와": {
+  "쓰인수": 1,
+  "자리": [
+   "body<main.sm-wrap<div.sm-note"
+  ],
+  "화면": [
+   "/community/school-month.html"
+  ]
+ },
+ "위에서": {
+  "쓰인수": 1,
+  "자리": [
+   "div.rw-main<div.rw-doc<p.rw-hint"
+  ],
+  "화면": [
+   "/recruit/job-write.html"
+  ]
+ },
+ "유럽 순회 실황": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-cs"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "유로파콘체르트": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "일반 베르크 《보체크》와 바그너 《탈하일러》는 예정대로": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.list<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "작곡과 신작 발표": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "재단 (민간)": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/foundation-view.html"
+  ]
+ },
+ "접수 3월 · 예선 5월 · 본선 6월": {
+  "쓰인수": 1,
+  "자리": [
+   "input[placeholder]"
+  ],
+  "화면": [
+   "/spot/spot-write-concours.html"
+  ]
+ },
+ "정기연주회 실황": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "정남일": {
+  "쓰인수": 1,
+  "자리": [
+   "div.artist<div<h4"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "제7회 민 클래식컵 뮤직 컴페티션 — 전국 음악 콩쿠르": {
+  "쓰인수": 1,
+  "자리": [
+   "ul.list<li<a"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "졸업연주회": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "중세 ~1400 · 0명": {
+  "쓰인수": 1,
+  "자리": [
+   "button[aria-label]"
+  ],
+  "화면": [
+   "/db/timeline.html"
+  ]
+ },
+ "진": {
+  "쓰인수": 1,
+  "자리": [
+   "header.pv-hero<div.pv-portrait<span"
+  ],
+  "화면": [
+   "/db/modern-view.html"
+  ]
+ },
+ "카라얀 아카이브": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "캠퍼스 투어": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/school-view.html"
+  ]
+ },
+ "콘서트홀 · 오페라극장 · 리사이틀홀 외": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "콘서트홀 투어": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/venue-view.html"
+  ]
+ },
+ "키릴 페트렌코": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-facts<div<dd"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "키릴 페트렌코 (2019–)": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "페트렌코 취임 연주": {
+  "쓰인수": 1,
+  "자리": [
+   "a.pv-card<span.pv-cardbody<span.pv-ct"
+  ],
+  "화면": [
+   "/db/org-view.html"
+  ]
+ },
+ "피아노 독주": {
+  "쓰인수": 1,
+  "자리": [
+   "input[placeholder]"
+  ],
+  "화면": [
+   "/spot/spot-write-score.html"
+  ]
+ },
+ "한국 최고의 실내악 콘서트": {
+  "쓰인수": 1,
+  "자리": [
+   "div.selfpic<div<h4"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "한국문화예술위원회": {
+  "쓰인수": 1,
+  "자리": [
+   "input[placeholder]"
+  ],
+  "화면": [
+   "/spot/spot-write-funding.html"
+  ]
+ },
+ "한국음악학회지": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-facts<div<dd"
+  ],
+  "화면": [
+   "/db/academic-view.html"
+  ]
+ },
+ "한국음악학회지 제42집": {
+  "쓰인수": 1,
+  "자리": [
+   "dl.pv-deflist<div<dd"
+  ],
+  "화면": [
+   "/db/academic-view.html"
+  ]
+ },
+ "한여름밤 우리가곡 야외음악회": {
+  "쓰인수": 1,
+  "자리": [
+   "div.card<div.cap<h4"
+  ],
+  "화면": [
+   "/home.html"
+  ]
+ },
+ "현대 1945~ · 0명": {
+  "쓰인수": 1,
+  "자리": [
+   "button[aria-label]"
+  ],
+  "화면": [
+   "/db/timeline.html"
+  ]
+ }
+}

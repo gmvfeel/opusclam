@@ -336,8 +336,8 @@
     if (!I){ say('no', '관심분야 기능을 불러오지 못했습니다. 새로 고쳐 주십시오.'); return; }
     ME = await I.me();
     if (!ME){
-      location.href = '/account/login.html?next='
-        + encodeURIComponent('/account/interests.html');
+      ocGo('/account/login.html?next='
+        + encodeURIComponent('/account/interests.html'));
       return;
     }
     MINE = (await I.list(true)).slice();

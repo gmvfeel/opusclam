@@ -41,7 +41,7 @@
 
   /* 사전 파일 판(버전) — 사전을 고치면 이 숫자를 올립니다.
      ★ 안 올리면 브라우저가 옛 사전을 계속 씁니다. */
-  var V = '20260810s';
+  var V = '20260810v';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -133,6 +133,11 @@
     }
   };
 
+  /* 알림창을 감쌀 때 쓸 원래 함수 자리 */
+  var _dialogWrapped = false;
+  /* 앞부분 맞추기에 쓸 가장 짧은 열쇠 길이 — 짧으면 엉뚱한 곳에 걸립니다 */
+  var MIN_PREFIX = 6;
+
   /* 사전과 살림살이 — ★ 반드시 조기 return 위에 두어야 합니다 */
   var DICT = null;
   var _pk = null;
@@ -168,6 +173,28 @@
 
      ★ 「돌아갈 주소」(?next=·pushState) 에는 <b>쓰지 마세요.</b>
        그것은 /en 이 붙은 채여야 로그인 뒤에도 영어로 돌아옵니다. */
+  /* ── 화면을 옮길 때 언어를 잃지 않게 ─────────────────────────
+     ★ 무엇이 잘못됐었나 (2026-08-10 · 훑기 도구가 찾음)
+       /en/account/interests.html 은 로그인이 필요해서
+         location.href = '/account/login.html?next=…'
+       로 보냅니다. 그런데 그 주소에 <b>/en 이 없어</b> 로그인 화면이
+       한국어로 열립니다. 로그인한 뒤에도 한국어로 돌아옵니다.
+       — 영어로 보던 사람이 한 번 튕기면 말이 바뀌어 버립니다.
+
+     ★ 파일마다 고치지 않습니다
+       열한 곳이 넘고, 앞으로 새로 만드는 이동에서도 같은 일이 납니다.
+       <b>여기 한 곳</b>에서 감싸면 지금 것도 앞으로 것도 함께 됩니다.
+
+     ★ 쓰는 법 —  ocGo('/account/login.html?next=' + back)
+       i18n 이 없으면 그냥 그 주소로 갑니다(폴백 안전). */
+  window.ocGo = function (url, replace) {
+    var u = url;
+    try {
+      if (window.OCI18N && OCI18N.url) u = OCI18N.url(String(url));
+    } catch (e) {}
+    if (replace) location.replace(u); else location.href = u;
+  };
+
   window.ocPath = function (p) {
     var s = String(p == null ? '' : p);
     if (s.charAt(0) !== '/') return s;
@@ -235,6 +262,9 @@
 
   /* 첫 훑기 — 지금 있는 것(주로 <head> 와 빈 <body>)을 바꿉니다 */
   scan(document.documentElement);
+
+  /* 알림창(alert·confirm·prompt)도 옮깁니다 */
+  wrapDialogs();
 
   /* 앞으로 붙는 것들을 지켜봅니다 */
   startWatch();
@@ -743,6 +773,83 @@
       var host = document.querySelector('main, article, .wrap, .container') || document.body;
       host.insertBefore(box, host.firstChild);
     } catch (e) {}
+  }
+
+  /* ── 알림창을 감싸 옮깁니다 ────────────────────────────────────
+     ★ 왜 필요한가
+       alert() · confirm() 은 <b>화면(DOM)에 들어가지 않습니다.</b>
+       그래서 지켜보기(MutationObserver)로는 영영 잡을 수 없고,
+       영어 화면에서도 한국어 그대로 튀어나옵니다.
+
+     ★ 왜 파일마다 고치지 않는가
+       공용 JS 여덟 곳에 서른여덟 군데가 있습니다. 하나씩
+       OCI18N.t() 로 감싸면 빠뜨리기 쉽고, 앞으로 새로 만드는
+       alert 도 그때마다 손봐야 합니다.
+       <b>바깥에서 한 번 감싸면</b> 지금 것도 앞으로 것도 함께 됩니다.
+
+     ★ 앞부분만 맞는 것도 옮깁니다
+       '삭제 실패: ' + 오류내용  처럼 이어붙인 글은 통째로는 사전에
+       없습니다. 그래서 <b>앞부분</b>이 사전에 있으면 그 부분만 바꾸고
+       뒤(오류 내용)는 그대로 둡니다.
+       ★ 너무 짧은 열쇠로는 하지 않습니다 — 엉뚱한 곳에 걸립니다.
+
+     ★ 한국어에서는 감싸지 않습니다 — 원래 함수 그대로입니다. */
+  function wrapDialogs() {
+    if (_dialogWrapped) return;
+    _dialogWrapped = true;
+    ['alert', 'confirm', 'prompt'].forEach(function (name) {
+      var orig = window[name];
+      if (typeof orig !== 'function') return;
+      window[name] = function (msg, second) {
+        try { msg = dialogText(msg); } catch (e) {}
+        return (name === 'prompt') ? orig.call(window, msg, second)
+                                   : orig.call(window, msg);
+      };
+    });
+  }
+
+  /* 알림창 글자 옮기기 — 통째로 → 줄마다 → 앞부분 */
+  function dialogText(msg) {
+    if (msg == null) return msg;
+    var s = String(msg);
+    if (!s || !/[가-힣]/.test(s)) return msg;
+
+    /* ① 통째로 */
+    var whole = translate(s);
+    if (whole !== s) return whole;
+
+    /* ② 줄마다 (여러 줄짜리 알림이 많습니다) */
+    if (s.indexOf('\n') >= 0) {
+      var lines = s.split('\n');
+      var any = false;
+      var out = lines.map(function (ln) {
+        var t = translate(ln);
+        if (t !== ln) any = true;
+        return t;
+      });
+      if (any) return out.join('\n');
+    }
+
+    /* ③ 앞부분만 */
+    var key = null;
+    for (var k in DICT) {
+      if (k.length < MIN_PREFIX) continue;
+      if (s.indexOf(k) !== 0) continue;
+      if (!key || k.length > key.length) key = k;   /* 가장 긴 것을 고릅니다 */
+    }
+    if (key) {
+      /* ★ 사이 공백이 겹치지 않게 다듬습니다.
+         사전 열쇠는 여백을 고른 '삭제 실패:' 인데 실제 글은
+         '삭제 실패: 네트워크' 라 뒤에 빈칸이 하나 더 붙습니다.
+         그대로 이으면 'Could not delete:  네트워크' 처럼 두 칸이 됩니다. */
+      var rest = s.slice(key.length);
+      var head = DICT[key];
+      if (/\s$/.test(head) && /^\s/.test(rest)) rest = rest.replace(/^\s+/, '');
+      else if (!/\s$/.test(head) && /^\s/.test(rest)) rest = ' ' + rest.replace(/^\s+/, '');
+      return head + rest;
+    }
+
+    return s;
   }
 
   function onReady(fn) {

@@ -1,3 +1,5 @@
+/* i18n 이 없을 때를 위한 폴백 — 언어를 붙이지 못해도 이동은 됩니다 */
+if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) location.replace(u); else location.href = u; }; }
 /* ============================================================
    OPUSCLAM  악보 내려받기          assets/score-dl.js
 
@@ -81,7 +83,7 @@
        튕기면 다시 찾아 들어가야 해서 번거롭습니다. */
     var back = encodeURIComponent(location.pathname + location.search);
     if (confirm('악보는 회원만 내려받을 수 있습니다.\n\n로그인 화면으로 가시겠습니까?')){
-      location.href = '/account/login.html?next=' + back;
+      ocGo('/account/login.html?next=' + back);
     }
   }
 
@@ -212,7 +214,7 @@
   function askLink(){
     var back = encodeURIComponent(location.pathname + location.search);
     if (confirm('악보 링크는 회원만 볼 수 있습니다.\n\n로그인 화면으로 가시겠습니까?')){
-      location.href = '/account/login.html?next=' + back;
+      ocGo('/account/login.html?next=' + back);
     }
   }
 

@@ -1,3 +1,5 @@
+/* i18n 이 없을 때를 위한 폴백 — 언어를 붙이지 못해도 이동은 됩니다 */
+if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) location.replace(u); else location.href = u; }; }
 /* ============================================================
    OPUSCLAM 통합검색 엔진 — assets/search.js
    ------------------------------------------------------------
@@ -323,7 +325,7 @@ window.OCSearch = (function () {
   function go(qRaw) {
     var q = clean(qRaw);
     if (!q) return;
-    location.href = '/search.html?q=' + encodeURIComponent(q);
+    ocGo('/search.html?q=' + encodeURIComponent(q));
   }
 
   /* search.html 에서 자동 시작 */

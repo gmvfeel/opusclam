@@ -1,3 +1,5 @@
+/* i18n 이 없을 때를 위한 폴백 — 언어를 붙이지 못해도 이동은 됩니다 */
+if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) location.replace(u); else location.href = u; }; }
 /* ============================================================
    OPUSCLAM 공용 게시판 엔진 — assets/board.js
    ------------------------------------------------------------
@@ -1411,7 +1413,7 @@ window.OCBoard = (function () {
     function onVote(v) {
       if (busy) return; busy = true;
       ensureClient().then(function (id) {
-        if (!id) { busy = false; if (confirm('로그인이 필요한 기능입니다. 로그인 페이지로 이동할까요?')) location.href = '/account/login.html'; return; }
+        if (!id) { busy = false; if (confirm('로그인이 필요한 기능입니다. 로그인 페이지로 이동할까요?')) ocGo('/account/login.html'); return; }
         var op;
         if (mine === v) { op = client.from(cfg.votesTable).delete().eq('post_id', post.id).eq('user_id', id); mine = null; }
         else { op = client.from(cfg.votesTable).upsert({ user_id: id, post_id: post.id, value: v }, { onConflict: 'user_id,post_id' }); mine = v; }

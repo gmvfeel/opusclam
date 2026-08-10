@@ -899,7 +899,7 @@
   var box=document.getElementById("mpBody");
   function esc(s){return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
   function fmt(x){ if(!x)return "-"; try{var d=new Date(x);return d.getFullYear()+"."+("0"+(d.getMonth()+1)).slice(-2)+"."+("0"+d.getDate()).slice(-2);}catch(e){return "-";} }
-  function doLogout(){ sb.auth.signOut().then(function(){ location.href="/home.html"; }); }
+  function doLogout(){ sb.auth.signOut().then(function(){ ocGo("/home.html"); }); }
 
   function headerLoggedIn(m, session){
     var al=document.querySelector(".authlink"); if(!al) return;

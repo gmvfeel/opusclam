@@ -1,3 +1,5 @@
+/* i18n 이 없을 때를 위한 폴백 — 언어를 붙이지 못해도 이동은 됩니다 */
+if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) location.replace(u); else location.href = u; }; }
 /* ══════════════════════════════════════════════════════════════
    생년월일 — <b>고르는 상자 세 개</b>로                2026-08-05
    window.OCBirth
@@ -254,7 +256,7 @@
     logout: async function(){
       var c = sb(); if(!c) return;
       await c.auth.signOut();
-      location.href = '/home.html';
+      ocGo('/home.html');
     },
 
     /* 비밀번호 재설정 메일 발송 */
