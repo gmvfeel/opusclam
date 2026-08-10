@@ -649,7 +649,7 @@ function needInnerSpace() {
           '/account/profile.html',
           '/account/interests.html'
         ];
-        var noInner = window.OC_NO_INNER.indexOf(location.pathname) >= 0;
+        var noInner = window.OC_NO_INNER.indexOf((window.ocPath||String)(location.pathname)) >= 0;  /* ★ 언어를 떼고 견줍니다 */
 
         /* ★ 이름 옆 「마이페이지」 표시 — assets/app.js 와 같은 모양입니다.
            currentColor 라 어느 헤더에서든 색이 따라옵니다. */

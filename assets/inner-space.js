@@ -100,7 +100,7 @@
   function skipHere() {
     var list = (window.OC_NO_INNER && window.OC_NO_INNER.length)
       ? window.OC_NO_INNER : SKIP;
-    return list.indexOf(location.pathname) >= 0;
+    return list.indexOf((window.ocPath || String)(location.pathname)) >= 0;   /* ★ 언어를 떼고 견줍니다 */
   }
 
   /* ★ 스타일도 <b>스스로</b> 싣습니다.

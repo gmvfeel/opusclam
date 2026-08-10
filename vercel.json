@@ -1,4 +1,12 @@
 {
+  "rewrites": [
+    { "source": "/en", "destination": "/index.html" },
+    { "source": "/ja", "destination": "/index.html" },
+    { "source": "/en/", "destination": "/index.html" },
+    { "source": "/ja/", "destination": "/index.html" },
+    { "source": "/en/:path*", "destination": "/:path*" },
+    { "source": "/ja/:path*", "destination": "/:path*" }
+  ],
   "headers": [
     {
       "source": "/assets/:path*.js",
@@ -8,6 +16,12 @@
     },
     {
       "source": "/assets/:path*.css",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/assets/i18n/:path*.json",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]

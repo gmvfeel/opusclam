@@ -135,8 +135,10 @@
          없었습니다.</b> 게시판 쪽만 표 이름과 같게 modern_music 으로
          둡니다. (받는 쪽은 account/mypage.html 의 FAV_META) */
     var TYPE_FIX = { '/community/modern-view.html': 'modern_music' };
-    var itemType = TYPE_FIX[location.pathname]
-      || location.pathname.split('/').pop().replace('-view.html', '');
+    /* ★ 언어를 떼고 견줍니다 — /en/community/modern-view.html 도 같은 화면입니다 */
+    var _p = (window.ocPath || String)(location.pathname);
+    var itemType = TYPE_FIX[_p]
+      || _p.split('/').pop().replace('-view.html', '');
       var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
       var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
       var client = null;

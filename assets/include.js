@@ -4,6 +4,41 @@
    - 헤더는 "동기"로 즉시 넣는다: 뒤의 헤더 동작 스크립트(햄버거·테마·스티키)보다 먼저 DOM에 들어가야 함.
    - 푸터는 이 파일이 담당하지 않는다(app.js 가 #oc-footer 자리에 그린다).
    - 사용법: 헤더 자리표 바로 아래에 <script src="/assets/include.js"></script> 한 줄. */
+
+/* ── 다국어 엔진 싣기 (2026-08-10 신설) ────────────────────────────
+   ★ 왜 여기서 싣나
+     화면 111개에 <script src="/assets/i18n.js"> 를 한 줄씩 넣으면
+     배포할 파일이 111개가 되고, 화면을 늘릴 때마다 또 넣어야 하며,
+     한 곳이라도 빠뜨리면 그 화면만 한국어로 남습니다.
+     include.js 는 <b>모든 화면이 이미 부르고 있고</b>, <body> 바로
+     다음에서 <b>동기</b>로 실립니다 — 본문이 그려지기 전입니다.
+     여기 한 줄이면 111개가 한꺼번에 됩니다.
+
+   ★ document.write 를 쓰는 까닭
+     문서를 읽는 도중이라 <b>그 자리에 끼워 넣어 곧바로</b> 실행됩니다.
+     createElement 로 붙이면 비동기라, 한국어가 한 번 그려진 뒤에
+     바뀌어 반짝입니다.
+
+   ★ 한국어 화면에서는 i18n.js 가 사전을 받지도 않고 곧 끝납니다.
+     (언어 고르개만 답니다) — 부담이 거의 없습니다.
+
+   ★ 판(버전) 을 꼭 올리세요 — 사전이나 엔진을 고치면 이 숫자를
+     바꿔야 브라우저가 새것을 받습니다. */
+(function () {
+  var V = '20260810';
+  if (document.getElementById('oc-i18n-js')) return;
+  var src = '/assets/i18n.js?v=' + V;
+  try {
+    if (document.readyState === 'loading') {
+      document.write('<script id="oc-i18n-js" src="' + src + '"><\/script>');
+    } else {
+      var s = document.createElement('script');
+      s.id = 'oc-i18n-js'; s.src = src;
+      (document.head || document.documentElement).appendChild(s);
+    }
+  } catch (e) {}
+})();
+
 (function () {
   function inject(id, url) {
     var slot = document.getElementById(id);
@@ -22,9 +57,18 @@
   /* ── 주소에서 이름 뽑기 (GNB·하위 메뉴가 함께 씁니다) ────────
      한 곳에 두어야 두 메뉴가 같은 규칙으로 켜집니다. */
 
+  /* ★ 주소를 견주기 전에 <b>언어를 뗍니다</b> (2026-08-10)
+       /en/db/person.html 과 /db/person.html 은 같은 화면입니다.
+       떼지 않으면 영어·일본어 화면에서 위 메뉴 표시가 꺼지고,
+       관심분야 단추가 사라집니다.
+     ★ 아래 셋(fileOf·baseOf·dirOf)은 <b>주소와 링크(href) 양쪽에</b>
+       쓰이므로, 여기 한 곳에서 떼면 양쪽이 똑같이 맞아떨어집니다.
+     ★ i18n.js 가 없어도 안전합니다 — String 이 그대로 돌려줍니다. */
+  function bare(p) { return (window.ocPath || String)(p); }
+
   /* 파일 이름 그대로 — job-write.html → job-write */
   function fileOf(path) {
-    var f = String(path || '').split('#')[0].split('?')[0].split('/').pop() || 'index.html';
+    var f = bare(String(path || '')).split('#')[0].split('?')[0].split('/').pop() || 'index.html';
     return f.replace(/\.html$/, '') || 'index';
   }
 
@@ -47,7 +91,7 @@
 
   /* 폴더 — /recruit/job.html → /recruit/ */
   function dirOf(path) {
-    var q = String(path || '').split('#')[0].split('?')[0];
+    var q = bare(String(path || '')).split('#')[0].split('?')[0];
     var i = q.lastIndexOf('/');
     return i >= 0 ? q.slice(0, i + 1) : '/';
   }
@@ -195,7 +239,7 @@
     if (!bar || bar.querySelector('.oc-fav-btn')) return;
 
     /* 지금 화면이 어느 갈래인지 주소로 찾습니다 */
-    var path = location.pathname;
+    var path = bare(location.pathname);   /* ★ 언어를 떼고 견줍니다 */
     var cat = null;
     var cats = window.OCInterests.CATS || [];
     for (var i = 0; i < cats.length; i++) {

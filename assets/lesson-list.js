@@ -376,9 +376,11 @@
     (function tick() {
       var nav = document.querySelector('.ln-tabs');
       if (!nav) { if (++n > 40) return; return setTimeout(tick, 50); }
-      var here = location.pathname;
+      /* ★ 주소와 링크 양쪽에서 언어를 뗍니다 */
+      var _b = (window.ocPath || String);
+      var here = _b(location.pathname);
       [].forEach.call(nav.querySelectorAll('a[href]'), function (a) {
-        if ((a.getAttribute('href') || '') === here) a.classList.add('active');
+        if (_b(a.getAttribute('href') || '') === here) a.classList.add('active');
       });
     })();
   }

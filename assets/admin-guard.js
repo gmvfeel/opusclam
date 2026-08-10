@@ -260,7 +260,9 @@
 
   function autoStart() {
     if (window.__ocAdminGuardOn) return;             /* 화면이 직접 부른 경우 */
-    if (String(location.pathname).indexOf('/admin/') !== 0) return;
+    /* ★ 언어를 떼고 봅니다 (2026-08-10) — /en/admin/… 으로 들어와도
+       「어드민 화면이 아니다」 로 새어 나가면 안 됩니다. */
+    if ((window.ocPath || String)(location.pathname).indexOf('/admin/') !== 0) return;
 
     var n = 0;
     (function tick() {

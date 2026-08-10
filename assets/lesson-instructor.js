@@ -145,10 +145,12 @@
         if (++n > 40) return;               /* 2초쯤 기다리고 그만둡니다 */
         return setTimeout(tick, 50);
       }
-      var here = location.pathname.replace(/\/index\.html$/, '/');
+      /* ★ 주소와 링크 <b>양쪽</b>에서 언어를 뗍니다 — 한쪽만 떼면 어긋납니다 */
+      var _b = (window.ocPath || String);
+      var here = _b(location.pathname).replace(/\/index\.html$/, '/');
       if (here === '/lesson/' || here === '/lesson/index.html') return;
       [].forEach.call(nav.querySelectorAll('a[href]'), function (a) {
-        var h = (a.getAttribute('href') || '').replace(/\/index\.html$/, '/');
+        var h = _b(a.getAttribute('href') || '').replace(/\/index\.html$/, '/');
         if (h === here) a.classList.add('active');
       });
     })();
