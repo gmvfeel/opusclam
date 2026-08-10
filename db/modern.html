@@ -655,7 +655,8 @@ if('serviceWorker' in navigator){
   }
   function renderRow(o,no,ctx){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
-    var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
+    var _np = (window.ocNamePair||function(r){var k=(r.name_ko||'').trim(),e=(r.name_en||'').trim();return{main:k||e,sub:(e&&e!==k)?e:''}})(o);
+    var en = _np.sub ? '<span class="c-name-en">' + esc(_np.sub) + '</span>' : '';
     /* ★ 목록 그림은 assets/thumb.js 가 만듭니다 —
        원본을 그대로 받지 않고 <b>보이는 크기만큼</b> 줄여 받습니다.
        예전에는 못 받으면 원본으로 되돌아가서, 위키미디어 원본(수 MB)을
@@ -665,7 +666,7 @@ if('serviceWorker' in navigator){
     var links='<span class="c-link">'+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_audio,'음원',IC.audio)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
-      +'<td class="c-name"><a href="modern-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
+      +'<td class="c-name"><a href="modern-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(_np.main)+oc+en+'</a></td>'
       +'<td class="c-field">'+(o.school_style?'<span class="tag">'+esc(o.school_style)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
       +'<td class="c-nation">'+nat+'</td>'
       +'<td class="c-life">'+nd(o.life)+'</td>'

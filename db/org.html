@@ -943,11 +943,12 @@ if('serviceWorker' in navigator){
   }
   function renderRow(o,no,ctx){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
-    var en=(o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
+    var _np = (window.ocNamePair||function(r){var k=(r.name_ko||'').trim(),e=(r.name_en||'').trim();return{main:k||e,sub:(e&&e!==k)?e:''}})(o);
+    var en = _np.sub ? '<span class="c-name-en">' + esc(_np.sub) + '</span>' : '';
     var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+OCThumb.img(o.logo_url, {size:38, fallback:ini(o.name_ko)})+'</span></td>'
-      +'<td class="c-name"><a href="org-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(o.name_ko)+oc+en+'</a></td>'
+      +'<td class="c-name"><a href="org-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(_np.main)+oc+en+'</a></td>'
       +'<td class="c-field">'+(o.type?'<span class="tag">'+esc(o.type)+'</span>':'<span class="nd">\u2014</span>')+'</td>'
       +'<td class="c-nation">'+nd(o.location)+'</td>'
       +'<td class="c-life">'+nd(o.founded)+'</td>'

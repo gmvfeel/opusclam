@@ -1054,7 +1054,7 @@ if('serviceWorker' in navigator){
     return '<tr data-id="'+esc(p.id)+'">'
       +'<td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+OCThumb.img(p.image_url, {size:38, fallback:ava(p.name_ko)})+'</span></td>'
-      +'<td class="c-name"><a href="person-view.html?id='+encodeURIComponent(p.id)+'&p='+ctx.cur+'">'+esc(p.name_ko)+oc+((p.name_en&&p.name_en!==p.name_ko)?'<span class="c-name-en">'+esc(p.name_en)+'</span>':'')+'</a></td>'
+      +'<td class="c-name"><a href="person-view.html?id='+encodeURIComponent(p.id)+'&p='+ctx.cur+'">'+(function(_r){var _p=(window.ocNamePair||function(r){var k=(r.name_ko||'').trim(),e=(r.name_en||'').trim();return{main:k||e,sub:(e&&e!==k)?e:''}})(_r);return esc(_p.main)+oc+(_p.sub?'<span class="c-name-en">'+esc(_p.sub)+'</span>':'');})(p)+'</a></td>'
       +'<td class="c-field">'+tags(p.field)+'</td>'
       +'<td class="c-nation">'+nat+'</td>'
       +'<td class="c-life">'+nd(p.life)+'</td>'

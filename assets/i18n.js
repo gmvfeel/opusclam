@@ -41,7 +41,7 @@
 
   /* 사전 파일 판(버전) — 사전을 고치면 이 숫자를 올립니다.
      ★ 안 올리면 브라우저가 옛 사전을 계속 씁니다. */
-  var V = '20260810v';
+  var V = '20260810w';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -173,6 +173,59 @@
 
      ★ 「돌아갈 주소」(?next=·pushState) 에는 <b>쓰지 마세요.</b>
        그것은 /en 이 붙은 채여야 로그인 뒤에도 영어로 돌아옵니다. */
+  /* ── 자료의 이름을 지금 언어로 고르기 ─────────────────────────
+     ★ 무엇이 잘못됐었나 (2026-08-10)
+       화면 스무 곳이 이름을 이렇게 골랐습니다.
+           row.name_ko || row.name_en
+       한국어 이름이 있으면 <b>언제나 한국어</b>가 나옵니다.
+       그래서 영어 화면인데 목록의 인물·단체 이름만 한국어로 남아
+       <b>껍데기만 영어</b>인 꼴이 되었습니다.
+
+     ★ 말에 따라 차례를 뒤집습니다
+         한국어  name_ko → name_en
+         영어    name_en → name_ko
+         일본어  name_ja → name_en → name_ko
+       (name_ja 는 아직 없는 표가 많습니다. 없으면 영어로 내려갑니다 —
+        빈 칸을 보여 주는 것보다 낫습니다.)
+
+     ★ 이름 말고 다른 칸에도 씁니다 — ocField(row, 'summary') 처럼.
+
+     ★ i18n 이 없어도 안전합니다(폴백). */
+  window.ocField = function (row, base) {
+    if (!row) return '';
+    var L = (window.OCI18N && OCI18N.lang) || 'ko';
+    var ko = row[base + '_ko'], en = row[base + '_en'], ja = row[base + '_ja'];
+    var pick;
+    if (L === 'en')      pick = en || ko;
+    else if (L === 'ja') pick = ja || en || ko;
+    else                 pick = ko || en;
+    return (pick == null ? '' : String(pick));
+  };
+  window.ocName = function (row) { return window.ocField(row, 'name'); };
+
+  /* ── 목록의 「큰 이름 + 작은 이름」 ────────────────────────────
+     ★ DB 목록은 이름을 두 줄로 보여 줍니다.
+         큰 글씨 : 한국어  ·  작은 글씨 : 영어
+       좋은 짜임입니다 — 두 말이 함께 보입니다.
+       영어 화면에서는 <b>차례만 뒤집으면</b> 됩니다.
+         큰 글씨 : 영어    ·  작은 글씨 : 한국어
+
+     ★ 같은 글자면 작은 줄을 두지 않습니다 — 두 번 겹쳐 보입니다.
+     ★ i18n 이 없으면 예전처럼(한국어가 큰 글씨) 돌아갑니다. */
+  window.ocNamePair = function (row) {
+    if (!row) return { main: '', sub: '' };
+    var L = (window.OCI18N && OCI18N.lang) || 'ko';
+    var ko = (row.name_ko || '').trim();
+    var en = (row.name_en || '').trim();
+    var ja = (row.name_ja || '').trim();
+    var main, sub;
+    if (L === 'en')      { main = en || ko;        sub = ko; }
+    else if (L === 'ja') { main = ja || en || ko;  sub = (ja ? (en || ko) : ko); }
+    else                 { main = ko || en;        sub = en; }
+    if (!sub || sub === main) sub = '';
+    return { main: main, sub: sub };
+  };
+
   /* ── 화면을 옮길 때 언어를 잃지 않게 ─────────────────────────
      ★ 무엇이 잘못됐었나 (2026-08-10 · 훑기 도구가 찾음)
        /en/account/interests.html 은 로그인이 필요해서

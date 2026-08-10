@@ -643,9 +643,13 @@ if('serviceWorker' in navigator){
     var oc=o.is_oc?' <span class="oc-badge">OC</span>':'';
     /* 수집된 논문은 대부분 영문이라 name_ko 가 비어 있습니다.
        그때는 영문 제목을 주 제목으로 올려야 제목 칸이 비지 않습니다. */
-    var hasKo=!!(o.name_ko&&String(o.name_ko).trim());
-    var main=hasKo?o.name_ko:(o.name_en||'');
-    var en=(hasKo&&o.name_en&&o.name_en!==o.name_ko)?'<span class="c-name-en">'+esc(o.name_en)+'</span>':'';
+    /* ★ 보는 말에 따라 주 제목과 딸림 제목의 차례를 뒤집습니다.
+       학술DB 는 수집된 논문 대부분이 영문이라 name_ko 가 비는 일이
+       많습니다. ocNamePair 가 빈 쪽을 알아서 건너뜁니다. */
+    var _np = (window.ocNamePair||function(r){var k=(r.name_ko||'').trim(),e=(r.name_en||'').trim();
+      return{main:k||e,sub:(e&&e!==k)?e:''}})(o);
+    var main=_np.main;
+    var en=_np.sub?'<span class="c-name-en">'+esc(_np.sub)+'</span>':'';
     var av=(o.ava&&String(o.ava).trim())?esc(o.ava):ini(main);
     var links='<span class="c-link">'+lk(o.link_full,'전문',IC.full)+lk(o.link_cite,'인용',IC.cite)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
