@@ -138,6 +138,26 @@
 
   /* .wr::before 는 테두리를 두르며 걷어냈으므로 여기서도 뺍니다
      (없는 것을 가리키는 규칙은 헷갈리게만 합니다) */
+  /* ── 알림 · 미리보기 (2026-08-10) ───────────────────────── */
+  .wr-msg{margin-top:18px;padding:14px 16px;border-radius:10px;font-size:13.5px;line-height:1.6}
+  .wr-msg.ok{background:#eef7f0;border:1px solid #bfe0c8;color:#1f5c33}
+  .wr-msg.err{background:#fdf0ef;border:1px solid #f0c8c4;color:#8c2f26}
+  .wr-msg.wait{background:var(--paper-3);border:1px solid var(--line-2);color:var(--text-2)}
+  .wr-msg a{color:inherit;font-weight:700;text-decoration:underline}
+
+  .wr-preview{margin-top:18px;padding:18px 20px;border:1px solid var(--line-2);
+    border-radius:12px;background:var(--paper-3)}
+  .wr-preview h3{font-size:15px;font-weight:700;margin:0 0 4px}
+  .wr-preview-note{font-size:12px;color:var(--text-3);margin:0 0 14px}
+  .wr-preview dl{display:grid;grid-template-columns:150px 1fr;gap:9px 16px;margin:0;font-size:13.5px}
+  .wr-preview dt{color:var(--text-3);font-weight:600}
+  .wr-preview dd{margin:0;color:var(--text);word-break:break-word;white-space:pre-wrap}
+  .wr-preview dd .wr-was{display:block;margin-top:3px;font-size:12px;color:var(--text-3);
+    text-decoration:line-through}
+  .wr-preview .wr-empty{color:var(--text-3)}
+  @media(max-width:640px){ .wr-preview dl{grid-template-columns:1fr;gap:2px 0}
+    .wr-preview dt{margin-top:10px} }
+
   @media(max-width:640px){.wr-fields{grid-template-columns:1fr}.wr-f-full{grid-column:auto}.wr-actions::before{width:100%}}
 
   /* 국/영문 병기 */
@@ -196,6 +216,11 @@
 <!-- ===== header (partials/header.html 에서 공통 관리) ===== -->
 <div id="oc-header"></div>
 <script src="/assets/include.js"></script>
+<!-- ★ 2026-08-10 · Supabase 라이브러리를 불러옵니다
+     그전에는 fetch 로 REST 를 직접 두드려 자료를 <b>읽기만</b> 했습니다.
+     그래서 로그인한 사람인지 알 수도, 함수를 부를 수도 없었고
+     제출 버튼이 껍데기로 남아 있었습니다. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- ===== people database (data-centric) ===== -->
 <section class="pdb">
@@ -270,8 +295,14 @@
 
       <div class="wr-actions">
         <button type="button" class="wr-btn wr-cancel" onclick="history.back()">취소</button>
-        <button type="button" class="wr-btn wr-ghost">미리보기</button>
-        <button type="button" class="wr-btn wr-primary">제출 (검수 요청)</button>
+        <button type="button" class="wr-btn wr-ghost" id="wrPreview">미리보기</button>
+        <button type="button" class="wr-btn wr-primary" id="wrSubmit">제출 (검수 요청)</button>
+      </div>
+      <div class="wr-msg" id="wrMsg" hidden></div>
+      <div class="wr-preview" id="wrPreviewBox" hidden>
+        <h3>미리보기</h3>
+        <p class="wr-preview-note">제출하면 이렇게 담깁니다. 아직 저장된 것은 아닙니다.</p>
+        <dl id="wrPreviewList"></dl>
       </div>
       <p class="wr-foot">제출된 내용은 자격 회원 검수 후 반영되며, 반영까지 다소 시간이 걸릴 수 있습니다.</p>
     </div>
@@ -1135,8 +1166,10 @@ if('serviceWorker' in navigator){
     var box=document.getElementById('wrFields');
     if(!box) return;
     /* 국문 이름 칸을 찾습니다 — DB마다 이름표(라벨)가 달라도
-       칸 이름(data-k)은 name_ko 로 같습니다. 학술DB 는 title 입니다. */
-    var el=box.querySelector('[data-k="name_ko"]') || box.querySelector('[data-k="title"]');
+       칸 이름(data-k)은 name_ko 로 같습니다.
+       (학술DB 도 2026-08-10 부터 name_ko 입니다. 그전에는 title 로
+        잘못 이어져 있어 제목이 채워지지 않았습니다.) */
+    var el=box.querySelector('[data-k="name_ko"]');
     if(el && !el.value){
       el.value=nm;
       /* 어느 칸이 채워졌는지 눈에 보이게 잠깐 표시합니다 */
@@ -1175,6 +1208,148 @@ if('serviceWorker' in navigator){
       .then(function(r){return r.json();}).then(function(a){ render(_db,(a&&a[0])||null); })
       .catch(function(){ render(_db,null); });
   } else { render(_db, null); }
+
+  /* ═══════════════════════════════════════════════════════════
+     제출 · 미리보기   (2026-08-10)
+
+     그동안 두 버튼은 <b>껍데기</b>였습니다. 눌러도 아무 일이 없어
+     회원이 애써 적어도 아무 데도 남지 않았습니다.
+
+     ★ 표에 바로 넣지 않고 <b>함수(oc_edit_submit)로만</b> 보냅니다
+       화면에서 표에 직접 넣게 두면, 브라우저에서 값을 바꿔
+       「이미 반영됨」 으로 적어 내 검수를 건너뛸 수 있습니다.
+       함수 안에서 누가 냈는지·어느 표인지를 정해 담습니다.
+     ═══════════════════════════════════════════════════════════ */
+  /* ★ 접속 객체는 화면 전체에 <b>하나만</b> 둡니다 (window.__ocSb).
+     여러 곳에서 따로 만들면 로그인 상태가 어긋나고 콘솔에
+     「Multiple GoTrueClient instances detected」 경고가 뜹니다. */
+  function sb(){
+    if (!window.__ocSb && window.supabase && window.supabase.createClient) {
+      window.__ocSb = window.supabase.createClient(_U, _K);
+    }
+    return window.__ocSb || null;
+  }
+
+  var msgBox = document.getElementById('wrMsg');
+  function say(kind, html){
+    if (!msgBox) return;
+    msgBox.className = 'wr-msg ' + kind;
+    msgBox.innerHTML = html;
+    msgBox.hidden = false;
+    msgBox.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+  function hush(){ if (msgBox) msgBox.hidden = true; }
+
+  /* 폼에 적힌 것을 모읍니다 — 칸 이름(data-k)이 붙은 <b>입력칸</b>만.
+
+     ★ 입력칸만 골라야 합니다 (2026-08-10 · 시험에서 잡았습니다)
+       이미지 칸은 <div>클릭 또는 드래그하여 이미지 업로드</div> 로 그려집니다.
+       칸을 가리지 않고 글자를 읽으면 <b>그 안내 문구가 값이 되어</b>
+       logo_url 에 「클릭 또는 드래그하여…」 가 저장될 뻔했습니다.
+       이미지 올리기는 아직 만들지 않았으므로 아예 뺍니다. */
+  function collect(){
+    var out = {}, box = document.getElementById('wrFields');
+    if (!box) return out;
+    box.querySelectorAll('input[data-k], textarea[data-k], select[data-k]').forEach(function(el){
+      var k = el.getAttribute('data-k');
+      var v = String(el.value == null ? '' : el.value).trim();
+      if (v) out[k] = v;
+    });
+    return out;
+  }
+
+  /* 보강일 때는 <b>바뀐 것만</b> 보냅니다.
+     안 바꾼 칸까지 보내면 검수 화면에서 무엇을 고쳤는지 알아보기 어렵고,
+     그 사이 남이 고친 값을 되돌려 놓는 일도 생깁니다. */
+  function changedOnly(all){
+    if (_mode !== 'enhance' || !curRec) return all;
+    var out = {};
+    Object.keys(all).forEach(function(k){
+      var was = curRec[k] == null ? '' : String(curRec[k]).trim();
+      if (all[k] !== was) out[k] = all[k];
+    });
+    return out;
+  }
+
+  function labelOf(k){
+    var d = F[curDb]; if (!d) return k;
+    for (var i = 0; i < d.f.length; i++) if (d.f[i].k === k) return d.f[i].l;
+    return k;
+  }
+
+  /* ── 미리보기 ─────────────────────────────────────────── */
+  var pvBtn = document.getElementById('wrPreview');
+  if (pvBtn) pvBtn.addEventListener('click', function(){
+    var box  = document.getElementById('wrPreviewBox');
+    var list = document.getElementById('wrPreviewList');
+    if (!box || !list) return;
+    var all = collect(), diff = changedOnly(all);
+    var keys = Object.keys(diff);
+    if (!keys.length){
+      list.innerHTML = '<dt class="wr-empty">—</dt><dd class="wr-empty">'
+        + (_mode === 'enhance' ? '아직 바꾸신 내용이 없습니다.' : '아직 적으신 내용이 없습니다.')
+        + '</dd>';
+    } else {
+      list.innerHTML = keys.map(function(k){
+        var was = (_mode === 'enhance' && curRec && curRec[k] != null && String(curRec[k]).trim())
+                  ? '<span class="wr-was">' + esc(String(curRec[k]).trim()) + '</span>' : '';
+        return '<dt>' + esc(labelOf(k)) + '</dt><dd>' + esc(diff[k]) + was + '</dd>';
+      }).join('');
+    }
+    box.hidden = false;
+    box.scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
+
+  /* ── 제출 ─────────────────────────────────────────────── */
+  var subBtn = document.getElementById('wrSubmit');
+  if (subBtn) subBtn.addEventListener('click', async function(){
+    hush();
+    var s = sb();
+    if (!s){ say('err', '지금은 서버에 이을 수 없습니다. 잠시 뒤 다시 해 주십시오.'); return; }
+
+    var who = null;
+    try { who = (await s.auth.getUser()).data.user; } catch (e) {}
+    if (!who){
+      say('err', '제출하시려면 <a href="/account/login.html">로그인</a>이 필요합니다.');
+      return;
+    }
+
+    var all = collect(), body = changedOnly(all);
+    if (!Object.keys(body).length){
+      say('err', _mode === 'enhance'
+        ? '바꾸신 내용이 없습니다. 고칠 칸을 채우고 다시 눌러 주십시오.'
+        : '적으신 내용이 없습니다.');
+      return;
+    }
+    if (_mode === 'new' && !body.name_ko && !body.name_en){
+      say('err', '이름은 적어 주셔야 합니다.');
+      return;
+    }
+
+    subBtn.disabled = true;
+    var was = subBtn.textContent;
+    subBtn.textContent = '보내는 중…';
+    say('wait', '보내는 중입니다…');
+
+    try {
+      var r = await s.rpc('oc_edit_submit', {
+        p_db: curDb, p_mode: (_mode === 'enhance' ? 'enhance' : 'new'),
+        p_id: _id || null, p_payload: body
+      });
+      if (r.error) throw new Error(r.error.message || '보내지 못했습니다');
+      say('ok',
+        '<b>제출했습니다.</b> 검수 뒤에 반영되며, 반영되면 액티브포인트가 쌓입니다.<br>'
+        + '<a href="/account/mypage.html">마이페이지</a>에서 확인하실 수 있습니다.');
+      subBtn.textContent = '제출됨';
+    } catch (e) {
+      var m = String(e.message || e);
+      if (/로그인/.test(m)) m = '로그인이 풀렸습니다. 다시 로그인해 주십시오.';
+      else if (/기다리고 있습니다/.test(m)) m = '이미 내신 보강이 검수를 기다리고 있습니다.';
+      say('err', esc(m));
+      subBtn.disabled = false;
+      subBtn.textContent = was;
+    }
+  });
 })();
 </script>
 <script src="/assets/app.js" defer></script>

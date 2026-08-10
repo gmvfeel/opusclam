@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>DB 등록·보강 검수 · OPUSCLAM ADMIN</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 120px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  button{appearance:none;border:0;border-radius:7px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.ok{background:#0f7a3d}
+  button.drop{background:#8a8c9e}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input[type=text]{padding:9px 12px;border:1px solid #d8d8e2;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
+
+  /* 목록 */
+  .item{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:16px 18px;margin-bottom:12px}
+  .item.done{opacity:.6}
+  .ihead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+  .ihead h3{font-size:15px;margin:0;font-weight:700}
+  .tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+  .tag.new{background:#eef3fd;color:#28518f}
+  .tag.enh{background:#f2eefd;color:#5b3fa0}
+  .tag.open{background:#fff2e8;color:#a1521a}
+  .tag.doing{background:#fffbe6;color:#8a6a2a}
+  .tag.done{background:#eef7f0;color:#1f5c33}
+  .tag.drop{background:#f2f2f5;color:#6b6d80}
+  .meta{font-size:12.5px;color:#6b6d80;margin-bottom:12px}
+  .meta b{color:#20223a;font-weight:600}
+
+  /* 무엇이 바뀌는가 */
+  .diff{border:1px solid #e8e8f0;border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .diff table{width:100%;border-collapse:collapse;font-size:13px}
+  .diff th{background:#fafafd;text-align:left;padding:9px 12px;font-size:12px;color:#6b6d80;font-weight:600;border-bottom:1px solid #e8e8f0;width:150px}
+  .diff td{padding:9px 12px;border-bottom:1px solid #f0f0f5;vertical-align:top;word-break:break-word}
+  .diff tr:last-child th,.diff tr:last-child td{border-bottom:0}
+  .was{color:#8a8c9e;text-decoration:line-through;display:block;font-size:12px;margin-bottom:3px}
+  .now{color:#20223a}
+  .empty{color:#8a8c9e}
+
+  .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .msg{margin-top:10px;font-size:13px;padding:10px 12px;border-radius:7px;display:none}
+  .msg.on{display:block}
+  .msg.ok{background:#eef7f0;border:1px solid #bfe0c8;color:#1f5c33}
+  .msg.err{background:#fdf0ef;border:1px solid #f0c8c4;color:#8c2f26}
+  .loading{color:#6b6d80;padding:30px 0;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="/admin/admin.html">← 관리 화면으로</a>
+  <h1>DB 등록·보강 검수</h1>
+  <p class="sub">회원이 낸 등록·보강을 살펴보고 반영하거나 되돌려 보냅니다.</p>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <div class="row">
+      <select id="filter">
+        <option value="open">안 본 것</option>
+        <option value="doing">보는 중</option>
+        <option value="">전체</option>
+        <option value="done">반영했음</option>
+        <option value="drop">반영 안 함</option>
+      </select>
+      <button class="ghost" id="reload">다시 읽기</button>
+      <span id="count" style="color:#6b6d80;font-size:13px"></span>
+    </div>
+    <div class="note">
+      <b>반영</b>을 누르면 실제 DB에 들어가고 회원에게 액티브포인트가 쌓입니다.<br>
+      <b>신규 등록</b>은 <b>감춘 상태</b>로 들어갑니다 — 각 DB 도구에서 확인하신 뒤 드러내 주십시오.<br>
+      제출된 뒤에 원본이 바뀌었으면 알려 드립니다. 확인하시고 다시 누르면 그대로 진행합니다.
+    </div>
+  </div>
+
+  <div id="list"><div class="loading">읽는 중…</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/admin-guard.js"></script>
+<script>
+(function(){
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* ★ 접속 객체는 화면 전체에 하나만 둡니다.
+     admin-guard.js 도 window.__ocSb 를 먼저 찾습니다. */
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
+
+  var DBKO = {person:'인물', org:'음악단체', venue:'공연장', school:'음악학교',
+              modern:'현대음악', foundation:'기관·재단', academic:'학술'};
+  var STKO = {open:'안 봄', doing:'보는 중', done:'반영했음', drop:'반영 안 함'};
+
+  function esc(s){ return (s==null?'':String(s))
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function fmt(x){ if(!x) return '-';
+    try{ var d=new Date(x);
+      return d.getFullYear()+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+('0'+d.getDate()).slice(-2)
+             +' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+    catch(e){ return '-'; } }
+  function warn(t){ var w=document.getElementById('warn'); w.textContent=t; w.className='warn on'; }
+
+  var listBox = document.getElementById('list');
+  var rows = [];
+
+  /* 어떤 칸의 이름인지 — write.html 과 같은 이름표를 씁니다 */
+  var LABEL = {
+    name_ko:'이름(국문)', name_en:'이름(영문)', type:'유형', location:'소재지',
+    founded:'설립·창단', leader:'대표·지휘자', activities:'대표 활동', home_venue:'연고 공연장',
+    logo_url:'로고', description:'소개', link_home:'홈페이지', link_wiki:'위키',
+    link_video:'영상', link_audio:'음원', opened:'개관', seats:'좌석수',
+    operator:'운영주체', resident:'상주단체', programs:'대표 프로그램',
+    school_style:'사조·유파', nationality:'국적', life:'생몰', technique:'대표 기법',
+    lineage:'사사(계보)', active_period:'활동시기', works:'대표작', image_url:'사진',
+    estab_type:'설립구분', subsidiary:'산하·운영', business:'주요 사업', field:'분야',
+    author:'저자', publisher:'발행처', pub_year:'발행연도', language:'언어',
+    keywords:'키워드', link_full:'원문 링크', category:'구분', departments:'대표 학과',
+    alumni:'저명 동문', instrument:'주요 악기', school:'출신학교', era_name:'사조',
+    era_yr:'활동 시기'
+  };
+  function lab(k){ return LABEL[k] || k; }
+
+  function diffTable(d, mode){
+    var keys = Object.keys(d || {});
+    if (!keys.length) return '<div class="diff"><table><tr><th>—</th><td class="empty">바뀌는 내용이 없습니다</td></tr></table></div>';
+    return '<div class="diff"><table>' + keys.map(function(k){
+      var v = d[k] || {};
+      var before = (v.before == null || v.before === '') ? '' : String(v.before);
+      var after  = (v.after  == null) ? '' : String(v.after);
+      var b = (mode === 'enhance' && before)
+              ? '<span class="was">' + esc(before) + '</span>' : '';
+      return '<tr><th>' + esc(lab(k)) + '</th><td>' + b
+             + '<span class="now">' + (after ? esc(after) : '<span class="empty">(비움)</span>')
+             + '</span></td></tr>';
+    }).join('') + '</table></div>';
+  }
+
+  function card(r){
+    var isDone = (r.status === 'done' || r.status === 'drop');
+    var link = r.target_id
+      ? '<a href="/db/' + esc(r.db_key) + '-view.html?id=' + encodeURIComponent(r.target_id)
+        + '" target="_blank">원본 보기 →</a>' : '';
+    return '<div class="item' + (isDone ? ' done' : '') + '" data-id="' + r.id + '">'
+      + '<div class="ihead">'
+      +   '<span class="tag ' + (r.mode === 'new' ? 'new">신규 등록' : 'enh">보강') + '</span>'
+      +   '<h3>' + esc(r.title || '(이름 없음)') + '</h3>'
+      +   '<span class="tag ' + esc(r.status) + '">' + esc(STKO[r.status] || r.status) + '</span>'
+      + '</div>'
+      + '<p class="meta">'
+      +   '<b>' + esc(DBKO[r.db_key] || r.db_key) + 'DB</b> · '
+      +   esc(r.member_name || '회원') + ' · ' + fmt(r.created_at)
+      +   (link ? ' · ' + link : '')
+      +   (r.admin_note ? '<br>되돌린 까닭 : ' + esc(r.admin_note) : '')
+      + '</p>'
+      + diffTable(r.diff, r.mode)
+      + (isDone ? '' :
+          '<div class="acts">'
+        +   '<button class="ok" data-act="apply">반영</button>'
+        +   '<button class="ghost" data-act="doing">보는 중으로</button>'
+        +   '<input type="text" data-note placeholder="되돌리는 까닭" style="flex:1;min-width:200px">'
+        +   '<button class="drop" data-act="reject">되돌리기</button>'
+        + '</div>')
+      + '<div class="msg"></div>'
+      + '</div>';
+  }
+
+  async function load(){
+    listBox.innerHTML = '<div class="loading">읽는 중…</div>';
+    var st = document.getElementById('filter').value;
+    var r = await sb.rpc('oc_edit_list', { p_status: st || null });
+    if (r.error){
+      warn('목록을 읽지 못했습니다 — ' + r.error.message);
+      listBox.innerHTML = '';
+      return;
+    }
+    rows = r.data || [];
+    document.getElementById('count').textContent = rows.length + '건';
+    listBox.innerHTML = rows.length
+      ? rows.map(card).join('')
+      : '<div class="card" style="text-align:center;color:#6b6d80">해당하는 것이 없습니다.</div>';
+  }
+
+  function say(el, kind, text){
+    var m = el.querySelector('.msg');
+    m.className = 'msg on ' + kind;
+    m.textContent = text;
+  }
+
+  listBox.addEventListener('click', async function(e){
+    var btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    var item = btn.closest('.item');
+    var id = Number(item.getAttribute('data-id'));
+    var act = btn.getAttribute('data-act');
+    var acts = item.querySelectorAll('button');
+
+    if (act === 'reject'){
+      var note = (item.querySelector('[data-note]').value || '').trim();
+      if (!note){ say(item, 'err', '되돌리는 까닭을 적어 주십시오. 회원에게 보입니다.'); return; }
+      acts.forEach(function(b){ b.disabled = true; });
+      var r = await sb.rpc('oc_edit_reject', { p_id: id, p_note: note });
+      if (r.error){ say(item, 'err', r.error.message); acts.forEach(function(b){ b.disabled=false; }); return; }
+      say(item, 'ok', '되돌렸습니다.');
+      setTimeout(load, 700);
+      return;
+    }
+
+    if (act === 'doing'){
+      acts.forEach(function(b){ b.disabled = true; });
+      var r2 = await sb.rpc('oc_edit_mark', { p_id: id, p_status: 'doing' });
+      if (r2.error){ say(item, 'err', r2.error.message); }
+      setTimeout(load, 500);
+      return;
+    }
+
+    if (act === 'apply'){
+      var force = btn.getAttribute('data-force') === '1';
+      if (!confirm('실제 DB에 반영합니다. 진행할까요?')) return;
+      acts.forEach(function(b){ b.disabled = true; });
+      var r3 = await sb.rpc('oc_edit_apply', { p_id: id, p_force: force });
+      if (r3.error){
+        say(item, 'err', r3.error.message);
+        acts.forEach(function(b){ b.disabled = false; });
+        return;
+      }
+      var d = r3.data || {};
+      if (d.ok === false && d.reason === 'conflict'){
+        /* ★ 제출된 뒤에 원본이 바뀐 경우
+           모르고 덮어쓰면 그 사이의 수정이 사라집니다.
+           무엇이 바뀌었는지 알리고, 다시 누르면 그대로 진행합니다. */
+        var cols = (d.cols || []).map(lab).join(', ');
+        say(item, 'err', '제출된 뒤에 원본이 바뀐 칸이 있습니다 — ' + cols
+                         + '. 원본을 확인하시고 「그대로 반영」을 누르면 덮어씁니다.');
+        btn.textContent = '그대로 반영';
+        btn.setAttribute('data-force', '1');
+        acts.forEach(function(b){ b.disabled = false; });
+        return;
+      }
+      say(item, 'ok', '반영했습니다.'
+          + (d.mode === 'new' ? ' 새 항목은 감춘 상태로 들어갔습니다.' : '')
+          + (d.point ? ' 포인트도 드렸습니다.' : ' (포인트 규칙이 없어 포인트는 못 드렸습니다)'));
+      setTimeout(load, 900);
+    }
+  });
+
+  document.getElementById('filter').addEventListener('change', load);
+  document.getElementById('reload').addEventListener('click', load);
+  load();
+})();
+</script>
+</body>
+</html>

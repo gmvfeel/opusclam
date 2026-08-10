@@ -242,7 +242,7 @@
       <p class="dash-sub">사람이 보낸 것에 답하고, 밖으로 내보내는 자리입니다.</p>
       <div class="cards">
         <div class="card clickable" id="cardMembers"><span class="cbadge" id="badgeMembers"></span><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
-        <div class="card clickable" id="cardReview"><span class="cbadge" id="badgeReview"></span><h3>제출 검수</h3><p>자격 회원이 등록·보강 제출한 내용을 확인하고, 승인 시 실제 DB에 반영합니다.</p><span class="go">검수하기 →</span></div>
+        <a class="card clickable tool" href="db-edits.html" id="cardReview"><span class="cbadge" id="badgeReview"></span><h3>DB 등록·보강 검수</h3><p>회원이 낸 등록·보강을 확인하고 반영합니다. 무엇이 바뀌는지 <b>이전 값과 나란히</b> 보여 주고, 반영하면 회원에게 포인트가 쌓입니다.</p><span class="go">검수하기 →</span></a>
         <a class="card clickable tool" href="reports.html">
           <span class="tag">데이터 도구</span>
           <h3>데이터 신고 처리</h3>
@@ -556,7 +556,9 @@
     function setBadge(id,n){var e=document.getElementById(id);if(!e)return;if(n>0){e.textContent=n>99?'99+':n;e.classList.add('on');}else{e.classList.remove('on');}}
     async function updateDashBadges(){
       try{var m=await sb.from('members').select('id',{count:'exact',head:true}).eq('status','pending');setBadge('badgeMembers',m.count||0);}catch(e){}
-      try{var s=await sb.from('submissions').select('id',{count:'exact',head:true}).eq('status','pending');setBadge('badgeReview',s.count||0);}catch(e){}
+      /* ★ 2026-08-10 · 검수 대기 건수를 새 표(oc_db_edits)에서 셉니다.
+         옛 submissions 표는 target_id 가 uuid 라 보강을 담지 못해 더 쓰지 않습니다. */
+      try{var s=await sb.rpc('oc_edit_pending_count');setBadge('badgeReview',s.data||0);}catch(e){}
     }
     var mgData=[]; var mgPage=0;
     /* ★ 의심 판정을 <b>점수</b>로 바꿨습니다.
@@ -931,8 +933,13 @@
       var up=await sb.from('submissions').update({status:'rejected',reviewed_by:uid,reviewed_at:new Date().toISOString()}).eq('id',s.id);
       if(up.error){ alert('반려 처리 실패: '+up.error.message); return false; } return true;
     }
-    var _cardReview=document.getElementById('cardReview');
-    if(_cardReview) _cardReview.addEventListener('click',function(){ show('review'); rvCur='pending'; rvSetActive(); loadReviews(); });
+    /* ★ 2026-08-10 · 제출 검수를 admin/db-edits.html 로 옮겼습니다.
+       까닭 — 이 화면이 쓰던 submissions 표는 target_id 가 uuid 인데
+       인물·단체·공연장 등 <b>모든 DB 의 id 는 숫자</b>입니다.
+       그래서 「보강」 은 애초에 담을 수 없었고, 신규 등록만 들어갔습니다.
+       새 표(oc_db_edits)는 어느 표든 담습니다.
+       이 카드는 이제 링크이므로 여는 코드를 두지 않습니다.
+       아래 review 구역과 loadReviews 는 지난 기록을 보기 위해 남겨 둡니다. */
     document.getElementById('rvBack').addEventListener('click',function(){show('dash');});
     document.querySelectorAll('#review .rv-tab').forEach(function(b){ b.addEventListener('click',function(){ rvCur=b.getAttribute('data-s'); rvSetActive(); loadReviews(); }); });
     document.getElementById('rvList').addEventListener('click', async function(e){
