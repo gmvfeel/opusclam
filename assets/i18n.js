@@ -41,7 +41,7 @@
 
   /* 사전 파일 판(버전) — 사전을 고치면 이 숫자를 올립니다.
      ★ 안 올리면 브라우저가 옛 사전을 계속 씁니다. */
-  var V = '20260810w';
+  var V = '20260811b';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -137,6 +137,61 @@
   var _dialogWrapped = false;
   /* 앞부분 맞추기에 쓸 가장 짧은 열쇠 길이 — 짧으면 엉뚱한 곳에 걸립니다 */
   var MIN_PREFIX = 6;
+
+  /* ════════════════════════════════════════════════════════════
+     말에 따라 감출 메뉴와 자리         (2026-08-10 · 파트너 지정)
+     ════════════════════════════════════════════════════════════
+     ★ 왜 감추는가
+       한국 안에서만 뜻이 있는 것들이 있습니다.
+         · 리쿠르트 — 한국 채용 정보
+         · 입시요강 · 입시커뮤니티 — 한국 대학 입시
+         · 지원금 / 정책자금 — 한국 정부 사업
+         · 입점문의 — 한국 쇼핑몰 입점
+       바깥에서 오신 분께 이런 것을 내밀면 도움이 되기는커녕
+       「나와 상관없는 곳」 이라는 인상을 줍니다.
+
+     ★ 화면 파일을 고치지 않습니다
+       메뉴는 partials 한 곳에서 나오고, 홈은 섹션이 열여섯 개입니다.
+       말이 늘 때마다 그 파일들을 손대면 반드시 어긋납니다.
+       여기 목록만 고치면 헤더·전체메뉴·하위메뉴·푸터·홈이 함께 따릅니다.
+
+     ★ 영어와 일본어를 따로 정할 수 있습니다
+       지금은 같지만, 예컨대 일본에서는 한국 입시를 보고 싶어 할 수도
+       있습니다. 그때는 ja 목록에서 그 줄만 빼면 됩니다. */
+
+  /* 감출 화면 (주소가 이것으로 시작하면 메뉴에서 지웁니다) */
+  var HIDE_PATH = {
+    en: [
+      '/recruit/',                      /* 리쿠르트 — 통째로 */
+      '/community/admission',           /* 입시 · 입시커뮤니티 */
+      '/spot/funding',                  /* 지원금 / 정책자금 */
+      '/spot/sites',                    /* 관련사이트 */
+      '/shop/apply',                    /* 입점문의 · 안내 */
+      '/lesson/live',                   /* 진행중 레슨 */
+      '/lesson/one',                    /* 분야별 1:1 레슨 */
+      '/lesson/group',                  /* 분야별 그룹레슨 */
+      '/lesson/instructor',             /* 인스트럭터 정보 · 신청 */
+      '/lesson/curate'
+    ],
+    ja: [
+      '/recruit/',
+      '/community/admission',
+      '/spot/funding',
+      '/spot/sites',
+      '/shop/apply',
+      '/lesson/live',
+      '/lesson/one',
+      '/lesson/group',
+      '/lesson/instructor',
+      '/lesson/curate'
+    ]
+  };
+
+  /* 감출 홈 섹션 — 제목의 영문으로 찾습니다 (<span class="en-s">) */
+  var HIDE_SECTION = {
+    en: ['Recruit', 'Entrance Exam', 'Funding'],
+    ja: ['Recruit', 'Entrance Exam', 'Funding']
+  };
 
   /* 사전과 살림살이 — ★ 반드시 조기 return 위에 두어야 합니다 */
   var DICT = null;
@@ -326,8 +381,8 @@
      문서를 읽는 도중에는 파서가 글자를 <b>조각내어</b> 넣기도 합니다
      ("인물 D" → "인물 DB"). 그 사이에 견주면 어긋납니다.
      다 읽은 뒤 한 번, 그림·글꼴까지 다 온 뒤 한 번 더 훑습니다. */
-  onReady(function () { scan(document.documentElement); mountLegalNote(); });
-  window.addEventListener('load', function () { scan(document.documentElement); });
+  onReady(function () { scan(document.documentElement); mountLegalNote(); hideKoreaOnly(); });
+  window.addEventListener('load', function () { scan(document.documentElement); hideKoreaOnly(); });
 
   API.ready = true;
 
@@ -573,6 +628,8 @@
     timer = null;
     var list = queue; queue = [];
     pause();
+    /* 헤더·하위메뉴가 나중에 들어오므로 그때마다 다시 감춥니다 */
+    try { hideKoreaOnly(); } catch (e) {}
     try {
       for (var i = 0; i < list.length; i++) {
         var n = list[i];
@@ -903,6 +960,156 @@
     }
 
     return s;
+  }
+
+  /* ── 한국 안에서만 뜻이 있는 메뉴·자리를 감춥니다 ──────────────
+     ★ 지우지 않고 <b>감춥니다</b> (display:none)
+       지우면 그 자리를 세거나 찾는 다른 코드가 어긋날 수 있습니다.
+       감추면 화면에서만 사라지고 짜임은 그대로입니다.
+       (「삭제보다 숨김」 — 오퍼스클램의 원칙과도 같습니다)
+
+     ★ 링크 하나가 아니라 <b>담긴 칸</b>을 감춥니다
+       <li><a href="/recruit/…">리쿠르트</a></li> 에서 링크만 감추면
+       빈 칸이 남아 목록에 구멍이 생깁니다. 담긴 칸을 찾아 감춥니다.
+
+     ★ 큰 메뉴가 통째로 비면 그 메뉴도 감춥니다
+       리쿠르트는 하위가 전부 사라지므로 위 큰 메뉴도 남길 이유가 없습니다.
+
+     ★ 한국어 화면에는 아무 일도 하지 않습니다. */
+  function hideKoreaOnly() {
+    if (LANG === 'ko') return;
+    var paths = HIDE_PATH[LANG] || [];
+    var secs  = HIDE_SECTION[LANG] || [];
+    if (!paths.length && !secs.length) return;
+
+    try {
+      /* ① 링크 — 담긴 칸을 감춥니다 */
+      var links = document.querySelectorAll('a[href]');
+      for (var i = 0; i < links.length; i++) {
+        var a = links[i];
+        if (a.getAttribute('data-oc-koronly') === 'done') continue;
+        var h = (window.ocPath || String)(a.getAttribute('href') || '');
+        if (h.charAt(0) !== '/') continue;
+        var hit = false;
+        for (var j = 0; j < paths.length; j++) {
+          if (h.indexOf(paths[j]) === 0) { hit = true; break; }
+        }
+        if (!hit) continue;
+        a.setAttribute('data-oc-koronly', 'done');
+
+        /* ★ 칸의 <b>제목</b>은 감추지 않습니다.
+             SHOPPING 은 제목 자체가 /shop/apply.html 로 걸려 있어,
+             그대로 감추면 칸 제목이 사라지고 번호(06)만 남습니다
+             (2026-08-10 · 스크린샷으로 잡음).
+             제목이 가리키는 곳이 감출 화면이면 <b>링크만 풀고</b> 글자는 둡니다. */
+        var h4 = a.closest('h4, h3, .fm-col > .t, .sec-head');
+        if (h4 && a.parentElement === h4) {
+          var span = document.createElement('span');
+          span.textContent = a.textContent;
+          span.className = a.className;
+          span.style.cssText = a.getAttribute('style') || '';
+          a.parentNode.replaceChild(span, a);
+          continue;
+        }
+        /* ★ 담는 상자는 <b>아주 좁게</b> 잡습니다.
+             .sec · .card 는 여러 자리를 함께 담고,
+             .fm-col 은 전체메뉴의 <b>칸 하나를 통째로</b> 담습니다.
+             그래서 「입시」 링크 하나 때문에 OC커뮤니티 칸이 통째로
+             사라졌습니다 — 영어 전체메뉴에 DATABASE 하나만 남았습니다
+             (2026-08-10 · 스크린샷으로 잡음).
+           ▶ 줄(li)이나 위 큰 메뉴(nav-item)까지만 봅니다.
+             칸이 통째로 빌 때 감추는 일은 아래 ③ 이 맡습니다. */
+        var box = a.closest('li, .nav-item') || a;
+        /* 큰 메뉴 상자는 하위가 남아 있으면 감추지 않습니다 */
+        if (box.classList && box.classList.contains('nav-item')) {
+          var inner = box.querySelectorAll('.dropdown a[href]');
+          var alive = 0;
+          for (var k = 0; k < inner.length; k++) {
+            var ih = (window.ocPath || String)(inner[k].getAttribute('href') || '');
+            var ho = false;
+            for (var m = 0; m < paths.length; m++) if (ih.indexOf(paths[m]) === 0) { ho = true; break; }
+            if (!ho) alive++;
+          }
+          if (alive > 0) { hideEl(a.closest('li') || a); continue; }
+        }
+        hideEl(box);
+      }
+
+      /* ② 홈의 큰 자리 — 제목의 영문으로 찾습니다 */
+      if (secs.length) {
+        var heads = document.querySelectorAll('.en-s');
+        for (var x = 0; x < heads.length; x++) {
+          var t = (heads[x].textContent || '').trim();
+          if (secs.indexOf(t) < 0) continue;
+          hideSection(heads[x]);
+        }
+      }
+
+      /* ③ 전체메뉴에서 칸 하나가 통째로 비면 그 칸도 감춥니다
+         ★★ offsetParent 로 「보이는가」 를 재면 안 됩니다 ★★
+           전체메뉴는 평소에 <b>닫혀 있습니다.</b> 닫혀 있으면 그 안의
+           링크는 모두 offsetParent 가 null 이라 「하나도 안 보인다」 가
+           됩니다. 그래서 <b>모든 칸이 감춰졌습니다</b> — 영어 전체메뉴에
+           DATABASE 하나만 남았습니다 (2026-08-10 · 눈으로 잡음).
+         ▶ 보이는지가 아니라 <b>주소만</b> 봅니다. */
+      var cols = document.querySelectorAll('.fullmenu-grid > *');
+      for (var c = 0; c < cols.length; c++) {
+        var as = cols[c].querySelectorAll('a[href]');
+        if (!as.length) continue;
+        var left = 0;
+        for (var d = 0; d < as.length; d++) {
+          var ah = (window.ocPath || String)(as[d].getAttribute('href') || '');
+          if (ah.charAt(0) !== '/') { left++; continue; }   /* 바깥 주소는 남깁니다 */
+          var out = false;
+          for (var e = 0; e < paths.length; e++) if (ah.indexOf(paths[e]) === 0) { out = true; break; }
+          if (!out) left++;
+        }
+        if (left === 0) hideEl(cols[c]);
+      }
+    } catch (e) {}
+  }
+
+  /* ── 홈의 한 자리만 정확히 감춥니다 ────────────────────────────
+     ★ 무엇이 잘못됐었나 (2026-08-10 · 검사 도구가 잡음)
+       처음에는 제목에서 가장 가까운 <section> 을 찾아 감췄습니다.
+       그런데 홈은 <b>한 &lt;section&gt; 안에 자리가 여럿</b> 들어 있습니다.
+         section.board  ← News · Concours · Festival · Scores
+         section.lower  ← Recruit · Utility / Data
+       그래서 「리쿠르트」 를 감추려다 <b>유틸리티·자료까지</b> 날아갔고,
+       뉴스·콩쿨·페스티벌·악보도 통째로 사라졌습니다.
+
+     ▶ 「제목이 <b>하나뿐인</b> 가장 큰 조상」 을 찾습니다.
+       그것이 그 자리만 담은 상자입니다.
+       조상이 모두 제목을 여럿 담고 있으면(형제로 늘어선 짜임),
+       제목 줄부터 <b>다음 제목 전까지</b>만 감춥니다. */
+  function hideSection(headEl) {
+    var head = headEl.closest('.sec-head') || headEl;
+
+    /* ① 제목이 하나뿐인 가장 큰 조상 찾기 */
+    var best = null, cand = head.parentElement;
+    while (cand && cand !== document.body && cand.nodeType === 1) {
+      var n = cand.querySelectorAll('.sec-head').length;
+      if (n <= 1) { best = cand; cand = cand.parentElement; }
+      else break;
+    }
+    if (best) { hideEl(best); return; }
+
+    /* ② 형제로 늘어선 짜임 — 이 제목부터 다음 제목 전까지 */
+    hideEl(head);
+    var sib = head.nextElementSibling;
+    while (sib) {
+      if (sib.classList && sib.classList.contains('sec-head')) break;
+      if (sib.querySelector && sib.querySelector('.sec-head')) break;
+      hideEl(sib);
+      sib = sib.nextElementSibling;
+    }
+  }
+
+  function hideEl(el) {
+    if (!el || !el.style) return;
+    if (el.getAttribute && el.getAttribute('data-oc-hidden') === '1') return;
+    el.style.display = 'none';
+    if (el.setAttribute) el.setAttribute('data-oc-hidden', '1');
   }
 
   function onReady(fn) {
