@@ -107,12 +107,24 @@ async function fetchDetail(mt10id) {
 
 const H = { apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY, 'Content-Type': 'application/json' };
 async function sbGetAll(table, select) {
-  const out = []; const STEP = 1000; let from = 0;
+  /* ★★ 200행 캡 ★★ (2026-08-10 고침)
+     예전에는 STEP=1000 으로 달라 하고 「1000보다 적게 오면 끝」 이라 보았습니다.
+     그런데 Supabase 는 <b>한 번에 200줄까지만</b> 줍니다. 그래서 첫 쪽에서
+     200줄을 받고 200 < 1000 이므로 <b>바로 멈췄습니다.</b>
+     공연장 1,267건 가운데 앞 200건만 「이미 있는 것」 으로 알아본 셈이라,
+     나머지를 <b>또 담을 뻔했습니다.</b>
+     ▶ 서버가 자르는 크기(200)로 달라 하고, <b>받은 만큼</b> 앞으로 갑니다.
+     ▶ 같은 함정을 tools/check-range-loop.py 가 자동으로 잡습니다. */
+  const out = []; const PAGE = 200; let from = 0;
   while (true) {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + orderFor(table), { headers: { ...H, Range: from + '-' + (from + STEP - 1) } });
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=' + select + orderFor(table), { headers: { ...H, Range: from + '-' + (from + PAGE - 1) } });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
-    const batch = await readJson(r); out.push(...batch);
-    if (batch.length < STEP) break; from += STEP;
+    const batch = await readJson(r);
+    if (!batch.length) break;
+    out.push(...batch);
+    if (batch.length < PAGE) break;
+    from += batch.length;
+    if (out.length > 200000) break;
   }
   return out;
 }

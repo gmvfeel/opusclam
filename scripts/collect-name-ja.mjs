@@ -60,18 +60,35 @@ const SPARQL = 'https://query.wikidata.org/sparql';
 const getJSON = makeGetJSON({ ua: 'OPUSCLAM/1.0 (name_ja collector; cser@wixon.co.kr)' });
 
 /* ── Supabase 읽기 (200줄 서버 캡이 있어 나누어 받습니다) ────── */
+/* ── Supabase 읽기 ────────────────────────────────────────────
+   ★★ 여기서 크게 잘못했었습니다 (2026-08-10 · 첫 실행에서 드러남) ★★
+     STEP 을 1000 으로 두고 「1000개보다 적게 오면 끝」 이라 보았습니다.
+     그런데 Supabase 는 <b>한 번에 200줄까지만</b> 돌려줍니다.
+     그래서 첫 번째로 200줄을 받고 200 < 1000 이므로 「다 받았다」 고
+     판단해 <b>표마다 200줄에서 멈췄습니다.</b>
+     인물 15,248명 가운데 200명만 본 것입니다.
+
+   ▶ 서버가 자르는 크기와 <b>같은 크기로</b> 달라고 해야 합니다.
+     그리고 「받은 만큼」 앞으로 갑니다 — 서버가 더 적게 주더라도
+     자리를 건너뛰지 않습니다.
+
+   ※ 인계 문서에 「Supabase 200행 서버 캡 → .range() 루프 필요」 라고
+     적혀 있었는데, 새 수집기를 쓰면서 그대로 되풀이했습니다. */
+const PAGE = 200;          // 서버가 잘라 주는 크기
+
 async function getAll(path) {
-  const STEP = 1000;
   let from = 0, out = [];
   for (;;) {
     const r = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
-      headers: { ...H, Range: from + '-' + (from + STEP - 1) }
+      headers: { ...H, Range: from + '-' + (from + PAGE - 1) }
     });
     if (!r.ok) throw new Error('GET ' + r.status + ' ' + await r.text());
     const rows = await r.json();
+    if (!rows.length) break;
     out = out.concat(rows);
-    if (rows.length < STEP) break;
-    from += STEP;
+    if (rows.length < PAGE) break;   // 마지막 쪽
+    from += rows.length;             // ★ 받은 만큼만 앞으로
+    if (out.length > 200000) break;  // 끝없이 도는 것을 막는 안전장치
   }
   return out;
 }
@@ -158,15 +175,30 @@ async function runTable(table) {
 
   let got = 0, saved = 0, skipped = 0;
   const show = [];
+  const todo = [];
   for (const r of rows) {
     const ja = labels.get(String(r.wikidata_id).trim());
     if (!usable(ja, r)) { if (ja) skipped++; continue; }
     got++;
     if (show.length < 8) show.push([r.name_ko || r.name_en || '(이름 없음)', ja]);
-    if (SAVE) {
-      try { await patch(table, r.id, { name_ja: ja }); saved++; }
-      catch (e) { console.log('   담기 실패 id=' + r.id + ' ' + String(e).slice(0, 60)); }
+    todo.push([r.id, ja]);
+  }
+
+  /* ★ 한 줄씩 차례로 보내면 만 건에 스무 분이 넘습니다.
+     여섯 개씩 함께 보냅니다 — 서버에 무리를 주지 않으면서 훨씬 빠릅니다. */
+  if (SAVE && todo.length) {
+    const LANE = 6;
+    for (let i = 0; i < todo.length; i += LANE) {
+      const part = todo.slice(i, i + LANE);
+      await Promise.all(part.map(async ([id, ja]) => {
+        try { await patch(table, id, { name_ja: ja }); saved++; }
+        catch (e) { console.log('   담기 실패 id=' + id + ' ' + String(e).slice(0, 60)); }
+      }));
+      if ((i / LANE) % 40 === 0) {
+        process.stdout.write('   담는 중 ' + Math.min(i + LANE, todo.length) + '/' + todo.length + '\r');
+      }
     }
+    process.stdout.write('\n');
   }
 
   console.log(' 받은 일본어 이름 ' + got + '개' +
