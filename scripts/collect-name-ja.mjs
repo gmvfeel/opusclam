@@ -56,7 +56,6 @@ const LIMIT = Number((argv.find(a => a.startsWith('--limit=')) || '').split('=')
 /* 대상 표 — 위키데이터 고리(wikidata_id)가 있는 것만 */
 const TABLES = ['persons', 'orgs', 'venues', 'schools', 'modern_composers', 'foundations'];
 
-const SPARQL = 'https://query.wikidata.org/sparql';
 const getJSON = makeGetJSON({ ua: 'OPUSCLAM/1.0 (name_ja collector; cser@wixon.co.kr)' });
 
 /* ── Supabase 읽기 (200줄 서버 캡이 있어 나누어 받습니다) ────── */
@@ -100,36 +99,33 @@ async function patch(table, id, body) {
   if (!r.ok) throw new Error('PATCH ' + r.status + ' ' + await r.text());
 }
 
-/* ── 위키데이터에서 일본어 라벨 받기 ─────────────────────────
-   ★ 한 번에 너무 많이 물으면 시간 초과가 납니다. 200개씩 끊습니다. */
-async function labelsJa(qids) {
+/* ── 위키데이터에서 일본어 이름 받기 ────────────────────────────
+   ★★ SPARQL 을 버리고 <b>라벨 API</b> 로 바꿨습니다 (2026-08-10) ★★
+     처음에는 SPARQL 로 200개씩 물었습니다. 그런데 7,200개쯤에서
+     위키데이터가 <b>「2분 뒤에 오라」(HTTP 429)</b> 며 문을 닫았습니다.
+     SPARQL 은 무거운 질의라 한도가 빡빡합니다.
+     우리가 필요한 것은 <b>이름 한 줄</b>뿐이니 SPARQL 은 과했습니다.
+
+   ▶ wbgetentities 는 이름만 돌려주는 가벼운 창구입니다.
+     한 번에 50개까지 물을 수 있고 한도가 훨씬 넉넉합니다.
+
+   ★ 이 함수는 <b>50개씩만</b> 받아 돌려줍니다.
+     바깥에서 받는 대로 곧바로 담습니다 — 아래 ② 를 보십시오. */
+const API = 'https://www.wikidata.org/w/api.php';
+
+async function labelsJaChunk(qids) {
   const out = new Map();
-  const CH = 200;
-  for (let i = 0; i < qids.length; i += CH) {
-    const part = qids.slice(i, i + CH);
-    const vs = part.map(q => 'wd:' + q).join(' ');
-    const q = `SELECT ?item (SAMPLE(?jaL) AS ?ja) WHERE {
-  VALUES ?item { ${vs} }
-  OPTIONAL { ?item rdfs:label ?jaL FILTER(lang(?jaL)="ja") }
-} GROUP BY ?item`;
-    const url = SPARQL + '?format=json&query=' + encodeURIComponent(q);
-    let j;
-    try {
-      j = await getJSON(url);
-    } catch (e) {
-      if (isStop(e)) throw e;
-      console.log('   질의 실패 — 건너뜁니다 (' + String(e).slice(0, 50) + ')');
-      continue;
-    }
-    for (const b of (j?.results?.bindings || [])) {
-      const qid = String(b.item?.value || '').split('/').pop();
-      const ja  = (b.ja?.value || '').trim();
-      if (qid && ja) out.set(qid, ja);
-    }
-    process.stdout.write('   받는 중 ' + Math.min(i + CH, qids.length) + '/' + qids.length + '\r');
-    await sleep(400);
+  if (!qids.length) return out;
+  const url = API + '?action=wbgetentities&format=json&props=labels&languages=ja'
+            + '&ids=' + qids.join('|');
+  const j = await getJSON(url);
+  const ents = j && j.entities;
+  if (!ents) return out;
+  for (const qid in ents) {
+    const lab = ents[qid] && ents[qid].labels && ents[qid].labels.ja;
+    const ja = lab && String(lab.value || '').trim();
+    if (ja) out.set(qid, ja);
   }
-  process.stdout.write('\n');
   return out;
 }
 
@@ -170,42 +166,80 @@ async function runTable(table) {
   console.log(' 일본어 이름이 비어 있고 위키 고리가 있는 줄: ' + rows.length);
   if (!rows.length) return { got: 0, saved: 0 };
 
-  const qids = [...new Set(rows.map(r => String(r.wikidata_id).trim()).filter(Boolean))];
-  const labels = await labelsJa(qids);
-
-  let got = 0, saved = 0, skipped = 0;
-  const show = [];
-  const todo = [];
+  /* ★★ 받는 대로 <b>곧바로 담습니다</b> ★★
+     예전에는 「전부 받은 뒤에」 담았습니다. 그래서 7,200개를 받아 놓고도
+     위키데이터가 문을 닫자 <b>하나도 담지 못한 채 끝났습니다</b>
+     — 로그에 「받은 것 0개 · 담은 것 0개」 라고 찍혔습니다
+     (2026-08-10 · 파트너가 로그로 찾음).
+     ▶ 50개 받으면 50개 담습니다. 중간에 멈춰도 <b>거기까지는 남습니다.</b>
+     ▶ 다음 실행은 name_ja 가 빈 줄만 읽으므로 저절로 이어집니다. */
+  const CH = 50;
+  const byQid = new Map();
   for (const r of rows) {
-    const ja = labels.get(String(r.wikidata_id).trim());
-    if (!usable(ja, r)) { if (ja) skipped++; continue; }
-    got++;
-    if (show.length < 8) show.push([r.name_ko || r.name_en || '(이름 없음)', ja]);
-    todo.push([r.id, ja]);
+    const q = String(r.wikidata_id || '').trim();
+    if (!q) continue;
+    if (!byQid.has(q)) byQid.set(q, []);
+    byQid.get(q).push(r);
   }
+  const qids = [...byQid.keys()];
 
-  /* ★ 한 줄씩 차례로 보내면 만 건에 스무 분이 넘습니다.
-     여섯 개씩 함께 보냅니다 — 서버에 무리를 주지 않으면서 훨씬 빠릅니다. */
-  if (SAVE && todo.length) {
-    const LANE = 6;
-    for (let i = 0; i < todo.length; i += LANE) {
-      const part = todo.slice(i, i + LANE);
-      await Promise.all(part.map(async ([id, ja]) => {
-        try { await patch(table, id, { name_ja: ja }); saved++; }
-        catch (e) { console.log('   담기 실패 id=' + id + ' ' + String(e).slice(0, 60)); }
-      }));
-      if ((i / LANE) % 40 === 0) {
-        process.stdout.write('   담는 중 ' + Math.min(i + LANE, todo.length) + '/' + todo.length + '\r');
+  let got = 0, saved = 0, skipped = 0, stopped = false;
+  const show = [];
+
+  for (let i = 0; i < qids.length; i += CH) {
+    const part = qids.slice(i, i + CH);
+    let labels;
+    try {
+      labels = await labelsJaChunk(part);
+    } catch (e) {
+      if (isStop(e)) {
+        console.log('\n   위키데이터가 잠시 문을 닫았습니다 — 여기까지 담고 멈춥니다.');
+        stopped = true; break;
+      }
+      console.log('   한 묶음 실패 — 건너뜁니다 (' + String(e).slice(0, 50) + ')');
+      continue;
+    }
+
+    /* 받은 것을 곧바로 담습니다 (여섯 개씩 함께) */
+    const todo = [];
+    for (const [q, rs] of byQid) {
+      if (!labels.has(q)) continue;
+      const ja = labels.get(q);
+      for (const r of rs) {
+        if (!usable(ja, r)) { skipped++; continue; }
+        got++;
+        if (show.length < 8) show.push([r.name_ko || r.name_en || '(이름 없음)', ja]);
+        todo.push([r.id, ja]);
+      }
+      labels.delete(q);
+    }
+    if (SAVE && todo.length) {
+      const LANE = 6;
+      for (let k = 0; k < todo.length; k += LANE) {
+        await Promise.all(todo.slice(k, k + LANE).map(async ([id, ja]) => {
+          try { await patch(table, id, { name_ja: ja }); saved++; }
+          catch (e) { console.log('   담기 실패 id=' + id + ' ' + String(e).slice(0, 50)); }
+        }));
       }
     }
-    process.stdout.write('\n');
+
+    if ((i / CH) % 20 === 0 || i + CH >= qids.length) {
+      process.stdout.write('   ' + Math.min(i + CH, qids.length) + '/' + qids.length +
+                           ' · 담은 것 ' + saved + '\r');
+    }
+    /* 라벨 창구는 가벼워서 이 정도면 넉넉합니다.
+       그래도 위키데이터가 문을 닫으면 담은 것까지 남기고 곱게 멈춥니다. */
+    await sleep(120);
   }
+  process.stdout.write('\n');
 
   console.log(' 받은 일본어 이름 ' + got + '개' +
               (skipped ? ' (영문과 같거나 일본 글자가 없어 거른 것 ' + skipped + '개)' : ''));
   for (const [a, b] of show) console.log('    ' + a + '  →  ' + b);
   if (SAVE) console.log(' 담았습니다: ' + saved + '개');
-  return { got, saved };
+  if (stopped) console.log(' ※ 위키데이터가 문을 닫아 여기까지입니다 —'
+                         + ' 다음 실행에서 남은 것을 이어받습니다.');
+  return { got, saved, stopped };
 }
 
 /* ── 실행 ───────────────────────────────────────────────── */
@@ -222,6 +256,11 @@ async function runTable(table) {
     try {
       const r = await runTable(t);
       tg += r.got; ts += r.saved;
+      if (r.stopped) {
+        console.log('\n★ 위키데이터가 문을 닫아 여기서 멈춥니다.'
+                  + ' 담은 것은 그대로 남습니다 — 다음 실행에서 이어받습니다.');
+        break;
+      }
     } catch (e) {
       if (isStop(e)) { console.log('\n★ 위키데이터가 잠시 받지 않습니다 — 여기서 멈춥니다.'); break; }
       console.log('\n' + t + ' 처리 중 문제 — 건너뜁니다: ' + String(e).slice(0, 80));
