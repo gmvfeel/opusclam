@@ -25,7 +25,7 @@
    ★ 판(버전) 을 꼭 올리세요 — 사전이나 엔진을 고치면 이 숫자를
      바꿔야 브라우저가 새것을 받습니다. */
 (function () {
-  var V = '20260810p';
+  var V = '20260810q';
   if (document.getElementById('oc-i18n-js')) return;
   var src = '/assets/i18n.js?v=' + V;
   try {
