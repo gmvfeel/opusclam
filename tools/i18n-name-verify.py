@@ -32,7 +32,7 @@ PORT = 8877
 
 # 화면마다 renderRow 에 넘길 가짜 한 줄
 FAKE = {
-    'db/person.html':     {'id': 1, 'name_ko': '홍길동', 'name_en': 'Hong Gildong'},
+    'db/person.html':     {'id': 1, 'name_ko': '홍길동', 'name_en': 'Hong Gildong', 'name_ja': 'ホン・ギルドン'},
     'db/org.html':        {'id': 1, 'name_ko': '서울시향', 'name_en': 'Seoul Phil'},
     'db/venue.html':      {'id': 1, 'name_ko': '예술의전당', 'name_en': 'Arts Center'},
     'db/school.html':     {'id': 1, 'name_ko': '서울대', 'name_en': 'SNU'},
@@ -73,8 +73,12 @@ def main():
     with sync_playwright() as p:
         br = p.chromium.launch()
         for path, row in FAKE.items():
-            for lang, want_main, want_sub in (('ko', row['name_ko'], row['name_en']),
-                                              ('en', row['name_en'], row['name_ko'])):
+            cases = [('ko', row['name_ko'], row['name_en']),
+                     ('en', row['name_en'], row['name_ko'])]
+            # 일본어 — name_ja 가 있으면 그것이, 없으면 영어가 큰 글씨
+            cases.append(('ja', row.get('name_ja') or row['name_en'],
+                          row['name_en'] if row.get('name_ja') else row['name_ko']))
+            for lang, want_main, want_sub in cases:
                 pg = br.new_page(viewport={'width': 1400, 'height': 900})
 
                 def handle(route):

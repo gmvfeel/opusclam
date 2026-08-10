@@ -1,0 +1,86 @@
+name: 일본어 이름 · 채우기 (주1회)
+
+# ★ 무엇을 하는가
+#   위키데이터에서 일본어 이름을 받아 name_ja 가 빈 줄을 채웁니다.
+#   인물·단체·공연장·학교·현대음악·기관재단 여섯 표가 대상입니다.
+#
+# ★ 왜 주 1회면 충분한가
+#   이름은 자주 바뀌지 않습니다. 새로 담긴 항목만 채우면 되므로
+#   한 주에 한 번이면 넉넉합니다. 무료 실행 시간도 아낍니다.
+#
+# ★ 여러 번 돌아도 안전합니다
+#   이미 채워진 줄(name_ja is not null)은 아예 읽지 않습니다.
+#   사람이 손댄 표기를 덮어쓰지 않습니다.
+#
+# ★ 먼저 sql/name-ja-B-apply.sql 을 실행해 칸을 만들어 두셔야 합니다.
+#   칸이 없으면 수집기가 「읽지 못했습니다」 라 적고 조용히 넘어갑니다.
+
+on:
+  schedule:
+    # 일요일 05:20 KST — 다른 수집기와 겹치지 않는 시간대
+    - cron: '20 20 * * 6'
+  workflow_dispatch:
+    inputs:
+      table:
+        description: '한 표만 채우려면 이름을 적으세요 (persons · orgs · venues · schools · modern_composers · foundations). 비우면 전부.'
+        type: string
+        default: ''
+      limit:
+        description: '표당 최대 줄 수 (비우면 제한 없음)'
+        type: string
+        default: ''
+      dryrun:
+        description: '담지 않고 무엇이 올지만 봅니다'
+        type: boolean
+        default: false
+
+concurrency:
+  group: oc-collect-name-ja
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Collect Japanese names
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          ARGS=""
+          [ "${{ inputs.dryrun }}" = "true" ] || ARGS="$ARGS --save"
+          [ -n "${{ inputs.table }}" ] && ARGS="$ARGS --table=${{ inputs.table }}"
+          [ -n "${{ inputs.limit }}" ] && ARGS="$ARGS --limit=${{ inputs.limit }}"
+          echo "인자: $ARGS"
+          # 위키데이터가 잠시 받지 않는 일이 있어 두 번까지 다시 시도합니다
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+          try2 node scripts/collect-name-ja.mjs $ARGS
+
+  oc-notify-failure:
+    needs: collect
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi
