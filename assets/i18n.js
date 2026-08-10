@@ -47,7 +47,7 @@
        함께 배포해야 했습니다 — 내용은 한 글자도 안 바뀌는데 말입니다.
      ★ 이 숫자는 그냥 두어도 됩니다. 사전을 크게 바꿀 때 올리면
        확실히 새 사전을 받게 하는 이중 안전장치 구실을 합니다. */
-  var V = '20260811j';
+  var V = '20260811m';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -752,7 +752,21 @@
       'html[data-theme="dark"] .oc-lang ul li a:hover{background:#242424 !important;color:#fff !important}' +
       'html[data-theme="dark"] .oc-lang ul li a.on{color:#b9a3e8 !important}' +
       '.oc-lang-float{position:fixed;top:10px;right:12px;z-index:9998;margin:0;padding:2px 4px;border-radius:7px;background:rgba(20,18,40,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff}' +
-      '.oc-lang-float>button{opacity:.9}';
+      '.oc-lang-float>button{opacity:.9}' +
+      /* ★ 큰 광고의 아래를 오른쪽 기둥에 맞춥니다 (영어·일본어에서만)
+         왼쪽 큰 광고는 aspect-ratio:756/310 으로 <b>높이가 고정</b>입니다.
+         오른쪽 기둥에 광고를 옮겨 그 기둥이 길어져도 왼쪽은 제 높이만큼만
+         있어 아래가 어긋났습니다.
+         ★ 처음에는 JS 로 기둥 높이를 <b>재어</b> 맞추려 했는데, 자료가 늦게
+           채워져 잴 때마다 값이 달라 오히려 차이가 벌어졌습니다.
+           파트너가 「그냥 같게 하면 안 되나」 하셔서 CSS 로 <b>남은 자리를
+           채우게</b> 바꿨습니다. 훨씬 짧고, 브라우저가 알아서 맞춥니다.
+         ※ 좁은 화면에서는 두 기둥이 위아래로 놓이므로 손대지 않습니다. */
+      '@media(min-width:1081px){' +
+        'html[data-oc-lang] .board-main{grid-template-rows:auto 1fr}' +
+        'html[data-oc-lang] .board-main .board-ad{align-self:stretch;height:auto;' +
+        'aspect-ratio:auto;min-height:310px}' +
+      '}';
     var st = document.createElement('style');
     st.id = 'oc-i18n-css';
     st.textContent = css;
@@ -1170,6 +1184,9 @@
           var rest = document.querySelector(j.after);
           if (rest) hideEl(rest);
         }
+
+
+
       } catch (e) {}
     }
   }
