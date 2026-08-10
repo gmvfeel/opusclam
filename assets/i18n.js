@@ -47,7 +47,7 @@
        함께 배포해야 했습니다 — 내용은 한 글자도 안 바뀌는데 말입니다.
      ★ 이 숫자는 그냥 두어도 됩니다. 사전을 크게 바꿀 때 올리면
        확실히 새 사전을 받게 하는 이중 안전장치 구실을 합니다. */
-  var V = '20260811i';
+  var V = '20260811j';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -202,8 +202,24 @@
        그 판단은 <b>사람이 한 번 하면 끝나는 일</b>입니다.
        여기 적어 두는 편이 확실하고, 나중에 읽기도 쉽습니다. */
   var HIDE_BLOCK = {
-    en: ['section.lower'],   /* 리쿠르트+유틸리티가 빠져 광고만 남는 줄 */
-    ja: ['section.lower']
+    en: [],
+    ja: []
+  };
+
+  /* ── 감춘 뒤 <b>옮길</b> 것 ────────────────────────────────────
+     ★ 왜 옮기는가 (2026-08-10 · 파트너 지정)
+       section.lower 는 <b>리쿠르트 · 유틸리티 · 광고</b> 세 칸입니다.
+       앞 둘이 빠지면 광고만 혼자 남아 그 줄이 어색해집니다.
+       그렇다고 <b>광고를 없애면 안 됩니다</b> — 광고 자리는 수익과
+       이어진 자리입니다. (제가 처음에 지워 버렸습니다.)
+     ▶ 오른쪽 기둥(.side) 맨 아래로 옮깁니다.
+       「오늘의 작품 · 이주의 음악가」 아래가 비어 있어 자리가 맞습니다.
+     ★ 옮긴 뒤 빈 줄(section.lower)은 감춥니다. */
+  var MOVE_AD = {
+    en: [{ from: 'section.lower .ad-slot.lower-ad', to: 'section.board aside.side',
+           after: 'section.lower' }],
+    ja: [{ from: 'section.lower .ad-slot.lower-ad', to: 'section.board aside.side',
+           after: 'section.lower' }]
   };
 
   /* 감출 홈 섹션 — 제목의 영문으로 찾습니다 (<span class="en-s">) */
@@ -1114,6 +1130,9 @@
         for (var y = 0; y < els.length; y++) hideEl(els[y]);
       }
 
+      /* ②-3 광고를 살려 옮깁니다 */
+      moveAds();
+
       /* ⑤ 빠진 뒤 남은 자리를 다듬습니다
          ★ 반드시 <b>맨 마지막</b>이어야 합니다.
            앞의 ①~④ 가 다 끝나야 「무엇이 남았는가」 를 셀 수 있습니다.
@@ -1122,6 +1141,37 @@
            (2026-08-10 · 유틸리티 옆 광고가 혼자 남았습니다). */
       tidyAfterHide();
     } catch (e) {}
+  }
+
+  /* ── 광고를 다른 자리로 옮깁니다 ──────────────────────────────
+     ★ 지우지 않고 <b>옮깁니다.</b> 광고 자리는 수익과 이어진 자리라
+       말이 달라졌다는 이유로 없애면 안 됩니다.
+     ★ 한 번만 옮깁니다 — 지켜보기가 여러 번 돌아도 자리를 흩지 않습니다. */
+  function moveAds() {
+    var jobs = MOVE_AD[LANG] || [];
+    for (var i = 0; i < jobs.length; i++) {
+      try {
+        var j = jobs[i];
+        var ad = document.querySelector(j.from);
+        var dest = document.querySelector(j.to);
+        if (!ad || !dest) continue;
+        if (ad.getAttribute('data-oc-moved') === '1') continue;
+
+        /* 광고를 담고 있던 칸째로 옮겨야 짜임이 유지됩니다 */
+        var box = ad.parentElement && ad.parentElement.children.length === 1
+                  ? ad.parentElement : ad;
+        box.setAttribute('data-oc-moved', '1');
+        ad.setAttribute('data-oc-moved', '1');
+        box.style.marginTop = '18px';
+        dest.appendChild(box);
+
+        /* 옮긴 뒤 빈 줄은 감춥니다 */
+        if (j.after) {
+          var rest = document.querySelector(j.after);
+          if (rest) hideEl(rest);
+        }
+      } catch (e) {}
+    }
   }
 
   /* ── 감춘 뒤 남은 자리 다듬기 ──────────────────────────────────
