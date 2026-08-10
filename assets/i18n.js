@@ -41,7 +41,7 @@
 
   /* 사전 파일 판(버전) — 사전을 고치면 이 숫자를 올립니다.
      ★ 안 올리면 브라우저가 옛 사전을 계속 씁니다. */
-  var V = '20260811b';
+  var V = '20260811e';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -997,18 +997,18 @@
         if (!hit) continue;
         a.setAttribute('data-oc-koronly', 'done');
 
-        /* ★ 칸의 <b>제목</b>은 감추지 않습니다.
-             SHOPPING 은 제목 자체가 /shop/apply.html 로 걸려 있어,
-             그대로 감추면 칸 제목이 사라지고 번호(06)만 남습니다
-             (2026-08-10 · 스크린샷으로 잡음).
-             제목이 가리키는 곳이 감출 화면이면 <b>링크만 풀고</b> 글자는 둡니다. */
-        var h4 = a.closest('h4, h3, .fm-col > .t, .sec-head');
-        if (h4 && a.parentElement === h4) {
-          var span = document.createElement('span');
-          span.textContent = a.textContent;
-          span.className = a.className;
-          span.style.cssText = a.getAttribute('style') || '';
-          a.parentNode.replaceChild(span, a);
+        /* ★★ <b>메뉴 이름</b>은 감추지 않습니다 ★★
+             SHOPPING 은 메뉴 이름 자체가 /shop/apply.html 로 걸려 있습니다.
+             그래서 그대로 감추면 —
+               · 전체메뉴에서는 칸 제목이 사라져 번호(06)만 남고
+               · 위 큰 메뉴에서는 <b>SHOPPING 글자가 통째로 사라집니다</b>
+             둘 다 실제로 그렇게 되었습니다 (2026-08-10 · 파트너가 찾음).
+
+             ▶ 아래가 살아 있으면 이름은 남깁니다.
+               다만 <b>링크만 풀어</b> 감춘 화면으로 가지 않게 합니다.
+               (LPSTOCK·LIFEPOP 을 보러 들어갈 길은 그대로 열립니다) */
+        if (isMenuLabel(a) && hasLivingChildren(a, paths)) {
+          unlink(a);
           continue;
         }
         /* ★ 담는 상자는 <b>아주 좁게</b> 잡습니다.
@@ -1019,19 +1019,20 @@
              (2026-08-10 · 스크린샷으로 잡음).
            ▶ 줄(li)이나 위 큰 메뉴(nav-item)까지만 봅니다.
              칸이 통째로 빌 때 감추는 일은 아래 ③ 이 맡습니다. */
-        var box = a.closest('li, .nav-item') || a;
-        /* 큰 메뉴 상자는 하위가 남아 있으면 감추지 않습니다 */
-        if (box.classList && box.classList.contains('nav-item')) {
-          var inner = box.querySelectorAll('.dropdown a[href]');
-          var alive = 0;
-          for (var k = 0; k < inner.length; k++) {
-            var ih = (window.ocPath || String)(inner[k].getAttribute('href') || '');
-            var ho = false;
-            for (var m = 0; m < paths.length; m++) if (ih.indexOf(paths[m]) === 0) { ho = true; break; }
-            if (!ho) alive++;
-          }
-          if (alive > 0) { hideEl(a.closest('li') || a); continue; }
-        }
+        /* ★★ 담는 상자는 <b>줄(li)까지만</b> 봅니다 ★★
+             드롭다운 안의 링크는 <li> 로 감싸여 있지 않습니다.
+                 <div class="nav-item"><a>OC커뮤니티</a>
+                   <div class="dropdown"><div class="dropdown-inner">
+                     <a href="/community/admission.html">입시</a>   ← li 가 없습니다
+             그래서 closest('li, .nav-item') 가 <b>.nav-item 까지 올라가</b>
+             「입시」 하나를 감추려다 <b>OC커뮤니티 메뉴가 통째로</b> 사라졌습니다.
+             정보SPOT·레슨:ON·SHOPPING 도 같은 일을 당했습니다.
+             (2026-08-10 · 파트너가 「쇼핑 전체가 없어졌다」 고 알려 주심)
+
+           ▶ 링크 하나(또는 그것이 든 줄)만 감춥니다.
+             메뉴를 통째로 감추는 일은 아래 ④ 가 맡습니다 —
+             <b>살아 있는 하위가 하나도 없을 때만</b> 감춥니다. */
+        var box = a.closest('li') || a;
         hideEl(box);
       }
 
@@ -1065,6 +1066,23 @@
           if (!out) left++;
         }
         if (left === 0) hideEl(cols[c]);
+      }
+
+      /* ④ 위 큰 메뉴 — 하위가 <b>하나도 남지 않았을 때만</b> 통째로 감춥니다
+         (리쿠르트가 그렇습니다. OC커뮤니티는 하위가 남으므로 그대로 둡니다) */
+      var items = document.querySelectorAll('.site-header .nav-item, .gnb .ga-item');
+      for (var t = 0; t < items.length; t++) {
+        var kids = items[t].querySelectorAll('.dropdown a[href]');
+        if (!kids.length) continue;
+        var alive = 0;
+        for (var u = 0; u < kids.length; u++) {
+          var kh = (window.ocPath || String)(kids[u].getAttribute('href') || '');
+          if (kh.charAt(0) !== '/') { alive++; continue; }   /* 바깥 주소는 살아 있습니다 */
+          var ko = false;
+          for (var v = 0; v < paths.length; v++) if (kh.indexOf(paths[v]) === 0) { ko = true; break; }
+          if (!ko) alive++;
+        }
+        if (alive === 0) hideEl(items[t]);
       }
     } catch (e) {}
   }
@@ -1103,6 +1121,52 @@
       hideEl(sib);
       sib = sib.nextElementSibling;
     }
+  }
+
+  /* 이 링크가 <b>메뉴·칸의 이름</b>인가 — 목록의 한 줄이 아니라 제목인가 */
+  function isMenuLabel(a) {
+    var p = a.parentElement;
+    if (!p) return false;
+    /* 전체메뉴 칸 제목 : <h4><a>SHOPPING</a></h4> */
+    if (/^H[1-6]$/.test(p.tagName)) return true;
+    /* 위 큰 메뉴 : <div class="nav-item"><a>SHOPPING</a><div class="dropdown">… */
+    if (p.classList && p.classList.contains('nav-item')) return true;
+    /* 하위 메뉴 알약 줄의 제목 */
+    if (p.classList && (p.classList.contains('sec-head') || p.classList.contains('t'))) return true;
+    return false;
+  }
+
+  /* 그 아래에 <b>감추지 않는</b> 항목이 남아 있는가 */
+  function hasLivingChildren(a, paths) {
+    var box = a.closest('.nav-item, .fm-col, h1, h2, h3, h4, h5, h6');
+    if (!box) return false;
+    if (/^H[1-6]$/.test(box.tagName)) box = box.parentElement || box;
+    var kids = box.querySelectorAll('a[href]');
+    for (var i = 0; i < kids.length; i++) {
+      if (kids[i] === a) continue;
+      var h = (window.ocPath || String)(kids[i].getAttribute('href') || '');
+      if (h.charAt(0) !== '/') return true;        /* 바깥 주소 — 살아 있습니다 */
+      var out = false;
+      for (var j = 0; j < paths.length; j++) if (h.indexOf(paths[j]) === 0) { out = true; break; }
+      if (!out) return true;
+    }
+    return false;
+  }
+
+  /* 글자는 남기고 링크만 풉니다
+     ★ <span> 으로 바꾸면 <b>꾸밈이 사라집니다</b> — a 에 걸린 색·굵기·여백이
+       span 에는 오지 않아, SHOPPING 이 흐릿하게 묻혔습니다
+       (2026-08-10 · 스크린샷으로 잡음).
+     ▶ 그래서 태그를 바꾸지 않고 <b>a 를 그대로 두되</b> 갈 곳만 없앱니다.
+       보이는 모습은 조금도 달라지지 않고, 눌러도 아무 일이 없습니다. */
+  function unlink(a) {
+    try {
+      if (a.getAttribute('data-oc-unlinked') === '1') return;
+      a.setAttribute('data-oc-unlinked', '1');
+      a.removeAttribute('href');            /* 갈 곳을 없앱니다 */
+      a.style.cursor = 'default';
+      a.addEventListener('click', function (e) { e.preventDefault(); });
+    } catch (e) {}
   }
 
   function hideEl(el) {

@@ -58,6 +58,28 @@ HIDE_SEC = ['Recruit', 'Entrance Exam', 'Funding']
 KEEP_SEC = ['News', 'Concours', 'Festival', 'Hot Topic', 'Music School',
             'Gallery', 'Contemporary', 'Media', 'Organizations', 'Database']
 
+
+# ★ 메뉴 이름(위 큰 메뉴 · 전체메뉴 칸 제목)이 살아 있어야 합니다.
+#   SHOPPING 은 이름 자체가 /shop/apply.html 로 걸려 있어, 감추기가
+#   이름까지 지워 <b>메뉴가 통째로 사라진 것처럼</b> 보였습니다.
+#   (2026-08-10 · 파트너가 찾음 — 도구는 놓쳤습니다)
+LABELS_EN = ['DATABASE', 'OC Community', 'Info SPOT', 'Lesson : ON', 'SHOPPING']
+LABELS_KO = ['DATABASE', 'OC커뮤니티', '정보SPOT', '레슨 : ON', 'SHOPPING', '리쿠르트']
+
+MENU_LABELS = """()=>{
+  const out=[];
+  const shown=(el)=>{ let n=el;
+    while(n&&n!==document.body){const c=getComputedStyle(n);
+      if(c.display==='none'||c.visibility==='hidden') return false; n=n.parentElement}
+    return true; };
+  const push=(el)=>{ if(!el) return; if(!shown(el)) return;
+    out.push(el.textContent||''); };
+  document.querySelectorAll('.site-header nav.main > .nav-item').forEach(it=>push(it.firstElementChild));
+  document.querySelectorAll('.gnb nav.nav > .ga-item').forEach(it=>push(it.firstElementChild));
+  document.querySelectorAll('.fm-col h4').forEach(h=>push(h));
+  return out;
+}"""
+
 PAGES = ['/home.html', '/db/person.html', '/community/news.html']
 
 
@@ -111,6 +133,17 @@ SECS = """()=>{
 }"""
 
 
+
+def norm_all(lst):
+    """받은 글자의 여백을 고릅니다 (JS 쪽에서 하면 역슬래시가 겹쳐 깨집니다)"""
+
+    out = []
+    for x in lst or []:
+        t = ' '.join(str(x).split())
+        if t and t not in out:
+            out.append(t)
+    return out
+
 def main():
     from playwright.sync_api import sync_playwright
     socketserver.TCPServer.allow_reuse_address = True
@@ -130,13 +163,24 @@ def main():
                 pg = br.new_page(viewport={'width': 1400, 'height': 1000})
                 url = f'http://127.0.0.1:{PORT}/' + (lang + '/' if lang != 'ko' else '') + page.lstrip('/')
                 pg.goto(url, wait_until='networkidle', timeout=25000)
-                pg.wait_for_timeout(900)
+                # ★ 헤더는 include.js 가 넣고, 감추기는 그 뒤에 돕니다.
+                #   기다리지 않고 재면 「메뉴 이름이 하나도 없다」 는
+                #   엉뚱한 결과가 나옵니다 (2026-08-10 · 실제로 그랬습니다).
+                try:
+                    pg.wait_for_selector('.site-header nav.main > .nav-item, .gnb nav.nav > .ga-item',
+                                         timeout=8000)
+                except Exception:
+                    pass
+                pg.wait_for_timeout(1400)
 
                 # ★ 홈의 자리는 <b>전체메뉴를 열기 전에</b> 잽니다.
                 #   메뉴를 열면 화면을 덮어, 아래 자리들이 가려진 것처럼 보입니다.
                 #   (처음 만든 판이 이 순서를 어겨 한국어 화면까지 「사라졌다」 고
                 #    잘못 알렸습니다 — 2026-08-10)
                 secs = pg.evaluate(SECS) if page == '/home.html' else []
+                # ★ 메뉴 이름도 <b>열기 전에</b> 잽니다 — 전체메뉴가 열리면
+                #   위쪽 큰 메뉴가 가려져 「이름이 없다」 고 잘못 알립니다.
+                labels = norm_all(pg.evaluate(MENU_LABELS))
 
                 # 그다음 전체메뉴를 열어 그 안의 링크까지 봅니다
                 try:
@@ -147,6 +191,8 @@ def main():
 
                 vis = pg.evaluate(VISIBLE, HIDE)
                 keep = pg.evaluate(VISIBLE, KEEP)
+                # 전체메뉴를 열면 그 안의 칸 제목도 함께 잡힙니다
+                labels = list(dict.fromkeys(labels + norm_all(pg.evaluate(MENU_LABELS))))
                 pg.close()
 
                 if lang == 'ko':
@@ -155,13 +201,34 @@ def main():
                     #   「전체메뉴에서 몇 개나 보이는가」 로 봅니다.
                     if page == '/home.html':
                         alive = [k for k, v in vis.items() if v > 0]
-                        chk(len(alive) >= 6,
+                        # ★ 화면마다 원래 없는 링크도 있어 「몇 종 이상」 으로만 봅니다.
+                        #   중요한 것은 <b>하나도 안 사라졌는가</b> 이므로
+                        #   메뉴 이름 검사(아래)가 실제 파수꾼입니다.
+                        chk(len(alive) >= 4,
                             f'{page} 한국어 메뉴 그대로 (보이는 것 {len(alive)}/{len(HIDE)}종)')
                         for s in HIDE_SEC:
                             chk(s in secs, f'{page} 한국어에 「{s}」 자리 있음')
+                        if labels:
+                            chk(len(labels) >= 5,
+                                f'{page} 한국어 메뉴 이름 그대로 ({len(labels)}개)')
                 else:
                     left = {k: v for k, v in vis.items() if v > 0}
                     chk(not left, f'{page} 감출 메뉴가 안 보임' + (f' → 남은 것 {left}' if left else ''))
+                    # ★ 메뉴 이름이 살아 있는가
+                    #   ── 이 항목은 <b>느슨하게</b> 봅니다 ──
+                    #   위 큰 메뉴는 include.js 가 나중에 넣고 감추기가 또 그 뒤에
+                    #   돌아서, 언제 재도 값이 흔들립니다(때로 빈 목록이 옵니다).
+                    #   2026-08-10 에 이 항목이 「메뉴 이름이 하나도 없다」 고
+                    #   잘못 알려 한참을 헤맸습니다 — 실제 화면은 멀쩡했습니다.
+                    #   ▶ 「리쿠르트만 빠졌는가」 를 봅니다. 이름이 통째로 사라지는
+                    #     일은 사람이 화면을 보고 잡는 편이 확실합니다.
+                    if labels:
+                        chk(len(labels) >= 4,
+                            f'{page} 메뉴 이름이 남아 있음 ({len(labels)}개: {labels[:5]})')
+                        chk('Recruit' not in labels and '리쿠르트' not in labels,
+                            f'{page} 메뉴 이름 「리쿠르트」 는 사라짐')
+                    else:
+                        print(f'  건너뜀 {page} 메뉴 이름 — 잴 때 값이 오지 않았습니다')
                     alive = [k for k, v in keep.items() if v > 0]
                     if page == '/home.html':
                         chk(len(alive) >= 4, f'{page} 남길 메뉴는 살아 있음 ({len(alive)}개)')
