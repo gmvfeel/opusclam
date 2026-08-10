@@ -44,6 +44,52 @@ def chk(ok, msg):
     print(('  OK   ' if ok else '  틀림 ') + msg)
     if not ok: fail.append(msg)
 
+
+# ── [0] 소스 검사 — 「값(var)이 조기 return 아래에 있는가」 ──────────
+#   2026-08-10 에 이 실수를 <b>두 번</b> 했습니다.
+#   ① 상수를 파일 아래쪽에 두어 번역이 통째로 실패
+#   ② var HOSTS 를 조기 return 아래에 두어 한국어 화면에서 고르개가 사라짐
+#   둘 다 바깥의 try 가 오류를 삼켜 조용했습니다. 눈으로는 못 잡습니다.
+print('[0] 소스 검사 — 값 선언 자리')
+_src = open(f'{NEW}/assets/i18n.js', encoding='utf-8').read()
+_lines = _src.split('\n')
+
+# 주석·글자 안은 빼고 본다
+def _strip(line):
+    out, i, q = [], 0, None
+    while i < len(line):
+        c = line[i]
+        if q:
+            if c == '\\': i += 2; continue
+            if c == q: q = None
+            i += 1; continue
+        if c in '"\'':
+            q = c; i += 1; continue
+        if line[i:i+2] == '/*': return ''.join(out)
+        if line[i:i+2] == '//': break
+        out.append(c); i += 1
+    return ''.join(out)
+
+_clean = [_strip(l) for l in _lines]
+_in_comment = False
+for i, l in enumerate(_lines):
+    if '/*' in l and '*/' not in l: _in_comment = True; _clean[i] = ''
+    elif _in_comment:
+        _clean[i] = ''
+        if '*/' in l: _in_comment = False
+
+# 맨 바깥(들여쓰기 2칸)의 조기 return 자리
+_ret = [i for i, l in enumerate(_clean) if re.match(r'^ {4}return;\s*$', l)]
+_first_ret = min(_ret) if _ret else len(_clean)
+
+_bad = []
+for i, l in enumerate(_clean):
+    if i <= _first_ret: continue
+    m = re.match(r'^ {2}var\s+([A-Za-z_$][\w$]*)\s*=', l)
+    if m: _bad.append(f'{i+1}행 var {m.group(1)}')
+chk(not _bad,
+    '값(var)이 모두 조기 return 위에 있음' + (f' → 아래에 있는 것: {_bad}' if _bad else ''))
+
 with sync_playwright() as p:
     br = p.chromium.launch()
 
@@ -88,7 +134,7 @@ with sync_playwright() as p:
                     print('        새:', repr(ta[max(0,i-60):i+60]))
                     print('        옛:', repr(tb[max(0,i-60):i+60]))
                     break
-        chk(a.evaluate("()=>!!document.querySelector('.oc-lang')"), f'{path} 언어 고르개 있음')
+        chk(a.evaluate("()=>[...document.querySelectorAll('.oc-lang')].some(e=>{const b=e.getBoundingClientRect();return b.width>0&&b.height>0})"), f'{path} 언어 고르개 보임')
         chk(a.evaluate("()=>document.documentElement.lang")=='ko', f'{path} lang=ko 유지')
         # ★ 회원·글쓰기 화면은 <b>원래부터</b> noindex 입니다 — 견주기에서 뺍니다
         if not path.startswith('/account/'):
@@ -123,7 +169,7 @@ with sync_playwright() as p:
     chk(pg.evaluate("()=>!!document.querySelector('meta[name=robots][content*=noindex]')"), 'noindex 붙음')
     chk(pg.evaluate("()=>document.querySelectorAll('link[rel=alternate][hreflang]').length")==0,
         'hreflang 은 아직 안 붙음(막아 둔 동안)')
-    chk(pg.evaluate("()=>[...document.querySelectorAll('.oc-lang li a')].filter(a=>a.rel==='nofollow').length")==2,
+    chk(pg.evaluate("()=>[...document.querySelectorAll('.oc-lang:not([style*=none]) li a')].filter(a=>a.rel==='nofollow').length")==2,
         '언어 고르개 en/ja 에 nofollow')
     # 경로 판단이 언어 경로에서도 되는가
     chk(pg.evaluate("()=>typeof window.ocPath==='function' && ocPath('/en/db/x.html')==='/db/x.html'"),
@@ -148,16 +194,50 @@ with sync_playwright() as p:
     chk(not errs, '콘솔 오류 없음' + (f' → {errs[:3]}' if errs else ''))
     pg.close()
 
-    # ── ④ 언어 고르개 동작 ─────────────────────────────────
+    # ── ④ 언어 고르개 — 세 말 모두에서, 눈에 보이는지·실제로 옮겨가는지 ──
     print('\n[4] 언어 고르개')
-    pg, _ = load('http://127.0.0.1:8801/db/person.html')
-    pg.click('.oc-lang > button')
-    pg.wait_for_timeout(200)
-    chk(pg.evaluate("()=>document.querySelector('.oc-lang').classList.contains('open')"), '눌러서 열림')
-    links = pg.evaluate("()=>[...document.querySelectorAll('.oc-lang li a')].map(a=>a.getAttribute('href'))")
-    chk(links == ['/db/person.html', '/en/db/person.html', '/ja/db/person.html'],
-        f'고르개 주소 세 줄 → {links}')
-    pg.close()
+
+    # 글자가 바탕에 묻히지 않는가 (2026-08-10 · 흰 상자에 흰 글씨였음)
+    CONTRAST = """(sel)=>{
+      const el=document.querySelector(sel); if(!el) return null;
+      const cs=getComputedStyle(el);
+      const rgb=t=>{const m=t.match(/[\\d.]+/g)||[];return m.slice(0,3).map(Number).concat(m.length>3?+m[3]:1)};
+      const lum=c=>{const a=c.slice(0,3).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});
+        return .2126*a[0]+.7152*a[1]+.0722*a[2]};
+      let bgEl=el, bg=[255,255,255,1];
+      while(bgEl){const b=rgb(getComputedStyle(bgEl).backgroundColor); if(b[3]>0){bg=b;break} bgEl=bgEl.parentElement}
+      const fg=rgb(cs.color);
+      const L1=lum(fg), L2=lum(bg);
+      const ratio=(Math.max(L1,L2)+.05)/(Math.min(L1,L2)+.05);
+      return {ratio:Math.round(ratio*10)/10, alpha:fg[3], text:el.textContent.trim()};
+    }"""
+
+    for lang, base in [('ko',''), ('en','/en'), ('ja','/ja')]:
+        pg, errs = load(f'http://127.0.0.1:8801{base}/db/person.html')
+        pg.locator('.oc-lang > button').locator('visible=true').first.click(); pg.wait_for_timeout(250)
+
+        n = pg.evaluate("()=>document.querySelectorAll('.oc-lang:not([style*=none]) li a').length")
+        chk(n == 3, f'[{lang}] 고르개 세 줄 → {n}줄')
+
+        # 세 줄 모두 읽을 수 있는가
+        for i, nm in enumerate(['한국어', 'English', '日本語']):
+            r = pg.evaluate(CONTRAST, f'.oc-lang:not([style*=none]) li:nth-child({i+1}) a')
+            ok = r and r['ratio'] >= 4.5 and r['alpha'] >= .9 and r['text'] == nm
+            chk(ok, f'[{lang}] 「{nm}」 눈에 보임 → {r}')
+
+        # 링크 주소가 옳은가 (i18n 이 /en 을 덧붙이지 않았는가)
+        hrefs = pg.evaluate("()=>[...document.querySelectorAll('.oc-lang:not([style*=none]) li a')].map(a=>a.getAttribute('href'))")
+        want = ['/db/person.html', '/en/db/person.html', '/ja/db/person.html']
+        chk(hrefs == want, f'[{lang}] 고르개 주소 → {hrefs}')
+
+        # ★ 실제로 눌러서 그 말로 옮겨가는가 — 여기서 「한국어로 안 돌아옴」 을 잡습니다
+        pg.locator('.oc-lang li:nth-child(1) a').locator('visible=true').first.click()
+        pg.wait_for_load_state('networkidle'); pg.wait_for_timeout(500)
+        chk(pg.url.endswith('/db/person.html') and '/en/' not in pg.url and '/ja/' not in pg.url,
+            f'[{lang}] 「한국어」 눌러 한국어로 돌아옴 → {pg.url}')
+        chk(pg.evaluate("()=>document.documentElement.lang") == 'ko',
+            f'[{lang}] 돌아온 화면이 실제로 한국어')
+        pg.close()
 
     # ── ⑤ 없는 사전으로 넘어가도 안 죽는가 ───────────────────
     print('\n[5] 버팀 검사')
@@ -165,6 +245,27 @@ with sync_playwright() as p:
     chk(pg.evaluate("()=>document.body.innerText.length")>200, '영문 화면 본문 살아 있음')
     chk(not errs, '콘솔 오류 없음' + (f' → {errs[:3]}' if errs else ''))
     pg.close()
+
+
+    # ── ⑥ 화면 폭이 달라져도 고르개가 보이는가 (모바일 포함) ──
+    print('\n[6] 화면 폭별 고르개')
+    for w in (1440, 1200, 1024, 900, 860, 768, 640, 480, 390, 360):
+        pg = br.new_page(viewport={'width': w, 'height': 800})
+        pg.goto('http://127.0.0.1:8801/en/db/person.html', wait_until='networkidle')
+        pg.wait_for_timeout(600)
+        r = pg.evaluate("""()=>{
+          const all=[...document.querySelectorAll('.oc-lang')];
+          const vis=all.filter(e=>{const b=e.getBoundingClientRect();return b.width>0&&b.height>0
+            && getComputedStyle(e).display!=='none'});
+          return {total:all.length, visible:vis.length,
+                  where: vis.map(e=>e.parentElement.className||e.parentElement.tagName).join(',')}}""")
+        ok = r['visible'] == 1
+        chk(ok, f'{w}px — 보이는 고르개 1개 → {r["visible"]}개 ({r["where"]})')
+        if ok:   # 실제로 눌러 열리는지
+            pg.locator('.oc-lang > button').locator('visible=true').first.click(); pg.wait_for_timeout(200)
+            chk(pg.evaluate("()=>[...document.querySelectorAll('.oc-lang')].some(e=>e.classList.contains('open'))"),
+                f'{w}px — 눌러서 열림')
+        pg.close()
 
     br.close()
 

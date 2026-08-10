@@ -41,7 +41,7 @@
 
   /* 사전 파일 판(버전) — 사전을 고치면 이 숫자를 올립니다.
      ★ 안 올리면 브라우저가 옛 사전을 계속 씁니다. */
-  var V = '20260810';
+  var V = '20260810f';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -63,6 +63,9 @@
 
   /* 다룰 언어. 늘릴 때는 여기와 assets/i18n/○○.json 만 만들면 됩니다. */
   var LANGS = ['en', 'ja'];
+  /* ★ 아래 세 이름은 <b>사전에 넣지 마세요.</b>
+       고르개는 「그 말을 쓰는 사람이 읽을 이름」 을 보여야 합니다.
+       영어 화면에서도 「한국어」 라고 적혀 있어야 한국 사람이 찾습니다. */
   var NAMES = { ko: '한국어', en: 'English', ja: '日本語' };
   var SHORT = { ko: 'KO', en: 'EN', ja: 'JA' };
 
@@ -88,6 +91,17 @@
 
 /* 내가 넣은 값 기억 — 다시 건드리지 않기 위해 */
   var mine = (typeof WeakMap === 'function') ? new WeakMap() : null;
+
+  var HOSTS = [
+    '.site-header .util .right',   /* 넓은 화면 — 헤더 맨 윗줄 */
+    '.site-header .mast-tools',    /* 좁은 화면 — 로고 옆 도구 자리 */
+    '.gnb .auth',                  /* 회원 화면 헤더 */
+    '.gnb nav.nav'
+  ];
+
+  /* 사전과 살림살이 — ★ 반드시 조기 return 위에 두어야 합니다 */
+  var DICT = null;
+  var _pk = null;
 
   /* 지켜보기 살림살이 */
   var mo = null, paused = 0, queue = [], timer = null;
@@ -145,7 +159,16 @@
   mountStyle();
   onReady(mountPicker);
 
-  /* 한국어면 여기서 끝 — 사전도 받지 않습니다 */
+  /* 한국어면 여기서 끝 — 사전도 받지 않습니다.
+
+     ★★ 여기서 <b>되돌아갑니다.</b> 그러니 이 줄 아래에 새로 만드는
+        var 값은 한국어 화면에서 <b>영영 담기지 않습니다.</b> ★★
+        (2026-08-10 에 이 실수를 <b>두 번</b> 했습니다. 두 번째는
+         var HOSTS 를 아래에 두어 한국어 화면에서만 언어 고르개가
+         통째로 사라졌고, onReady 의 try 가 오류를 삼켜 조용했습니다.)
+     ▶ 값(var)은 반드시 <b>맨 위 붙박이 구역</b>에 두세요.
+       함수(function)는 미리 올라가므로 아래에 두어도 됩니다.
+       tools/i18n-verify.py 가 이 규칙을 자동으로 검사합니다. */
   if (LANG === 'ko') {
     markAlternates();
     API.ready = true;
@@ -156,7 +179,7 @@
      동기로 받는 까닭: 이 줄이 끝나야 본문이 그려집니다. 비동기로
      받으면 한국어가 한 번 그려진 뒤에 바뀌어 깜빡입니다.
      include.js 도 같은 방식으로 헤더를 넣고 있습니다. */
-  var DICT = loadDict(LANG);
+  DICT = loadDict(LANG);
   if (!DICT) {
     /* 사전이 없으면 한국어 그대로 보여 줍니다 — 화면이 멈추면 안 됩니다 */
     if (window.console) console.warn('[i18n] 사전을 받지 못했습니다:', LANG);
@@ -381,8 +404,15 @@
       }
     }
 
-    /* 링크에 언어 붙이기 */
+    /* 링크에 언어 붙이기
+       ★ data-oc-nolang 이 붙은 링크는 <b>건드리지 않습니다.</b>
+         (2026-08-10 · 파트너가 찾음)
+         언어 고르개의 「한국어」 줄은 일부러 /db/person.html 로 두는데,
+         여기서 /en 을 붙여 버려 <b>눌러도 제자리를 맴돌았습니다.</b>
+         「이 링크는 지금 언어를 따르지 않는다」 고 말할 방법이
+         있어야 합니다. 앞으로도 그런 링크는 이 표를 붙이세요. */
     if (el.nodeName === 'A') {
+      if (el.hasAttribute('data-oc-nolang')) return;
       var h = el.getAttribute('href');
       if (h) {
         var nh = localize(h);
@@ -450,6 +480,26 @@
        (index.html·home.html·회원 화면)에서도 같게 보이도록. */
   function mountStyle() {
     if (document.getElementById('oc-i18n-css')) return;
+    /* ★★ 색은 반드시 !important 로 못박습니다 ★★
+       ─────────────────────────────────────────────────────────
+       고르개는 헤더 맨 윗줄(.util .right) 안에 들어갑니다.
+       그 자리는 <b>어두운 바탕에 흰 글씨</b>라 style.css 에
+         .util .right a { color: rgba(255,255,255,.34) }
+       가 걸려 있습니다.
+
+       그런데 이 규칙은 클래스 둘·꼬리표 하나(0,2,1)이고
+       제 규칙 .oc-lang li a 는 클래스 하나·꼬리표 둘(0,1,2)이라
+       <b>제가 집니다.</b> 그래서 흰 상자 위에 흰 글씨가 되어
+       English·日本語 가 <b>보이지 않았습니다</b>
+       (2026-08-10 · 파트너가 스크린샷으로 찾음).
+       「한국어」 만 보인 것은 그 줄에만 .on 규칙이 하나 더 붙어
+       간신히 이겼기 때문입니다.
+
+       ★ style.css 를 고치지 않습니다 — 그 규칙은 헤더 윗줄
+         전체가 쓰는 것이라 건드리면 다른 곳이 틀어집니다.
+         내 것만 못박는 편이 안전합니다.
+       ★ 회원 헤더·홈처럼 style.css 를 안 쓰는 화면도 있어,
+         어느 화면에 놓이든 같게 보이려면 못박아야 합니다. */
     var css =
       '.oc-lang{position:relative;display:inline-flex;align-items:center;margin-left:14px;font-family:inherit}' +
       '.oc-lang>button{background:none;border:0;padding:2px 6px;cursor:pointer;font:inherit;font-size:11px;' +
@@ -458,33 +508,46 @@
       '.oc-lang>button::after{content:"";width:0;height:0;border-left:3px solid transparent;' +
       'border-right:3px solid transparent;border-top:4px solid currentColor;opacity:.7}' +
       '.oc-lang ul{position:absolute;top:100%;right:0;margin:4px 0 0;padding:5px 0;list-style:none;' +
-      'min-width:104px;background:#fff;border:1px solid #e6e1d7;border-radius:8px;' +
+      'min-width:112px;background:#fff;border:1px solid #e6e1d7;border-radius:8px;' +
       'box-shadow:0 8px 24px rgba(20,16,40,.14);display:none;z-index:9999}' +
       '.oc-lang.open ul{display:block}' +
-      '.oc-lang li a{display:block;padding:7px 14px;font-size:12.5px;color:#2a2b45;text-decoration:none;white-space:nowrap}' +
-      '.oc-lang li a:hover{background:#f6f2ea;color:#7C63B0}' +
-      '.oc-lang li a.on{color:#7C63B0;font-weight:700}' +
+      '.oc-lang ul li{margin:0;padding:0;list-style:none}' +
+      '.oc-lang ul li a{display:block;margin:0;padding:8px 14px;font-size:12.5px;font-weight:500;' +
+      'letter-spacing:normal;line-height:1.5;text-align:left;text-decoration:none;white-space:nowrap;' +
+      'color:#2a2b45 !important;background:transparent !important;opacity:1 !important}' +
+      '.oc-lang ul li a:hover{background:#f6f2ea !important;color:#7C63B0 !important}' +
+      '.oc-lang ul li a.on{color:#7C63B0 !important;font-weight:700}' +
+      '.oc-lang ul li a::after{content:none !important}' +
       'html[data-theme="dark"] .oc-lang ul{background:#161616;border-color:#2f2f2f}' +
-      'html[data-theme="dark"] .oc-lang li a{color:#e8e8e8}' +
-      'html[data-theme="dark"] .oc-lang li a:hover{background:#242424}' +
-      '.oc-lang-float{position:fixed;top:12px;right:14px;z-index:9998;color:#8a8aa0}';
+      'html[data-theme="dark"] .oc-lang ul li a{color:#e8e8e8 !important}' +
+      'html[data-theme="dark"] .oc-lang ul li a:hover{background:#242424 !important;color:#fff !important}' +
+      'html[data-theme="dark"] .oc-lang ul li a.on{color:#b9a3e8 !important}' +
+      '.oc-lang-float{position:fixed;top:10px;right:12px;z-index:9998;margin:0;padding:2px 4px;border-radius:7px;background:rgba(20,18,40,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff}' +
+      '.oc-lang-float>button{opacity:.9}';
     var st = document.createElement('style');
     st.id = 'oc-i18n-css';
     st.textContent = css;
     (document.head || document.documentElement).appendChild(st);
   }
 
-  function mountPicker() {
-    if (document.querySelector('.oc-lang')) return;
+  /* ── 언어 고르개 ──────────────────────────────────────────────
+     ★ 자리를 <b>화면 폭 숫자로 고르지 않습니다</b> (2026-08-10)
+       처음에는 헤더 맨 윗줄(.util .right) 한 곳에만 놓았습니다.
+       그런데 그 줄은 좁은 화면에서 통째로 사라집니다
+       — <b>모바일에서는 말을 바꿀 길이 아예 없었습니다.</b>
 
-    /* 놓을 자리를 차례로 찾습니다 */
-    var host = document.querySelector('.site-header .util .right')   /* 본 헤더 */
-            || document.querySelector('.gnb .auth')                   /* 회원 헤더 */
-            || document.querySelector('.gnb nav.nav')
-            || null;
+       「몇 px 아래면 다른 자리」 로 적을 수도 있지만, 그 숫자가
+       style.css 와 어긋나면 <b>둘 다 사라지거나 둘 다 나옵니다.</b>
+       화면마다 CSS 가 달라 숫자를 하나로 정할 수도 없습니다.
+
+     ▶ 그래서 <b>여러 자리에 만들어 두고, 실제로 눈에 보이는 것</b>
+       하나만 남깁니다. 재어 보고 고르므로 어떤 화면·어떤 폭에서도
+       반드시 하나는 보입니다. 창 크기를 바꾸면 다시 고릅니다. */
+  function buildPicker(host) {
+    if (!host || host.querySelector('.oc-lang')) return null;
 
     var box = document.createElement('div');
-    box.className = 'oc-lang' + (host ? '' : ' oc-lang-float');
+    box.className = 'oc-lang';
 
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -496,10 +559,11 @@
       var li = document.createElement('li');
       var a = document.createElement('a');
       a.href = (l === 'ko' ? '' : '/' + l) + BARE + location.search + location.hash;
+      a.setAttribute('data-oc-nolang', '1');   /* ★ 이 주소는 그대로 두어야 합니다 */
       a.textContent = NAMES[l] || l;
+      if (l === LANG) a.className = 'on';
       /* 막아 둔 동안에는 봇이 따라 들어가지 않게 합니다 */
       if (HIDE_FROM_SEARCH && l !== 'ko') a.setAttribute('rel', 'nofollow');
-      if (l === LANG) a.className = 'on';
       /* ★ 고른 말을 적어 둡니다 — 나중에 「그 말로 열기」 를 만들 때 씁니다.
            지금은 자동으로 옮기지 않습니다. */
       a.addEventListener('click', function () {
@@ -512,17 +576,77 @@
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
+      /* 다른 자리의 것은 닫습니다 */
+      [].forEach.call(document.querySelectorAll('.oc-lang'), function (o) {
+        if (o !== box) o.classList.remove('open');
+      });
       box.classList.toggle('open');
-    });
-    document.addEventListener('click', function (e) {
-      if (!box.contains(e.target)) box.classList.remove('open');
     });
 
     box.appendChild(btn);
     box.appendChild(ul);
+    host.appendChild(box);
+    return box;
+  }
 
-    if (host) host.appendChild(box);
-    else document.body.appendChild(box);
+  /* 눈에 보이는가 — 재어서 판단합니다 (CSS 를 짐작하지 않습니다) */
+  function shown(el) {
+    if (!el) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+
+  /* 보이는 것 하나만 남기고 나머지는 감춥니다 */
+  function syncPickers() {
+    var all = [].slice.call(document.querySelectorAll('.oc-lang'));
+    /* ★ 하나도 없어도 돌아가지 <b>않습니다</b> — 아래에서 떠 있는 것을
+       만들어야 합니다. 예전에 여기서 되돌아가는 바람에 헤더가 없는
+       화면(index.html·legal/*)에서 고르개가 <b>아예 없었습니다.</b> */
+    var keep = null;
+    all.forEach(function (el) {
+      el.style.display = '';                 /* 재기 전에 되돌립니다 */
+    });
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].classList.contains('oc-lang-float')) continue;
+      if (shown(all[i])) { keep = all[i]; break; }
+    }
+    /* 어느 자리도 안 보이면 — 떠 있는 것을 하나 둡니다 */
+    if (!keep) {
+      var f = document.querySelector('.oc-lang-float');
+      if (!f && document.body) {
+        f = buildPicker(document.body);
+        if (f) f.className = 'oc-lang oc-lang-float';
+      }
+      keep = f;
+    }
+    all = [].slice.call(document.querySelectorAll('.oc-lang'));
+    all.forEach(function (el) {
+      if (el !== keep) { el.style.display = 'none'; el.classList.remove('open'); }
+    });
+  }
+
+  function mountPicker() {
+    HOSTS.forEach(function (sel) {
+      var host = document.querySelector(sel);
+      if (host) buildPicker(host);
+    });
+    syncPickers();
+
+    /* 바깥을 누르면 닫습니다 */
+    if (!window.__ocLangClose) {
+      window.__ocLangClose = true;
+      document.addEventListener('click', function (e) {
+        [].forEach.call(document.querySelectorAll('.oc-lang'), function (box) {
+          if (!box.contains(e.target)) box.classList.remove('open');
+        });
+      });
+      window.addEventListener('resize', function () {
+        if (_pk) return;
+        _pk = setTimeout(function () { _pk = null; mountPicker(); }, 160);
+      });
+      /* 헤더가 늦게 들어오는 화면도 있으므로 한 번 더 확인합니다 */
+      window.addEventListener('load', function () { mountPicker(); });
+    }
   }
 
   function onReady(fn) {
