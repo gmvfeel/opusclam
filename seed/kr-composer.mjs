@@ -203,6 +203,21 @@ async function findPerson(name) {
     }
   } catch (e) { /* 검색이 안 되면 넘어갑니다 */ }
 
+  /* ★ 마지막으로 <b>위키데이터</b>에 물어봅니다.
+     한국어 위키에 문서가 없거나 동명이인에 묻힌 사람을 여기서 건집니다.
+     (신동훈처럼 영문 위키·위키데이터에만 있는 경우 — 2026-08-10) */
+  try {
+    const wd = await wdFindPerson(name);
+    if (wd) {
+      return {
+        name: name, found: true, title: wd.label,
+        extract: wd.desc || '',      /* 소개글이 짧습니다 — enrich 가 뒤에 채웁니다 */
+        qid: wd.qid,
+        via: '위키데이터',
+        wdBorn: wd.born,        /* ★ 검색할 때 이미 받았습니다 — 다시 물을 필요 없습니다 */
+      };
+    }
+  } catch (e) { /* 위키데이터가 안 되면 아래로 */ }
   return {
     name: name, found: false,
     why: tried.length ? `문서는 있으나 작곡가로 보이지 않습니다 (${tried.join(', ')})`
@@ -223,6 +238,112 @@ async function findPerson(name) {
      위키데이터에 없을 때만 소개글을 봅니다.
    ============================================================ */
 const WD = 'https://www.wikidata.org/w/api.php';
+
+/* ── 위키데이터에서 이름으로 찾습니다 ─────────────────────────────
+   ★★ 왜 필요한가 (2026-08-10 · 파트너가 빠진 20명을 물어봐 알게 됨) ★★
+     이 수집기는 <b>한국어 위키백과만</b> 보았습니다.
+     그런데 해외에서 활동하는 한국 작곡가는 <b>영문 위키·위키데이터에만</b>
+     문서가 있는 일이 흔합니다.
+       · 신동훈(1983~) — 베를린 필하모닉 재단·LA 필하모닉이 위촉하는
+         작곡가인데 영문 위키와 위키데이터(Q137783742)에만 있어서
+         이 수집기가 <b>「위키백과에 문서가 없습니다」</b> 라고 했습니다.
+     ▶ 한국어 위키에서 못 찾으면 <b>위키데이터에 한 번 더</b> 물어봅니다.
+       위키데이터는 언어를 가리지 않고, 「직업」 이 항목으로 들어 있어
+       작곡가인지 아닌지도 확실히 가릴 수 있습니다.
+
+   ★ 어떻게 가리는가
+     ① 이름으로 검색 (한국어 · 영어 둘 다)
+     ② 사람(Q5)인지 확인 — 곡 이름·단체가 걸리는 것을 막습니다
+     ③ 직업(P106)에 작곡가(Q36834)가 있는지 확인
+     ④ 한국어 라벨이 있으면 이름이 실제로 맞는지 대조
+     ⑤ 태어난 해가 1850년 이후인지 — 같은 이름의 옛 인물을 걸러냅니다
+   ★ 못 찾으면 조용히 null 을 돌려줍니다. 수집기를 멈추지 않습니다. */
+const WD_COMPOSER = 'Q36834';    /* 작곡가 */
+const WD_HUMAN    = 'Q5';        /* 사람 */
+
+async function wdFindPerson(name) {
+  /* ① 이름으로 검색 — 한국어로 먼저, 그다음 영어 */
+  const ids = [];
+  for (const lang of ['ko', 'en']) {
+    try {
+      const q = new URLSearchParams({
+        action: 'wbsearchentities', search: name, language: lang,
+        uselang: lang, type: 'item', limit: '8', format: 'json', origin: '*',
+      });
+      const res = await fetch(WD + '?' + q, { headers: { 'User-Agent': UA } });
+      if (res.ok) {
+        const data = await res.json();
+        for (const it of ((data && data.search) || [])) {
+          if (it && it.id && ids.indexOf(it.id) < 0) ids.push(it.id);
+        }
+      }
+    } catch (e) { /* 한 언어가 안 되면 다른 언어로 */ }
+    await new Promise((r) => setTimeout(r, 180));
+    if (ids.length >= 8) break;
+  }
+  if (!ids.length) return null;
+
+  /* ② 후보들의 속내를 봅니다 — 사람인가 · 작곡가인가 */
+  let ents;
+  try {
+    const q = new URLSearchParams({
+      action: 'wbgetentities', ids: ids.slice(0, 12).join('|'),
+      props: 'claims|labels|descriptions', languages: 'ko|en',
+      format: 'json', origin: '*',
+    });
+    const res = await fetch(WD + '?' + q, { headers: { 'User-Agent': UA } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    ents = (data && data.entities) || {};
+  } catch (e) { return null; }
+
+  const idOf = (snak) => {
+    const v = snak && snak.mainsnak && snak.mainsnak.datavalue
+           && snak.mainsnak.datavalue.value;
+    return (v && v.id) || null;
+  };
+
+  for (const qid of ids) {
+    const e = ents[qid];
+    if (!e || !e.claims) continue;
+    const cl = e.claims;
+
+    /* 사람이어야 합니다 — 곡 이름·단체가 걸리는 것을 막습니다 */
+    const kinds = (cl.P31 || []).map(idOf).filter(Boolean);
+    if (kinds.length && kinds.indexOf(WD_HUMAN) < 0) continue;
+
+    /* 직업에 작곡가가 있어야 합니다 */
+    const jobs = (cl.P106 || []).map(idOf).filter(Boolean);
+    if (jobs.indexOf(WD_COMPOSER) < 0) continue;
+
+    /* 한국어 라벨이 있으면 이름이 실제로 맞는지 봅니다 */
+    const koLabel = (e.labels && e.labels.ko && e.labels.ko.value) || '';
+    if (koLabel) {
+      const bare = koLabel.replace(/\s*\([^)]*\)\s*$/, '').trim();
+      if (bare !== name) continue;      /* 라벨이 있는데 다르면 딴 사람 */
+    }
+
+    /* 태어난 해 — 같은 이름의 옛 인물을 걸러냅니다 */
+    let born = null;
+    const b = (cl.P569 || [])[0];
+    const t = b && b.mainsnak && b.mainsnak.datavalue
+           && b.mainsnak.datavalue.value && b.mainsnak.datavalue.value.time;
+    if (t) {
+      const m = String(t).match(/([+-])(\d{4})/);
+      if (m && m[1] === '+') born = Number(m[2]);
+    }
+    if (born && born < 1850) continue;
+
+    const desc = (e.descriptions && (e.descriptions.ko || e.descriptions.en));
+    return {
+      qid: qid,
+      born: born,
+      label: koLabel || name,
+      desc: (desc && desc.value) || '',
+    };
+  }
+  return null;
+}
 
 async function wdLife(qids) {
   const out = {};
@@ -432,6 +553,13 @@ async function main() {
     const r = await findPerson(name);
     await new Promise((x) => setTimeout(x, 220));
 
+    /* 위키데이터로 건진 사람은 표시해 둡니다 — 새로 열린 길이라
+       얼마나 도움이 되는지 로그로 확인할 수 있어야 합니다 */
+    if (r.found && r.via === '위키데이터' && DEBUG) {
+      console.log(`  [위키데이터로 찾음] ${name} — ${r.qid}`
+                + (r.desc ? ` (${r.desc})` : ''));
+    }
+
     if (!r.found) {
       missing.push({ name: name, why: r.why });
       if (DEBUG) console.log(`  [못 찾음] ${name} — ${r.why}`);
@@ -450,7 +578,9 @@ async function main() {
   for (const r of found) {
     /* 위키데이터를 먼저, 없으면 소개글에서 */
     const wd = r.qid ? wdBy[r.qid] : null;
-    let born = wd && wd.born, died = wd && wd.died, from = '위키데이터';
+    let born = (wd && wd.born) || r.wdBorn || null;
+    let died = (wd && wd.died) || null;
+    let from = '위키데이터';
     if (!born) {
       const g = pickLife(r.extract);
       born = g.born; died = g.died; from = '소개글';
@@ -484,13 +614,23 @@ async function main() {
     rows.push({
       name_ko: r.name,
       field: pickField(r.extract),
-      nationality: '대한민국 (KOR)',
+      /* ★ 표기를 통일합니다 (2026-08-10)
+         실제 DB 를 보니 「대한민국」 325명 · 「대한민국 (KOR)」 6명이었고,
+         뒤의 여섯은 <b>이 수집기가 넣은 것</b>이었습니다.
+         국가 코드는 nat_code 에 따로 들어가므로 이름에 붙일 필요가 없습니다.
+         표기가 갈리면 국적으로 거를 때 여섯 명이 빠집니다. */
+      nationality: '대한민국',
       nat_code: 'KOR',
       life: life,
       era_name: pickEra(born),
       school: pickSchool(r.extract),
       description: r.extract.slice(0, 900),
-      link_wiki: 'https://ko.wikipedia.org/wiki/' + encodeURIComponent(r.title.replace(/ /g, '_')),
+      /* ★ 위키데이터로 찾은 사람은 한국어 위키 문서가 <b>없습니다.</b>
+         그대로 ko.wikipedia 주소를 만들면 깨진 링크가 됩니다.
+         그때는 위키데이터 항목을 가리킵니다. (2026-08-10) */
+      link_wiki: (r.via === '위키데이터' && r.qid)
+        ? 'https://www.wikidata.org/wiki/' + r.qid
+        : 'https://ko.wikipedia.org/wiki/' + encodeURIComponent(r.title.replace(/ /g, '_')),
       wikidata_id: qid,
       is_oc: false,
       hidden: false,
@@ -498,6 +638,9 @@ async function main() {
   }
 
   console.log('── 찾은 결과 ──');
+  const viaWd = found.filter((r) => r.via === '위키데이터').length;
+  if (viaWd) console.log(`  ※ 그 가운데 ${viaWd}명은 위키데이터로 찾았습니다`
+                       + ' (한국어 위키에 문서가 없거나 동명이인에 묻힌 사람)');
   console.log(`담을 사람 ${rows.length}명 · 이미 있어 건너뜀 ${skipped.length}명`
     + `${blocked.length ? ` · 다시 담지 않을 사람 ${blocked.length}명` : ''}`
     + ` · 못 찾음 ${missing.length}명\n`);
