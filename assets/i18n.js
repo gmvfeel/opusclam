@@ -41,7 +41,7 @@
 
   /* 사전 파일 판(버전) — 사전을 고치면 이 숫자를 올립니다.
      ★ 안 올리면 브라우저가 옛 사전을 계속 씁니다. */
-  var V = '20260810q';
+  var V = '20260810s';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -105,6 +105,32 @@
        (2026-08-10 · 파트너가 휴대폰 그림으로 찾음). */
   var BEFORE = {
     '.site-header .mast-tools': '.theme-toggle, .fullmenu-btn, .burger'
+  };
+
+  /* ── 약관 화면에 붙일 「정본 고지」 ─────────────────────────────
+     ★ 왜 필요한가
+       이용약관·개인정보처리방침은 <b>법적 효력이 있는 문서</b>입니다.
+       번역본을 아무 말 없이 올리면 「영문판도 같은 효력인가」 를 두고
+       다툼이 생길 수 있습니다. 그래서 옮긴 화면에는 <b>한국어 원문이
+       정본</b>임을 밝히고, 원문으로 가는 길을 함께 둡니다.
+
+     ★ 화면 파일을 고치지 않습니다 — 엔진이 스스로 붙입니다.
+       약관은 앞으로도 손볼 일이 있는데, 그때마다 네 파일에 같은
+       문구를 넣고 빼는 것은 빠뜨리기 쉽습니다.
+
+     ★ 한국어 화면에는 붙지 않습니다. */
+  var LEGAL_PATH = /^\/legal\//;
+  var LEGAL_NOTE = {
+    en: {
+      text: 'This is an unofficial translation provided for convenience. ' +
+            'The Korean original is the authoritative text — where the two differ, the Korean version prevails.',
+      link: 'Read the Korean original'
+    },
+    ja: {
+      text: 'これは便宜のための参考訳です。' +
+            '韓国語の原文が正文であり、内容に相違がある場合は韓国語版が優先します。',
+      link: '韓国語の原文を読む'
+    }
   };
 
   /* 사전과 살림살이 — ★ 반드시 조기 return 위에 두어야 합니다 */
@@ -217,7 +243,7 @@
      문서를 읽는 도중에는 파서가 글자를 <b>조각내어</b> 넣기도 합니다
      ("인물 D" → "인물 DB"). 그 사이에 견주면 어긋납니다.
      다 읽은 뒤 한 번, 그림·글꼴까지 다 온 뒤 한 번 더 훑습니다. */
-  onReady(function () { scan(document.documentElement); });
+  onReady(function () { scan(document.documentElement); mountLegalNote(); });
   window.addEventListener('load', function () { scan(document.documentElement); });
 
   API.ready = true;
@@ -679,6 +705,44 @@
       /* 헤더가 늦게 들어오는 화면도 있으므로 한 번 더 확인합니다 */
       window.addEventListener('load', function () { mountPicker(); });
     }
+  }
+
+  /* 약관 화면 맨 위에 정본 고지를 놓습니다 */
+  function mountLegalNote() {
+    try {
+      if (LANG === 'ko') return;
+      if (!LEGAL_PATH.test(BARE)) return;
+      if (document.getElementById('oc-legal-note')) return;
+      var n = LEGAL_NOTE[LANG];
+      if (!n || !document.body) return;
+
+      if (!document.getElementById('oc-legal-css')) {
+        var st = document.createElement('style');
+        st.id = 'oc-legal-css';
+        st.textContent =
+          '#oc-legal-note{margin:0 0 22px;padding:13px 16px;border-radius:9px;' +
+          'border:1px solid #e3d9bd;background:#fdf8ec;color:#5b4a20;' +
+          'font-size:13px;line-height:1.7;word-break:keep-all}' +
+          '#oc-legal-note a{color:#7C63B0;font-weight:600;text-decoration:underline;' +
+          'margin-left:6px;white-space:nowrap}' +
+          'html[data-theme="dark"] #oc-legal-note{background:#231d10;border-color:#4a3f22;color:#d9c99a}';
+        (document.head || document.documentElement).appendChild(st);
+      }
+
+      var box = document.createElement('div');
+      box.id = 'oc-legal-note';
+      box.setAttribute('role', 'note');
+      box.appendChild(document.createTextNode(n.text));
+      var a = document.createElement('a');
+      a.href = BARE;                       /* 한국어 원문 */
+      a.setAttribute('data-oc-nolang', '1');   /* ★ 언어를 붙이면 안 됩니다 */
+      a.textContent = n.link;
+      box.appendChild(a);
+
+      /* 본문이 시작되는 자리를 찾아 그 맨 앞에 둡니다 */
+      var host = document.querySelector('main, article, .wrap, .container') || document.body;
+      host.insertBefore(box, host.firstChild);
+    } catch (e) {}
   }
 
   function onReady(fn) {
