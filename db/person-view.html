@@ -1511,6 +1511,14 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
        function apply(w){ if(!w||!w.extract) return false;
          var isEn=(w.lang==='en');
          var bio=document.querySelector('.pv-prose');
+         /* ★ DB 에 소개글이 있으면 <b>덮어쓰지 않습니다</b> (2026-08-10)
+            회원이 DB보강으로 고친 글이 위키 본문에 밀려 사라졌습니다.
+            사람이 손댄 것이 자동으로 받아온 것보다 앞섭니다.
+            사진·갤러리는 아래에서 그대로 받아옵니다 — 그것은 덮어쓰기가
+            아니라 <b>빈 자리를 채우는</b> 일이기 때문입니다. */
+         var _hasKo = !!(REC && REC.description && String(REC.description).trim()
+                         && !/^[|{]/.test(String(REC.description).trim()));
+         if (_hasKo) bio = null;
          var src='<p style="margin-top:12px;font-size:.8em;color:var(--text-3)">출처: <a href="'+esc(w.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">위키백과</a> · CC BY-SA</p>';
          if(bio){
            if(isEn){
@@ -1525,7 +1533,7 @@ document.title=nm+' · 인물DB · OPUSCLAM.COM';
          }
          /* 리드문(상단 큰 글씨)은 영문으로 바꾸지 않고 한국어 요약을 유지합니다 */
          var lead=document.querySelector('.pv-lead');
-         if(lead && !isEn){ var f=(w.extract.split(/\n+/)[0]||w.extract); lead.textContent=(f.length>120?f.slice(0,120)+'\u2026':f); }
+         if(lead && !isEn && !_hasKo){ var f=(w.extract.split(/\n+/)[0]||w.extract); lead.textContent=(f.length>120?f.slice(0,120)+'\u2026':f); }
          /* 모아둔 사진이 이미 들어가 있으면 위키 사진으로 바꾸지 않습니다 */
          if(w.thumb && !((REC.image_url||'').trim()) && !document.querySelector('.pv-portrait img')){ var por=document.querySelector('.pv-portrait'); if(por){ por.innerHTML=''; por.style.overflow='hidden'; var im=document.createElement('img'); im.src=w.thumb; im.alt=nm; im.style.cssText='width:100%;height:100%;object-fit:cover'; por.appendChild(im);} }
          return true; }
