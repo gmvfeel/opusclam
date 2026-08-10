@@ -25,9 +25,21 @@
    ★ 판(버전) 을 꼭 올리세요 — 사전이나 엔진을 고치면 이 숫자를
      바꿔야 브라우저가 새것을 받습니다. */
 (function () {
-  var V = '20260811e';
+  /* ★ 판(버전) 쿼리를 떼었습니다 (2026-08-10 · 파트너 지적)
+     vercel.json 이 /assets/*.js 에 이미
+         Cache-Control: max-age=0, must-revalidate
+     를 걸어 두어, 브라우저가 <b>매번 서버에 물어봅니다.</b>
+     그래서 ?v= 가 없어도 새 파일을 받습니다.
+
+     예전에는 「혹시 모르니」 판 번호를 붙였는데, 그러려면 판을 올릴
+     때마다 index.html 과 legal/ 네 개까지 <b>다섯 파일을 함께</b>
+     배포해야 했습니다. 내용은 한 글자도 안 바뀌는데 말입니다.
+     ▶ 이제 i18n.js 를 고치면 <b>그 파일만</b> 올리시면 됩니다.
+
+     ※ 사전(en.json·ja.json)을 받을 때 쓰는 판 번호는 i18n.js <b>안에</b>
+       있으므로 그대로 둡니다 — 그것은 한 파일만 고치면 됩니다. */
   if (document.getElementById('oc-i18n-js')) return;
-  var src = '/assets/i18n.js?v=' + V;
+  var src = '/assets/i18n.js';
   try {
     if (document.readyState === 'loading') {
       document.write('<script id="oc-i18n-js" src="' + src + '"><\/script>');

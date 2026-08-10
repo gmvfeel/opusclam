@@ -39,9 +39,15 @@
 (function () {
   'use strict';
 
-  /* 사전 파일 판(버전) — 사전을 고치면 이 숫자를 올립니다.
-     ★ 안 올리면 브라우저가 옛 사전을 계속 씁니다. */
-  var V = '20260811e';
+  /* 사전 파일 판(버전) — assets/i18n/en.json · ja.json 을 받을 때만 씁니다.
+     ★ 화면(html)에는 판 번호를 붙이지 않습니다 (2026-08-10 정리).
+       vercel.json 이 /assets/*.js 와 /assets/i18n/*.json 에 이미
+       must-revalidate 를 걸어 두어 브라우저가 매번 물어봅니다.
+       예전에는 판을 올릴 때마다 index.html 과 legal/ 넷까지 다섯 파일을
+       함께 배포해야 했습니다 — 내용은 한 글자도 안 바뀌는데 말입니다.
+     ★ 이 숫자는 그냥 두어도 됩니다. 사전을 크게 바꿀 때 올리면
+       확실히 새 사전을 받게 하는 이중 안전장치 구실을 합니다. */
+  var V = '20260811i';
 
   /* ★★ 번역이 덜 찬 동안 검색엔진에 잡히지 않게 막습니다 ★★
      ─────────────────────────────────────────────────────────────
@@ -187,10 +193,26 @@
     ]
   };
 
+  /* 감출 덩어리 — 선택자로 곧바로 지정합니다
+     ★ 왜 자동 판정을 버렸나 (2026-08-10)
+       「광고만 남은 줄이면 감춘다」 를 코드로 재려 했더니, 재는 때와
+       감추는 때가 엉켜 몇 번을 고쳐도 어긋났습니다.
+       section.lower 는 <b>리쿠르트 · 유틸리티 · 광고</b> 세 칸인데,
+       앞 둘을 빼면 광고만 남아 바로 위 큰 광고와 겹쳐 보입니다.
+       그 판단은 <b>사람이 한 번 하면 끝나는 일</b>입니다.
+       여기 적어 두는 편이 확실하고, 나중에 읽기도 쉽습니다. */
+  var HIDE_BLOCK = {
+    en: ['section.lower'],   /* 리쿠르트+유틸리티가 빠져 광고만 남는 줄 */
+    ja: ['section.lower']
+  };
+
   /* 감출 홈 섹션 — 제목의 영문으로 찾습니다 (<span class="en-s">) */
   var HIDE_SECTION = {
-    en: ['Recruit', 'Entrance Exam', 'Funding'],
-    ja: ['Recruit', 'Entrance Exam', 'Funding']
+    /* ★ Utility / Data 는 <b>메뉴에서는 남기고 홈에서만</b> 뺍니다
+       (2026-08-10 · 파트너 지정). 올라온 자료가 한국어 프로그램·악보라
+       바깥에서 오신 분께는 도움이 되지 않습니다. */
+    en: ['Recruit', 'Entrance Exam', 'Funding', 'Utility / Data'],
+    ja: ['Recruit', 'Entrance Exam', 'Funding', 'Utility / Data']
   };
 
   /* 사전과 살림살이 — ★ 반드시 조기 return 위에 두어야 합니다 */
@@ -1084,7 +1106,49 @@
         }
         if (alive === 0) hideEl(items[t]);
       }
+
+      /* ②-2 통째로 감출 덩어리 */
+      var blocks = HIDE_BLOCK[LANG] || [];
+      for (var b = 0; b < blocks.length; b++) {
+        var els = document.querySelectorAll(blocks[b]);
+        for (var y = 0; y < els.length; y++) hideEl(els[y]);
+      }
+
+      /* ⑤ 빠진 뒤 남은 자리를 다듬습니다
+         ★ 반드시 <b>맨 마지막</b>이어야 합니다.
+           앞의 ①~④ 가 다 끝나야 「무엇이 남았는가」 를 셀 수 있습니다.
+           예전에는 홈의 자리를 감추기 전에 세어, 광고만 남은 줄을
+           <b>못 알아보고 그대로 두었습니다</b>
+           (2026-08-10 · 유틸리티 옆 광고가 혼자 남았습니다). */
+      tidyAfterHide();
     } catch (e) {}
+  }
+
+  /* ── 감춘 뒤 남은 자리 다듬기 ──────────────────────────────────
+     ★ 왜 필요한가 (2026-08-10 · 파트너가 화면을 보고 알려 주심)
+       메뉴만 감추면 <b>빈 자리가 그대로 남습니다.</b>
+         · 아래 빠른 링크는 다섯 칸 격자였는데 둘이 빠져
+           <b>세 칸이 왼쪽으로 몰렸습니다.</b>
+         · 리쿠르트·유틸리티가 빠진 줄에는 <b>광고만 혼자</b> 남아,
+           바로 위에 있는 큰 광고와 겹쳐 보였습니다.
+       감추는 일과 <b>빈자리를 메우는 일</b>은 함께 해야 합니다. */
+  function tidyAfterHide() {
+    /* ① 빠른 링크 — 남은 칸 수에 맞춰 가운데로 모읍니다 */
+    var qw = document.querySelector('.quick .wrap');
+    if (qw) {
+      var alive = 0;
+      var qs = qw.querySelectorAll('.qa');
+      for (var i = 0; i < qs.length; i++) {
+        if (qs[i].getAttribute('data-oc-hidden') !== '1') alive++;
+      }
+      if (alive > 0 && alive < qs.length) {
+        /* 격자를 남은 수로 다시 짜고 가운데로 둡니다.
+           칸 너비는 그대로 두어 아이콘 크기가 커지지 않게 합니다. */
+        qw.style.gridTemplateColumns = 'repeat(' + alive + ', minmax(0, 176px))';
+        qw.style.justifyContent = 'center';
+      }
+    }
+
   }
 
   /* ── 홈의 한 자리만 정확히 감춥니다 ────────────────────────────
