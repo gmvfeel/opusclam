@@ -90,8 +90,11 @@ def main():
         for k, v in parts[lang].items():
             if not str(v).strip():
                 bad.append(f'{lang}: {k!r} 의 뜻이 비어 있습니다')
-            elif KO.search(str(v)) and lang == 'en':
-                bad.append(f'en: {k!r} → {v!r} 에 한국어가 남아 있습니다')
+            elif KO.search(str(v)):
+                # ★ 일본어도 봅니다 — 「生誕世紀별」 처럼 한 글자만 한글로
+                #   남는 일이 실제로 있었습니다(2026-08-10). 한자에 섞이면
+                #   눈으로는 좀처럼 보이지 않습니다.
+                bad.append(f'{lang}: {k!r} → {v!r} 에 한국어가 남아 있습니다')
 
     # ── ③ 이미 있는 것과 어긋나는가 ───────────────────────────────
     for lang in LANGS:
