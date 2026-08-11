@@ -721,7 +721,11 @@
     font-size:11px;font-weight:700;padding:1px 6px;border-radius:10px;
     margin-left:6px;vertical-align:middle;flex:0 0 auto}
 
-  .grid-region{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+  /* ★ 간격 · 2026-08-11 파트너 요청으로 gap 8px → <b>5px</b>
+       입시요강 지역 단추가 한 줄에 열여섯 칸이라 사이가 도드라졌습니다.
+       칸 너비는 1fr 이므로 간격을 줄이면 <b>단추가 그만큼 넓어집니다</b> —
+       글자가 눌리지 않고 오히려 여유가 생깁니다. */
+  .grid-region{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px}
   .grid-region a{background:var(--paper);border:1px solid var(--line);border-radius:6px;text-align:center;padding:11px 0;font-size:12.5px;color:var(--text);transition:.15s}
   .grid-region a:hover{background:var(--violet-2);color:#fff;border-color:var(--violet-2)}
 
@@ -1854,7 +1858,11 @@ if('serviceWorker' in navigator){
   // 공지사항 / 콩쿨 — 제목 + 날짜
   /* 목록 자리를 게시판에서 채울 설정 */
   const FEED_LIST = {
-    notices: { t:'news', v:'/community/news-view.html', o:'is_pinned.desc,created_at.desc', n:4 },
+    /* ★ n:5 · 2026-08-11 — 왼쪽 칸 목록을 4줄에서 <b>5줄</b>로 늘렸습니다.
+         ★ 여기와 아래 init() 두 곳을 <b>함께</b> 맞춰야 합니다.
+           notices 전용 표가 비어 있으면 이 경로로 떨어지므로,
+           한쪽만 고치면 뉴스만 줄 수가 어긋납니다. */
+    notices: { t:'news', v:'/community/news-view.html', o:'is_pinned.desc,created_at.desc', n:5 },
   };
 
   async function feedList(key){
@@ -2999,14 +3007,18 @@ if('serviceWorker' in navigator){
     loadHeroSlides();
     loadTicker();
     loadDbPick();                      /* DATABASE 자리 — 일곱 갈래 무작위 */
-    loadDateList('notice-list', 'notices');
-    /* ★ 왼쪽 칸 세 목록을 <b>4줄씩</b>으로 맞췄습니다 —
-       네 묶음(콩쿨·페스티벌·악보)이 나란히 놓이므로 줄 수를 같게 두면
-       칸이 고르게 보입니다. */
+    loadDateList('notice-list', 'notices', 5);
+    /* ★ 왼쪽 칸 목록을 <b>5줄씩</b>으로 맞췄습니다 (2026-08-11 · 4 → 5)
+       뉴스·콩쿨·페스티벌·악보가 세로로 나란히 놓이므로 줄 수를 같게
+       두면 칸이 고르게 보입니다.
+       ★ 뉴스는 위 FEED_LIST 의 n 도 함께 5로 두었습니다 — 전용 표가
+         비면 그쪽으로 떨어지기 때문입니다.
+       ★ 오른쪽 기둥(지원금·음악단체)은 <b>4줄 그대로</b> 둡니다.
+         따로 선 기둥이라 왼쪽과 줄을 맞출 필요가 없습니다. */
     loadDailyPick();          /* 오늘의 작품 · 이주의 음악가 (2026-08-09) */
-    loadDateList('concours-list', 'concours', 4);
-    loadDateList('festival-list', 'festival', 4);
-    loadScoreList(4);
+    loadDateList('concours-list', 'concours', 5);
+    loadDateList('festival-list', 'festival', 5);
+    loadScoreList(5);
     loadFunding(4);          /* 2026-08-09 · 7 → 4 (콩쿨·페스티벌·악보와 줄 수를 맞춥니다) */
     loadOrgs(4);
     loadMedia();
