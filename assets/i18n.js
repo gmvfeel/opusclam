@@ -629,6 +629,32 @@
     var cur = node.nodeValue;
     if (!cur || !/\S/.test(cur)) return;
     if (isMine(node, cur)) return;                 /* 내가 넣은 그대로면 지나감 */
+
+    /* ★★ 2026-08-11 · <b>고르개의 값을 먼저 못박습니다</b> ★★
+       ─────────────────────────────────────────────────────
+       파트너가 「영문·일문에서 조건 검색이 안 된다」 고 알려 주셨습니다.
+       원인은 HTML 규칙이었습니다 —
+
+         <option>작곡</option>   ← value 가 없으면 <b>글자가 값</b>입니다
+
+       우리 화면의 option 84개에 value 가 <b>하나도 없었습니다.</b>
+       그래서 글자를 「Composition」 으로 바꾸면 select.value 도
+       「Composition」 이 되고, 그것으로 조회하니 <b>0건</b>이 나왔습니다.
+       DB 갈래 일곱 곳의 <b>모든 조건 검색이 먹통</b>이었습니다.
+
+       ★ 왜 화면이 아니라 여기서 고치는가
+         화면마다 value 를 적으면 수백 곳이고, 새 화면을 만들 때
+         또 빠뜨립니다. <b>글자를 바꾸기 직전</b>에 원문을 값으로
+         박아 두면 화면을 하나도 고치지 않아도 됩니다.
+
+       ★ 이미 value 가 있으면 건드리지 않습니다. */
+    try {
+      var _p = node.parentNode;
+      if (_p && _p.nodeName === 'OPTION' && !_p.hasAttribute('value')) {
+        _p.setAttribute('value', String(cur).trim());
+      }
+    } catch (e) {}
+
     var out = translate(cur);
     if (out === cur) return;
     node.nodeValue = out;
