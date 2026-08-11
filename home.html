@@ -1166,13 +1166,13 @@
       <span class="lbl">전공별정보나눔</span>
       <span class="txt"></span>
       <span class="dt"></span>
-      <a class="more en" href="#">VIEW DETAIL &rarr;</a>
+      <a class="more en" href="#">VIEW &rarr;</a>
     </div>
     <div class="tk">
       <span class="lbl">음악지식 Q&amp;A</span>
       <span class="txt"></span>
       <span class="dt"></span>
-      <a class="more en" href="#">VIEW DETAIL &rarr;</a>
+      <a class="more en" href="#">VIEW &rarr;</a>
     </div>
   </div>
 </div>
@@ -2907,7 +2907,11 @@ if('serviceWorker' in navigator){
         txt.appendChild(ta);
         const dt  = document.createElement('span'); dt.className  = 'dt';
         const a   = document.createElement('a');   a.className    = 'more en';
-        a.innerHTML = 'VIEW DETAIL &rarr;';
+        /* ★ 2026-08-11 · 「VIEW DETAIL →」 → 「VIEW →」 (파트너 요청)
+             ★ 위 마크업 두 곳도 함께 고쳤습니다. 그쪽은 자료가 닿기 전
+               잠깐 보이는 기본값이라, 한쪽만 고치면 화면이 뜨는 순간
+               「VIEW DETAIL →」 이 스쳤다가 바뀝니다. */
+        a.innerHTML = 'VIEW &rarr;';
         tk.appendChild(lbl); tk.appendChild(txt); tk.appendChild(dt); tk.appendChild(a);
         box.appendChild(tk);
 
@@ -2919,11 +2923,15 @@ if('serviceWorker' in navigator){
           ta.textContent  = r.headline || '';
           ta.href = href;
           ta.title = r.headline || '';
-          /* 모양은 그대로 두고(2026-08-03) 시간대만 바로잡습니다.
-             티커에는 날짜만 담긴 값(ticker 표)과 시각까지 담긴 값
-             (게시판 created_at)이 섞여 들어오므로 ymd() 가 가려 줍니다. */
-          const _p = ymd(r.posted_on);
-          dt.textContent  = _p ? _p.join('-') : '';
+          /* ★ 2026-08-11 · 날짜 모양을 <b>다른 목록과 같게</b> 맞췄습니다.
+               여기만 ymd() 를 손으로 이어 붙여 2026-06-30 으로 나왔고,
+               뉴스·콩쿨·페스티벌 등 나머지는 fmtDate() 로 26.06.30 이었습니다.
+             ★ fmtDate() 는 안에서 ymd() 를 부르므로 <b>시간대 보정은 그대로</b>입니다.
+               티커에는 날짜만 담긴 값(ticker 표)과 시각까지 담긴 값
+               (게시판 created_at)이 섞여 들어오는데, 그 가림도 유지됩니다.
+             ★ 앞으로 날짜 모양을 바꿀 일이 있으면 fmtDate() <b>한 곳만</b> 고치면
+               메인 전체가 따라옵니다. */
+          dt.textContent  = fmtDate(r.posted_on);
           a.href = href;
         }
         draw();
