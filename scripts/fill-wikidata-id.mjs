@@ -75,8 +75,35 @@ const GOOD_KIND = ['재단','협회','기관','단체','회사','음반','레이
   'competition','festival','concours','trust','council','agency','museum','venue',
   '음악','공연','문화','예술','콩쿠르','페스티벌','오케스트라','학교','대학'];
 
+/* ★★ 2026-08-11 · <한 글자 낱말을 모두 뺐습니다> ★★
+   ─────────────────────────────────────────────────────
+   시늉 실행에서 이런 줄이 보였습니다 —
+
+     루치아노 베리오 → 6점 · … · ★ 갈래 어긋남
+     안톤 베베른     → 6점 · … · ★ 갈래 어긋남
+
+   둘 다 <맞는 후보>인데 감점을 받았습니다. 까닭을 찾아보니
+   목록에 있던 <한 글자 「리」> 였습니다 —
+
+     「이탈리아의 작곡가」   → 이탈<리>아
+     「오스트리아의 작곡가」  → 오스트<리>아
+     「헝가리의 작곡가」     → 헝가<리>
+
+   원래는 마을 이름(○○리)을 걸러내려던 것입니다. 그런데 한국어는
+   낱말 사이에 빈칸이 없어, <한 글자는 다른 말 속에 파묻힙니다>.
+
+   스물넷을 재어 보니 <열다섯>이 잘못 걸렸습니다 —
+   부<산>·<강>원·<역>사·바이올<리>니스트·첼<리>스트·바<리>톤 …
+   <음악가를 찾는 규칙이 음악가를 깎고> 있었습니다.
+
+   ★ 「군·면·읍·리·역·강·산·섬」 을 뺐습니다.
+     이 여덟은 실제로 걸러낸 것보다 <잘못 깎은 것이 훨씬 많습니다>.
+     장소는 「마을」·「도시」·「village」·「town」 처럼 두 글자 이상으로
+     충분히 가려집니다.
+   ★ 같은 목록이 admin/wikidata-fill.html 에도 있습니다 —
+     <함께> 고쳐야 화면과 자동이 같은 판단을 합니다. */
 const BAD_KIND = ['사람','인물','작곡가','연주자','가수','배우','앨범','노래','영화','드라마',
-  '마을','도시','군','면','읍','리','역','강','산','섬','책','소설','만화','게임',
+  '마을','도시','읍면','책','소설','만화','게임',
   'human','person','composer','musician','singer','actor','album','song','single',
   'film','movie','tv series','village','town','city','district','river','mountain',
   'island','book','novel','manga','video game','station','wikimedia'];
@@ -116,11 +143,20 @@ const PERSON_BAD_JOB = [
   '스케이트','체조','유도','권투','복싱','레슬링','선수',
   'footballer','football player','baseball','basketball','volleyball','badminton',
   'golfer','tennis','swimmer','athlete','wrestler','boxer','skater',
-  /* 학계·다른 분야 */
+  /* 학계·다른 분야
+     ★ 낱말을 하나하나 적기보다 <「…학자」 로 끝나는 말>을 함께 봅니다.
+       「통계학자」 를 빠뜨려 「이영조 → 대한민국의 통계학자」 가 7점으로
+       들어가려 했습니다. 실제 로그에서는 2등이 있어 우연히 막혔을 뿐입니다.
+       세상의 학문을 다 적을 수는 없으니, 아래 EXCEPT 에 적은 <음악 쪽>만
+       빼고 나머지 「…학자」 는 모두 무관하게 봅니다. */
   '영어영문학','국문학','법학','의학','공학','물리학','화학','생물학','경제학','경영학',
+  '통계학','사회학','심리학','철학자','신학자','인류학','지리학','천문학','수학자',
   '정치인','국회의원','시장','도지사','장관','판사','검사','변호사','의사','기업인','언론인',
+  '군인','경찰','승려','목사','신부','요리사','건축가','디자이너','화가','조각가','사진가',
   'politician','lawyer','physician','engineer','economist','professor of english',
   'linguist','historian','mathematician','physicist','chemist','biologist',
+  'statistician','sociologist','psychologist','philosopher','theologian','architect',
+  'painter','sculptor','photographer','soldier','police','chef',
   /* 대중문화 — 우리 DB 는 클래식입니다 */
   '아이돌','래퍼','트로트','개그맨','코미디언','유튜버','방송인','모델','성우',
   'rapper','idol','comedian','youtuber','tv personality','voice actor','fashion model',
@@ -226,6 +262,14 @@ function scoreCand(row, cfg, c, only) {
     if (isPerson) {
       for (const j of PERSON_BAD_JOB) {
         if (desc.includes(j)) { sc -= 8; why.push('★ 음악과 무관한 직업'); badJob = true; break; }
+      }
+      /* ★ 목록에 없는 「…학자」 도 무관하게 봅니다 — 세상의 학문을 다
+           적을 수는 없습니다. 다만 <음악 쪽 학자>는 뺍니다. */
+      if (!badJob && /[가-힣]{2,}학자/.test(desc)) {
+        const okScholar = ['음악학자','음악사학자','국악학자','작곡학자','민족음악학자'];
+        if (!okScholar.some(w => desc.includes(w))) {
+          sc -= 8; why.push('★ 음악과 무관한 학자'); badJob = true;
+        }
       }
     }
 

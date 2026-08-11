@@ -211,7 +211,16 @@
     'competition','festival','concours','trust','council','agency','museum','venue',
     '음악','공연','문화','예술','콩쿠르','페스티벌','오케스트라','학교','대학'];
   var BAD_KIND = ['사람','인물','작곡가','연주자','가수','배우','앨범','노래','영화','드라마',
-    '마을','도시','군','면','읍','리','역','강','산','섬','책','소설','만화','게임',
+    /* ★★ 2026-08-11 · 한 글자 낱말을 뺐습니다 ★★
+         「리」 가 「이탈<리>아」·「헝가<리>」·「바이올<리>니스트」 안에 걸려
+         <맞는 후보를 깎고> 있었습니다. 스물넷을 재어 보니 열다섯이
+         잘못 걸렸습니다 (부<산>·<강>원·<역>사·첼<리>스트 …).
+       ★ 한국어는 낱말 사이에 빈칸이 없어 한 글자는 다른 말에 파묻힙니다.
+         장소는 「마을」·「도시」·village·town 처럼 두 글자 이상으로 충분합니다.
+       ★ scripts/fill-wikidata-id.mjs 와 <같은 목록>이어야 합니다 —
+         화면과 자동이 다르게 판단하면, 자동이 넘긴 것을 사람이 보러
+         왔을 때 화면이 또 다른 답을 내놓아 헷갈립니다. */
+    '마을','도시','읍면','책','소설','만화','게임',
     'human','person','composer','musician','singer','actor','album','song','single',
     'film','movie','tv series','village','town','city','district','river','mountain',
     'island','book','novel','manga','video game','station','wikimedia'];
