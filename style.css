@@ -313,7 +313,8 @@
   .ticker .wrap{display:flex;align-items:stretch;height:52px}
   .tk{display:flex;align-items:center;gap:16px;flex:1;overflow:hidden}
   .tk:first-child{border-right:1px solid var(--line);padding-right:26px;margin-right:26px}
-  .tk .lbl{font-family:var(--serif);font-weight:700;letter-spacing:.16em;font-size:12px;color:var(--violet-2);white-space:nowrap}
+  /* ★ 2026-08-11 · 자간 .16em → .08em (home.html 과 같은 값) */
+  .tk .lbl{font-family:var(--serif);font-weight:700;letter-spacing:.08em;font-size:12px;color:var(--violet-2);white-space:nowrap}
   .tk .txt{flex:1;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tk .dt{font-size:12px;color:var(--text-3);white-space:nowrap}
   .tk .more{font-size:11px;color:var(--text-2);white-space:nowrap;letter-spacing:.08em}
@@ -412,7 +413,9 @@
   .ticket .tk-ic svg{width:34px;height:34px;color:#fff}
 
   .side .sec-head{border-bottom-width:2px}
-  .fund li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+  /* ★ 2026-08-11 · 점 추가 + 줄 간격 9px → 6px (home.html 과 같은 값) */
+  .fund li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+  .fund li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--violet-2);flex:0 0 4px}
   .fund li a{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
   .fund li a:hover{color:var(--link-hover)}
   .fund li .dt{font-size:10.5px;color:var(--text-3);white-space:nowrap}
