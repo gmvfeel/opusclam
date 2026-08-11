@@ -170,6 +170,45 @@
   .dash-h{font-size:17px;font-weight:800;color:#e8e8f2;margin:34px 0 4px;letter-spacing:-.01em}
   .dash-h:first-of-type{margin-top:8px}
   .dash-h--auto{color:#9a9cb0}
+
+  /* ★★ 2026-08-11 · 갈래를 <b>접을 수 있게</b> 했습니다 ★★
+     ─────────────────────────────────────────────────────
+     파트너 말씀 — 「카드가 스무 개가 넘어 뭐가 뭔지 헷갈린다」
+
+     갈래는 이미 넷으로 나뉘어 있었습니다. 그런데 <b>넷이 다 펼쳐져</b>
+     있어 한 화면에 스무 개가 늘어섰습니다. 「자료 손질」 설명에는
+     「필요할 때만 열면 됩니다」 라고 적혀 있는데도 늘 열려 있었습니다.
+
+     ★ 이제 <b>「매일 보는 일」 만 펼치고</b> 나머지는 접습니다.
+       한 번 펼치거나 접으면 그 상태를 기억합니다(같은 브라우저에서).
+     ★ 카드를 지우지 않았습니다 — 보이는 방식만 바꿉니다. */
+  .dash-h{cursor:pointer;user-select:none;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .dash-h .fold{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:20px;height:20px;border-radius:6px;flex:0 0 auto;
+    background:rgba(255,255,255,.07);color:#c9c9dd;font-size:11px;
+    transition:transform .18s ease, background .18s ease;
+  }
+  .dash-h:hover .fold{background:rgba(255,255,255,.14)}
+  .dash-h.closed .fold{transform:rotate(-90deg)}
+  .dash-h .hcount{
+    font-size:12px;font-weight:700;color:#9a9cb0;
+    padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.06);
+  }
+  /* ★ 할 일이 쌓인 갈래는 <b>숫자를 붉게</b> — 접혀 있어도 눈에 띕니다 */
+  .dash-h .hwait{
+    font-size:12px;font-weight:800;color:#fff;
+    padding:2px 9px;border-radius:99px;background:#e0574f;
+    box-shadow:0 2px 8px rgba(224,87,79,.35);
+  }
+  .dash-h.closed + .dash-sub,
+  .dash-h.closed + .dash-sub + .cards,
+  .dash-h.closed + .cards{display:none}
+
+  /* ★ 할 일이 없는 카드는 <b>조금 물러나게</b> — 지우지는 않습니다.
+       매일 열었을 때 <b>지금 할 것</b>에 눈이 먼저 가야 합니다. */
+  .card.idle{opacity:.62}
+  .card.idle:hover{opacity:1}
   .dash-sub{font-size:12.5px;line-height:1.7;color:#9a9cb0;margin:0 0 16px;max-width:760px}
   /* ★ 넓은 화면에서 글줄이 지나치게 길어지지 않게 — 카드는 그대로 펼칩니다 */
   .body > p, .sec > p{max-width:900px}
@@ -243,14 +282,6 @@
       <div class="cards">
         <div class="card clickable" id="cardMembers"><span class="cbadge" id="badgeMembers"></span><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
         <a class="card clickable tool" href="db-edits.html" id="cardReview"><span class="cbadge" id="badgeReview"></span><h3>DB 등록·보강 검수</h3><p>회원이 낸 등록·보강을 확인하고 반영합니다. 무엇이 바뀌는지 <b>이전 값과 나란히</b> 보여 주고, 반영하면 회원에게 포인트가 쌓입니다.</p><span class="go">검수하기 →</span></a>
-        <a class="card clickable tool" href="field-review.html">
-          <span class="cbadge" id="badgeField"></span>
-          <span class="tag">데이터 도구</span>
-          <h3>인물 분야 검토</h3>
-          <p>소개문에 적힌 직업과 <b>분야 칸이 어긋난 사람</b>을 골라 바로잡습니다. 소개문을 보고 <b>맞는 분야를 눌러</b> 저장하시면 됩니다.</p>
-          <span class="when">자동수집이 소개문 <b>첫 문장에서만</b> 직업을 뽑습니다. 그래서 「테너 성악가, 가곡 작곡가, 지휘자」 인 금수현 선생이 <b>「성악」 하나로</b> 담겼습니다. 「그네」의 작곡가인데 작곡이 빠진 것입니다. 이런 사람이 <b>일흔 명이 넘습니다.</b></span>
-          <span class="go">검토하기 &rarr;</span>
-        </a>
         <a class="card clickable tool" href="claims.html">
           <span class="cbadge" id="badgeClaims"></span>
           <span class="tag">회원 · 데이터</span>
@@ -293,6 +324,14 @@
       <h2 class="dash-h">자료 손질</h2>
       <p class="dash-sub">담긴 자료를 다듬습니다. 필요할 때만 열면 됩니다.</p>
       <div class="cards">
+        <a class="card clickable tool" href="field-review.html">
+          <span class="cbadge" id="badgeField"></span>
+          <span class="tag">데이터 도구</span>
+          <h3>인물 분야 검토</h3>
+          <p>소개문에 적힌 직업과 <b>분야 칸이 어긋난 사람</b>을 골라 바로잡습니다. 소개문을 보고 <b>맞는 분야를 눌러</b> 저장하시면 됩니다.</p>
+          <span class="when">자동수집이 소개문 <b>첫 문장에서만</b> 직업을 뽑습니다. 그래서 「테너 성악가, 가곡 작곡가, 지휘자」 인 금수현 선생이 <b>「성악」 하나로</b> 담겼습니다. 「그네」의 작곡가인데 작곡이 빠진 것입니다. 이런 사람이 <b>일흔 명이 넘습니다.</b></span>
+          <span class="go">검토하기 &rarr;</span>
+        </a>
         <div class="card clickable" id="cardManage"><h3>DB 관리 · 정제</h3><p>음악과 무관해 보이는 인물을 <b>비음악 점수</b>로 표시합니다. 점수가 높을수록 무관할 가능성이 큽니다.</p><span class="when">자동화에 없는 일입니다 — 지울지 말지는 사람이 정합니다.</span><span class="go">관리하기 →</span></div>
         <a class="card clickable tool" href="work-clean.html">
           <span class="tag">데이터 도구</span>
@@ -553,7 +592,12 @@
     var sb = window.__ocSb ||
              (window.__ocSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY));
     var views={login:document.getElementById('loginWrap'),dash:document.getElementById('dash'),hero:document.getElementById('hero'),collect:document.getElementById('collect'),manage:document.getElementById('manage'),members:document.getElementById('members'),review:document.getElementById('review')};
-    function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');if(v==='dash'){if(typeof updateDashBadges==='function')updateDashBadges();if(typeof loadDashStats==='function')loadDashStats();}}
+    function show(v){for(var k in views)views[k].classList.remove('on');views[v].classList.add('on');if(v==='dash'){
+      /* ★ 접기는 <b>배지보다 먼저</b> 그립니다 — 배지는 서버에서 오므로
+           늦습니다. 먼저 그려 두면 화면이 뜨는 순간부터 접혀 있고,
+           숫자는 도착한 뒤 updateDashBadges 가 다시 채웁니다. */
+      if(typeof paintFolds==='function'){try{paintFolds();}catch(e){}}
+      if(typeof updateDashBadges==='function')updateDashBadges();if(typeof loadDashStats==='function')loadDashStats();}}
     async function loadDashStats(){
       var r=await sb.from('members').select('status,member_type,created_at'); if(r.error)return;
       var rows=r.data||[];
@@ -585,6 +629,91 @@
                        .select('id',{count:'exact',head:true}).eq('status','pending');
         if(!cl.error) setBadge('badgeClaims', cl.count||0);
       }catch(e){}
+
+      /* ★ 배지를 다 채운 뒤 갈래 머리글을 새로 그립니다 —
+           갈래마다 「대기 몇 건」 을 모아 보여 줍니다. */
+      try{ paintFolds(); }catch(e){}
+    }
+
+    /* ══════════ 갈래 접기 · 2026-08-11 ══════════
+       파트너 말씀 — 「카드가 스무 개가 넘어 뭐가 뭔지 헷갈린다」
+
+       ★ 갈래는 이미 넷으로 나뉘어 있었습니다. 문제는 <b>넷이 다
+         펼쳐져</b> 있어 한 화면에 스무 개가 늘어선 것이었습니다.
+         「자료 손질」 설명에는 「필요할 때만 열면 됩니다」 라고 적혀
+         있는데도 늘 열려 있었습니다.
+       ★ 「매일 보는 일」 만 펼치고 나머지는 접습니다. 파트너가 접거나
+         펼친 상태는 <b>기억합니다</b> (같은 브라우저에서).
+       ★ 접혀 있어도 <b>대기 건수는 머리글에 붉게</b> 보입니다 —
+         접었다가 할 일을 놓치면 접는 뜻이 없습니다.
+       ★ 카드는 하나도 지우지 않았습니다. 보이는 방식만 바꿉니다. */
+    /* ★ 열쇠 이름을 <b>함수 안에</b> 둡니다.
+         처음에는 바깥에 var 로 두었는데, 이 파일의 스크립트 묶음 구조
+         때문에 <b>함수가 그 변수를 보지 못했습니다.</b> 그런데도
+         try/catch 가 오류를 먹어 <b>조용히 실패</b>했습니다 —
+         눌러도 기억되지 않는데 아무 표시가 없었습니다.
+       ★ 값을 함수 안에 두면 어느 스코프에서도 확실합니다. */
+    function foldState(){
+      try{ return JSON.parse(localStorage.getItem('ocAdminFold') || '{}'); }
+      catch(e){ return {}; }
+    }
+    function foldSave(st){
+      try{ localStorage.setItem('ocAdminFold', JSON.stringify(st)); }
+      catch(e){ if(window.console) console.warn('[admin] 접기 상태를 기억하지 못했습니다', e); }
+    }
+
+    function paintFolds(){
+      var hs = document.querySelectorAll('.dash-h');
+      var st = foldState();
+      for (var i = 0; i < hs.length; i++) {
+        var h = hs[i];
+        var name = h.getAttribute('data-fold') ||
+                   (h.textContent || '').replace(/\s+/g,' ').trim();
+
+        /* 이 갈래에 딸린 카드 묶음을 찾습니다 (설명 문단을 건너뜁니다) */
+        var box = h.nextElementSibling;
+        while (box && !box.classList.contains('cards')) {
+          if (box.classList.contains('dash-h')) { box = null; break; }
+          box = box.nextElementSibling;
+        }
+        var cards = box ? box.querySelectorAll('.card') : [];
+
+        /* 대기 건수를 모읍니다 — 켜진 배지의 숫자를 더합니다 */
+        var wait = 0;
+        for (var c = 0; c < cards.length; c++) {
+          var bg = cards[c].querySelector('.cbadge');
+          if (!bg) continue;                       /* 배지가 없는 카드는 그대로 */
+          var n = bg.classList.contains('on') ? parseInt(bg.textContent, 10) : 0;
+          if (isFinite(n) && n > 0) { wait += n; cards[c].classList.remove('idle'); }
+          else { cards[c].classList.add('idle'); }
+        }
+
+        /* 머리글을 한 번만 만들고, 그 뒤엔 숫자만 갱신합니다 */
+        if (!h.getAttribute('data-fold')) {
+          h.setAttribute('data-fold', name);
+          h.innerHTML = '<span class="fold">&#9662;</span>'
+                      + '<span class="htxt"></span>'
+                      + '<span class="hcount"></span>'
+                      + '<span class="hwait" style="display:none"></span>';
+          h.querySelector('.htxt').textContent = name;
+          h.addEventListener('click', function(){
+            var open = !this.classList.contains('closed');
+            this.classList.toggle('closed', open);
+            var s2 = foldState();
+            s2[this.getAttribute('data-fold')] = open ? 'closed' : 'open';
+            foldSave(s2);
+          });
+          /* 처음 상태 — 기억된 것이 있으면 그것을,
+             없으면 「매일 보는 일」 만 펼칩니다 */
+          var want = st[name];
+          var openByDefault = (name.indexOf('매일') === 0);
+          if (want === 'closed' || (want == null && !openByDefault)) h.classList.add('closed');
+        }
+        h.querySelector('.hcount').textContent = cards.length + '개';
+        var w = h.querySelector('.hwait');
+        if (wait > 0) { w.textContent = '대기 ' + wait; w.style.display = ''; }
+        else { w.style.display = 'none'; }
+      }
     }
     var mgData=[]; var mgPage=0;
     /* ★ 의심 판정을 <b>점수</b>로 바꿨습니다.
