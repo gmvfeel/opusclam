@@ -242,9 +242,10 @@ function scoreCand(row, cfg, c, only) {
   const lb = flat(c.label);
   const desc = String(c.desc || '').toLowerCase();
 
-  if (lb && (lb === a || lb === b)) { sc += 4; why.push('이름 같음'); }
-  else if (lb && a && (lb.includes(a) || a.includes(lb))) { sc += 2; why.push('이름 비슷'); }
-  else if (lb && b && (lb.includes(b) || b.includes(lb))) { sc += 2; why.push('영문 비슷'); }
+  let nameHit = false;
+  if (lb && (lb === a || lb === b)) { sc += 4; why.push('이름 같음'); nameHit = true; }
+  else if (lb && a && (lb.includes(a) || a.includes(lb))) { sc += 2; why.push('이름 비슷'); nameHit = true; }
+  else if (lb && b && (lb.includes(b) || b.includes(lb))) { sc += 2; why.push('영문 비슷'); nameHit = true; }
 
   /* 우리가 아는 지역·국적이 설명에 나오나 */
   const where = String(row[cfg.where] || '');
@@ -339,7 +340,7 @@ function scoreCand(row, cfg, c, only) {
        그래서 <이름이 뚜렷할 때만> 넣습니다. */
 
   if (only) { sc += 1; why.push('후보 하나뿐'); }
-  return { score: sc, why: why.join(' · ') };
+  return { score: sc, why: why.join(' · '), nameHit: nameHit };
 }
 
 /* ── 넣습니다 ────────────────────────────────────────────────
@@ -393,21 +394,55 @@ async function runTable(cfg) {
     const only = cands.length === 1;
     for (const c of cands) {
       const v = scoreCand(row, cfg, c, only);
-      c.score = v.score; c.why = v.why;
+      /* ★ nameHit 을 <반드시 함께> 담습니다.
+           이 한 줄을 빠뜨려 「넣음 0건」 이 나왔습니다. scoreCand 는
+           제대로 돌려주는데 받아 담지 않아, 아래에서 nameHit 이
+           undefined 가 되고 `=== true` 가 늘 어긋났습니다.
+         ★ 시늉 실행이 잡아 주었습니다 — 시험을 따로 쓰면 이런 <이음새>가
+           비어도 통과합니다. 실제 파일을 그대로 돌려야 보입니다. */
+      c.score = v.score; c.why = v.why; c.nameHit = v.nameHit;
     }
     cands.sort((x, y) => y.score - x.score);
 
-    /* ★ 뚜렷할 때만 넣습니다 — 화면과 같은 문턱입니다.
-         1등이 6점 이상이고, 2등보다 3점 이상 높을 때만.
-         같은 이름이 여럿이면 넘깁니다. */
+    /* ★ 뚜렷할 때만 넣습니다 — 세 가지를 모두 만족해야 합니다.
+         ⑴ 1등이 6점 이상
+         ⑵ 2등보다 3점 이상 높음 (같은 이름이 여럿이면 넘김)
+         ⑶ ★ <이름이 조금이라도 맞아야> 합니다
+
+       ★★ ⑶을 왜 넣었는가 (세 번째 시늉 실행에서 드러난 것) ★★
+         이런 줄이 있었습니다 —
+
+           아널드 쇤베르크 → Q154770 6점 · 지역 맞음 · 음악 하는 사람 · 후보 하나뿐
+           벨라 바르토크   → Q83326  6점 · 지역 맞음 · 음악 하는 사람 · 후보 하나뿐
+
+         결과는 <맞았습니다>. 그런데 근거에 <이름이 없습니다>. 위키데이터
+         한국어 표기가 「아르놀트 쇤베르크」·「벨러 버르토크」 라 이름이
+         걸리지 않았고, 「지역 +2 · 음악가 +3 · 후보 하나뿐 +1」 만으로
+         6점이 된 것입니다.
+
+         그러면 <이름이 조금도 안 맞는 사람>도 같은 점수를 받습니다.
+         재현해 보았습니다 —
+
+           「박영희」(프랑스) 를 찾는데 「Claude Debussy · 프랑스의 작곡가」
+           → 6점 · <들어갑니다>
+
+         프랑스 작곡가는 수백 명입니다. 이름을 보지 않으면 그 가운데
+         아무나 이어질 수 있습니다.
+         → 이름이 <같거나 비슷하지도 않으면> 넣지 않습니다.
+           쇤베르크·바르토크는 사람이 화면에서 보게 되지만, 엉뚱한
+           사람이 조용히 이어지는 것보다 낫습니다. */
     const top = cands[0];
     const clear = top.score >= 6
-      && (cands.length === 1 || top.score - cands[1].score >= 3);
+      && (cands.length === 1 || top.score - cands[1].score >= 3)
+      && top.nameHit === true;
 
     if (!clear) {
       skip++;
       if (skip <= 5) {
-        console.log(`  · 넘김 ${name} — 1등 ${top.score}점(${top.qid} ${top.desc || '설명 없음'})`
+        const why = !top.nameHit ? '이름이 맞지 않음'
+                  : top.score < 6 ? '점수 모자람'
+                  : '1·2등이 비슷함';
+        console.log(`  · 넘김 ${name} — ${why} · 1등 ${top.score}점(${top.qid} ${top.desc || '설명 없음'})`
           + (cands[1] ? ` / 2등 ${cands[1].score}점` : ''));
       }
       continue;

@@ -235,9 +235,13 @@
     var a = flat(row.ko), b2 = flat(row.en), lb = flat(c.label);
     var desc = String(c.desc || '').toLowerCase();
 
-    if (lb && (lb === a || lb === b2)) { sc += 4; why.push('이름 같음'); }
-    else if (lb && a && (lb.indexOf(a) >= 0 || a.indexOf(lb) >= 0)) { sc += 2; why.push('이름 비슷'); }
-    else if (lb && b2 && (lb.indexOf(b2) >= 0 || b2.indexOf(lb) >= 0)) { sc += 2; why.push('영문 비슷'); }
+    var nameHit = false;
+
+    if (lb && (lb === a || lb === b2)) { sc += 4; why.push('이름 같음'); nameHit = true; }
+
+    else if (lb && a && (lb.indexOf(a) >= 0 || a.indexOf(lb) >= 0)) { sc += 2; why.push('이름 비슷'); nameHit = true; }
+
+    else if (lb && b2 && (lb.indexOf(b2) >= 0 || b2.indexOf(lb) >= 0)) { sc += 2; why.push('영문 비슷'); nameHit = true; }
 
     /* 우리가 아는 지역이 설명에 나오나 */
     var where = String(row.where || '');
@@ -258,7 +262,7 @@
     }
 
     if (only) { sc += 1; why.push('후보 하나뿐'); }
-    return { score: sc, why: why.join(' · ') };
+    return { score: sc, why: why.join(' · '), nameHit: nameHit };
   }
 
   function cfgOf(){
@@ -360,7 +364,15 @@
         if (row.cands.length && row.cands[0].score >= 6
             /* 1등과 2등이 <b>비슷하면</b> 고르지 않습니다 — 헷갈리는
                경우입니다(같은 이름이 여럿). */
-            && (row.cands.length === 1 || row.cands[0].score - row.cands[1].score >= 3)){
+            && (row.cands.length === 1 || row.cands[0].score - row.cands[1].score >= 3)
+            /* ★★ 2026-08-11 · <b>이름이 조금이라도 맞아야</b> 합니다 ★★
+               「지역 맞음 +2 · 음악 하는 사람 +3 · 후보 하나뿐 +1」 만으로
+               6점이 되어, <b>이름이 조금도 안 맞는 사람</b>이 골라지던 것을
+               막습니다. 재현해 보니 「박영희」 를 찾는데
+               「Claude Debussy · 프랑스의 작곡가」 가 6점으로 골라졌습니다.
+               프랑스 작곡가는 수백 명입니다.
+             ★ scripts/fill-wikidata-id.mjs 와 <b>같은 규칙</b>입니다. */
+            && row.cands[0].nameHit === true){
           row.pick = row.cands[0].qid;
           row.auto = true;
         }
