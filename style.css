@@ -441,7 +441,9 @@
   .grid-region a{background:var(--paper);border:1px solid var(--line);border-radius:6px;text-align:center;padding:11px 0;font-size:12.5px;color:var(--text);transition:.15s}
   .grid-region a:hover{background:var(--violet-2);color:#fff;border-color:var(--violet-2)}
 
-  .dl li{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  /* ★ 2026-08-11 · home.html 과 같은 값(6px)으로 맞췄습니다.
+       ul.list 와 줄 높이가 같아야 나란히 놓았을 때 어긋나지 않습니다. */
+  .dl li{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
   .dl li a{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
   .dl li .icon{width:28px;height:28px;border-radius:6px;background:var(--paper-3);display:grid;place-items:center;color:var(--violet-2)}
   .dl li .icon svg{width:15px;height:15px}
