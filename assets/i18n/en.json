@@ -754,6 +754,7 @@
   "등록": "Submit",
   "등록 실패:": "Could not post: ",
   "등록 현황": "Entries at a glance",
+  "등록·보강은 전공자 · 음악관계자 · 단체 · 음악학교 회원에게 열려 있습니다. 가입하실 때 회원 종류를 골라 주십시오.": "Adding and improving entries is open to members registered as students, industry professionals, ensembles or schools. Please choose your membership type when you sign up.",
   "등록·보강하기": "add or improve",
   "등록된 공연 소식이 아직 없습니다.": "No concert news yet.",
   "등록된 공연정보가 아직 없습니다.": "No concerts listed yet.",
@@ -2369,6 +2370,7 @@
   "회원가입 · 약관 동의 · OPUSCLAM.COM": "Sign up · Accept the terms · OPUSCLAM.COM",
   "회원가입 완료": "Registration complete",
   "회원가입은 이용자가 약관에 동의하고 회사가 정한 가입 양식을 작성하여 신청하며, 회사가 이를 승낙함으로써 성립합니다.": "Membership is established when a user agrees to these Terms, applies by completing the registration form set by the Company, and the Company accepts the application.",
+  "회원가입하고 등록하기": "Sign up and add an entry",
   "회원과 방문자가 쌓이는 중이어서 초기에 들어오시는 분께는 그만큼 조건을 낮춰 드립니다.": "Membership and traffic are still growing, so early partners get correspondingly better terms.",
   "회원은 자신이 등록·보강하는 콘텐츠가 제3자의 권리를 침해하지 않음을 보증합니다.": "Members warrant that the content they post or contribute does not infringe the rights of any third party.",
   "회원이 등록·보강한 콘텐츠에 대하여, 회원은 회사가 해당 콘텐츠를 서비스의 운영·개선·홍보 목적으로 국내외에서 사용(복제·수정·전시·배포 등)할 수 있도록": "In respect of content a member posts or contributes, the member grants the Company the right to use it (including reproduction, modification, display and distribution) in Korea and abroad for the purposes of operating, improving and promoting the Service,",
@@ -2385,7 +2387,7 @@
   "희망분야": "Preferred field",
   "희망분야·희망지역·희망급여와 학력·경력·자기소개서를 적습니다. 적다가": "Enter your preferred field, location and pay, along with education, experience and a personal statement. While writing,",
   "희망지역": "Preferred location",
-  "🔒 일정 자격을 갖춘 회원만 등록·보강할 수 있습니다. (로그인 필요)": "🔒 Only qualified members may add or improve entries. (Sign-in required)",
   "＋ 강의 등록": "＋ Add a course",
-  "＋ 파일추가": "＋ Add a file"
+  "＋ 파일추가": "＋ Add a file",
+  "🔒 일정 자격을 갖춘 회원만 등록·보강할 수 있습니다. (로그인 필요)": "🔒 Only qualified members may add or improve entries. (Sign-in required)"
 }

@@ -246,7 +246,22 @@ window.OCList = (function () {
         ? '<b>' + esc(kw) + '</b> 로 찾은 결과가 없습니다.'
         : '조건에 맞는 자료가 없습니다.';
 
-      var totalTxt = (total || 0).toLocaleString();
+      /* ★★ 2026-08-11 · <b>전체 건수를 따로 셉니다</b> ★★
+         ─────────────────────────────────────────────────────
+         파트너가 「12건으로 나온다」 고 알려 주셨습니다. 인물DB 는
+         15,222건인데요.
+
+         여기서 쓰던 total 은 <b>지금 조건으로 찾은 결과 수</b>입니다
+         (조회 응답의 content-range 에서 옵니다). 그런데 이 문장의 뜻은
+         「우리 DB 에 <b>이만큼</b> 담겨 있으니, 없는 것이 아니라 아직
+         담기지 않은 것일 수 있습니다」 입니다. <b>전체 건수</b>여야 합니다.
+         찾은 결과가 0건인 자리에서 그 수를 보여 주는 것은 뜻이 없습니다.
+
+       ★ 자리만 만들어 두고 <b>나중에 채웁니다.</b>
+         자료가 없을 때만 필요하므로 늘 세지 않습니다. 개수만 받아
+         오므로(head 요청) 가볍고, 한 번 센 것은 담아 두어 다시 묻지
+         않습니다. */
+      var totalTxt = '…';
 
       return ''
         + '<div class="pdb-none">'
@@ -278,7 +293,7 @@ window.OCList = (function () {
         +   '<div class="pdb-none-cta">'
         +     '<p class="pdb-none-ask">' + esc(info.ask) + '</p>'
         +     '<p class="pdb-none-sub">'
-        +       '오퍼스클램에 <b>' + totalTxt + '</b>'
+        +       '오퍼스클램에 <b class="pdb-none-total">' + totalTxt + '</b>'
         +       '<span>' + esc(info.held) + '</span> '
         +       '<span>없는 것이 아니라 아직 담기지 않은 것일 수 있습니다.</span><br>'
         /* ★★ 2026-08-11 · <b>한국어 낱말을 &lt;b&gt; 로 감싸지 않습니다</b> ★★
@@ -320,7 +335,35 @@ window.OCList = (function () {
     /* 손님에게는 「회원가입하고 등록하기」 로 바꿔 줍니다.
        ★ 로그인 여부를 확인하는 동안 화면이 비어 보이지 않도록,
          먼저 그려 두고 확인이 끝나면 단추만 고칩니다. */
+    /* ── 「우리 DB 에 이만큼 담겨 있습니다」 의 숫자 ─────────────
+       ★ 조건을 <b>걸지 않은</b> 전체 건수를 셉니다. 목록이 쓰는 total 은
+         지금 조건으로 찾은 결과 수라, 0건인 자리에서 보여 주면 뜻이 없습니다.
+       ★ 개수만 받아 옵니다 (줄은 한 개만 청하고 count=exact 로 총수를 받음).
+       ★ 한 번 센 것은 담아 둡니다 — 조건을 바꿔 가며 여러 번 찾아도
+         다시 묻지 않습니다.
+       ★ 숨긴 것(hidden)은 가리지 않습니다. 갈래마다 그 칸이 있는지
+         달라서 조건을 걸면 어떤 갈래에서 조회가 실패합니다.
+         숨긴 것은 서른 개 남짓이라 「대략 이만큼」 이라는 뜻에는 지장이 없습니다. */
+    var _allCount = null;
+    function fillNoneTotal() {
+      var slot = document.querySelector('.pdb-none-total');
+      if (!slot) return;
+      if (_allCount != null) { slot.textContent = _allCount.toLocaleString(); return; }
+      var u = SB_URL + '/rest/v1/' + cfg.table + '?select=id&limit=1';
+      fetch(u, { headers: {
+        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+        Prefer: 'count=exact', Range: '0-0'
+      } }).then(function (r) {
+        var crg = r.headers.get('content-range') || '';
+        var t = parseInt(String(crg).split('/')[1], 10);
+        if (!isFinite(t)) { slot.textContent = ''; return; }
+        _allCount = t;
+        slot.textContent = t.toLocaleString();
+      }).catch(function () { slot.textContent = ''; });
+    }
+
     function fixEmptyCta() {
+      fillNoneTotal();
       var box = document.getElementById('pdbNoneBtns');
       if (!box) return;
       var link = box.querySelector('.pdb-none-btn');
@@ -335,7 +378,10 @@ window.OCList = (function () {
         link.setAttribute('href', '/account/join.html?next=' + encodeURIComponent(next));
         var hint = document.createElement('p');
         hint.className = 'pdb-none-who';
-        hint.innerHTML = '등록·보강은 <b>전공자 · 음악관계자 · 단체 · 음악학교</b> 회원에게 열려 있습니다. '
+        /* ★ 한국어 낱말을 &lt;b&gt; 로 감싸지 않습니다 — 문장이 조각나
+             i18n 이 일부만 옮겨 한국어와 다른 말이 뒤섞입니다.
+             굵게 보이던 회원 종류는 그대로 읽히니 잃는 것이 없습니다. */
+        hint.textContent = '등록·보강은 전공자 · 음악관계자 · 단체 · 음악학교 회원에게 열려 있습니다. '
           + '가입하실 때 회원 종류를 골라 주십시오.';
         box.parentNode.insertBefore(hint, box);
       }).catch(function () {});
