@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>관계자 인증 확인 · OPUSCLAM ADMIN</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 120px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px}
+  .card p{margin:0 0 14px;color:#5c5e70;font-size:13px}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.ok{background:#0f7a3d}
+  button.no{background:#fff;color:#a01c1c;border:1px solid #e3b7b7}
+  button.sm{padding:7px 12px;font-size:12px}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input[type=search],input[type=text]{padding:9px 12px;border:1px solid #d8d8e2;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .tabs button{background:#f2f2f7;color:#5c5e70;padding:8px 13px;font-size:12.5px}
+  .tabs button.on{background:#20223a;color:#fff}
+  .tabs b{display:inline-block;margin-left:5px;font-size:11.5px;opacity:.8}
+  .lst{margin-top:14px;border:1px solid #eeeef4;border-radius:8px;background:#fff}
+
+  .it{padding:14px;border-bottom:1px solid #f4f4f8;font-size:12.5px}
+  .it:last-child{border-bottom:0}
+  .it-top{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:7px}
+  .kind{flex:0 0 auto;padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:800;color:#5f4aa0;background:#efe9fb}
+  .ename{font-size:14px;font-weight:800}
+  .ename a{color:#20223a;text-decoration:none}
+  .ename a:hover{color:#7C63B0}
+  .st{flex:0 0 auto;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
+  .st.pending{color:#8a6f18;background:#faf1d6}
+  .st.approved{color:#0f7a3d;background:#e2f3e8}
+  .st.rejected{color:#a01c1c;background:#fbe9e9}
+  .st.revoked{color:#6b6d80;background:#eeeef4}
+  .flag{flex:0 0 auto;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:800}
+  .flag.ok{color:#0f7a3d;background:#e2f3e8}
+  .flag.eye{color:#8a6f18;background:#faf1d6}
+  .flag.bad{color:#a01c1c;background:#fbe9e9}
+  .it-body{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;color:#5c5e70;font-size:12px}
+  .it-body div{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .it-body b{color:#20223a;font-weight:700}
+  .it-body a{color:#5f4aa0}
+  .it-btns{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center}
+  .it-btns input[type=text]{flex:1 1 220px;min-width:0;font-size:12px;padding:7px 10px}
+  .dup{margin-top:8px;padding:9px 11px;border-radius:7px;background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;font-size:12px;line-height:1.7}
+  .msg{margin-top:8px;font-size:12px;color:#6b6d80;min-height:1em}
+  .msg.bad{color:#a01c1c}
+  .empty{padding:30px 14px;text-align:center;color:#8a8c9e;font-size:13px;line-height:1.9}
+  @media(max-width:700px){ .it-body{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="admin.html">&larr; 관리자 홈</a>
+  <h1>관계자 인증 확인</h1>
+  <div class="sub">회원이 「이 항목이 저(저희)입니다」 라고 신청한 것을 확인해 이어 줍니다.</div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <h2>무엇을 보는 화면인가</h2>
+    <p>
+      인물 15,000여 명 · 단체 · 공연장 · 학교 · 기관재단은 <b>우리가 모아 넣은 자료</b>라 주인이 없습니다.
+      그 당사자가 회원으로 들어왔을 때 <b>같은 곳이 두 벌 되는 것을 막고</b>, 본인이 자기 항목을
+      직접 채우게 하려고 잇습니다.
+    </p>
+    <div class="row">
+      <select id="f-kind"><option value="">갈래 전부</option></select>
+      <input type="search" id="f-q" placeholder="항목 이름으로 찾기">
+      <button id="btn-load">다시 불러오기</button>
+    </div>
+    <div class="tabs" id="tabs"></div>
+
+    <div class="note">
+      <b>승인하기 전에 보실 것</b><br>
+      · <b>도메인 맞음</b> — 신청자 메일 도메인이 그 곳 누리집과 같습니다. 참고 표시일 뿐
+        저절로 승인되지 않습니다. 도메인은 빌릴 수도 있고, 큰 기관은 부서가 여럿입니다.<br>
+      · <b>사람 눈 필요</b> — 인물 · 현대음악 · 학술입니다. <b>동명이인</b>이 있어 이름만으로는
+        가릴 수 없습니다. 증빙을 꼭 확인해 주십시오.<br>
+      · <b>이미 이어진 사람이 있으면</b> 빨간 칸으로 알려 드립니다. 한 단체에 담당자가
+        여럿인 것은 정상이지만, 인물이 둘이면 한쪽은 남의 것을 주장하는 셈입니다.<br>
+      · <b>회원 상태가 승인이 아니면</b> 빨간 표가 붙습니다. 회원 승인이 먼저입니다.
+    </div>
+  </div>
+
+  <div class="lst" id="lst"><div class="empty">불러오는 중…</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/admin-guard.js"></script>
+<!-- ★ claim.js 를 <b>인라인 스크립트보다 먼저</b> 부릅니다.
+       갈래 목록(KINDS)을 그 파일에서 가져다 쓰기 때문입니다.
+       나중에 부르면 목록이 없어 갈래 고르개가 비어 버립니다. -->
+<script src="/assets/claim.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════
+   관계자 인증 확인 · 2026-08-11
+   ────────────────────────────────────────────────────────────────
+   ★ 짝이 되는 것
+       sql/claim-01-B-apply.sql   entity_claims 표 · RLS · 함수
+       assets/claim.js            회원 쪽 엔진 (신청 · 표시)
+
+   ★ 갈래 목록을 <b>여기 손으로 적지 않습니다</b>
+     assets/claim.js 의 ocClaim.KINDS 하나만 봅니다.
+     두 곳에 적으면 언젠가 갈라집니다 — 지난번 회원 종류를 여러 곳에
+     적었다가 org 를 <b>네 번</b> 빠뜨렸습니다. 갈래를 늘릴 일이 있으면
+     claim.js 와 SQL 의 oc_entity_kind <b>두 곳만</b> 고치면 됩니다.
+
+   ★ 승인은 <b>entity_claims 의 status 만</b> 바꿉니다
+     DB 항목(persons·orgs…)은 손대지 않습니다. 이었다가 풀어도
+     자료가 상하지 않아야 합니다.
+   ════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  var SUPABASE_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* ★ 반드시 싱글턴 — createClient 를 또 부르면 세션 토큰이 질의에
+       실리지 않아 RLS 가 관리자를 남처럼 봅니다. */
+  function sb(){
+    if(!window.__ocSb){
+      if(!window.supabase || !window.supabase.createClient) return null;
+      window.__ocSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return window.__ocSb;
+  }
+
+  var MTYPE = { major:'전공자', industry:'관계자', org:'단체·기업', school:'음악학교', general:'일반' };
+  var STNAME = { pending:'기다림', approved:'이어짐', rejected:'아님', revoked:'거둠' };
+
+  var listEl = document.getElementById('lst');
+  var warnEl = document.getElementById('warn');
+  var STATUS = 'pending';
+
+  function warn(m){ warnEl.textContent = m; warnEl.classList.add('on'); }
+  function esc(s){ return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function ymd(t){
+    if(!t) return '';
+    try{ var d=new Date(t);
+      return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+    }catch(e){ return ''; }
+  }
+
+  /* ── 갈래 목록은 claim.js 하나만 봅니다 ─────────────────────── */
+  function KINDS(){ return (window.ocClaim && window.ocClaim.KINDS) || null; }
+  function kindOf(k){
+    var K = KINDS(); if(!K) return null;
+    for(var i=0;i<K.length;i++) if(K[i].kind===k) return K[i];
+    return null;
+  }
+  /* 사람 눈이 꼭 필요한 갈래 — SQL 의 oc_claim_needs_review 와 같은 규칙입니다.
+     신청 줄에 needs_review 가 담겨 오므로 평소에는 그것을 씁니다.
+     이 함수는 그 값이 비어 있을 때만 씁니다(옛 자료 대비). */
+  function eyeKind(k){ return k==='persons' || k==='modern_composers' || k==='academic'; }
+
+  /* ── 갈래 고르개 · 상태 탭 ──────────────────────────────────── */
+  function buildFilters(){
+    var K = KINDS();
+    if(K){
+      var sel = document.getElementById('f-kind');
+      K.forEach(function(k){
+        var o=document.createElement('option'); o.value=k.kind; o.textContent=k.label;
+        sel.appendChild(o);
+      });
+    }
+    var tabs = document.getElementById('tabs');
+    var order = ['pending','approved','rejected','revoked',''];
+    tabs.innerHTML = order.map(function(s){
+      return '<button data-st="'+s+'"'+(s===STATUS?' class="on"':'')+'>'+
+             (s===''?'전부':STNAME[s])+'<b data-n="'+s+'"></b></button>';
+    }).join('');
+    tabs.addEventListener('click', function(e){
+      var b = e.target.closest('button[data-st]'); if(!b) return;
+      STATUS = b.getAttribute('data-st');
+      tabs.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); });
+      load();
+    });
+  }
+
+  /* ── 갯수 ──────────────────────────────────────────────────── */
+  async function counts(){
+    var c=sb(); if(!c) return;
+    for(var st in STNAME){
+      var r=await c.from('entity_claims').select('id',{count:'exact',head:true}).eq('status',st);
+      var el=document.querySelector('b[data-n="'+st+'"]');
+      if(el) el.textContent = (r && typeof r.count==='number') ? r.count : '';
+    }
+  }
+
+  /* ── 목록 ──────────────────────────────────────────────────── */
+  async function load(){
+    var c=sb();
+    if(!c){ warn('Supabase 를 불러오지 못했습니다. 새로 고쳐 주십시오.'); return; }
+    if(!KINDS()){
+      warn('assets/claim.js 를 불러오지 못했습니다. 그 파일이 배포되었는지 확인해 주십시오.');
+      listEl.innerHTML='<div class="empty">갈래 목록을 읽지 못했습니다.</div>';
+      return;
+    }
+
+    var kd=document.getElementById('f-kind').value;
+    var q=(document.getElementById('f-q').value||'').trim();
+    listEl.innerHTML='<div class="empty">불러오는 중…</div>';
+
+    var sel='id,member_id,entity_kind,entity_id,entity_name,status,role_title,note,'+
+            'evidence_url,email_domain,domain_match,needs_review,created_at,'+
+            'decided_at,decided_note,members(name,username,member_type,email,status)';
+    var qq=c.from('entity_claims').select(sel).order('created_at',{ascending:false}).limit(200);
+    if(STATUS) qq=qq.eq('status',STATUS);
+    if(kd) qq=qq.eq('entity_kind',kd);
+    if(q)  qq=qq.ilike('entity_name','%'+q+'%');
+
+    var r=await qq;
+    if(r.error){
+      if(/does not exist|42P01|schema cache/i.test(r.error.message||'')){
+        listEl.innerHTML='<div class="empty"><b>아직 표가 만들어지지 않았습니다.</b><br>'+
+          'Supabase → SQL Editor 에서 <b>sql/claim-01-B-apply.sql</b> 을 먼저 돌려 주십시오.</div>';
+        return;
+      }
+      warn('불러오지 못했습니다: '+r.error.message);
+      listEl.innerHTML='<div class="empty">불러오지 못했습니다.</div>';
+      return;
+    }
+    var rows=r.data||[];
+
+    /* ★ 같은 항목에 <b>다른 사람</b>이 이미 이어져 있는지 함께 봅니다.
+         한 단체에 담당자 여럿은 정상이지만, 인물이 둘이면 한쪽은
+         남의 것을 주장하는 셈입니다. 관리자가 그것을 알아야 합니다.
+       ★ 항목 갈래별로 <b>한 번씩만</b> 물어봅니다 — 줄마다 물으면
+         200줄에 200번 왕복입니다. */
+    var dupMap={};
+    if(rows.length){
+      var keys={};
+      rows.forEach(function(x){ keys[x.entity_kind+'|'+x.entity_id]=1; });
+      var kk=Object.keys(keys);
+      for(var i=0;i<kk.length;i++){
+        var p=kk[i].split('|');
+        var d=await c.from('entity_claims')
+          .select('id,member_id,members(name,username)')
+          .eq('entity_kind',p[0]).eq('entity_id',p[1]).eq('status','approved');
+        if(d.data && d.data.length) dupMap[kk[i]]=d.data;
+      }
+    }
+
+    draw(rows,dupMap);
+    counts();
+  }
+
+  function draw(list,dupMap){
+    if(!list.length){
+      listEl.innerHTML='<div class="empty">해당하는 신청이 없습니다.</div>';
+      return;
+    }
+    var h='';
+    list.forEach(function(x){
+      var K=kindOf(x.entity_kind);
+      var m=x.members||{};
+      var view=K?(K.view+'?id='+encodeURIComponent(x.entity_id)):'#';
+      var eye=(x.needs_review===null||x.needs_review===undefined)?eyeKind(x.entity_kind):x.needs_review;
+      var dup=(dupMap[x.entity_kind+'|'+x.entity_id]||[]).filter(function(d){
+        return d.member_id!==x.member_id; });
+      var memberBad = m.status && m.status!=='approved';
+
+      h+='<div class="it" data-id="'+x.id+'">';
+      h+='<div class="it-top">';
+      h+= '<span class="kind">'+esc(K?K.label:x.entity_kind)+'</span>';
+      h+= '<span class="ename"><a href="'+view+'" target="_blank" rel="noopener">'+
+            esc(x.entity_name||('#'+x.entity_id))+'</a></span>';
+      h+= '<span class="st '+esc(x.status)+'">'+esc(STNAME[x.status]||x.status)+'</span>';
+      if(x.domain_match) h+='<span class="flag ok">도메인 맞음</span>';
+      if(eye)            h+='<span class="flag eye">사람 눈 필요</span>';
+      if(memberBad)      h+='<span class="flag bad">회원 '+esc(m.status)+'</span>';
+      h+='</div>';
+
+      h+='<div class="it-body">';
+      h+= '<div>신청 회원 · <b>'+esc(m.name||'(이름 없음)')+'</b> ('+esc(m.username||'')+
+          (m.member_type?' · '+esc(MTYPE[m.member_type]||m.member_type):'')+')</div>';
+      h+= '<div>메일 · '+esc(m.email||'')+(x.email_domain?' <b>@'+esc(x.email_domain)+'</b>':'')+'</div>';
+      h+= '<div>맡은 일 · '+esc(x.role_title||'(적지 않음)')+'</div>';
+      h+= '<div>신청한 때 · '+ymd(x.created_at)+'</div>';
+      if(x.evidence_url)
+        h+='<div>증빙 · <a href="'+esc(x.evidence_url)+'" target="_blank" rel="noopener">'+
+             esc(String(x.evidence_url).slice(0,60))+'</a></div>';
+      if(x.note) h+='<div>하실 말씀 · '+esc(x.note)+'</div>';
+      if(x.decided_at)
+        h+='<div>처리한 때 · '+ymd(x.decided_at)+(x.decided_note?' — '+esc(x.decided_note):'')+'</div>';
+      h+='</div>';
+
+      if(dup.length){
+        h+='<div class="dup"><b>이미 이어진 사람이 있습니다</b> — '+
+            dup.map(function(d){ var dm=d.members||{};
+              return esc(dm.name||'')+'('+esc(dm.username||'')+')'; }).join(' · ')+
+            (eye
+              ? '<br>사람 눈이 필요한 갈래입니다. 동명이인이거나 한쪽이 남의 것을 주장하는 것일 수 있습니다.'
+              : '<br>한 곳에 담당자가 여럿인 것은 정상입니다.')+'</div>';
+      }
+      if(memberBad && x.status==='pending'){
+        h+='<div class="dup"><b>회원 승인이 먼저입니다</b> — 이 회원은 '+esc(m.status)+
+           ' 상태입니다. 회원 관리에서 승인한 뒤에 이어 주십시오.</div>';
+      }
+
+      if(x.status==='pending'){
+        h+='<div class="it-btns">';
+        h+= '<input type="text" class="memo" placeholder="확인한 근거를 적어 두십시오 (뒤에 다툴 때 쓰입니다)">';
+        h+= '<button class="ok sm" data-do="approve">이어 주기</button>';
+        h+= '<button class="no sm" data-do="reject">아니라고 하기</button>';
+        h+='</div>';
+      } else if(x.status==='approved'){
+        h+='<div class="it-btns">';
+        h+= '<input type="text" class="memo" placeholder="푸는 까닭">';
+        h+= '<button class="ghost sm" data-do="unlink">이은 것 풀기</button>';
+        h+='</div>';
+      }
+      h+='<div class="msg"></div></div>';
+    });
+    listEl.innerHTML=h;
+
+    listEl.querySelectorAll('button[data-do]').forEach(function(b){
+      b.addEventListener('click',function(){
+        decide(b.closest('.it'), b.getAttribute('data-do'));
+      });
+    });
+  }
+
+  /* ── 처리 ──────────────────────────────────────────────────── */
+  async function decide(it, act){
+    var c=sb(); if(!c) return;
+    var id=it.getAttribute('data-id');
+    var memoEl=it.querySelector('.memo');
+    var memo=memoEl?memoEl.value.trim():'';
+    var msg=it.querySelector('.msg');
+    var btns=it.querySelectorAll('button');
+
+    var next = act==='approve' ? 'approved' : (act==='reject' ? 'rejected' : 'revoked');
+    var word = act==='approve' ? '이어 두었습니다' :
+               (act==='reject' ? '아니라고 해 두었습니다' : '이은 것을 풀었습니다');
+
+    /* ★ 거절·풀기는 까닭을 <b>반드시</b> 받습니다.
+         나중에 「왜 안 됐냐」 는 물음이 오면 이것이 근거가 됩니다.
+         승인은 도메인·증빙이 이미 남아 있어 강제하지 않습니다. */
+    if(act!=='approve' && !memo){
+      msg.textContent='까닭을 적어 주십시오 — 뒤에 다툴 때 근거가 됩니다.';
+      msg.className='msg bad'; return;
+    }
+
+    btns.forEach(function(b){ b.disabled=true; });
+    msg.textContent='처리 중…'; msg.className='msg';
+
+    var u=await c.auth.getUser();
+    var uid=u&&u.data&&u.data.user&&u.data.user.id;
+
+    var r=await c.from('entity_claims').update({
+      status: next,
+      decided_by: uid || null,
+      decided_at: new Date().toISOString(),
+      decided_note: memo || null
+    }).eq('id', id).select('id').maybeSingle();
+
+    if(r.error || !r.data){
+      msg.textContent='처리하지 못했습니다'+
+        (r.error ? ': '+r.error.message : '. 관리자 권한(members.is_admin)을 확인해 주십시오.');
+      msg.className='msg bad';
+      btns.forEach(function(b){ b.disabled=false; });
+      return;
+    }
+    msg.textContent=word+'.'; msg.className='msg';
+    setTimeout(load, 700);
+  }
+
+  /* ── 띄우기 ────────────────────────────────────────────────── */
+  document.getElementById('btn-load').addEventListener('click', load);
+  document.getElementById('f-kind').addEventListener('change', load);
+  document.getElementById('f-q').addEventListener('keydown', function(e){
+    if(e.key==='Enter') load();
+  });
+
+  /* supabase-js 는 CDN 에서 옵니다. 아직 안 왔을 수 있어 잠깐 기다립니다. */
+  (function wait(n){
+    n = n || 0;
+    if(sb() && KINDS()){ buildFilters(); load(); return; }
+    if(n > 40){
+      buildFilters();
+      if(!sb()) warn('Supabase 를 불러오지 못했습니다. 새로 고쳐 주십시오.');
+      else warn('assets/claim.js 를 불러오지 못했습니다. 배포를 확인해 주십시오.');
+      listEl.innerHTML='<div class="empty">준비되지 않았습니다.</div>';
+      return;
+    }
+    setTimeout(function(){ wait(n+1); }, 150);
+  })();
+})();
+</script>
+</body>
+</html>

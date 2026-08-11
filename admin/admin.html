@@ -243,6 +243,14 @@
       <div class="cards">
         <div class="card clickable" id="cardMembers"><span class="cbadge" id="badgeMembers"></span><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
         <a class="card clickable tool" href="db-edits.html" id="cardReview"><span class="cbadge" id="badgeReview"></span><h3>DB 등록·보강 검수</h3><p>회원이 낸 등록·보강을 확인하고 반영합니다. 무엇이 바뀌는지 <b>이전 값과 나란히</b> 보여 주고, 반영하면 회원에게 포인트가 쌓입니다.</p><span class="go">검수하기 →</span></a>
+        <a class="card clickable tool" href="claims.html">
+          <span class="cbadge" id="badgeClaims"></span>
+          <span class="tag">회원 · 데이터</span>
+          <h3>관계자 인증 처리</h3>
+          <p>회원이 <b>「이 항목이 저(저희)입니다」</b> 라고 낸 신청을 확인합니다. 승인하면 그 회원과 DB 항목이 이어지고 상세 화면에 <b>「공식 인증」</b> 표시가 붙습니다.</p>
+          <span class="when">기관·재단DB 에 <b>크레디아를 이미 담아 두었는데</b> 크레디아 관계자가 가입하면, 예전에는 같은 곳이 <b>두 벌</b>이 됐습니다. 인물 15,250명·단체·공연장·학교 — 일곱 갈래 모두 그랬습니다. 이어 두면 <b>당사자가 자기 자료를 채워 줍니다.</b></span>
+          <span class="go">처리하기 →</span>
+        </a>
         <a class="card clickable tool" href="reports.html">
           <span class="tag">데이터 도구</span>
           <h3>데이터 신고 처리</h3>
@@ -559,6 +567,16 @@
       /* ★ 2026-08-10 · 검수 대기 건수를 새 표(oc_db_edits)에서 셉니다.
          옛 submissions 표는 target_id 가 uuid 라 보강을 담지 못해 더 쓰지 않습니다. */
       try{var s=await sb.rpc('oc_edit_pending_count');setBadge('badgeReview',s.data||0);}catch(e){}
+      /* ★ 2026-08-11 · 관계자 인증 대기 건수.
+           표시 자리(badgeClaims)는 있었는데 채우는 코드가 없어 <b>늘 비어</b>
+           있었습니다. 그러면 신청이 쌓여도 관리자가 알 길이 없습니다.
+         ★ 표가 아직 없으면(SQL 을 안 돌린 상태) 조용히 넘어갑니다 —
+           숫자가 안 보일 뿐 관리자 홈이 깨지지 않아야 합니다. */
+      try{
+        var cl=await sb.from('entity_claims')
+                       .select('id',{count:'exact',head:true}).eq('status','pending');
+        if(!cl.error) setBadge('badgeClaims', cl.count||0);
+      }catch(e){}
     }
     var mgData=[]; var mgPage=0;
     /* ★ 의심 판정을 <b>점수</b>로 바꿨습니다.

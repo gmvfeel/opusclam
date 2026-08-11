@@ -404,6 +404,66 @@
     return { run: run, picked: function () { return picked; } };
   }
 
+  /* ── ⑦ 상세 화면에 저절로 붙기 ────────────────────────────────
+     ★ 화면마다 붙이는 코드를 적지 않습니다. 뷰 화면에 이 한 줄만 두면 됩니다.
+
+         <script src="/assets/claim.js" data-kind="orgs" defer></script>
+
+       report.js 가 data-table 로 하는 것과 같은 방식입니다.
+     ★ data-kind 를 <b>짐작하지 않습니다.</b> 화면이 알려 주게 합니다 —
+       주소만 보고 갈래를 맞히려 하면 새 화면이 생길 때마다 어긋납니다.
+
+     ★ 이름이 늦게 채워집니다
+       뷰 화면은 이름을 자바스크립트로 나중에 넣습니다(.pv-name).
+       그래서 <b>이름이 들어올 때까지 기다립니다.</b> 먼저 붙이면
+       신청 서식에 빈 이름이 담깁니다.
+     ★ 스무 번(약 3초) 기다려도 안 오면 <b>조용히 그만둡니다.</b>
+       자료를 못 불러온 화면에 「관계자이신가요?」 를 띄우면
+       무엇에 대한 물음인지 알 수 없습니다. */
+  function autoMount() {
+    var me = document.currentScript;
+    var kind = me && me.getAttribute('data-kind');
+    if (!kind || !kindOf(kind)) return;
+
+    var id = null;
+    try { id = new URLSearchParams(location.search).get('id'); } catch (e) {}
+    if (!id) return;
+
+    function attach(n) {
+      n = n || 0;
+      var h = document.querySelector('.pv-name');
+      var nm = h ? String(h.textContent || '').trim() : '';
+      /* 이름 옆에 붙은 원어 이름은 떼고 한국어만 씁니다 */
+      var sub = h ? h.querySelector('.pv-name-sub') : null;
+      if (sub) nm = nm.replace(String(sub.textContent || '').trim(), '').trim();
+
+      if (!h || !nm || !window.__ocSb) {
+        if (n > 20) return;                  /* 조용히 그만둡니다 */
+        setTimeout(function () { attach(n + 1); }, 150);
+        return;
+      }
+      if (h.querySelector('.oc-claim-badge')) return;   /* 두 번 붙이지 않습니다 */
+
+      /* ① 이름 옆에 「공식 인증」 */
+      var bslot = document.createElement('span');
+      h.appendChild(bslot);
+      mountBadge(bslot, kind, id);
+
+      /* ② 「관계자이신가요?」 — 단추 줄 아래에 둡니다 */
+      var acts = document.querySelector('.pv-actions');
+      var aslot = document.createElement('div');
+      aslot.className = 'oc-claim-slot';
+      if (acts && acts.parentNode) acts.parentNode.insertBefore(aslot, acts.nextSibling);
+      else if (h.parentNode) h.parentNode.appendChild(aslot);
+      else return;
+      mountAsk(aslot, kind, id, nm);
+    }
+
+    if (document.readyState === 'loading')
+      document.addEventListener('DOMContentLoaded', function () { attach(0); });
+    else attach(0);
+  }
+
   /* ── 바깥에 내놓기 ───────────────────────────────────────────── */
   window.ocClaim = {
     KINDS: KINDS,
@@ -418,4 +478,6 @@
     mountAsk: mountAsk,
     mountPicker: mountPicker
   };
+
+  autoMount();
 })();

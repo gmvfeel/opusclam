@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="/assets/auth.css">
+<link rel="stylesheet" href="/assets/claim.css">
 <style>
   /* ★ 폭을 <b>640 → 1120px</b> 로 넓혔습니다 (2026-08-05 · 파트너 지시)
      탭으로 나눈 뒤에도 양옆이 크게 놀았습니다. 하위 짜임을 살펴보니
@@ -706,6 +707,24 @@
       <div class="mp-card" id="mpBody">
         <div class="mp-msg">불러오는 중…</div>
       </div>
+
+      <!-- ───────── 내 DB 항목 (관계자 인증) ─────────
+           ★ 2026-08-11 · 파트너 물음에서 나온 것입니다.
+             기관·재단DB 에 크레디아를 이미 담아 두었는데 크레디아 관계자가
+             가입하면 <b>같은 곳이 두 벌</b>이 됐습니다. 이어 두면 당사자가
+             자기 자료를 채워 줍니다.
+           ★ 「내 정보」 에 두는 까닭 — 어느 항목의 관계자인지는 <b>신분</b>에
+             관한 것입니다. Linked 는 회원끼리의 인맥이라 성격이 다릅니다.
+           ★ 아직 신청이 없으면 <b>이 칸 자체를 감춥니다</b> — 빈 칸이 보이면
+             무엇을 해야 하는지 모르는 채 자리만 차지합니다. -->
+      <div class="mp-card" id="mpClaimCard" style="display:none">
+        <div class="mp-head">
+          <h3>내 DB 항목</h3>
+          <p class="mp-sub">「이 항목이 저(저희)입니다」 라고 신청해 이어 둔 것입니다.
+             이어지면 그 항목을 직접 고치실 수 있고 화면에 「공식 인증」 표시가 붙습니다.</p>
+        </div>
+        <div class="oc-claim-mine" id="mpClaimList"></div>
+      </div>
     </div>
 
     <!-- ───────── 활동 · 등급 ─────────
@@ -874,6 +893,7 @@
 <div id="oc-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
+<script src="/assets/claim.js"></script>
 <!-- ★ inner-space.js 를 싣지 않습니다 (2026-08-05 · 파트너 지시)
      마이페이지는 이너스페이스의 「자세한 판」이라 패널이 필요 없습니다.
      싣지 않으니 33KB 를 받지 않아 <b>더 빠릅니다.</b> -->
@@ -1332,6 +1352,10 @@
     posts:    function(){ if(UID) loadMine(UID); },
     linked:   function(){ drawLinks(); },
     saved:    function(){ loadFavs(); },
+    /* ★ 내 DB 항목(관계자 인증)도 <b>열 때</b> 그립니다 (2026-08-11)
+       「내 정보」 탭에 함께 둡니다 — 어느 항목의 관계자인지는 <b>신분</b>에
+       관한 것입니다. Linked 는 회원끼리의 인맥이라 성격이 다릅니다. */
+    info:     function(){ drawClaims(); },
     /* ★ 리쿠르트도 <b>열 때</b> 그립니다 (2026-08-05)
        assets/recruit-apps.js 는 예전에 화면이 열릴 때 스스로 그렸습니다.
        그러면 안 보는 탭의 지원 목록까지 미리 받아 오게 됩니다.
@@ -1616,6 +1640,97 @@
       + (sub.length ? '<div class="sub">' + esc(sub.join(' · ')) + '</div>' : '')
       + (withMsg && x.msg ? '<div class="msg">' + esc(x.msg) + '</div>' : '')
       + '</div>';
+  }
+
+  /* ══════════ 내 DB 항목 (관계자 인증) · 2026-08-11 ══════════
+     ★ 파트너 물음에서 나온 것입니다 — 기관·재단DB 에 크레디아를 이미
+       담아 두었는데 크레디아 관계자가 가입하면 같은 곳이 두 벌이 됐습니다.
+
+     ★ 목록·신청·철회는 모두 assets/claim.js 가 합니다.
+       여기서 직접 표를 조회하지 않습니다 — 규칙이 두 곳에 생기면 갈라집니다.
+
+     ★ 신청이 하나도 없으면 <b>칸 자체를 감춥니다.</b>
+       빈 칸이 보이면 무엇을 해야 하는지 모르는 채 자리만 차지합니다.
+       대신 가입할 때 골라 두신 것이 있으면 그것을 안내합니다. */
+  async function drawClaims(){
+    var card = document.getElementById('mpClaimCard');
+    var box  = document.getElementById('mpClaimList');
+    if(!card || !box) return;
+    if(!window.ocClaim){ return; }          /* 아직 안 실려 있으면 조용히 넘어갑니다 */
+
+    var rows = [];
+    try { rows = await window.ocClaim.mine(); } catch(e){ rows = []; }
+
+    /* 가입할 때 「이미 있는 곳」 을 골라 두셨는가 (extra.claim_hint) */
+    var hint = null;
+    try {
+      var m = await window.ocClaim.me();
+      if (m && m.extra && m.extra.claim_hint) hint = m.extra.claim_hint;
+    } catch(e){}
+
+    if(!rows.length && !hint){ card.style.display='none'; return; }
+    card.style.display='';
+
+    var STN = { pending:'확인 중', approved:'이어짐', rejected:'아니라고 함', revoked:'거둠' };
+    var h = '';
+
+    /* 가입 때 골라 두었는데 아직 신청으로 이어지지 않은 것 */
+    if(hint){
+      var already = rows.some(function(r){
+        return r.entity_kind===hint.kind && String(r.entity_id)===String(hint.id); });
+      if(!already){
+        h += '<div class="ocm-row">'
+           +   '<span class="ocm-k">가입 때 고르신 곳</span>'
+           +   '<span class="ocm-n">'+esc(hint.name||'')+'</span>'
+           +   '<button class="ocm-x" data-hint="1">인증 신청하기</button>'
+           +   '<div class="ocm-note">가입하실 때 「이 곳입니다」 라고 골라 두신 곳입니다. '
+           +     '회원 승인이 끝났으니 이제 신청하실 수 있습니다.</div>'
+           + '</div>';
+      }
+    }
+
+    rows.forEach(function(r){
+      h += '<div class="ocm-row" data-id="'+r.id+'">'
+         +   '<span class="ocm-k">'+esc(r.label)+'</span>'
+         +   '<a class="ocm-n" href="'+r.view+'">'+esc(r.entity_name||'')+'</a>'
+         +   '<span class="ocm-s '+esc(r.status)+'">'+esc(STN[r.status]||r.status)+'</span>'
+         +   '<span class="ocm-d">'+(r.created_at?String(r.created_at).slice(0,10).replace(/-/g,'.'):'')+'</span>';
+      if(r.status==='pending' || r.status==='approved')
+        h += '<button class="ocm-x" data-revoke="'+r.id+'">'
+           + (r.status==='approved' ? '이은 것 풀기' : '신청 거두기') + '</button>';
+      if(r.decided_note && (r.status==='rejected' || r.status==='revoked'))
+        h += '<div class="ocm-note">관리자 메모 · '+esc(r.decided_note)+'</div>';
+      if(r.status==='approved')
+        h += '<div class="ocm-note">이 항목을 직접 고치실 수 있고, 화면에 「공식 인증」 표시가 붙습니다.</div>';
+      h += '</div>';
+    });
+
+    box.innerHTML = h;
+
+    /* 철회 */
+    box.querySelectorAll('button[data-revoke]').forEach(function(b){
+      b.addEventListener('click', async function(){
+        if(!confirm('정말 거두시겠습니까? 다시 신청하실 수 있습니다.')) return;
+        b.disabled = true;
+        var ok = await window.ocClaim.revoke(Number(b.getAttribute('data-revoke')));
+        if(!ok){ alert('처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'); b.disabled=false; return; }
+        drawClaims();
+      });
+    });
+
+    /* 가입 때 골라 둔 곳을 이제 신청 */
+    var hb = box.querySelector('button[data-hint]');
+    if(hb && hint){
+      hb.addEventListener('click', async function(){
+        hb.disabled = true;
+        var r = await window.ocClaim.request({
+          kind: hint.kind, id: hint.id, name: hint.name,
+          note: '가입할 때 고른 곳입니다.'
+        });
+        if(!r.ok){ alert(r.msg); hb.disabled=false; return; }
+        drawClaims();
+      });
+    }
   }
 
   async function drawLinks(){
