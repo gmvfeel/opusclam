@@ -107,8 +107,19 @@
     /* 푸터 링크도 같이 */
     footer a{ display:inline-flex;align-items:center;min-height:34px;
       padding-top:7px;padding-bottom:7px;margin-top:-7px;margin-bottom:-7px; }
-    /* 목록 줄의 제목은 줄 전체가 눌리므로 높이만 확보합니다 */
-    ul.list li{ padding-top:11px;padding-bottom:11px; }
+    /* ★ 2026-08-11 · 여기 있던 ul.list li{padding:11px} 를 없앴습니다.
+         두 가지 이유입니다.
+
+       ① 애초에 <b>작동하지 않았습니다.</b>
+          미디어쿼리는 우선순위를 높여 주지 않습니다. 아래쪽(521줄)의
+          ul.list li{padding:9px 0} 이 <b>뒤에 나오므로</b> 이것을 덮었습니다.
+          모바일에서 재어 보니 11px 이 아니라 9px 이 적용돼 있었습니다.
+          → 미디어쿼리 안에서 덮어쓰려면 그 규칙이 <b>원본보다 뒤에</b> 와야 합니다.
+
+       ② 파트너 뜻과 반대 방향입니다.
+          목록 줄 간격을 <b>좁혀</b> 달라는 요청이라 되살리지 않습니다.
+          누를 자리는 32.5px 로 남습니다 — 줄 전체가 눌리고 가로가 넓어
+          작은 단추와 달리 44px 지침을 그대로 볼 필요는 없습니다. */
   }
   @media(max-width:420px){ .exam-comm em{display:none} }
 
@@ -518,7 +529,12 @@
   .lead .foot .dt{font-size:11.5px;color:var(--text-3)}
 
   ul.list{margin-top:4px}
-  ul.list li{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  /* ★ 줄 간격 · 2026-08-11 파트너 요청으로 9px → <b>6px</b>
+       한 줄 38.5px → <b>32.5px</b> (다섯 줄 192.5 → 162.5px)
+       ★ 이 한 줄이 홈의 목록 <b>여섯 곳 전부</b>를 정합니다 —
+         뉴스 · 콩쿠르 · 페스티벌 · 악보 · 음악단체 · 리쿠르트
+         (style.css 에도 같은 규칙이 있어 함께 맞춰 두었습니다) */
+  ul.list li{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
   ul.list li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--violet-2);flex:0 0 4px}
   ul.list li a{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
   ul.list li a:hover{color:var(--link-hover)}
