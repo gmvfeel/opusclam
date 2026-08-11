@@ -218,7 +218,15 @@
 
     var sel='id,member_id,entity_kind,entity_id,entity_name,status,role_title,note,'+
             'evidence_url,email_domain,domain_match,needs_review,created_at,'+
-            'decided_at,decided_note,members(name,username,member_type,email,status)';
+            /* ★ 2026-08-11 · <b>members! 로 어느 관계인지 못박습니다.</b>
+         entity_claims 는 members 를 <b>두 번</b> 가리킵니다 —
+           member_id   신청한 회원
+           decided_by  처리한 관리자
+         그냥 members(...) 라고 쓰면 PostgREST 가 어느 쪽인지 몰라
+         「more than one relationship was found」 로 <b>통째로 실패</b>합니다.
+       ★ 제약 이름은 짐작하지 않고 실제 DB 에서 확인한 것입니다. */
+            'decided_at,decided_note,'+
+            'members!entity_claims_member_id_fkey(name,username,member_type,email,status)';
     var qq=c.from('entity_claims').select(sel).order('created_at',{ascending:false}).limit(200);
     if(STATUS) qq=qq.eq('status',STATUS);
     if(kd) qq=qq.eq('entity_kind',kd);
@@ -250,7 +258,7 @@
       for(var i=0;i<kk.length;i++){
         var p=kk[i].split('|');
         var d=await c.from('entity_claims')
-          .select('id,member_id,members(name,username)')
+          .select('id,member_id,members!entity_claims_member_id_fkey(name,username)')
           .eq('entity_kind',p[0]).eq('entity_id',p[1]).eq('status','approved');
         if(d.data && d.data.length) dupMap[kk[i]]=d.data;
       }
