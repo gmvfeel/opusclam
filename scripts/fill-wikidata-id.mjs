@@ -358,7 +358,33 @@ async function saveOne(table, id, qid) {
     },
     body: JSON.stringify({ wikidata_id: qid }),
   });
-  if (!res.ok) throw new Error(`넣기 실패 ${table}#${id}: ${res.status} ${await res.text()}`);
+
+  if (!res.ok) {
+    const body = await res.text();
+    /* ★★ 409 · 이미 그 번호를 쓰는 줄이 있습니다 ★★
+       ─────────────────────────────────────────────────
+       실제 실행(2026-08-11)에서 두 건이 이렇게 실패했습니다 —
+
+         도이치 그라모폰 → Key (wikidata_id)=(Q168407) already exists
+         라 스칼라       → Key (wikidata_id)=(Q5471)   already exists
+
+       각 표에 wikidata_id <b>유일 제약</b>이 걸려 있어, 같은 번호를
+       두 줄에 넣을 수 없습니다. 즉 <b>같은 표 안에 같은 대상이 두 줄</b>
+       담겨 있고 한쪽은 이미 번호가 채워져 있었던 것입니다.
+
+       ★ 이것은 <b>고마운 실패</b>입니다. 제약이 막아 주어 같은 번호가
+         두 곳에 붙지 않았습니다. 잘못은 자료 쪽에 있습니다.
+       ★ 그래서 <b>오류로 멈추지 않고</b> 「겹침」 으로 세어 둡니다.
+         맨 끝에 모아 알려 드리고, sql/dup-01-wikidata.sql 로
+         어느 줄이 겹치는지 찾으실 수 있습니다. */
+    if (res.status === 409 && /wikidata/i.test(body)) {
+      const e = new Error('이미 다른 줄이 그 번호를 씁니다');
+      e.dup = true;
+      throw e;
+    }
+    throw new Error(`넣기 실패 ${table}#${id}: ${res.status} ${body}`);
+  }
+
   const back = await res.json();
   return Array.isArray(back) && back.length > 0;   /* 0이면 그새 채워진 것 */
 }
@@ -367,9 +393,9 @@ async function saveOne(table, id, qid) {
 async function runTable(cfg) {
   const rows = await loadEmpty(cfg, LIMIT);
   console.log(`\n■ ${cfg.label} (${cfg.table}) — 번호가 빈 자료 ${rows.length}건`);
-  if (!rows.length) return { seen: 0, put: 0, skip: 0, none: 0 };
+  if (!rows.length) return { seen: 0, put: 0, skip: 0, none: 0, dup: 0 };
 
-  let put = 0, skip = 0, none = 0;
+  let put = 0, skip = 0, none = 0, dup = 0;
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -455,14 +481,20 @@ async function runTable(cfg) {
       if (ok) { put++; if (put <= 8) console.log(`  ✓ ${name} → ${top.qid} (${top.score}점 · ${top.why})`); }
       else    { skip++; console.log(`  · ${name} — 그새 사람이 채웠습니다`); }
     } catch (e) {
-      console.log(`  ✘ ${name} — ${e.message}`);
+      if (e && e.dup) {
+        dup++;
+        if (dup <= 5) console.log(`  ⊘ ${name} → ${top.qid} · ${e.message} (같은 표에 겹친 줄이 있습니다)`);
+      } else {
+        console.log(`  ✘ ${name} — ${e.message}`);
+      }
     }
 
     await sleep(60);
   }
 
-  console.log(`  → 넣음 ${put} · 넘김 ${skip} · 후보 없음 ${none}`);
-  return { seen: rows.length, put, skip, none };
+  console.log(`  → 넣음 ${put} · 넘김 ${skip} · 후보 없음 ${none}`
+    + (dup ? ` · 겹침 ${dup}` : ''));
+  return { seen: rows.length, put, skip, none, dup };
 }
 
 /* ── 시작 ────────────────────────────────────────────────────── */
@@ -474,11 +506,12 @@ async function runTable(cfg) {
   console.log('═══ 위키데이터 번호 채우기 ═══');
   console.log(`  표 ${list.length}개 · 표마다 최대 ${LIMIT}건` + (DRY ? ' · 시늉만(넣지 않음)' : ''));
 
-  const sum = { seen: 0, put: 0, skip: 0, none: 0 };
+  const sum = { seen: 0, put: 0, skip: 0, none: 0, dup: 0 };
   for (const cfg of list) {
     try {
       const r = await runTable(cfg);
       sum.seen += r.seen; sum.put += r.put; sum.skip += r.skip; sum.none += r.none;
+      sum.dup += (r.dup || 0);
     } catch (e) {
       if (isStop(e)) { console.log(`⏸ 멈춤: ${stopReason()}`); break; }
       console.error(`✘ ${cfg.label}: ${e.message}`);
@@ -490,6 +523,10 @@ async function runTable(cfg) {
   console.log(`  번호 넣음  ${sum.put}건`);
   console.log(`  넘김       ${sum.skip}건  ← 헷갈리는 것입니다. admin/wikidata-fill.html 에서 사람이 봅니다`);
   console.log(`  후보 없음  ${sum.none}건`);
+  if (sum.dup) {
+    console.log(`  겹침       ${sum.dup}건  ← <같은 표에 같은 대상이 두 줄> 담겨 있습니다.`);
+    console.log(`               sql/dup-01-wikidata.sql 로 어느 줄인지 찾으실 수 있습니다.`);
+  }
   if (sum.put === 0 && sum.seen > 0) {
     console.log('\n  ※ 하나도 넣지 못했습니다. 문턱이 높거나 이름이 위키데이터와 다를 수 있습니다.');
   }
