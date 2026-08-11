@@ -343,6 +343,27 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       if(extra.company) common.name = extra.company;             // 단체·기업 → 단체명
       else if(extra.school_name) common.name = extra.school_name; // 음악학교 → 학교명
     }
+
+    /* ★ 2026-08-11 · 가입 화면에서 「이미 있는 곳」 을 고르셨으면 함께 담습니다.
+         ─────────────────────────────────────────────────────
+         기관·재단DB 의 크레디아를 이미 담아 두었는데 크레디아 관계자가
+         가입하면 <b>같은 곳이 두 벌</b>이 되던 문제를 막습니다.
+
+       ★ 여기서 곧바로 잇지 않는 까닭
+         가입 직후에는 아직 <b>승인 전(pending)</b>이라 잇기 신청 자체가
+         막혀 있습니다(entity_claims 의 RLS). 그래서 「어느 항목이라고
+         하셨는지」만 적어 두었다가, 관리자가 회원을 승인할 때 함께
+         이어 드립니다. 승인 뒤 마이페이지에서도 하실 수 있습니다.
+
+       ★ 이것은 <b>주장</b>일 뿐 확인된 것이 아닙니다.
+         반드시 관리자가 보고 정합니다 — 이름만 같은 곳일 수 있습니다. */
+    try {
+      var hint = window.__ocClaimHint;
+      if (hint && hint.kind && hint.id) {
+        extra.claim_hint = { kind: hint.kind, id: hint.id, name: hint.name || '' };
+      }
+    } catch (e) {}
+
     return await ocAuth.signup(Object.assign({ type:type, extra:extra }, common));
   };
 

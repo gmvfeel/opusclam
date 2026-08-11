@@ -417,6 +417,28 @@
   /* 문서 제목 */
   try { if (document.title) document.title = translate(document.title); } catch (e) {}
 
+  /* ★ 2026-08-11 · 검색 결과에 나오는 <b>두 줄 설명</b>도 옮깁니다.
+       ─────────────────────────────────────────────────────────
+       예전에는 제목만 옮겼습니다. 그래서 영어 화면인데 설명만
+       한국어로 나갔습니다 — 검색 결과에서 그것이 더 눈에 띕니다.
+
+     ★ 글감은 화면의 <b>소개 문장(.pdb-lead)</b>과 같습니다.
+       그 문장들은 이미 사전에 들어 있으므로 따로 옮길 것이 없습니다.
+       (넣는 일은 scripts/build-meta.mjs 가 합니다)
+
+     ★ og:description·twitter:description 도 함께 봅니다 —
+       카카오톡·트위터에 주소를 붙일 때 나오는 그 설명입니다. */
+  try {
+    var metaSel = 'meta[name="description"],meta[property="og:description"],' +
+                  'meta[name="twitter:description"],meta[property="og:title"],' +
+                  'meta[name="twitter:title"]';
+    var metas = document.querySelectorAll(metaSel);
+    for (var mi = 0; mi < metas.length; mi++) {
+      var mc = metas[mi].getAttribute('content');
+      if (mc) metas[mi].setAttribute('content', translate(mc));
+    }
+  } catch (e) {}
+
   /* 첫 훑기 — 지금 있는 것(주로 <head> 와 빈 <body>)을 바꿉니다 */
   scan(document.documentElement);
 

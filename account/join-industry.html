@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="/assets/auth.css">
+<link rel="stylesheet" href="/assets/claim.css">
 <style>
   /* 탭에 따라 폼 배경 구분: 단체·기업 선택 시 연한 색조 */
   .fbox{transition:background .25s ease}
@@ -24,9 +25,10 @@
                ★ data-k="birth" 를 <b>담는 요소에 그대로</b> 둡니다 —
                  이 화면의 저장 코드가 data-k 를 훑어 값을 모으므로,
                  이름을 바꾸면 생년월일이 저장되지 않습니다. -->
-            <div class="oc-birth-box" data-k="birth" data-birth></div></div><div class="fg"><label class="fl">회사(단체)명</label><input class="inp" type="text" data-k="company" placeholder="소속 회사·단체"></div><div class="fg"><label class="fl">부서/직책</label><input class="inp" type="text" data-k="position" placeholder=""></div><div class="fg full"><label class="fl">주소</label><div class="inrow"><input class="inp" type="text" data-k="address" id="oc-addr-industry" placeholder=""><button type="button" class="mini-btn" data-addr-search data-addr1="#oc-addr-industry">주소검색</button></div><div class="hint">주소검색을 누르시면 채워집니다. 나머지 주소(동·호수 등)는 이어서 적어 주십시오.</div></div><div class="fg full"><label class="fl">관련 영상</label><input class="inp" type="text" data-k="link_video" placeholder="URL"></div></div></div><div data-group="org"><div class="frow"><div class="fg"><label class="fl">단체(기업)명 <span class="req">*</span></label><input class="inp" type="text" data-k="company" data-req placeholder=""></div><div class="fg"><label class="fl">영문명</label><input class="inp" type="text" data-k="name_en" placeholder="(선택)"></div><div class="fg"><label class="fl">사업자번호</label><input class="inp" type="text" data-k="biz_no" placeholder=""></div><div class="fg"><label class="fl">홈페이지</label><input class="inp" type="text" data-k="link_home" placeholder="https://"></div><div class="fg"><label class="fl">창단/설립 연도</label><input class="inp" type="text" data-k="founded" placeholder="예: 1998"></div><div class="fg"><label class="fl">대표자·지휘자</label><input class="inp" type="text" data-k="leader" placeholder=""></div><div class="fg"><label class="fl">연고 공연장</label><input class="inp" type="text" data-k="home_venue" placeholder=""></div><div class="fg"><label class="fl">부서/직책</label><input class="inp" type="text" data-k="position" placeholder=""></div><div class="fg full"><label class="fl">주소</label><div class="inrow"><input class="inp" type="text" data-k="address" id="oc-addr-org" placeholder=""><button type="button" class="mini-btn" data-addr-search data-addr1="#oc-addr-org">주소검색</button></div><div class="hint">주소검색을 누르시면 채워집니다. 나머지 주소(동·호수 등)는 이어서 적어 주십시오.</div></div><div class="fg full"><label class="fl">단체 소개</label><textarea class="inp" data-k="description" placeholder=""></textarea></div><div class="fg full"><label class="fl">로고</label><input class="inp" type="file" data-k="logo"><div class="hint">권장 사이즈 정사각, JPG/PNG</div></div><div class="fg full"><label class="fl">관련 영상</label><input class="inp" type="text" data-k="link_video" placeholder="URL"></div></div></div><div class="frow"><div class="fg"><label class="fl">이메일 <span class="req">*</span></label><input class="inp" type="email" data-k="email" data-req placeholder="name@example.com"></div><div class="fg"><label class="fl">휴대폰</label><input class="inp" type="text" data-k="phone" placeholder="010-0000-0000"></div><div class="fg full"><label class="fl">분야 선택</label><select class="inp" data-k="field1"><option value="">선택하세요</option><option>공연기획</option><option>공연제작</option><option>매니지먼트</option><option>평론</option><option>악기/음향</option><option>출판/미디어</option><option>기타</option></select></div></div><div class="fg full"><label class="db-consent"><input type="checkbox" data-k="db_consent" checked> <span>작성한 정보가 오퍼스클램 데이터베이스에 등록되는 것에 동의합니다. (관리자 승인 후 반영)</span></label></div></div><div class="err" id="form-err"></div><div class="actions"><button class="btn primary" id="submit-btn">회원가입 완료</button><a class="btn ghost" href="/account/join.html">취소</a></div></div></main><div id="oc-footer"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+            <div class="oc-birth-box" data-k="birth" data-birth></div></div><div class="fg"><label class="fl">회사(단체)명</label><input class="inp" type="text" data-k="company" placeholder="소속 회사·단체"></div><div class="fg"><label class="fl">부서/직책</label><input class="inp" type="text" data-k="position" placeholder=""></div><div class="fg full"><label class="fl">주소</label><div class="inrow"><input class="inp" type="text" data-k="address" id="oc-addr-industry" placeholder=""><button type="button" class="mini-btn" data-addr-search data-addr1="#oc-addr-industry">주소검색</button></div><div class="hint">주소검색을 누르시면 채워집니다. 나머지 주소(동·호수 등)는 이어서 적어 주십시오.</div></div><div class="fg full"><label class="fl">관련 영상</label><input class="inp" type="text" data-k="link_video" placeholder="URL"></div></div></div><div data-group="org"><div class="frow"><div class="fg full"><label class="fl">단체(기업)명 <span class="req">*</span></label><input class="inp" type="text" data-k="company" data-req placeholder=""><div id="oc-claim-pick"></div></div><div class="fg"><label class="fl">영문명</label><input class="inp" type="text" data-k="name_en" placeholder="(선택)"></div><div class="fg"><label class="fl">사업자번호</label><input class="inp" type="text" data-k="biz_no" placeholder=""></div><div class="fg"><label class="fl">홈페이지</label><input class="inp" type="text" data-k="link_home" placeholder="https://"></div><div class="fg"><label class="fl">창단/설립 연도</label><input class="inp" type="text" data-k="founded" placeholder="예: 1998"></div><div class="fg"><label class="fl">대표자·지휘자</label><input class="inp" type="text" data-k="leader" placeholder=""></div><div class="fg"><label class="fl">연고 공연장</label><input class="inp" type="text" data-k="home_venue" placeholder=""></div><div class="fg"><label class="fl">부서/직책</label><input class="inp" type="text" data-k="position" placeholder=""></div><div class="fg full"><label class="fl">주소</label><div class="inrow"><input class="inp" type="text" data-k="address" id="oc-addr-org" placeholder=""><button type="button" class="mini-btn" data-addr-search data-addr1="#oc-addr-org">주소검색</button></div><div class="hint">주소검색을 누르시면 채워집니다. 나머지 주소(동·호수 등)는 이어서 적어 주십시오.</div></div><div class="fg full"><label class="fl">단체 소개</label><textarea class="inp" data-k="description" placeholder=""></textarea></div><div class="fg full"><label class="fl">로고</label><input class="inp" type="file" data-k="logo"><div class="hint">권장 사이즈 정사각, JPG/PNG</div></div><div class="fg full"><label class="fl">관련 영상</label><input class="inp" type="text" data-k="link_video" placeholder="URL"></div></div></div><div class="frow"><div class="fg"><label class="fl">이메일 <span class="req">*</span></label><input class="inp" type="email" data-k="email" data-req placeholder="name@example.com"></div><div class="fg"><label class="fl">휴대폰</label><input class="inp" type="text" data-k="phone" placeholder="010-0000-0000"></div><div class="fg full"><label class="fl">분야 선택</label><select class="inp" data-k="field1"><option value="">선택하세요</option><option>공연기획</option><option>공연제작</option><option>매니지먼트</option><option>평론</option><option>악기/음향</option><option>출판/미디어</option><option>기타</option></select></div></div><div class="fg full"><label class="db-consent"><input type="checkbox" data-k="db_consent" checked> <span>작성한 정보가 오퍼스클램 데이터베이스에 등록되는 것에 동의합니다. (관리자 승인 후 반영)</span></label></div></div><div class="err" id="form-err"></div><div class="actions"><button class="btn primary" id="submit-btn">회원가입 완료</button><a class="btn ghost" href="/account/join.html">취소</a></div></div></main><div id="oc-footer"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/addr.js"></script>
 <script src="/assets/auth.js"></script>
+<script src="/assets/claim.js"></script>
 <script>
 (function(){
   var TYPE='industry';
@@ -45,9 +47,41 @@
     if(!window.ocAuth||!window.ocAuth.client()){msg.textContent='(미리보기) Supabase 설정 후 확인됩니다';msg.style.color='#8a94a6';return;}
     var ok=await window.ocAuth.usernameAvailable(u); msg.textContent=ok?'사용 가능한 아이디입니다.':'이미 사용 중인 아이디입니다.'; msg.style.color=ok?'#7bd88f':'#f2777a';
   });
+  /* ★ 2026-08-11 · 「이미 오퍼스클램에 있는 곳인가」 확인 (파트너 물음)
+       ─────────────────────────────────────────────────────────
+       기관·재단DB 에 크레디아를 이미 담아 두었는데 크레디아 관계자가
+       가입하면, 예전에는 <b>같은 크레디아가 두 벌</b>이 됐습니다.
+       이제 단체명을 적으면 그 자리에서 찾아 보여 드립니다.
+
+     ★ 여기서는 <b>잇기 신청을 하지 않습니다.</b>
+       가입 직후에는 아직 승인 전이라 신청이 막혀 있습니다(RLS).
+       고르신 것만 적어 두었다가, 관리자가 회원을 승인할 때
+       함께 이어 드립니다. 승인 뒤 마이페이지에서도 하실 수 있습니다. */
+  var pickedEntity = null;
+  var companyInput = document.querySelector('[data-group="org"] [data-k="company"]');
+  var pickBox = document.getElementById('oc-claim-pick');
+  if (companyInput && pickBox && window.ocClaim) {
+    window.ocClaim.mountPicker(pickBox, {
+      input: companyInput,
+      memberType: 'org',
+      onPick: function (p) { pickedEntity = p; }
+    });
+  }
+
   document.getElementById('submit-btn').addEventListener('click', async function(){
     var err=document.getElementById('form-err'); err.textContent='';
     if(!window.ocAuth){err.textContent='초기화 중입니다. 잠시 후 다시 시도해 주세요.';return;}
+
+    /* 고르신 것이 있으면 가입 정보에 실어 보냅니다 —
+       auth.js 가 extra.claim_hint 로 담습니다. */
+    if (TYPE === 'org' && pickedEntity) {
+      window.__ocClaimHint = {
+        kind: pickedEntity.kind, id: pickedEntity.id, name: pickedEntity.name
+      };
+    } else {
+      window.__ocClaimHint = null;
+    }
+
     var r=await window.ocAuth.formSignup(document, TYPE);
     if(!r||!r.ok){err.textContent=(r&&r.msg)||'가입 처리 중 오류가 발생했습니다.';return;}
     ocGo('/account/join-complete.html');
