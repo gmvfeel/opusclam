@@ -81,15 +81,68 @@ const BAD_KIND = ['사람','인물','작곡가','연주자','가수','배우','�
   'film','movie','tv series','village','town','city','district','river','mountain',
   'island','book','novel','manga','video game','station','wikimedia'];
 
-/* ★ 인물 갈래는 BAD_KIND 에서 <사람 관련 낱말을 뺍니다>.
-     그러지 않으면 「작곡가」 라는 설명이 붙은 진짜 작곡가를
-     「갈래 어긋남」 으로 깎아 아무도 못 찾습니다. */
-const PERSON_OK = new Set(['사람','인물','작곡가','연주자','가수','배우',
-  'human','person','composer','musician','singer','actor']);
+/* ★ 인물 갈래는 BAD_KIND 에서 <사람이라는 말 자체>만 뺍니다.
+     그러지 않으면 「대한민국의 작곡가」 라는 설명이 붙은 진짜 작곡가를
+     「갈래 어긋남」 으로 깎아 아무도 못 찾습니다.
+   ★ 다만 <가수·배우>는 빼지 않습니다 — 우리 DB 는 클래식 인물이므로
+     대중가수·배우는 <다른 사람>일 가능성이 큽니다. */
+const PERSON_OK = new Set(['사람','인물','작곡가','연주자',
+  'human','person','composer','musician']);
+
+/* ★★ 인물 갈래에서 <음악과 무관한 직업>은 크게 깎습니다 ★★
+   ─────────────────────────────────────────────────────
+   시늉 실행(2026-08-11)에서 드러난 위험입니다 —
+
+     김신    → 「대한민국의 축구 선수」      6점
+     김대성  → 「대한민국의 배드민턴 선수」  6점
+     신동일  → 「중앙대학교의 영어영문학자」 6점
+     이건우  → 「대한민국의 가수」           6점
+
+   이번에는 2등이 있어 「3점 차이」 규칙에 걸려 넘어갔습니다. 그런데
+   후보가 <하나뿐이면> 「후보 하나뿐」 +1점을 받아 <7점으로 들어갑니다>.
+   재현해 보니 넷 다 들어갔습니다.
+
+   ★ 왜 6점까지 올라가나
+     이름 같음 +4, 그리고 국적이 「대한민국」 이라 설명에 그 말이 있으면
+     「지역 맞음」 +2 — 운동선수도 대한민국 사람이니 맞아 버립니다.
+     신동일은 「중앙대학교」 의 <대학> 이 GOOD_KIND 에 있어 오히려
+     「갈래 맞음」 +2 를 받았습니다.
+
+   ★ 잘못 이은 번호는 그 뒤의 보강·사진·번역을 <모두 엉뚱하게> 만듭니다.
+     그래서 −8점으로 크게 깎아 확실히 문턱 아래로 내립니다. */
+const PERSON_BAD_JOB = [
+  /* 운동 */
+  '축구','야구','배드민턴','농구','배구','골프','테니스','수영','육상','씨름','태권도',
+  '스케이트','체조','유도','권투','복싱','레슬링','선수',
+  'footballer','football player','baseball','basketball','volleyball','badminton',
+  'golfer','tennis','swimmer','athlete','wrestler','boxer','skater',
+  /* 학계·다른 분야 */
+  '영어영문학','국문학','법학','의학','공학','물리학','화학','생물학','경제학','경영학',
+  '정치인','국회의원','시장','도지사','장관','판사','검사','변호사','의사','기업인','언론인',
+  'politician','lawyer','physician','engineer','economist','professor of english',
+  'linguist','historian','mathematician','physicist','chemist','biologist',
+  /* 대중문화 — 우리 DB 는 클래식입니다 */
+  '아이돌','래퍼','트로트','개그맨','코미디언','유튜버','방송인','모델','성우',
+  'rapper','idol','comedian','youtuber','tv personality','voice actor','fashion model',
+];
 
 /* ★ 옵션 이름을 <짐작하지 않고> scripts/lib/http.mjs 에서 확인했습니다.
      ua · accept · tries · backoff · maxWaitMs · budgetMs 만 받습니다.
      쉬는 틈은 그 파일이 다루지 않으므로 아래에서 sleep 으로 둡니다. */
+/* ★ 인물 갈래에서 <음악 하는 사람>임을 알리는 말 — 가점합니다.
+     ★ 왜 필요한가 (시늉 실행에서 드러난 것)
+       「예뇌 타카스」 → Q261138 「Hungarian composer」 는 <맞는 후보>인데
+       1점밖에 받지 못했습니다. 이름 표기가 달라 「이름 같음」 을 못 받고,
+       국적이 「헝가리」 인데 설명은 영어라 「지역 맞음」 도 못 받았습니다.
+       그런데 「composer」 라는 <가장 뚜렷한 근거>에는 점수가 없었습니다. */
+const MUSIC_JOB = [
+  '작곡가','지휘자','연주자','성악가','피아니스트','바이올리니스트','첼리스트',
+  '음악가','음악학자','오르가니스트','소프라노','테너','바리톤','플루티스트',
+  'composer','conductor','pianist','violinist','cellist','organist','flautist','flutist',
+  'soprano','tenor','baritone','mezzo-soprano','musicologist','musician',
+  'classical', 'opera singer', 'harpsichordist', 'violist',
+];
+
 const getJSON = makeGetJSON({
   ua: 'OPUSCLAM/1.0 (https://opusclam.com; cser@wixon.co.kr)',
 });
@@ -165,9 +218,32 @@ function scoreCand(row, cfg, c, only) {
 
   if (desc) {
     const isPerson = (cfg.table === 'persons' || cfg.table === 'modern_composers');
-    for (const g of GOOD_KIND) {
-      if (desc.includes(g)) { sc += 2; why.push('갈래 맞음'); break; }
+
+    /* ★ 인물 갈래에서 <음악과 무관한 직업>이면 먼저 크게 깎습니다.
+         가점보다 먼저 보아, 「중앙대학교의 영어영문학자」 처럼 「대학」 이
+         들어 있어 가점까지 받는 일을 막습니다. */
+    let badJob = false;
+    if (isPerson) {
+      for (const j of PERSON_BAD_JOB) {
+        if (desc.includes(j)) { sc -= 8; why.push('★ 음악과 무관한 직업'); badJob = true; break; }
+      }
     }
+
+    if (!badJob) {
+      for (const g of GOOD_KIND) {
+        if (desc.includes(g)) { sc += 2; why.push('갈래 맞음'); break; }
+      }
+    }
+
+    /* ★ 인물 갈래에서 <음악 하는 사람>이면 가점합니다.
+         「Hungarian composer」 인 진짜 작곡가(예뇌 타카스)가 1점밖에
+         못 받아 놓치던 것을 고칩니다. */
+    if (isPerson && !badJob) {
+      for (const m of MUSIC_JOB) {
+        if (desc.includes(m)) { sc += 3; why.push('음악 하는 사람'); break; }
+      }
+    }
+
     for (const d of BAD_KIND) {
       if (isPerson && PERSON_OK.has(d)) continue;   /* ★ 인물은 사람 낱말을 깎지 않습니다 */
       if (desc.includes(d)) { sc -= 4; why.push('★ 갈래 어긋남'); break; }
@@ -175,6 +251,48 @@ function scoreCand(row, cfg, c, only) {
   } else {
     why.push('설명 없음');
   }
+
+  /* ★★ 이름 표기가 다르면 <넣지 않습니다> ★★
+
+     ─────────────────────────────────────────────────────
+
+     시늉 실행에서 이런 경우가 나왔습니다 —
+
+  
+
+       「예뇌 타카스」  ↔  Jenő Takács      (Hungarian composer)
+
+       「노르망 록우드」 ↔  Normand Lockwood  (American classical composer)
+
+  
+
+     둘 다 <맞는 후보>입니다. 그런데 한글 표기와 원어가 달라
+
+     「이름 같음」 을 받지 못해 4점에 머물렀습니다.
+
+  
+
+     ★ 점수를 더 주어 넣게 할 수도 있었지만 <그러지 않았습니다>.
+
+       이름이 맞는지 <기계가 확인할 길이 없기> 때문입니다.
+
+       「Hungarian composer」 라는 설명만으로는, 그 사람이 우리가
+
+       찾는 「예뇌 타카스」 인지 <같은 나라의 다른 작곡가>인지
+
+       가릴 수 없습니다. 헝가리 작곡가는 여럿입니다.
+
+  
+
+     ★ 두 방향의 위험을 견주면 —
+
+         넣지 않으면  사람이 화면에서 보고 넣습니다 (손이 좀 갑니다)
+
+         잘못 넣으면  보강·사진·번역이 <모두 엉뚱한 사람 것>이 되고,
+
+                      그 뒤에 아무도 알아채지 못합니다
+
+       그래서 <이름이 뚜렷할 때만> 넣습니다. */
 
   if (only) { sc += 1; why.push('후보 하나뿐'); }
   return { score: sc, why: why.join(' · ') };
