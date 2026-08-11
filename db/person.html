@@ -1034,7 +1034,19 @@ if('serviceWorker' in navigator){
   function natCode(n){if(!n)return '';n=String(n).trim();if(NATCODE[n])return NATCODE[n];for(var k in NATCODE){if(n.indexOf(k)>=0)return NATCODE[k];}return '';}
   function nd(v){return (v!=null&&String(v).trim())?esc(v):'<span class="nd">\u2014</span>';}
   function ava(n){n=(n||'').trim();return n?esc(n.charAt(0)):'?';}
-  function tags(f){if(!f)return '';return f.split(',').map(function(t){t=t.trim();return t?'<span class="tag">'+esc(t)+'</span>':'';}).join('');}
+  /* ★ 2026-08-11 · 쉼표만 쪼개던 것을 <b>중점(·)·슬래시</b>도 쪼개게 했습니다.
+       실제 자료에 「작곡·국악」 처럼 중점으로 이은 것이 있습니다(백대웅).
+       쉼표만 쪼개면 <b>「작곡·국악」 이 한 덩어리 이름표</b>로 나와,
+       옆 사람의 「작곡」 과 달라 보입니다.
+     ★ 앞뒤 빈칸을 떼고, 빈 것은 버립니다 — 「작곡,」 처럼 끝에 쉼표가
+       남은 자료가 있어도 빈 이름표가 생기지 않습니다. */
+  function tags(f){
+    if(!f) return '';
+    return String(f).split(/[,·\/]/).map(function(t){
+      t=t.trim();
+      return t ? '<span class="tag">'+esc(t)+'</span>' : '';
+    }).join('');
+  }
 
   function renderRow(p,no,ctx){
     var oc=p.is_oc?' <span class="oc-badge">OC</span>':'';
@@ -1087,7 +1099,41 @@ if('serviceWorker' in navigator){
     var ROLES=['작곡','편곡','지휘','연주','성악','음악학','음악교육','평론'];
     var GROUPS={'작곡·지휘·이론 전체':{c:'field',v:['작곡','편곡','지휘','음악학','음악교육','평론']},'연주 전체':{c:'field',v:['연주']},'건반 전체':{c:'instrument',v:['피아노','오르간','하프시코드','아코디언','건반악기']},'현악 전체':{c:'instrument',v:['바이올린','비올라','첼로','콘트라베이스','하프','기타','류트','비올족']},'목관 전체':{c:'instrument',v:['플루트','오보에','클라리넷','바순','색소폰','리코더']},'금관 전체':{c:'instrument',v:['호른','트럼펫','트롬본','튜바']}};
     var fieldParam='';
-    if(field&&field!=='전체 분야'){ if(GROUPS[field]){ var g=GROUPS[field]; fieldParam='&'+g.c+'=in.('+g.v.map(function(x){return encodeURIComponent(x);}).join(',')+')'; } else if(ROLES.indexOf(field)>=0){ fieldParam='&field=eq.'+encodeURIComponent(field); } else { fieldParam='&instrument=eq.'+encodeURIComponent(field); } }
+    /* ★★ 2026-08-11 · 분야·악기 거르기를 <b>부분 일치</b>로 바꿨습니다 ★★
+       ─────────────────────────────────────────────────────────────
+       ★ 무엇이 잘못됐던가
+         eq (정확히 일치)를 쓰고 있었습니다. 그런데 한 사람이 여러
+         분야를 겸하면 칸에 <b>「작곡,지휘」 처럼 함께</b> 담깁니다.
+         그러면 「작곡」 으로 거를 때 <b>그 사람이 빠집니다.</b>
+
+         실제로 겪은 일 — 분야 오분류를 바로잡으며 아홉 분을 고쳤는데
+         (금수현 「작곡,성악」 · 최영섭 「작곡,지휘」 …) 그 가운데
+         <b>여섯 분이 「작곡」 목록에서 사라졌습니다.</b>
+         자료를 낫게 고쳤는데 <b>찾을 수 없게</b> 된 것입니다.
+
+       ★ 왜 부분 일치로 괜찮은가
+         분야 여덟 가지(작곡·편곡·지휘·연주·성악·음악학·음악교육·평론)는
+         <b>어느 것도 다른 것에 들어 있지 않습니다.</b> 그래서 「작곡」 을
+         찾으면 「편곡」 이 걸리는 일이 없습니다.
+         (「음악학」 과 「음악교육」 도 겹치는 낱말은 「음악」 뿐입니다)
+
+       ★ 묶음(GROUPS)은 or 로 잇습니다
+         in.(가,나,다) 는 <b>값 전체가 같아야</b> 걸립니다. 그래서
+         or=(field.ilike.*가*,field.ilike.*나*…) 로 바꿉니다.
+
+       ★ 악기도 함께 바꿉니다 — 두 가지를 다루는 연주자가 있습니다. */
+    if(field&&field!=='전체 분야'){
+      if(GROUPS[field]){
+        var g=GROUPS[field];
+        fieldParam='&or=('+g.v.map(function(x){
+          return g.c+'.ilike.*'+encodeURIComponent(x)+'*';
+        }).join(',')+')';
+      } else if(ROLES.indexOf(field)>=0){
+        fieldParam='&field=ilike.*'+encodeURIComponent(field)+'*';
+      } else {
+        fieldParam='&instrument=ilike.*'+encodeURIComponent(field)+'*';
+      }
+    }
     return regionParam+fieldParam+eraParam+scParam;
   }
   function buildOrder(sels){
