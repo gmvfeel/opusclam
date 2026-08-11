@@ -56,16 +56,27 @@
      번역해도 <b>「한국어가 섞인 영어 쪽」 이라는 평가가 남습니다.</b>
      그래서 다 채울 때까지 「거두어 가지 마세요」 표를 붙여 둡니다.
 
-     ▶ 언제 끄나 — 사전이 충분히 차서 화면이 온전히 그 말로 보일 때
-       아래 한 줄만 false 로 바꾸면 됩니다. 그 순간 noindex 가 빠지고
-       hreflang 이 붙어 검색엔진이 언어별로 거두어 갑니다.
-       (한국어 화면에는 처음부터 아무 영향이 없습니다)
+     ▶ 2026-08-11 · <b>열었습니다.</b> 사전 2,319개 · 화면 문구 96% ·
+       법적 문서 4종 100%. 이제 noindex 가 빠지고 hreflang 이 붙습니다.
+       (한국어 화면에는 처음부터 아무 영향이 없었습니다)
+
+     ★ hreflang 은 <b>두 갈래로</b> 알립니다.
+       ① 이 파일이 화면 <head> 에 넣는 link — 구글은 자바스크립트를
+          돌리므로 읽습니다.
+       ② <b>sitemap.xml</b> — 네이버·다음·빙은 자바스크립트를 잘 돌리지
+          않아 ①을 놓칠 수 있습니다. 그래서 sitemap 에도 넣었습니다.
+          그쪽은 scripts/build-sitemap.mjs 가 만듭니다.
+       ★ 둘 다 <b>같은 짝</b>이어야 합니다. 어느 한쪽만 고치면 구글이
+         어긋난 짝을 통째로 버립니다. 감출 화면(HIDE_PATH)을 손대면
+         <b>sitemap 을 다시 돌려 주십시오.</b>
 
      ★ robots.txt 에 Disallow 를 <b>넣지 않습니다.</b>
        막아 버리면 봇이 화면을 읽지 못해 <b>noindex 를 보지도 못합니다.</b>
        그러면 링크만 보고 주소를 거두어 갈 수 있어 오히려 위험합니다.
-       읽게 하되 「거두지 마세요」 라고 말하는 편이 확실합니다. */
-  var HIDE_FROM_SEARCH = true;
+       읽게 하되 「거두지 마세요」 라고 말하는 편이 확실합니다.
+
+     ★ 되돌리려면 아래를 true 로 바꾸면 됩니다 — 그 순간 다시 막힙니다. */
+  var HIDE_FROM_SEARCH = false;
 
   /* 다룰 언어. 늘릴 때는 여기와 assets/i18n/○○.json 만 만들면 됩니다. */
   var LANGS = ['en', 'ja'];
@@ -505,8 +516,28 @@
          막아 둔 화면을 「이 말의 판」 이라고 알리면 서로 어긋납니다. */
       if (HIDE_FROM_SEARCH) return;
       if (document.querySelector('link[rel="alternate"][hreflang]')) return;
+
+      /* ★ 2026-08-11 · 그 말에서 <b>감춘 화면</b>은 그 말을 적지 않습니다.
+           리쿠르트·입시·지원금 따위는 영어·일본어 메뉴에서 감췄는데,
+           예전에는 여기서 세 말을 늘 적었습니다. 그러면
+           <b>sitemap.xml 과 짝이 어긋납니다</b> — sitemap 은 한국어만
+           담고 이쪽은 영어·일본어까지 담으니, 구글이 서로 다른 두 말을
+           듣고 <b>그 짝을 통째로 버립니다.</b>
+         ★ 감출 목록은 위 HIDE_PATH 하나만 봅니다. sitemap 을 만드는
+           scripts/build-sitemap.mjs 도 이 파일의 같은 자리를 읽습니다.
+           그래서 한 곳만 고치면 둘이 저절로 맞습니다. */
+      function shownIn(lang) {
+        var paths = HIDE_PATH[lang] || [];
+        for (var i = 0; i < paths.length; i++) {
+          if (BARE.indexOf(paths[i]) === 0) return false;
+        }
+        return true;
+      }
+
       var list = [['ko', BARE]];
-      LANGS.forEach(function (l) { list.push([l, '/' + l + BARE]); });
+      LANGS.forEach(function (l) {
+        if (shownIn(l)) list.push([l, '/' + l + BARE]);
+      });
       list.push(['x-default', BARE]);
       list.forEach(function (pair) {
         var el = document.createElement('link');

@@ -1,0 +1,183 @@
+/* ════════════════════════════════════════════════════════════════
+   sitemap.xml 을 세 말(한국어·영어·일본어)로 넓혀 다시 씁니다
+   ────────────────────────────────────────────────────────────────
+   실행:  node scripts/build-sitemap.mjs
+   결과:  sitemap.xml 을 덮어씁니다
+
+   ★ 왜 손으로 적지 않고 이 파일을 두는가
+     화면 51개 × 세 말 = 153 줄입니다. 손으로 적으면 새 화면을 열
+     때마다 세 군데를 고쳐야 하고, 한 곳을 빠뜨리면 hreflang 이
+     서로 어긋나 <b>구글이 통째로 무시합니다.</b>
+     주소는 아래 PAGES 한 곳에만 적고, 나머지는 이 파일이 만듭니다.
+
+   ★ hreflang 의 규칙 — 서로 가리켜야 합니다
+     한국어 판이 영어 판을 「내 다른 말 판」이라 하면,
+     <b>영어 판도 한국어 판을 똑같이 가리켜야</b> 합니다.
+     한쪽만 가리키면 구글은 그 짝을 버립니다. 그래서 세 판 모두에
+     같은 목록을 넣습니다.
+
+   ★ 영어·일본어에서 감춘 화면은 그 말의 sitemap 에 넣지 않습니다
+     메뉴에서 안 보이는 화면이 검색에는 나오면 앞뒤가 맞지 않습니다.
+     감출 목록은 assets/i18n.js 의 HIDE_PATH 와 <b>같아야</b> 하므로,
+     이 파일이 그 파일을 직접 읽어 맞춥니다 — 두 곳에 적지 않습니다.
+   ════════════════════════════════════════════════════════════════ */
+
+import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ORIGIN = 'https://opusclam.com';
+const LANGS = ['en', 'ja'];
+
+/* ── 담을 화면 ──────────────────────────────────────────────────
+   ★ 새 메뉴를 열면 여기에 한 줄만 보태고 이 파일을 다시 돌리십시오.
+   ★ 상세 화면(-view.html)은 아직 넣지 않습니다 — 내용을 자바스크립트로
+     불러오므로 봇에게는 빈 껍데기입니다. 미리 그려 주게 된 뒤에 엽니다. */
+const PAGES = [
+  ['/',                                    'daily',   '1.0'],
+  ['/home.html',                           'daily',   '1.0'],
+  ['/search.html',                         'weekly',  '0.6'],
+
+  ['/db/index.html',                       'daily',   '0.9'],
+  ['/db/person.html',                      'daily',   '0.9'],
+  ['/db/venue.html',                       'weekly',  '0.8'],
+  ['/db/modern.html',                      'weekly',  '0.8'],
+  ['/db/org.html',                         'weekly',  '0.8'],
+  ['/db/school.html',                      'weekly',  '0.8'],
+  ['/db/foundation.html',                  'weekly',  '0.8'],
+  ['/db/work.html',                        'weekly',  '0.8'],
+  ['/db/timeline.html',                    'monthly', '0.7'],
+  ['/db/terms.html',                       'monthly', '0.7'],
+  ['/db/academic.html',                    'weekly',  '0.8'],
+
+  ['/community/index.html',                'daily',   '0.9'],
+  ['/community/news.html',                 'daily',   '0.8'],
+  ['/community/hottopic.html',             'daily',   '0.8'],
+  ['/community/qna.html',                  'daily',   '0.8'],
+  ['/community/prenatal.html',             'weekly',  '0.7'],
+  ['/community/prenatal-playlist.html',    'weekly',  '0.7'],
+  ['/community/selfpr.html',               'weekly',  '0.7'],
+  ['/community/school-month.html',         'monthly', '0.7'],
+  ['/community/gallery.html',              'weekly',  '0.7'],
+  ['/community/modern.html',               'weekly',  '0.7'],
+  ['/community/utility.html',              'weekly',  '0.7'],
+  ['/community/admission.html',            'weekly',  '0.8'],
+  ['/community/admission-community.html',  'weekly',  '0.7'],
+
+  ['/spot/index.html',                     'daily',   '0.8'],
+  ['/spot/concert.html',                   'daily',   '0.8'],
+  ['/spot/concours.html',                  'weekly',  '0.8'],
+  ['/spot/concours-price.html',            'weekly',  '0.7'],
+  ['/spot/festival.html',                  'weekly',  '0.8'],
+  ['/spot/funding.html',                   'weekly',  '0.7'],
+  ['/spot/score.html',                     'weekly',  '0.7'],
+  ['/spot/media.html',                     'weekly',  '0.7'],
+  ['/spot/sites.html',                     'monthly', '0.6'],
+
+  ['/lesson/index.html',                   'weekly',  '0.8'],
+  ['/lesson/master.html',                  'weekly',  '0.7'],
+  ['/lesson/open.html',                    'weekly',  '0.7'],
+  ['/lesson/live.html',                    'weekly',  '0.7'],
+  ['/lesson/one.html',                     'weekly',  '0.7'],
+  ['/lesson/group.html',                   'weekly',  '0.7'],
+  ['/lesson/instructor.html',              'weekly',  '0.7'],
+
+  ['/recruit/guide.html',                  'monthly', '0.6'],
+  ['/recruit/job.html',                    'daily',   '0.7'],
+  ['/recruit/talent.html',                 'daily',   '0.7'],
+
+  ['/shop/apply.html',                     'monthly', '0.5'],
+
+  ['/legal/terms.html',                    'yearly',  '0.3'],
+  ['/legal/privacy.html',                  'yearly',  '0.3'],
+  ['/legal/data-policy.html',              'yearly',  '0.3'],
+  ['/legal/data-protection.html',          'yearly',  '0.3'],
+];
+
+/* ── assets/i18n.js 에서 「그 말에서 감출 주소」 를 그대로 읽어 옵니다
+      두 곳에 적으면 언젠가 갈라집니다. 한 곳만 봅니다. ────────── */
+function readHidePath() {
+  const src = readFileSync(join(ROOT, 'assets', 'i18n.js'), 'utf8');
+  const start = src.indexOf('var HIDE_PATH');
+  if (start < 0) throw new Error('i18n.js 에서 HIDE_PATH 를 찾지 못했습니다');
+  const open = src.indexOf('{', start);
+  let depth = 0, end = -1;
+  for (let i = open; i < src.length; i++) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
+  }
+  if (end < 0) throw new Error('HIDE_PATH 의 닫는 괄호를 찾지 못했습니다');
+
+  const body = src.slice(open, end + 1);
+  const out = {};
+  for (const lang of LANGS) {
+    const m = new RegExp(lang + '\\s*:\\s*\\[([\\s\\S]*?)\\]').exec(body);
+    if (!m) { out[lang] = []; continue; }
+    /* 주석을 걷어내고 따옴표 안의 것만 거둡니다 */
+    const cleaned = m[1].replace(/\/\*[\s\S]*?\*\//g, '');
+    out[lang] = [...cleaned.matchAll(/'([^']+)'|"([^"]+)"/g)].map(x => x[1] || x[2]);
+  }
+  return out;
+}
+
+const HIDE = readHidePath();
+const hidden = (lang, path) =>
+  (HIDE[lang] || []).some(p => path.startsWith(p));
+
+/* 그 주소를 볼 수 있는 말만 추립니다 (한국어는 늘 봅니다) */
+function langsFor(path) {
+  return ['ko', ...LANGS.filter(l => !hidden(l, path))];
+}
+
+const href = (lang, path) => ORIGIN + (lang === 'ko' ? path : '/' + lang + path);
+const today = new Date().toISOString().slice(0, 10);
+
+/* ── 짓기 ──────────────────────────────────────────────────────── */
+const lines = [];
+lines.push('<?xml version="1.0" encoding="UTF-8"?>');
+lines.push('<!-- OPUSCLAM.COM 사이트맵');
+lines.push('     ★ 이 파일은 scripts/build-sitemap.mjs 가 만듭니다.');
+lines.push('       손으로 고치지 마십시오 — 다시 돌리면 지워집니다.');
+lines.push('       새 화면을 열면 그 파일의 PAGES 에 한 줄 보태고 다시 돌리십시오.');
+lines.push('       node scripts/build-sitemap.mjs');
+lines.push('');
+lines.push('     ★ 한국어·영어·일본어 세 판을 hreflang 으로 묶었습니다.');
+lines.push('       영어·일본어에서 감춘 메뉴는 그 말의 판을 넣지 않았습니다');
+lines.push('       (감출 목록은 assets/i18n.js 의 HIDE_PATH 를 그대로 읽습니다).');
+lines.push('');
+lines.push('     ★ 상세 화면(-view.html)은 아직 넣지 않았습니다 —');
+lines.push('       내용을 자바스크립트로 불러오므로 봇에게는 빈 껍데기입니다. -->');
+lines.push('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
+lines.push('        xmlns:xhtml="http://www.w3.org/1999/xhtml">');
+
+let count = 0;
+for (const [path, freq, pri] of PAGES) {
+  const langs = langsFor(path);
+  for (const lang of langs) {
+    lines.push('  <url>');
+    lines.push(`    <loc>${href(lang, path)}</loc>`);
+    /* 서로 가리키기 — 이 주소를 볼 수 있는 말 전부를 적습니다 */
+    for (const l of langs) {
+      lines.push(`    <xhtml:link rel="alternate" hreflang="${l}" href="${href(l, path)}"/>`);
+    }
+    lines.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${href('ko', path)}"/>`);
+    lines.push(`    <lastmod>${today}</lastmod>`);
+    lines.push(`    <changefreq>${freq}</changefreq>`);
+    lines.push(`    <priority>${pri}</priority>`);
+    lines.push('  </url>');
+    count++;
+  }
+}
+lines.push('</urlset>');
+
+writeFileSync(join(ROOT, 'sitemap.xml'), lines.join('\n') + '\n', 'utf8');
+
+/* ── 알림 ──────────────────────────────────────────────────────── */
+const onlyKo = PAGES.filter(([p]) => langsFor(p).length === 1).length;
+console.log(`  화면 ${PAGES.length}개 → 주소 ${count}개`);
+console.log(`  영어·일본어에서 감춘 화면 ${onlyKo}개는 한국어만 넣었습니다`);
+for (const l of LANGS) {
+  const n = PAGES.filter(([p]) => !hidden(l, p)).length;
+  console.log(`    ${l} : ${n}개 (감춤 ${PAGES.length - n}개)`);
+}
