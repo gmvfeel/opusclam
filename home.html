@@ -2219,7 +2219,23 @@ if('serviceWorker' in navigator){
   /* 각 자리를 어느 게시판에서 채울지 */
   const FEED = {
     notice_lead:  { t:'news',            v:'/community/news-view.html',              o:'is_pinned.desc,created_at.desc' },
-    hot_topic:    { t:'hottopic',        v:'/community/hottopic-view.html',          o:'is_pinned.desc,like_count.desc,created_at.desc' },
+    /* ★★ 2026-08-12 · 핫토픽도 무작위로 바뀝니다 ★★
+       ────────────────────────────────────────────────────────
+       ★ 무엇이 문제였나
+         고정글(is_pinned)을 맨 앞에 두고 하나만 받았으므로
+         메인에 <b>늘 같은 글</b>만 나왔습니다. 게시판에서 고정을
+         풀지 않는 한 몇 달이고 그 글입니다.
+
+       ★ 어떻게 바꿨나
+         공연사진 자리와 <b>같은 방식</b>입니다 —
+           img    이미지가 있는 글만
+           pool   최근 12건 가운데서
+           random 고정·features 를 보지 않고 무작위로
+
+       ★ 게시판 목록은 그대로입니다
+         고정글은 핫토픽 게시판 목록에서 여전히 맨 위에 붙습니다.
+         메인의 이 카드만 돌아갑니다. */
+    hot_topic:    { t:'hottopic',        v:'/community/hottopic-view.html',          o:'created_at.desc', img:true, pool:12, random:true },
     /* ★ 공연사진은 열 때마다 <b>무작위로</b> 바뀝니다.
          pool   — 몇 건 가운데서 고를지
          random — 「고정」 을 무시하고 언제나 무작위로 고를지
@@ -2264,8 +2280,20 @@ if('serviceWorker' in navigator){
       /* random 을 켠 자리는 고정을 보지 않고 받은 것 가운데서 고릅니다.
          켜지 않은 자리는 고정한 글을 먼저 지킵니다(공지·핫토픽 등). */
       let pickFrom = rows;
+      /* ★ 2026-08-12 · 「그림 있는 글만」의 허점
+           질의는 thumb_url 이 <b>null</b> 인 것만 걸러 냅니다. 그런데
+           글쓰기 화면에서 사진을 넣지 않으면 null 이 아니라 <b>빈 글자</b>가
+           담기는 경우가 있어, 그런 글이 통과해 <b>그림 없는 카드</b>가
+           메인에 나올 수 있었습니다.
+           받은 뒤에 한 번 더 걸러 냅니다. 그림 있는 글이 하나도 없으면
+           카드를 비우지 않고 그냥 받은 것을 씁니다 — 자리가 뚫리는 것보다
+           그림 없는 카드가 낫습니다. */
+      if (f.img) {
+        const withImg = rows.filter(x => x.thumb_url && String(x.thumb_url).trim());
+        if (withImg.length) pickFrom = withImg;
+      }
       if (!f.random) {
-        const pinned = rows.filter(x => x.is_pinned);
+        const pinned = pickFrom.filter(x => x.is_pinned);
         if (pinned.length) pickFrom = pinned;
       }
       const r = (take > 1)
