@@ -10,6 +10,32 @@
      SUPABASE_URL
      SUPABASE_SERVICE_KEY        (sb_secret_... 또는 service_role 키)
                                  옛 이름 SUPABASE_SERVICE_ROLE_KEY 도 받아들입니다
+
+   ★★ 2026-08-12 · 「한꺼번에 채우기」를 더했습니다 ★★
+   ────────────────────────────────────────────────────────────
+   ★ 왜 (파트너 지적)
+     손으로 돌려도 글이 늘지 않는 일이 있었습니다. 고장이 아니고
+     <b>일부러 넣어 둔 장치</b> 때문입니다 —
+       · 「조용한 회차」   평일 18% · 주말 35% 확률로 아무것도 안 올림
+       · perRun [0, 1]    게시판마다 0건일 수도 있음
+       · weekly           현대음악·태교음악·유틸리티는 대개 건너뜀
+     날마다 조금씩 자연스럽게 쌓이게 하려는 것이라 평소에는 이게 맞습니다.
+     그런데 <b>런칭 전에 화면을 채워 두려면</b> 몇 달을 기다릴 수 없습니다.
+
+   ★ 어떻게 쓰나 — 손으로 돌릴 때만 씁니다
+     node seed/auto-seed.mjs                      평소대로 (아무것도 안 바뀝니다)
+     node seed/auto-seed.mjs --fill=30            지금 30건까지 채웁니다
+     node seed/auto-seed.mjs --fill=30 --board=qna  그 게시판만
+     node seed/auto-seed.mjs --fill=30 --dry      담지 않고 무엇이 올라갈지만
+
+   ★ --fill 을 주면 이 셋을 건너뜁니다
+     조용한 회차 · perRun 상한 · weekly 건너뛰기
+   ★ 건너뛰지 <b>않는</b> 것 — 안전장치는 그대로 지킵니다
+     · 이미 있는 제목은 담지 않습니다
+     · 게시판별 시드 상한(GUARD_SEED_POSTS)
+     · 회원 글이 많은 게시판은 손대지 않음(GUARD_REAL_POSTS)
+     · onlyCategory · requireThumb 조건
+   ★ 예약(크론)에는 영향이 없습니다 — 옵션을 주지 않으면 예전과 같습니다.
    ============================================================ */
 
 import { POOL } from './content-pool.mjs';
@@ -24,6 +50,20 @@ if (!SB_URL || !SB_KEY) {
   console.error('환경변수 SUPABASE_URL 과 SUPABASE_SERVICE_KEY 가 없습니다.');
   process.exit(1);
 }
+
+/* ── 손으로 돌릴 때 쓰는 옵션 ──────────────────────────────── */
+const ARGS = Object.fromEntries(
+  process.argv.slice(2).map((a) => {
+    const m = /^--([^=]+)(?:=(.*))?$/.exec(a);
+    return m ? [m[1], m[2] === undefined ? true : m[2]] : [a, true];
+  })
+);
+/* --fill=30 → 이번에 담을 <b>전체</b> 목표 건수 (0 이면 평소 동작) */
+const FILL = /^\d+$/.test(String(ARGS.fill)) ? Number(ARGS.fill) : 0;
+/* --board=qna → 그 게시판만 */
+const ONLY_BOARD = typeof ARGS.board === 'string' ? ARGS.board : null;
+/* --dry → 담지 않고 무엇이 올라갈지만 */
+const DRY = !!ARGS.dry;
 
 /* ============================================================
    1) 게시판 설정
@@ -169,7 +209,13 @@ function moodFactor() {
 /* ============================================================
    4) 새 글 올리기
    ============================================================ */
-async function seedPosts(key, cfg, mood) {
+/**
+ * @param want0  ★ 이번에 이 게시판에 담을 <b>목표 건수</b>.
+ *               0 이면 평소대로 perRun·mood 로 정합니다.
+ *               숫자가 오면 그만큼 채우고, 조용한 회차·weekly·perRun 을
+ *               건너뜁니다. 다만 남은 글이 그보다 적으면 있는 만큼만 담습니다.
+ */
+async function seedPosts(key, cfg, mood, want0 = 0) {
   const posts = POOL.posts.filter((p) => p.board === key);
   if (!posts.length) return 0;
 
@@ -186,7 +232,9 @@ async function seedPosts(key, cfg, mood) {
     console.log(`[skip] ${key} — 시드 글 상한(${GUARD_SEED_POSTS}) 도달`);
     return 0;
   }
-  if (cfg.weekly && !chance(0.28)) return 0;   // 느린 게시판
+  /* ★ --fill 로 채우는 중이면 「느린 게시판」 건너뛰기를 하지 않습니다.
+       평소에는 이 줄이 현대음악·태교음악·유틸리티를 대개 넘겨 줍니다. */
+  if (!want0 && cfg.weekly && !chance(0.28)) return 0;   // 느린 게시판
 
   // 이미 올라간 제목은 건너뜀
   const rows = await sbGet(`${cfg.table}?select=title&author_id=is.null&limit=1000`);
@@ -199,9 +247,25 @@ async function seedPosts(key, cfg, mood) {
     return 0;
   }
 
-  let want = rnd(cfg.perRun[0], cfg.perRun[1]);
-  want = Math.min(Math.round(want * mood), cand.length);
+  let want;
+  if (want0) {
+    /* ★ 채우는 중 — 목표만큼, 다만 남은 글과 시드 상한을 넘지 않게 */
+    const room = Math.max(0, GUARD_SEED_POSTS - seedCnt);
+    want = Math.min(want0, cand.length, room);
+  } else {
+    want = rnd(cfg.perRun[0], cfg.perRun[1]);
+    want = Math.min(Math.round(want * mood), cand.length);
+  }
   if (want <= 0) return 0;
+
+  if (DRY) {
+    console.log(`[dry] ${key} — ${want}건 올릴 수 있습니다 (남은 글 ${cand.length}개)`);
+    cand.slice(0, Math.min(want, 5)).forEach((p, i) => {
+      console.log(`        ${i + 1}. ${p.category} · ${p.title}`);
+    });
+    if (want > 5) console.log(`        … 그리고 ${want - 5}건`);
+    return want;
+  }
 
   let made = 0;
   for (let i = 0; i < want; i++) {
@@ -316,26 +380,89 @@ async function bumpNumbers() {
    7) 실행
    ============================================================ */
 (async () => {
-  const mood = moodFactor();
-  if (mood === 0) {
-    console.log('=== 조용한 회차 — 새 글 없이 종료 ===');
+  /* ── 어느 게시판을 볼지 ─────────────────────────────────── */
+  let boards = Object.entries(BOARDS);
+  if (ONLY_BOARD) {
+    boards = boards.filter(([k]) => k === ONLY_BOARD);
+    if (!boards.length) {
+      console.error('그런 게시판이 없습니다 : ' + ONLY_BOARD);
+      console.error('쓸 수 있는 이름 : ' + Object.keys(BOARDS).join(' · '));
+      process.exit(1);
+    }
+  }
+
+  /* ── 평소 회차 ──────────────────────────────────────────── */
+  if (!FILL) {
+    const mood = moodFactor();
+    if (mood === 0) {
+      console.log('=== 조용한 회차 — 새 글 없이 종료 ===');
+      console.log('    (일부러 넣어 둔 장치입니다. 한꺼번에 채우시려면 --fill=30 을 주십시오)');
+      return;
+    }
+
+    let posts = 0, comments = 0;
+    for (const [key, cfg] of boards) {
+      try {
+        posts += await seedPosts(key, cfg, mood);
+      } catch (e) {
+        console.error(`[error] ${key} 글 등록 실패 — ${e.message}`);
+      }
+    }
+    try { comments = await seedComments(mood); }
+    catch (e) { console.error('[error] 댓글 실패 — ' + e.message); }
+
+    let bumped = 0;
+    try { bumped = await bumpNumbers(); }
+    catch (e) { console.error('[error] 조회수 갱신 실패 — ' + e.message); }
+
+    console.log(`=== 완료: 새 글 ${posts} · 댓글 ${comments} · 숫자갱신 ${bumped} ===`);
     return;
   }
 
-  let posts = 0, comments = 0;
-  for (const [key, cfg] of Object.entries(BOARDS)) {
-    try {
-      posts += await seedPosts(key, cfg, mood);
-    } catch (e) {
-      console.error(`[error] ${key} 글 등록 실패 — ${e.message}`);
+  /* ── 한꺼번에 채우기 (--fill) ───────────────────────────────
+     ★ 게시판에 <b>골고루</b> 나눠 담습니다. 한 게시판에 몰리면
+       그 게시판만 갑자기 늘어나 어색합니다.
+     ★ 남은 글이 없는 게시판은 저절로 건너갑니다 — 그만큼
+       다른 게시판이 더 받도록 <b>여러 바퀴</b>를 돕니다. */
+  console.log('╔══════════════════════════════════════════════╗');
+  console.log('║  한꺼번에 채우기 (--fill)                    ║');
+  console.log('╚══════════════════════════════════════════════╝');
+  console.log(DRY ? '\n※ 담지 않고 무엇이 올라갈지만 봅니다 (--dry)\n'
+                  : `\n★ 목표 ${FILL}건을 지금 담습니다\n`);
+  if (ONLY_BOARD) console.log(`※ ${ONLY_BOARD} 게시판만 봅니다\n`);
+
+  let posts = 0;
+  const per = {};
+  /* 한 바퀴에 게시판마다 최대 몇 건씩 — 몰리지 않게 작게 잡고 여러 바퀴 */
+  const STEP = Math.max(1, Math.ceil(FILL / (boards.length * 3)));
+
+  for (let round = 1; round <= 40 && posts < FILL; round++) {
+    let madeThisRound = 0;
+    for (const [key, cfg] of boards) {
+      if (posts >= FILL) break;
+      const want = Math.min(STEP, FILL - posts);
+      try {
+        const n = await seedPosts(key, cfg, 1, want);
+        posts += n; madeThisRound += n;
+        if (n) per[key] = (per[key] || 0) + n;
+      } catch (e) {
+        console.error(`[error] ${key} 글 등록 실패 — ${e.message}`);
+      }
+    }
+    /* 한 바퀴 돌아 아무것도 못 담았으면 더 돌아도 소용없습니다 */
+    if (!madeThisRound) {
+      console.log('\n※ 더 담을 글이 없습니다 — 풀이 모두 쓰였거나 상한에 닿았습니다.');
+      break;
     }
   }
-  try { comments = await seedComments(mood); }
-  catch (e) { console.error('[error] 댓글 실패 — ' + e.message); }
 
-  let bumped = 0;
-  try { bumped = await bumpNumbers(); }
-  catch (e) { console.error('[error] 조회수 갱신 실패 — ' + e.message); }
-
-  console.log(`=== 완료: 새 글 ${posts} · 댓글 ${comments} · 숫자갱신 ${bumped} ===`);
+  console.log('\n── 게시판별 ──');
+  for (const [key, cfg] of boards) {
+    console.log(`   ${key.padEnd(20)} ${String(per[key] || 0).padStart(4)}건`);
+    void cfg;
+  }
+  console.log(`\n=== ${DRY ? '올릴 수 있는 글' : '담은 글'} ${posts}건 / 목표 ${FILL}건 ===`);
+  if (!DRY && posts) {
+    console.log('    화면에서 확인해 보십시오. 댓글과 조회수는 평소 회차가 채웁니다.');
+  }
 })();

@@ -15,6 +15,37 @@ on:
     #   ▶ 풀을 더 채우신 뒤에 두 번으로 돌리셔도 됩니다.
     - cron: '23 0 * * *'   # KST 매일 09:23
   workflow_dispatch:        # Actions 탭에서 손으로도 실행 가능
+    inputs:
+      # ★ 2026-08-12 · 「한꺼번에 채우기」를 더했습니다 (파트너 요청)
+      #
+      #  ★ 왜 필요한가
+      #    손으로 돌려도 글이 늘지 않는 일이 있습니다. 고장이 아니고
+      #    일부러 넣어 둔 장치 때문입니다 —
+      #      · 「조용한 회차」  평일 18% · 주말 35% 확률로 아무것도 안 올림
+      #      · perRun [0, 1]   게시판마다 0건일 수도 있음
+      #      · weekly          현대음악·태교음악·유틸리티는 대개 건너뜀
+      #    날마다 조금씩 자연스럽게 쌓이게 하려는 것이라 평소에는 이게 맞습니다.
+      #    그런데 런칭 전에 화면을 채워 두려면 몇 달을 기다릴 수 없습니다.
+      #
+      #  ★ 비워 두면 예전과 똑같이 돕니다. 예약(매일 새벽)도 그대로입니다.
+      fill:
+        description: '한꺼번에 채울 건수 (비우면 평소대로 · 예: 30)'
+        required: false
+        default: ''
+        type: string
+      board:
+        description: '한 게시판만 (비우면 골고루 · 예: qna · hottopic · news)'
+        required: false
+        default: ''
+        type: string
+      dry:
+        description: '담지 않고 무엇이 올라갈지만 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
 
 # 수동 실행과 예약 실행이 겹치지 않게 합니다.
 concurrency:
@@ -35,7 +66,18 @@ jobs:
           node-version: '20'
 
       - name: 자동 시드 실행
-        run: node seed/auto-seed.mjs
+        run: |
+          OPTS=""
+          FILL="${{ github.event.inputs.fill }}"
+          if [ -n "$FILL" ]; then OPTS="$OPTS --fill=$FILL"; fi
+
+          BOARD="${{ github.event.inputs.board }}"
+          if [ -n "$BOARD" ]; then OPTS="$OPTS --board=$BOARD"; fi
+
+          if [ "${{ github.event.inputs.dry }}" = "yes" ]; then OPTS="$OPTS --dry"; fi
+
+          echo "── 실행 : node seed/auto-seed.mjs $OPTS ──"
+          node seed/auto-seed.mjs $OPTS
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           # 두 이름을 모두 넘깁니다 — 스크립트가 어느 쪽을 읽어도 작동합니다.
