@@ -728,39 +728,56 @@
   .ticket .tk-ic{width:64px;height:64px;border-radius:10px;background:rgba(255,255,255,.14);display:grid;place-items:center}
   .ticket .tk-ic svg{width:34px;height:34px;color:#fff}
 
-  /* ★★ 2026-08-12 · 태교음악 자리를 <b>네 배너 롤링</b>으로 (파트너 요청) ★★
+  /* ★★ 2026-08-12 · 태교음악 자리를 <b>위로 굴러가는</b> 네 배너로 ★★
      ─────────────────────────────────────────────────────────────
      ★ 무엇이었나
        태교음악 배너 <b>한 장이 고정</b>이었습니다. 그 자리에 알릴 것이
        네 가지 있는데(태교음악 · 상황별 선곡 · 전공별 정보나눔 ·
        마스터클래스) 한 장만 계속 보였습니다.
 
+     ★ 처음에는 <b>겹쳐서 흐려지며</b> 바뀌게 만들었습니다
+       그런데 파트너가 「무비마키처럼 <b>위로 굴러가는</b>」 쪽을 원하셨습니다.
+       흐려지며 바뀌는 것은 <b>바뀌었다는 것만</b> 알려 주는데,
+       굴러가면 <b>다음 것이 온다</b>는 것이 눈에 보입니다.
+
      ★ 어떻게 만드나
-       네 장을 <b>겹쳐 놓고</b> 하나만 보이게 합니다(.on).
-       히어로 슬라이드와 <b>같은 방식</b>입니다 — .on 을 옮기고 점을
-       누르면 그 장으로 갑니다. 새 방식을 만들지 않았습니다.
+       네 장을 <b>세로로 쌓아</b> 두고(.tk-track), 창은 <b>한 장 높이만</b>
+       보이게 잘라 둡니다(.tk-roll{overflow:hidden}).
+       5초마다 트랙을 <b>한 장 높이만큼 위로</b> 밀어 올립니다.
 
-     ★ 높이는 <b>가장 긴 글에 맞춰 고정</b>합니다
-       장마다 글 길이가 달라 그대로 두면 넘어갈 때마다 아래 내용이
-       들썩입니다. 겹쳐 놓으면 가장 큰 장이 높이를 정합니다.
+     ★ 높이를 어떻게 정하나 — <b>첫 장이 정합니다</b>
+       장마다 글 길이가 달라 그대로 두면 창 높이가 흔들립니다.
+       첫 장만 자리를 차지하게 두고(position:relative) 나머지는 그 아래에
+       이어 붙이면, 창 높이가 <b>가장 위 장에 맞춰 고정</b>됩니다.
+       ★ 그래서 각 장에 <b>같은 높이</b>를 줍니다(--tk-h). 글이 짧은 장도
+         같은 자리를 차지해야 정확히 한 장씩 굴러갑니다.
 
-     ★ 마우스를 올리면 <b>멈춥니다</b> — 읽는 중에 넘어가면 답답합니다. */
-  .tk-roll{position:relative;margin-bottom:16px}
-  .tk-roll .ticket{margin-bottom:0;opacity:0;visibility:hidden;
-    position:absolute;left:0;top:0;right:0;
-    transition:opacity .45s ease,visibility .45s ease}
-  /* 첫 장은 자리를 차지해 높이를 정합니다 (position:static) */
-  .tk-roll .ticket:first-child{position:relative}
-  .tk-roll .ticket.on{opacity:1;visibility:visible;z-index:2}
-  /* 점 — 오른쪽 아래 */
+     ★ 마지막 다음에는 <b>처음으로</b> 갑니다
+       그때는 미끄러지지 않고 <b>곧바로</b> 되돌립니다(transition 을 잠깐 끔).
+       거꾸로 쭉 내려가는 것이 보이면 어색합니다. */
+  /* ★ 창 높이를 <b>한 장 높이로 못박습니다</b>
+       처음에는 「첫 장이 높이를 정한다」고 두었는데, 첫 장이 트랙 안에
+       있으니 <b>트랙 전체 높이</b>(132×4=528px)가 창 높이가 되어
+       네 장이 다 보였습니다(검증에서 드러났습니다).
+       창은 창, 장은 장 — 각각 못박아야 합니다. */
+  .tk-roll{position:relative;margin-bottom:16px;overflow:hidden;border-radius:10px;
+    height:var(--tk-h,132px)}
+  .tk-track{display:block;transition:transform .62s cubic-bezier(.22,1,.36,1)}
+  .tk-track.no-anim{transition:none}
+  .tk-roll .ticket{margin-bottom:0;border-radius:10px;
+    height:var(--tk-h,132px);box-sizing:border-box;align-items:center}
+  /* 점 — 오른쪽 아래, 창 위에 뜁니다 */
   .tk-roll .tk-dots{position:absolute;right:14px;bottom:10px;z-index:5;
     display:flex;gap:5px}
   .tk-roll .tk-dots i{width:6px;height:6px;border-radius:50%;
     background:rgba(255,255,255,.42);cursor:pointer;transition:.2s}
   .tk-roll .tk-dots i.on{background:#fff;width:16px;border-radius:3px}
+  @media(max-width:900px){ .tk-roll{--tk-h:118px} }
   @media(max-width:600px){
+    .tk-roll{--tk-h:126px}
     .tk-roll .ticket p{font-size:11px}
     .tk-roll .tk-dots{right:10px;bottom:8px}
+  }
   }
 
   .side .sec-head{border-bottom-width:2px}
@@ -1369,7 +1386,8 @@
       </div>
 
       <div class="tk-roll" id="tk-roll">
-      <a class="ticket on" href="/community/prenatal.html" style="text-decoration:none;background:linear-gradient(120deg,#c2410c,#ea8b3a)">
+      <div class="tk-track" id="tk-track">
+        <a class="ticket" href="/community/prenatal.html" style="text-decoration:none;background:linear-gradient(120deg,#c2410c,#ea8b3a)">
         <div>
           <div class="en-s">PRENATAL MUSIC</div>
           <h4 style="color:#fff">태교음악</h4>
@@ -1377,7 +1395,7 @@
         </div>
         <div class="tk-ic" style="background:rgba(255,255,255,.2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-6.8-4.3-8.6-8.2C1.9 8.9 3.8 5.5 7.1 5.5c1.9 0 3.3 1.1 4.9 3 1.6-1.9 3-3 4.9-3 3.3 0 5.2 3.4 3.7 6.8-1.8 3.9-8.6 8.2-8.6 8.2z"/><circle cx="10.1" cy="14.4" r="1.35" fill="currentColor" stroke="none"/><circle cx="14.4" cy="13.3" r="1.35" fill="currentColor" stroke="none"/><path d="M11.45 14.4V10.1M15.75 13.3V9"/></svg></div>
       </a>
-      <a class="ticket" href="/community/prenatal-playlist.html" style="text-decoration:none;background:linear-gradient(120deg,#8a3b12,#d9772c)">
+        <a class="ticket" href="/community/prenatal-playlist.html" style="text-decoration:none;background:linear-gradient(120deg,#8a3b12,#d9772c)">
         <div>
           <div class="en-s">PLAYLIST</div>
           <h4 style="color:#fff">태교음악 상황별 선곡</h4>
@@ -1385,7 +1403,7 @@
         </div>
         <div class="tk-ic" style="background:rgba(255,255,255,.2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.4h9.6M4 11h9.6M4 15.6h5.6"/><circle cx="16.4" cy="17.6" r="2.2"/><path d="M18.6 17.6V8.4l3-.8"/></svg></div>
       </a>
-      <a class="ticket" href="/community/qna.html?track=%EC%A0%84%EA%B3%B5%EB%B3%84" style="text-decoration:none;background:linear-gradient(120deg,#3f3175,#6d55a3)">
+        <a class="ticket" href="/community/qna.html?track=%EC%A0%84%EA%B3%B5%EB%B3%84" style="text-decoration:none;background:linear-gradient(120deg,#3f3175,#6d55a3)">
         <div>
           <div class="en-s">MAJOR TALK</div>
           <h4 style="color:#fff">전공별 정보나눔</h4>
@@ -1393,7 +1411,7 @@
         </div>
         <div class="tk-ic" style="background:rgba(255,255,255,.2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.4h11.2a1 1 0 0 1 1 1v5.8a1 1 0 0 1-1 1H8.2l-3.8 3v-3h-1a1 1 0 0 1-1-1V6.4a1 1 0 0 1 1-1Z"/><path d="M18 9.4h2.6a1 1 0 0 1 1 1v5.4a1 1 0 0 1-1 1h-.8v2.6l-3.2-2.6h-2.4"/></svg></div>
       </a>
-      <a class="ticket" href="/lesson/master.html" style="text-decoration:none;background:linear-gradient(120deg,#1f2a5e,#3d5a9e)">
+        <a class="ticket" href="/lesson/master.html" style="text-decoration:none;background:linear-gradient(120deg,#1f2a5e,#3d5a9e)">
         <div>
           <div class="en-s">MASTER CLASS</div>
           <h4 style="color:#fff">마스터클래스</h4>
@@ -1401,7 +1419,9 @@
         </div>
         <div class="tk-ic" style="background:rgba(255,255,255,.2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.6" y="4.4" width="18.8" height="12.4" rx="1.4"/><path d="M10.4 8.2l4.6 2.4-4.6 2.4V8.2Z"/><path d="M8 20.4h8"/><path d="M12 16.8v3.6"/></svg></div>
       </a>
+      </div>
       <div class="tk-dots"><i class="on"></i><i></i><i></i><i></i></div>
+    </div>
     </div>
 
       <div class="sec-head"><div class="t"><span class="en-s">Funding</span><span class="ko">지원금 / 정책자금정보</span></div><a class="more en" href="/spot/funding.html">VIEW MORE +</a></div>
@@ -1707,30 +1727,71 @@
   }
 })();
 
-/* ★★ 2026-08-12 · 태교음악 자리 네 배너 롤링 (파트너 요청) ★★
+/* ★★ 2026-08-12 · 태교음악 자리 네 배너 — <b>위로 굴러갑니다</b> ★★
    ─────────────────────────────────────────────────────────────
-   ★ 히어로 슬라이드와 <b>같은 방식</b>입니다 — .on 을 옮기고,
-     점을 누르면 그 장으로 갑니다. 새 방식을 만들지 않았습니다.
-   ★ 마우스를 올리면 <b>멈춥니다</b> — 읽는 중에 넘어가면 답답합니다.
-   ★ 다른 탭으로 가 있는 동안에도 멈춥니다. 돌아오면 다시 돕니다.
-     (보이지 않는 동안 계속 도는 것은 헛일입니다) */
+   ★ 처음에는 겹쳐서 흐려지며 바뀌게 만들었는데, 파트너가
+     「무비마키처럼 <b>위로 굴러가는</b>」 쪽을 원하셨습니다.
+
+   ★ 어떻게 도나
+     네 장을 세로로 쌓은 트랙(.tk-track)을 <b>한 장 높이만큼</b> 위로
+     밀어 올립니다. 창은 한 장만 보이게 잘려 있습니다.
+
+   ★ 마지막 다음에는 <b>곧바로</b> 처음으로 되돌립니다
+     미끄러지며 거꾸로 쭉 내려가면 어색합니다. 그래서 그 순간만
+     transition 을 끄고(no-anim) 되돌린 뒤 다시 켭니다.
+     ★ 끄고 바로 켜면 브라우저가 한 덩어리로 처리해 그대로 미끄러집니다.
+       그래서 <b>다음 그림 그릴 때</b>까지 기다렸다 켭니다
+       (requestAnimationFrame 두 번).
+
+   ★ 한 장 높이는 <b>실제로 재서</b> 씁니다
+     CSS 에 132px 로 적어 두었지만 화면 폭에 따라 달라집니다(900px 아래
+     118px · 600px 아래 126px). 그래서 첫 장의 실제 높이를 재고,
+     창 크기가 바뀌면 다시 잽니다.
+
+   ★ 마우스를 올리면 멈춥니다 — 읽는 중에 넘어가면 답답합니다.
+   ★ 다른 탭에 가 있는 동안에도 멈춥니다. */
 (function(){
   var box=document.getElementById('tk-roll');
-  if(!box) return;
-  var cards=box.querySelectorAll('.ticket');
+  var track=document.getElementById('tk-track');
+  if(!box||!track) return;
+  var cards=track.querySelectorAll('.ticket');
   var dots=box.querySelectorAll('.tk-dots i');
-  if(cards.length<2){ if(cards[0]) cards[0].classList.add('on'); return; }
-  var i=0, timer=null;
-  function go(n){
-    cards[i].classList.remove('on'); if(dots[i]) dots[i].classList.remove('on');
-    i=(n+cards.length)%cards.length;
-    cards[i].classList.add('on');    if(dots[i]) dots[i].classList.add('on');
+  if(cards.length<2) return;
+
+  var i=0, timer=null, h=0;
+
+  function measure(){
+    h = Math.round(cards[0].getBoundingClientRect().height);
+    apply(false);
   }
-  function start(){ stop(); timer=setInterval(function(){ go(i+1); }, 5200); }
+  function apply(anim){
+    if(!anim) track.classList.add('no-anim');
+    track.style.transform = 'translateY(' + (-h*i) + 'px)';
+    if(!anim){
+      /* 다음 그림 그릴 때까지 기다렸다 다시 켭니다 */
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ track.classList.remove('no-anim'); });
+      });
+    }
+  }
+  function mark(){
+    dots.forEach(function(d,k){ d.classList.toggle('on', k===i); });
+  }
+  function next(){
+    if(i >= cards.length-1){
+      /* 마지막 → 처음: 미끄러지지 않고 곧바로 */
+      i = 0; mark(); apply(false);
+    } else {
+      i++; mark(); apply(true);
+    }
+  }
+  function go(k){ i = (k+cards.length)%cards.length; mark(); apply(true); }
+  function start(){ stop(); timer=setInterval(next, 5000); }
   function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+
   dots.forEach(function(d,k){
     d.setAttribute('role','button');
-    d.setAttribute('aria-label', (k+1)+'번째 배너 보기');
+    d.setAttribute('aria-label',(k+1)+'번째 배너 보기');
     d.addEventListener('click', function(){ go(k); start(); });
   });
   box.addEventListener('mouseenter', stop);
@@ -1738,7 +1799,9 @@
   document.addEventListener('visibilitychange', function(){
     if(document.hidden) stop(); else start();
   });
-  start();
+  window.addEventListener('resize', measure);
+
+  measure(); mark(); start();
 })();
 
 /* hero concert slides — dots control these (재초기화 가능) */
