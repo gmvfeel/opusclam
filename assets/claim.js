@@ -38,14 +38,42 @@
      ★ 여기가 <b>유일한 목록</b>입니다. 화면에 손으로 다시 적지 마십시오.
      ★ kind 는 <b>표 이름 그대로</b>입니다 — SQL 의 oc_entity_kind 와 같습니다.
      ★ nameCol 이 갈래마다 다릅니다 (학술은 title). 짐작하지 말고 여기만 봅니다. */
+  /* ★★ 2026-08-12 · 사람인 갈래와 단체인 갈래의 <b>말을 나눴습니다</b> ★★
+     ──────────────────────────────────────────────────────────────
+     ★ 무엇이 어색했나 (파트너 지적)
+       모든 갈래에 「관계자」를 썼습니다. 공연장·단체·학교·재단에는
+       맞는 말이지만 <b>사람에게는 안 맞습니다.</b>
+         「이 인물 관계자이신가요?」   ← 미칼라 페트리 본인에게 묻는 말
+       신청 서식도 「맡으신 일 · 예: 기획팀장」이라 사람에게는
+       물을 것이 아니었습니다.
+
+     ★ 어떻게 나눴나
+       갈래마다 who·ask·claimWord·roleLabel·roleHint 를 둡니다.
+         사람 갈래(인물·현대음악)  「이 분이 본인이신가요」 / 직함·활동
+         단체 갈래(공연장·단체 …)  「이 공연장 관계자이신가요」 / 맡으신 일
+       학술은 <b>논문</b>이라 「저자이신가요」가 맞습니다.
+
+     ★ 왜 여기에 두나
+       문구를 화면마다 적으면 일곱 곳에 흩어집니다. 갈래 정의가
+       이미 한 곳에 모여 있으니 문구도 여기 붙입니다.
+       OPUSFINE 에서는 이 표만 갈아 끼우면 됩니다. */
   var KINDS = [
-    { kind:'persons',          label:'인물',        nameCol:'name_ko', enCol:'name_en', view:'/db/person-view.html',     hasHidden:true  },
+    { kind:'persons',          label:'인물',        nameCol:'name_ko', enCol:'name_en', view:'/db/person-view.html',     hasHidden:true,
+      who:'사람', ask:'이 분이 본인이신가요',  claimWord:'본인 인증',
+      roleLabel:'직함·활동',   roleHint:'예: 리코더 연주자 · 서울대 교수',
+      evidLabel:'확인할 수 있는 곳', evidHint:'누리집·소속 기관 프로필 주소 등' },
     { kind:'orgs',             label:'음악단체',    nameCol:'name_ko', enCol:'name_en', view:'/db/org-view.html',        hasHidden:true  },
     { kind:'venues',           label:'공연장',      nameCol:'name_ko', enCol:'name_en', view:'/db/venue-view.html',      hasHidden:true  },
     { kind:'schools',          label:'음악학교',    nameCol:'name_ko', enCol:'name_en', view:'/db/school-view.html',     hasHidden:true  },
     { kind:'foundations',      label:'기관·재단',   nameCol:'name_ko', enCol:'name_en', view:'/db/foundation-view.html', hasHidden:true  },
-    { kind:'modern_composers', label:'현대음악',    nameCol:'name_ko', enCol:'name_en', view:'/db/modern-view.html',     hasHidden:true  },
-    { kind:'academic',         label:'학술',        nameCol:'title',   enCol:null,      view:'/db/academic-view.html',   hasHidden:false }
+    { kind:'modern_composers', label:'현대음악',    nameCol:'name_ko', enCol:'name_en', view:'/db/modern-view.html',     hasHidden:true,
+      who:'사람', ask:'이 분이 본인이신가요',  claimWord:'본인 인증',
+      roleLabel:'직함·활동',   roleHint:'예: 작곡가 · 한국예술종합학교 교수',
+      evidLabel:'확인할 수 있는 곳', evidHint:'누리집·소속 기관 프로필 주소 등' },
+    { kind:'academic',         label:'학술',        nameCol:'title',   enCol:null,      view:'/db/academic-view.html',   hasHidden:false,
+      who:'글',   ask:'이 글의 저자이신가요',  claimWord:'저자 인증',
+      roleLabel:'맡으신 몫',   roleHint:'예: 제1저자 · 공동저자',
+      evidLabel:'확인할 수 있는 곳', evidHint:'논문 초록 주소 · 소속 기관 프로필 등' }
   ];
 
   /* 회원 갈래별로 「먼저 보여 줄」 갈래 — 단체 회원에게 인물DB 를 앞세우면
@@ -68,6 +96,34 @@
     return String(s == null ? '' : s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;');
+  }
+
+  /* ★ 갈래에 적힌 말을 꺼냅니다. 안 적혀 있으면 단체 쪽 기본값을 씁니다 —
+       공연장·단체·학교·재단은 예전 말이 그대로 맞기 때문입니다. */
+  function wordOf(kind, key) {
+    var k = kindOf(kind) || {};
+    var DEF = {
+      ask:       '',                      /* 비어 있으면 「이 ○○ 관계자이신가요」로 만듭니다 */
+      claimWord: '관계자 인증',
+      roleLabel: '맡으신 일',
+      roleHint:  '예: 기획팀장',
+      evidLabel: '확인할 수 있는 곳',
+      evidHint:  '누리집의 담당자 안내 주소 등'
+    };
+    return k[key] || DEF[key];
+  }
+
+  /* ★ 묻는 문장을 만듭니다.
+       갈래에 ask 가 적혀 있으면 그 문장을 그대로 씁니다 —
+       갈래 이름을 기계로 끼우면 말이 어그러집니다.
+         「이 현대음악 본인이신가요?」  ✗
+         「이 분이 본인이신가요?」      ✓
+         「이 글의 저자이신가요?」      ✓
+       적혀 있지 않으면 예전처럼 「이 공연장 관계자이신가요」로 만듭니다. */
+  function askOf(kind) {
+    var k = kindOf(kind) || {};
+    if (k.ask) return k.ask;
+    return '이 ' + ((k.label) || '항목') + ' 관계자이신가요';
   }
 
   function kindOf(kind) {
@@ -240,7 +296,7 @@
     var b = await badge(kind, id);
     if (!b || !b.owner_count) { el.innerHTML = ''; return; }
     el.innerHTML =
-      '<span class="oc-claim-badge" title="이 항목의 관계자가 인증되었습니다">' +
+      '<span class="oc-claim-badge" title="이 항목이 인증되었습니다">' +
         '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" ' +
              'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
           '<path d="M20 6 9 17l-5-5"/></svg>' +
@@ -259,7 +315,7 @@
     if (!m) {
       el.innerHTML =
         '<a class="oc-claim-ask" href="/account/login.html">' +
-        '이 ' + esc((kindOf(kind) || {}).label || '항목') + ' 관계자이신가요? 로그인 후 인증받으실 수 있습니다 &rarr;</a>';
+        esc(askOf(kind)) + '? 로그인 후 인증받으실 수 있습니다 &rarr;</a>';
       return;
     }
     if (m.status !== 'approved') return;
@@ -278,7 +334,7 @@
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'oc-claim-ask';
-    btn.innerHTML = '이 ' + esc((kindOf(kind) || {}).label || '항목') + ' 관계자이신가요? 인증받기 &rarr;';
+    btn.innerHTML = esc(askOf(kind)) + '? 인증받기 &rarr;';
     btn.addEventListener('click', function () { openForm(el, kind, id, name); });
     el.appendChild(btn);
   }
@@ -287,11 +343,11 @@
   function openForm(el, kind, id, name) {
     el.innerHTML =
       '<div class="oc-claim-form">' +
-        '<div class="ocf-t">' + esc(name || '') + ' — 관계자 인증 신청</div>' +
-        '<label class="ocf-l">맡으신 일 <span class="ocf-o">(선택)</span></label>' +
-        '<input class="ocf-i" data-f="role" placeholder="예: 기획팀장">' +
-        '<label class="ocf-l">확인할 수 있는 곳 <span class="ocf-o">(선택)</span></label>' +
-        '<input class="ocf-i" data-f="evidence" placeholder="누리집의 담당자 안내 주소 등">' +
+        '<div class="ocf-t">' + esc(name || '') + ' — ' + esc(wordOf(kind, 'claimWord')) + ' 신청</div>' +
+        '<label class="ocf-l">' + esc(wordOf(kind, 'roleLabel')) + ' <span class="ocf-o">(선택)</span></label>' +
+        '<input class="ocf-i" data-f="role" placeholder="' + esc(wordOf(kind, 'roleHint')) + '">' +
+        '<label class="ocf-l">' + esc(wordOf(kind, 'evidLabel')) + ' <span class="ocf-o">(선택)</span></label>' +
+        '<input class="ocf-i" data-f="evidence" placeholder="' + esc(wordOf(kind, 'evidHint')) + '">' +
         '<label class="ocf-l">하실 말씀 <span class="ocf-o">(선택)</span></label>' +
         '<textarea class="ocf-i ocf-ta" data-f="note" rows="2"></textarea>' +
         '<div class="ocf-note">신청하시면 관리자가 확인한 뒤 이어 드립니다. ' +
@@ -468,6 +524,11 @@
   window.ocClaim = {
     KINDS: KINDS,
     kindOf: kindOf,
+    /* ★ 2026-08-12 · 갈래별 말투를 밖으로도 내놓습니다.
+         ① 시험할 수 있게 하려고 (문구가 갈래마다 맞는지 자동 확인)
+         ② 다른 화면(마이페이지 「내 DB 항목」 등)에서도 같은 말을 쓰게 */
+    wordOf: wordOf,
+    askOf: askOf,
     me: me,
     search: search,
     request: request,
