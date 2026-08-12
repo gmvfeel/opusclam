@@ -251,6 +251,12 @@ const G_POP = new RegExp([
   '\\bjazz\\b', 'bebop', 'swing music', 'dixieland', 'ragtime', 'boogie',
   'electronic dance', '\\bedm\\b', 'techno', 'trance', 'dubstep',
   'house music', 'drum and bass', 'ambient', 'new-?age',
+  /* ★ 2026-08-12 보탬 — 노이즈·인더스트리얼·드론
+       Aube·Maurizio Bianchi 의 장르가 `noise music, drone music,
+       industrial music` 인데 이 낱말이 대중음악 목록에 <b>아예 없어서</b>
+       「애매한 장르(앰비언트)뿐」으로 잘못 분류됐습니다. */
+  'noise music', 'harsh noise', 'power electronics',
+  'industrial music', 'industrial rock', 'drone music', 'lowercase music',
   'country music', 'bluegrass', 'reggae', '\\bska\\b', 'reggaeton',
   '\\benka\\b', '\\btrot\\b', 'schlager',
   /* ★ 2026-08-12 보탬 — 아시아 대중가요
@@ -451,8 +457,38 @@ export function checkClassic(p) {
   if (gClassic.length) return { ok: true, why: '장르가 클래식' };
 
   /* ② 대중음악 장르만 있으면 뺍니다 —
-        야니·이루마, 그리고 심포닉메탈·록오페라 밴드. */
-  if (gPop.length) return { ok: false, why: '대중음악 장르만 있음' };
+        야니·이루마, 그리고 심포닉메탈·록오페라 밴드.
+
+     ★★ 2026-08-12 · 단, <b>애매한 장르 하나뿐</b>이면 단정하지 않습니다 ★★
+     ──────────────────────────────────────────────────────────────
+     ★ 무엇이 잘못됐나
+       제러미 솔(스카이림 게임음악 작곡가)이 빠졌습니다.
+       위키데이터 장르가 `ambient music` <b>하나뿐</b>이었습니다.
+
+       앰비언트·일렉트로닉·실험음악은 <b>대중음악이라고 단정할 수 없습니다.</b>
+       게임·영화음악 작곡가에게도, 현대음악 작곡가에게도 붙습니다.
+       메탈·록·엔카처럼 뜻이 분명한 장르와는 다릅니다.
+
+     ★ 어떻게 고쳤나
+       걸린 대중음악 장르가 <b>애매한 것뿐</b>이면 장르로 결론내지 않고
+       직업·소개문까지 내려가서 봅니다.
+         제러미 솔     ambient 하나 → 직업 composer → 담김
+         윌리엄 바신스키 ambient 하나 → 직업 saxophonist → 담김
+         원오트릭스     electronic + ambient + drone → 뺌 (애매하지 않은 것 포함)
+         Aube          noise + drone → 뺌
+         심포닉메탈     metal → 뺌
+
+     ★ 왜 이 정도만 넓히나
+       「장르가 대중음악이면 직업이 클래식이어도 뺀다」는 규칙은
+       심포닉메탈 첼리스트·피아니스트를 걸러내는 <b>핵심</b>입니다.
+       그것까지 풀면 이번에 잡은 사람 절반이 다시 들어옵니다. */
+  /* ★ 애매한 장르 — 이것<b>만</b> 걸렸을 때는 장르로 단정하지 않습니다.
+     drone·noise 는 넣지 않았습니다. 그 둘은 뜻이 분명한 실험 소음 계열이고,
+     Aube·Maurizio Bianchi 가 그 길로 잘못 살아났습니다. */
+  const AMBIGUOUS = /^(?:\s*(?:ambient|dark\s+ambient|new-?age|electroacoustic)\s*(?:music)?\s*)$/i;
+  if (gPop.length && !gPop.every(x => AMBIGUOUS.test(x))) {
+    return { ok: false, why: '대중음악 장르만 있음' };
+  }
 
   /* ③ 직업을 항목마다 봅니다.
         ★ 통째로 보면 「jazz pianist」의 pianist 가 클래식으로 잡힙니다.

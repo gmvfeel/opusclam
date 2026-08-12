@@ -159,6 +159,54 @@ t('현대음악 — 심포닉메탈 빠짐',
   checkModern({ wd_genre: 'symphonic metal', wd_occupation: 'composer',
                 birth_year: 1970 }).ok, false);
 
+/* ══ 10. ★★ 2026-08-12 · 실제로 지운 21명 전체 ★★
+     dry run 세 번을 거쳐 21명을 지웠습니다. 그런데 <b>전체 목록을
+     처음 보고</b> 두 명이 잘못 지워진 것을 알았습니다.
+     장르로 판정을 끝내고 직업·소개문을 보지 않은 것이 원인이었습니다.
+     이 21명 전부를 시험으로 못박아 둡니다. ══ */
+
+/* 되살려야 하는 두 명 */
+keep('제러미 솔 · 스카이림 게임음악',
+  { wd_genre: 'ambient music', wd_occupation: 'composer' });
+keep('윌리엄 바신스키 · 실험음악',
+  { wd_genre: 'ambient music', wd_occupation: 'saxophonist, clarinetist, composer' });
+
+/* 지운 것이 맞는 사람들 — 애매한 장르 규칙 때문에 되살아나면 안 됩니다 */
+drop('원오트릭스 · 일렉트로닉',
+  { wd_genre: 'electronic music, ambient music, drone music',
+    wd_occupation: 'musician, record producer, singer, composer' });
+drop('Aube · 노이즈',
+  { wd_genre: 'ambient music, drone music, noise music, dark ambient',
+    wd_occupation: 'musician, graphic designer, composer' });
+drop('Maurizio Bianchi · 인더스트리얼',
+  { wd_genre: 'dark ambient, ambient music, industrial music, drone music, noise music',
+    wd_occupation: 'recording artist, musician, composer' });
+drop('Mustis · 심포닉블랙메탈(피아니스트)',
+  { wd_genre: 'symphonic black metal', wd_occupation: 'pianist, composer' });
+drop('Paavo Lötjönen · 아포칼립티카(첼리스트)',
+  { wd_genre: 'heavy metal music, symphonic metal', wd_occupation: 'cellist, musician' });
+drop('Antero Manninen · 아포칼립티카(첼리스트)',
+  { wd_genre: 'heavy metal music, symphonic metal', wd_occupation: 'cellist, musician' });
+drop('옌스 요한슨 · 네오클래시컬메탈(피아니스트)',
+  { wd_genre: 'neo-classical metal',
+    wd_occupation: 'session musician, musician, pianist, composer' });
+drop('Lana Lane · 심포닉록',
+  { wd_genre: 'symphonic rock, progressive metal',
+    wd_occupation: 'composer, pianist, musician, rock singer' });
+drop('Ladyva · 부기우기(피아니스트)',
+  { wd_genre: 'boogie-woogie', wd_occupation: 'pianist' });
+drop('Edgar Meyer · 블루그래스(더블베이스)',
+  { wd_genre: 'bluegrass music',
+    wd_occupation: 'double-bassist, musician, professor, composer' });
+drop('엔도 미노루 · 엔카',
+  { wd_genre: 'enka', wd_occupation: 'lyricist, composer' });
+drop('빌리 메이 · 빅밴드(영화음악 겸)',
+  { wd_genre: 'jazz, swing, vocal music, easy listening, traditional pop, orchestral pop, big band music',
+    wd_occupation: 'recording artist, jazz musician, trumpeter, music arranger, film score composer, bandleader' });
+drop('니콜라이 노스코프 · 글램메탈',
+  { wd_genre: 'psychedelic rock, glam metal, folk rock, new wave, symphonic rock',
+    wd_occupation: 'singer, composer, writer, trumpeter, rock musician, drummer, keyboardist' });
+
 console.log('\n══ 클래식 판정 검증 ══');
 console.log('  통과 : ' + pass + '개');
 console.log('  실패 : ' + fail + '개');
