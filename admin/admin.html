@@ -282,6 +282,18 @@
       <div class="cards">
         <div class="card clickable" id="cardMembers"><span class="cbadge" id="badgeMembers"></span><h3>회원 관리 · 승인</h3><p>자격 회원(전공자·관계자·단체·학교)의 가입 승인을 처리하고, 회원 목록을 관리합니다.</p><span class="go">관리하기 →</span></div>
         <a class="card clickable tool" href="db-edits.html" id="cardReview"><span class="cbadge" id="badgeReview"></span><h3>DB 등록·보강 검수</h3><p>회원이 낸 등록·보강을 확인하고 반영합니다. 무엇이 바뀌는지 <b>이전 값과 나란히</b> 보여 주고, 반영하면 회원에게 포인트가 쌓입니다.</p><span class="go">검수하기 →</span></a>
+        <!-- ★ 2026-08-12 · 인물 소개문 검수 (파트너와 결정)
+             소개문이 없는 4,652명은 위키로 채울 수 없어(문서 중간값 1개)
+             Claude 가 초안을 쓰고 여기서 확인해 넣습니다. -->
+        <a class="card clickable tool" href="person-drafts.html">
+          <span class="cbadge" id="badgeDrafts"></span>
+          <span class="tag">데이터 · 검수</span>
+          <h3>인물 소개문 검수</h3>
+          <p>Claude 가 쓴 인물 소개문 초안을 확인해 인물DB 에 넣습니다. <b>승인한 것만</b> 화면에 나가고, 잘못 넣었으면 <b>되돌릴 수</b> 있습니다.</p>
+          <span class="when">인물 15,233명 가운데 소개문이 <b>아예 없는 사람이 4,652명</b>입니다. 위키백과에서 다시 받아오려 했지만 그 사람들은 위키 문서가 <b>중간값 한 개</b>뿐인 무명 인물이라 채울 수가 없었습니다 — 1,087명을 다시 조회해 얻은 것이 <b>1건</b>이었습니다. <b>빈 항목은 이용자가 틀린 것을 알려줄 수도 없습니다.</b> 먼저 채워져 있어야 DB보강과 신고가 돌아갑니다.</span>
+          <span class="go">검수하기 →</span>
+        </a>
+
         <a class="card clickable tool" href="claims.html">
           <span class="cbadge" id="badgeClaims"></span>
           <span class="tag">회원 · 데이터</span>
