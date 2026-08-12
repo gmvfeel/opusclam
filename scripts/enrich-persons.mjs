@@ -17,7 +17,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) { console.error('환경변수 필요: SUPABASE_URL / SUPABASE_SERVICE_KEY'); process.exit(1); }
 
-const VERSION     = 'v1.2';   // 로그 첫 줄에 찍힙니다. 이 값이 안 보이면 이전 파일이 돌고 있는 것입니다
+const VERSION     = 'v1.3';   // 로그 첫 줄에 찍힙니다. 이 값이 안 보이면 이전 파일이 돌고 있는 것입니다
 const UA          = 'OpusclamBot/1.0 (https://opusclam.com; cser@wixon.co.kr)';
 const DAILY_LIMIT = parseInt(process.env.DAILY_LIMIT || '1500', 10);  // 하루 처리량 (무료 분 관리)
 const CH_SPARQL   = 150;   // 위키데이터 배치
@@ -96,11 +96,114 @@ async function sparql(query, tries = 3) {
   }
   return [];
 }
+/* ★★ 2026-08-12 v1.3 · 소개문을 <b>제대로</b> 받아옵니다 ★★
+   ────────────────────────────────────────────────────────────────
+   ★ 무엇이 문제였나 (파트너 지적 — 존 애덤스는 위키에 자료가 많은데 비어 있음)
+     세 가지가 겹쳐 있었습니다.
+
+       ① exintro:'1'        문서 <b>도입부만</b> 받았습니다.
+       ② \s+ → ' '          <b>줄바꿈을 지웠습니다.</b> 그래서 화면에서 한
+                             덩어리로 나왔습니다(실제로 줄바꿈이 남은 것은
+                             15,233명 중 60명뿐이었습니다).
+       ③ slice(0, 400)      받은 것을 <b>400자에서 잘랐습니다</b>(영문 700자).
+                             이게 가장 직접적인 원인입니다 — 실측 결과
+                             한국어 소개 평균 249자 · 가장 긴 것도 1,758자,
+                             1,000자 넘는 사람이 <b>한 명</b>뿐이었습니다.
+
+   ★ 어떻게 고쳤나
+     · exintro 를 뺍니다 → 문서 본문이 옵니다.
+     · <b>다만 통째로 쓰지 않습니다.</b> 위키 문서는 수만 자가 되고 뒤쪽에는
+       「같이 보기 · 각주 · 외부 링크」 같은 목록이 붙습니다. 그래서
+       <b>앞쪽 절 몇 개만</b> 쓰고 그 뒤는 버립니다(sectionsOf).
+     · 줄바꿈은 <b>살립니다.</b> 줄 안의 여러 공백만 정리합니다.
+     · 자르는 길이를 넉넉히 둡니다(아래 MAX_KO · MAX_EN).
+
+   ★ explaintext 는 그대로 둡니다 — 표·틀 없이 글만 받는 값입니다. */
+const MAX_KO = 4000;   // 한국어 소개 최대 (예전 400)
+const MAX_EN = 4000;   // 영문 소개 최대 (예전 700)
+const MAX_SECTIONS = 4; // 앞에서부터 쓸 절 수 (머리말 + 생애 등)
+
+/* 위키 글에서 <b>앞쪽 절 몇 개만</b> 남깁니다.
+   explaintext 로 받으면 절 제목이 「== 생애 ==」 꼴로 들어옵니다.
+   ★ 뒤쪽의 목록성 절은 이름으로 걸러 냅니다 — 본문이 아니라
+     참고 자료 목록이라 소개문에 넣으면 읽을 수 없게 됩니다. */
+function trimWiki(raw) {
+  /* ★ 여기서 멈출 절 이름
+       ★ 「작품」·「수상」을 막는 까닭 — 그 내용은 <b>이미 따로 담겨 있습니다.</b>
+         대표작 person_works 16,642건 · 수상 person_awards 5,989건.
+         소개문에 목록이 또 들어가면 화면에서 두 번 보입니다.
+       ★ 한국어와 영문을 <b>짝을 맞춰</b> 적습니다. 검증에서 「작품」 단독이
+         빠져 있어(영문은 Works 를 막는데) 「작품」 절이 새어 들어왔습니다. */
+  const BAD = new RegExp('^(' + [
+    /* 참고·목록성 */
+    '같이\\s*보기', '각주', '주석', '참고\\s*문헌', '외부\\s*링크', '더\\s*읽을거리',
+    '관련\\s*항목', '출처', '목록', '둘러보기',
+    /* 이미 따로 담긴 것 */
+    '작품', '작품\\s*목록', '주요\\s*작품', '대표작', '음반', '음반\\s*목록', '디스코그래피',
+    '수상', '수상\\s*내역', '서훈', '상훈',
+    /* 본문이 아니라 평가·영향 정리 */
+    '영향', '평가', '평가와\\s*유산', '유산',
+    /* 영문 */
+    'See also', 'References', 'Notes', 'Further reading', 'External links',
+    'Bibliography', 'Discography', 'Works', 'Selected works', 'Compositions',
+    'Awards', 'Awards and honours', 'Honours', 'Sources', 'Footnotes', 'Citations',
+    'Legacy', 'Recordings'
+  ].join('|') + ')$', 'i');
+  const txt = String(raw || '').replace(/\r/g, '');
+  /* 절 제목 줄(== … ==)을 기준으로 나눕니다. 첫 조각은 머리말입니다. */
+  const parts = txt.split(/\n(?==+[^=\n]+=+\s*$)/m);
+  const out = [];
+  for (let i = 0; i < parts.length && out.length < MAX_SECTIONS; i++) {
+    const seg = parts[i];
+    const m = /^=+\s*([^=\n]+?)\s*=+\s*$/m.exec(seg.split('\n')[0] || '');
+    const name = m ? m[1].trim() : '';
+    if (name && BAD.test(name)) break;          /* 목록성 절이 나오면 거기서 멈춥니다 */
+    /* 절 제목 줄은 버리고 본문만 씁니다 — 소개문에 「== 생애 ==」가
+       그대로 보이면 어색합니다. */
+    const body = (name ? seg.split('\n').slice(1).join('\n') : seg);
+    const clean = body
+      .split('\n')
+      .map(s => s.replace(/[ \t\u00a0]+/g, ' ').trim())   /* 줄 안 공백만 정리 */
+      .filter(Boolean)
+      .join('\n');
+    if (clean) out.push(clean);
+  }
+  return out.join('\n\n').trim();
+}
+
+/* 길이 상한에 맞춰 자릅니다 — <b>문단 경계</b>를 지킵니다.
+   ★ 왜 문단 경계인가
+     글자 수로 딱 자르면 문장 도중에 끊깁니다. 파트너가 본
+     「…갈채를 받은 것은 교」가 그런 모습입니다.
+     상한을 넘지 않는 마지막 문단까지만 씁니다.
+   ★ 첫 문단이 이미 상한을 넘으면 그 문단은 <b>문장 끝에서</b> 자릅니다. */
+function cutAtParagraph(txt, limit) {
+  const s = String(txt || '');
+  if (s.length <= limit) return s;
+  const paras = s.split(/\n{2,}/);
+  const out = [];
+  let n = 0;
+  for (const p of paras) {
+    if (out.length && n + p.length + 2 > limit) break;
+    out.push(p); n += p.length + 2;
+  }
+  if (out.length) {
+    /* 첫 문단만으로 상한을 넘는 경우도 아래에서 다시 다듬습니다 */
+    let joined = out.join('\n\n');
+    if (joined.length <= limit) return joined;
+  }
+  /* 한 문단이 너무 길면 문장 끝에서 자릅니다 */
+  const head = s.slice(0, limit);
+  const m = /[.!?。][^.!?。]*$/.exec(head);
+  const cut = m ? head.slice(0, head.length - m[0].length + 1) : head;
+  return (cut || head).trim();
+}
+
 async function wikiExtracts(host, titles) {
-  // 여러 문서의 도입부를 한 번에 가져옵니다
+  // 여러 문서를 한 번에 가져옵니다 (도입부만이 아니라 본문까지)
   const p = new URLSearchParams({
     action: 'query', format: 'json', origin: '*', redirects: '1',
-    prop: 'extracts', exintro: '1', explaintext: '1', titles: titles.join('|')
+    prop: 'extracts', explaintext: '1', titles: titles.join('|')
   });
   try {
     const r = await fetch('https://' + host + '/w/api.php?' + p.toString(), { headers: { 'User-Agent': UA } });
@@ -110,7 +213,10 @@ async function wikiExtracts(host, titles) {
     const out = {};
     Object.keys(pages).forEach(k => {
       const pg = pages[k];
-      if (pg.title && pg.extract) out[pg.title] = String(pg.extract).replace(/\s+/g, ' ').trim();
+      if (pg.title && pg.extract) {
+        const v = trimWiki(pg.extract);
+        if (v) out[pg.title] = v;
+      }
     });
     return out;
   } catch (e) { return {}; }
@@ -231,17 +337,64 @@ async function main() {
   }
   console.log('  · 시대 표기 학습:', Object.keys(eraYr).join(', ') || '(없음)');
 
-  // 2) 처리 대상 — 미점검 우선, 그다음 오래된 순
+  /* 2) 처리 대상
+     ★★ 2026-08-12 v1.3 · <b>소개문이 비어 있는 사람을 먼저</b> 봅니다 ★★
+     ────────────────────────────────────────────────────────────────
+     ★ 무엇이 문제였나 (파트너 지적)
+       예전 차례는 ① 미점검 → ② 오래 전에 점검한 순이었습니다.
+       그런데 실측해 보니 —
+         이미 점검 표시가 있는 사람   15,213명
+         아직 점검 안 된 사람            20명
+         <b>점검 표시가 있는데 소개문이 비어 있는 사람  4,652명</b>
+       즉 하루 1,500명 가운데 20명만 미점검이고 나머지는 「오래된 순」으로
+       뽑히는데, 그 중 소개문이 비어 있는 사람이 섞여 있을 뿐이라
+       <b>4,652명을 다 훑는 데 열흘이 걸립니다.</b> 게다가 소개문이 이미
+       충실한 사람도 함께 다시 조회해 시간을 씁니다.
+
+     ★ 어떻게 고쳤나 — 차례를 셋으로
+       ① 아직 점검 안 된 사람                      (20명)
+       ② <b>소개문이 비어 있는 사람</b>              (4,652명) ← 새로 넣음
+       ③ 나머지 — 오래 전에 점검한 순               (소개문 늘리기용)
+       ②를 먼저 보면 <b>빈 화면부터 채워집니다.</b>
+
+     ★ --only-empty 를 주면 ②만 봅니다 (③을 건너뜁니다).
+       빈 것부터 급히 채울 때 씁니다. */
+  const ONLY_EMPTY = process.argv.includes('--only-empty');
+  /* 소개문이 비어 있다 = 한국어도 영문도 없다
+     ★ or 절을 두 번 쓰지 않고 <b>and 하나로 감쌉니다.</b>
+       &or=(…)&or=(…) 로 두 번 적으면 PostgREST 판에 따라 뒤엣것이
+       앞엣것을 덮을 수 있습니다. 흉내 서버에서는 둘 다 걸렸지만,
+       실제 서버에서 다르게 동작하면 <b>엉뚱한 사람을 훑게 됩니다.</b>
+       and(or(...),or(...)) 는 한 덩어리라 그런 논란이 없습니다. */
+  const EMPTY_DESC = '&and=(or(description.is.null,description.eq.),'
+                   +        'or(description_en.is.null,description_en.eq.))';
   let targets = [];
   if (has('wd_checked_at')) {
+    /* ① 아직 점검 안 된 사람 */
     targets = await sbGetAll('persons', COLS,
       HID + '&wikidata_id=not.is.null&wd_checked_at=is.null', DAILY_LIMIT);
+    console.log('  · ① 미점검:', targets.length, '명');
+
+    /* ② 소개문이 비어 있는 사람 — 점검 표시가 있어도 다시 봅니다 */
     if (targets.length < DAILY_LIMIT) {
+      const seen = new Set(targets.map(t => t.id));
+      const empty = await sbGetAll('persons', COLS,
+        HID + '&wikidata_id=not.is.null' + EMPTY_DESC + '&order=wd_links.desc.nullslast',
+        DAILY_LIMIT - targets.length);
+      let added = 0;
+      empty.forEach(m => { if (!seen.has(m.id)) { targets.push(m); seen.add(m.id); added++; } });
+      console.log('  · ② 소개문 비어 있음:', added, '명');
+    }
+
+    /* ③ 나머지 — 오래 전에 점검한 순 (소개문을 더 길게 다시 받기) */
+    if (!ONLY_EMPTY && targets.length < DAILY_LIMIT) {
+      const seen = new Set(targets.map(t => t.id));
       const more = await sbGetAll('persons', COLS,
         HID + '&wikidata_id=not.is.null&wd_checked_at=not.is.null&order=wd_checked_at.asc',
         DAILY_LIMIT - targets.length);
-      const seen = new Set(targets.map(t => t.id));
-      more.forEach(m => { if (!seen.has(m.id)) targets.push(m); });
+      let added = 0;
+      more.forEach(m => { if (!seen.has(m.id)) { targets.push(m); added++; } });
+      console.log('  · ③ 오래된 순:', added, '명');
     }
   } else {
     // wd_checked_at 컬럼이 없으면 저명도 미조회 인물부터
@@ -286,13 +439,37 @@ async function main() {
   // 5) 소개문 — 한국어 위키백과 (description 이 비어 있는 인물만)
   const koJobs = [];  // [title, target]
   const enJobs = [];
+  /* ★★ 2026-08-12 v1.3 · 한국어와 영문을 <b>따로</b> 판단합니다 ★★
+     ────────────────────────────────────────────────────────────────
+     ★ 무엇이 문제였나
+       예전에는 이렇게 갈렸습니다 —
+         한국어 문서가 있으면 → 한국어만 받고 영문은 <b>아예 안 받음</b>
+         한국어 문서가 없고 영문이 있으면 → 영문을 받음
+       그래서 한국어 소개가 짧아도 영문을 곁들일 수 없었습니다.
+       실측: 한국어 있음 1,720명 · 영문 있음 8,860명.
+       화면(SELF PR·인물DB 상세)은 이미 <b>둘을 함께</b> 보여 주도록
+       고쳐 두었으므로, 받아 두면 그만큼 쓸모가 있습니다.
+
+     ★ 어떻게 고쳤나
+       한국어와 영문을 <b>각각</b> 봅니다. 비어 있는 쪽만 받아 옵니다.
+       둘 다 비어 있으면 둘 다 받습니다.
+
+     ★ 문서 제목은 <b>위키데이터가 알려준 주소</b>에서 꺼냅니다(m.koA·m.enA).
+       이름으로 찾으면 동명이인에 걸립니다 — 「존 애덤스」는 미국 2대
+       대통령도 있습니다. 위키데이터 QID 로 이어진 주소라 그 사람이 맞습니다. */
+  function titleOf(url) {
+    if (!url) return '';
+    const part = String(url).split('/wiki/')[1] || '';
+    try { return decodeURIComponent(part).replace(/_/g, ' '); }
+    catch (e) { return part.replace(/_/g, ' '); }
+  }
   for (const q of qids) {
     const cur = byQid.get(q), m = meta[q] || {};
-    const koBad = isEmpty(cur.description) || /^[|{]/.test(String(cur.description).trim());
-    if (koBad && m.koA) koJobs.push([decodeURIComponent(m.koA.split('/wiki/')[1] || '').replace(/_/g, ' '), cur]);
-    else if (koBad && !m.koA && m.enA && isEmpty(cur.description_en)) {
-      enJobs.push([decodeURIComponent(m.enA.split('/wiki/')[1] || '').replace(/_/g, ' '), cur]);
-    }
+    /* 틀 코드(|… 나 {…)가 들어온 것은 소개문으로 보지 않습니다 */
+    const koBad = isEmpty(cur.description)    || /^[|{]/.test(String(cur.description).trim());
+    const enBad = isEmpty(cur.description_en) || /^[|{]/.test(String(cur.description_en).trim());
+    if (koBad && m.koA) koJobs.push([titleOf(m.koA), cur]);
+    if (enBad && m.enA) enJobs.push([titleOf(m.enA), cur]);
   }
   const grabbed = { ko: 0, en: 0 };
   async function fillFrom(host, jobs, key) {
@@ -301,7 +478,16 @@ async function main() {
       const got = await wikiExtracts(host, slice.map(j => j[0]).filter(Boolean));
       slice.forEach(([title, t]) => {
         const txt = got[title];
-        if (txt && txt.length >= 20) { t['_' + key] = txt.slice(0, key === 'ko' ? 400 : 700); grabbed[key]++; }
+        /* ★ 2026-08-12 v1.3 · 자르는 길이를 넉넉히 (예전 한국어 400 · 영문 700)
+             이것이 소개문이 짧았던 <b>가장 직접적인 원인</b>이었습니다.
+             실측: 한국어 소개 평균 249자 · 가장 긴 것 1,758자 ·
+             1,000자 넘는 사람이 15,233명 중 <b>한 명</b>.
+           ★ 자를 때 <b>문단 경계에서</b> 끊습니다 — 문장 도중에 끊기면
+             「…갈채를 받은 것은 교」처럼 됩니다(파트너가 본 그 모습). */
+        if (txt && txt.length >= 20) {
+          t['_' + key] = cutAtParagraph(txt, key === 'ko' ? MAX_KO : MAX_EN);
+          grabbed[key]++;
+        }
       });
       await sleep(200);
     }

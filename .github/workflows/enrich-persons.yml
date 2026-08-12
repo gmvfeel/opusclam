@@ -11,6 +11,28 @@ on:
         description: '이번 실행에서 처리할 인물 수 (기본 1500)'
         required: false
         default: '1500'
+      # ★ 2026-08-12 v1.3 · 「소개문이 비어 있는 사람만」 (파트너 요청)
+      #
+      #  ★ 왜 필요한가 (2026-08-12 실측)
+      #    인물 15,233명 가운데 소개문이 아예 없는 사람이 4,653명입니다.
+      #    그런데 그 사람들은 이미 「점검했다」 표시(wd_checked_at)가 찍혀
+      #    있어서, 예전 규칙으로는 다시 보지 않았습니다.
+      #    v1.3 은 차례를 ① 미점검 → ② 소개문 비어 있음 → ③ 오래된 순
+      #    으로 바꿨습니다. 그래서 그냥 돌려도 빈 것부터 채워집니다.
+      #
+      #  ★ 이 칸을 yes 로 두면 ③ 을 건너뜁니다.
+      #    빈 화면을 급히 없애고 싶을 때 씁니다. 4,653명을 하루 1500명씩
+      #    보면 사흘이면 끝납니다.
+      #  ★ 비워 두면(no) 평소대로 — 빈 것을 먼저 채우고, 남는 자리는
+      #    이미 있는 소개문을 더 길게 다시 받아 오는 데 씁니다.
+      only_empty:
+        description: '소개문이 비어 있는 사람만 보기 (빈 화면 먼저 채우기)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
 
 # 앞 실행이 아직 돌고 있으면 겹치지 않게 기다립니다
 # ★ persons 표를 함께 쓰는 것들을 한 대기줄로 묶습니다.
@@ -36,7 +58,10 @@ jobs:
           DAILY_LIMIT: ${{ github.event.inputs.daily_limit || '1500' }}
         run: |
           try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
-          try2 node scripts/enrich-persons.mjs
+          OPTS=""
+          if [ "${{ github.event.inputs.only_empty }}" = "yes" ]; then OPTS="--only-empty"; fi
+          echo "── 실행 : node scripts/enrich-persons.mjs $OPTS ──"
+          try2 node scripts/enrich-persons.mjs $OPTS
 
   # ── 실패를 알려 줍니다 ──────────────────────────────────────
   #  ★ 왜 필요한가 — 예약 실행이 실패해도 눌러 보지 않으면 모릅니다.
