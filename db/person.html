@@ -1144,16 +1144,50 @@ if('serviceWorker' in navigator){
          or=(field.ilike.*가*,field.ilike.*나*…) 로 바꿉니다.
 
        ★ 악기도 함께 바꿉니다 — 두 가지를 다루는 연주자가 있습니다. */
+    /* ★★ 2026-08-12 · 악기로 거를 때 <b>두 칸을 함께</b> 봅니다 ★★
+       ─────────────────────────────────────────────────────────────
+       ★ 무엇이 잘못됐던가
+         「연주 전체」 는 8월 11일에 고쳐 1,989명을 찾게 됐습니다.
+         그런데 <b>낱낱의 악기</b>(피아노·바이올린…)와 「건반 전체」·
+         「현악 전체」 같은 묶음은 <b>instrument 칸만</b> 봤습니다.
+
+         분야 칸에 「피아노」 가 든 1,038명 가운데 instrument 칸이
+         채워진 분은 980명입니다. 나머지 <b>58명은 「피아노」 로
+         걸러도 나오지 않습니다.</b> 현악 27명 · 관악 22명도 같습니다.
+         「연주 전체」 로는 나오는데 「피아노」 로는 안 나오는 셈입니다.
+
+       ★ 어떻게 고쳤나
+         악기로 거를 때 <b>instrument 와 field 를 or 로 함께</b> 봅니다.
+           or=(instrument.ilike.*피아노*,field.ilike.*피아노*)
+
+       ★ 엉뚱한 사람이 걸리지 않는가
+         field 칸에 드는 값은 분야 여덟 가지 아니면 악기 이름뿐입니다.
+         악기 이름이 분야 이름에 들어 있는 경우가 없으므로 겹치지 않습니다.
+         (「기타」 는 분야 칸에서도 악기를 뜻합니다 — 국내/외 상자의
+          「기타」 와는 다른 상자라 서로 섞이지 않습니다) */
+    function instOr(vals){
+      var t=[];
+      for(var i=0;i<vals.length;i++){
+        var v=encodeURIComponent(vals[i]);
+        t.push('instrument.ilike.*'+v+'*');
+        t.push('field.ilike.*'+v+'*');
+      }
+      return '&or=('+t.join(',')+')';
+    }
     if(field&&field!=='전체 분야'){
       if(GROUPS[field]){
         var g=GROUPS[field];
-        fieldParam='&or=('+g.v.map(function(x){
-          return g.c+'.ilike.*'+encodeURIComponent(x)+'*';
-        }).join(',')+')';
+        if(g.c==='instrument'){
+          fieldParam=instOr(g.v);
+        } else {
+          fieldParam='&or=('+g.v.map(function(x){
+            return g.c+'.ilike.*'+encodeURIComponent(x)+'*';
+          }).join(',')+')';
+        }
       } else if(ROLES.indexOf(field)>=0){
         fieldParam='&field=ilike.*'+encodeURIComponent(field)+'*';
       } else {
-        fieldParam='&instrument=ilike.*'+encodeURIComponent(field)+'*';
+        fieldParam=instOr([field]);
       }
     }
     return regionParam+fieldParam+eraParam+scParam;
