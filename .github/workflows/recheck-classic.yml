@@ -1,0 +1,132 @@
+name: 인물 · 클래식 다시 판정 (수동)
+
+# ── 무엇을 하나 ──────────────────────────────────────────────
+#  이미 담긴 인물을 scripts/lib/classic.mjs 로 다시 판정해
+#  대중음악 인물을 찾아냅니다.
+#
+# ── 왜 필요한가 (2026-08-12) ─────────────────────────────────
+#  판정이 「클래식 낱말이 있으면 통과」였는데,
+#  대중음악 장르 이름에 클래식 낱말이 박혀 있었습니다 —
+#      symphonic metal   → symphon 이 걸려 통과
+#      rock opera        → opera 가 걸려 통과
+#      orchestral pop    → orchestral 이 걸려 통과
+#      baroque pop       → baroque 가 걸려 통과
+#  심포닉메탈 밴드 보컬이 「장르가 클래식」으로 들어왔습니다.
+#  이제 장르를 항목마다 따로 보고, 한 항목에 클래식 낱말과 대중음악
+#  낱말이 함께 있으면 대중음악으로 봅니다.
+#
+# ── ★ 처음에는 「실제로 지우기 = no」 로 돌리십시오 ──────────
+#  까닭별로 묶어서 보여 줍니다. 이름을 하나씩 보실 필요가 없습니다.
+#      ● 대중음악 장르만 있음 — ○○명   ← 이 까닭이 맞나만 보십시오
+#  묶음마다 표본 여덟 명을 함께 찍습니다.
+#  한 묶음을 전부 보시려면 「이 까닭만 자세히」 칸에 그 까닭의 한 조각을
+#  적으십시오 (예: 대중음악 장르).
+#
+# ── ★ 안전장치 ───────────────────────────────────────────────
+#  ① 판정할 근거가 아예 없는 사람(장르·직업·소개문이 모두 빔)은
+#     지우지 않습니다. 보강 수집기가 며칠 뒤 채워 줄 사람입니다.
+#  ② 차단 목록에 먼저 올리고 그다음 지웁니다. 차단이 실패하면
+#     한 명도 지우지 않고 멈춥니다.
+#  ③ 전체의 30%가 넘게 빠지면 멈춥니다.
+#  ④ 상한 칸에 숫자를 적으면 그보다 많이 빠질 때 멈춥니다.
+#
+# ── 되돌릴 수 있나 ───────────────────────────────────────────
+#  지운 사람은 되살릴 수 없습니다. 다만 차단 목록에 위키데이터 번호가
+#  남으므로, admin/blocklist.html 에서 차단을 풀면 다음 자동수집이
+#  그 사람을 다시 담습니다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      save:
+        description: '실제로 지우기 (처음에는 no 로 무엇이 빠질지 보십시오)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      list:
+        description: '빠질 사람을 전부 찍기 (로그가 아주 길어집니다 — 지울 때는 yes 권장)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      why:
+        description: '이 까닭만 자세히 (예: 대중음악 장르 · 비우면 묶음별 표본만)'
+        required: false
+        default: ''
+        type: string
+      max:
+        description: '상한 — 이 수를 넘게 빠지면 지우지 않고 멈춥니다 (비우면 30% 울타리만)'
+        required: false
+        default: ''
+        type: string
+
+concurrency:
+  group: oc-persons
+  cancel-in-progress: false
+
+jobs:
+  recheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── 판정 규칙이 온전한지 먼저 봅니다 ──────────────────
+      #  규칙에 구멍이 있으면 15,000명을 읽기 전에 여기서 멈춥니다.
+      #  「지켜야 하는 사람」(브람스·거슈윈·모리코네·김자경·진은숙)이
+      #  빠지는 규칙이면 이 단계가 실패합니다.
+      - name: 클래식 판정 확인 (48가지)
+        run: node scripts/lib/classic.test.mjs
+
+      - name: 인물DB 클래식 다시 판정
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          OPTS=""
+          if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
+          if [ "${{ github.event.inputs.list }}" = "yes" ]; then OPTS="$OPTS --list"; fi
+
+          WHY="${{ github.event.inputs.why }}"
+          if [ -n "$WHY" ]; then OPTS="$OPTS --why=$WHY"; fi
+
+          MAX="${{ github.event.inputs.max }}"
+          if [ -n "$MAX" ]; then OPTS="$OPTS --max=$MAX"; fi
+
+          echo "── 실행 : node scripts/recheck-classic.mjs $OPTS ──"
+          node scripts/recheck-classic.mjs $OPTS
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  oc-notify-failure:
+    needs: recheck
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '인물 클래식 다시 판정이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n※ 「멈췄습니다」로 끝났다면 안전장치가 걸린 것이며\n   자료는 손대지 않았습니다. 로그의 묶음을 보십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다"
+          fi
