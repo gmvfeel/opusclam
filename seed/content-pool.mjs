@@ -25,6 +25,17 @@
             뜨기 직전이었습니다.
           ★ 자동시드를 하루 두 번에서 <b>한 번</b>으로 줄였습니다.
             남은 것으로 두 배 오래 갑니다.
+     7차  qna-5(21) · news-3(14)                  = 35
+          ★ 2026-08-12 · <b>남은 양을 SQL 로 세어 보고</b> 바닥난 곳부터
+            채웠습니다. 그때 상태 —
+              지식나눔  담긴 것 114 · 풀 52 → <b>이미 바닥</b> (매일 도는 게시판)
+              뉴스      담긴 것  12 · 풀 14 → 남은 것 <b>2개</b>
+              입시커뮤니티 10 · 핫토픽 18 · 유틸리티 9
+              현대음악 8 · 태교음악 8 (이 셋은 weekly 라 천천히 줄어듭니다)
+          ★ 파트너 요청으로 <b>내용을 더 충실하게</b> 썼습니다 —
+            지식나눔 답변 총량 글당 평균 667자(예전 300자 안팎)
+            뉴스 본문 평균 677자 · 문단 7개(예전 5~7문단)
+          ★ 사진은 넣지 않았습니다. 아래 「사진」 항목과 같은 까닭입니다.
 
    ★ 사진 게시판(gallery)은 아직 넣지 않았습니다.
      requireThumb 설정 때문에 그림 주소가 있어야 올라가는데,
@@ -53,6 +64,8 @@ import { ADMISSION4 } from './pool/admission-4.mjs';
 import { HOTTOPIC4 } from './pool/hottopic-4.mjs';
 import { MODERN2 } from './pool/modern-2.mjs';
 import { PRENATAL2 } from './pool/prenatal-2.mjs';
+import { QNA5 } from './pool/qna-5.mjs';
+import { NEWS3 } from './pool/news-3.mjs';
 // 사진 준비 뒤: import { GALLERY } from './pool/gallery.mjs';
 
 /* 일반 게시판용 닉네임 풀 (글에 author 가 지정돼 있으면 그것을 씁니다)
@@ -91,6 +104,8 @@ export const POOL = {
     ...HOTTOPIC4,
     ...MODERN2,
     ...PRENATAL2,
+    ...QNA5,
+    ...NEWS3,
     // ...GALLERY,
   ],
 };
