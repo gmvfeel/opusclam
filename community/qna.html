@@ -224,7 +224,7 @@
       where:'&track=eq.' + encodeURIComponent(TRACK),
       searchCols:['title','body','keywords'],
       categories:[{value:'',label:'전체'}].concat(CATS[TRACK].map(function(c){ return {value:c,label:c}; })),
-      articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
+      twoCol:true, articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
       writeLabel:'질문하기',
       reactions:true
     });

@@ -810,6 +810,69 @@ img.oc-imgload{
   white-space:nowrap}
 .con-view{font-size:11px;color:var(--text-3);white-space:nowrap}
 
+/* ============================================================
+   두 칸 목록 — board.js 의 twoCol 을 켠 게시판
+   ------------------------------------------------------------
+   2026-08-12
+
+   ★ 왜
+     목록 한 줄이 화면 폭을 다 쓰는데 담긴 것은 제목과 미리보기
+     한두 줄뿐이라 오른쪽이 휑했습니다. 열 건을 보려면 화면을
+     다섯 번 내려야 했습니다.
+     음원·동영상(as-cards)·공연(as-concert)은 이미 두 칸이므로
+     같은 결로 맞춥니다.
+
+   ★ 폭이 넓을 때만 두 칸입니다
+     아래 규칙 전체를 min-width:821px 안에 두었습니다.
+     좁은 화면에서는 이 규칙이 아예 켜지지 않으므로
+     지금 있는 모바일 규칙과 다툴 일이 없습니다.
+     (미디어쿼리는 우선순위를 높이지 않으므로, 밖에 두면
+      .board-list.as-two .doc-row 가 모바일 규칙을 눌러버립니다)
+
+   ★ 고정글(HOT)과 안내문은 두 칸을 가로지릅니다
+     반으로 줄이면 큰 사진과 관련포스트가 들어갈 자리가 없고,
+     「글이 없습니다」 안내문이 왼쪽 반쪽에 치우쳐 보입니다.
+   ============================================================ */
+@media (min-width:821px){
+  .board-list.as-two{display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:0 26px;align-items:start}
+  .board-list.as-two .board-feat,
+  .board-list.as-two .board-empty{grid-column:1/-1}
+
+  /* ── 글 목록(핫토픽·뉴스·지식나눔 …) ── */
+  .board-list.as-two .board-row{gap:12px;padding:14px 4px}
+  .board-list.as-two .board-row-no{width:22px;font-size:.82em}
+  /* 칸이 좁아진 만큼 미리보기는 한 줄로 줄입니다 */
+  .board-list.as-two .board-prev{-webkit-line-clamp:1}
+  .board-list.as-two .board-row-thumb{width:78px;height:52px}
+  .board-list.as-two .board-row-right{font-size:.76em;gap:3px}
+
+  /* ── 자료 목록(입시요강) ──
+     한 줄에 로고·제목·설명·배지·날짜·원문이 모두 들어 있어
+     반폭에서는 옆으로 늘어놓을 수 없습니다.
+
+     ★ 로고와 제목은 <b>한 줄에</b> 둡니다
+       모바일 규칙처럼 제목을 통째로 아래로 내리면 첫 줄에
+       번호와 작은 로고만 남아 헐거워 보입니다.
+       그래서 제목 뒤에 <b>폭 100%의 빈 칸(::after)</b>을 끼워
+       배지·날짜·원문만 다음 줄로 내려보냅니다. */
+  .board-list.as-two .doc-row{flex-wrap:wrap;gap:8px 12px;padding:16px 4px}
+  .board-list.as-two .doc-logo{width:44px;height:44px}
+  .board-list.as-two .doc-no,
+  .board-list.as-two .doc-logo{order:0}
+  .board-list.as-two .doc-main{order:0;flex:1 1 140px}
+  .board-list.as-two .doc-row::after{content:"";order:1;flex:0 0 100%;height:0}
+  .board-list.as-two .doc-cat,
+  .board-list.as-two .doc-date,
+  .board-list.as-two .doc-dl{order:2;align-self:center}
+  .board-list.as-two .doc-title{font-size:14.6px}
+  .board-list.as-two .doc-desc{font-size:12.8px;-webkit-line-clamp:1;margin:4px 0 5px}
+  .board-list.as-two .doc-home{font-size:11.8px}
+  .board-list.as-two .doc-date{font-size:12px}
+  .board-list.as-two .doc-dl{margin-left:auto;font-size:11.8px}
+}
+
 @media (max-width:640px){
   .con-row{gap:11px;padding:13px 4px}
   .con-no{display:none}

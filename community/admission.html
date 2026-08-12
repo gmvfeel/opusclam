@@ -109,7 +109,7 @@
       searchCols:['title','body','keywords'],
       categories:[{value:'',label:'구분선택'},{value:'대학',label:'대학'},{value:'예고',label:'예고'},{value:'대학원',label:'대학원'}],
       regions:[{value:'',label:'국내/해외'},{value:'국내',label:'국내'},{value:'해외',label:'해외'}],
-      docStyle:true, yearFilter:true, writeRole:'member', pinnedFirst:false, defaultSort:'created_at',
+      twoCol:true, docStyle:true, yearFilter:true, writeRole:'member', pinnedFirst:false, defaultSort:'created_at',
       // 글에 사진·로고가 없으면 연결된 학교DB(school_id)의 로고를 끌어옵니다
       logoFrom:{ table:'schools', key:'school_id', col:'logo_url', nameCol:'name_ko' }
     });
