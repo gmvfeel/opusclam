@@ -92,14 +92,34 @@ html[data-theme="dark"] .board-feat{background:var(--paper-2)}
 .board-row:hover .board-row-title,
 .board-row:hover .board-prev,
 .board-row:hover .board-row-no,
-.board-row:hover .board-row-right,
+.board-row:hover .board-row-head,
+.board-row:hover .board-row-head .brh-by,
+.board-row:hover .board-row-head .brh-date,
 .board-row:hover .board-cc{color:#fff}
 .board-row:hover .board-tag{color:#fff;border-color:rgba(255,255,255,.45);background:transparent}
 html[data-theme="dark"] .board-row:hover{background:#000}
 .board-row-no{flex:none;width:26px;color:var(--text-3);font-size:.87em;padding-top:2px;font-variant-numeric:tabular-nums}
 .board-row-main{flex:1;min-width:0}
 .board-row-title{display:block;font-size:1em;font-weight:600;color:var(--text);margin:0 0 5px;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.board-row-right{flex:none;text-align:right;display:flex;flex-direction:column;gap:5px;align-items:flex-end;font-size:.8em;color:var(--text-3);white-space:nowrap}
+@media(max-width:640px){.doc-row{padding-right:6px}}
+/* ★★ 2026-08-12 · 분류·작성자·날짜를 제목 <b>위</b> 한 줄로 ★★
+   ─────────────────────────────────────────────────────────
+   예전에는 오른쪽 끝(.board-row-right)에 붙어 있었습니다.
+   제목과 멀어 어느 글의 것인지 눈이 한 번 더 움직였고, 두 칸 배치가
+   되면서 그 거리가 더 어색해졌습니다.
+   이제 제목 위에 모읍니다 — 읽는 차례와 맞습니다.
+     국내 · 기립박수 · 2026.08.11
+     기립박수를 처음 쳐 본 날
+   ★ .board-row-right 규칙은 <b>더 쓰이지 않습니다</b>(board.js 에서
+     그리지 않습니다). 아래 규칙이 그 자리를 대신합니다. */
+.board-row-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  margin:0 0 6px;font-size:.8em;color:var(--text-3);line-height:1.5}
+.board-row-head .board-tag{font-size:11.5px;padding:1px 8px}
+.board-row-head .brh-by{color:var(--text-3)}
+/* 가운뎃점으로 잇습니다 — 배지 뒤부터 */
+.board-row-head .brh-by+.brh-date::before,
+.board-row-head .board-tag+.brh-date::before{content:"·";margin-right:9px;opacity:.6}
+.board-row-head .brh-date{font-variant-numeric:tabular-nums;white-space:nowrap}
 
 .board-foot{display:flex;align-items:center;margin-top:22px;position:relative}
 .board-foot .board-pager{flex:1;margin-top:0}
@@ -499,17 +519,17 @@ html[data-theme="dark"] .doc-row:hover{background:#000}
 .board-tag[data-cat="해외"]{color:var(--violet-2);border-color:rgba(124,99,176,.5)}
 
 /* 목록 우측 메타(작성자·날짜·분류)를 오른쪽 끝에서 안쪽으로 */
-.board-row-right{margin-right:24px}
+
 .doc-row{padding-right:24px}
-@media(max-width:640px){.board-row-right{margin-right:8px}.doc-row{padding-right:6px}}
+
 
 /* 목록 우측: [구분배지] | [작성자·날짜] 가로 배치 */
-.board-row-right{flex-direction:row;align-items:center;gap:14px}
-.board-row-cat{flex:none}
-.board-row-cat .board-tag{font-size:12px}
-.board-row-meta{display:flex;flex-direction:row;align-items:center}
-.board-row-meta>span+span::before{content:"·";margin:0 8px;color:var(--text-3);opacity:.6}
-@media(max-width:560px){.board-row-meta{flex-direction:column;align-items:flex-end}.board-row-meta>span+span::before{content:none}}
+
+
+
+
+
+
 
 /* 자료형 로고 자리 — 이니셜 뱃지(로고 없을 때) */
 .doc-logo-txt{font-family:var(--display);font-weight:800;font-size:11px;color:var(--violet-2);text-align:center;line-height:1.12;padding:2px;word-break:keep-all;letter-spacing:-.02em}
@@ -852,7 +872,8 @@ img.oc-imgload{
   /* 칸이 좁아진 만큼 미리보기는 한 줄로 줄입니다 */
   .board-list.as-two .board-prev{-webkit-line-clamp:1}
   .board-list.as-two .board-row-thumb{width:78px;height:52px}
-  .board-list.as-two .board-row-right{font-size:.76em;gap:3px}
+  /* 제목 위 한 줄 — 좁은 칸에서는 조금 작게 */
+  .board-list.as-two .board-row-head{font-size:.76em;gap:7px;margin-bottom:5px}
 
   /* ── 자료 목록(입시요강) ──
      한 줄에 로고·제목·설명·배지·날짜·원문이 모두 들어 있어

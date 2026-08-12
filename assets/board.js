@@ -543,14 +543,39 @@ window.OCBoard = (function () {
         + '</a>' + rel
         + '</div>';
     }
+    /* ★★ 2026-08-12 · 분류·작성자·날짜를 <b>제목 위로</b> 옮겼습니다 ★★
+       ──────────────────────────────────────────────────────────────
+       ★ 무엇이 어색했나 (파트너 지적)
+         「국내 · 기립박수 · 2026.08.11」이 <b>오른쪽 끝</b>에 붙어 있었습니다.
+         제목과 멀어서 어느 글의 것인지 눈이 한 번 더 움직였고,
+         두 칸 배치가 되면서 그 거리가 더 어색해졌습니다.
+
+       ★ 어떻게 바꿨나
+         제목 <b>위</b>에 한 줄로 모읍니다 —
+             국내 · 기립박수 · 2026.08.11
+             기립박수를 처음 쳐 본 날
+             공연이 끝나고 앞줄부터 사람들이 일어섰습니다 …
+         읽는 차례(무엇에 관한 글인가 → 제목 → 미리보기)와 맞습니다.
+
+       ★ 아홉 게시판이 함께 바뀝니다 — 이 함수 하나가 그리기 때문입니다.
+         화면마다 고칠 곳이 없습니다. */
     function articleRowHtml(rec, no) {
       var th = cfg.rowThumb ? '<span class="board-row-thumb">' + (rec.thumb_url ? imgTag(rec.thumb_url, 120) : '') + '</span>' : '';
+      /* 제목 위 한 줄 — 있는 것만 가운뎃점으로 잇습니다 */
+      var meta = metaLine(rec);
+      var head = '<span class="board-row-head">'
+               + tagHtml(rec)
+               + (meta ? '<span class="brh-by">' + meta + '</span>' : '')
+               + '<span class="brh-date">' + fmtDate(rec.created_at) + '</span>'
+               + '</span>';
       return '<a class="board-row' + (cfg.rowThumb ? ' has-thumb' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur + '">'
         + '<span class="board-row-no">' + (no > 0 && no < 10 ? '0' + no : no) + '</span>'
         + th
-        + '<span class="board-row-main"><span class="board-row-title">' + esc(rec.title || '') + ccHtml(rec) + newHtml(rec) + '</span>'
-        + '<span class="board-prev">' + previewText(rec.body, 140) + '</span></span>'
-        + '<span class="board-row-right"><span class="board-row-cat">' + tagHtml(rec) + '</span><span class="board-row-meta"><span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></span></span>'
+        + '<span class="board-row-main">'
+        +   head
+        +   '<span class="board-row-title">' + esc(rec.title || '') + ccHtml(rec) + newHtml(rec) + '</span>'
+        +   '<span class="board-prev">' + previewText(rec.body, 140) + '</span>'
+        + '</span>'
         + '</a>';
     }
     /* 연결된 표(예: schools)에서 로고를 끌어오기 위한 캐시
