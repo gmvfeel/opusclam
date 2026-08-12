@@ -66,19 +66,41 @@ async function rest(path, init = {}) {
   return t ? JSON.parse(t) : null;
 }
 
-/* ★ PostgREST 는 한 번에 200줄까지만 줍니다.
-   끝냄은 0줄일 때만, offset 은 실제로 받은 수만큼, order 에 id 필수. */
+/* ★★ 2026-08-11 · <b>Range 헤더 방식으로 바꿨습니다</b> ★★
+   ─────────────────────────────────────────────────────
+   ★ 무엇이 잘못됐나
+     dry run 을 돌려 보니 「인물 : <b>200명</b>」 만 나왔습니다.
+     인물DB 는 15,255명입니다. <b>1.3%만 보고 끝냈습니다.</b>
+     그래서 「바뀔 사람 10명」 이라는 결과도 200명 안에서만 센 것입니다.
+
+   ★ 왜 그랬나
+     limit/offset 을 <b>쿼리로</b> 보냈습니다. Supabase 는 응답을
+     200줄로 자르는데, limit 도 200이라 <b>어디서 잘렸는지 알 수
+     없습니다.</b> 두 번째 쪽이 0줄로 와서 그대로 끝났습니다.
+
+   ★ 어떻게 고쳤나
+     scripts/enrich-persons.mjs 가 쓰는 <b>Range 헤더</b> 방식으로
+     바꿨습니다. 그것은 15,000명을 제대로 훑고 있어 <b>검증된 방법</b>입니다.
+     서버가 몇 줄을 주든 <b>실제로 받은 수만큼</b> 나아가고,
+     <b>0줄일 때만</b> 끝냅니다.
+
+   ★ 진행 상황을 <b>자주</b> 찍습니다
+     예전에는 2,000명마다 찍어서, 200에서 멈춘 것을 <b>알 수 없었습니다.</b>
+     이제 쪽마다 찍어 어디까지 갔는지 보입니다. */
 async function getAll(path) {
   const out = [];
-  let off = 0;
-  for (;;) {
-    const rows = await rest(path + '&limit=200&offset=' + off);
-    if (!Array.isArray(rows) || rows.length === 0) break;
+  let from = 0;
+  const TAKE = 200;
+  for (let guard = 0; guard < 500; guard++) {
+    const rows = await rest(path, {
+      headers: { Range: from + '-' + (from + TAKE - 1), 'Range-Unit': 'items' }
+    });
+    if (!Array.isArray(rows) || rows.length === 0) break;   /* ★ 0줄일 때만 끝냅니다 */
     out.push(...rows);
-    off += rows.length;
-    if (rows.length < 200) break;
-    if (off % 2000 === 0) process.stdout.write('   읽는 중 ' + off + '명\r');
+    from += rows.length;                                     /* ★ 받은 만큼만 나아갑니다 */
+    process.stdout.write('   읽는 중 ' + out.length + '명\r');
   }
+  process.stdout.write('                              \r');
   return out;
 }
 
