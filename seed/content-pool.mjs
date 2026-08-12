@@ -26,6 +26,13 @@
           ★ 자동시드를 하루 두 번에서 <b>한 번</b>으로 줄였습니다.
             남은 것으로 두 배 오래 갑니다.
      7차  qna-5(21) · news-3(14)                  = 35
+     8차  admission-5(14) · hottopic-5(12)
+          modern-3(8) · prenatal-3(8) · utility-3(8) = 50
+          ★ 7차와 같은 날 이어서 만들었습니다. 남은 것이 열흘~한 달
+            안쪽이던 게시판을 모두 채웠습니다.
+          ★ 만들면서 <b>주제가 겹친 네 개를 찾아 갈아 끼웠습니다</b> —
+            제목은 달랐는데 내용이 같았습니다(좌석·오페라 줄거리·
+            아이 악기 시작·공개 리허설). 제목만 대조하면 놓칩니다.
           ★ 2026-08-12 · <b>남은 양을 SQL 로 세어 보고</b> 바닥난 곳부터
             채웠습니다. 그때 상태 —
               지식나눔  담긴 것 114 · 풀 52 → <b>이미 바닥</b> (매일 도는 게시판)
@@ -66,6 +73,11 @@ import { MODERN2 } from './pool/modern-2.mjs';
 import { PRENATAL2 } from './pool/prenatal-2.mjs';
 import { QNA5 } from './pool/qna-5.mjs';
 import { NEWS3 } from './pool/news-3.mjs';
+import { ADMISSION5 } from './pool/admission-5.mjs';
+import { HOTTOPIC5 } from './pool/hottopic-5.mjs';
+import { MODERN3 } from './pool/modern-3.mjs';
+import { PRENATAL3 } from './pool/prenatal-3.mjs';
+import { UTILITY3 } from './pool/utility-3.mjs';
 // 사진 준비 뒤: import { GALLERY } from './pool/gallery.mjs';
 
 /* 일반 게시판용 닉네임 풀 (글에 author 가 지정돼 있으면 그것을 씁니다)
@@ -106,6 +118,11 @@ export const POOL = {
     ...PRENATAL2,
     ...QNA5,
     ...NEWS3,
+    ...ADMISSION5,
+    ...HOTTOPIC5,
+    ...MODERN3,
+    ...PRENATAL3,
+    ...UTILITY3,
     // ...GALLERY,
   ],
 };
