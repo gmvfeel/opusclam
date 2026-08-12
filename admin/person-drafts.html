@@ -56,6 +56,24 @@
   .empty{padding:28px;text-align:center;color:#8a8ca0}
   .edit{display:none;margin-top:10px}
   .edit.on{display:block}
+  /* ★ 2026-08-12 · 사진·링크 칸 (파트너 요청)
+       소개문만 채워도 나아지지만 사진·링크가 비어 있으면 허전합니다.
+       검수하면서 함께 채울 수 있게 합니다.
+     ★ 인물 15,233명 중 사진이 있는 사람이 6,321명뿐입니다. */
+  .media{display:none;margin-top:10px;padding:14px;background:#fbfbfd;
+    border:1px solid #eeeef4;border-radius:8px}
+  .media.on{display:block}
+  .media .mrow{display:flex;gap:9px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  .media label{flex:0 0 62px;font-size:12px;font-weight:700;color:#5c5e70}
+  .media input[type=text]{flex:1 1 320px;min-width:200px;font-size:12.5px}
+  .media .hint{flex:1 1 100%;font-size:11.5px;color:#9a9cae;margin:-4px 0 6px 71px}
+  .mprev{margin-top:10px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .mprev img{width:150px;height:190px;object-fit:cover;border-radius:8px;
+    border:1px solid #e3e3ec;background:#f2f2f7}
+  .mprev .bad{font-size:12px;color:#a01c1c}
+  .mchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .mchip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;
+    background:#eeecf7;color:#5b4a92}
   .gap{background:#eef3ff;border:1px solid #ccd9f5;color:#2c4a80;border-radius:8px;
     padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
   .gap b{font-size:14px}
@@ -224,7 +242,10 @@
          관계 이름을 못박지 않아도 됩니다. */
     var sel = 'id,person_id,lang,body,edited_body,source_note,confidence,status,'
             + 'prev_description,decided_at,decided_note,created_at,'
-            + 'persons(id,name_ko,name_en,field,instrument,life,school,nationality,link_wiki)';
+            /* ★ 2026-08-12 · 사진·링크 (파트너 요청) */
+            + 'image_url,link_wiki,link_audio,link_video,photo_note,'
+            + 'persons(id,name_ko,name_en,field,instrument,life,school,nationality,'
+            +          'image_url,link_wiki,link_audio,link_video)';
     var qq = c.from('oc_person_drafts').select(sel)
       .eq('status', STATUS)
       .order('created_at', { ascending: true })   /* 오래된 것부터 검수 */
@@ -264,20 +285,59 @@
       var bits = [p.field, p.instrument, p.life, p.nationality, p.school]
         .filter(function (v) { return v && String(v).trim(); }).join(' · ');
 
+      /* ★ 2026-08-12 · 인물DB 에 이미 있는 것과 초안에 적힌 것을 함께 보여 줍니다.
+           이미 있으면 승인해도 <b>덮어쓰지 않습니다</b> — 그것을 알 수 있게
+           「있음」 표를 붙입니다. */
+      function has(v) { return v && String(v).trim() && String(v).trim() !== '#'; }
+      var chips = '';
+      [['사진', p.image_url], ['위키', p.link_wiki], ['음원', p.link_audio], ['영상', p.link_video]]
+        .forEach(function (kv) {
+          if (has(kv[1])) chips += '<span class="mchip">' + kv[0] + ' 있음</span>';
+        });
+
       var acts = '';
       if (x.status === 'pending') {
         acts = '<div class="acts">'
           + '<button class="ok sm" data-do="approve" data-id="' + x.id + '">그대로 승인</button>'
-          + '<button class="ghost sm" data-do="edit" data-id="' + x.id + '">고쳐서 승인</button>'
+          + '<button class="ghost sm" data-do="edit" data-id="' + x.id + '">글 고치기</button>'
+          + '<button class="ghost sm" data-do="media" data-id="' + x.id + '">사진·링크</button>'
           + '<button class="no sm" data-do="reject" data-id="' + x.id + '">버리기</button>'
           + '<input type="text" data-memo="' + x.id + '" placeholder="검수 메모 (선택)">'
           + '</div>'
+          + (chips ? '<div class="mchips">' + chips + '</div>' : '')
           + '<div class="edit" data-edit="' + x.id + '">'
           + '<textarea rows="10" data-ta="' + x.id + '">' + esc(txt) + '</textarea>'
           + '<div class="acts">'
           +   '<button class="ok sm" data-do="save" data-id="' + x.id + '">고친 글로 승인</button>'
           +   '<button class="ghost sm" data-do="cancel" data-id="' + x.id + '">접기</button>'
-          + '</div></div>';
+          + '</div></div>'
+          /* ── 사진·링크 칸 ─────────────────────────────────────
+             ★ 인물DB 에 이미 값이 있으면 그것을 <b>흐린 글씨로</b> 보여 주고,
+               초안 칸은 비워 둡니다. 있는 것을 덮어쓰지 않기 때문입니다. */
+          + '<div class="media" data-media="' + x.id + '">'
+          +   '<div class="mrow"><label>사진</label>'
+          +     '<input type="text" data-m="image" data-id="' + x.id + '" value="' + esc(x.image_url || '') + '"'
+          +     ' placeholder="' + (has(p.image_url) ? '이미 있습니다 — ' + esc(p.image_url).slice(0, 60) : 'https:// 사진 주소') + '"></div>'
+          +   '<div class="hint">위키미디어 커먼즈처럼 <b>이용 조건이 확인된</b> 사진만 넣어 주십시오.</div>'
+          +   '<div class="mrow"><label>위키</label>'
+          +     '<input type="text" data-m="wiki" data-id="' + x.id + '" value="' + esc(x.link_wiki || '') + '"'
+          +     ' placeholder="' + (has(p.link_wiki) ? '이미 있습니다' : 'https:// 위키백과 문서') + '"></div>'
+          +   '<div class="mrow"><label>음원</label>'
+          +     '<input type="text" data-m="audio" data-id="' + x.id + '" value="' + esc(x.link_audio || '') + '"'
+          +     ' placeholder="' + (has(p.link_audio) ? '이미 있습니다' : 'https:// 음원 페이지') + '"></div>'
+          +   '<div class="mrow"><label>영상</label>'
+          +     '<input type="text" data-m="video" data-id="' + x.id + '" value="' + esc(x.link_video || '') + '"'
+          +     ' placeholder="' + (has(p.link_video) ? '이미 있습니다' : 'https:// 영상 페이지') + '"></div>'
+          +   '<div class="mrow"><label>사진 출처</label>'
+          +     '<input type="text" data-m="note" data-id="' + x.id + '" value="' + esc(x.photo_note || '') + '"'
+          +     ' placeholder="예: 위키미디어 커먼즈 · CC BY-SA 4.0"></div>'
+          +   '<div class="acts">'
+          +     '<button class="sm" data-do="msave" data-id="' + x.id + '">사진·링크 저장</button>'
+          +     '<button class="ghost sm" data-do="mprev" data-id="' + x.id + '">사진 미리보기</button>'
+          +     '<button class="ghost sm" data-do="mclose" data-id="' + x.id + '">접기</button>'
+          +   '</div>'
+          +   '<div class="mprev" data-mprev="' + x.id + '"></div>'
+          + '</div>';
       } else if (x.status === 'applied') {
         acts = '<div class="acts">'
           + '<button class="no sm" data-do="revert" data-id="' + x.id + '">되돌리기</button>'
@@ -321,8 +381,29 @@
     var msg = document.querySelector('[data-msg="' + id + '"]');
     var box = document.querySelector('[data-edit="' + id + '"]');
 
+    var mbox = document.querySelector('[data-media="' + id + '"]');
+
     if (doWhat === 'edit')   { if (box) box.className = 'edit on';  return; }
     if (doWhat === 'cancel') { if (box) box.className = 'edit';     return; }
+    if (doWhat === 'media')  { if (mbox) mbox.className = 'media on'; return; }
+    if (doWhat === 'mclose') { if (mbox) mbox.className = 'media';    return; }
+
+    /* ★ 사진 미리보기 — 주소를 넣고도 엉뚱한 사진인지 모르면 소용없습니다.
+         띄워 보고 안 뜨면 그 자리에서 알려 줍니다. */
+    if (doWhat === 'mprev') {
+      var iv = document.querySelector('[data-m="image"][data-id="' + id + '"]');
+      var pv = document.querySelector('[data-mprev="' + id + '"]');
+      if (!pv) return;
+      var url = iv ? (iv.value || '').trim() : '';
+      if (!/^https?:\/\//.test(url)) {
+        pv.innerHTML = '<span class="bad">사진 주소가 http:// 또는 https:// 로 시작해야 합니다.</span>';
+        return;
+      }
+      pv.innerHTML = '<img src="' + esc(url) + '" alt="" '
+        + 'onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),'
+        + '{className:\'bad\',textContent:\'사진을 불러오지 못했습니다. 주소를 확인해 주십시오.\'}))">';
+      return;
+    }
 
     var c = sb(); if (!c) return;
     var memoEl = document.querySelector('[data-memo="' + id + '"]');
@@ -339,6 +420,24 @@
       var u = await c.from('oc_person_drafts').update({ edited_body: v }).eq('id', id).select('id');
       if (u.error) { say('고친 글을 저장하지 못했습니다 — ' + u.error.message, 'bad'); return; }
       doWhat = 'approve';
+    }
+
+    /* 사진·링크 저장 — 넷을 한 번에 넘깁니다.
+       ★ 한 칸씩 따로 저장하면 일부만 되고 일부는 안 되는 일이 생깁니다. */
+    if (doWhat === 'msave') {
+      function mv(k) {
+        var e = document.querySelector('[data-m="' + k + '"][data-id="' + id + '"]');
+        return e ? (e.value || '').trim() : '';
+      }
+      var rm = await c.rpc('oc_draft_set_media', {
+        p_id: Number(id), p_image: mv('image') || null, p_wiki: mv('wiki') || null,
+        p_audio: mv('audio') || null, p_video: mv('video') || null, p_note: mv('note') || null
+      });
+      if (rm.error) { say('저장하지 못했습니다 — ' + rm.error.message, 'bad'); return; }
+      var om = Array.isArray(rm.data) ? rm.data[0] : rm.data;
+      if (om && om.ok === false) { say(om.message || '저장하지 못했습니다.', 'bad'); return; }
+      say((om && om.message) || '저장했습니다.', 'good');
+      return;
     }
 
     var fn = doWhat === 'approve' ? 'oc_draft_approve'
