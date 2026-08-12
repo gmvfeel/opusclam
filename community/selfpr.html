@@ -71,6 +71,15 @@
   .sp-list .sp-li-t{color:var(--text);overflow-wrap:anywhere}
   .sp-list .sp-li-s{color:var(--text-3);font-size:13px}
   .sp-more{margin-top:12px;font-size:13px;color:var(--text-3)}
+  /* ★ 2026-08-12 · 소개문이 위키백과 <b>머리말까지만</b> 담겨 있어
+       중간에 끊긴 것처럼 보입니다. 그 까닭을 알려 주고 원문으로
+       가는 길을 둡니다. (수집기가 exintro 로 머리말만 받아옵니다 —
+       나중에 절 단위로 더 받아오는 작업을 따로 할 예정입니다) */
+  .sp-cut{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    margin-top:14px;padding:12px 15px;border:1px dashed var(--line-2);
+    border-radius:10px;background:var(--paper-2);font-size:13px;color:var(--text-3)}
+  .sp-cut a{color:var(--violet-2);text-decoration:none;font-weight:600}
+  .sp-cut a:hover{text-decoration:underline}
   .sp-meta{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:14px;line-height:1.6}
   .sp-meta dt{color:var(--text-3);white-space:nowrap}
   .sp-meta dd{margin:0;color:var(--text-2);overflow-wrap:anywhere}
@@ -327,9 +336,27 @@
          원문이 위키백과 글이라 정확하고, 「영문」 표시를 달아 두면
          읽는 분이 브라우저 번역을 쓸 수 있습니다. */
     var hasKo = has(p.description), hasEn = has(p.description_en);
+
+    /* ★ 소개문이 끊긴 것처럼 보이는 까닭을 알려 줍니다 (2026-08-12)
+         소개문은 위키백과 문서의 <b>머리말까지만</b> 담겨 있습니다.
+         그래서 문장 도중에 끝나는 일이 있습니다. 화면이 자르는 것이
+         아니므로 「더 보기」로는 해결되지 않고, 원문으로 보내야 합니다. */
+    function cutNote(txt, wikiUrl) {
+      var s = String(txt || '').trim();
+      /* 문장이 온전히 끝났으면 안내를 붙이지 않습니다 */
+      if (/[.!?。]["')\]]?$/.test(s) || /(습니다|입니다|이다|였다|한다)[.]?$/.test(s)) return '';
+      return '<div class="sp-cut">'
+        + '<span>소개문이 위키백과 문서의 머리말까지만 담겨 있어 여기서 끊깁니다.</span>'
+        + (has(wikiUrl)
+          ? '<a href="' + esc(wikiUrl) + '" target="_blank" rel="noopener">위키백과에서 전문 보기 &#8599;</a>'
+          : '')
+        + '</div>';
+    }
+
     if (hasKo) {
       secs += section('소개 · 이력',
         '<div class="sp-body">' + paras(p.description) + '</div>'
+        + cutNote(p.description, p.link_wiki)
         + (hasEn
           ? '<details class="sp-en"><summary>'
             + '<span class="sp-en-badge">영문</span> 영문 소개 원문 보기'
@@ -338,6 +365,7 @@
     } else if (hasEn) {
       secs += section('소개 · 이력 (영문)',
         '<div class="sp-body">' + paras(p.description_en) + '</div>'
+        + cutNote(p.description_en, p.link_wiki)
         + '<p class="sp-more">위키백과 영문 문서에서 가져온 글입니다. '
         + '한국어 소개는 준비되는 대로 함께 보여 드리겠습니다.</p>');
     }

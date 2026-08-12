@@ -408,8 +408,11 @@ html[data-theme="dark"] .board-form{
 @media(max-width:640px){.board-feat{position:static}}
 @media(max-width:560px){.board-feat-body.has-img{flex-direction:column;gap:14px}.board-feat-img{width:100%;height:180px}}
 
-/* 커뮤니티 히어로 동심원 링 — 아주 느린 은은한 숨쉬기(투명도만) */
-@keyframes orbitbreath{0%,100%{opacity:.64}50%{opacity:.92}}
+/* 커뮤니티 히어로 동심원 링 — 아주 느린 은은한 숨쉬기(투명도만)
+   ★ 2026-08-12 · 무늬를 흐리게 하면서 숨쉬기 폭도 낮췄습니다
+     (0.64~0.92 → 0.42~0.62). 도형 자체를 옅게 했으니 여기서 다시
+     진하게 올리면 흐리게 한 뜻이 반쯤 사라집니다. */
+@keyframes orbitbreath{0%,100%{opacity:.42}50%{opacity:.62}}
 .scene-orbit g{animation:orbitbreath 9s ease-in-out infinite}
 
 /* 화제 카드 추천/비추천 표시 (cfg.reactions) */
@@ -1087,6 +1090,33 @@ img.oc-imgload{
 .board-row:hover .board-tag.board-paid{color:#fff}
 
 /* 목록 설명글 옆의 안내 링크 (콩쿨 → 상단 등재 안내) */
-.pdb-lead-link{display:inline-block;margin-left:10px;font-size:.93em;font-weight:700;color:#8a6d1f;text-decoration:none;border-bottom:1px solid rgba(201,169,78,.5);white-space:nowrap}
-.pdb-lead-link:hover{color:#6d55a3;border-bottom-color:currentColor}
-[data-theme="dark"] .pdb-lead-link{color:#e3c877}
+/* ★★ 2026-08-12 · 안내문 옆 링크를 <b>단추 모양</b>으로 (파트너 지적) ★★
+   ────────────────────────────────────────────────────────────────
+   ★ 무엇이 문제였나
+     태교음악 게시판의 「상황별 선곡 보기 →」가 안내문 끝에 글자로만
+     붙어 있어 <b>눈에 안 띄었습니다.</b> 밑줄 한 줄과 흐린 금빛이라
+     본문의 일부처럼 읽혔습니다.
+
+   ★ 어떻게 고쳤나
+     테두리와 배경을 둔 <b>작은 단추</b>로 만듭니다. 누를 수 있는 것으로
+     보이게 하는 것이 먼저이고, 색은 이 사이트의 보랏빛을 씁니다.
+     마우스를 올리면 배경이 차면서 화살표가 오른쪽으로 조금 움직입니다.
+   ★ 이 결은 board.css 에 있어 <b>다른 게시판에서도 함께</b> 쓰입니다. */
+.pdb-lead-link{display:inline-flex;align-items:center;gap:6px;
+  margin-left:12px;padding:6px 13px;
+  font-size:.9em;font-weight:700;white-space:nowrap;text-decoration:none;
+  color:var(--violet-2);background:rgba(109,85,163,.07);
+  border:1px solid rgba(109,85,163,.35);border-radius:20px;
+  transition:background .16s ease,border-color .16s ease,color .16s ease}
+.pdb-lead-link::after{content:"→";font-size:1.05em;line-height:1;
+  transition:transform .16s ease}
+.pdb-lead-link:hover{color:#fff;background:var(--violet-2);
+  border-color:var(--violet-2)}
+.pdb-lead-link:hover::after{transform:translateX(3px)}
+[data-theme="dark"] .pdb-lead-link{color:#c4a9e6;background:rgba(196,169,230,.10);
+  border-color:rgba(196,169,230,.4)}
+[data-theme="dark"] .pdb-lead-link:hover{color:#1b1725;background:#c4a9e6}
+@media(max-width:600px){
+  /* 좁은 화면에서는 줄을 바꿔 아래에 놓습니다 — 안내문과 겹치지 않게 */
+  .pdb-lead-link{display:inline-flex;margin:10px 0 0}
+}

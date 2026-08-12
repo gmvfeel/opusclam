@@ -44,12 +44,27 @@
           var base = 18 + Math.random() * 12;              /* 무리 크기 18~30 */
           var n = 4 + Math.floor(Math.random() * 3);       /* 링 4~6겹 */
           for (var i = 0; i < n; i++) {
+            /* ★★ 2026-08-12 · 링을 <b>흐리게</b> 했습니다 (파트너 지적) ★★
+               ─────────────────────────────────────────────────────
+               ★ 무엇이 문제였나
+                 커뮤니티 상단 무늬가 다른 섹션보다 뚜렷하게 보였습니다.
+                 네 섹션의 배경 투명도(.pdb-bg 0.55)는 같은데,
+                 <b>도형 하나하나의 진하기와 굵기가 달랐습니다.</b>
+                   커뮤니티 링   opacity 0.50 · 굵기 1.60
+                   정보SPOT 점   opacity 0.22
+                 게다가 커뮤니티는 도형이 51개뿐이라(다른 곳은 180~234개)
+                 하나가 크고 굵어 더 눈에 들어왔습니다.
+
+               ★ 어떻게 고쳤나
+                 가장 안쪽 링을 0.50 → <b>0.26</b> 으로, 굵기를 1.6 → <b>1.15</b> 로
+                 낮췄습니다. 정보SPOT(0.22)과 비슷한 자리입니다.
+                 바깥쪽으로 갈수록 옅어지는 결은 그대로 두었습니다. */
             g.appendChild(attr(el('circle'), {
               cx: cx.toFixed(1), cy: cy.toFixed(1),
               r: (base * (i + 1)).toFixed(1),
               fill: 'none', stroke: 'url(#dg)',
-              'stroke-width': (1.6 - i * 0.08).toFixed(2),
-              opacity: Math.max(0.15, 0.5 - i * 0.07).toFixed(2)
+              'stroke-width': (1.15 - i * 0.06).toFixed(2),
+              opacity: Math.max(0.08, 0.26 - i * 0.04).toFixed(2)
             }));
           }
         }
