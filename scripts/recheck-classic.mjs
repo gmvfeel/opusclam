@@ -114,29 +114,51 @@ async function main() {
     + '&order=id.asc');
   console.log('인물 : ' + rows.length + '명        ');
 
-  const groups = new Map();     // 까닭 → [사람]
+  const groups = new Map();     // 대중음악 근거가 있어 지울 사람
+  const hold   = new Map();     // 근거가 없을 뿐인 사람 — 지우지 않습니다
   let ok = 0;
-  const noEvidence = [];        // 근거가 아예 없는 사람 — 지우지 않습니다
+  const noEvidence = [];        // 장르·직업·소개문이 아예 없는 사람
+
+  /* ★★ 2026-08-12 · 「지울 것」과 「사람이 봐야 할 것」을 나눕니다 ★★
+     ──────────────────────────────────────────────────────────────
+     첫 dry run 이 48명을 골라냈는데 <b>29명이 오판</b>이었습니다.
+     오판은 모두 <b>대중음악이라서가 아니라 근거가 모자라서</b> 걸린 것이었습니다 —
+
+       이경선   직업이 `academic` 하나뿐  → 서울대 바이올린 교수
+       김택수   직업이 `singer` 하나뿐    → 작곡가 Texu Kim
+       김남윤   소개문 「바이올린 연주자」 → 규칙이 「바이올리니스트」만 알았음
+
+     ▶ 원칙을 세웁니다 —
+       <b>대중음악 근거가 있는 사람만 지웁니다.</b>
+       근거가 <b>없는</b> 것은 대중음악이라는 뜻이 아닙니다.
+       보강 수집기가 며칠 뒤 장르·소개문을 채워 주면 그때 제대로 판정됩니다.
+       지우면 되살릴 수 없으니 기다리는 편이 낫습니다. */
+  const POP_REASONS = ['대중음악 장르만 있음', '대중음악 전용 직업',
+                       '대중음악을 겸한 작곡·제작', '소개문이 대중음악'];
 
   for (const p of rows) {
     const c = checkClassic(p);
     if (c.ok) { ok++; continue; }
     if (c.noEvidence) { noEvidence.push(p); continue; }
-    if (!groups.has(c.why)) groups.set(c.why, []);
-    groups.get(c.why).push(p);
+    const box = POP_REASONS.includes(c.why) ? groups : hold;
+    if (!box.has(c.why)) box.set(c.why, []);
+    box.get(c.why).push(p);
   }
 
   const drop = [...groups.values()].flat();
+  const holdList = [...hold.values()].flat();
 
   console.log('\n── 다시 판정한 결과 ──');
   console.log('   클래식으로 남음      : ' + ok + '명');
-  console.log('   ★ 빠질 것           : ' + drop.length + '명');
-  console.log('   판정 못 함(지우지 않음): ' + noEvidence.length + '명'
-              + '   (장르·직업·소개문이 모두 빔 — 보강 수집기가 채울 사람들입니다)');
+  console.log('   ★ 지울 것           : ' + drop.length + '명   (대중음악 근거가 있는 사람)');
+  console.log('   사람이 봐야 할 것    : ' + holdList.length + '명   (근거가 모자랄 뿐 — 지우지 않습니다)');
+  console.log('   판정 못 함          : ' + noEvidence.length + '명'
+              + '   (장르·직업·소개문이 모두 빔 — 지우지 않습니다)');
 
-  console.log('\n── 까닭별 묶음 ──');
+  console.log('\n── 지울 묶음 (대중음악 근거 있음) ──');
   console.log('   ※ 이름을 하나씩 보지 마시고 「까닭이 맞는지」만 보십시오.');
   const sorted = [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+  if (!sorted.length) console.log('   없습니다.');
   for (const [why, list] of sorted) {
     console.log('\n   ● ' + why + ' — ' + list.length + '명');
     const n = (LIST || (WHY && why.indexOf(WHY) >= 0)) ? list.length : Math.min(8, list.length);
@@ -152,6 +174,26 @@ async function main() {
     if (n < list.length) console.log('       … 그리고 ' + (list.length - n) + '명 (전부 보시려면 --list)');
   }
 
+  /* ★ 지우지 않는 묶음 — 왜 남기는지 함께 알립니다 */
+  if (holdList.length) {
+    console.log('\n── 사람이 봐야 할 묶음 (지우지 않습니다) ──');
+    console.log('   근거가 모자라 판정하지 못한 사람입니다. 대중음악이라는 뜻이 아닙니다.');
+    console.log('   보강 수집기가 장르·소개문을 채우면 다음 실행에서 제대로 갈립니다.');
+    for (const [why, list] of [...hold.entries()].sort((a, b) => b[1].length - a[1].length)) {
+      console.log('\n   ○ ' + why + ' — ' + list.length + '명');
+      const n = LIST ? list.length : Math.min(10, list.length);
+      for (let i = 0; i < n; i++) {
+        const p = list[i];
+        console.log('       ' + String(i + 1).padStart(4) + '. ' + nameOf(p)
+          + (p.wikidata_id ? '  [' + p.wikidata_id + ']' : '')
+          + (p.wd_occupation ? '  · ' + short(p.wd_occupation, 60) : ''));
+        if (!p.wd_occupation && (p.description || p.description_en))
+          console.log('             소개 : ' + short(p.description || p.description_en, 80));
+      }
+      if (n < list.length) console.log('       … 그리고 ' + (list.length - n) + '명');
+    }
+  }
+
   if (noEvidence.length) {
     console.log('\n── 판정 못 한 사람 표본 (지우지 않습니다) ──');
     noEvidence.slice(0, 5).forEach((p, i) => {
@@ -163,6 +205,7 @@ async function main() {
   if (!SAVE) {
     console.log('\n※ 아무것도 지우지 않았습니다.');
     console.log('  ' + drop.length + '명을 지우시려면 --save 를 주십시오.');
+  console.log('  (사람이 봐야 할 ' + holdList.length + '명과 판정 못 한 ' + noEvidence.length + '명은 --save 를 주셔도 지우지 않습니다)');
     return;
   }
   if (!drop.length) { console.log('\n지울 것이 없습니다.'); return; }

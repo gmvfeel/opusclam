@@ -92,6 +92,41 @@ keep('바로크 음악 전문',     { wd_genre: 'baroque music', wd_occupation: 
 keep('오페레타',             { wd_genre: 'operetta', wd_occupation: 'composer' });
 keep('더블베이스 주자',      { wd_occupation: 'double bassist' });
 
+/* ══ 8. ★★ 2026-08-12 실제 실행에서 잘못 걸렸던 사람들 ★★
+     첫 dry run 이 48명을 골라냈는데 그 가운데 <b>29명이 오판</b>이었습니다.
+     같은 실수를 되풀이하지 않도록 실제 값을 그대로 넣어 둡니다. ══ */
+keep('기욤 드 마쇼(아르스 노바)',
+  { wd_genre: 'dit, ars nova, lay, virelai, rondeau',
+    wd_occupation: 'writer, songwriter, poet, composer' });
+keep('현제명(희망의 나라로)',   { wd_occupation: 'songwriter, singer, composer' });
+keep('김희경',                  { wd_occupation: 'music educator, songwriter, composer' });
+keep('이찬해',                  { wd_occupation: 'music educator, songwriter, composer' });
+keep('장성 · 피아노 연주자',    { description: '대한민국의 피아노 연주자이다.' });
+keep('김남윤 · 바이올린 연주자',{ description: '대한민국의 바이올린 연주자, 대학 교수이다.' });
+keep('정사인 · 플루트 연주자',  { description: '대한민국의 플루트 연주자이다.' });
+keep('최수영 · 바이올린 연주자',{ description: '대한민국의 청소년 바이올린 연주자이다' });
+keep('이현준 · 트럼페터',       { description: '대한민국의 트럼페터이다.' });
+keep('가야금 연주자',           { description: '가야금 연주자이다.' });
+
+/* 그래도 빠져야 하는 사람 — 실제 값 그대로 */
+drop('원오트릭스 포인트 네버',
+  { wd_genre: 'electronic music, ambient music, drone music',
+    wd_occupation: 'musician, record producer, singer, composer' });
+drop('Roy Wood',
+  { wd_genre: 'art rock, symphonic rock, glam rock, pop rock, jazz fusion',
+    wd_occupation: 'composer, record producer, singer-songwriter, guitarist' });
+drop('Tony MacAlpine',
+  { wd_genre: 'jazz fusion, neo-classical metal',
+    wd_occupation: 'jazz guitarist, violinist, guitarist' });
+drop('로타 엥베리(슐라거)',
+  { wd_genre: 'schlager music, dansband music',
+    wd_occupation: 'pianist, television presenter, schlager singer' });
+drop('Jan Tabachnyk',
+  { wd_occupation: 'music educator, accordionist, television presenter, record producer' });
+drop('노이즈 음악가',
+  { wd_genre: 'ambient music, drone music, noise music, dark ambient',
+    wd_occupation: 'recording artist, musician, composer' });
+
 /* ══ 7. 현대음악DB 판정도 함께 (연주자·영화음악 제외 유지) ══ */
 t('현대음악 — 진은숙 담김',
   checkModern({ wd_genre: 'contemporary classical music', wd_occupation: 'composer',

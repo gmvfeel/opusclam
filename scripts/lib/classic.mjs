@@ -212,6 +212,16 @@ const G_CLASSIC = new RegExp([
   // 형식
   'motet', '\\bmass\\b', 'requiem', 'oratorio', 'cantata', 'passion',
   'chorale', 'madrigal', '\\bchanson\\b', '\\blied\\b', 'art song',
+  /* ★ 2026-08-12 보탬 — 중세·르네상스 형식
+       기욤 드 마쇼(14세기 아르스 노바)가 빠졌습니다.
+       장르가 `dit, ars nova, lay, virelai, rondeau` 인데
+       이 형식 이름이 하나도 없었습니다. */
+  'ars nova', 'ars antiqua', 'virelai', 'rondeau', '\\brondo\\b',
+  'ballade', '\\bballata\\b', '\\bcaccia\\b', '\\bmotetus\\b',
+  'organum', 'plainchant', 'plainsong', 'gregorian', 'chant',
+  'troubadour', 'trouv[eè]re', 'minnesang', 'meistersinger',
+  'polyphon', 'monophon', 'isorhythm', '\\blai\\b', '\\blay\\b',
+  '아르스\\s*노바', '그레고리오', '단성', '다성',
   'concerto', 'sonata', '\\bfugue\\b', '\\betude\\b', 'prelude',
   'nocturne', 'symphonic poem', 'tone poem', 'overture', 'suite',
   '\\bballet\\b', 'incidental music', 'chamber opera',
@@ -302,12 +312,19 @@ const O_POP = new RegExp([
   'singer-songwriter', 'pop singer', 'rock musician', 'idol\\b',
   'jazz musician', 'jazz pianist', 'jazz guitarist', 'jazz singer',
   'session musician', 'backing vocalist',
-  /* ★ 2026-08-12 보탬 — 대중음악 쪽 표시
-       songwriter        클래식 작곡가는 composer 로 적힙니다
-       record producer   음반 제작자. 팝 작곡가에 거의 늘 함께 붙습니다
-     이 둘만으로는 빼지 않습니다 — <b>약한 클래식 직업만</b> 있을 때
-     함께 있으면 뺍니다(위 O_WEAK 설명). */
-  'songwriter', 'record producer'
+  /* ★★ 2026-08-12 · `songwriter` 를 <b>뺐습니다</b> ★★
+       처음에 넣었더니 <b>한국 작곡가가 대거 빠졌습니다</b> —
+         현제명(희망의 나라로) · 김희경 · 이영자 · 이찬해
+         기욤 드 마쇼(14세기)까지 `writer, songwriter, poet, composer` 로
+         적혀 있어 걸렸습니다.
+       위키데이터는 한국·유럽 작곡가에게도 songwriter 를 그냥 붙입니다.
+       「리」 한 글자로 이탈리아·바이올리니스트를 깎았던 것과 같은 실수였습니다.
+
+     ★ record producer 는 남깁니다
+       음반 제작자는 클래식 작곡가에게 거의 붙지 않고,
+       팝 작곡·제작자에게는 거의 늘 붙습니다.
+       이것도 <b>약한 클래식 직업만</b> 있을 때에만 쓰입니다. */
+  'record producer'
 ].join('|'), 'i');
 
 
@@ -318,7 +335,27 @@ const O_POP = new RegExp([
      위키데이터에 opera singer 가 아니라 그냥 singer · academic 으로만
      적혀 있어 직업으로는 살릴 길이 없었습니다.
    ▶ 소개문(위키백과)에 「성악가」「작곡가」가 적혀 있으면 살립니다. */
-const D_CLASSIC = /성악가|작곡가|지휘자|피아니스트|바이올리니스트|첼리스트|비올리스트|오르가니스트|음악학자|국악인|명창|클래식|고전음악|현대음악|오페라|관현악|교향악|실내악|합창단|소프라노|메조|알토|테너|바리톤|베이스\s*가수|음악\s*교육자|음악가|作曲家|classical|opera singer|\bcomposer\b|\bconductor\b|\bpianist\b|\bviolinist\b|\bcellist\b|musicolog/i;
+const D_CLASSIC = new RegExp([
+  '성악가', '작곡가', '지휘자', '음악학자', '국악인', '명창',
+  '피아니스트', '바이올리니스트', '첼리스트', '비올리스트', '오르가니스트',
+  /* ★★ 2026-08-12 보탬 — 한국어 위키백과는 「○○ 연주자」로 씁니다 ★★
+       「피아니스트」만 알고 있어서 이런 분들이 빠졌습니다 —
+         장성「피아노 연주자」 · 김남윤「바이올린 연주자」
+         이현준「트럼페터」   · 정사인「플루트 연주자」
+       한국 음악가는 대부분 이 형태로 적혀 있습니다. */
+  '(?:피아노|바이올린|비올라|첼로|콘트라베이스|더블베이스|하프|기타|류트|'
+  + '플루트|피콜로|오보에|클라리넷|바순|색소폰|리코더|'
+  + '호른|트럼펫|트롬본|튜바|오르간|하프시코드|쳄발로|건반|타악기|팀파니|'
+  + '가야금|거문고|해금|대금|아쟁|피리|장구|판소리)\\s*연주자',
+  '트럼페터', '트롬보니스트', '플루티스트', '하피스트', '오보이스트',
+  '클라리네티스트', '색소포니스트', '기타리스트', '반주자', '악장',
+  '관현악단', '교향악단', '필하모닉', '음악\\s*교수',
+  '클래식', '고전음악', '현대음악', '오페라', '관현악', '교향악', '실내악',
+  '합창단', '소프라노', '메조', '알토', '테너', '바리톤', '베이스\\s*가수',
+  '음악\\s*교육자', '음악가', '作曲家',
+  'classical', 'opera singer', '\\bcomposer\\b', '\\bconductor\\b',
+  '\\bpianist\\b', '\\bviolinist\\b', '\\bcellist\\b', 'musicolog'
+].join('|'), 'i');
 
 /* 소개문에 대중음악 표시가 뚜렷하면 살리지 않습니다 */
 /* ★ 2026-08-12 보탬
@@ -435,7 +472,15 @@ export function checkClassic(p) {
   /* ④ 마지막으로 소개문을 봅니다.
         직업이 그냥 「singer」·「academic」으로만 적힌 한국 근현대
         음악가를 살리는 길입니다. */
-  if (hasD && !D_POP.test(d) && D_CLASSIC.test(d)) {
+  if (hasD && D_POP.test(d)) {
+    /* ★ 2026-08-12 · 소개문에 대중음악이 <b>뚜렷이</b> 적힌 경우는
+         까닭을 따로 돌려줍니다. 「근거가 모자란 사람」과 섞이면
+         지우는 도구가 가려 쓸 수 없습니다.
+         「대한민국의 대중음악가이다」는 근거가 없는 것이 아니라
+         <b>대중음악이라는 근거가 있는</b> 것입니다. */
+    return { ok: false, why: '소개문이 대중음악' };
+  }
+  if (hasD && D_CLASSIC.test(d)) {
     return { ok: true, why: '소개문이 클래식' };
   }
 
