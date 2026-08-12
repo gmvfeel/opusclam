@@ -218,7 +218,10 @@
 
     if (!live.length && !hid.length) {
       box.innerHTML = '<div class="mp-msg">아직 받은 지원이 없습니다.<br><br>'
-        + '<a class="mp-btn ghost" href="/recruit/job.html">내 공고 보기</a> '
+        /* ★ 2026-08-12 · 「내 공고 보기」가 <b>목록 전체로</b> 갔습니다 (파트너 지적)
+             자기 공고만 모아 보거나 고칠 자리가 없어, 한 번 올리면
+             수정·삭제를 못 했습니다. → 새로 만든 관리 화면으로 보냅니다. */
+        + '<a class="mp-btn ghost" href="/recruit/my.html">내 등록 관리</a> '
         + '<a class="mp-btn primary" href="/recruit/job-write.html">채용정보 올리기</a></div>';
       return;
     }
