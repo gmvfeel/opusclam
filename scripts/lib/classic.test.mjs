@@ -127,6 +127,30 @@ drop('노이즈 음악가',
   { wd_genre: 'ambient music, drone music, noise music, dark ambient',
     wd_occupation: 'recording artist, musician, composer' });
 
+/* ══ 9. ★ 2026-08-12 두 번째 dry run — 영화·게임음악이 빠지던 것
+     인물DB 는 영화·게임음악을 <b>넣습니다</b>(파트너 결정).
+     현대음악DB 만 뺍니다. ══ */
+keep('레나 레인 · 게임음악',
+  { wd_genre: 'video game music',
+    wd_occupation: 'video game developer, DJ producer, composer' });
+keep('페드로 브롬프만 · 영화음악',
+  { wd_occupation: 'DJ producer, composer',
+    description: '브라질의 영화음악 작곡가이다.' });
+keep('히사이시 · 게임음악 겸',
+  { wd_genre: 'film music, video game music', wd_occupation: 'composer' });
+drop('소개문 없는 DJ 겸 작곡가',
+  { wd_occupation: 'DJ producer, composer' });
+drop('핫토리 료이치 · 가요쿄쿠',
+  { wd_genre: 'kayōkyoku',
+    wd_occupation: 'jazz musician, music arranger, lyricist, pop music, composer' });
+drop('김택수 · 싱어송라이터',
+  { wd_occupation: 'singer', description: '대한민국의 싱어송라이터 겸 작곡가, 음악 프로듀서다.' });
+
+/* ★ 현대음악DB 는 게임·영화음악을 빼야 합니다 — 인물DB 와 다릅니다 */
+t('현대음악 — 게임음악 빠짐',
+  checkModern({ wd_genre: 'video game music', wd_occupation: 'composer',
+                birth_year: 1990 }).ok, false);
+
 /* ══ 7. 현대음악DB 판정도 함께 (연주자·영화음악 제외 유지) ══ */
 t('현대음악 — 진은숙 담김',
   checkModern({ wd_genre: 'contemporary classical music', wd_occupation: 'composer',

@@ -225,8 +225,14 @@ const G_CLASSIC = new RegExp([
   'concerto', 'sonata', '\\bfugue\\b', '\\betude\\b', 'prelude',
   'nocturne', 'symphonic poem', 'tone poem', 'overture', 'suite',
   '\\bballet\\b', 'incidental music', 'chamber opera',
-  // 영화·무대 음악 (★ 파트너 결정으로 포함)
+  // 영화·게임·무대 음악 (★ 파트너 결정으로 포함 — 인물DB에만.
+  //   현대음악DB 는 checkModern() 의 MEDIA_MUSIC 이 따로 빼냅니다)
   'film score', 'film music', 'soundtrack', 'score music',
+  /* ★ 2026-08-12 보탬 — 게임음악
+       레나 레인(Celeste 작곡가)이 장르 `video game music` 때문에
+       빠졌습니다. 영화음악은 넣고 게임음악은 빠뜨렸던 것입니다. */
+  'video game music', 'game music', 'game soundtrack',
+  'television music', 'incidental score',
   // 한국어
   '클래식', '고전음악', '현대음악', '오페라', '오페레타', '관현악', '교향',
   '실내악', '합창', '가곡', '성가', '미사', '칸타타', '협주곡', '소나타',
@@ -247,6 +253,11 @@ const G_POP = new RegExp([
   'house music', 'drum and bass', 'ambient', 'new-?age',
   'country music', 'bluegrass', 'reggae', '\\bska\\b', 'reggaeton',
   '\\benka\\b', '\\btrot\\b', 'schlager',
+  /* ★ 2026-08-12 보탬 — 아시아 대중가요
+       핫토리 료이치(일본 가요쿄쿠 작곡가)가 장르 단계에서 걸리지 않고
+       직업 단계까지 내려왔습니다. 가요쿄쿠는 일본 대중가요입니다. */
+  'kay[oō]kyoku', '歌謡曲', 'city pop', 'shibuya-?kei', 'dansband',
+  'canzone napoletana', 'chanson fran',
   'classical crossover', 'operatic pop', 'popera',
   '가요', '트로트', '힙합', '아이돌', '댄스음악'
 ].join('|'), 'i');
@@ -465,6 +476,29 @@ export function checkClassic(p) {
   if (strongItems.length) return { ok: true, why: '클래식 직업' };
   if (weakItems.length && !popItems.length) return { ok: true, why: '클래식 직업 · 작곡·교육' };
   if (weakItems.length && popItems.length) {
+    /* ★★ 2026-08-12 · 여기서 <b>소개문을 한 번 더 봅니다</b> ★★
+       ──────────────────────────────────────────────────────────
+       ★ 무엇이 잘못됐나
+         페드로 브롬프만(나르코스·로보캅 영화음악)이 빠졌습니다.
+         직업이 `DJ producer, composer` 뿐이라
+         약한 클래식(composer) + 대중음악(DJ) → 뺌 이었습니다.
+
+         근본 원인은 <b>직업으로 판정을 끝내고 소개문을 아예 보지 않은 것</b>
+         입니다. 소개문에는 「영화음악 작곡가」라고 적혀 있는데
+         그 글을 읽기 전에 결론을 내렸습니다.
+
+       ★ 왜 소개문을 더 믿는가
+         직업 목록은 위키데이터 편집자가 살면서 한 일을 늘어놓은 것이고,
+         소개문 첫 대목은 <b>그 사람이 무엇으로 알려졌는지</b>를 말합니다.
+         분야 판정(field.mjs)에서 같은 결론에 이르렀습니다.
+
+       ★ 잘못 살릴 위험은 낮습니다
+         소개문에 대중음악 표시(D_POP)가 있으면 살리지 않습니다.
+         그리고 <b>살리는 쪽이 지우는 쪽보다 안전합니다</b> —
+         잘못 살리면 다음에 다시 걸리지만, 잘못 지우면 되살릴 수 없습니다. */
+    if (hasD && !D_POP.test(d) && D_CLASSIC.test(d)) {
+      return { ok: true, why: '소개문이 클래식 · 직업은 대중음악 겸업' };
+    }
     return { ok: false, why: '대중음악을 겸한 작곡·제작' };
   }
   if (popItems.length) return { ok: false, why: '대중음악 전용 직업' };
