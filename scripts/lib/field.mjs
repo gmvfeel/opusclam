@@ -33,6 +33,30 @@
 
    ★ 소개문이 없으면 아무것도 바꾸지 않습니다.
      짐작으로 고치느니 그대로 두는 편이 낫습니다.
+
+   ────────────────────────────────────────────────────────────
+   ★★ 2026-08-12 · 15,254명 dry run 의 표본 40명을 눈으로 보고
+      두 가지를 고쳤습니다. 「리」 한 글자 사건과 같은 종류입니다.
+
+   [①] 목소리 이름이 <b>악기 이름</b>에 걸렸습니다
+     오스카 요스트 「violin, <b>tenor sax</b>ophone 을 연주한 독일 음악가」
+       → `\btenor\b` 에 걸려 <b>성악</b>. 성악가가 아닙니다.
+     한국어도 같습니다 — 「<b>알토</b> 색소폰」·「<b>테너</b> 색소폰」
+     ▶ 뒤에 악기 이름이 오면 걸리지 않게 했습니다.
+
+   [②] <b>베이스</b>(남성 최저 성부)가 규칙에 아예 없었습니다
+     토머스 웰시 「English composer and <b>operatic bass</b>」
+       → 소프라노·테너·바리톤은 있는데 베이스가 없어
+         「지금 값(성악)에 근거 없음」이 되어 <b>작곡으로 바뀔</b> 뻔했습니다.
+     ▶ 다만 <b>「베이스」는 악기이기도 합니다</b> —
+       `basso continuo`(통주저음)·베이스 기타·더블베이스.
+       그래서 <b>목소리일 때만</b> 걸리게 했습니다 —
+         operatic bass · bass-baritone · bass singer · basso profondo
+       `basso continuo` 는 일부러 뺐습니다 (오르간·쳄발로 주자입니다).
+
+   [③] 곁들여 — 빠져 있던 연주자 이름을 넣었습니다
+     saxophonist · bassist · drummer · timpanist · accordionist ·
+     lutenist · mandolinist (전부 「못 찾음」이었습니다)
    ============================================================ */
 
 /* ── 소개문에서 찾을 말 ─────────────────────────────────────
@@ -43,8 +67,19 @@
 const TEXT_RULES = [
   ['작곡', /작곡가|\bcomposer\b/i],
   ['지휘', /지휘자|\bconductor\b|kapellmeister|dirigent/i],
-  ['성악', /성악가|보컬리스트|소프라노|메조|알토|테너|바리톤|오페라\s*가수|\bsoprano\b|\bmezzo|\bcontralto\b|\btenor\b|\bbaritone\b|countertenor|opera singer|\bsinger\b|vocalist/i],
-  ['연주', /피아니스트|바이올리니스트|첼리스트|비올리스트|오르가니스트|하피스트|플루티스트|기타리스트|연주자|\bpianist\b|\bviolinist\b|\bcellist\b|\bviolist\b|\borganist\b|\bharpsichordist\b|\bflautist\b|\bflutist\b|\boboist\b|\bclarinetist\b|\bbassoonist\b|\btrumpeter\b|\btrombonist\b|\bharpist\b|\bguitarist\b|percussionist|concertmaster|instrumentalist|\bvirtuoso\b/i],
+  ['성악', new RegExp(
+      '성악가|보컬리스트|소프라노|메조|바리톤|오페라\\s*가수|명가수'
+    + '|오페라\\s*베이스|베이스\\s*(?:바리톤|가수)'
+    /* ★ 「알토 색소폰」·「테너 색소폰」에 걸리지 않게 뒤를 봅니다 */
+    + '|알토(?!\\s*(?:색소폰|색스|플루트|리코더|클라리넷|호른|트롬본))'
+    + '|테너(?!\\s*(?:색소폰|색스|호른|트롬본|튜바|리코더|드럼|기타|밴조|비올))'
+    + '|\\bsoprano\\b|\\bmezzo|\\bcontralto\\b|\\bbaritone\\b|countertenor|counter-tenor'
+    + '|\\btenor\\b(?!\\s*(?:sax|horn|trombone|tuba|recorder|drum|guitar|banjo|viol|violin|clef|cor\\b))'
+    /* ★ 베이스 — 「목소리」일 때만. 「basso continuo」·「베이스 기타」는 뺍니다 */
+    + '|operatic\\s+bass\\b|\\bbass[-\\s]?baritone\\b|\\bbass\\s+(?:singer|vocalist|soloist)\\b'
+    + '|basso\\s+(?:profondo|cantante|buffo)'
+    + '|opera singer|\\bsinger\\b|vocalist', 'i')],
+  ['연주', /피아니스트|바이올리니스트|첼리스트|비올리스트|오르가니스트|하피스트|플루티스트|기타리스트|색소포니스트|색소폰\s*연주자|타악기\s*연주자|연주자|\bpianist\b|\bviolinist\b|\bcellist\b|\bviolist\b|\borganist\b|\bharpsichordist\b|\bflautist\b|\bflutist\b|\boboist\b|\bclarinetist\b|\bbassoonist\b|\btrumpeter\b|\btrombonist\b|\bharpist\b|\bguitarist\b|\bsaxophonist\b|\bbassist\b|\bdrummer\b|\btimpanist\b|\baccordionist\b|\blutenist\b|\bmandolinist\b|percussionist|concertmaster|instrumentalist|\bvirtuoso\b/i],
   ['음악학', /음악학자|음악\s*이론가|음악\s*사학자|musicolog|music theorist|music historian/i],
   ['국악', /국악인|판소리|명창|가야금|거문고|해금|대금|정가|gugak|pansori/i],
   ['편곡', /편곡자|\barranger\b|orchestrator/i]
@@ -55,9 +90,18 @@ const TEXT_RULES = [
      빈칸을 채울 때만 씁니다 — 이미 들어 있는 값을 이것으로 고치지 않습니다. */
 export const FIELD_RULES = [
   [/\bcomposer\b|songwriter/i, '작곡'],
-  [/opera singer|\bsinger\b|soprano|mezzo|contralto|\btenor\b|baritone|countertenor|\bbass\b|vocalist|chanteuse/i, '성악'],
+  /* ★ 2026-08-12 — 여기도 같은 구멍이 있었습니다.
+       `\btenor\b` 가 「tenor saxophonist」를, `\bbass\b` 가
+       「double bass player」·「bass guitarist」를 <b>성악</b>으로 보냈습니다.
+       이 규칙은 매일 도는 인물 보강 수집기가 <b>빈칸을 채울 때</b> 쓰므로
+       그대로 두면 잘못된 값이 계속 쌓입니다. */
+  [new RegExp(
+      'opera singer|\\bsinger\\b|soprano|mezzo|contralto|baritone|countertenor'
+    + '|\\btenor\\b(?!\\s*(?:sax|horn|trombone|tuba|recorder|drum|guitar|banjo|viol))'
+    + '|\\bbass\\s+(?:singer|vocalist|soloist)\\b|basso\\s+(?:profondo|cantante|buffo)'
+    + '|vocalist|chanteuse', 'i'), '성악'],
   [/conductor|kapellmeister|choir director|music director/i, '지휘'],
-  [/pianist|violinist|cellist|violist|organist|flautist|flutist|oboist|clarinet|bassoon|trumpet|trombon|tubist|harpist|percussion|guitarist|bassist|drummer|harpsichord|instrumentalist|accompanist|concertmaster|luthier|violin maker/i, '연주'],
+  [/pianist|violinist|cellist|violist|organist|flautist|flutist|oboist|clarinet|bassoon|trumpet|trombon|tubist|harpist|percussion|guitarist|bassist|drummer|saxophon|timpanist|accordion|lutenist|mandolin|double bass|contrabass|harpsichord|instrumentalist|accompanist|concertmaster|luthier|violin maker/i, '연주'],
   [/musicolog|music theorist|music historian/i, '음악학'],
   [/music educator|music teacher|pedagogue|university teacher/i, '음악교육'],
   [/arranger|orchestrator/i, '편곡'],
