@@ -26,6 +26,11 @@
      node scripts/fix-person-field.mjs --save         실제로 고칩니다
      node scripts/fix-person-field.mjs --only=작곡    지금 값이 '작곡'인 것만
      node scripts/fix-person-field.mjs --fill         분야가 빈칸인 사람도 채웁니다
+     node scripts/fix-person-field.mjs --save --max=300
+         ★ 300명이 넘게 바뀌면 <b>고치지 않고 실패로 끝냅니다</b>.
+           예약으로 저절로 도는 실행에 씁니다 — 규칙에 구멍이 생겼을 때
+           사람이 보기 전에 수백 명이 바뀌는 것을 막습니다.
+           실패하면 워크플로가 GitHub 이슈로 알려 줍니다.
 
    필요한 환경변수
      SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY
@@ -50,6 +55,8 @@ const SAVE = !!args.save;
 const LIST = !!args.list;
 const FILL = !!args.fill;
 const ONLY = typeof args.only === 'string' ? args.only : null;
+/* ★ 한 번에 이 수를 넘게 바뀌면 고치지 않고 멈춥니다 (0이면 제한 없음) */
+const MAX = typeof args.max === 'string' && /^\d+$/.test(args.max) ? Number(args.max) : 0;
 
 const HDR = {
   apikey: SB_KEY,
@@ -117,6 +124,7 @@ async function main() {
                    : '\n※ 고치지 않고 무엇이 바뀔지만 봅니다.\n');
   if (FILL) console.log('※ 빈칸인 사람도 채웁니다 (--fill)\n');
   if (ONLY) console.log('※ 지금 값이 「' + ONLY + '」 인 사람만 봅니다\n');
+  if (MAX > 0) console.log('※ 상한 ' + MAX + '명 — 넘으면 고치지 않고 멈춥니다 (--max)\n');
 
   let path = 'persons?select=id,name_ko,name_en,field,description,description_en,wd_occupation'
            + '&order=id.asc';
@@ -211,6 +219,18 @@ async function main() {
   if (todo.length > rows.length * 0.6) {
     console.error('\n★ 멈췄습니다 — 전체의 60%가 넘는 ' + todo.length + '명이 바뀝니다.');
     console.error('  규칙이 잘못됐을 수 있습니다. 사람이 먼저 확인해 주십시오.');
+    process.exit(1);
+  }
+
+  /* ★ 울타리 둘 — 예약 실행용 상한 (--max)
+     예약으로 저절로 도는 실행은 <b>새로 담긴 사람만</b> 손보면 됩니다.
+     한 주에 수백 명이 바뀐다면 규칙에 구멍이 생겼다는 뜻이므로
+     고치지 않고 실패로 끝냅니다. 워크플로가 이슈로 알려 줍니다. */
+  if (MAX > 0 && todo.length > MAX) {
+    console.error('\n★ 멈췄습니다 — ' + todo.length + '명이 바뀌는데 상한은 ' + MAX + '명입니다.');
+    console.error('  아무것도 고치지 않았습니다.');
+    console.error('  규칙에 구멍이 생겼을 수 있습니다. 위 목록을 사람이 먼저 확인해 주십시오.');
+    console.error('  확인 뒤 손으로 돌리실 때는 상한 칸을 비우거나 큰 수로 두십시오.');
     process.exit(1);
   }
 

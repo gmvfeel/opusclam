@@ -1,38 +1,61 @@
-name: 인물 · 분야 다시 판정 (수동)
+name: 인물 · 분야 다시 판정 (주 1회 · 수동)
 
 # ── 무엇을 하나 ──────────────────────────────────────────────
 #  인물DB의 「분야」가 잘못 정해진 사람을 찾아 고칩니다.
 #
-# ── 왜 필요한가 ──────────────────────────────────────────────
-#  분야를 정하는 규칙이 <b>규칙 순서</b>를 따르고 있었습니다.
-#  `composer` 가 맨 앞이라, 직업 목록에 composer 가 하나라도 있으면
-#  무조건 「작곡」이 되었습니다.
+# ── ★ 무엇을 근거로 고치나 — 소개문입니다 ────────────────────
+#  세 번 틀리고 지금 방식에 이르렀습니다. 기록해 둡니다.
 #
-#    마우리치오 폴리니
-#      concertmaster, pianist, musician, conductor, composer
-#      → 「작곡」  ✗  (피아니스트입니다)
+#  [처음]  규칙 차례대로 — `composer` 가 맨 앞이라
+#          직업 목록에 composer 가 하나만 있어도 무조건 「작곡」
+#            마우리치오 폴리니 (실제로는 피아니스트) → 「작곡」  ✗
+#          이용자가 데이터 신고로 알려 주셔서 드러났습니다.
 #
-#  이용자가 <b>데이터 신고</b>로 알려 주셔서 드러났습니다.
-#  위키데이터는 연주자에게도 composer 를 자주 붙이므로
-#  같은 오류가 많이 있을 것입니다.
+#  [두 번째] 직업 목록에 적힌 차례를 따름
+#          「위키데이터는 주업을 앞에 적는다」고 짐작했으나 틀렸습니다.
+#            모차르트  music educator, violinist, … composer  ← 맨 뒤
+#            폴리니    concertmaster, pianist, … composer     ← 맨 뒤
+#          돌려 보니 5,946명이 바뀌는데 그 안에
+#          모차르트·바흐 → 음악교육 · 바그너 → 평론 · 쇼팽 → 연주 가 있었습니다.
 #
-#  이제는 <b>직업 목록에 적힌 순서</b>를 따릅니다.
-#  위키데이터는 대체로 주업을 앞에 적습니다.
-#    폴리니       concertmaster 가 첫 번째 → 연주  ✓
-#    라흐마니노프  composer 가 첫 번째      → 작곡  ✓
+#  [지금]  위키백과 소개문의 첫 문장을 봅니다.
+#          그 사람이 무엇으로 알려졌는지는 첫 문장에 적혀 있습니다.
+#            모차르트  「… 오스트리아의 작곡가이다」    → 작곡
+#            폴리니    「… 이탈리아의 피아니스트이다」  → 연주
+#          ★ 소개문이 없는 사람은 건드리지 않습니다.
+#          ★ 지금 적힌 분야가 소개문에 함께 나오면 그대로 둡니다 —
+#            힌데미트 「바이올리니스트, 비올리스트 및 작곡가」 → 작곡 유지
 #
-# ── ★ 처음에는 「실제로 고치기 = no」 로 돌리십시오 ──
-#  고치지 않고 <b>누가 어떻게 바뀔지</b>만 보여 줍니다.
-#  「전부 찍기 = yes」 를 함께 켜면 바뀔 사람을 모두 보실 수 있습니다.
+#  판정 규칙 정본은 `scripts/lib/field.mjs` 한 곳에만 있습니다.
+#  (인물 보강 수집기 enrich-persons.mjs 도 같은 파일을 씁니다)
+#  고치실 때는 `scripts/lib/field.test.mjs` 를 함께 돌려 주십시오 — 58가지 확인.
+#
+# ── 예약 ─────────────────────────────────────────────────────
+#  ★ 매주 월요일 새벽 5시 20분(한국)에 저절로 돕니다.
+#    새로 담긴 사람의 분야는 인물 보강 수집기가 직업 목록으로 채우므로
+#    폴리니 같은 오류가 계속 생깁니다. 주 1회 소개문으로 다시 봅니다.
+#
+#  ★ 예약 실행에는 상한 300명이 걸려 있습니다.
+#    한 주에 300명이 넘게 바뀐다면 규칙에 구멍이 생겼다는 뜻이므로
+#    아무것도 고치지 않고 실패로 끝냅니다. 실패는 이슈로 알려 줍니다.
+#    (2026-08-12 첫 일괄 정리 때는 48명. 평소엔 한 자리 수일 것입니다)
+#
+# ── 손으로 돌리실 때 ─────────────────────────────────────────
+#  ★ 처음에는 「실제로 고치기 = no」 로 무엇이 바뀔지 보십시오.
+#    「전부 찍기 = yes」 를 함께 켜면 바뀔 사람을 모두 보여 줍니다.
+#    되돌리기 파일을 만들지 않으므로 그 로그가 유일한 기록입니다.
 #
 # ── 무엇을 건드리지 않나 ─────────────────────────────────────
 #  ★ field 칸만 고칩니다 (PATCH 로 그 칸만 보냅니다).
-#    이름·설명·사진 등 다른 칸은 건드리지 않습니다.
-#  ★ 빈칸은 기본적으로 채우지 않습니다.
-#    이미 값이 있는데 <b>틀린 것</b>만 고칩니다.
-#    (빈칸 채우기는 인물 보강 수집기가 합니다)
+#    이름·소개문·사진·생몰년 등 다른 칸은 건드리지 않습니다.
+#  ★ 사람 수는 늘지도 줄지도 않습니다. 이미 담긴 사람의 칸만 고칩니다.
+#  ★ 빈칸은 기본적으로 채우지 않습니다 (빈칸 채우기는 보강 수집기가 합니다).
 
 on:
+  schedule:
+    # 일요일 20:20 UTC = 월요일 05:20 한국
+    # (GitHub 예약은 정시보다 몇십 분 밀릴 수 있습니다 — 정상입니다)
+    - cron: '20 20 * * 0'
   workflow_dispatch:
     inputs:
       save:
@@ -44,7 +67,7 @@ on:
           - 'no'
           - 'yes'
       list:
-        description: '바뀔 사람을 전부 찍기 (로그가 아주 길어집니다 — 보통은 no)'
+        description: '바뀔 사람을 전부 찍기 (되돌릴 근거가 됩니다 — 고칠 때는 yes 권장)'
         required: false
         default: 'no'
         type: choice
@@ -64,6 +87,11 @@ on:
         options:
           - 'no'
           - 'yes'
+      max:
+        description: '상한 — 이 수를 넘게 바뀌면 고치지 않고 멈춥니다 (비우면 제한 없음)'
+        required: false
+        default: ''
+        type: string
 
 concurrency:
   group: oc-persons
@@ -80,19 +108,33 @@ jobs:
         with:
           node-version: '20'
 
+      # ── 판정 규칙이 온전한지 먼저 봅니다 ──────────────────
+      #  규칙에 구멍이 있으면 15,000명을 읽기 전에 여기서 멈춥니다.
+      - name: 판정 규칙 확인 (58가지)
+        run: node scripts/lib/field.test.mjs
+
       - name: 인물 분야 다시 판정
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          OPTS=""
-          if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
-          if [ "${{ github.event.inputs.list }}" = "yes" ]; then OPTS="$OPTS --list"; fi
-          if [ "${{ github.event.inputs.fill }}" = "yes" ]; then OPTS="$OPTS --fill"; fi
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            # ★ 예약 실행 — 고치고, 전부 기록하고, 300명 상한
+            OPTS="--save --list --max=300"
+            echo "── 예약 실행 (주 1회 · 상한 300명) ──"
+          else
+            OPTS=""
+            if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
+            if [ "${{ github.event.inputs.list }}" = "yes" ]; then OPTS="$OPTS --list"; fi
+            if [ "${{ github.event.inputs.fill }}" = "yes" ]; then OPTS="$OPTS --fill"; fi
 
-          ONLY="${{ github.event.inputs.only }}"
-          if [ -n "$ONLY" ]; then OPTS="$OPTS --only=$ONLY"; fi
+            ONLY="${{ github.event.inputs.only }}"
+            if [ -n "$ONLY" ]; then OPTS="$OPTS --only=$ONLY"; fi
+
+            MAX="${{ github.event.inputs.max }}"
+            if [ -n "$MAX" ]; then OPTS="$OPTS --max=$MAX"; fi
+          fi
 
           echo "── 실행 : node scripts/fix-person-field.mjs $OPTS ──"
           node scripts/fix-person-field.mjs $OPTS
@@ -116,7 +158,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           T="[자동수집 실패] $WF"
-          B=$(printf '인물 분야 다시 판정이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          B=$(printf '인물 분야 다시 판정이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n※ 「상한을 넘었다」는 까닭이면 자료가 잘못된 것이 아니라\n   판정 규칙에 구멍이 생겼을 수 있다는 뜻입니다. 로그의 목록을 보십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
           N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
           if [ -n "$N" ]; then
             gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"

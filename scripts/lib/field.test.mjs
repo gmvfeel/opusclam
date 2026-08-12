@@ -2,7 +2,7 @@
    ★ 「걸려야 하는 것」과 「걸리면 안 되는 것」을 함께 봅니다.
      한쪽만 보면 「리」 한 글자 사건이 또 납니다. */
 
-import { fieldFromText, hasEvidence, guessField, decideField } from './scripts/lib/field.mjs';
+import { fieldFromText, hasEvidence, guessField, decideField } from './field.mjs';
 
 let pass = 0, fail = 0;
 const bad = [];
