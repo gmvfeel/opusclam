@@ -626,7 +626,8 @@ a.board-card.board-focus{position:relative;z-index:1;border-radius:10px}
    카드형 목록 — 음원·동영상처럼 영상이 중심인 목록
    board.js 의 cardStyle 을 켠 화면에서만 쓰입니다.
    ============================================================ */
-.board-list.as-cards{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;
+/* ★ 2026-08-12 · 칸 사이를 26 → 48px (as-two·as-concert 와 같게) */
+.board-list.as-cards{display:grid;grid-template-columns:1fr 1fr;gap:0 48px;
   border-top:1px solid var(--line)}
 /* 둥근 모서리를 두지 않습니다 — 아래 구분선의 좌우 끝이 곡선을 따라
    위로 말려 보이기 때문입니다. 곧은 선이 목록에서 훨씬 정연합니다. */
@@ -839,9 +840,12 @@ img.oc-imgload{
    음원·동영상 목록과 같은 결로 두 칸에 놓습니다.
    좁아진 칸에 맞춰 날짜·조회수는 정보 아래로 내립니다.
    ────────────────────────────────────────────────────────── */
+/* ★ 2026-08-12 · 칸 사이를 26 → 48px 로 넓혔습니다.
+     글 목록(as-two)과 같은 까닭입니다 — 날짜와 VIEW 가 칸 오른쪽 끝에
+     붙어 있어서 다음 칸과 34px 밖에 안 됐습니다. 안쪽 여백도 함께 둡니다. */
 .board-list.as-concert{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  gap:0 26px}
-.board-list.as-concert .con-row{padding:15px 8px}
+  gap:0 48px}
+.board-list.as-concert .con-row{padding:15px 10px}
 .board-list.as-concert .con-no{width:24px;font-size:11.5px}
 .board-list.as-concert .con-th{width:96px}
 .board-list.as-concert .con-title{font-size:14.2px;margin-bottom:8px;
@@ -885,14 +889,30 @@ img.oc-imgload{
      「글이 없습니다」 안내문이 왼쪽 반쪽에 치우쳐 보입니다.
    ============================================================ */
 @media (min-width:821px){
+  /* ★★ 2026-08-12 · 두 칸 사이를 <b>넓혔습니다</b> (파트너 지적) ★★
+     ─────────────────────────────────────────────────────────
+     ★ 무엇이 지저분했나
+       칸 사이는 26px 이었는데, 글자가 <b>칸 끝 4px까지</b> 차 있어서
+       왼쪽 미리보기와 오른쪽 칸 사이가 30px 밖에 안 됐습니다.
+       두 칸의 글이 거의 붙어 보여 어느 줄이 어느 칸인지 헷갈렸습니다.
+
+     ★ 두 가지를 함께 손봤습니다
+       ① 칸 사이(gap)를 26 → <b>48px</b>
+       ② 줄의 <b>안쪽 여백</b>을 좌우로 두어 글자가 칸 끝에 닿지 않게
+       둘 중 하나만 하면 부족합니다. gap 만 넓히면 글자는 여전히
+       칸 끝까지 가고, 여백만 두면 칸이 좁아져 제목이 더 잘립니다.
+
+     ★ 한 칸일 때(1040px 아래)는 그대로 둡니다 — 이 규칙 전체가
+       min-width:821px 안에 있고, 아래에서는 원래 여백을 씁니다. */
   .board-list.as-two{display:grid;
     grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    gap:0 26px;align-items:start}
+    gap:0 48px;align-items:start}
   .board-list.as-two .board-feat,
   .board-list.as-two .board-empty{grid-column:1/-1}
 
   /* ── 글 목록(핫토픽·뉴스·지식나눔 …) ── */
-  .board-list.as-two .board-row{gap:12px;padding:14px 4px}
+  /* 좌우 10px — 글자가 칸 끝에 닿지 않게 합니다 */
+  .board-list.as-two .board-row{gap:12px;padding:14px 10px}
   .board-list.as-two .board-row-no{width:22px;font-size:.82em}
   /* 칸이 좁아진 만큼 미리보기는 한 줄로 줄입니다 */
   .board-list.as-two .board-prev{-webkit-line-clamp:1}
@@ -909,7 +929,7 @@ img.oc-imgload{
        번호와 작은 로고만 남아 헐거워 보입니다.
        그래서 제목 뒤에 <b>폭 100%의 빈 칸(::after)</b>을 끼워
        배지·날짜·원문만 다음 줄로 내려보냅니다. */
-  .board-list.as-two .doc-row{flex-wrap:wrap;gap:8px 12px;padding:16px 4px}
+  .board-list.as-two .doc-row{flex-wrap:wrap;gap:8px 12px;padding:16px 10px}
   .board-list.as-two .doc-logo{width:44px;height:44px}
   .board-list.as-two .doc-no,
   .board-list.as-two .doc-logo{order:0}
