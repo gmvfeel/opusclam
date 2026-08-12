@@ -1289,20 +1289,63 @@ if('serviceWorker' in navigator){
      var fc=document.querySelector('.pv-facts'); if(fc){
        fc.innerHTML=fact('국적',natv)+fact('생몰',esc(p.life||''))+fact('사조',erav)+fact('주요 악기',esc(p.instrument||''));
      }
+     /* ★★ 2026-08-12 · 소개문 두 가지를 고쳤습니다 (파트너 지적) ★★
+        ──────────────────────────────────────────────────────────────
+        ★ ① 같은 글이 위아래로 <b>두 번</b> 나왔습니다
+          .pv-lead(상단 큰 글씨)에 소개문 <b>전체</b>를 넣고,
+          .pv-prose(생애·활동)에도 <b>같은 전체</b>를 넣었습니다.
+          .pv-lead 는 원래 <b>한두 문장 요약</b> 자리입니다
+          (견본: 「바로크 음악을 집대성한 … 남겼다」 두 문장).
+          ▶ 이 화면 안에 이미 올바른 방식이 있었습니다 — 아래쪽
+            위키 소개를 넣는 대목(1520줄 근처)은 <b>첫 문단만 120자로</b>
+            잘라 리드로 씁니다. 그 방식을 여기에도 씁니다.
+
+        ★ ② 줄바꿈이 <b>모두 사라졌습니다</b>
+          '<p>'+esc(koD)+'</p>' 로 통째로 감싸서, DB보강에서 나눠 쓴
+          문단이 한 덩어리가 됐습니다.
+          ▶ 아래에 이미 paras() 가 있습니다(줄바꿈으로 문단을 나눕니다).
+            같은 것을 새로 만들지 않고 <b>위로 끌어올려</b> 양쪽이 씁니다.
+
+        ★ 왜 esc 만으로는 안 되나
+          esc 는 꺾쇠·따옴표를 안전하게 바꾸는 일만 합니다. 줄바꿈은
+          HTML 에서 그냥 공백이라, 문단으로 나누거나 <br> 로 바꿔야
+          화면에 보입니다. */
+
+     /* 줄바꿈으로 문단을 나눕니다 — 빈 줄이 없어도 한 줄 바꿈마다 나눕니다.
+        ★ 5,000자에서 멈춥니다: 아주 긴 글이 화면을 통째로 밀지 않게. */
+     function pvParas(txt){
+       var LIM=5000, out=[], n=0;
+       var arr=String(txt||'').split(/\n+/).map(function(s){return s.trim();}).filter(Boolean);
+       for(var i=0;i<arr.length;i++){
+         if(n>0 && n+arr[i].length>LIM) break;
+         out.push('<p>'+esc(arr[i])+'</p>'); n+=arr[i].length;
+       }
+       return out.join('');
+     }
+     /* 리드문 — 첫 문단만, 너무 길면 120자에서 줄입니다 */
+     function pvLead(txt){
+       var s=String(txt||'').trim();
+       var first=(s.split(/\n+/)[0]||s).trim();
+       return first.length>120 ? first.slice(0,120)+'\u2026' : first;
+     }
+
      /* 소개문: 한국어 → 없으면 영문 원문(번역 전 표기) → 둘 다 없으면 참여 유도 */
      var koD=(p.description&&p.description.trim())?p.description.trim():'';
      if(koD && /^[|{]/.test(koD)) koD='';   /* 틀 코드가 들어온 경우는 소개문으로 보지 않음 */
      var enD=(p.description_en&&p.description_en.trim())?p.description_en.trim():'';
      var auto=(p.era_name?p.era_name+' 시대의 ':'')+(p.field?p.field.split(',')[0].trim()+' ':'')+'음악가.';
-     var lead=document.querySelector('.pv-lead'); if(lead) lead.textContent=koD||auto;
+     /* ★ 리드문에는 <b>첫 문단만</b> 넣습니다 (예전에는 소개문 전체) */
+     var lead=document.querySelector('.pv-lead');
+     if(lead) lead.textContent = koD ? pvLead(koD) : auto;
      var bio=document.querySelector('.pv-prose');
      if(bio){
        var h='';
        if(koD){
-         h='<p>'+esc(koD)+'</p>';
+         /* ★ pvParas — 줄바꿈을 문단으로 살립니다 (예전에는 한 덩어리) */
+         h=pvParas(koD);
        } else if(enD){
          h='<p class="pv-entag">영문 원문 · 한국어 번역 전</p>'
-          +'<p class="pv-en" lang="en">'+esc(enD)+'</p>'
+          +'<div class="pv-en" lang="en">'+pvParas(enD)+'</div>'
           +'<p class="pv-invite">한국어 소개가 아직 없습니다. 아래 <b>DB보강하기</b>로 기여해 주세요.</p>';
        } else {
          h='<p>'+esc(auto)+'</p>'

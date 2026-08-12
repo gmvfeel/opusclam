@@ -1132,14 +1132,35 @@ if('serviceWorker' in navigator){
      if(x.era)bits.push(x.era);
      if(cat)bits.push(cat);
      var lead0=bits.join(' · ');
+     /* ★★ 2026-08-12 · 소개문 두 가지를 고쳤습니다 (파트너 지적) ★★
+        ★ ① 같은 글이 위아래로 <b>두 번</b> — note 를 리드와 본문에 통째로 넣었습니다
+        ★ ② 줄바꿈이 <b>모두 사라짐</b> — '<p>'+esc(전체)+'</p>' 로 감쌌습니다
+        ★ 일곱 DB 상세가 모두 같은 문제였습니다 — 함께 고쳤습니다. */
+     function pvParas(txt){
+       var LIM=5000, out=[], n=0;
+       var arr=String(txt||'').split(/\n+/).map(function(s){return s.trim();}).filter(Boolean);
+       for(var i=0;i<arr.length;i++){
+         if(n>0 && n+arr[i].length>LIM) break;
+         out.push('<p>'+esc(arr[i])+'</p>'); n+=arr[i].length;
+       }
+       return out.join('');
+     }
+     function pvLead(txt){
+       var s=String(txt||'').trim();
+       var first=(s.split(/\n+/)[0]||s).trim();
+       return first.length>120 ? first.slice(0,120)+'\u2026' : first;
+     }
+
      var lead=document.querySelector('.pv-lead');
-     if(lead)lead.textContent=(x.note&&x.note.trim())?x.note.trim():(lead0||'작품DB');
+     /* 리드문에는 <b>첫 문단만</b> 넣습니다 */
+     if(lead)lead.textContent=(x.note&&x.note.trim())?pvLead(x.note):(lead0||'작품DB');
 
      /* 이 작품에 대해 */
      var bio=document.querySelector('.pv-prose');
      if(bio){
        if(x.note&&x.note.trim()){
-         bio.innerHTML='<p>'+esc(x.note.trim())+'</p>';
+         /* 본문은 줄바꿈을 문단으로 살립니다 */
+         bio.innerHTML=pvParas(x.note);
        }else{
          bio.innerHTML='<p>'+esc(lead0)+'</p>'
            +'<p style="color:var(--text-3)">작품 설명은 앞으로 채워 나갑니다. '

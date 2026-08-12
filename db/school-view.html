@@ -1087,8 +1087,33 @@ if('serviceWorker' in navigator){
      var fc=document.querySelector('.pv-facts');if(fc)fc.innerHTML=fact('구분',esc(x.category||''))+fact('소재지',esc(x.location||''))+fact('설립',esc(x.founded||''))+fact('설립구분',esc(x.estab_type||''));
      var lead0=(esc(x.location||'')+' · '+esc(x.category||'')).replace(/(^| · )+/g,function(m,p,o){return o===0?'':' · ';}).replace(/^ · | · $/g,'');
      var desc=(x.description&&x.description.trim())?x.description.trim():(lead0||'음악학교DB');
-     var lead=document.querySelector('.pv-lead');if(lead)lead.textContent=desc;
-     var bio=document.querySelector('.pv-prose');if(bio)bio.innerHTML='<p>'+esc(desc)+'</p>'+((x.description&&x.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
+     /* ★★ 2026-08-12 · 소개문 두 가지를 고쳤습니다 (파트너 지적) ★★
+        ★ ① 같은 글이 위아래로 <b>두 번</b> — .pv-lead 에 전체를 넣고
+             .pv-prose 에도 같은 전체를 넣었습니다. .pv-lead 는 원래
+             <b>한두 문장 요약</b> 자리입니다.
+        ★ ② 줄바꿈이 <b>모두 사라짐</b> — '<p>'+esc(전체)+'</p>' 로 통째로
+             감싸서 DB보강에서 나눠 쓴 문단이 한 덩어리가 됐습니다.
+        ★ 이 화면 아래쪽 위키 소개 대목에는 이미 올바른 방식(paras·첫 문단
+          120자)이 있었습니다. 같은 것을 새로 만들지 않고 위로 끌어올립니다.
+        ★ 일곱 DB 상세가 모두 같은 문제였습니다 — 함께 고쳤습니다. */
+     function pvParas(txt){
+       var LIM=5000, out=[], n=0;
+       var arr=String(txt||'').split(/\n+/).map(function(s){return s.trim();}).filter(Boolean);
+       for(var i=0;i<arr.length;i++){
+         if(n>0 && n+arr[i].length>LIM) break;
+         out.push('<p>'+esc(arr[i])+'</p>'); n+=arr[i].length;
+       }
+       return out.join('');
+     }
+     function pvLead(txt){
+       var s=String(txt||'').trim();
+       var first=(s.split(/\n+/)[0]||s).trim();
+       return first.length>120 ? first.slice(0,120)+'\u2026' : first;
+     }
+     /* 리드문에는 <b>첫 문단만</b> 넣습니다 */
+     var lead=document.querySelector('.pv-lead');if(lead)lead.textContent=pvLead(desc);
+     /* 본문은 줄바꿈을 문단으로 살립니다 */
+     var bio=document.querySelector('.pv-prose');if(bio)bio.innerHTML=pvParas(desc)+((x.description&&x.description.trim())?'':'<p style="color:var(--text-3)">상세 정보는 자동 수집·보강 예정입니다.</p>');
      var wl=document.querySelector('ul.pv-worklist');if(wl&&x.departments)wl.innerHTML=String(x.departments).split('·').map(function(w){w=w.trim();return w?'<li>'+esc(w)+'</li>':'';}).join('');
      var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=(x.category?fact('구분',esc(x.category)):'')+(x.location?fact('소재지',esc(x.location)):'')+(x.founded?fact('설립',esc(x.founded)):'')+(x.estab_type?fact('설립구분',esc(x.estab_type)):'')+(x.departments?fact('대표 학과',esc(x.departments)):'')+(x.alumni?fact('저명 동문',esc(x.alumni)):'')+(x.features?fact('대표 특성',esc(x.features)):'');
      (function(){document.querySelectorAll('.pv-sec, .pv-block').forEach(function(sec){var h=sec.querySelector('.pv-h');if(h&&/(주요 전공|캠퍼스|갤러리|영상|학과 · 전공 안내|입시|모집|관련 학교)/.test(h.textContent))sec.style.display='none';});})();
