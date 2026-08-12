@@ -801,7 +801,60 @@ window.OCBoard = (function () {
       setTimeout(function () { box.classList.remove('board-focus'); }, 4500);
     }
 
+    /* ★★ 2026-08-12 · 「전체 ○건」을 고정글 아래로 ★★
+       ─────────────────────────────────────────────────────────
+       ★ 무엇이 어색했나
+         「전체 27건」은 <b>바로 아래 목록이 몇 건인지</b> 말하는 머리말인데,
+         그 사이에 고정글(HOT) 카드가 끼어 있어 둘이 끊겨 보였습니다.
+         지식나눔은 고정글이 없어(Best Q&A 가 따로 있음) 목록에 붙어 있고,
+         핫토픽은 카드 위에 떠 있어 <b>화면마다 자리가 달랐습니다.</b>
+
+       ★ 더 나쁜 것 — 페이지마다 자리가 바뀝니다
+         고정글은 첫 쪽에만 나옵니다. 그래서 2쪽으로 넘기면 개수가
+         목록에 붙고, 1쪽으로 돌아오면 다시 떠올랐습니다.
+         <b>같은 화면이 쪽마다 다르게</b> 보였습니다.
+
+       ★ 어떻게 고쳤나
+         화면 HTML 은 아홉 개를 그대로 둡니다(고칠 곳이 아홉 배가 됩니다).
+         그린 뒤에 개수 표시를 <b>고정글 바로 다음으로 옮깁니다.</b>
+         고정글이 없으면 본래 자리(목록 위)로 되돌립니다.
+         두 칸 배치에서는 css 가 한 줄을 다 쓰게 잡아 줍니다. */
+    /* ★ 목록을 다시 그리기 <b>전에</b> 반드시 불러야 합니다.
+       개수 표시가 목록 안에 들어가 있는 채로 listEl.innerHTML 을 새로
+       넣으면 <b>그 요소가 통째로 지워집니다.</b> 쪽을 넘기면 「전체 ○건」이
+       사라졌습니다(2026-08-12 쪽 넘기기 시험에서 잡았습니다). */
+    function detachCount() {
+      if (!listEl) return;
+      var cnt = listEl.querySelector(':scope > .board-count')
+             || (listEl.firstElementChild && listEl.firstElementChild.classList
+                 && listEl.firstElementChild.classList.contains('board-count')
+                 ? listEl.firstElementChild : null);
+      if (!cnt) {
+        /* :scope 를 못 쓰는 브라우저를 위해 한 번 더 훑습니다 */
+        var all = listEl.children, i;
+        for (i = 0; i < all.length; i++) {
+          if (all[i].className && String(all[i].className).indexOf('board-count') >= 0) { cnt = all[i]; break; }
+        }
+      }
+      if (cnt) listEl.parentNode.insertBefore(cnt, listEl);
+    }
+
+    function placeCount() {
+      if (!listEl) return;
+      var cnt = document.querySelector('.board-count');
+      if (!cnt) return;
+      var feat = listEl.querySelector('.board-feat');
+      if (feat) {
+        /* 이미 고정글 바로 뒤에 있으면 건드리지 않습니다 */
+        if (feat.nextElementSibling !== cnt) feat.insertAdjacentElement('afterend', cnt);
+      } else if (cnt.parentNode === listEl) {
+        /* 고정글이 사라진 쪽 — 본래 자리로 */
+        listEl.parentNode.insertBefore(cnt, listEl);
+      }
+    }
+
     function loadPage(pg) {
+      detachCount();                       /* 지워지지 않게 먼저 빼둡니다 */
       if (listEl) listEl.innerHTML = skeleton(6);
       fetch(buildUrl((pg - 1) * PAGE), { headers: Object.assign({ Prefer: 'count=exact' }, HDR) })
         .then(function (r) {
@@ -813,8 +866,10 @@ window.OCBoard = (function () {
           cur = pg;
           var cnt = document.querySelector('.board-count b'); if (cnt) cnt.textContent = (total || 0).toLocaleString();
           if (!rows.length) {
+            detachCount();
             if (listEl) listEl.innerHTML = '<div class="board-empty">아직 등록된 글이 없습니다.</div>';
             if (pager) pager.innerHTML = '';
+            placeCount();          /* 고정글이 없으니 본래 자리로 */
           } else {
             return Promise.all([fetchExtLogos(rows), fetchPaidPlans()]).then(function () {
               if (listEl) {
@@ -847,6 +902,7 @@ window.OCBoard = (function () {
                 var numOf = sortDir() === 'asc'
                   ? function (i) { return off + i + 1; }
                   : function (i) { return total - off - i; };
+                detachCount();
                 listEl.innerHTML = cfg.concertStyle
                   ? rows.map(function (r, i) { return conRowHtml(r, numOf(i)); }).join('')
                   : (cfg.cardStyle
@@ -858,11 +914,12 @@ window.OCBoard = (function () {
                   : rows.map(function (r, i) { return itemHtml(r, numOf(i)); }).join(''))));
               }
               renderPager();
+              placeCount();         /* 고정글이 있으면 그 아래로 */
               focusItem();          /* 반드시 그린 뒤에 */
             });
           }
         })
-        .catch(function (e) { console.error((cfg.table) + ' 목록 로드 실패:', e); if (listEl) listEl.innerHTML = '<div class="board-empty">목록을 불러오지 못했습니다.</div>'; });
+        .catch(function (e) { console.error((cfg.table) + ' 목록 로드 실패:', e); detachCount(); if (listEl) listEl.innerHTML = '<div class="board-empty">목록을 불러오지 못했습니다.</div>'; });
     }
 
     if (pager) pager.addEventListener('click', function (e) {
