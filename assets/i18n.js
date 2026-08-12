@@ -820,11 +820,35 @@
       'box-shadow:0 8px 24px rgba(20,16,40,.14);display:none;z-index:9999}' +
       '.oc-lang.open ul{display:block}' +
       '.oc-lang ul li{margin:0;padding:0;list-style:none}' +
-      '.oc-lang ul li a{display:block;margin:0;padding:8px 14px;font-size:12.5px;font-weight:500;' +
-      'letter-spacing:normal;line-height:1.5;text-align:left;text-decoration:none;white-space:nowrap;' +
+      /* ★★ 2026-08-12 · 글자 크기도 <b>못박습니다</b> (파트너 지적) ★★
+         ─────────────────────────────────────────────────────────
+         ★ 무엇이 문제였나
+           목록의 「한국어 · English · 日本語」가 <b>8px</b> 로 아주 작게
+           보였습니다. 제 규칙은 12.5px 로 적어 두었는데 안 먹었습니다.
+
+         ★ 왜 안 먹었나 — <b>색에서 났던 일과 똑같습니다</b> (위 설명 참고)
+           style.css 68줄에 이것이 있습니다 —
+             .util .right a { font-size: 8px }
+           헤더 맨 윗줄 전체를 아주 작게 두는 규칙입니다.
+           그 규칙은 클래스 둘·꼬리표 하나(0,2,1)이고
+           제 규칙 .oc-lang ul li a 는 클래스 하나·꼬리표 셋(0,1,3)이라
+           <b>제가 집니다.</b>
+           2026-08-10 에 색만 !important 로 못박고 <b>크기는 빼먹었습니다.</b>
+
+         ★ 그래서 크기·굵기·자간을 함께 못박습니다.
+           목록은 흰 상자 안이라 헤더 윗줄의 작은 글씨 규칙을 따를 이유가
+           없습니다. 읽는 글자이므로 <b>13.5px</b> 로 조금 키웁니다.
+         ★ style.css 는 고치지 않습니다 — 헤더 윗줄 전체가 쓰는 규칙이라
+           건드리면 다른 곳이 틀어집니다. */
+      '.oc-lang ul li a{display:block;margin:0;padding:10px 16px;' +
+      'font-size:13.5px !important;font-weight:500 !important;' +
+      'letter-spacing:normal !important;line-height:1.5 !important;' +
+      'text-align:left;text-decoration:none;white-space:nowrap;' +
       'color:#2a2b45 !important;background:transparent !important;opacity:1 !important}' +
       '.oc-lang ul li a:hover{background:#f6f2ea !important;color:#7C63B0 !important}' +
-      '.oc-lang ul li a.on{color:#7C63B0 !important;font-weight:700}' +
+      /* ★ 지금 고르고 있는 언어는 굵게 — 위에서 굵기를 !important 로
+           못박았으므로 <b>여기도 못박아야</b> 이깁니다. */
+      '.oc-lang ul li a.on{color:#7C63B0 !important;font-weight:700 !important}' +
       '.oc-lang ul li a::after{content:none !important}' +
       'html[data-theme="dark"] .oc-lang ul{background:#161616;border-color:#2f2f2f}' +
       'html[data-theme="dark"] .oc-lang ul li a{color:#e8e8e8 !important}' +
