@@ -911,11 +911,33 @@ img.oc-imgload{
   .board-list.as-two .board-empty{grid-column:1/-1}
 
   /* ── 글 목록(핫토픽·뉴스·지식나눔 …) ── */
-  /* 좌우 10px — 글자가 칸 끝에 닿지 않게 합니다 */
+  /* 좌우 10px — 줄 자체가 칸 끝에 닿지 않게 합니다 */
   .board-list.as-two .board-row{gap:12px;padding:14px 10px}
   .board-list.as-two .board-row-no{width:22px;font-size:.82em}
   /* 칸이 좁아진 만큼 미리보기는 한 줄로 줄입니다 */
   .board-list.as-two .board-prev{-webkit-line-clamp:1}
+
+  /* ★★ 2026-08-12 · 글이 <b>칸 끝까지 차지 않게</b> 합니다 (파트너 지적) ★★
+     ──────────────────────────────────────────────────────────────
+     ★ 무엇이 지저분했나
+       칸 사이를 48px 로 넓혔는데도 여전히 답답했습니다. 재보니
+       제목과 미리보기가 <b>칸 안쪽 끝까지 꽉 차</b> 있었습니다.
+       줄임표(…)가 오른쪽 벽에 붙어서, 두 칸이 한 덩어리처럼 보였습니다.
+
+     ★ 무엇을 고쳤나
+       글이 놓이는 칸(.board-row-main)의 <b>오른쪽을 비워 둡니다.</b>
+       그러면 제목과 미리보기가 그 앞에서 끊기고, 줄마다 끊기는 자리가
+       <b>일정하게</b> 맞습니다.
+
+     ★ 왜 padding 이 아니라 margin·max-width 가 아닌가
+       .board-row-main 은 flex 로 남은 자리를 다 차지합니다.
+       여기에 오른쪽 여백을 주면 글자가 그만큼 앞에서 멈춥니다.
+       칸 자체를 좁히는 것이 아니라 <b>글이 멈추는 자리</b>만 당기는 것이라,
+       제목이 더 잘리는 정도는 이 여백만큼입니다.
+
+     ★ 한 칸일 때(1040px 아래)는 그대로 둡니다 — 이 규칙 전체가
+       min-width:821px 안에 있습니다. 좁은 화면에서는 폭이 아까우니까요. */
+  .board-list.as-two .board-row-main{padding-right:34px}
   .board-list.as-two .board-row-thumb{width:78px;height:52px}
   /* 제목 위 한 줄 — 좁은 칸에서는 조금 작게 */
   .board-list.as-two .board-row-head{font-size:.76em;gap:7px;margin-bottom:5px}
@@ -933,7 +955,10 @@ img.oc-imgload{
   .board-list.as-two .doc-logo{width:44px;height:44px}
   .board-list.as-two .doc-no,
   .board-list.as-two .doc-logo{order:0}
-  .board-list.as-two .doc-main{order:0;flex:1 1 140px}
+  /* ★ 글 목록과 같은 까닭 — 제목·설명이 칸 끝까지 차지 않게 합니다.
+       재보니 여기도 줄 끝과 10px 밖에 안 됐습니다. (공연정보는 날짜가
+       오른쪽에 따로 있어 이미 97px 이 비어 있어 손대지 않았습니다) */
+  .board-list.as-two .doc-main{order:0;flex:1 1 140px;padding-right:34px}
   .board-list.as-two .doc-row::after{content:"";order:1;flex:0 0 100%;height:0}
   .board-list.as-two .doc-cat,
   .board-list.as-two .doc-date,
