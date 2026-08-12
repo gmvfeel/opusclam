@@ -110,7 +110,7 @@ async function main() {
   if (MAX > 0) console.log('※ 상한 ' + MAX + '명 — 넘으면 지우지 않고 멈춥니다\n');
 
   const rows = await getAll(
-    'persons?select=id,name_ko,name_en,wd_id,wd_genre,wd_occupation,description,description_en,field'
+    'persons?select=id,name_ko,name_en,wikidata_id,wd_genre,wd_occupation,description,description_en,field'
     + '&order=id.asc');
   console.log('인물 : ' + rows.length + '명        ');
 
@@ -143,7 +143,7 @@ async function main() {
     for (let i = 0; i < n; i++) {
       const p = list[i];
       console.log('       ' + String(i + 1).padStart(4) + '. ' + nameOf(p)
-        + (p.wd_id ? '  [' + p.wd_id + ']' : ''));
+        + (p.wikidata_id ? '  [' + p.wikidata_id + ']' : ''));
       if (p.wd_genre)      console.log('             장르 : ' + short(p.wd_genre, 90));
       if (p.wd_occupation) console.log('             직업 : ' + short(p.wd_occupation, 90));
       if (!p.wd_genre && !p.wd_occupation)
@@ -155,7 +155,7 @@ async function main() {
   if (noEvidence.length) {
     console.log('\n── 판정 못 한 사람 표본 (지우지 않습니다) ──');
     noEvidence.slice(0, 5).forEach((p, i) => {
-      console.log('   ' + (i + 1) + '. ' + nameOf(p) + (p.wd_id ? '  [' + p.wd_id + ']' : ''));
+      console.log('   ' + (i + 1) + '. ' + nameOf(p) + (p.wikidata_id ? '  [' + p.wikidata_id + ']' : ''));
     });
     if (noEvidence.length > 5) console.log('   … 그리고 ' + (noEvidence.length - 5) + '명');
   }
@@ -199,7 +199,7 @@ async function main() {
   const qids = [];
   let noQid = 0;
   for (const p of drop) {
-    const q = p.wd_id ? String(p.wd_id).trim() : '';
+    const q = p.wikidata_id ? String(p.wikidata_id).trim() : '';
     if (!q) { noQid++; continue; }
     if (seen.has(q)) continue;
     seen.add(q); qids.push(q);
