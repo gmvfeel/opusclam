@@ -299,5 +299,7 @@
     /* 서비스워커 등록 (PWA 설치 가능 조건) */
     if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}
   </script>
+<!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->
+<script src="/assets/pwa-install.js" defer></script>
 </body>
 </html>
