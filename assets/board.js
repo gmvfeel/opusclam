@@ -1303,13 +1303,37 @@ window.OCBoard = (function () {
            display:none 이면 크기가 0 이 되어 셈이 어긋납니다.
            보이고 감추는 것은 opacity·visibility 로만 합니다. */
 
-        /* 재생 단추 — 누르면 그 자리에서 유튜브 틀로 바뀌며 곧바로 재생됩니다 */
+        /* ★★ 2026-08-12 · 재생 단추를 <b>크게 보기</b>로 바꿨습니다 ★★
+           ────────────────────────────────────────────────────────────
+           ★ 무엇이 아쉬웠나 (파트너 요청)
+             누르면 <b>그 자리에서</b> 작게 재생됐습니다. 글 사이에 낀
+             작은 창으로는 끝까지 보지 않습니다. 레슨:ON 마스터클래스는
+             화면을 가득 덮는 큰 창으로 열리는데 그쪽이 나았습니다.
+
+           ★ 어떻게 했나
+             마스터클래스에 있던 라이트박스를 <b>공용 부품으로 뽑아</b>
+             (assets/video-lightbox.js) 여기서도 씁니다.
+             같은 코드를 새로 쓰면 두 벌이 되어, 한쪽만 고쳐지는 일이
+             또 생깁니다 — 오늘 리스트 탭에서 겪은 그대로입니다.
+
+           ★ 부품을 못 받으면 <b>예전처럼</b> 그 자리에서 재생합니다
+             영상이 아예 안 나오는 것보다 작게라도 나오는 편이 낫습니다. */
         (function () {
           var btn = box.querySelector('.bv-play');
           if (!btn) return;
-          btn.addEventListener('click', function () {
-            var vid = btn.getAttribute('data-video');
-            if (!vid) return;
+          var vid = btn.getAttribute('data-video');
+          if (!vid) return;
+
+          /* 부품이 알아보는 표시를 붙여 둡니다 */
+          btn.setAttribute('data-lb', '1');
+          btn.setAttribute('data-p', 'youtube');
+          btn.setAttribute('data-i', vid);
+          btn.setAttribute('data-t', (o.title || document.title || ''));
+          if (o.channel_name) btn.setAttribute('data-c', o.channel_name);
+          if (o.link_url) btn.setAttribute('data-u', o.link_url);
+          btn.setAttribute('aria-label', '영상을 크게 보기');
+
+          function inline() {
             var fr = document.createElement('iframe');
             fr.src = 'https://www.youtube.com/embed/' + encodeURIComponent(vid)
                    + '?autoplay=1&rel=0&modestbranding=1';
@@ -1317,7 +1341,20 @@ window.OCBoard = (function () {
             fr.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen');
             fr.setAttribute('allowfullscreen', '');
             btn.replaceWith(fr);
-          });
+          }
+
+          function ready() {
+            if (window.ocVideoLB) { window.ocVideoLB.bind(box); return true; }
+            return false;
+          }
+          if (ready()) return;
+
+          /* 아직 안 실렸으면 싣습니다 */
+          var sc = document.createElement('script');
+          sc.src = '/assets/video-lightbox.js';
+          sc.onload = function () { if (!ready()) btn.addEventListener('click', inline); };
+          sc.onerror = function () { btn.addEventListener('click', inline); };
+          document.head.appendChild(sc);
         })();
 
         /* 조회수 +1 (best-effort) */

@@ -972,5 +972,77 @@
     });
   }
 
-  window.OCLesson = { list: list, view: view, home: home, TABS: TABS, FIELDS: FIELDS };
+  /* ★★ 2026-08-12 · 대문에도 「최신 마스터클래스 한 편」을 크게 ★★
+     ──────────────────────────────────────────────────────────────
+     ★ 파트너 요청 — 레슨:ON 대문 인스트럭터 영역 <b>위</b>에
+       분야와 상관없이 최신 동영상 하나를 크게 보여 달라.
+
+     ★ 새로 만들지 않았습니다
+       마스터클래스 탭에 이미 「추천 한 편을 크게」(featured)가 있습니다.
+       그 짜임과 라이트박스를 <b>그대로</b> 씁니다 — 같은 것을 두 번
+       만들면 한쪽만 고쳐지는 일이 생깁니다(오늘 여러 번 겪었습니다).
+
+     ★ 무엇을 고르나
+       lessons_public 에서 <b>영상이 있는 것</b> 가운데 tab='master' 인
+       가장 새 것 한 편입니다. 파트너 말씀대로 <b>분야는 보지 않습니다.</b>
+       (탭 목록의 featured 는 그 탭 안에서 고르는데, 여기서는 대문이라
+        마스터클래스로만 좁힙니다)
+
+     쓰는 법
+       OCLesson.featureOne({ box:'lnFeatHome' })         마스터클래스 최신
+       OCLesson.featureOne({ box:'…', where:{} })        갈래 상관없이 */
+  function featureOne(opt) {
+    opt = opt || {};
+    var box = $(opt.box || 'lnFeatHome');
+    if (!box) return;
+    var where = opt.where || { tab: 'master' };
+
+    waitSb(function (c) {
+      if (!c) { box.innerHTML = ''; return; }
+      var q = c.from('lessons_public').select('*')
+        .not('video_id', 'is', null)
+        .order('sort_order', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1);
+      Object.keys(where).forEach(function (k) { q = q.eq(k, where[k]); });
+
+      q.then(function (r) {
+        var o = (r.data || [])[0];
+        /* ★ 없으면 <b>자리를 비웁니다</b> — 「불러오는 중…」이 남으면
+             영상이 없는 것인지 고장인지 알 수 없습니다. */
+        if (r.error || !o) { box.innerHTML = ''; return; }
+        styleOnce();
+
+        var curated = (o.source === 'curated');
+        var by = curated ? (o.credit || '') : (o.instructor_name || '');
+
+        box.innerHTML =
+            '<section class="oc-ft">'
+          +   '<div class="oc-ft-ph">' + poster(o) + '</div>'
+          +   '<div class="oc-ft-tx">'
+          +     '<div class="oc-ft-lb">' + esc(opt.label || 'NEW MASTER CLASS')
+          +       (curated ? '<span class="cu">큐레이션</span>' : '') + '</div>'
+          +     '<h3 class="oc-ft-t">' + esc(o.title || '-') + '</h3>'
+          +     (by ? '<div class="oc-ft-by">' + (curated ? 'SOURCE' : 'INSTRUCTOR')
+                    + ' &middot; <b>' + esc(by) + '</b></div>' : '')
+          +     (o.summary ? '<p class="oc-ft-d">' + esc(o.summary) + '</p>' : '')
+          +     '<div class="oc-ft-act">'
+          +       '<button type="button" class="oc-ft-go" data-lb="1"'
+          +         ' data-p="' + esc(o.video_provider) + '" data-i="' + esc(o.video_id) + '"'
+          +         ' data-t="' + esc(o.title || '') + '"'
+          +         ' data-c="' + esc(by) + '"'
+          +         ' data-u="' + esc(o.credit_url || '') + '">&#9658; 지금 보기</button>'
+          +       '<a class="oc-ft-more" href="/lesson/lesson-view.html?id='
+          +         encodeURIComponent(o.id) + '">강의정보 &#8594;</a>'
+          +     '</div>'
+          +   '</div>'
+          + '</section>';
+
+        bindLb(box);   /* 표지와 「지금 보기」 둘 다 크게 보기로 */
+      });
+    });
+  }
+
+  window.OCLesson = { list: list, view: view, home: home, featureOne: featureOne,
+                      TABS: TABS, FIELDS: FIELDS };
 })();

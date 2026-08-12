@@ -77,6 +77,15 @@
 
   <div class="ln-wrap">
 
+    <!-- ── 최신 마스터클래스 한 편 (2026-08-12 · 파트너 요청) ──────
+         ★ 인스트럭터 영역 <b>위</b>에 둡니다. 대문에 들어온 사람이
+           가장 먼저 「무엇을 볼 수 있는 곳인가」를 알게 되는 자리입니다.
+         ★ 분야는 보지 않고 <b>가장 새 마스터클래스</b> 한 편입니다.
+         ★ 짜임과 재생(크게 보기)은 마스터클래스 탭의 것을 그대로 씁니다 —
+           assets/lesson-list.js 의 featureOne().
+         ★ 영상이 없으면 이 자리는 <b>비워 둡니다</b>(자리만 남지 않습니다). -->
+    <div id="lnFeatHome"></div>
+
     <!-- ── 인스트럭터 — 지금 만들 수 있는 유일한 진짜 내용입니다 ── -->
     <section class="ln-sec">
       <div class="ln-sec-top">
@@ -142,6 +151,10 @@
      ★ 표가 아니라 <b>뷰</b>(lesson_instructors_public)를 읽습니다.
        그 뷰에는 연락처가 아예 담기지 않습니다. */
   document.addEventListener('DOMContentLoaded', function () {
+    /* 대문 맨 위 — 최신 마스터클래스 한 편을 크게 (2026-08-12) */
+    if (window.OCLesson && OCLesson.featureOne)
+      OCLesson.featureOne({ box: 'lnFeatHome', label: 'NEW MASTER CLASS' });
+
     if (window.OCLessonIns) OCLessonIns.list({ box: 'lnInsHome', limit: 4, pager: false });
 
     /* 대문에 최근 강의 넷 — 탭을 가리지 않고 <b>모두</b>에서 뽑습니다 */
