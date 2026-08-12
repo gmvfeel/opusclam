@@ -885,9 +885,15 @@ img.oc-imgload{
      「글이 없습니다」 안내문이 왼쪽 반쪽에 치우쳐 보입니다.
    ============================================================ */
 @media (min-width:821px){
+  /* ★ 칸 사이 16px (2026-08-12 · 파트너 결정)
+       처음 26px → 48px 로 넓혀 봤다가 → 26px 로 되돌리고 → 16px.
+       글이 칸 끝에서 34px 앞에 멈추므로(아래 .board-row-main),
+       두 칸의 글 사이는 실제로 <b>34 + 16 + 4 = 54px</b> 쯤 됩니다.
+       칸 사이를 벌리는 대신 <b>글이 멈추는 자리</b>를 당기는 쪽이
+       제목을 덜 자르면서 같은 여백을 냅니다. */
   .board-list.as-two{display:grid;
     grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    gap:0 26px;align-items:start}
+    gap:0 16px;align-items:start}
   .board-list.as-two .board-feat,
   .board-list.as-two .board-empty{grid-column:1/-1}
 
