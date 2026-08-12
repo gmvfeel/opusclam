@@ -480,12 +480,18 @@
         var c = {};
         ERAS.forEach(function(e, i){ c[e.key] = list[i]; });
         drawBand(c);
-        /* 주소에 시대가 적혀 있으면 그것을, 아니면 바로크로 시작합니다 */
+        /* ★ 2026-08-12 · 처음 열면 <b>중세</b>부터 보여 줍니다 (파트너 지적)
+             예전에는 바로크로 시작했습니다. 그런데 이 화면의 안내문이
+             「중세부터 오늘까지 한 줄로 봅니다」이고, 띠도 중세가 맨 왼쪽입니다.
+             들어오자마자 가운데(바로크)가 켜져 있으면 <b>말과 화면이 어긋납니다.</b>
+             연표는 왼쪽에서 오른쪽으로 읽는 것이니 맨 앞에서 시작합니다.
+             ★ 주소에 ?era= 가 있으면 그것이 먼저입니다 —
+               음악사 연표에서 시대별로 넘어오는 길이 그대로 살아 있습니다. */
         var want = new URLSearchParams(location.search).get('era') || '';
         var ok = ERAS.some(function(e){ return e.key === want; });
-        pick(ok ? want : 'baroque');
+        pick(ok ? want : ERAS[0].key);
       })
-      .catch(function(){ pick('baroque'); });
+      .catch(function(){ pick(ERAS[0].key); });
   });
 })();
 </script>

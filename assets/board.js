@@ -1003,6 +1003,26 @@ window.OCBoard = (function () {
 
   /* ============================ 상세 ============================ */
   function view(cfg) {
+    /* ★★ 2026-08-12 · 리스트 탭 자리잡기를 <b>공용 부품</b>으로 옮겼습니다 ★★
+       ────────────────────────────────────────────────────────────
+       같은 일을 하는 코드가 두 곳에 따로 있었습니다 —
+         여기(커뮤니티·정보SPOT)   푸터 + 이너스페이스 둘 다 봄
+         db/*-view.html 아홉 곳     복붙 · <b>푸터만 봄</b>
+       그래서 2026-08-05 에 여기만 고쳐졌고, DATABASE 상세에서는
+       이너스페이스를 열면 단추가 패널 위에 계속 겹쳐 보였습니다.
+
+       ★ <b>글을 불러오기 전에</b> 싣습니다
+         예전 자리는 상세를 다 그린 뒤였습니다. 글을 못 찾거나 조회가
+         실패하면 그 대목에 닿지 못해 단추가 <b>관리되지 않은 채</b>
+         남습니다. 자리잡기는 글 내용과 상관없는 일이므로 앞으로 옮깁니다. */
+    (function () {
+      if (window.__ocPvSidetab) return;      /* 이미 돌고 있으면 그만 */
+      if (document.querySelector('script[src*="pv-sidetab.js"]')) return;
+      var sc = document.createElement('script');
+      sc.src = '/assets/pv-sidetab.js';
+      sc.onerror = function () { /* 못 받아도 화면은 그대로 돕니다 */ };
+      document.head.appendChild(sc);
+    })();
     var box = document.querySelector('.board-view');
     var id = new URLSearchParams(location.search).get('id');
     if (!box) return;
@@ -1257,48 +1277,6 @@ window.OCBoard = (function () {
          ★ 자리를 잴 때는 <b>display 를 건드리지 않습니다</b> —
            display:none 이면 크기가 0 이 되어 셈이 어긋납니다.
            보이고 감추는 것은 opacity·visibility 로만 합니다. */
-        (function () {
-          var tabs = document.querySelector('.pv-sidetabs');
-          if (!tabs) return;
-          var BASE = 500;      /* 원래 자리 (board.css 의 top 과 같아야 합니다) */
-          var MIN  = 96;       /* 이보다 위로는 올리지 않습니다 (헤더 자리) */
-
-          function show(on) {
-            tabs.style.opacity = on ? '1' : '0';
-            tabs.style.visibility = on ? 'visible' : 'hidden';
-          }
-
-          function upd() {
-            /* ⓑ 이너스페이스 패널이 화면을 덮고 있으면 비켜 있습니다 */
-            var ins = document.getElementById('ocInnerSpace');
-            if (ins) {
-              var ib = ins.getBoundingClientRect().bottom;
-              if (ib > 140) { show(false); return; }
-            }
-
-            /* ⓐ 푸터가 가까우면 그 위로 올라갑니다 */
-            tabs.style.top = BASE + 'px';
-            var h = tabs.offsetHeight || 0;
-            var stop = document.querySelector('.bigban')
-                    || document.querySelector('.triple')
-                    || document.querySelector('footer')
-                    || document.querySelector('#oc-footer');
-            if (!stop) {
-              var near = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 360);
-              show(!near);
-              return;
-            }
-            var st = stop.getBoundingClientRect().top;
-            var room = st - 20 - h;          /* 푸터 위에 놓을 수 있는 윗변 */
-            if (room >= BASE) { show(true); return; }        /* 원래 자리로 충분 */
-            if (room >= MIN)  { tabs.style.top = room + 'px'; show(true); return; }
-            show(false);                                      /* 올릴 자리도 없음 */
-          }
-
-          window.addEventListener('scroll', upd, { passive: true });
-          window.addEventListener('resize', upd);
-          upd();
-        })();
 
         /* 재생 단추 — 누르면 그 자리에서 유튜브 틀로 바뀌며 곧바로 재생됩니다 */
         (function () {

@@ -1012,24 +1012,6 @@ if('serviceWorker' in navigator){
 })();
 </script>
 <script>
-/* 리스트 탭: 하단 배너/푸터 겹침 방지 */
-(function(){
-  var tab=document.querySelector('.pv-listtab');
-  var stop=document.querySelector('.bigban')||document.querySelector('.triple')||document.querySelector('footer');
-  if(!tab||!stop)return;
-  function upd(){
-    var s=stop.getBoundingClientRect().top;
-    var t=tab.getBoundingClientRect().bottom;
-    var hide=s < t + 20;
-    tab.style.opacity=hide?'0':'1';
-    tab.style.visibility=hide?'hidden':'visible';
-  }
-  window.addEventListener('scroll',upd,{passive:true});
-  window.addEventListener('resize',upd);
-  upd();
-})();
-</script>
-<script>
 /* 학술DB 뷰: ?id 로드 */
 (function(){
   var URL='https://ptdxzxkgddvkusamkiol.supabase.co',KEY='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',H={apikey:KEY,Authorization:'Bearer '+KEY};
@@ -1271,5 +1253,7 @@ if('serviceWorker' in navigator){
 <!-- 관계 지도 · 뷰 아래에 접이식으로 붙습니다. -->
 <script src="/assets/network.js" defer></script>
 <script src="/assets/app.js" defer></script>
+<!-- 리스트 탭 자리잡기 — 푸터·이너스페이스를 피합니다 (공용) -->
+<script src="/assets/pv-sidetab.js"></script>
 </body>
 </html>

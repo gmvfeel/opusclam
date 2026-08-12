@@ -1029,24 +1029,6 @@ if('serviceWorker' in navigator){
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
 })();
 </script>
-<script>
-/* 리스트 탭: 하단 배너/푸터 겹침 방지 */
-(function(){
-  var tab=document.querySelector('.pv-listtab');
-  var stop=document.querySelector('.bigban')||document.querySelector('.triple')||document.querySelector('footer');
-  if(!tab||!stop)return;
-  function upd(){
-    var s=stop.getBoundingClientRect().top;
-    var t=tab.getBoundingClientRect().bottom;
-    var hide=s < t + 20;
-    tab.style.opacity=hide?'0':'1';
-    tab.style.visibility=hide?'hidden':'visible';
-  }
-  window.addEventListener('scroll',upd,{passive:true});
-  window.addEventListener('resize',upd);
-  upd();
-})();
-</script>
 <script src="/assets/photos.js"></script>
 <script>
 /* 공연장DB 뷰: ?id 로드 */
@@ -1119,5 +1101,7 @@ document.title=nm+' · 공연장DB · OPUSCLAM.COM';
 <script src="/assets/claim.js" data-kind="venues" defer></script>
 <script src="/assets/report.js?v=20260808" data-table="venues" data-label="공연장" defer></script>
 <script src="/assets/app.js" defer></script>
+<!-- 리스트 탭 자리잡기 — 푸터·이너스페이스를 피합니다 (공용) -->
+<script src="/assets/pv-sidetab.js"></script>
 </body>
 </html>
