@@ -23,9 +23,31 @@
   .pdb-table th.c-name{width:17%}
   .pdb-table th.c-field{width:7%}
   .pdb-table th.c-nation{width:9%}
-  .pdb-table th.c-life{width:7.5%}
+  /* ★★ 2026-08-12 · 생몰 칸이 좁아 연도가 잘렸습니다 ★★
+     ────────────────────────────────────────────────────────
+     ★ 무엇이 보였나 (노트북 폭 1024px)
+         1685 – 17      1929–202      1881 ~ 19
+       사망 연도가 통째로 잘려 나갔습니다.
+
+     ★ 왜 그랬나
+       표가 table-layout:fixed 이므로 <b>머리글 칸의 폭이 전부를
+       결정합니다.</b> assets/db-view.css 에 `.c-life{width:118px}` 로
+       넉넉히 잡혀 있었는데, 여기 있던 `th.c-life{width:7.5%}` 가
+       <b>th 가 붙어 우선순위가 높아</b> 그것을 덮어썼습니다.
+         1280px → 92px  ·  1024px → 73px  (필요한 폭 약 99px)
+
+     ★ 어떻게 고쳤나
+       퍼센트 대신 <b>px 로 못박습니다.</b> 생몰은 글자 수가 정해져 있어
+       화면이 좁아져도 줄어들 이유가 없는 칸입니다.
+       그만큼은 대표작 칸에서 덜어냅니다(그쪽은 줄어들어도
+       … 로 이어지므로 뜻이 상하지 않습니다).
+
+     ★ 생몰 형식이 열 가지 섞여 있습니다
+         1685 – 1750 · 1929–2026 · 1881 ~ 1958 · ?–1552 · 기원전 5세기
+       가장 넓은 「1881 ~ 1958」이 들어가는 폭으로 잡았습니다. */
+  .pdb-table th.c-life{width:112px}
   .pdb-table th.c-era{width:7%}
-  .pdb-table th.c-work{width:15%}
+  .pdb-table th.c-work{width:13%}
   .pdb-table th.c-org{width:12%}
   .pdb-table th.c-school{width:8.5%}
   .pdb-table th.c-link{width:9%}/* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
@@ -36,8 +58,9 @@
     .pdb-table th.c-name{width:20%}
     .pdb-table th.c-field{width:9%}
     .pdb-table th.c-nation{width:11%}
-    .pdb-table th.c-life{width:9%}
-    .pdb-table th.c-work{width:24%}
+    /* 태블릿에서도 같은 까닭으로 px 로 못박습니다 */
+    .pdb-table th.c-life{width:104px}
+    .pdb-table th.c-work{width:21%}
     .pdb-table th.c-org{width:15%}
     .pdb-table th.c-link{width:11%}
   }/* ===== 휴대폰: 핵심(이름·분야·국적·대표작·링크)만 ===== */
@@ -45,9 +68,10 @@
   @media(max-width:520px){
     .pdb-table .c-work,.pdb-table .c-org,.pdb-table .c-nation,.pdb-table .c-link{display:none}
     .pdb-table th.c-work,.pdb-table th.c-org,.pdb-table th.c-nation,.pdb-table th.c-link{width:0}
-    .pdb-table th.c-name{width:48%}
-    .pdb-table th.c-field{width:22%}
-    .pdb-table th.c-life{width:30%}
+    .pdb-table th.c-name{width:44%}
+    .pdb-table th.c-field{width:20%}
+    /* 휴대폰에서는 글자가 더 작아지므로 96px 로 충분합니다 */
+    .pdb-table th.c-life{width:96px}
     .pdb-table th,.pdb-table td{padding-left:6px;padding-right:6px}
     .pdb-table .c-field{white-space:normal}
     .pdb-table .nat-code{display:none}

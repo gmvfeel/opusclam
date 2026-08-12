@@ -23,9 +23,15 @@
   .pdb-table th.c-name{width:15%}
   .pdb-table th.c-field{width:9%}
   .pdb-table th.c-nation{width:12%}
-  .pdb-table th.c-life{width:8%}
+  /* ★★ 2026-08-12 · 생몰 칸이 좁아 연도가 잘렸습니다 ★★
+     인물DB와 같은 문제입니다. 표가 table-layout:fixed 이므로
+     머리글 칸의 폭이 전부를 결정하는데, 8% 는 1024px 화면에서
+     78px 밖에 안 되어 「1685 – 17」처럼 <b>25px 잘렸습니다.</b>
+     생몰은 글자 수가 정해진 칸이므로 퍼센트가 아니라 px 로 못박고,
+     그만큼 대표작 칸에서 덜어냅니다. */
+  .pdb-table th.c-life{width:112px}
   .pdb-table th.c-org{width:10%}
-  .pdb-table th.c-work{width:12%}
+  .pdb-table th.c-work{width:10%}
   .pdb-table th.c-era{width:10%}
   .pdb-table th.c-school{width:8%}
   .pdb-table th.c-link{width:8%}/* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
@@ -36,9 +42,9 @@
     .pdb-table th.c-name{width:18%}
     .pdb-table th.c-field{width:10%}
     .pdb-table th.c-nation{width:13%}
-    .pdb-table th.c-life{width:9%}
+    .pdb-table th.c-life{width:104px}
     .pdb-table th.c-org{width:12%}
-    .pdb-table th.c-work{width:15%}
+    .pdb-table th.c-work{width:12%}
     .pdb-table th.c-era{width:13%}
     .pdb-table th.c-link{width:10%}
   }/* ===== 휴대폰: 핵심(이름·분야·국적·대표작·링크)만 ===== */
