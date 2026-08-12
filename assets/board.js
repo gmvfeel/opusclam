@@ -1140,12 +1140,17 @@ window.OCBoard = (function () {
           var poster = o.thumb_url || ('https://i.ytimg.com/vi/' + encodeURIComponent(vid) + '/maxresdefault.jpg');
           player = '<figure class="bv-video">'
             + '<button type="button" class="bv-play" data-video="' + esc(vid) + '"'
-            + ' aria-label="영상 재생">'
+            + ' aria-label="영상을 크게 보기">'
             +   '<img src="' + esc(poster) + '" alt="" loading="lazy"'
             +     ' onerror="this.src=\'https://i.ytimg.com/vi/' + esc(vid) + '/hqdefault.jpg\'">'
-            +   '<span class="bv-playbtn" aria-hidden="true">'
-            +     '<svg viewBox="0 0 68 48"><path class="bv-playbg" d="M66.5 7.7c-.8-2.9-2.5-5.4-5.4-6.2C55.8 0 34 0 34 0S12.2 0 6.9 1.5C4 2.3 2.3 4.8 1.5 7.7 0 13 0 24 0 24s0 11 1.5 16.3c.8 2.9 2.5 5.4 5.4 6.2C12.2 48 34 48 34 48s21.8 0 27.1-1.5c2.9-.8 4.6-3.3 5.4-6.2C68 35 68 24 68 24s0-11-1.5-16.3z"/><path class="bv-playtri" d="M45 24 27 14v20"/></svg>'
-            +   '</span>'
+            /* ★ 2026-08-12 · 레슨:ON 과 같은 <b>흰 동그라미</b> 단추.
+                 예전에는 유튜브식 빨간 네모 SVG 였습니다. 빨간 네모는
+                 「유튜브로 나간다」로 읽히는데 실제로는 그 자리에서
+                 크게 열립니다. 모양이 하는 일을 말해 주도록 맞췄습니다.
+               ★ 유니코드 삼각형(&#9658;)을 씁니다 — 레슨:ON 이 쓰는 것과
+                 같고, 전용 글꼴 없이도 어느 기기에서나 보입니다. */
+            +   '<span class="bv-playbtn" aria-hidden="true">&#9658;</span>'
+            +   '<span class="bv-playnote" aria-hidden="true">눌러서 크게 보기</span>'
             + '</button>'
             + (o.channel_name ? '<figcaption>' + esc(o.channel_name) + '</figcaption>' : '')
             + '</figure>';
