@@ -33,7 +33,7 @@
      node scripts/collect-persons.mjs                    무엇이 올지만 봅니다
      node scripts/collect-persons.mjs --save             실제로 담습니다
      node scripts/collect-persons.mjs --job=Q36834       한 직업만
-     node scripts/collect-persons.mjs --limit=2000       직업당 최대
+     node scripts/collect-persons.mjs --limit=2000       직업당 <새 사람> 최대
      node scripts/collect-persons.mjs --list             받을 사람 전부 찍기
 
    필요한 환경변수
@@ -214,24 +214,62 @@ async function runJob(job, have, blocked) {
   const qids = [];
   let stopped = false;
 
-  for (let off = 0; off < LIMIT; off += PAGE) {
+  /* ★★ 2026-08-12 · 상한을 <b>「새 사람」 기준</b>으로 바꿨습니다 ★★
+     ──────────────────────────────────────────────────────────────
+     ★ 무엇이 잘못됐나
+       예전에는 <b>받아온 항목 수</b>를 4000에서 끊었습니다.
+       그런데 위키데이터는 늘 <b>같은 번호 순서</b>로 돌려줍니다.
+       작곡가는 앞 4000명 가운데 <b>3,932명이 이미 담긴 사람</b>이었습니다.
+
+         받은 것 4000  →  이미 있음 3932  →  새 사람 68
+
+       그래서 다시 돌려도 <b>같은 4000명을 또 봅니다.</b>
+       4000명 뒤쪽에는 영영 닿지 못했습니다.
+       「담으신 뒤 다시 돌리면 이어서 받습니다」라는 안내는
+       사실이 아니었습니다.
+
+     ★ 어떻게 고쳤나
+       <b>새 사람이 상한만큼 모일 때까지</b> 쪽을 넘깁니다.
+       이미 담긴 사람·차단된 사람은 자리를 차지하지 않습니다.
+       위키데이터가 더 줄 것이 없으면(한 쪽이 다 안 차면) 끝냅니다.
+
+     ★ 헛돌지 않게 쪽 수에 울타리를 둡니다
+       한 직업에 최대 400쪽(20만 항목)까지만 봅니다.
+       쪽마다 1.5초 쉬므로 400쪽이면 10분입니다. 제한 시간은 60분입니다. */
+  const MAX_PAGES = 400;
+  let scanned = 0;
+  let reachedEnd = false;
+
+  for (let pg = 0; pg < MAX_PAGES; pg++) {
+    const off = pg * PAGE;
     let rows;
     try {
-      rows = await sparql(listQuery(job.qid, off, Math.min(PAGE, LIMIT - off)));
+      rows = await sparql(listQuery(job.qid, off, PAGE));
     } catch (e) {
       if (isStop(e)) { stopped = true; console.log('  ※ ' + e.message); break; }
       console.log('  · 목록 ' + off + '~ 실패 · 건너뜁니다 (' + String(e.message || '').slice(0, 50) + ')');
       continue;
     }
-    if (!rows.length) break;
+    if (!rows.length) { reachedEnd = true; break; }
     rows.forEach(b => { const q = qidOf(val(b, 'item')); if (q) qids.push(q); });
-    if (rows.length < PAGE) break;
+    scanned += rows.length;
+
+    /* 새 사람이 몇 명 모였나 — 이것으로 끊습니다 */
+    const newSoFar = qids.filter(q => !have.has(q) && !blocked.has(q)).length;
+    process.stdout.write('   훑는 중 ' + scanned + '항목 · 새 사람 ' + newSoFar + '명\r');
+
+    if (rows.length < PAGE) { reachedEnd = true; break; }
+    if (newSoFar >= LIMIT) break;
     await sleep(1500);
   }
-  const hitLimit = qids.length >= LIMIT;
-  console.log('위키데이터에서 받은 항목 : ' + qids.length + '명'
+  process.stdout.write('                                                  \r');
+
+  const newCount = qids.filter(q => !have.has(q) && !blocked.has(q)).length;
+  const hitLimit = !reachedEnd && newCount >= LIMIT;
+  console.log('위키데이터에서 훑은 항목 : ' + qids.length + '명'
     + (stopped ? '  ※ 속도 제한으로 중간에 멈췄습니다' : '')
-    + (hitLimit ? '  ★ 상한(' + LIMIT + ')에 닿았습니다 — 더 있습니다' : ''));
+    + (reachedEnd ? '  (끝까지 훑었습니다)' : '')
+    + (hitLimit ? '  ★ 새 사람 상한(' + LIMIT + ')에 닿았습니다 — 더 있습니다' : ''));
 
   /* 이미 담긴 것·차단된 것 먼저 걸러 상세 요청을 줄입니다 */
   const fresh = qids.filter(q => !have.has(q) && !blocked.has(q));
@@ -409,11 +447,12 @@ async function main() {
   }
   const over = results.filter(r => r.hitLimit);
   if (over.length) {
-    console.log('\n★ 상한(' + LIMIT + ')에 닿은 직업이 ' + over.length + '가지 있습니다 —');
+    console.log('\n★ 새 사람 상한(' + LIMIT + ')에 닿은 직업이 ' + over.length + '가지 있습니다 —');
     console.log('  ' + over.map(r => r.job.en).join(' · '));
-    console.log('  이 직업들은 <b>아직 더 남아 있습니다.</b>'.replace(/<[^>]+>/g, ''));
+    console.log('  이 직업들은 아직 더 남아 있습니다.');
     console.log('  담으신 뒤 같은 설정으로 다시 돌리면 이어서 받습니다');
-    console.log('  (이미 담긴 사람은 건너뜁니다).');
+    console.log('  (담은 사람은 「이미 있음」이 되어 자리를 차지하지 않으므로');
+    console.log('   다음에는 그 뒤쪽을 훑습니다).');
   }
 
   if (!SAVE) {

@@ -43,7 +43,7 @@ on:
         default: ''
         type: string
       limit:
-        description: '직업당 최대 몇 명까지'
+        description: '직업당 새로 담을 사람 최대 몇 명까지 (이미 담긴 사람은 세지 않습니다)'
         required: false
         default: '4000'
         type: string
