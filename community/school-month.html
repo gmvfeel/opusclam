@@ -45,8 +45,35 @@
     border-radius:999px;padding:5px 13px;white-space:nowrap}
 
   /* 사진 */
-  .sm-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:26px}
-  .sm-photos img{width:100%;height:150px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+  /* ★★ 2026-08-12 · 사진을 <b>크게, 여러 장</b> (파트너 요청) ★★
+     ────────────────────────────────────────────────────────────
+     ★ 자료를 세어 보고 정했습니다
+       사진이 있는 학교 995곳 가운데 <b>525곳이 두 장 이상</b>이고
+       가장 많은 곳은 일곱 장입니다. 여러 장을 그리는 짜임은 이미
+       있었는데(아래 grid) <b>높이가 150px 로 작아</b> 눈에 안 들어왔습니다.
+       그래서 자료를 더 모을 필요 없이 <b>화면만</b> 고치면 됩니다.
+
+     ★ 어떻게
+       ① 높이 150 → 260px
+       ② 첫 장은 <b>두 칸을 차지하고 더 크게</b>(380px) — 대표 사진 노릇
+       ③ 사진이 한 장뿐이면 그 한 장이 <b>전체 폭</b>을 차지합니다
+         (:only-child) — 좁은 사진 하나가 왼쪽에 덜렁 남지 않게
+
+     ★ 왜 첫 장만 크게 하나
+       모두 같은 크기로 크게 하면 화면이 사진으로만 채워집니다.
+       하나가 크고 나머지가 작으면 눈이 갈 곳이 정해집니다. */
+  .sm-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:26px}
+  .sm-photos img{width:100%;height:260px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+  /* 첫 장 — 두 칸을 차지하고 더 크게 */
+  .sm-photos > a:first-child,
+  .sm-photos > img:first-child{grid-column:span 2}
+  .sm-photos > a:first-child img,
+  .sm-photos > img:first-child{height:380px}
+  /* 한 장뿐이면 전체 폭 */
+  .sm-photos > a:only-child,
+  .sm-photos > img:only-child{grid-column:1/-1}
+  .sm-photos > a:only-child img,
+  .sm-photos > img:only-child{height:420px}
 
   /* 정보 섹션 */
   .sm-sec{border-top:1px solid var(--line);padding:24px 0}
@@ -88,7 +115,7 @@
   .sm-src{font-size:12.5px;color:var(--text-3);margin-top:14px}
   /* 모아둔 사진 여러 장 */
   .sm-photos a{display:block;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
-  .sm-photos a img{width:100%;height:150px;object-fit:cover;display:block;transition:transform .25s ease}
+  .sm-photos a img{width:100%;height:260px;object-fit:cover;display:block;transition:transform .25s ease}
   .sm-photos a:hover img{transform:scale(1.04)}
   .sm-photocap{grid-column:1/-1;font-size:12.5px;color:var(--text-3);margin:2px 0 0;line-height:1.6}
   .sm-photocap a{display:inline;border:0;border-radius:0;overflow:visible;color:var(--violet-2);text-decoration:none}
@@ -117,8 +144,19 @@
     .sm-logo{width:76px;height:76px}
     .sm-name{font-size:22px}
     .sm-ymbox{order:-1;width:100%;flex-direction:row;justify-content:space-between;align-items:center}
+    /* 좁은 화면에서는 두 칸이라 첫 장 넓히기를 풉니다 */
     .sm-photos{grid-template-columns:repeat(2,1fr)}
-    .sm-photos img{height:118px}
+    .sm-photos > a:first-child,
+    .sm-photos > img:first-child{grid-column:1/-1}
+    /* ★ 원래 여기 .sm-photos img{height:118px} 가 있었습니다.
+         제 규칙 뒤에 와서 이겨 버려, 좁은 화면에서 나머지 사진이
+         118px 로 작게 남았습니다. 그 줄을 지우고 아래로 합칩니다. */
+    .sm-photos img,
+    .sm-photos a img{height:200px}
+    .sm-photos > a:first-child img,
+    .sm-photos > img:first-child{height:260px}
+    .sm-photos > a:only-child img,
+    .sm-photos > img:only-child{height:260px}
     .sm-adm{flex-wrap:wrap}
     .sm-past a{flex-wrap:wrap;gap:4px}
     .sm-past .ym{min-width:0}

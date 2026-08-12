@@ -98,7 +98,11 @@ html[data-theme="dark"] .board-feat{background:var(--paper-2)}
 .board-row:hover .board-cc{color:#fff}
 .board-row:hover .board-tag{color:#fff;border-color:rgba(255,255,255,.45);background:transparent}
 html[data-theme="dark"] .board-row:hover{background:#000}
-.board-row-no{flex:none;width:26px;color:var(--text-3);font-size:.87em;padding-top:2px;font-variant-numeric:tabular-nums}
+/* ★ 2026-08-12 · 번호를 굵게 (파트너 요청)
+     정보SPOT 음원·동영상 목록(.bc-no)이 font-weight:700 인데
+     게시판 목록은 굵기 지정이 없어 가늘게 보였습니다. 같게 맞춥니다. */
+.board-row-no{flex:none;width:26px;color:var(--text-3);font-size:.87em;padding-top:2px;
+  font-weight:700;font-variant-numeric:tabular-nums}
 .board-row-main{flex:1;min-width:0}
 .board-row-title{display:block;font-size:1em;font-weight:600;color:var(--text);margin:0 0 5px;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:640px){.doc-row{padding-right:6px}}
@@ -729,7 +733,7 @@ html[data-theme="dark"] .board-card:hover{background:#000}
 
 /* 문서형 목록 (입시요강 등) */
 .doc-no{flex:none;width:30px;padding-top:20px;color:var(--text-3);font-size:12.5px;
-  font-variant-numeric:tabular-nums;text-align:center;line-height:1}
+  font-variant-numeric:tabular-nums;text-align:center;line-height:1;font-weight:700}
 .doc-row:hover .doc-no{color:#fff}
 
 /* 카드형 목록 (음원·동영상) */
@@ -788,8 +792,9 @@ html[data-theme="dark"] .board-card:hover{background:#000}
 .con-row:hover .con-view{color:#fff}
 html[data-theme="dark"] .con-row:hover{background:#000}
 
+/* ★ 2026-08-12 · 번호를 굵게 — 다른 목록(.board-row-no·.bc-no·.doc-no)과 같게 */
 .con-no{flex:0 0 auto;width:30px;padding-top:3px;color:var(--text-3);font-size:12.5px;
-  font-variant-numeric:tabular-nums;text-align:center;line-height:1}
+  font-weight:700;font-variant-numeric:tabular-nums;text-align:center;line-height:1}
 
 /* 포스터 — 공연 포스터는 세로로 깁니다 */
 .con-th{flex:0 0 auto;width:84px;aspect-ratio:3/4;border-radius:6px;overflow:hidden;
