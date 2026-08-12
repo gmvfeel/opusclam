@@ -1098,7 +1098,63 @@ window.OCBoard = (function () {
            (오늘 interests.js 에서 같은 것을 겪고 이렇게 바꿨습니다) */
         if (lkSlot) needLinkedAsk();
         var tag = o.category ? '<span class="board-tag">' + esc(o.category) + '</span>' : '';
-        var thumb = o.thumb_url ? '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">' : '';
+        /* ★★ 2026-08-12 · 같은 사진이 <b>두 번 나오던 것</b>을 고쳤습니다 ★★
+           ────────────────────────────────────────────────────────────
+           ★ 무엇이 문제였나 (파트너 지적)
+             상세 화면은 본문 위에 thumb_url 사진을 한 장 놓습니다(bv-thumb).
+             그런데 <b>본문(body) 안에도 같은 사진이 들어 있는</b> 글이 많습니다 —
+             글쓰기에서 사진을 넣으면 본문에 <img> 로 들어가고, 목록에
+             쓸 대표 사진으로 그 주소가 thumb_url 에도 함께 담기기 때문입니다.
+             그래서 <b>똑같은 사진이 위아래로 두 번</b> 보였습니다.
+
+           ★ 왜 위쪽 사진을 그냥 없애지 않나
+             본문에 사진이 없고 thumb_url 만 있는 글도 있습니다.
+             없애면 그 글은 사진을 아예 잃습니다.
+
+           ★ 어떻게 고쳤나
+             <b>본문에 그 사진이 이미 있으면 위쪽에 넣지 않습니다.</b>
+             주소를 견줄 때 뒤에 붙는 것들(?width=… 같은 크기 조정 값)을
+             떼고 견줍니다 — 같은 사진인데 주소가 조금 달라 못 알아보는
+             일을 막기 위해서입니다.
+             리사이저를 거친 주소(images.weserv.nl/?url=…)도 안쪽 주소를
+             꺼내 견줍니다. */
+        var thumb = (function () {
+          if (!o.thumb_url) return '';
+          var bodyHtml = String(o.body || '');
+          /* 주소에서 견줄 부분만 남깁니다 */
+          function keyOf(u) {
+            u = String(u || '');
+            /* 리사이저를 거친 것이면 안쪽 주소를 꺼냅니다 */
+            var m = /[?&]url=([^&]+)/.exec(u);
+            if (m) { try { u = decodeURIComponent(m[1]); } catch (e) { u = m[1]; } }
+            u = u.replace(/^https?:\/\//, '')      /* http/https 차이 무시 */
+                 .replace(/#.*$/, '');
+            /* ★ 물음표 뒤를 <b>통째로 지우지 않습니다.</b>
+                 크기 조정 값(width·w·h·quality 등)만 떼고 나머지는 남깁니다.
+                 통째로 지우면 a.jpg?a 와 a.jpg?b 처럼 <b>서로 다른 사진</b>을
+                 같다고 보아, 있어야 할 사진이 사라집니다.
+                 (검증에서 실제로 이 일이 났습니다) */
+            var qi = u.indexOf('?');
+            if (qi >= 0) {
+              var base = u.slice(0, qi);
+              var keep = u.slice(qi + 1).split('&').filter(function (kv) {
+                var k = kv.split('=')[0].toLowerCase();
+                return ['w', 'width', 'h', 'height', 'q', 'quality', 'output',
+                        'fit', 'dpr', 'we', 'l', 'af', 'il'].indexOf(k) < 0;
+              });
+              u = base + (keep.length ? '?' + keep.sort().join('&') : '');
+            }
+            return u;
+          }
+          var want = keyOf(o.thumb_url);
+          if (!want) return '';
+          /* 본문 안의 <img src="…"> 를 모두 뽑아 견줍니다 */
+          var re = /<img[^>]+src\s*=\s*["']([^"']+)["']/gi, m2;
+          while ((m2 = re.exec(bodyHtml))) {
+            if (keyOf(m2[1]) === want) return '';   /* 이미 본문에 있습니다 */
+          }
+          return '<img class="bv-thumb" src="' + esc(o.thumb_url) + '" alt="" loading="lazy">';
+        })();
         var link = o.link_url ? '<a class="bv-link" href="' + esc(o.link_url) + '" target="_blank" rel="noopener">원문 보기 \u2197</a>' : '';
         /* ★ 악보의 바깥 링크는 <b>회원만</b>입니다.
            주소를 spot.link_url 에 두면 select=* 로 비회원에게도 새어 나가므로
