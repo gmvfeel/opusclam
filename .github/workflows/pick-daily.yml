@@ -1,0 +1,107 @@
+name: 운영 · 오늘의 SELF PR · 이달의 음악학교 (매일)
+
+on:
+  schedule:
+    # KST 매일 00:20 — 날이 바뀌면 곧 그날의 인물이 뜨게 합니다.
+    # (UTC 15:20 = KST 다음날 00:20)
+    - cron: '20 15 * * *'
+  workflow_dispatch:
+    inputs:
+      fill-past:
+        description: '지난 며칠을 메울까요 (비우면 오늘만 · 예: 15)'
+        required: false
+        default: ''
+        type: string
+      ymd:
+        description: '그 날만 (예: 2026-08-01)'
+        required: false
+        default: ''
+        type: string
+      ym:
+        description: '그 달만 (예: 2026-07)'
+        required: false
+        default: ''
+        type: string
+      only:
+        description: '한쪽만'
+        required: false
+        default: '둘 다'
+        type: choice
+        options:
+          - '둘 다'
+          - 'person'
+          - 'school'
+      dry:
+        description: '담지 않고 무엇을 고를지만 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+concurrency:
+  group: oc-pick-daily
+  cancel-in-progress: false
+
+jobs:
+  pick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 저장소 가져오기
+        uses: actions/checkout@v4
+
+      - name: Node 준비
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 자동 선정 실행
+        run: |
+          OPTS=""
+          FP="${{ github.event.inputs.fill-past }}"
+          if [ -n "$FP" ]; then OPTS="$OPTS --fill-past=$FP"; fi
+
+          YMD="${{ github.event.inputs.ymd }}"
+          if [ -n "$YMD" ]; then OPTS="$OPTS --ymd=$YMD"; fi
+
+          YM="${{ github.event.inputs.ym }}"
+          if [ -n "$YM" ]; then OPTS="$OPTS --ym=$YM"; fi
+
+          ONLY="${{ github.event.inputs.only }}"
+          if [ "$ONLY" = "person" ] || [ "$ONLY" = "school" ]; then OPTS="$OPTS --only=$ONLY"; fi
+
+          if [ "${{ github.event.inputs.dry }}" = "yes" ]; then OPTS="$OPTS --dry"; fi
+
+          echo "── 실행 : node scripts/pick-daily.mjs $OPTS ──"
+          node scripts/pick-daily.mjs $OPTS
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+  # ── 실패를 이슈로 알립니다 (다른 워크플로와 같은 방식) ──────
+  oc-notify-failure:
+    needs: pick
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 선정이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi
