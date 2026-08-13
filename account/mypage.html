@@ -288,6 +288,20 @@
           border-bottom:1px solid var(--line2,#e8e6ef);font-size:13px;color:var(--tx3,#8a8798)}
   .ra-sum b{color:var(--tx,#2b2740);font-weight:800}
   .ra-sum-new b{color:#c62828}
+  /* ★ 2026-08-12 · 「내 등록 관리」 링크 (파트너 지적)
+       올린 공고를 고치거나 마감할 자리가 없었습니다.
+       ★ 이 줄(.ra-sum)은 <b>늘 나옵니다</b> — 처음에는 「받은 지원이
+         없습니다」 안내에만 넣었는데, 그 안내는 지원이 하나도 없을 때만
+         나와서 지원이 있는 분에게는 단추가 아예 안 보였습니다.
+       ★ margin-left:auto 로 <b>오른쪽 끝</b>에 붙입니다 — 왼쪽 셈과
+         섞이지 않게. */
+  .ra-sum-manage{margin-left:auto;font-size:12.5px;font-weight:700;
+    color:var(--vi2,#7C63B0);text-decoration:none;white-space:nowrap;
+    border:1px solid var(--line2,#e8e6ef);border-radius:18px;padding:5px 13px;
+    transition:border-color .16s ease,background .16s ease,color .16s ease}
+  .ra-sum-manage:hover{border-color:var(--vi2,#7C63B0);
+    background:var(--vi2,#7C63B0);color:#fff}
+  @media(max-width:600px){ .ra-sum-manage{margin-left:0} }
 
   .ra-list{list-style:none;margin:0;padding:0}
   .ra-it{padding:14px 0;border-bottom:1px solid var(--line,#f0eff5);cursor:pointer;transition:background .12s}
@@ -764,6 +778,12 @@
         <p class="mp-note">
           커뮤니티와 정보SPOT에 올리신 것을 모았습니다. 제목을 누르면 그 글로 갑니다.
           <b>고치거나 지우는 것</b>은 글 안에서 하실 수 있습니다.
+          <!-- ★ 2026-08-12 · 한 줄 더했습니다 (파트너 지적)
+                 「내가 올린 것」에 <b>채용정보가 없어서</b> 여기서 찾으시다
+                 못 찾는 일이 생깁니다. 그 자리를 알려 드립니다. -->
+          <br>올리신 <b>채용정보·인재정보</b>는 여기가 아니라
+          <a href="/recruit/my.html" style="color:var(--vi2,#7C63B0);font-weight:700">리쿠르트 &gt; 내 등록 관리</a>
+          에서 고치고 마감하실 수 있습니다.
         </p>
       </div>
       <div class="mp-card" id="myBody" style="display:none">
