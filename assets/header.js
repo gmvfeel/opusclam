@@ -138,6 +138,18 @@ document.querySelectorAll('.tabs').forEach(function(t){
   window.addEventListener('resize',function(){if(window.innerWidth>880)close();});
 })();
 
+/* ★ 2026-08-13 · 하위 메뉴 자리 — <b>JS 로 재던 것을 거두었습니다</b>
+     ─────────────────────────────────────────────────────────────
+     한때 하위 메뉴를 <b>그 대메뉴 글자에 맞추려</b> 여기서 자리를 재고
+     --dd-shift 를 넣었습니다. 그런데 —
+       · 항목이 여러 줄로 감기면(flex-wrap) 계산이 무너졌습니다
+       · 좁은 화면에서는 <b>애초에 들어갈 자리가 없습니다</b> —
+         「OC커뮤니티」가 352px 에 있고 항목이 700px 을 차지하는데
+         화면이 1000px 이면 넘칩니다
+     ▶ 파트너와 <b>가운데 정렬을 유지하며 조금만 왼쪽으로</b> 옮기는
+       쪽으로 정했습니다. 그것은 style.css 한 줄로 됩니다(--dd-nudge).
+     ★ 다시 JS 로 재려 하지 말아 주십시오 — 화면 폭마다 어긋납니다. */
+
 /* full menu */
 (function(){
   var btn=document.getElementById('fullMenuBtn');

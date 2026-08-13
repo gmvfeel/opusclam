@@ -110,9 +110,36 @@
     background:rgba(246,246,249,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--line);border-bottom:1px solid #d6d6dc;box-shadow:0 16px 32px -18px rgba(30,20,60,.28);
     opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,visibility .22s ease;z-index:65}
   .nav-item:hover .dropdown{opacity:1;visibility:visible;pointer-events:auto}
-  .dropdown-inner{max-width:var(--wrap);margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center}
-  /* DATABASE 메뉴만 왼쪽 정렬 (형태·다른 메뉴는 그대로) */
-  .nav-item--db .dropdown-inner{justify-content:flex-start}
+  /* ★★ 2026-08-13 · 하위 메뉴를 <b>왼쪽으로 조금</b> 옮깁니다 (파트너 지적) ★★
+     ─────────────────────────────────────────────────────────────
+     ★ 무엇이 어색했나
+       하위 메뉴가 오른쪽으로 치우쳐 보였습니다.
+       까닭은 <b>가운데 정렬</b>인데 오른쪽 항목(로그인·검색·전체메뉴)이
+       자리를 차지해, 눈으로 보는 가운데와 어긋나기 때문입니다.
+
+     ★ 어떻게 고치나 — <b>가운데 정렬은 그대로</b> 두고 왼쪽으로 밉니다
+       한때 「그 대메뉴 글자에 맞추기」를 JS 로 해봤는데 —
+         · 항목이 여러 줄로 감기면 계산이 무너졌습니다
+         · 좁은 화면에서는 애초에 들어갈 자리가 없었습니다
+       그래서 <b>한 줄로 끝나는</b> 이 방식으로 정했습니다.
+
+     ★ --dd-nudge 만 고치면 됩니다
+       지금 <b>110px</b> 왼쪽입니다. 더 왼쪽으로 원하시면 숫자를 키우고,
+       덜 원하시면 줄이십시오. <b>이 한 줄만</b> 바꾸시면 됩니다.
+     ★ 좁은 화면(880px 아래)에서는 0 으로 둡니다 — 세로로 쌓이므로
+       밀면 오히려 글자가 잘립니다. */
+  .dropdown-inner{max-width:var(--wrap);margin:0 auto;padding:12px 20px;
+    display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+    /* ★ 옮기는 양을 <b>화면 폭에 따라</b> 정합니다.
+         한 값으로 두면 1180px 아래에서 왼쪽으로 넘쳐 첫 항목이
+         화면 밖으로 나갔습니다(검증에서 드러났습니다).
+       ★ min() 을 씁니다 — 「110px 만큼, 다만 넘치지 않는 만큼만」.
+         (100vw - 항목이 차지하는 폭)의 절반이 넘길 수 있는 한계입니다. */
+    --dd-nudge:min(110px, max(0px, (100vw - 1140px) / 2));
+    transform:translateX(calc(var(--dd-nudge) * -1))}
+  /* DATABASE 메뉴만 왼쪽 정렬 (형태·다른 메뉴는 그대로)
+     ★ 이 메뉴는 왼쪽 정렬이라 밀면 화면 밖으로 나갑니다 — 그대로 둡니다. */
+  .nav-item--db .dropdown-inner{justify-content:flex-start;--dd-nudge:0px}
   .dropdown a{position:relative;font-size:13px;color:#9a9baa;padding:5px 18px;white-space:nowrap;letter-spacing:-.01em;transition:color .15s}
   .dropdown a:not(:last-child)::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--line-2)}
   .dropdown a:hover{color:#363845}
@@ -523,7 +550,9 @@
       transform:none;box-shadow:none;border:0;border-radius:0;background:rgba(0,0,0,.22);
       max-height:0;overflow:hidden;transition:max-height .3s ease}
     .nav-item.open .dropdown{max-height:660px}
-    .dropdown-inner{flex-direction:column;align-items:stretch;padding:6px 0;max-width:none}
+    /* ★ 좁은 화면 — 세로로 쌓이므로 밀지 않습니다 (2026-08-13) */
+    .dropdown-inner{flex-direction:column;align-items:stretch;padding:6px 0;max-width:none;
+      --dd-nudge:0px;transform:none}
     .dropdown a{padding:10px 34px;font-size:13px;color:rgba(255,255,255,.6)}
     .dropdown a:hover{color:var(--violet-3)}
     .dropdown a::after{display:none}
