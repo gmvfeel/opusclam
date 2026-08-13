@@ -81,34 +81,37 @@
     + '.oc-tab{position:fixed;left:0;right:0;bottom:0;z-index:1500;display:none;'
     +   'height:' + H + 'px;box-sizing:border-box;'
     +   'padding-bottom:env(safe-area-inset-bottom,0);'
-    +   'background:var(--paper,#fff);border-top:1px solid var(--line,#e4e4ec);'
-    +   'box-shadow:0 -6px 18px -12px rgba(20,18,40,.28)}'
+    /* ★ 2026-08-14 · 흰 띠 → <b>검정</b> (파트너 지시)
+         밝은 모드·어두운 모드 <b>둘 다</b> 검정입니다. 그래서 아래쪽
+         글자·아이콘 색도 흰 계열로 함께 바꿉니다 — 바탕만 바꾸면
+         회색 글자가 묻힙니다. */
+    +   'background:#0d0d12;border-top:1px solid rgba(255,255,255,.10);'
+    +   'box-shadow:0 -8px 22px -14px rgba(0,0,0,.55)}'
     + '.oc-tab-in{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:' + H + 'px}'
     /* 한 칸 */
     + '.oc-tab a,.oc-tab button{display:flex;flex-direction:column;align-items:center;'
     +   'justify-content:center;gap:6px;border:0;background:none;padding:7px 2px 6px;cursor:pointer;'
     +   'font-family:inherit;font-size:10.5px;font-weight:600;letter-spacing:-.02em;'
-    +   'color:var(--text-3,#8a8c9e);text-decoration:none;-webkit-tap-highlight-color:transparent}'
+    +   'color:rgba(255,255,255,.60);text-decoration:none;-webkit-tap-highlight-color:transparent}'
     + '.oc-tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;'
     +   'stroke-linecap:round;stroke-linejoin:round}'
-    + '.oc-tab .on{color:var(--violet-2,#7c63b0)}'
+    + '.oc-tab .on{color:#b9a3e8}'
     + '.oc-tab .on svg{stroke-width:2}'
     /* 「마이페이지」는 다섯 글자라 320px 화면(한 칸 64px)에서 끊길 수
        있습니다 — 자간을 좁히고 한 줄로 묶습니다 */
     + '.oc-tab span{white-space:nowrap;letter-spacing:-.045em}'
     /* 지금 보고 있는 자리 — 위에 짧은 막대 */
     + '.oc-tab .on::before{content:"";position:absolute;top:0;width:28px;height:2px;'
-    +   'border-radius:0 0 3px 3px;background:var(--violet-2,#7c63b0)}'
+    +   'border-radius:0 0 3px 3px;background:#b9a3e8}'
     + '.oc-tab a,.oc-tab button{position:relative}'
     /* ★ 2026-08-14 · 전체메뉴·서랍이 열리면 띠를 감춥니다 (파트너 지시)
          전체메뉴는 z-index 120, 서랍은 90 인데 띠는 1500 이라 메뉴 위에
          띠가 남아 있었습니다. 띠의 z-index 를 내리면 맨위로 단추·PWA 띠
          (200)에 가리므로, 열린 동안만 감추는 쪽이 맞습니다. */
     + 'html.oc-menu-open .oc-tab{display:none !important}'
-    /* 어두운 화면 */
-    + 'html[data-theme="dark"] .oc-tab{background:#111;border-top-color:#2b2b2b}'
-    + 'html[data-theme="dark"] .oc-tab a,html[data-theme="dark"] .oc-tab button{color:#9a9a9a}'
-    + 'html[data-theme="dark"] .oc-tab .on{color:#b9a3e8}'
+    /* 어두운 화면 — 바탕을 순수 블랙에 가깝게 한 단계만 더 낮춥니다
+       (밝은 모드도 이미 검정이므로 색을 다시 적지 않습니다) */
+    + 'html[data-theme="dark"] .oc-tab{background:#0a0a0a;border-top-color:rgba(255,255,255,.08)}'
     /* 좁은 화면에서만 보입니다 */
     + '@media (max-width:' + MAX + 'px){'
     +   '.oc-tab{display:block}'
