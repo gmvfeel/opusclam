@@ -67,17 +67,20 @@
     +   'box-shadow:0 0 0 3px rgba(124,99,176,.1)}'
     + '.ocs.open .ocs-btn::after{transform:rotate(180deg)}'
     /* 목록 */
-    + '.ocs-list{position:absolute;left:0;top:calc(100% + 5px);z-index:70;'
+    /* ★ 2026-08-13 · 목록을 <b>화면 기준(fixed)</b>으로 띄웁니다
+         예전에는 상자 기준(absolute)이었습니다. 그런데 고르개가 히어로
+         섹션 안에 있고 검색창은 그 아래 <main> 안에 있어서, 조상들의
+         쌓임 순서 때문에 <b>검색창이 목록 위에 그려졌습니다.</b>
+         z-index 를 올려도 조상이 만든 쌓임 문맥을 넘지 못합니다.
+       ▶ 화면 기준으로 띄우면 조상의 쌓임·잘림에서 벗어납니다.
+         자리는 열 때 재어서 정합니다(아래 place 함수). */
+    + '.ocs-list{position:fixed;left:0;top:0;z-index:2000;'
     +   'margin:0;padding:5px 0;list-style:none;min-width:100%;max-width:min(88vw,420px);'
     +   'max-height:min(58vh,420px);overflow:auto;-webkit-overflow-scrolling:touch;'
     +   'background:var(--paper,#fff);border:1px solid var(--line,#e4e4ec);border-radius:11px;'
     +   'box-shadow:0 14px 34px -10px rgba(20,18,40,.26);display:none}'
     + '.ocs.open .ocs-list{display:block}'
-    /* 위로 열기 — 아래에 자리가 없을 때 */
-    + '.ocs.up .ocs-list{top:auto;bottom:calc(100% + 5px)}'
-    /* 오른쪽에 붙여 열기 — 목록이 화면 오른쪽으로 삐져나갈 때
-       (모바일에서는 가로 넘침을 막아 두었으므로 잘려 보이지 않게 해야 합니다) */
-    + '.ocs.right .ocs-list{left:auto;right:0}'
+
     + '.ocs-list li{margin:0;padding:0;list-style:none}'
     + '.ocs-opt{display:block;width:100%;box-sizing:border-box;padding:11px 15px;'
     +   'background:none;border:0;font:inherit;font-size:13px;text-align:left;'
@@ -156,21 +159,49 @@
     }
   }
 
+  /* ── 목록 자리 정하기 ────────────────────────────────────────
+     화면 기준(fixed)이므로 열 때마다 재어서 놓습니다.
+       · 단추 바로 아래에, 단추와 같은 폭 이상으로
+       · 아래에 자리가 없으면 위로
+       · 오른쪽으로 삐져나가면 왼쪽으로 당깁니다 */
+  function place(box) {
+    var r = box._btn.getBoundingClientRect();
+    var list = box._list;
+    list.style.minWidth = Math.round(r.width) + 'px';
+    list.style.left = '0px';
+    list.style.top = '0px';
+    list.style.maxHeight = '';
+
+    var lw = Math.max(list.offsetWidth, r.width);
+    var lh = list.offsetHeight;
+    var below = w.innerHeight - r.bottom - 10;
+    var above = r.top - 10;
+    var up = (lh > below) && (above > below);
+
+    /* 자리가 아주 좁으면 그 안에서 스크롤되게 합니다 */
+    var room = up ? above : below;
+    if (lh > room) list.style.maxHeight = Math.max(160, Math.round(room)) + 'px';
+    lh = list.offsetHeight;
+
+    var left = r.left;
+    if (left + lw > w.innerWidth - 8) left = w.innerWidth - 8 - lw;
+    if (left < 8) left = 8;
+
+    list.style.left = Math.round(left) + 'px';
+    list.style.top = Math.round(up ? (r.top - 5 - lh) : (r.bottom + 5)) + 'px';
+  }
+
   function open(box, on) {
     if (on) {
       /* 열려 있던 다른 것은 닫습니다 */
       [].forEach.call(d.querySelectorAll('.ocs.open'), function (o) {
         if (o !== box) o.classList.remove('open');
       });
-      /* 아래에 자리가 없으면 위로 엽니다 */
-      var r = box.getBoundingClientRect();
-      box.classList.toggle('up', (w.innerHeight - r.bottom) < 240 && r.top > 260);
-      /* 목록이 오른쪽으로 삐져나가면 오른쪽에 붙여 엽니다 */
-      box.classList.remove('right');
-      var lw = box._list.scrollWidth || r.width;
-      if (r.left + Math.max(lw, r.width) > w.innerWidth - 8) box.classList.add('right');
+      box.classList.add('open');
+      place(box);
+    } else {
+      box.classList.remove('open');
     }
-    box.classList.toggle('open', !!on);
     box._btn.setAttribute('aria-expanded', on ? 'true' : 'false');
   }
 
@@ -288,6 +319,18 @@
         });
       }
     });
+    /* 화면 기준으로 띄웠으므로, 스크롤하면 자리를 다시 잡아야 합니다 */
+    var _sc = null;
+    function replace() {
+      if (_sc) return;
+      _sc = setTimeout(function () {
+        _sc = null;
+        var box = d.querySelector('.ocs.open');
+        if (box && box._btn) place(box);
+      }, 16);
+    }
+    w.addEventListener('scroll', replace, { passive: true });
+
     var _rz = null;
     w.addEventListener('resize', function () {
       if (_rz) return;
