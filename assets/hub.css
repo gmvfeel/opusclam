@@ -177,7 +177,10 @@
 
   /* 좁은 칸용 한 줄 목록 (날짜 + 제목) */
   /* 둥근 모서리를 두지 않습니다 — 아래 구분선 끝이 말려 보입니다 */
-  .bd-line{display:flex;align-items:flex-start;gap:14px;padding:11px 6px;
+  /* ★ 2026-08-13 · min-width:0 · overflow:hidden 안전장치
+       위 격자를 고쳤지만, 이 줄이 다른 곳에도 쓰이므로 줄 자체가
+       칸을 밀지 못하게 막아 둡니다. */
+  .bd-line{display:flex;align-items:flex-start;gap:14px;padding:11px 6px;min-width:0;overflow:hidden;
     border-bottom:1px solid var(--line-2);text-decoration:none;color:inherit;
     transition:background-color .2s ease, color .2s ease}
   /* 제목과 설명을 한 덩어리로 묶어 두 줄로 놓습니다 */
@@ -241,7 +244,13 @@
   @media (max-width:760px){
     .cm-quick{grid-template-columns:repeat(2,1fr)}
     .cm-track > *{flex:0 0 calc((100% - 14px)/2)}
-    .cm-two{grid-template-columns:1fr;gap:44px}
+    /* ★ 2026-08-13 · 1fr → minmax(0,1fr) (390px 에서 재현해 확인)
+         `1fr` 은 `minmax(auto,1fr)` 입니다. 그래서 칸이 <b>속 내용이
+         가장 좁아질 수 있는 너비</b>까지 늘어납니다. 목록 설명줄
+         (.bd-linedesc)이 white-space:nowrap 이라 90자 한 줄이 그대로
+         칸 너비가 되어, 정보SPOT 메인이 <b>390px 화면에서 938px</b> 로
+         벌어졌습니다(오른쪽으로 한참 밀어야 ≡ 가 나왔습니다). */
+    .cm-two{grid-template-columns:minmax(0,1fr);gap:44px}
     .bd-feat{flex-direction:column;gap:15px}
     .bd-featimg{width:100%}
     .bd-feattitle{font-size:17.5px}
@@ -693,7 +702,7 @@
     .hb-totalnum{font-size:36px}
     .hb-cards{grid-template-columns:repeat(2,1fr)}
     .hub-grid{grid-template-columns:repeat(2,1fr)}
-    .hub-list.as-grid{grid-template-columns:1fr}
+    .hub-list.as-grid{grid-template-columns:minmax(0,1fr)}
     .hub-date,.hub-view{display:none}
     .hb-title{font-size:17.5px}
   }

@@ -73,7 +73,15 @@
   function update(){
     var solid;
     if(window.innerWidth<=880){
-      solid = window.scrollY>8;               // 모바일: 맨 위는 투명, 스크롤하면 불투명
+      /* ★ 2026-08-13 · 모바일에서는 <b>늘 불투명</b>합니다 (파트너 지시)
+           예전에는 맨 위에서 투명이었습니다. 그래서 화면마다 상단이
+           달라 보였습니다 — 인물DB(흰 헤더)와 정보SPOT·커뮤니티(어두운
+           투명 헤더)가 서로 다른 사이트처럼 보였습니다.
+         ★ 레슨:ON 만 예외입니다 — 그 화면은 사진 히어로 위에 헤더가
+           얹히는 것이 설계입니다(html.ln-page 로 표시됩니다). */
+      solid = document.documentElement.classList.contains('ln-page')
+                ? window.scrollY>8
+                : true;
     } else if(hero){
       var trigger=hero.offsetHeight-sh.offsetHeight-8;
       solid = hovering || window.scrollY>Math.max(trigger,60);
