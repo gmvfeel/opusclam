@@ -84,19 +84,25 @@
     word-break:keep-all;margin-top:5px}
 
   .tl-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:34px}
-  .tl-col h3{font-family:var(--display);font-size:14px;color:var(--text);margin:0 0 14px;
-    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-    padding-bottom:10px;border-bottom:1px solid var(--line)}
+  /* ★ 2026-08-13 · 칸 머리글을 두 줄로 나눴습니다 (파트너 지시)
+       첫 줄 — 제목 + 오른쪽에 「더 보기」
+       둘째 줄 — 무엇을 기준으로 셌는지
+     아래 테두리는 h3 이 아니라 이 상자가 갖습니다. 그러지 않으면
+     선이 제목과 기준 글자 사이를 지나갑니다. */
+  .tl-colhead{margin:0 0 14px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+  .tl-col h3{font-family:var(--display);font-size:14px;color:var(--text);margin:0;
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px}
   /* ★ 무엇을 기준으로 셌는지 밝힙니다.
      연표는 <태어난 해>로 세고, 인물DB 화면은 <era_name>으로 거릅니다.
      둘 다 맞는 숫자인데 재는 자가 다릅니다. 밝혀 두지 않으면
      숫자가 틀린 것처럼 보입니다. */
-  .tl-col h3 em{font-style:normal;font-size:11px;color:var(--text-3);font-weight:400;
-    white-space:nowrap}
-  .tl-more{display:block;margin-top:18px;padding:12px;text-align:center;
-    font-size:12.5px;color:var(--text-2);background:var(--paper);text-decoration:none;
-    border:1px solid var(--line-2);border-radius:9px;transition:border-color .15s,color .15s}
-  .tl-more:hover{border-color:var(--violet-2);color:var(--violet-2)}
+  .tl-basis{font-size:11px;color:var(--text-3);font-weight:400;margin:5px 0 0;
+    line-height:1.5}
+  /* ★ 더 보기 — 아래 큰 단추에서 제목 오른쪽 <b>작은 글자 링크</b>로 옮겼습니다 */
+  .tl-more{flex:0 0 auto;font-size:11.5px;color:var(--text-2);text-decoration:none;
+    white-space:nowrap;font-family:var(--sans, inherit);font-weight:500;
+    transition:color .15s}
+  .tl-more:hover{color:var(--violet-2)}
 
   .tl-item{display:flex;gap:12px;align-items:flex-start;padding:12px 2px;
     border-bottom:1px solid var(--line);text-decoration:none}
@@ -183,19 +189,25 @@
 
     <div class="tl-cols">
       <section class="tl-col">
-        <h3>이 시대의 음악가 <em>태어난 해 기준</em></h3>
+        <div class="tl-colhead">
+          <h3>이 시대의 음악가 <a class="tl-more" id="tlMoreP" href="/db/person.html">인물DB 에서 더 보기 &rarr;</a></h3>
+          <p class="tl-basis">태어난 해 기준</p>
+        </div>
         <div id="tlPersons"></div>
-        <a class="tl-more" id="tlMoreP" href="/db/person.html">인물DB 에서 더 보기 &rarr;</a>
       </section>
       <section class="tl-col">
-        <h3>이 시대의 작품 <em>작곡 연도 기준</em></h3>
+        <div class="tl-colhead">
+          <h3>이 시대의 작품 <a class="tl-more" id="tlMoreW" href="/db/work.html">작품DB 에서 더 보기 &rarr;</a></h3>
+          <p class="tl-basis">작곡 연도 기준</p>
+        </div>
         <div id="tlWorks"></div>
-        <a class="tl-more" id="tlMoreW" href="/db/work.html">작품DB 에서 더 보기 &rarr;</a>
       </section>
       <section class="tl-col">
-        <h3>이 시대의 용어 <em>표시된 시대 기준</em></h3>
+        <div class="tl-colhead">
+          <h3>이 시대의 용어 <a class="tl-more" id="tlMoreT" href="/db/terms.html">용어사전 에서 더 보기 &rarr;</a></h3>
+          <p class="tl-basis">표시된 시대 기준</p>
+        </div>
         <div id="tlTerms"></div>
-        <a class="tl-more" id="tlMoreT" href="/db/terms.html">용어사전 에서 더 보기 &rarr;</a>
       </section>
     </div>
 
