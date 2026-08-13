@@ -218,9 +218,43 @@
     background:rgba(239,239,243,.985);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);border-bottom:1px solid #cfcfd8;box-shadow:0 18px 36px -16px rgba(20,14,45,.42);
     opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,visibility .22s ease;z-index:65}
   .nav-item:hover .dropdown{opacity:1;visibility:visible;pointer-events:auto}
-  .dropdown-inner{max-width:var(--wrap);margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center}
+  /* ★★ 2026-08-13 · 하위 메뉴를 왼쪽으로 (파트너 지적) ★★
+     ─────────────────────────────────────────────────────────────
+     ★ 왜 여기에도 적나
+       파트너가 「메인과 다른 화면의 하위 메뉴 자리가 다르다」고 하셨습니다.
+       재 보니 <b>메인만 81px 어긋났습니다.</b>
+       까닭은 이 화면이 style.css 를 부르지 않고 <b>헤더·푸터 CSS 를
+       자기 안에</b> 갖고 있기 때문입니다 — style.css 에만 넣은 값이
+       메인에는 안 걸립니다.
+       ★ 아침에 푸터 붉은색에서 겪은 것과 <b>같은 문제</b>입니다.
+     ★ 값이 어긋나면 화면마다 다르게 보이므로 style.css 의 것을
+       <b>그대로</b> 옮겼습니다. 한쪽만 고치지 말아 주십시오. */
+  .dropdown-inner{max-width:var(--wrap);margin:0 auto;padding:12px 20px;
+    display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+    --dd-nudge:min(81px, max(0px, (100vw - 1140px) / 2));
+    transform:translateX(calc(var(--dd-nudge) * -1))}
   /* DATABASE 메뉴만 왼쪽 정렬 (형태·다른 메뉴는 그대로) */
-  .nav-item--db .dropdown-inner{justify-content:flex-start}
+  .nav-item--db .dropdown-inner{justify-content:flex-start;--dd-nudge:0px}
+  /* ★★ 메뉴별로 <b>바로 아래 올 항목</b>을 맞춥니다 (파트너 요청) ★★
+     ─────────────────────────────────────────────────────────────
+       OC커뮤니티  → 지식나눔
+       정보SPOT   → 지원금 / 정책자금정보
+       SHOPPING  → LIFEPOP
+     ★ 값이 메뉴마다 다른 까닭
+       하위 메뉴는 <b>모두 같은 자리에서</b> 시작합니다(가운데 정렬).
+       그런데 대메뉴는 저마다 다른 자리에 있으니, 맞추려면 메뉴마다
+       다른 만큼 밀어야 합니다.
+     ★ 이 값은 style.css 에 있는 것과 <b>똑같습니다</b>
+       메인은 style.css 를 부르지 않고 헤더 CSS 를 자기 안에 갖고 있어
+       거기 넣은 값이 안 걸립니다. 한쪽만 고치면 <b>메인과 다른 화면의
+       하위 메뉴 자리가 달라집니다</b> (파트너가 그것을 찾아 주셨습니다).
+     ★ 하위 메뉴 항목이 늘거나 줄면 세 값을 다시 재야 합니다. */
+  .nav-item--community .dropdown-inner{
+    --dd-nudge:min(81px, max(0px, (100vw - 1140px) / 2))}
+  .nav-item--spot .dropdown-inner{
+    --dd-nudge:min(-11px, max(-200px, (100vw - 1140px) / 2 - 92px))}
+  .nav-item--shop .dropdown-inner{
+    --dd-nudge:max(-346px, min(-265px, (100vw - 1140px) / 2 - 346px))}
   .dropdown a{position:relative;font-size:13px;color:#4a4c5c;font-weight:500;padding:5px 18px;white-space:nowrap;letter-spacing:-.01em;transition:color .15s}
   .dropdown a:not(:last-child)::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--line-2)}
   .dropdown a:hover{color:var(--violet-2,#5b4b9e)}
@@ -960,7 +994,9 @@
       transform:none;box-shadow:none;border:0;border-radius:0;background:rgba(0,0,0,.22);
       max-height:0;overflow:hidden;transition:max-height .3s ease}
     .nav-item.open .dropdown{max-height:660px}
-    .dropdown-inner{flex-direction:column;align-items:stretch;padding:6px 0;max-width:none}
+    /* ★ 좁은 화면 — 세로로 쌓이므로 밀지 않습니다 (2026-08-13) */
+    .dropdown-inner{flex-direction:column;align-items:stretch;padding:6px 0;max-width:none;
+      --dd-nudge:0px;transform:none}
     .dropdown a{padding:10px 34px;font-size:13px;color:rgba(255,255,255,.6)}
     .dropdown a:hover{color:var(--violet-3)}
     .dropdown a::after{display:none}
@@ -3306,7 +3342,5 @@ if('serviceWorker' in navigator){
 <script src="/assets/app.js" defer></script>
 <script src="/assets/interests.js"></script>
 <script src="/assets/my-main.js"></script>
-<!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->
-<script src="/assets/pwa-install.js" defer></script>
 </body>
 </html>
