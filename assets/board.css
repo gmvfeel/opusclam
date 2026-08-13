@@ -439,6 +439,17 @@ html[data-theme="dark"] .board-form{
      붙어 보이지 않게 아래를 조금 띄웁니다 */
   .board-feat-react{margin-right:0;padding-top:0;margin-bottom:4px}
   .board-feat-prev{-webkit-line-clamp:3}
+
+  /* ★ 2026-08-13 · 「글쓰기」를 쪽수 <b>아래 줄</b>로 내립니다
+       .board-actions 가 position:absolute; right:0 이어서 쪽수 줄 <b>위에
+       겹쳐</b> 있었습니다. 넓은 화면에서는 쪽수가 가운데에 모여 겹치지
+       않지만, 좁은 화면에서는 쪽수가 오른쪽까지 늘어나 「다음」 단추가
+       글쓰기 뒤로 숨었습니다.
+     ★ 자리를 빼앗지 않게 static 으로 돌리고 위아래로 놓습니다. */
+  .board-foot{flex-direction:column;align-items:stretch;gap:14px}
+  .board-foot .board-pager{width:100%;justify-content:center}
+  .board-actions{position:static;justify-content:center}
+  .board-write{padding:11px 22px}
 }
 @media(max-width:560px){.board-feat-body.has-img{flex-direction:column;gap:14px}.board-feat-img{width:100%;height:180px}}
 
