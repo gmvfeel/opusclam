@@ -145,7 +145,7 @@ export const QNA4 = [
 /* ════════ 전공 · 진로 ════════ */
 
 {
-  board: 'qna', track: '전공·실기', category: '기악전공',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'etuede3392', keywords: '연습량,부상,손목,건강',
   title: '연습을 많이 하면 손이 아픈데 참고 해야 하나요',
   body:
@@ -169,7 +169,7 @@ export const QNA4 = [
 },
 
 {
-  board: 'qna', track: '전공·실기', category: '성악전공',
+  board: 'qna', track: '전공별', category: '성악전공',
   author: 'fach5580', keywords: '성종,파흐,음역,배역',
   title: '제 목소리가 어느 성종인지 어떻게 아나요',
   body:
@@ -192,7 +192,7 @@ export const QNA4 = [
 },
 
 {
-  board: 'qna', track: '전공·실기', category: '음악사/이론전공',
+  board: 'qna', track: '전공별', category: '음악사/이론전공',
   author: 'thesis6238', keywords: '논문,자료찾기,음악학,연구',
   title: '음악 논문을 찾을 때 어디부터 보시나요',
   body:
@@ -239,7 +239,7 @@ export const QNA4 = [
 },
 
 {
-  board: 'qna', track: '무대·기획', category: '대관관련',
+  board: 'qna', track: '음악지식', category: '대관관련',
   author: 'antrag6612', keywords: '대관,피아노,조율,준비',
   title: '대관할 때 피아노 조율은 누가 하나요',
   body:
@@ -264,7 +264,7 @@ export const QNA4 = [
 /* ════════ 유학 ════════ */
 
 {
-  board: 'qna', track: '학교·유학', category: '해외유학',
+  board: 'qna', track: '음악지식', category: '해외유학',
   author: 'diplom7723', keywords: '유학,오디션,영상,지원',
   title: '유학 지원할 때 영상 심사는 어떻게 준비하나요',
   body:

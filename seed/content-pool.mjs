@@ -26,6 +26,15 @@
           ★ 자동시드를 하루 두 번에서 <b>한 번</b>으로 줄였습니다.
             남은 것으로 두 배 오래 갑니다.
      7차  qna-5(21) · news-3(14)                  = 35
+    11차  qna-6(7)                                 = 7
+          ★ 2026-08-13 · 일곱 글 <b>모두 파트너가 주신 것</b>입니다.
+            전공별 정보나눔 — 작곡전공 4 · 기악전공 3.
+          ★ 파트너 글에 「작곡」 「연주 · 연주자」로 적혀 있었는데,
+            화면 분류에 그 이름이 없어 <b>작곡전공 · 기악전공</b>으로
+            옮겼습니다. 다른 값을 넣으면 어느 분류에도 안 잡힙니다.
+          ★ 「무대 위에서 나를 잃지 않기」는 10년 차 연주자의 긴 기록입니다
+            (785자). 이런 글이 게시판의 결을 잡아 줍니다.
+
     10차  modern-4(7)                              = 7
           ★ 2026-08-13 · 일곱 글 <b>모두 파트너가 주신 것</b>입니다.
             리게티 아트모스페르 · 케이지 4′33″ · 전자음악 사조 ·
@@ -92,6 +101,7 @@ import { QNA5 } from './pool/qna-5.mjs';
 import { NEWS3 } from './pool/news-3.mjs';
 import { OPUSNITY } from './pool/opusnity.mjs';
 import { MODERN4 } from './pool/modern-4.mjs';
+import { QNA6 } from './pool/qna-6.mjs';
 import { ADMISSION5 } from './pool/admission-5.mjs';
 import { HOTTOPIC5 } from './pool/hottopic-5.mjs';
 import { MODERN3 } from './pool/modern-3.mjs';
@@ -139,6 +149,7 @@ export const POOL = {
     ...NEWS3,
     ...OPUSNITY,
     ...MODERN4,
+    ...QNA6,
     ...ADMISSION5,
     ...HOTTOPIC5,
     ...MODERN3,

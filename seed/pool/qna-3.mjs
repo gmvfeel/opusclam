@@ -107,7 +107,7 @@ export const QNA3 = [
 /* ════════ 학교·유학 ════════ */
 
 {
-  board: 'qna', track: '학교·유학', category: '해외유학',
+  board: 'qna', track: '음악지식', category: '해외유학',
   author: 'sprache3096', keywords: '어학,독일어,유학준비,어학증명',
   title: '유학 준비에서 어학은 언제부터 시작하는 것이 좋을까요',
   body:
@@ -125,7 +125,7 @@ export const QNA3 = [
 },
 
 {
-  board: 'qna', track: '학교·유학', category: '음악학교',
+  board: 'qna', track: '음악지식', category: '음악학교',
   author: 'transfer5261', keywords: '편입,학점인정,실기시험,전공변경',
   title: '음대 편입은 무엇을 준비해야 하나요',
   body:
@@ -144,7 +144,7 @@ export const QNA3 = [
 },
 
 {
-  board: 'qna', track: '학교·유학', category: '음악학교',
+  board: 'qna', track: '음악지식', category: '음악학교',
   author: 'stipend4478', keywords: '장학금,등록금,학비지원,예술지원',
   title: '음대 장학금은 어떤 종류가 있나요',
   body:
@@ -167,7 +167,7 @@ export const QNA3 = [
 /* ════════ 전공·실기 ════════ */
 
 {
-  board: 'qna', track: '전공·실기', category: '기악전공',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'metronom7048', keywords: '연습법,느린연습,정확도,효율',
   title: '느리게 연습하라는 말이 정확히 어느 정도인가요',
   body:
@@ -186,7 +186,7 @@ export const QNA3 = [
 },
 
 {
-  board: 'qna', track: '전공·실기', category: '성악전공',
+  board: 'qna', track: '전공별', category: '성악전공',
   author: 'atem3315', keywords: '호흡,지지,성악,횡격막',
   title: '호흡 지지라는 말이 몸의 어디를 쓰는 것인가요',
   body:
@@ -205,7 +205,7 @@ export const QNA3 = [
 },
 
 {
-  board: 'qna', track: '전공·실기', category: '기악전공',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'schmerz9174', keywords: '통증,부상예방,연습시간,휴식',
   title: '연습하다 손목이 아픈데 계속해도 되는 걸까요',
   body:
@@ -224,7 +224,7 @@ export const QNA3 = [
 },
 
 {
-  board: 'qna', track: '전공·실기', category: '음악사/이론전공',
+  board: 'qna', track: '전공별', category: '음악사/이론전공',
   author: 'analyse6183', keywords: '악곡분석,화성분석,공부법,이론',
   title: '악곡 분석은 무엇부터 손대야 하나요',
   body:
@@ -248,7 +248,7 @@ export const QNA3 = [
 /* ════════ 무대·기획 ════════ */
 
 {
-  board: 'qna', track: '무대·기획', category: '대관관련',
+  board: 'qna', track: '음악지식', category: '대관관련',
   author: 'plakat7052', keywords: '홍보,포스터,관객모집,독주회',
   title: '작은 독주회 관객은 어떻게 모으시나요',
   body:
@@ -270,7 +270,7 @@ export const QNA3 = [
 },
 
 {
-  board: 'qna', track: '무대·기획', category: '연주자/연주단체/작곡과',
+  board: 'qna', track: '음악지식', category: '연주자/연주단체/작곡과',
   author: 'programm8264', keywords: '프로그램구성,연주순서,독주회,곡배치',
   title: '연주 순서는 어떤 기준으로 정하나요',
   body:

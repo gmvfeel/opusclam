@@ -62,7 +62,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '음악지식', category: '악기',
+  board: 'qna', track: '음악지식', category: '연주자/연주단체/작곡과',
   author: 'holzwahl3357', keywords: '악기,나무,단풍,가문비,제작',
   title: '현악기는 왜 앞판과 뒷판의 나무가 다른가요',
   body:
@@ -86,7 +86,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '음악지식', category: '연주관습',
+  board: 'qna', track: '음악지식', category: '연주/공연/음반',
   author: 'taktschlag2264', keywords: '지휘,박자,젓기,업비트',
   title: '지휘자가 첫 박을 젓기 전에 손을 위로 드는 것에 뜻이 있나요',
   body:
@@ -110,7 +110,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '음악지식', category: '악기',
+  board: 'qna', track: '음악지식', category: '연주자/연주단체/작곡과',
   author: 'transpon6685', keywords: '이조악기,클라리넷,호른,조성',
   title: '악보에 적힌 음과 실제로 나는 음이 다른 악기가 있다고요',
   body:
@@ -134,7 +134,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '음악지식', category: '감상',
+  board: 'qna', track: '음악지식', category: '연주/공연/음반',
   author: 'absolut1188', keywords: '절대음감,청음,상대음감',
   title: '절대음감이 없으면 음악을 하기 어려운 걸까요',
   body:
@@ -160,7 +160,7 @@ export const QNA5 = [
 /* ════════ 전공·실기 ════════ */
 
 {
-  board: 'qna', track: '전공·실기', category: '연습',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'blattwend5641', keywords: '악보넘기기,페이지터너,암기',
   title: '독주회에서 악보 넘기는 문제를 어떻게 해결하시나요',
   body:
@@ -184,7 +184,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '전공·실기', category: '연주',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'lampenfieb4429', keywords: '무대공포,긴장,호흡,리허설',
   title: '무대에 서면 손이 떨려서 연습한 것이 안 나옵니다',
   body:
@@ -210,7 +210,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '전공·실기', category: '연습',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'metronom6614', keywords: '연습기록,계획,효율',
   title: '연습 시간을 재는 것과 내용을 적는 것 중 어느 쪽이 나을까요',
   body:
@@ -234,7 +234,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '전공·실기', category: '실내악',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'kammermus8802', keywords: '실내악,자리배치,앙상블,소리',
   title: '실내악에서 앉는 자리를 바꾸면 소리가 달라지나요',
   body:
@@ -258,7 +258,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '전공·실기', category: '악기',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'feuchte2681', keywords: '습도,악기관리,보관,케이스',
   title: '장마철에 악기를 어떻게 두고 계신가요',
   body:
@@ -286,7 +286,7 @@ export const QNA5 = [
 /* ════════ 학교·유학 ════════ */
 
 {
-  board: 'qna', track: '학교·유학', category: '입시',
+  board: 'qna', track: '음악지식', category: '입시/진로관련',
   author: 'vorspiel4183', keywords: '실기시험,곡선정,입시,레퍼토리',
   title: '실기 시험 곡을 어려운 것으로 골라야 유리한가요',
   body:
@@ -310,7 +310,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '학교·유학', category: '유학',
+  board: 'qna', track: '음악지식', category: '해외유학',
   author: 'gasthoer5936', keywords: '유학,청강,수업,사전답사',
   title: '유학 갈 학교의 수업을 미리 볼 수 있는 방법이 있을까요',
   body:
@@ -335,7 +335,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '학교·유학', category: '학교생활',
+  board: 'qna', track: '음악지식', category: '음악학교',
   author: 'begleiter7025', keywords: '반주,학점,협업,실기시험',
   title: '반주를 맡아 주는 친구에게 어떻게 하는 것이 맞을까요',
   body:
@@ -361,7 +361,7 @@ export const QNA5 = [
 /* ════════ 무대·기획 ════════ */
 
 {
-  board: 'qna', track: '무대·기획', category: '무대',
+  board: 'qna', track: '음악지식', category: '공연홀',
   author: 'buehnenli5417', keywords: '조명,무대,악보,눈부심',
   title: '무대 조명 때문에 악보가 잘 안 보인 적이 있습니다',
   body:
@@ -385,7 +385,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '무대·기획', category: '기획',
+  board: 'qna', track: '음악지식', category: '연주/공연/음반',
   author: 'programm5104', keywords: '프로그램북,해설,저작권,편집',
   title: '프로그램북 곡 해설은 어떻게 쓰는 것이 좋을까요',
   body:
@@ -411,7 +411,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '무대·기획', category: '기획',
+  board: 'qna', track: '음악지식', category: '연주/공연/음반',
   author: 'ticketing6749', keywords: '초대,예매,좌석,운영',
   title: '작은 연주회에서 초대 손님 좌석을 어떻게 관리하시나요',
   body:
@@ -437,7 +437,7 @@ export const QNA5 = [
 /* ════════ 전공별 ════════ */
 
 {
-  board: 'qna', track: '전공별', category: '성악',
+  board: 'qna', track: '전공별', category: '성악전공',
   author: 'chorstim8146', keywords: '합창,성부,블렌딩,발성',
   title: '합창에서 제 소리가 튄다는 말을 들었습니다',
   body:
@@ -461,7 +461,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '전공별', category: '국악',
+  board: 'qna', track: '전공별', category: '기타전공',
   author: 'gugak4472', keywords: '국악,협업,조율,창작',
   title: '국악기와 서양악기를 함께 쓸 때 무엇을 먼저 정해야 할까요',
   body:
@@ -486,7 +486,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '전공별', category: '작곡',
+  board: 'qna', track: '전공별', category: '작곡전공',
   author: 'auftrag2843', keywords: '위촉,작곡,협의,초연',
   title: '연주자에게 위촉을 받았는데 무엇을 합의해 두어야 하나요',
   body:
@@ -512,7 +512,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '전공별', category: '피아노',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'pedalfrag3625', keywords: '페달,피아노,울림,악보',
   title: '악보에 페달 표시가 없는 곡은 어떻게 판단하나요',
   body:
@@ -537,7 +537,7 @@ export const QNA5 = [
 },
 
 {
-  board: 'qna', track: '전공별', category: '관악',
+  board: 'qna', track: '전공별', category: '기악전공',
   author: 'rohrbau5390', keywords: '리드,관악,보관,습도',
   title: '리드를 여러 개 돌려 쓰라는 말의 뜻이 무엇인가요',
   body:
