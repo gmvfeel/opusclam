@@ -1222,18 +1222,44 @@ img.oc-imgload{
     pointer-events:none;
   }
   .board-actions:empty{display:none}
+  /* ★ 2026-08-14 · 밋밋하다는 파트너 지적으로 <b>결</b>을 넣었습니다
+       ① 왼쪽 짙은 보라 → 오른쪽 밝은 보라 <b>그라데이션</b>
+          (서브메뉴 고르개와 같은 계열이라 화면의 결이 맞습니다)
+       ② 위쪽에 <b>가는 밝은 선</b>(inset) — 단추가 살짝 도드라집니다
+       ③ 아주 느린 <b>광택 한 줄</b>이 6초마다 지나갑니다 — 「눌러도
+          되는 것」이라는 신호입니다. 움직임을 싫어하는 설정
+          (prefers-reduced-motion)에서는 멈춥니다
+       ④ 글자 앞에 <b>연필</b>을 둡니다 (그림 파일 없이 SVG 로) */
   .board-actions .board-write{
-    pointer-events:auto;
-    display:block; width:100%;
+    pointer-events:auto; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    width:100%; height:var(--oc-write-h,52px);
     border:0; border-radius:0;
-    background:var(--violet); color:#fff;
-    height:var(--oc-write-h,52px); line-height:var(--oc-write-h,52px);
     padding:0; text-align:center;
-    font-size:15px; font-weight:700; letter-spacing:-.01em;
-    box-shadow:0 -8px 20px -14px rgba(20,18,40,.45);
+    font-size:15px; font-weight:800; letter-spacing:-.01em;
+    color:#fff;
+    background:linear-gradient(100deg, #33255a 0%, #4c3d8b 46%, #6a58b4 100%);
+    box-shadow:0 -10px 24px -14px rgba(20,18,40,.5),
+               inset 0 1px 0 rgba(255,255,255,.22);
   }
-  .board-actions .board-write:hover,
-  .board-actions .board-write:active{background:var(--violet)}
+  /* 연필 */
+  .board-actions .board-write::before{
+    content:''; flex:0 0 auto; width:17px; height:17px;
+    background:no-repeat center/contain
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L20 8l-4-4L4 16v4z'/%3E%3Cpath d='M14 6l4 4'/%3E%3C/svg%3E");
+    opacity:.92;
+  }
+  /* 광택 한 줄 */
+  .board-actions .board-write::after{
+    content:''; position:absolute; top:0; bottom:0; left:-40%; width:38%;
+    background:linear-gradient(100deg, transparent 0%, rgba(255,255,255,.20) 50%, transparent 100%);
+    transform:skewX(-14deg);
+    animation:ocWriteSheen 6s ease-in-out infinite;
+    pointer-events:none;
+  }
+  .board-actions .board-write:active{
+    background:linear-gradient(100deg, #2b1f4c 0%, #43367a 46%, #5d4da0 100%);
+  }
 
   /* 단추가 놓인 화면만 아래를 더 비웁니다 */
   html.oc-has-write body{
@@ -1250,3 +1276,16 @@ img.oc-imgload{
   html.oc-menu-open .board-actions{display:none}
 }
 html[data-theme="dark"] .board-actions .board-write{box-shadow:0 -8px 20px -14px rgba(0,0,0,.8)}
+
+@keyframes ocWriteSheen{
+  0%   { left:-40%; }
+  55%  { left:120%; }
+  100% { left:120%; }
+}
+@media (prefers-reduced-motion:reduce){
+  .board-actions .board-write::after{animation:none;display:none}
+}
+html[data-theme="dark"] .board-actions .board-write{
+  background:linear-gradient(100deg, #241a40 0%, #3a2f6b 46%, #52449a 100%);
+  box-shadow:0 -10px 24px -14px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.16);
+}
