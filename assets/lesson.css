@@ -1006,6 +1006,22 @@ html.ln-page .site-header:not(.solid) header.masthead{
     word-break: keep-all; }
   .ln-tabs{ margin-top: 24px; }
   .ln-tabs a{ min-height: 42px; padding: 9px 6px; font-size: 12.5px; }
+  /* ★ 2026-08-13 (2차) · 일곱째 칸이 <b>두 칸을 차지</b>하게 합니다
+       탭이 일곱인데 2열이라 마지막 칸 오른쪽이 <b>빈 자리</b>로 남았습니다.
+       가로줄과 세로줄이 그 자리에서 끊겨 「틀이 깨진」 것처럼 보였습니다.
+     ★ 홀수 개일 때만 걸립니다 — 탭을 여덟으로 늘리면 저절로 안 걸립니다. */
+  .ln-tabs a:last-child:nth-child(odd){ grid-column: 1 / -1; }
+
+  /* ★ 2026-08-13 (2차) · 알약 단추에서 글자가 삐져나온 것
+       카드가 좁아(약 150px) 「CLASS INFORMATION →」이 두 줄로 감기는데
+       높이가 26px 로 <b>못박혀</b> 있어서 아래로 삐져나왔습니다.
+     ★ 한 줄로 붙여 두고(nowrap) 글자·여백을 줄여 칸에 들어가게 합니다.
+       높이도 못박지 않고 여백으로 잡습니다. */
+  .ln-pill{
+    height: auto; min-height: 26px; padding: 5px 10px;
+    font-size: 9.5px; letter-spacing: .06em; gap: 5px;
+    white-space: nowrap; box-sizing: border-box; max-width: 100%;
+  }
   .ln-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
   .ln-tabs{ grid-template-columns: repeat(2, 1fr); }
   /* ★ 2026-08-13 · 3·4번째 칸의 윗선을 <b>되살립니다</b>
