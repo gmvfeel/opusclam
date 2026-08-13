@@ -177,6 +177,10 @@
     /* ★ 2026-08-13 · -265px → -155px (110px 왼쪽으로 되돌림)
          LIFEPOP 이 SHOPPING 보다 110px 오른쪽에 있었습니다. */
     --dd-nudge:max(-236px, min(-155px, (100vw - 1140px) / 2 - 236px))}
+  .nav-item--recruit .dropdown-inner{
+    /* ★ 2026-08-13 · 리쿠르트 하위 메뉴를 오른쪽으로 (파트너 요청)
+         기본값 81px 왼쪽이라 대메뉴보다 훨씬 왼쪽에 있었습니다. */
+    --dd-nudge:max(-241px, min(-160px, (100vw - 1140px) / 2 - 241px))}
   .dropdown a{position:relative;font-size:13px;color:#9a9baa;padding:5px 18px;white-space:nowrap;letter-spacing:-.01em;transition:color .15s}
   .dropdown a:not(:last-child)::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--line-2)}
   .dropdown a:hover{color:#363845}
