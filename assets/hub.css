@@ -817,3 +817,33 @@
     .hb-ptitle span{flex:1 1 100%}
     .hb-ptitle u{margin-left:auto}
   }
+
+/* ══════════════════════════════════════════════════════════════════
+   게시판 탭(.bd-tabs) — 좁은 화면에서 옆으로 밀기 (2026-08-14)
+   ──────────────────────────────────────────────────────────────────
+   ★ 무엇이 깨졌나 (파트너 지적)
+     커뮤니티 메인 「새 글」 탭이 여섯 칸입니다. 390px 화면에서 한 칸이
+     65px 밖에 안 되는데 글자를 묶어 두지 않아 <b>「뉴 스 / 공 지」처럼
+     한 글자씩 세로로</b> 쌓였습니다. 현대음악·태교 탭도 같은 짜임입니다.
+   ★ 줄을 바꾸지 않고 <b>옆으로 밀게</b> 합니다 — 두 줄이 되면 어느 것이
+     켜졌는지 알아보기 어렵습니다(마이페이지 탭과 같은 판단입니다).
+   ★ 세로 스크롤바를 막습니다 — 한 축을 auto 로 두면 다른 축도 auto 가
+     되고, 켜진 탭의 margin-bottom:-1.5px 이 상자를 넘어 세로 스크롤바를
+     만듭니다(마이페이지에서 겪은 것과 같습니다). 그래서 그 값도 0 으로.
+   ══════════════════════════════════════════════════════════════════ */
+@media(max-width:760px){
+  .bd-tabs{
+    flex-wrap:nowrap;
+    overflow-x:auto; overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+  }
+  .bd-tabs::-webkit-scrollbar{display:block;height:3px}
+  .bd-tabs::-webkit-scrollbar:vertical{display:none;width:0}
+  .bd-tabs::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+  .bd-tab{
+    flex:0 0 auto; white-space:nowrap;
+    padding:11px 13px; font-size:12.5px;
+    margin-bottom:0;
+  }
+}

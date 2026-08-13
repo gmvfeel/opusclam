@@ -601,7 +601,16 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
     var st = document.createElement('style');
     st.id = 'oc-auth-dw-css';
     st.textContent = 'body > nav.main{display:none}'
-      + '@media(max-width:' + MOBILE + 'px){body > nav.main{display:flex}}';
+      + '@media(max-width:' + MOBILE + 'px){body > nav.main{display:flex}}'
+      /* ★ 2026-08-14 · 서랍 아래 바깥 링크(WIXON·LPSTOCK·BOOKLPS)의 글꼴이
+           <b>명조체</b>로 나왔습니다 (파트너 지적).
+           그 규칙은 style.css 의 `.m-community{font-family:var(--serif)}` 인데,
+           --serif 값이 두 파일에서 다릅니다 —
+             style.css : Pretendard (산세리프)
+             auth.css  : Nanum Myeongjo (명조)
+           회원 화면은 auth.css 가 <b>뒤에</b> 오므로 auth.css 값이 이겨
+           명조가 됐습니다. 이 화면에서만 산세리프로 되돌립니다. */
+      + '@media(max-width:' + MOBILE + 'px){body > nav.main .m-community{font-family:var(--sans)}}';
     document.head.appendChild(st);
   }
 
