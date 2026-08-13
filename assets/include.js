@@ -628,3 +628,14 @@
   s.defer = true;
   document.head.appendChild(s);
 })();
+
+/* 모바일 아래 고정 메뉴 싣기 — 2026-08-13
+   ★ 같은 까닭입니다 — 화면 126개가 이 파일을 이미 부릅니다. */
+(function () {
+  if (window.__ocTabJs) return;
+  window.__ocTabJs = true;
+  var s = document.createElement('script');
+  s.src = '/assets/tabbar.js';
+  s.defer = true;
+  document.head.appendChild(s);
+})();
