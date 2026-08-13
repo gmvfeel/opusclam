@@ -73,6 +73,10 @@
   ];
 
   var CSS = ''
+    /* ★ 띠 높이를 <b>CSS 변수로도</b> 내놓습니다 (2026-08-14)
+         게시판 「글쓰기」가 이 띠 위에 고정으로 붙습니다(assets/board.css).
+         그쪽에서 68 을 다시 적으면 높이를 바꿀 때 반드시 어긋납니다. */
+    + ':root{--oc-tab-h:' + H + 'px}'
     /* 띠 */
     + '.oc-tab{position:fixed;left:0;right:0;bottom:0;z-index:1500;display:none;'
     +   'height:' + H + 'px;box-sizing:border-box;'
