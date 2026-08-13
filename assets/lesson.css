@@ -992,9 +992,18 @@ html.ln-page .site-header:not(.solid) header.masthead{
        ★ 영문을 <b>지우지 않습니다</b> — 같은 뜻을 국문이 아래에 적고
          있지만, 이 화면의 결(브랜드 목소리)이라 남깁니다. 줄바꿈만 풀어
          글이 자연스럽게 흐르게 했습니다. */
-  .ln-hero-en{ margin-top: 18px; font-size: 14px; line-height: 1.5; }
-  .ln-hero-en br{ display: none; }
-  .ln-hero-ko{ margin-top: 14px; font-size: 14.5px; line-height: 1.6; }
+  /* ★ 2026-08-13 (2차) · 줄바꿈을 <b>되살립니다</b> (파트너 지적)
+       줄바꿈을 풀었더니 세 문장이 이어져 「…MASTER CLASS. New /
+       classes are added periodically.」 처럼 <b>문장 가운데에서</b>
+       끊겼습니다. 원래 <br> 자리가 문장 끝이라 그쪽이 맞습니다.
+     ★ 대신 글자를 더 줄여 <b>한 문장이 한 줄에</b> 들어가게 합니다.
+     ★ 국문은 word-break:keep-all 로 <b>낱말째로</b> 끊습니다 —
+       그러지 않으면 「마스터 클 / 래스」 처럼 낱말이 갈라집니다. */
+  .ln-logo{ width: min(690px, 68vw); }
+  .ln-hero-en{ margin-top: 16px; font-size: 12.5px; line-height: 1.6;
+    word-break: keep-all; }
+  .ln-hero-ko{ margin-top: 13px; font-size: 13px; line-height: 1.65;
+    word-break: keep-all; }
   .ln-tabs{ margin-top: 24px; }
   .ln-tabs a{ min-height: 42px; padding: 9px 6px; font-size: 12.5px; }
   .ln-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
