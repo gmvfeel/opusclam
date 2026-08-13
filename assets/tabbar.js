@@ -95,6 +95,10 @@
     /* ★ 위쪽 ≡ 는 감춥니다 — 같은 것이 둘이면 헷갈립니다.
          전체메뉴 안의 닫기(×)는 그대로 둡니다. */
     +   '.mast-tools .fullmenu-btn,.mast-tools .burger{display:none !important}'
+    /* ★ 회원 화면(.gnb)의 ≡ 도 함께 감춥니다 — 그쪽은 짜임이 달라
+         위 선택자에 걸리지 않았습니다. 눌러 주는 것은 코드로 하므로
+         감춰도 전체메뉴는 열립니다. */
+    +   '.gnb .burger{display:none !important}'
     + '}';
 
   function injectCSS() {
@@ -151,8 +155,18 @@
          있게 되어(assets/header.js), 나중에 그쪽을 고쳐도 함께 따릅니다.
        ★ 헤더가 늦게 들어오는 화면이 있어, 누를 때 다시 찾습니다. */
     nav.querySelector('.oc-tab-more').addEventListener('click', function () {
+      /* ① 본 화면 — 헤더의 전체메뉴 단추 */
       var btn = d.getElementById('fullMenuBtn');
       if (btn) { btn.click(); return; }
+      /* ② 회원 화면(.gnb) — 그쪽은 .burger 가 전체메뉴를 엽니다.
+           ★ assets/auth.js 가 그 단추를 눌렀을 때 <b>전체메뉴를 만들고
+             style.css 를 끼워 넣습니다.</b> 그래서 우리가 직접 열면
+             모양이 없는 메뉴가 나옵니다 — 반드시 그 단추를 눌러야 합니다.
+           ★ 이것이 없어서 로그인·회원가입 화면에서 「전체」가 아무 일도
+             하지 않았습니다 (파트너 지적). */
+      var bg = d.querySelector('.gnb .burger') || d.querySelector('.burger');
+      if (bg) { bg.click(); return; }
+      /* ③ 그래도 없으면 이미 들어와 있는 전체메뉴를 엽니다 */
       var fm = d.getElementById('fullMenu');
       if (fm) { fm.classList.add('open'); d.body.style.overflow = 'hidden'; }
     });
