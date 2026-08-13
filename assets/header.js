@@ -123,7 +123,19 @@ document.querySelectorAll('.tabs').forEach(function(t){
   var overlay=document.getElementById('navOverlay');
   var sh=document.getElementById('siteHeader');
   if(!burger||!nav||!overlay)return;
-  function open(){nav.classList.add('open');overlay.classList.add('open');burger.classList.add('open');burger.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';if(sh)sh.style.zIndex='95';}
+  /* ★ 2026-08-14 · 열 때 <b>지금 있는 갈래를 펼칩니다</b> (파트너 지시)
+       하이라이트만으로는 「오퍼니티」·「핫토픽」 같은 하위 항목이 접혀
+       보이지 않아, 옆 게시판으로 옮기려면 한 번 더 눌러야 했습니다.
+     ★ 열 때마다 다시 맞춥니다 — 앞서 손으로 열어 둔 다른 갈래는 접습니다.
+       (그러지 않으면 두 갈래가 함께 펼쳐져 목록이 길어집니다) */
+  function expandActive(){
+    if(window.innerWidth>880)return;                 /* 넓은 화면은 hover 로 동작합니다 */
+    var cur=nav.querySelector('.nav-item > a.active');
+    nav.querySelectorAll('.nav-item.open').forEach(function(o){o.classList.remove('open');});
+    if(cur&&cur.parentElement&&cur.parentElement.querySelector('.dropdown'))
+      cur.parentElement.classList.add('open');
+  }
+  function open(){nav.classList.add('open');overlay.classList.add('open');burger.classList.add('open');burger.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';if(sh)sh.style.zIndex='95';expandActive();}
   function close(){nav.classList.remove('open');overlay.classList.remove('open');burger.classList.remove('open');burger.setAttribute('aria-expanded','false');document.body.style.overflow='';if(sh)sh.style.zIndex='';}
   burger.addEventListener('click',function(){nav.classList.contains('open')?close():open();});
   overlay.addEventListener('click',close);

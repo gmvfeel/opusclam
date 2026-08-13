@@ -513,8 +513,30 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
     setExpanded(open);
   }
 
+  /* 회원 화면 서랍도 열 때 지금 있는 갈래를 펼칩니다 (2026-08-14)
+     ★ 표시(.active)는 assets/include.js 가 붙입니다. 그런데 그 함수는
+       `.site-header` 안만 보고, 이 서랍은 body 밑에 붙습니다 —
+       그래서 여기서 <b>폴더가 같은</b> 대메뉴를 직접 찾습니다.
+       (마이페이지처럼 대메뉴에 없는 화면이면 아무것도 펼치지 않습니다) */
+  function dwExpand(){
+    if (!dwBox || !isNarrow()) return;
+    dwBox.querySelectorAll('.nav-item.open').forEach(function(o){ o.classList.remove('open'); });
+    var dir = location.pathname.replace(/[^/]*$/, '');
+    var cur = dwBox.querySelector('.nav-item > a.active');
+    if (!cur) {
+      var tops = dwBox.querySelectorAll('.nav-item > a[href^="/"]');
+      for (var i = 0; i < tops.length; i++) {
+        var h = tops[i].getAttribute('href').replace(/[^/]*$/, '');
+        if (h === dir) { cur = tops[i]; cur.classList.add('active'); break; }
+      }
+    }
+    if (cur && cur.parentElement && cur.parentElement.querySelector('.dropdown'))
+      cur.parentElement.classList.add('open');
+  }
+
   function dwSet(open){
     if (!dwBox) return;
+    if (open) dwExpand();
     dwBox.classList.toggle('open', !!open);
     if (dwOv) dwOv.classList.toggle('open', !!open);
     document.body.style.overflow = open ? 'hidden' : '';
