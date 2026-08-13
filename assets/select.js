@@ -75,6 +75,9 @@
     + '.ocs.open .ocs-list{display:block}'
     /* 위로 열기 — 아래에 자리가 없을 때 */
     + '.ocs.up .ocs-list{top:auto;bottom:calc(100% + 5px)}'
+    /* 오른쪽에 붙여 열기 — 목록이 화면 오른쪽으로 삐져나갈 때
+       (모바일에서는 가로 넘침을 막아 두었으므로 잘려 보이지 않게 해야 합니다) */
+    + '.ocs.right .ocs-list{left:auto;right:0}'
     + '.ocs-list li{margin:0;padding:0;list-style:none}'
     + '.ocs-opt{display:block;width:100%;box-sizing:border-box;padding:11px 15px;'
     +   'background:none;border:0;font:inherit;font-size:13px;text-align:left;'
@@ -162,6 +165,10 @@
       /* 아래에 자리가 없으면 위로 엽니다 */
       var r = box.getBoundingClientRect();
       box.classList.toggle('up', (w.innerHeight - r.bottom) < 240 && r.top > 260);
+      /* 목록이 오른쪽으로 삐져나가면 오른쪽에 붙여 엽니다 */
+      box.classList.remove('right');
+      var lw = box._list.scrollWidth || r.width;
+      if (r.left + Math.max(lw, r.width) > w.innerWidth - 8) box.classList.add('right');
     }
     box.classList.toggle('open', !!on);
     box._btn.setAttribute('aria-expanded', on ? 'true' : 'false');

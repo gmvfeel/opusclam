@@ -1210,6 +1210,23 @@
     .m-community{ min-height:40px; display:flex !important; align-items:center; font-size:11.5px; }
   }
   
+  /* ══ 모바일 · 가로로 새는 것 막기 (2026-08-13) ═════════════
+     ★ 왜 두나
+       파트너 휴대폰에서 화면이 오른쪽으로 한참 밀리는 일이 있었습니다.
+       실제 자료를 넣어 열 화면을 390px 로 다시 재었는데 <b>재현되지
+       않았습니다</b>(전부 390px). 기기·브라우저에 따라 무엇 하나가
+       삐져나가는 것으로 보입니다.
+     ★ 그래서 원인을 계속 쫓는 대신 <b>새지 못하게</b> 막습니다.
+       가로로 넘치는 것이 있어도 화면 밖으로 밀려나지 않습니다.
+     ★ 세로 스크롤·붙어 있는 헤더·서랍(≡)에는 영향이 없습니다 —
+       가로만 막습니다. 모바일 표는 이미 자기 상자에서 옆으로 밀립니다
+       (.pdb-tablewrap 의 overflow-x:auto).
+     ★ 넓은 화면에는 걸지 않습니다 — 거기서 막으면 진짜 문제를
+       못 보고 지나칩니다. */
+  @media (max-width:768px){
+    html{overflow-x:hidden}
+    body{overflow-x:hidden;max-width:100%}
+  }
 </style>
 </head>
 <body>
