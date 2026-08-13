@@ -640,6 +640,21 @@ html.ln-page .site-header:not(.solid) header.masthead{
   margin-top: 26px; padding: 54px 20px; text-align: center;
   border: 1px dashed var(--ln-line2); background: var(--ln-bg2);
   font-size: 13.5px; line-height: 1.9; color: var(--ln-tx2);
+  /* ★ 2026-08-14 · 낱말 <b>중간에서 끊겼습니다</b> (파트너 지적)
+       「등록된 강의가 아직 없습 / 니다.」 처럼 됐습니다. 한국어는
+       기본값(break-word 계열)에서 글자 단위로 끊깁니다 —
+       keep-all 로 <b>어절 단위</b>로 넘깁니다.
+     ★ 주소처럼 띄어쓰기 없는 긴 글자는 그래도 넘칠 수 있으므로
+       break-word 를 함께 둡니다(둘은 서로 다른 성질입니다). */
+  word-break: keep-all; overflow-wrap: break-word;
+  /* ★ 2026-08-14 · 상자가 <b>절반 폭</b>이었습니다 (파트너 지적)
+       이 상자는 카드 목록(.ln-grid) <b>안에</b> 들어갑니다. 그 격자가
+       좁은 화면에서 2열(넓은 화면 4열)이므로 상자가 <b>칸 하나</b>만
+       차지했습니다. 「인스트럭터 정보」는 격자가 1열(.ln-ins-grid)이라
+       전체 폭으로 보였던 것입니다 — 상자 잘못이 아니라 자리 잘못입니다.
+     ▶ 몇 열이든 <b>줄 전체</b>를 쓰게 합니다. 격자가 아닌 곳에서는
+       이 값이 아무 일도 하지 않으므로 그대로 두어도 안전합니다. */
+  grid-column: 1 / -1;
 }
 .ln-none b{ color: var(--ln-tx); }
 /* ★ 2026-08-13 · 빈 안내 상자의 단추를 <b>아랫줄</b>로 (파트너 지시)
@@ -653,8 +668,23 @@ html.ln-page .site-header:not(.solid) header.masthead{
 .ln-none .ln-vd{
   display: flex; width: fit-content;
   margin-left: auto; margin-right: auto;
+  /* ★ 2026-08-14 · 알약 안 글자가 두 줄로 접혔습니다 (파트너 지적)
+       상자가 좁은 칸(약 190px)에 들어갈 때 「인스트럭터 신청 →」 이
+       접혔습니다. 한 줄로 묶고, 자간·좌우 여백을 줄여 좁은 칸에서도
+       들어가게 합니다(자간 .1em 은 아홉 글자에서 9px 을 더 먹습니다).
+     ★ 그래도 모자라면 알약이 상자 폭을 넘지 않게 줄어듭니다. */
+  white-space: nowrap; max-width: 100%;
+  letter-spacing: .02em; padding: 0 13px; gap: 6px;
 }
-.ln-msg{ padding: 40px 0; text-align: center; font-size: 13px; color: var(--ln-tx3); }
+/* ★ 2026-08-14 · 좁은 화면·좁은 칸에서 상자 좌우 여백을 줄입니다
+     .ln-none 의 좌우 20px 이 알약이 쓸 자리를 40px 먹어, 190px 칸에서는
+     알약 안쪽이 114px 밖에 남지 않았습니다(글자가 112px) — 그래서
+     접혔습니다. 여백을 줄여 여유를 둡니다. */
+@media (max-width:860px){
+  .ln-none{ padding: 44px 14px; font-size: 13px; }
+}
+/* 「불러오는 중…」·오류 안내도 같은 자리에 뜹니다 — 같이 줄 전체로 */
+.ln-msg{ padding: 40px 0; text-align: center; font-size: 13px; color: var(--ln-tx3); grid-column: 1 / -1; }
 
 /* ══ 아래 띠 (회원권 안내) ═══════════════════════════════════
    시안 — 보라→남보라 그라데이션 + GET STARTED
