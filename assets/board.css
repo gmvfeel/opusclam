@@ -426,6 +426,19 @@ html[data-theme="dark"] .board-form{
   .board-feat{position:relative}
   .board-ribbon{top:14px;right:-44px;width:140px;font-size:11px;padding:4px 0}
   .board-feat-body{padding-right:8px}
+
+  /* ★ 2026-08-13 · 제목과 좋아요 수를 <b>위아래로</b> 놓습니다
+       나란히 두면 좋아요 칸(약 100px)과 리본 자리(48px)가 폭을 먹어
+       제목 몫이 140px 밖에 남지 않았습니다. 그래서 제목이
+       「서른일곱에 / 첼로 시작해 / 서 1년 됐습 / 니다」 처럼
+       <b>낱말 가운데에서</b> 끊겼습니다.
+     ★ 제목 첫 줄이 리본 아래로 들어가지 않게 오른쪽을 비워 둡니다. */
+  .board-feat-titlerow{flex-direction:column;gap:9px}
+  .board-feat-title{padding-right:52px;font-size:1.28em;line-height:1.35}
+  /* 좋아요·싫어요는 미리보기 <b>아래</b>가 아니라 제목 아래에 붙습니다 —
+     붙어 보이지 않게 아래를 조금 띄웁니다 */
+  .board-feat-react{margin-right:0;padding-top:0;margin-bottom:4px}
+  .board-feat-prev{-webkit-line-clamp:3}
 }
 @media(max-width:560px){.board-feat-body.has-img{flex-direction:column;gap:14px}.board-feat-img{width:100%;height:180px}}
 
