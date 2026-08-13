@@ -258,6 +258,68 @@ html[data-theme="dark"] .pdb-table tbody tr:not(.pdb-norow):hover td{background:
     outline:none; border-color:var(--violet-2, #5b4b9e);
     box-shadow:0 0 0 3px rgba(91,75,158,.12);
   }
+
+  /* ══ 2026-08-14 · <b>눈에 뜨이게</b> (파트너 지시) ══════════════
+     ★ 무엇이 문제였나 — 두 가지가 겹쳤습니다
+       ① 흰 바탕 + 옅은 회색 테두리라 <b>흰 화면에 묻혔습니다.</b>
+          위에 「홈 / Database」 길잡이, 아래에 큰 제목이 있어 그 사이
+          옅은 상자는 <b>고를 수 있는 것으로 보이지 않았습니다.</b>
+       ② 폭이 <b>절반</b>이었습니다. assets/select.js 가 크기를 잴 때
+          상자를 inline-block 으로 바꾸는데, 그러면 안쪽 select 의
+          width:100% 가 <b>제 내용 폭으로 접힙니다</b>(부모 폭이 아직
+          없으므로). 그래서 「전체」 글자만큼만 남았습니다.
+          → 인라인 값을 이겨야 하므로 !important 로 되돌립니다.
+     ★ 색은 보라를 채웁니다 — 이 화면에서 유일하게 <b>누르는 것</b>이므로
+       채운 색이 맞습니다(옆에 다투는 단추가 없습니다).
+     ★ 아래 규칙은 두 벌입니다 — select.js 가 올려 세운 단추(.ocs-btn)와,
+       그것이 안 실렸을 때의 기본 select. 둘 다 같은 모양이어야 합니다. */
+
+  /* 폭 되돌리기 — select.js 가 인라인으로 넣은 값을 이깁니다 */
+  .pdb-subnav-sel .ocs{ display:block !important; width:100% !important; }
+
+  /* ① select.js 가 만든 단추 */
+  .pdb-subnav-sel .ocs-btn{
+    height:48px; padding:0 16px;
+    font-size:14.5px; font-weight:800; letter-spacing:-.01em;
+    color:#fff;
+    background:linear-gradient(135deg, #3b2b63 0%, #5b4b9e 100%);
+    border:0; border-radius:12px;
+    box-shadow:0 10px 22px -12px rgba(59,43,99,.6);
+  }
+  .pdb-subnav-sel .ocs-btn::after{ opacity:.9; border-top-color:#fff; }
+  .pdb-subnav-sel .ocs-btn:hover,
+  .pdb-subnav-sel .ocs.open .ocs-btn{
+    color:#fff; border:0;
+    background:linear-gradient(135deg, #47356f 0%, #6a58b4 100%);
+    box-shadow:0 12px 26px -12px rgba(59,43,99,.7);
+  }
+
+  /* ② select.js 가 없을 때의 기본 select — 같은 모양으로 */
+  .pdb-subnav-sel select{
+    height:48px; font-size:14.5px; font-weight:800;
+    color:#fff;
+    background:linear-gradient(135deg, #3b2b63 0%, #5b4b9e 100%);
+    border:0;
+    box-shadow:0 10px 22px -12px rgba(59,43,99,.6);
+    background-image:linear-gradient(45deg, transparent 50%, #fff 50%),
+                     linear-gradient(135deg, #fff 50%, transparent 50%),
+                     linear-gradient(135deg, #3b2b63 0%, #5b4b9e 100%);
+    background-position:calc(100% - 21px) 21px, calc(100% - 15px) 21px, 0 0;
+    background-size:6px 6px, 6px 6px, 100% 100%;
+    background-repeat:no-repeat, no-repeat, no-repeat;
+  }
+  .pdb-subnav-sel select option{ color:var(--text, #2b2740); background:#fff; }
+
+  /* ★ 어두운 화면 — select.js 가 넣는
+       `html[data-theme="dark"] .ocs-btn{background:#17171a}` 이
+       특이도가 <b>더 높아</b> 위 보라를 덮습니다. 같은 힘으로 되살립니다
+       (어두운 바탕에서는 한 단계 옅은 보라가 눈에 편합니다). */
+  html[data-theme="dark"] .pdb-subnav-sel .ocs-btn{
+    color:#fff; border:0;
+    background:linear-gradient(135deg, #2c2144 0%, #4a3d80 100%);
+    box-shadow:0 10px 22px -14px rgba(0,0,0,.8);
+  }
+  html[data-theme="dark"] .pdb-subnav-sel .ocs-btn::after{ border-top-color:#fff; }
 }
 
 
