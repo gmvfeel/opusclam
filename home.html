@@ -1284,7 +1284,8 @@
        그 아래 붙는 것이 자연스럽습니다.
      ★ 안쪽 .m-actions 는 서랍과 같은 결입니다 — assets/app.js 가
        그 선택자를 이미 보고 있어 로그인 상태가 저절로 반영됩니다. */
-  .fm-auth{margin-top:34px;padding-top:22px;border-top:1px solid rgba(255,255,255,.16)}
+  /* ★ 2026-08-13 · 맨 위로 올렸으므로 선을 <b>아래쪽</b>에 둡니다 */
+  .fm-auth{margin:0 0 30px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.16)}
   .fullmenu .fm-auth .m-actions{
     display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:0;margin:0;
   }
@@ -1302,9 +1303,15 @@
   /* 로그인한 뒤 app.js 가 넣는 「이너스페이스」도 같은 모양이 됩니다 */
   .fullmenu .fm-auth .m-actions a[data-oc-inner]{border-style:dashed}
   @media(max-width:600px){
-    .fm-auth{margin-top:26px;padding-top:18px}
+    .fm-auth{margin:0 0 22px;padding-bottom:18px}
     .fullmenu .fm-auth .m-actions{gap:8px 12px}
     .fullmenu .fm-auth .m-actions a{min-height:44px;padding:0 16px;font-size:13px}
+  }
+  /* ★ 좁은 화면에서는 전체메뉴 본문을 <b>위에서부터</b> 쌓습니다 —
+       가운데 정렬이면 회원 줄이 화면 밖으로 밀려납니다.
+       (.fullmenu-body 는 넓은 화면에서 align-items:center 입니다) */
+  @media(max-width:880px){
+    .fullmenu-body{align-items:flex-start;padding-top:26px}
   }
 </style>
 </head>
