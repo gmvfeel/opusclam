@@ -254,7 +254,9 @@
   .nav-item--spot .dropdown-inner{
     --dd-nudge:min(-11px, max(-200px, (100vw - 1140px) / 2 - 92px))}
   .nav-item--shop .dropdown-inner{
-    --dd-nudge:max(-346px, min(-265px, (100vw - 1140px) / 2 - 346px))}
+    /* ★ 2026-08-13 · -265px → -155px (110px 왼쪽으로 되돌림)
+         LIFEPOP 이 SHOPPING 보다 110px 오른쪽에 있었습니다. */
+    --dd-nudge:max(-236px, min(-155px, (100vw - 1140px) / 2 - 236px))}
   .dropdown a{position:relative;font-size:13px;color:#4a4c5c;font-weight:500;padding:5px 18px;white-space:nowrap;letter-spacing:-.01em;transition:color .15s}
   .dropdown a:not(:last-child)::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--line-2)}
   .dropdown a:hover{color:var(--violet-2,#5b4b9e)}
