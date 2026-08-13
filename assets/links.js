@@ -55,8 +55,15 @@
       + '.ocl-t em{font-style:normal;font-size:11px;font-weight:600;color:var(--text-3,#8a8c9e);background:var(--paper-2,#f2f2f7);border-radius:99px;padding:2px 8px}'
       + '.ocl-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}'
       + '@media(max-width:900px){.ocl-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}'
-      + '@media(max-width:560px){.ocl-cards{grid-template-columns:1fr}}'
-      + '.ocl-c{display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px solid var(--line,#e4e4ec);border-radius:12px;text-decoration:none;background:transparent;transition:border-color .15s,transform .15s}'
+      /* ★ 2026-08-13 · 1fr → minmax(0,1fr) (모바일 실기 확인)
+           `1fr` 은 `minmax(auto,1fr)` 입니다. 그래서 칸의 <b>가장 좁아질 수
+           있는 너비</b>가 내용 길이가 되는데, .ocl-n 이 white-space:nowrap 이라
+           긴 논문 제목이 그대로 칸 너비가 되어 <b>화면 오른쪽으로 넘쳤습니다.</b>
+           minmax(0,…) 로 두면 0 까지 좁아질 수 있어 말줄임(…)이 걸립니다.
+           ※ 위 900px 규칙은 처음부터 minmax(0,1fr) 이라 문제가 없었습니다 —
+             그래서 태블릿에서는 안 보이고 폰에서만 보였습니다. */
+      + '@media(max-width:560px){.ocl-cards{grid-template-columns:minmax(0,1fr)}}'
+      + '.ocl-c{display:flex;align-items:center;gap:12px;min-width:0;padding:13px 15px;border:1px solid var(--line,#e4e4ec);border-radius:12px;text-decoration:none;background:transparent;transition:border-color .15s,transform .15s}'
       + 'a.ocl-c:hover{border-color:var(--violet-2,#7c63b0);transform:translateY(-2px)}'
       + '.ocl-c--off{opacity:.72}'
       + '.ocl-av{width:42px;height:42px;border-radius:50%;background:var(--paper-2,#f2f2f7);border:1px solid var(--line,#e4e4ec);display:grid;place-items:center;font-family:var(--display,inherit);font-weight:700;font-size:15px;color:var(--text-3,#8a8c9e);flex:0 0 auto}'
