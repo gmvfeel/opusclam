@@ -302,6 +302,17 @@
 
   /* 성장 추이 */
   .hb-stat{display:grid;grid-template-columns:1fr 210px;gap:20px;align-items:stretch;margin-top:2px}
+  /* ★ 2026-08-13 · 모바일에서 1열로 (390px 실측)
+       위 규칙은 화면 폭과 무관하게 오른쪽에 210px 를 떼어 줍니다.
+       390px 에서는 왼쪽 그래프 자리가 <b>110px</b> 밖에 남지 않아
+       성장 곡선과 월별 막대가 상자 밖으로 잘렸습니다.
+     ★ 숫자 칸은 세로 넷 → <b>가로 2×2</b> 로 눕힙니다. 세로로 두면
+       넷이 화면 한 판을 먹습니다. */
+  @media(max-width:760px){
+    .hb-stat{grid-template-columns:minmax(0,1fr)}
+    .hb-figs{flex-direction:row;flex-wrap:wrap;gap:8px}
+    .hb-fig{flex:1 1 calc(50% - 4px);min-width:0}
+  }
   .hb-curve{position:relative;border:1px solid var(--line);border-radius:14px;background:var(--paper);
     padding:10px 14px 4px;color:var(--text);overflow:hidden;
     display:flex;align-items:center;min-height:262px}

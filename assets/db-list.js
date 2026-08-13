@@ -552,6 +552,61 @@ window.OCList = (function () {
       });
     }
 
+    /* ── 모바일 · 조건 고르개 접기 (2026-08-13) ─────────────────
+       ★ 왜 필요한가 (390px 로 재어 보고 알았습니다)
+         인물DB 목록에서 <b>목록의 첫 줄이 852px 지점</b>에 있었습니다.
+         화면 높이가 844px 이므로 <b>첫 화면에 목록이 한 줄도 안 보입니다.</b>
+         조건 고르개 다섯 개가 세로로 쌓여 163px, 「DB 등록」이 한 줄 더
+         49px 를 차지했기 때문입니다.
+
+       ★ 조건은 <b>필요할 때만</b> 펼칩니다
+         목록을 보러 온 사람에게 조건창을 먼저 내밀 까닭이 없습니다.
+         단추에 <b>지금 걸린 조건 수</b>를 적어 두어, 접혀 있어도
+         「무엇이 걸려 있는지」 알 수 있게 합니다.
+
+       ★ 여기 한 곳에 넣습니다 — db 폴더 화면이 스물한 개입니다.
+         화면마다 단추를 붙이면 반드시 어긋납니다.
+       ★ 넓은 화면에서는 CSS 가 단추를 감춥니다(style.css 참고). */
+    (function () {
+      var bar = document.querySelector('.pdb-toolbar');
+      var box = document.querySelector('.pdb-selects');
+      if (!bar || !box) return;
+      if (document.querySelector('.pdb-filtoggle')) return;   /* 두 번 붙지 않게 */
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'pdb-filtoggle';
+      btn.setAttribute('aria-expanded', 'false');
+
+      /* 걸린 조건 수 — 첫 항목(전체)이 아닌 고르개를 셉니다 */
+      function activeCount() {
+        var n = 0;
+        box.querySelectorAll('select').forEach(function (s) {
+          if (s.selectedIndex > 0) n++;
+        });
+        return n;
+      }
+      function label() {
+        var n = activeCount();
+        btn.textContent = n ? ('조건 ' + n + '개' + (bar.classList.contains('filopen') ? ' 접기' : '')) 
+                            : (bar.classList.contains('filopen') ? '조건 접기' : '조건으로 걸러 보기');
+        btn.classList.toggle('on', n > 0);
+      }
+      btn.addEventListener('click', function () {
+        var open = bar.classList.toggle('filopen');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        label();
+      });
+      box.querySelectorAll('select').forEach(function (s) {
+        s.addEventListener('change', label);
+      });
+
+      bar.insertBefore(btn, box);
+      /* 조건이 이미 걸려 있으면(주소로 들어온 경우) 펼친 채로 엽니다 */
+      if (activeCount() > 0) bar.classList.add('filopen');
+      label();
+    })();
+
     /* 검색 배선: Enter · 검색버튼 · 돋보기 아이콘 · 셀렉트 변경 */
     (function () {
       var inp = document.querySelector('.pdb-search input');

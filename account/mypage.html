@@ -255,6 +255,14 @@
     scrollbar-width:none;
   }
   .mp-tabs::-webkit-scrollbar{display:none}
+  /* ★ 2026-08-13 · 좁은 화면에서는 <b>가느다란 줄을 보여 줍니다</b> (390px 실측)
+       탭 넓이가 619px 인데 상자는 350px 입니다. 옆으로 밀 수 있는데
+       표시가 없어 <b>탭이 더 있는 줄 모르고</b> 지나갑니다. */
+  @media(max-width:760px){
+    .mp-tabs{scrollbar-width:thin}
+    .mp-tabs::-webkit-scrollbar{display:block;height:3px}
+    .mp-tabs::-webkit-scrollbar-thumb{background:var(--line,#d8d8e2);border-radius:99px}
+  }
   .mp-tab{
     flex:0 0 auto; position:relative;
     padding:11px 14px 13px; border:0; background:none;
