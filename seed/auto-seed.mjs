@@ -88,6 +88,17 @@ const BOARDS = {
     body: 'html', authorName: true, likes: true, dislikes: true,
     perRun: [0, 1],
   },
+  /* ★ 2026-08-13 · 오퍼니티 (파트너 요청)
+       핫토픽보다 자유롭게 쓰는 커뮤니티 게시판입니다.
+     ★ 설정이 핫토픽과 <b>똑같습니다</b> — 표만 다릅니다.
+       댓글 외래키도 news_id 입니다(board.js 에 박혀 있어 그렇게 만들었습니다).
+     ★ weekly 를 주지 않습니다 — 커뮤니티 게시판이라 매일 도는 편이
+       자연스럽습니다(핫토픽·지식나눔과 같은 결). */
+  opusnity: {
+    table: 'opusnity', commentTable: 'opusnity_comments', fk: 'news_id',
+    body: 'html', authorName: true, likes: true, dislikes: true,
+    perRun: [0, 1],
+  },
   admission_community: {
     table: 'admission_community', commentTable: 'admission_community_comments', fk: 'news_id',
     body: 'html', authorName: true, likes: true, dislikes: true,

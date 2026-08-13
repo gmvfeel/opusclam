@@ -26,6 +26,12 @@
           ★ 자동시드를 하루 두 번에서 <b>한 번</b>으로 줄였습니다.
             남은 것으로 두 배 오래 갑니다.
      7차  qna-5(21) · news-3(14)                  = 35
+     9차  opusnity(20)                             = 20
+          ★ 2026-08-13 · <b>새 게시판</b> 오퍼니티의 첫 글들입니다.
+            비어 있는 게시판에는 아무도 쓰지 않아 스무 개를 먼저 채웁니다.
+          ★ 앞 여섯 개는 <b>파트너가 직접 주신 글</b>입니다 — 말투를
+            손보지 않았습니다. 「ㅎㅎ」 「ㅇ_ㅇ」 같은 것이 실제 결이고,
+            다듬으면 오히려 만들어진 글처럼 됩니다.
      8차  admission-5(14) · hottopic-5(12)
           modern-3(8) · prenatal-3(8) · utility-3(8) = 50
           ★ 7차와 같은 날 이어서 만들었습니다. 남은 것이 열흘~한 달
@@ -73,6 +79,7 @@ import { MODERN2 } from './pool/modern-2.mjs';
 import { PRENATAL2 } from './pool/prenatal-2.mjs';
 import { QNA5 } from './pool/qna-5.mjs';
 import { NEWS3 } from './pool/news-3.mjs';
+import { OPUSNITY } from './pool/opusnity.mjs';
 import { ADMISSION5 } from './pool/admission-5.mjs';
 import { HOTTOPIC5 } from './pool/hottopic-5.mjs';
 import { MODERN3 } from './pool/modern-3.mjs';
@@ -118,6 +125,7 @@ export const POOL = {
     ...PRENATAL2,
     ...QNA5,
     ...NEWS3,
+    ...OPUSNITY,
     ...ADMISSION5,
     ...HOTTOPIC5,
     ...MODERN3,
