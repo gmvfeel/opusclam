@@ -201,6 +201,46 @@ function jitterNow(maxHours = 5) {
   const d = new Date(Date.now() - rnd(5, maxHours * 60) * 60 * 1000);
   return d.toISOString();
 }
+
+/* ★★ 2026-08-13 · 한꺼번에 채울 때 날짜를 <b>여러 날에 흩습니다</b> ★★
+   ─────────────────────────────────────────────────────────────
+   ★ 무엇이 문제였나 (파트너 지적)
+     --fill=25 로 오퍼니티를 채웠더니 <b>스물다섯 개가 모두 오늘 날짜</b>가
+     됐습니다. 목록을 열면 같은 날짜가 죽 늘어서 「한꺼번에 만든 것」이
+     한눈에 보입니다.
+     까닭은 jitterNow 가 <b>최대 다섯 시간</b>만 뒤로 물리기 때문입니다.
+     평소 회차는 하루 한두 건이라 그게 맞지만, 한꺼번에 채울 때는
+     맞지 않습니다.
+
+   ★ 어떻게 흩나
+     담을 건수에 맞춰 <b>기간을 정합니다</b> — 하루에 한두 건씩 올라간 것처럼
+     보이도록. 25건이면 열엿새쯤에 걸칩니다.
+     그 기간 안에서 <b>고르지 않게</b> 흩습니다. 날마다 똑같이 한 건이면
+     그것도 기계 같아 보입니다.
+
+   ★ 시각도 사람처럼 둡니다
+     새벽 3~6시는 피합니다 — 그 시간에 글이 올라오는 일은 드뭅니다.
+     저녁(19~23시)에 조금 더 몰리게 둡니다.
+
+   ★ 앞뒤 순서는 걱정하지 않아도 됩니다
+     목록은 created_at 으로 정렬하므로, 흩어 놓으면 저절로 섞입니다. */
+function spreadDate(idx, total) {
+  /* 건수에 맞춘 기간 — 하루 1.5건쯤으로 봅니다. 가장 짧게 3일, 길게 90일 */
+  const days = Math.max(3, Math.min(90, Math.ceil(total / 1.5)));
+  /* idx 를 기준으로 삼되 앞뒤로 흔들어 고르지 않게 만듭니다 */
+  const base = (idx + Math.random()) * (days / Math.max(1, total));
+  const back = Math.min(days, Math.max(0.02, base + (Math.random() - 0.5) * 1.6));
+
+  const d = new Date(Date.now() - back * 86400000);
+  /* 시각 — 새벽 3~6시는 피하고 저녁에 조금 더 몰리게 */
+  const HOURS = [7,8,9,10,11,12,13,14,15,16,17,18,
+                 19,19,20,20,21,21,22,22,23,23,0,1,2];
+  d.setHours(HOURS[Math.floor(Math.random() * HOURS.length)],
+             rnd(0, 59), rnd(0, 59), 0);
+  /* 앞날로 넘어가지 않게 — 오늘 것이 미래가 되면 목록 맨 위가 이상해집니다 */
+  const now = Date.now() - 4 * 60 * 1000;
+  return new Date(Math.min(d.getTime(), now)).toISOString();
+}
 /** 기준 시각 이후 ~ 지금 사이의 임의 시각 (댓글용) */
 function afterButBeforeNow(isoBase, minMinutes = 40) {
   const base = new Date(isoBase).getTime() + minMinutes * 60 * 1000;
@@ -285,7 +325,10 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
       category: p.category,
       title: p.title,
       body: p.body,
-      created_at: jitterNow(),
+      /* ★ 평소 회차는 지금 시각 근처(jitterNow) —
+           한꺼번에 채울 때는 <b>여러 날에 흩습니다</b>(spreadDate).
+           그러지 않으면 담은 것이 모두 오늘 날짜가 됩니다. */
+      created_at: FILL ? spreadDate(i, want) : jitterNow(),
       view_count: rnd(3, 40),
     };
     if (cfg.authorName) row.author_name = p.author || pick(POOL.authors);

@@ -26,6 +26,14 @@
           ★ 자동시드를 하루 두 번에서 <b>한 번</b>으로 줄였습니다.
             남은 것으로 두 배 오래 갑니다.
      7차  qna-5(21) · news-3(14)                  = 35
+    10차  modern-4(7)                              = 7
+          ★ 2026-08-13 · 일곱 글 <b>모두 파트너가 주신 것</b>입니다.
+            리게티 아트모스페르 · 케이지 4′33″ · 전자음악 사조 ·
+            진은숙 · 현대음악 LP · 쇼스타코비치 5번.
+          ★ 제가 손댄 곳 셋 — 사실 오류 하나(뤼미에르 → 피에르 셰페르),
+            깨진 글자 여섯 곳, 어떤 영상인지 모를 유튜브 주소 하나.
+            그 밖의 말투는 손대지 않았습니다.
+
      9차  opusnity(25)                             = 25
           ★ 2026-08-13 · <b>새 게시판</b> 오퍼니티의 첫 글들입니다.
             비어 있는 게시판에는 아무도 쓰지 않아 스무 개를 먼저 채웁니다.
@@ -83,6 +91,7 @@ import { PRENATAL2 } from './pool/prenatal-2.mjs';
 import { QNA5 } from './pool/qna-5.mjs';
 import { NEWS3 } from './pool/news-3.mjs';
 import { OPUSNITY } from './pool/opusnity.mjs';
+import { MODERN4 } from './pool/modern-4.mjs';
 import { ADMISSION5 } from './pool/admission-5.mjs';
 import { HOTTOPIC5 } from './pool/hottopic-5.mjs';
 import { MODERN3 } from './pool/modern-3.mjs';
@@ -129,6 +138,7 @@ export const POOL = {
     ...QNA5,
     ...NEWS3,
     ...OPUSNITY,
+    ...MODERN4,
     ...ADMISSION5,
     ...HOTTOPIC5,
     ...MODERN3,
