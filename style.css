@@ -76,6 +76,9 @@
   @media(max-width:880px){
     .m-community{display:block;margin:10px 24px 4px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);font-family:var(--serif);letter-spacing:.12em;font-size:11px;font-weight:600;transition:color .2s ease}
     .m-community:active{color:#fff}
+    /* ★ 2026-08-13 · 자매 서비스 링크가 <b>셋</b>이 되었습니다.
+         첫 줄만 윗선을 갖고, 나머지는 붙여 한 덩이로 보이게 합니다. */
+    .m-community + .m-community{border-top:0;padding-top:0;margin-top:0}
   }
   @media(max-width:880px){
     .util .left{white-space:nowrap;min-width:0}
