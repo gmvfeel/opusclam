@@ -73,6 +73,20 @@
     .pdb-table th.c-era,.pdb-table td.c-era{display:none}
     .pdb-table th.c-no,.pdb-table td.c-no{display:none}
   }
+  /* ★ 2026-08-13 · 휴대폰에서는 <b>용어와 설명</b>만 남깁니다 (390px 실기)
+       390px 에서 네 칸(용어·구분·설명·작품)이 남아 좁은 칸이 7%·6% 로
+       <b>40px</b> 밖에 되지 않았습니다. 그래서 머리글이
+       「구 / 분」·「작 / 품」 처럼 한 글자씩 끊겼습니다.
+     ★ 폭을 다시 나눠 줍니다 — 칸을 감추기만 하면 %가 남아
+       용어 칸이 좁게 남습니다.
+     ★ 구분·작품은 상세 화면에서 볼 수 있습니다. */
+  @media(max-width:560px){
+    .pdb-table th.c-field,.pdb-table td.c-field{display:none}
+    .pdb-table th.c-link,.pdb-table td.c-link{display:none}
+    .pdb-table th.c-name{width:34%}
+    .pdb-table th.c-sum{width:66%}
+    .pdb-table th{white-space:nowrap}
+  }
 </style>
 </head>
 <body data-header="overlay">
