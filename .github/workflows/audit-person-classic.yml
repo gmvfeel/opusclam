@@ -1,0 +1,91 @@
+name: 인물 · 클래식 무관 후보 찾기 (주 1회)
+
+# ★ 무엇을 하나
+#   인물DB 를 훑어 클래식 음악인이 아닐 수 있는 사람을 골라
+#   oc_person_audit 표에 <후보와 근거만> 담습니다.
+#
+# ★ 아무것도 지우지 않습니다
+#   숨기는 것은 admin/person-audit.html 에서 사람이 봅니다.
+#   판단이 필요한 일은 SQL 자동판정 대신 도구를 만듭니다 —
+#   학술DB 정리에서 배운 것입니다.
+#
+# ★ 왜 필요했나 (2026-08-13)
+#   「가장 알려진 57명」을 뽑았더니 그중 10명이 클래식이 아니었습니다 —
+#   F1 경주 선수(피아노를 잘 쳤음), 외과의사(브람스의 친구), 소설가,
+#   발명가, 발레 교육자, 팝 가수. 위키데이터에서 음악 낱말이 걸린 사람을
+#   받아 왔기 때문입니다.
+#
+# ★ 주 1회로 둔 까닭
+#   한 번 훑으면 그 뒤로는 새로 들어온 인물만 봐야 합니다. 매일 돌 일이
+#   아닙니다. 처음에는 손으로 몇 번 돌려 전체를 훑으십시오
+#   (daily_limit 을 크게 주시면 됩니다).
+#
+# ★ 시각 — KST 일요일 06:47. persons 를 쓰는 것들과 벌려 두었습니다.
+
+on:
+  schedule:
+    - cron: '47 21 * * 6'     # KST 일요일 06:47
+  workflow_dispatch:
+    inputs:
+      daily_limit:
+        description: '이번 실행에서 물어볼 인물 수 (기본 3000)'
+        required: false
+        default: '3000'
+        type: string
+      dry_run:
+        description: '담지 않고 무엇이 후보인지만 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+concurrency:
+  group: oc-persons
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 무관 후보 찾기 실행
+        run: node scripts/audit-person-classic.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DAILY_LIMIT: ${{ github.event.inputs.daily_limit || '3000' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run == 'yes' && '1' || '0' }}
+
+  # ── 실패를 이슈로 알립니다 (다른 워크플로와 같은 방식) ──────
+  oc-notify-failure:
+    needs: audit
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi
