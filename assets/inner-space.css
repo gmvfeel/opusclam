@@ -751,15 +751,34 @@ html.ins-open [data-oc-inner]{
        이므로 그 순서 그대로 세웁니다. 영상은 지난번대로 맨 끝입니다. */
     grid-template-areas: 'me' 'menu' 'soon' 'pie' 'link' 'right' 'vid';
   }
-  .ins-top{ grid-template-columns: 1fr; }
-  .ins-title{ grid-column: 1; font-size: 22px; }
-  .ins-top-l, .ins-top-r{ grid-column: 1; justify-content: center; }
-  .ins-tb{ flex: 1 1 auto; justify-content: center; height: 36px; }
-  /* ★ 단추가 셋이 되어 좁은 화면에서는 <b>줄을 바꿔</b> 놓습니다
-     (First Main · 회원정보 수정 · INNER SPACE CLOSE) */
-  /* 단추가 셋이라 좁은 화면에서는 줄을 바꿔 놓습니다 */
-  .ins-top-l, .ins-top-r{ flex-wrap: wrap; }
-  .ins-close{ letter-spacing: .02em; }
+  /* ★ 2026-08-14 · 맨 위 줄을 다시 짰습니다 (파트너 지시)
+       ─────────────────────────────────────────────────────────────
+       전에는 [First Main][회원정보 수정] 이 한 줄, 제목이 그 아래,
+       [CLOSE ✕] 가 또 아래여서 <b>석 줄</b>이 되고 규칙이 없어 보였습니다.
+       또 단추가 flex:1 1 auto 로 <b>가로를 다 먹어</b> 커 보였습니다.
+     ▶ 제목을 <b>맨 위</b>로 올리고, 그 아래에 단추 셋을 <b>한 줄로</b>
+       가운데 모읍니다. 단추는 내용만큼만 차지합니다.
+     ★ 격자(grid)를 flex 로 바꿉니다 — 격자에서는 왼쪽·오른쪽 묶음이
+       서로 다른 줄에 놓여 한 줄로 모을 수 없습니다. order 로 제목을
+       앞으로 보냅니다(마크업은 손대지 않습니다). */
+  .ins-top{
+    display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: center;
+    gap: 8px; margin-bottom: 16px;
+  }
+  .ins-title{ order: -1; width: 100%; font-size: 22px; text-align: center; }
+  .ins-top-l, .ins-top-r{ flex: 0 0 auto; justify-content: center; gap: 8px; }
+  /* 단추 — 작게 (32→28px · 12.5→11.5px · 좌우 17→12px) */
+  .ins-tb{
+    flex: 0 0 auto; justify-content: center;
+    height: 28px; padding: 0 12px; font-size: 11.5px;
+  }
+  /* 닫기는 <b>✕ 하나</b>로 — 「CLOSE」 는 감춥니다 */
+  /* gap:9px 과 「CLOSE」 뒤 공백이 남아 ✕ 가 한쪽으로 쏠리므로
+     틈을 없애고 가운데로 모읍니다 */
+  .ins-close{ letter-spacing: 0; width: 30px; padding: 0; gap: 0; justify-content: center; }
+  .ins-close .ins-close-t{ display: none; }
+  .ins-close i{ font-style: normal; font-size: 13px; line-height: 1; }
 }
 
 /* ══════════════════════════════════════════════════════════════

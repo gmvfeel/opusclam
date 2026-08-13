@@ -193,8 +193,11 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       +     '<span class="ins-top-r">'
       +       '<button type="button" class="ins-tb ins-close" id="insClose">'
       /* ★ 글자를 <b>CLOSE</b> 로 줄였습니다 (2026-08-05 · 파트너 지시)
-             「INNER SPACE CLOSE」 는 제목과 같은 말이 겹쳐 길었습니다. */
-      +         'CLOSE <i>&#10005;</i></button>'
+             「INNER SPACE CLOSE」 는 제목과 같은 말이 겹쳐 길었습니다.
+         ★ 2026-08-14 · 「CLOSE」 를 <b>따로 묶었습니다</b> — 좁은 화면에서는
+             그 글자를 감추고 <b>✕ 만</b> 남깁니다(assets/inner-space.css).
+             단추 셋이 한 줄에 들어가야 해서 자리를 아낍니다. */
+      +         '<span class="ins-close-t">CLOSE</span> <i>&#10005;</i></button>'
       +     '</span>'
       +   '</div>'
 
