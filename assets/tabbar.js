@@ -13,21 +13,33 @@
      여섯 대메뉴를 다 넣으면 한 칸이 65px 이 되어 글자가 8px 로 줄어듭니다.
      그러면 오늘 고친 「작은 글자」가 다시 무너집니다.
 
-       홈 · DATABASE · 검색 · 커뮤니티 · 전체(≡)
+       홈 · DATABASE · 검색 · 커뮤니티 · 마이페이지
 
      · 검색을 <b>가운데</b>에 둡니다 — 엄지가 가장 편한 자리이고,
        인물·작품·용어 3만 건이 넘는 사이트에서 검색은 부가 기능이
        아니라 주된 길입니다.
-     · 정보SPOT·레슨:ON·리쿠르트·SHOPPING 은 <b>전체(≡)</b> 안에 있습니다.
-     · 마이페이지는 넣지 않습니다 — 로그인하지 않은 사람에게는
-       죽은 칸이 됩니다. 전체메뉴 안에 이미 있습니다.
+     · 정보SPOT·레슨:ON·리쿠르트·SHOPPING 은 <b>헤더의 ≡</b> 안에 있습니다.
+
+   ★ 2026-08-14 · 파트너 지시로 고친 것
+     ① 다섯째 칸이 「전체(≡)」였습니다 → <b>마이페이지</b>로 바꿉니다.
+        로그인해 있으면 /account/mypage.html, 아니면 /account/login.html
+        로 갑니다. 글자도 「마이페이지 / 로그인」으로 함께 바뀝니다.
+     ② 위쪽 ≡ 를 <b>다시 보이게</b> 합니다 — 전체메뉴는 원래 자리
+        (헤더 오른쪽)에서 원래 방식으로 엽니다. 아래띠는 이제
+        전체메뉴를 열지 않습니다.
+
+   ★ 로그인 여부를 어떻게 압니까
+     supabase-js 가 세션을 브라우저에 담아 둡니다(sb-…-auth-token).
+     그 값이 있으면 로그인으로 봅니다 — <b>물어보지 않으니 값이 0</b>이고
+     칸을 그리는 즉시 정해집니다. 화면이 supabase 를 이미 실었으면
+     (window.__ocSb) 그것으로 한 번 더 맞춥니다. 담긴 값이 만료였다면
+     마이페이지가 「로그인이 필요합니다」를 보여 주므로 길이 막히지
+     않습니다.
 
    ★ 자리를 다투는 것들을 함께 옮깁니다
      맨위로 단추(.to-top)와 PWA 안내 띠(.pwa-install)가 같은 자리에
      있습니다. 띠 높이만큼 올립니다. 본문 아래도 그만큼 비웁니다 —
      그러지 않으면 푸터가 띠에 가립니다.
-
-   ★ 위쪽 ≡ 는 모바일에서 감춥니다 — 같은 것이 둘이면 헷갈립니다.
 
    ★ 화면 파일을 고치지 않습니다 — include.js 가 이 파일을 싣고,
      이 파일이 스스로 띠와 규칙을 넣습니다. 화면 126개를 손대지 않습니다.
@@ -48,7 +60,8 @@
         + '<path d="M4.5 12v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/>',
     find: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
     talk: '<path d="M20 14.5c0 1.1-.9 2-2 2H8l-4 3.5v-14c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2z"/>',
-    more: '<path d="M4 7h16M4 12h16M4 17h16"/>'
+    /* 사람 — 마이페이지 (2026-08-14) */
+    me:   '<circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c0-3.7 3.2-5.6 7.2-5.6s7.2 1.9 7.2 5.6"/>'
   };
 
   var ITEMS = [
@@ -56,7 +69,7 @@
     { k: 'db',   t: 'DATABASE',  href: '/db/index.html',        match: ['/db/'] },
     { k: 'find', t: '검색',      href: '/search.html',          match: ['/search.html'] },
     { k: 'talk', t: '커뮤니티',  href: '/community/index.html', match: ['/community/'] },
-    { k: 'more', t: '전체',      href: '#',                     match: [] }
+    { k: 'me',   t: '마이페이지', href: '/account/mypage.html',  match: ['/account/'] }
   ];
 
   var CSS = ''
@@ -76,6 +89,9 @@
     +   'stroke-linecap:round;stroke-linejoin:round}'
     + '.oc-tab .on{color:var(--violet-2,#7c63b0)}'
     + '.oc-tab .on svg{stroke-width:2}'
+    /* 「마이페이지」는 다섯 글자라 320px 화면(한 칸 64px)에서 끊길 수
+       있습니다 — 자간을 좁히고 한 줄로 묶습니다 */
+    + '.oc-tab span{white-space:nowrap;letter-spacing:-.045em}'
     /* 지금 보고 있는 자리 — 위에 짧은 막대 */
     + '.oc-tab .on::before{content:"";position:absolute;top:0;width:28px;height:2px;'
     +   'border-radius:0 0 3px 3px;background:var(--violet-2,#7c63b0)}'
@@ -92,13 +108,10 @@
     /* ★ 자리를 다투는 것들을 띠 위로 올립니다 */
     +   '.to-top{bottom:calc(' + (H + 12) + 'px + env(safe-area-inset-bottom,0px)) !important}'
     +   '.pwa-install{bottom:calc(' + (H + 10) + 'px + env(safe-area-inset-bottom,0px)) !important}'
-    /* ★ 위쪽 ≡ 는 감춥니다 — 같은 것이 둘이면 헷갈립니다.
-         전체메뉴 안의 닫기(×)는 그대로 둡니다. */
-    +   '.mast-tools .fullmenu-btn,.mast-tools .burger{display:none !important}'
-    /* ★ 회원 화면(.gnb)의 ≡ 도 함께 감춥니다 — 그쪽은 짜임이 달라
-         위 선택자에 걸리지 않았습니다. 눌러 주는 것은 코드로 하므로
-         감춰도 전체메뉴는 열립니다. */
-    +   '.gnb .burger{display:none !important}'
+    /* ★ 2026-08-14 · 위쪽 ≡ 를 감추던 규칙을 <b>지웠습니다</b>.
+         전체메뉴는 헤더 오른쪽(원래 자리)에서 원래 방식으로 엽니다.
+         여기서 감추면 style.css 의 `.burger{display:flex}` 를
+         !important 로 눌러 버려 되살릴 길이 없어집니다. */
     + '}';
 
   function injectCSS() {
@@ -124,6 +137,10 @@
     return '';
   }
 
+  function ico(k) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">' + I[k] + '</svg>';
+  }
+
   function build() {
     if (d.querySelector('.oc-tab')) return;
     injectCSS();
@@ -136,40 +153,65 @@
     var html = '<div class="oc-tab-in">';
     ITEMS.forEach(function (it) {
       var on = (it.k === cur) ? ' on' : '';
-      var ico = '<svg viewBox="0 0 24 24" aria-hidden="true">' + I[it.k] + '</svg>';
-      if (it.k === 'more') {
-        html += '<button type="button" class="oc-tab-more' + on + '" aria-label="전체 메뉴 열기">'
-              + ico + '<span>' + it.t + '</span></button>';
-      } else {
-        html += '<a class="' + on.trim() + '" href="' + it.href + '"'
-              + (on ? ' aria-current="page"' : '') + '>'
-              + ico + '<span>' + it.t + '</span></a>';
-      }
+      var cls = (it.k === 'me' ? 'oc-tab-me' + on : on.trim());
+      html += '<a class="' + cls + '" href="' + it.href + '"'
+            + (on ? ' aria-current="page"' : '') + '>'
+            + ico(it.k) + '<span>' + it.t + '</span></a>';
     });
     html += '</div>';
     nav.innerHTML = html;
     d.body.appendChild(nav);
 
-    /* 전체(≡) — 이미 있는 전체메뉴를 엽니다.
-       ★ 헤더의 단추를 눌러 줍니다. 그러면 여는 방식이 <b>한 곳</b>에만
-         있게 되어(assets/header.js), 나중에 그쪽을 고쳐도 함께 따릅니다.
-       ★ 헤더가 늦게 들어오는 화면이 있어, 누를 때 다시 찾습니다. */
-    nav.querySelector('.oc-tab-more').addEventListener('click', function () {
-      /* ① 본 화면 — 헤더의 전체메뉴 단추 */
-      var btn = d.getElementById('fullMenuBtn');
-      if (btn) { btn.click(); return; }
-      /* ② 회원 화면(.gnb) — 그쪽은 .burger 가 전체메뉴를 엽니다.
-           ★ assets/auth.js 가 그 단추를 눌렀을 때 <b>전체메뉴를 만들고
-             style.css 를 끼워 넣습니다.</b> 그래서 우리가 직접 열면
-             모양이 없는 메뉴가 나옵니다 — 반드시 그 단추를 눌러야 합니다.
-           ★ 이것이 없어서 로그인·회원가입 화면에서 「전체」가 아무 일도
-             하지 않았습니다 (파트너 지적). */
-      var bg = d.querySelector('.gnb .burger') || d.querySelector('.burger');
-      if (bg) { bg.click(); return; }
-      /* ③ 그래도 없으면 이미 들어와 있는 전체메뉴를 엽니다 */
-      var fm = d.getElementById('fullMenu');
-      if (fm) { fm.classList.add('open'); d.body.style.overflow = 'hidden'; }
-    });
+    /* 마이페이지 칸 — 로그인해 있으면 마이페이지, 아니면 로그인 화면 */
+    syncMe();
+    verifyMe();
+  }
+
+  /* 담긴 세션 값으로 즉시 판정 — 네트워크를 쓰지 않습니다 */
+  function hasStoredSession() {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (!k) continue;
+        if (k.indexOf('sb-') === 0 && k.indexOf('-auth-token') > 0) {
+          var v = localStorage.getItem(k);
+          if (v && v.length > 20 && v.indexOf('access_token') >= 0) return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function setMe(logged) {
+    var a = d.querySelector('.oc-tab-me');
+    if (!a) return;
+    a.setAttribute('href', logged ? '/account/mypage.html' : '/account/login.html');
+    var sp = a.querySelector('span');
+    if (sp) sp.textContent = logged ? '마이페이지' : '로그인';
+    a.setAttribute('aria-label', logged ? '마이페이지' : '로그인');
+  }
+
+  function syncMe() { setMe(hasStoredSession()); }
+
+  /* 화면이 supabase 를 이미 실었으면 그것으로 한 번 더 맞춥니다.
+     app.js 가 헤더를 고칠 때 window.__ocSb 를 만들므로 조금 뒤에
+     생깁니다 — 다섯 번까지 1초 간격으로 찾아봅니다. */
+  function verifyMe() {
+    var n = 0;
+    var t = setInterval(function () {
+      n++;
+      var sb = w.__ocSb;
+      if (sb && sb.auth && sb.auth.getSession) {
+        clearInterval(t);
+        try {
+          sb.auth.getSession().then(function (r) {
+            setMe(!!(r && r.data && r.data.session));
+          }, function () {});
+        } catch (e) {}
+        return;
+      }
+      if (n >= 5) clearInterval(t);
+    }, 1000);
   }
 
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', build);
