@@ -164,7 +164,7 @@
       a.onclick=null;
       var tg=document.createElement("i");
       tg.textContent="마이페이지";
-      tg.setAttribute("style", "font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.04em;margin-left:6px;padding:2px 6px;border-radius:4px;border:1px solid currentColor;opacity:.7;vertical-align:1px");
+      tg.setAttribute("style", "font-style:normal;font-size:8.5px;font-weight:800;letter-spacing:.04em;margin-left:5px;padding:1px 5px;border-radius:4px;border:1px solid currentColor;opacity:.7;vertical-align:1px");
       a.appendChild(tg);
     });
     links.join.forEach(function(a){ a.textContent="로그아웃"; a.setAttribute("href","#"); a.onclick=function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); }; });

@@ -676,7 +676,7 @@ function needInnerSpace() {
 
         /* ★ 이름 옆 「마이페이지」 표시 — assets/app.js 와 같은 모양입니다.
            currentColor 라 어느 헤더에서든 색이 따라옵니다. */
-        var MYTAG = '<i style="font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.04em;margin-left:6px;padding:2px 6px;border-radius:4px;border:1px solid currentColor;opacity:.7;vertical-align:1px">마이페이지</i>';
+        var MYTAG = '<i style="font-style:normal;font-size:8.5px;font-weight:800;letter-spacing:.04em;margin-left:5px;padding:1px 5px;border-radius:4px;border:1px solid currentColor;opacity:.7;vertical-align:1px">마이페이지</i>';
 
         /* ★ 회원 종류 (일반) 를 뗐습니다 — assets/app.js 와 같은 까닭 */
         al.innerHTML = '<a href="/account/mypage.html">'+esc(name)+'님'+MYTAG+'</a> '
