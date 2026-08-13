@@ -493,14 +493,53 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
      ★ 꾸미는 규칙(.fullmenu*)은 style.css 에 있습니다. 회원 화면도
        그 파일을 싣습니다.
      ★ 한 번 가져오면 담아 둡니다 — 두 번 받아 오지 않습니다. */
+  /* ★ 2026-08-14 · 좁은 화면에서는 <b>서랍</b>을 엽니다 (파트너 지적)
+       회원 화면에서 ≡ 를 누르면 PC 전체메뉴(01·02 두 칸 펼침)가 나와
+       다른 서브페이지(접히는 서랍)와 <b>달랐습니다</b>. 서브페이지는
+       assets/header.js 가 좁은 화면에서 nav.main 서랍을 엽니다 —
+       회원 화면도 같은 조각(partials/header.html 의 #mainNav)을 가져와
+       같은 방식으로 엽니다. 넓은 화면은 그대로 전체메뉴입니다.
+     ★ 메뉴 목록을 여기 적지 않습니다 — 가져와 씁니다. */
+  var MOBILE = 880;
+  function isNarrow(){ return window.innerWidth <= MOBILE; }
+
   var fmBox = null, fmLoading = false;
+  var dwBox = null, dwOv = null;   /* 서랍 · 서랍 뒤 어두운 막 */
 
   function fmSet(open){
     if (!fmBox) return;
     fmBox.classList.toggle('open', !!open);
     document.body.style.overflow = open ? 'hidden' : '';
+    setExpanded(open);
+  }
+
+  function dwSet(open){
+    if (!dwBox) return;
+    dwBox.classList.toggle('open', !!open);
+    if (dwOv) dwOv.classList.toggle('open', !!open);
+    document.body.style.overflow = open ? 'hidden' : '';
+    setExpanded(open);
+  }
+
+  function setExpanded(open){
     var b = document.querySelector('.gnb .burger');
-    if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (b) {
+      b.setAttribute('aria-expanded', open ? 'true' : 'false');
+      b.classList.toggle('open', !!open);
+    }
+  }
+
+  /* 지금 무엇이 열려 있습니까 */
+  function menuOpen(){
+    return !!((dwBox && dwBox.classList.contains('open'))
+           || (fmBox && fmBox.classList.contains('open')));
+  }
+
+  /* 좁으면 서랍, 넓으면 전체메뉴 */
+  function menuSet(open){
+    if (!open) { dwSet(false); fmSet(false); return; }
+    if (isNarrow() && dwBox) dwSet(true);
+    else fmSet(true);
   }
 
   function fmWire(){
@@ -508,13 +547,62 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
     fmBox.querySelectorAll('[data-fm-close]').forEach(function(el){
       el.addEventListener('click', function(){ fmSet(false); });
     });
-    fmBox.querySelectorAll('.fm-col a').forEach(function(a){
-      a.addEventListener('click', function(){ fmSet(false); });
+    /* ★ 2026-08-14 · `.fm-col a` 였습니다 → <b>모든 링크</b>.
+         회원 줄의 「이너스페이스」·「마이페이지」를 눌렀을 때 메뉴가
+         닫히지 않았습니다 (파트너 지적). 그 줄은 .fm-col 밖입니다. */
+    fmBox.addEventListener('click', function(e){
+      var a = e.target.closest && e.target.closest('a');
+      if (a) fmSet(false);
     });
     /* 헤더 로고를 전체메뉴에도 씁니다 (메인과 같은 처리) */
     var hdr = document.querySelector('.gnb .logo img');
     var fml = fmBox.querySelector('.fm-logo');
     if (hdr && fml) fml.src = hdr.src;
+  }
+
+  function dwWire(){
+    if (!dwBox) return;
+    var cl = dwBox.querySelector('#navClose');
+    if (cl) cl.addEventListener('click', function(){ dwSet(false); });
+    if (dwOv) dwOv.addEventListener('click', function(){ dwSet(false); });
+
+    /* 접힘 — assets/header.js 와 같은 짜임입니다 */
+    dwBox.querySelectorAll('.nav-item > a').forEach(function(a){
+      a.addEventListener('click', function(e){
+        if (!isNarrow()) return;
+        var item = a.parentElement;
+        if (item.querySelector('.dropdown')) {
+          e.preventDefault();
+          dwBox.querySelectorAll('.nav-item.open').forEach(function(o){
+            if (o !== item) o.classList.remove('open');
+          });
+          item.classList.toggle('open');
+        }
+      });
+    });
+
+    /* 그 밖의 링크를 누르면 닫습니다 (회원 줄·바깥 링크 포함) */
+    dwBox.addEventListener('click', function(e){
+      var a = e.target.closest && e.target.closest('a');
+      if (!a) return;
+      var item = a.parentElement;
+      if (item && item.classList.contains('nav-item') && item.querySelector('.dropdown')) return;
+      dwSet(false);
+    });
+
+    window.addEventListener('resize', function(){ if (!isNarrow()) dwSet(false); });
+  }
+
+  /* 서랍은 <b>좁은 화면에서만</b> 보입니다 — style.css 의 880px 이하
+     규칙이 자리를 잡아 주고, 넓은 화면에서는 헤더 안 가로 메뉴 모양이
+     되므로 화면 아래에 그대로 드러납니다. 그래서 감춥니다. */
+  function dwCss(){
+    if (document.getElementById('oc-auth-dw-css')) return;
+    var st = document.createElement('style');
+    st.id = 'oc-auth-dw-css';
+    st.textContent = 'body > nav.main{display:none}'
+      + '@media(max-width:' + MOBILE + 'px){body > nav.main{display:flex}}';
+    document.head.appendChild(st);
   }
 
   /* ★ 전체메뉴의 꾸미는 규칙(.fullmenu*)은 <b>style.css</b> 에 있습니다.
@@ -552,11 +640,29 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       var html = await r.text();
       var tmp = document.createElement('div');
       tmp.innerHTML = html;
+
+      /* 전체메뉴 (넓은 화면) */
       var fm = tmp.querySelector('#fullMenu');
-      if (!fm) { fmLoading = false; return; }
-      document.body.appendChild(fm);
-      fmBox = fm;
-      fmWire();
+      if (fm) { document.body.appendChild(fm); fmBox = fm; fmWire(); }
+
+      /* 서랍 (좁은 화면) — 뒤 어두운 막까지 함께 가져옵니다 */
+      var ov = tmp.querySelector('#navOverlay');
+      var dw = tmp.querySelector('#mainNav');
+      if (dw) {
+        dwCss();
+        if (ov) { document.body.appendChild(ov); dwOv = ov; }
+        document.body.appendChild(dw);
+        dwBox = dw;
+        dwWire();
+      }
+
+      /* ★ 회원 줄을 <b>다시 맞춥니다</b> — 이 메뉴는 화면이 다 그려진
+           뒤에 들어오므로 assets/app.js 가 처음 돌 때는 없었습니다.
+           그래서 로그인해 있는데도 「로그인 · 회원가입」이 그대로
+           보였습니다 (파트너 지적). */
+      if (window.OCAuth && window.OCAuth.refresh) window.OCAuth.refresh();
+
+      if (!fmBox && !dwBox) { fmLoading = false; return; }
     } catch (e) { /* 못 가져오면 아무 일도 하지 않습니다 */ }
     fmLoading = false;
   }
@@ -569,13 +675,13 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       var b = e.target.closest && e.target.closest('.gnb .burger');
       if (!b) return;
       e.preventDefault();
-      if (!fmBox) await fmLoad();
-      if (!fmBox) return;
-      fmSet(!fmBox.classList.contains('open'));
+      if (!fmBox && !dwBox) await fmLoad();
+      if (!fmBox && !dwBox) return;
+      menuSet(!menuOpen());
     });
 
     document.addEventListener('keydown', function(e){
-      if (e.key === 'Escape' && fmBox && fmBox.classList.contains('open')) fmSet(false);
+      if (e.key === 'Escape' && menuOpen()) menuSet(false);
     });
   }
 

@@ -142,6 +142,17 @@ document.querySelectorAll('.tabs').forEach(function(t){
       }
     });
   });
+  /* ★ 2026-08-14 · 그 밖의 링크를 누르면 <b>닫습니다</b> (파트너 지적)
+       회원 줄의 「이너스페이스」는 같은 화면에서 겹창을 열기 때문에,
+       서랍이 그대로 남아 겹창을 가렸습니다. 접히는 대메뉴(하위가 있는
+       것)는 위 아코디언이 맡으므로 여기서 건드리지 않습니다. */
+  nav.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a');
+    if(!a)return;
+    var item=a.parentElement;
+    if(item&&item.classList.contains('nav-item')&&item.querySelector('.dropdown')&&window.innerWidth<=880)return;
+    close();
+  });
   /* reset when resizing back to desktop */
   window.addEventListener('resize',function(){if(window.innerWidth>880)close();});
 })();
@@ -171,7 +182,13 @@ document.querySelectorAll('.tabs').forEach(function(t){
   function closeFm(){fm.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}
   btn.addEventListener('click',openFm);
   fm.querySelectorAll('[data-fm-close]').forEach(function(el){el.addEventListener('click',closeFm);});
-  fm.querySelectorAll('.fm-col a').forEach(function(a){a.addEventListener('click',closeFm);});
+  /* ★ 2026-08-14 · `.fm-col a` 였습니다 → <b>모든 링크</b>.
+       회원 줄(.fm-auth)의 「이너스페이스」·「마이페이지」는 .fm-col 밖이라
+       눌러도 전체메뉴가 닫히지 않았습니다 (파트너 지적). */
+  fm.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a');
+    if(a)closeFm();
+  });
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&fm.classList.contains('open'))closeFm();});
 })();
 

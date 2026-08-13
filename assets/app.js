@@ -263,6 +263,12 @@
     });
   }
 
+  /* ★ 2026-08-14 · 나중에 들어온 헤더·메뉴를 <b>다시 맞출 수 있게</b>
+       밖으로 내놓습니다. 회원 화면의 전체메뉴·서랍은 눌린 뒤에 들어오므로
+       이 파일이 처음 돌 때는 그 안의 「로그인·회원가입」이 없었습니다.
+       (assets/auth.js 가 붙인 직후 이것을 부릅니다) */
+  window.OCAuth = { refresh: updateHeaderAuth };
+
   function ocInit(){ injectFooter(); updateHeaderAuth(); loadEngines(); }
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", ocInit); }
   else { ocInit(); }
