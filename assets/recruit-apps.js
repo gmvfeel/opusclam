@@ -219,9 +219,9 @@
     if (!live.length && !hid.length) {
       box.innerHTML = '<div class="mp-msg">아직 받은 지원이 없습니다.<br><br>'
         /* ★ 2026-08-12 · 「내 공고 보기」가 <b>목록 전체로</b> 갔습니다 (파트너 지적)
-             자기 공고만 모아 보거나 고칠 자리가 없어, 한 번 올리면
-             수정·삭제를 못 했습니다. → 새로 만든 관리 화면으로 보냅니다. */
-        + '<a class="mp-btn ghost" href="/recruit/my.html">내 등록 관리</a> '
+             지금은 이 화면 <b>위쪽</b>에 「내 등록 관리」가 있으므로
+             그 단추를 없앴습니다. recruit/my.html 은 만들었다가
+             파트너 결정으로 <b>거두었습니다</b> — 없는 주소로 보내면 404 입니다. */
         + '<a class="mp-btn primary" href="/recruit/job-write.html">채용정보 올리기</a></div>';
       return;
     }
@@ -231,19 +231,9 @@
       + '<div class="ra-sum">'
       +   '<span>모두 <b>' + live.length + '</b>건</span>'
       +   (unread ? '<span class="ra-sum-new">아직 안 본 것 <b>' + unread + '</b>건</span>' : '')
-      /* ★★ 2026-08-12 · 「내 등록 관리」를 <b>늘 보이는 자리</b>로 옮겼습니다 ★★
-         ───────────────────────────────────────────────────────────
-         ★ 무엇이 잘못됐나
-           처음에는 위쪽 「아직 받은 지원이 없습니다」 안내에만 넣었습니다.
-           그 안내는 <b>지원이 하나도 없을 때만</b> 나옵니다
-           (if (!live.length && !hid.length)).
-           파트너는 지원이 2건 있어서 그 조건에 들지 않아
-           <b>단추가 아예 보이지 않았습니다.</b>
-
-         ★ 그래서 「모두 ○건」 줄 옆에 둡니다 — 이 줄은 <b>늘 나옵니다.</b>
-           올린 공고를 고치거나 마감하는 일은 지원이 있든 없든
-           똑같이 필요합니다. */
-      +   '<a class="ra-sum-manage" href="/recruit/my.html">내 등록 관리 &rarr;</a>'
+      /* ★ 여기에 「내 등록 관리」 링크를 두었다가 <b>뺐습니다</b> (2026-08-12)
+           같은 화면 <b>위쪽</b>에 관리 자리가 생겼으므로(#mjWrap) 링크가
+           필요 없습니다. 같은 화면 안에서 아래로 보내는 링크는 헷갈립니다. */
       + '</div>'
       + (live.length
         ? '<ul class="ra-list">' + live.map(recvItem).join('') + '</ul>'
@@ -488,12 +478,247 @@
   }
 
   /* ══════════════════════════════════════════════════════════
+     내 등록 관리 — 올린 채용정보·인재정보를 고치고 마감하고 지웁니다
+     ──────────────────────────────────────────────────────────
+     ★ 2026-08-12 · 왜 여기인가 (파트너 결정)
+       채용정보를 <b>한 번 올리면 수정도 삭제도 못 했습니다.</b>
+       처음에는 recruit/my.html 을 따로 만들었는데, 파트너가
+       「<b>내 것을 관리하는 자리는 마이페이지</b>」라고 하셨습니다 —
+       리쿠르트는 남의 공고를 보는 곳입니다.
+       ▶ 마이페이지로 옮기면 GNB·배경 문제도 아예 없어집니다
+         (그 화면은 탭 짜임이 없어 무늬가 진하게 나왔습니다).
+
+     ★ 칸 이름은 표에서 <b>직접 확인</b>했습니다
+       recruit_jobs 에 status 라는 칸은 <b>없습니다.</b> 코드에서 본
+       status 는 회원 승인 상태였습니다. 마감은 <b>hidden</b> 으로 다루고,
+       접수 기간은 apply_from · apply_to · apply_always ·
+       apply_until_hired 로 봅니다.
+     ══════════════════════════════════════════════════════════ */
+  var MJ = {
+    kind: 'job',
+    me: null,
+    cache: { job: null, talent: null },
+    cfg: {
+      job: {
+        table: 'recruit_jobs',
+        view: '/recruit/job-view.html',
+        write: '/recruit/job-write.html',
+        cols: 'id,title,org_name,apply_from,apply_to,apply_always,apply_until_hired,' +
+              'hidden,view_count,created_at,is_sample,job_cat1,job_cat2,region1,region2',
+        label: '채용정보',
+        empty: '올린 채용정보가 없습니다.',
+        newTo: '/recruit/job-write.html'
+      },
+      talent: {
+        table: 'recruit_talents',
+        view: '/recruit/talent-view.html',
+        write: '/recruit/talent-write.html',
+        cols: 'id,title,is_open,hidden,view_count,created_at,is_sample,' +
+              'job_cat1,job_cat2,region1,region2,now_status',
+        label: '인재정보',
+        empty: '올린 인재정보가 없습니다.',
+        newTo: '/recruit/talent-write.html'
+      }
+    }
+  };
+
+  function mjYmd(v) {
+    if (!v) return '';
+    var s = String(v).slice(0, 10).split('-');
+    return s.length === 3 ? (s[0] + '.' + s[1] + '.' + s[2]) : String(v);
+  }
+  function mjToday() {
+    var n = new Date();
+    var k = new Date(n.getTime() + 9 * 3600 * 1000);   /* 한국 시간 기준 */
+    return k.toISOString().slice(0, 10);
+  }
+
+  /* ★ 「마감일 지남」은 <b>감춘 것과 다릅니다.</b> 기간이 지났을 뿐
+       목록에는 그대로 있습니다. 둘을 갈라 보여 줘야 무엇을 감출지
+       판단할 수 있습니다. */
+  function mjState(o) {
+    if (o.hidden) return { cls: 'b-hide', txt: '감춤 (마감)' };
+    if (MJ.kind === 'talent') {
+      return o.is_open === false ? { cls: 'b-hide', txt: '비공개' }
+                                 : { cls: 'b-open', txt: '공개 중' };
+    }
+    if (o.apply_always)      return { cls: 'b-always', txt: '상시모집' };
+    if (o.apply_until_hired) return { cls: 'b-always', txt: '채용시 마감' };
+    if (o.apply_to && String(o.apply_to).slice(0, 10) < mjToday())
+      return { cls: 'b-past', txt: '마감일 지남' };
+    return { cls: 'b-open', txt: '접수 중' };
+  }
+  function mjPeriod(o) {
+    if (MJ.kind === 'talent') return o.now_status ? String(o.now_status) : '';
+    if (o.apply_always) return '상시모집';
+    if (o.apply_until_hired) return '채용시까지';
+    if (o.apply_from || o.apply_to) return mjYmd(o.apply_from) + ' ~ ' + mjYmd(o.apply_to);
+    return '';
+  }
+
+  async function mjLoad() {
+    var c = sb();
+    var box = el('#mjList');
+    if (!c || !box || !MJ.me) return;
+    box.innerHTML = '<div class="mp-msg">불러오는 중…</div>';
+
+    var cfg = MJ.cfg[MJ.kind];
+    var r = await c.from(cfg.table).select(cfg.cols)
+      .eq('member_id', MJ.me)
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (r.error) {
+      box.innerHTML = '<div class="mp-msg">불러오지 못했습니다.<br>'
+        + esc(r.error.message) + '</div>';
+      return;
+    }
+    var rows = r.data || [];
+    MJ.cache[MJ.kind] = rows;
+    var tabEl = el(MJ.kind === 'job' ? '#nJob' : '#nTal');
+    if (tabEl) tabEl.textContent = rows.length;
+
+    /* 다른 탭 수도 미리 세어 둡니다 — 눌러 보기 전에 몇 개인지 알 수 있게 */
+    var other = MJ.kind === 'job' ? 'talent' : 'job';
+    if (MJ.cache[other] === null) {
+      try {
+        var rr = await c.from(MJ.cfg[other].table)
+          .select('id', { count: 'exact', head: true }).eq('member_id', MJ.me);
+        var oel = el(other === 'job' ? '#nJob' : '#nTal');
+        if (oel && rr && typeof rr.count === 'number') oel.textContent = rr.count;
+      } catch (e) {}
+    }
+
+    /* ★ 지원 수는 <b>한 번에</b> 받습니다 — 공고마다 따로 물으면
+         공고 수만큼 조회가 나갑니다. */
+    var apps = {};
+    if (MJ.kind === 'job' && rows.length) {
+      try {
+        var ar = await c.from('recruit_applications').select('job_id')
+          .in('job_id', rows.map(function (x) { return x.id; }));
+        (ar.data || []).forEach(function (a) {
+          apps[a.job_id] = (apps[a.job_id] || 0) + 1;
+        });
+      } catch (e) {}
+    }
+    mjDraw(rows, apps);
+  }
+
+  function mjDraw(rows, apps) {
+    var cfg = MJ.cfg[MJ.kind];
+    var box = el('#mjList');
+    if (!rows.length) {
+      box.innerHTML = '<div class="mp-msg">' + esc(cfg.empty) + '<br><br>'
+        + '<a class="mp-btn primary" href="' + cfg.newTo + '">지금 등록하기</a></div>';
+      return;
+    }
+    box.innerHTML = rows.map(function (o) {
+      var st = mjState(o);
+      var per = mjPeriod(o);
+      var cat = [o.job_cat1, o.job_cat2].filter(Boolean).join(' › ');
+      var reg = [o.region1, o.region2].filter(Boolean).join(' › ');
+      var n = apps[o.id] || 0;
+      return '<div class="mj-row" data-mjrow="' + o.id + '">'
+        + '<div class="mj-main">'
+        +   '<div class="mj-head2">'
+        +     '<span class="mj-badge ' + st.cls + '">' + esc(st.txt) + '</span>'
+        +     (o.is_sample ? '<span class="mj-badge b-hide">견본</span>' : '')
+        +     '<span>' + esc(mjYmd(o.created_at)) + ' 등록</span>'
+        +     (o.view_count ? '<span>· 조회 ' + esc(o.view_count) + '</span>' : '')
+        +   '</div>'
+        +   '<a class="mj-title" href="' + cfg.view + '?id=' + encodeURIComponent(o.id) + '">'
+        +     esc(o.title || '(제목 없음)') + '</a>'
+        +   '<div class="mj-sub">'
+        +     (o.org_name ? esc(o.org_name) + ((cat || reg || per) ? ' · ' : '') : '')
+        +     [cat, reg, per].filter(Boolean).map(esc).join(' · ')
+        +   '</div>'
+        +   '<div class="mj-msg" data-mjmsg="' + o.id + '"></div>'
+        + '</div>'
+        + (MJ.kind === 'job'
+          ? '<div class="mj-apps"><span class="n">' + n + '</span>'
+            + '<span class="lb">받은 지원</span></div>'
+          : '<div class="mj-apps"><span class="n">' + (o.view_count || 0) + '</span>'
+            + '<span class="lb">조회</span></div>')
+        + '<div class="mj-acts">'
+        +   '<a href="' + cfg.write + '?id=' + encodeURIComponent(o.id) + '">수정</a>'
+        +   (o.hidden
+              ? '<button type="button" data-mjdo="show" data-mjid="' + o.id + '">다시 열기</button>'
+              : '<button type="button" data-mjdo="hide" data-mjid="' + o.id + '">마감</button>')
+        +   '<button type="button" class="danger" data-mjdo="del" data-mjid="' + o.id + '"'
+        +     ' data-mjn="' + n + '">삭제</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  /* ★ 삭제는 되돌릴 수 없습니다. <b>지원 수를 알려 주고</b> 한 번 더 묻습니다. */
+  async function mjAct(btn) {
+    var id = btn.getAttribute('data-mjid');
+    var doWhat = btn.getAttribute('data-mjdo');
+    var n = Number(btn.getAttribute('data-mjn') || 0);
+    var msg = document.querySelector('[data-mjmsg="' + id + '"]');
+    function say(s, cls) { if (msg) { msg.textContent = s; msg.className = 'mj-msg ' + (cls || ''); } }
+
+    var c = sb(); if (!c) return;
+    var cfg = MJ.cfg[MJ.kind];
+
+    if (doWhat === 'del') {
+      var w = '이 ' + cfg.label + '를 지우면 되돌릴 수 없습니다.';
+      if (n > 0) w += '\n\n★ 받은 지원이 ' + n + '건 있습니다. 그 기록도 함께 사라질 수 있습니다.'
+                   + '\n마감(감추기)으로 두면 자료가 남습니다.';
+      w += '\n\n그래도 지우시겠습니까?';
+      if (!window.confirm(w)) return;
+      say('지우는 중…');
+      var d = await c.from(cfg.table).delete()
+        .eq('id', id).eq('member_id', MJ.me).select('id');
+      if (d.error) { say('지우지 못했습니다 — ' + d.error.message, 'bad'); return; }
+      if (!d.data || !d.data.length) {
+        say('지우지 못했습니다. 내가 올린 것만 지울 수 있습니다.', 'bad'); return;
+      }
+      say('지웠습니다.', 'good');
+      setTimeout(mjLoad, 600);
+      return;
+    }
+
+    var hide2 = (doWhat === 'hide');
+    say(hide2 ? '마감하는 중…' : '다시 여는 중…');
+    var up = await c.from(cfg.table).update({ hidden: hide2 })
+      .eq('id', id).eq('member_id', MJ.me).select('id,hidden');
+    if (up.error) { say('바꾸지 못했습니다 — ' + up.error.message, 'bad'); return; }
+    if (!up.data || !up.data.length) {
+      say('바꾸지 못했습니다. 내가 올린 것만 고칠 수 있습니다.', 'bad'); return;
+    }
+    say(hide2 ? '마감했습니다. 목록에서 감춰집니다.' : '다시 열었습니다.', 'good');
+    setTimeout(mjLoad, 600);
+  }
+
+  function mjBind() {
+    var wrap = el('#mjWrap');
+    if (!wrap || wrap.__mjBound) return;
+    wrap.__mjBound = true;
+    /* ★ 한 곳에서 받습니다 — 목록을 다시 그려도 매번 붙이지 않아도 됩니다 */
+    wrap.addEventListener('click', function (e) {
+      var tb = e.target.closest('.mj-tabs button[data-k]');
+      if (tb) {
+        MJ.kind = tb.getAttribute('data-k');
+        wrap.querySelectorAll('.mj-tabs button').forEach(function (x) {
+          x.classList.toggle('on', x === tb);
+        });
+        mjLoad();
+        return;
+      }
+      var ab = e.target.closest('button[data-mjdo]');
+      if (ab) mjAct(ab);
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════
      시작
      ══════════════════════════════════════════════════════════ */
   async function init() {
     var recvBox = el('#raRecv');
     var sentBox = el('#raSent');
-    if (!recvBox && !sentBox) return;
+    var mjBox   = el('#mjWrap');
+    if (!recvBox && !sentBox && !mjBox) return;
 
     var c = sb();
     if (!c) return;
@@ -503,7 +728,7 @@
     if (!u) {
       /* 로그인하지 않았으면 두 묶음을 감춥니다 —
          마이페이지 자체가 로그인 안내를 이미 보여 줍니다. */
-      hide(recvBox); hide(sentBox);
+      hide(recvBox); hide(sentBox); hide(mjBox);
       return;
     }
 
@@ -530,6 +755,20 @@
 
     if (recvBox) { if (hiring) drawRecv(recvBox, u); else hide(recvBox); }
     if (sentBox) { if (seeker) drawSent(sentBox, u); else hide(sentBox); }
+
+    /* ★ 내 등록 관리 — <b>올릴 수 있는 회원에게만</b> 보입니다.
+         공고를 못 올리는 회원에게 관리 자리를 보여 주면
+         늘 빈 칸이라 고장처럼 보입니다.
+       ★ 인재정보는 개인도 올립니다. 그래서 둘 중 하나라도 되면 보여 줍니다. */
+    if (mjBox) {
+      if (hiring || seeker) {
+        MJ.me = u.id;
+        mjBind();
+        mjLoad();
+      } else {
+        hide(mjBox);
+      }
+    }
   }
 
   /* 그 묶음의 제목까지 함께 감춥니다 — 제목만 남으면 고장처럼 보입니다 */

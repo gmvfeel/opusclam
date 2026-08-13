@@ -288,20 +288,58 @@
           border-bottom:1px solid var(--line2,#e8e6ef);font-size:13px;color:var(--tx3,#8a8798)}
   .ra-sum b{color:var(--tx,#2b2740);font-weight:800}
   .ra-sum-new b{color:#c62828}
-  /* ★ 2026-08-12 · 「내 등록 관리」 링크 (파트너 지적)
-       올린 공고를 고치거나 마감할 자리가 없었습니다.
-       ★ 이 줄(.ra-sum)은 <b>늘 나옵니다</b> — 처음에는 「받은 지원이
-         없습니다」 안내에만 넣었는데, 그 안내는 지원이 하나도 없을 때만
-         나와서 지원이 있는 분에게는 단추가 아예 안 보였습니다.
-       ★ margin-left:auto 로 <b>오른쪽 끝</b>에 붙입니다 — 왼쪽 셈과
-         섞이지 않게. */
-  .ra-sum-manage{margin-left:auto;font-size:12.5px;font-weight:700;
-    color:var(--vi2,#7C63B0);text-decoration:none;white-space:nowrap;
-    border:1px solid var(--line2,#e8e6ef);border-radius:18px;padding:5px 13px;
-    transition:border-color .16s ease,background .16s ease,color .16s ease}
-  .ra-sum-manage:hover{border-color:var(--vi2,#7C63B0);
-    background:var(--vi2,#7C63B0);color:#fff}
-  @media(max-width:600px){ .ra-sum-manage{margin-left:0} }
+  /* ── 내 등록 관리 (2026-08-12) ───────────────────────────
+     ★ 마이페이지의 짜임(--tx · --line · --vi2 …)을 그대로 씁니다.
+       따로 색을 적으면 다크모드에서 어긋납니다. */
+  .mj-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+  .mj-tabs button{appearance:none;border:1px solid var(--line2,#e8e6ef);
+    background:var(--bg,#fff);color:var(--tx2,#5a5b74);border-radius:20px;
+    padding:8px 16px;font-size:13px;font-weight:600;font-family:inherit;
+    cursor:pointer;transition:.16s}
+  .mj-tabs button:hover{border-color:var(--vi2,#7C63B0);color:var(--vi2,#7C63B0)}
+  .mj-tabs button.on{background:var(--vi2,#7C63B0);border-color:var(--vi2,#7C63B0);color:#fff}
+  .mj-tabs button b{margin-left:5px;font-size:12px;opacity:.85}
+
+  .mj-row{display:flex;gap:14px;align-items:flex-start;padding:16px 0;
+    border-bottom:1px solid var(--line,#f0eff5)}
+  .mj-row:last-child{border-bottom:0}
+  .mj-main{flex:1 1 auto;min-width:0}
+  .mj-head2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;
+    font-size:11.5px;color:var(--tx3,#8a8798)}
+  .mj-badge{flex:0 0 auto;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700}
+  .b-open{background:#e6f4ea;color:#0f7a3d}
+  .b-hide{background:var(--bg2,#f7f6fa);color:var(--tx3,#8a8798)}
+  .b-past{background:#fdeaea;color:#a01c1c}
+  .b-always{background:#eeecf7;color:#5b4a92}
+  .mj-title{display:block;font-size:14.5px;font-weight:700;color:var(--tx,#2b2740);
+    text-decoration:none;line-height:1.4;margin-bottom:4px;overflow-wrap:anywhere}
+  .mj-title:hover{color:var(--vi2,#7C63B0)}
+  .mj-sub{font-size:12px;color:var(--tx3,#8a8798);line-height:1.6}
+  .mj-apps{flex:0 0 auto;text-align:center;min-width:74px}
+  .mj-apps .n{display:block;font-size:20px;font-weight:800;color:var(--vi2,#7C63B0);
+    font-variant-numeric:tabular-nums;line-height:1.2}
+  .mj-apps .lb{font-size:11px;color:var(--tx3,#8a8798)}
+  .mj-acts{flex:0 0 auto;display:flex;flex-direction:column;gap:5px;min-width:96px}
+  .mj-acts button,.mj-acts a{appearance:none;border:1px solid var(--line2,#e8e6ef);
+    background:var(--bg,#fff);color:var(--tx2,#5a5b74);border-radius:7px;padding:6px 11px;
+    font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center;
+    text-decoration:none;transition:.16s}
+  .mj-acts button:hover,.mj-acts a:hover{border-color:var(--vi2,#7C63B0);color:var(--vi2,#7C63B0)}
+  .mj-acts .danger{color:#a01c1c;border-color:#e3b7b7}
+  .mj-acts .danger:hover{background:#a01c1c;border-color:#a01c1c;color:#fff}
+  .mj-msg{margin-top:7px;font-size:12px;color:var(--tx3,#8a8798)}
+  .mj-msg.bad{color:#a01c1c}
+  .mj-msg.good{color:#0f7a3d}
+  @media(max-width:640px){
+    .mj-row{flex-wrap:wrap}
+    .mj-apps{min-width:0;text-align:left}
+    .mj-acts{flex-direction:row;flex-wrap:wrap;width:100%}
+  }
+
+  /* ★ 여기에 .ra-sum-manage(「내 등록 관리」 링크) 짜임이 있었는데
+       <b>지웠습니다</b> (2026-08-12) — 같은 화면 위쪽에 관리 자리가
+       생겨(#mjWrap) 그 링크를 없앴기 때문입니다.
+       쓰이지 않는 규칙을 남겨 두면 나중에 「이건 어디에 쓰나」로 헷갈립니다. */
 
   .ra-list{list-style:none;margin:0;padding:0}
   .ra-it{padding:14px 0;border-bottom:1px solid var(--line,#f0eff5);cursor:pointer;transition:background .12s}
@@ -780,10 +818,14 @@
           <b>고치거나 지우는 것</b>은 글 안에서 하실 수 있습니다.
           <!-- ★ 2026-08-12 · 한 줄 더했습니다 (파트너 지적)
                  「내가 올린 것」에 <b>채용정보가 없어서</b> 여기서 찾으시다
-                 못 찾는 일이 생깁니다. 그 자리를 알려 드립니다. -->
+                 못 찾는 일이 생깁니다. 그 자리를 알려 드립니다.
+               ★ 주소를 recruit/my.html 로 적었다가 바로잡았습니다 —
+                 그 화면은 만들었다가 <b>거두었습니다</b>(파트너 결정:
+                 내 것을 관리하는 자리는 마이페이지). 없는 주소로 보내면
+                 404 가 됩니다. 지금은 <b>이 화면의 리쿠르트 탭</b>에 있습니다. -->
           <br>올리신 <b>채용정보·인재정보</b>는 여기가 아니라
-          <a href="/recruit/my.html" style="color:var(--vi2,#7C63B0);font-weight:700">리쿠르트 &gt; 내 등록 관리</a>
-          에서 고치고 마감하실 수 있습니다.
+          <b>위 「리쿠르트」 탭</b>의 <b>내 등록 관리</b>에서
+          고치고 마감하실 수 있습니다.
         </p>
       </div>
       <div class="mp-card" id="myBody" style="display:none">
@@ -813,7 +855,45 @@
          (제목이 담는 칸의 <b>바로 앞</b>에 있어야 합니다 — 그 파일이
           previousElementSibling 으로 찾습니다). -->
     <div class="mp-pane" data-pane="recruit">
+
+      <!-- ★★ 2026-08-12 · 내 등록 관리 (파트너 결정) ★★
+           ─────────────────────────────────────────────────────────
+           ★ 무엇이 없었나
+             채용정보를 <b>한 번 올리면 수정도 삭제도 못 했습니다.</b>
+             상세 화면에 단추가 없고, 자기 공고만 모아 보는 자리도 없었습니다.
+
+           ★ 처음에는 recruit/my.html 을 따로 만들었습니다
+             그런데 파트너가 「<b>내 것을 관리하는 자리는 마이페이지</b>」라고
+             하셨습니다 — 리쿠르트는 <b>남의 공고를 보는 곳</b>이라 거기
+             「내 등록 관리」가 있는 것이 어색했습니다.
+             게다가 그 화면은 GNB 가 안 나오고 배경 무늬가 진하게 보였습니다.
+             ▶ 마이페이지 안으로 옮기면 그 문제가 <b>아예 없어집니다</b> —
+               탭 구조와 짜임이 이미 있기 때문입니다.
+
+           ★ 왜 「받은 지원」 <b>위</b>인가
+             공고를 올리는 일이 먼저이고, 지원은 그 결과입니다.
+             그리고 지원이 몇 건 왔는지 보고 <b>바로 마감</b>하는 흐름이
+             자연스럽습니다. -->
       <div class="mp-head">
+        <span class="jtag">MY POSTINGS</span>
+        <h1 style="font-size:24px">내 등록 관리</h1>
+        <p class="mp-note">
+          올리신 <b>채용정보·인재정보</b>입니다. 고치거나 마감하거나 지우실 수 있습니다.<br>
+          · <b>마감</b>은 목록에서 감추는 것입니다. 자료는 그대로 남아 <b>다시 열 수</b> 있습니다.<br>
+          · <b>삭제</b>는 되돌릴 수 없습니다. 받은 지원 기록도 함께 사라질 수 있습니다.<br>
+          · 접수 기간이 지난 공고는 <b>마감일 지남</b>으로 표시됩니다 — 감추지 않아도
+            지원자에게는 기간이 보입니다.
+        </p>
+      </div>
+      <div class="mp-card" id="mjWrap">
+        <div class="mj-tabs" id="mjTabs">
+          <button type="button" data-k="job" class="on">채용정보<b id="nJob"></b></button>
+          <button type="button" data-k="talent">인재정보<b id="nTal"></b></button>
+        </div>
+        <div id="mjList"><div class="mp-msg">불러오는 중…</div></div>
+      </div>
+
+      <div class="mp-head" style="margin-top:44px">
         <span class="jtag">RECEIVED</span>
         <h1 style="font-size:24px">받은 지원</h1>
         <p class="mp-note">
