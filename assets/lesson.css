@@ -983,9 +983,30 @@ html.ln-page .site-header:not(.solid) header.masthead{
        그 뒤에 오는 .ln-hero{padding:196px …} 가 이기기 때문입니다.
        고치실 일이 있으면 그 줄이 아니라 이 줄을 보십시오. */
   .ln-hero{ padding: 130px 0 30px; }
+  /* ★ 2026-08-13 · 히어로 높이 줄이기 (390px 실측 694px → 화면 844px)
+       첫 화면이 제목과 안내글로만 차서, 무엇을 하는 곳인지 알기 전에
+       스크롤해야 했습니다. 무엇을 어디서 줄였나 —
+         영문 안내  <br> 줄바꿈을 풀고 17px → 14px   116px → 약 63px
+         국문 안내  17px → 14.5px · 줄간 1.72 → 1.6   88px → 약 66px
+         7탭        칸 높이 48px → 42px · 위여백 40 → 24
+       ★ 영문을 <b>지우지 않습니다</b> — 같은 뜻을 국문이 아래에 적고
+         있지만, 이 화면의 결(브랜드 목소리)이라 남깁니다. 줄바꿈만 풀어
+         글이 자연스럽게 흐르게 했습니다. */
+  .ln-hero-en{ margin-top: 18px; font-size: 14px; line-height: 1.5; }
+  .ln-hero-en br{ display: none; }
+  .ln-hero-ko{ margin-top: 14px; font-size: 14.5px; line-height: 1.6; }
+  .ln-tabs{ margin-top: 24px; }
+  .ln-tabs a{ min-height: 42px; padding: 9px 6px; font-size: 12.5px; }
   .ln-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
   .ln-tabs{ grid-template-columns: repeat(2, 1fr); }
+  /* ★ 2026-08-13 · 3·4번째 칸의 윗선을 <b>되살립니다</b>
+       위 @media(max-width:900px) 의 `:nth-child(-n+4){border-top:0}` 이
+       여기서도 살아 있어, 2열이 된 뒤에도 1~4번 칸에 윗선이 없었습니다.
+       그래서 첫 줄과 둘째 줄이 <b>한 칸처럼</b> 붙어 보였습니다.
+       `.ln-tabs a{border-top:1px}` 로는 못 이깁니다 — 저쪽이 가려내는
+       힘(nth-child)이 더 세기 때문입니다. 같은 힘으로 되살립니다. */
   .ln-tabs a{ border-top: 1px solid var(--ln-line2); }
+  .ln-tabs a:nth-child(n+3){ border-top: 1px solid var(--ln-line2); }
   .ln-tabs a:nth-child(-n+2){ border-top: 0; }
   .ln-tabs a:nth-child(2n+1){ border-left: 0; }
   .ln-ins{ grid-template-columns: minmax(0,1fr); }
