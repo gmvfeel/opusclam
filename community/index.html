@@ -214,7 +214,13 @@
     </header>
 
     <!-- 게시판 바로가기 -->
-    <div class="cm-sec">
+    <!-- ★ 2026-08-13 · div → section 으로 바꿨습니다 (파트너 지적)
+           빠른 카드 아래 여백이 122px 로 벌어져 있었습니다. 까닭 —
+           .cm-sec:last-of-type{padding-bottom:70px} 는 <b>요소 종류마다</b>
+           따로 셉니다. 나머지 섹션은 모두 section 인데 이것만 div 여서
+           「마지막 div.cm-sec」이 되어 맨 아래 섹션용 70px 을 받았습니다.
+           section 으로 바꾸면 52px 만 남습니다. -->
+    <section class="cm-sec">
       <div class="cm-quick">
         <a class="cm-qcard" href="/community/hottopic.html">
           <span class="cm-qlabel">핫토픽</span>
@@ -264,7 +270,7 @@
           <span class="cm-qcount"><b id="cSch">—</b><i>호</i></span>
         </a>
       </div>
-    </div>
+    </section>
 
     <!-- ★ 2026-08-13 · 커뮤니티 현황 (파트너 요청)
            정보SPOT 현황과 같은 짜임입니다. 그림은 assets/stats-chart.js,
