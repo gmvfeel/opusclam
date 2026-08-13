@@ -203,7 +203,7 @@
   .brand .logo b{color:var(--violet-2)}
   .brand .tag{font-size:11px;letter-spacing:.34em;color:var(--text-3);text-transform:uppercase}
   @media(max-width:1240px){.brand .tag{display:none}}
-  nav.main{display:flex;gap:40px;flex-wrap:nowrap}
+  nav.main{display:flex;gap:clamp(40px,4vw,60px);flex-wrap:nowrap}
   .nav-item{position:static;display:flex;align-items:center}
   nav.main>.nav-item>a{font-weight:600;font-size:15px;color:#9a9baa;position:relative;padding:27px 0;letter-spacing:-.01em;white-space:nowrap;transition:color .2s ease}
   nav.main>.nav-item>a.active,nav.main>.nav-item:hover>a{color:#363845}

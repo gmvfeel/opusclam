@@ -699,3 +699,79 @@
   .hub-rdots i:hover{background:var(--text-3);background-clip:content-box}
   .hub-rdots i.on{background:var(--violet-2);width:18px;border-radius:4px;
     background-clip:content-box}
+
+  /* ══ 현황 그래프 — 월별 막대 + 흐름선 (공용) ══════════════════
+     ★ 2026-08-13 · 정보SPOT 화면(spot/index.html)이 자기 안에 갖고 있던
+       `.sp-m*` 짜임을 <b>공용으로</b> 옮겼습니다. 커뮤니티 메인이 같은
+       그림을 쓰는데, 복붙하면 한쪽만 고쳐지는 일이 생깁니다.
+     ★ 그리는 쪽은 assets/stats-chart.js 입니다.
+     ★ 정보SPOT 은 아직 자기 `.sp-m*` 를 씁니다 — 이 공용본이 검증된 뒤에
+       옮기면 됩니다. 두 벌이 함께 있어도 이름이 달라 부딪히지 않습니다.
+
+     ★ 왜 SVG 가 아니라 HTML 인가
+       SVG viewBox 는 실제 폭에 맞춰 늘어나면서 글자까지 함께 커집니다.
+       HTML 로 그리면 글자 크기가 화면 폭과 무관하게 그대로입니다. */
+  .hb-mchart{position:relative;padding-left:26px}
+  .hb-mcols{position:relative;display:flex;align-items:flex-end;gap:5px;
+    height:172px;padding-top:20px;box-sizing:border-box}
+
+  /* 값 눈금 — 막대 높이를 눈으로 재도록 가로줄을 깔아 둡니다 */
+  .hb-mgrid{position:absolute;left:0;right:0;top:20px;bottom:0;pointer-events:none}
+  .hb-mgrid i{position:absolute;left:0;right:0;height:0;border-top:1px dashed var(--line-2)}
+  .hb-mgrid i.base{border-top:1px solid var(--line)}
+  .hb-mgrid i b{position:absolute;left:-26px;top:-8px;width:21px;text-align:right;
+    font-size:11px;font-weight:400;color:var(--text-3);font-variant-numeric:tabular-nums}
+
+  .hb-mcol{position:relative;flex:1;display:flex;align-items:flex-end;justify-content:center;
+    height:100%;cursor:default}
+  .hb-mcol.link{cursor:pointer}
+  /* 값이 없는 달도 자리를 옅게 보여 줍니다 — 빈 곳이 많아도 헐거워 보이지 않습니다 */
+  .hb-mcol::before{content:'';position:absolute;bottom:0;top:0;width:100%;max-width:52px;
+    background:var(--paper-2);opacity:.55;border-radius:5px 5px 0 0}
+  html[data-theme="dark"] .hb-mcol::before{opacity:.35}
+  .hb-mbar{position:relative;width:100%;max-width:52px;border-radius:5px 5px 0 0;
+    background:var(--line-2);min-height:3px;transition:filter .15s ease}
+  .hb-mcol.has:hover .hb-mbar{filter:brightness(1.18)}
+  .hb-mval{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+    margin-bottom:5px;font-size:11.5px;font-weight:800;color:var(--text-2);
+    font-variant-numeric:tabular-nums;white-space:nowrap;z-index:3}
+
+  /* 막대 위에 겹치는 흐름선 — 달을 따라 오르내리는 결이 한눈에 보입니다.
+     막대와 <b>같은 좌표계</b>에 깔아야 꼭짓점이 막대 끝에 정확히 앉습니다. */
+  .hb-mline{position:absolute;left:0;right:0;top:20px;bottom:0;z-index:2;pointer-events:none}
+  .hb-mline svg{width:100%;height:100%;display:block;overflow:visible}
+  .hb-mline path{fill:none;stroke:#C9A94E;stroke-width:2;stroke-linecap:round;
+    stroke-linejoin:round;vector-effect:non-scaling-stroke}
+
+  /* 꼭짓점은 SVG 가 아니라 HTML 로 그립니다.
+     선을 막대에 맞추려고 SVG 를 가로세로 다른 비율로 늘리는데,
+     그 안에 동그라미를 두면 함께 늘어나 타원이 됩니다. */
+  .hb-mdot{position:absolute;left:50%;z-index:3;width:7px;height:7px;box-sizing:border-box;
+    border-radius:50%;background:#fff;border:2px solid #C9A94E;
+    transform:translate(-50%,50%);pointer-events:none}
+  html[data-theme="dark"] .hb-mdot{background:#17171a}
+
+  .hb-mlabels{display:flex;gap:5px;margin-top:9px}
+  .hb-mlabels span{flex:1;text-align:center;font-size:11.5px;color:var(--text-3);
+    font-variant-numeric:tabular-nums}
+  .hb-mlabels span.has{color:var(--text-2);font-weight:700}
+  /* 이번 달 — 지금이 어디쯤인지 한눈에 */
+  .hb-mlabels span.now{color:var(--violet-2);font-weight:800}
+  .hb-mlabels span.now::after{content:'';display:block;width:4px;height:4px;border-radius:50%;
+    background:var(--violet-2);margin:3px auto 0}
+
+  /* 마우스를 올리면 뜨는 알림창 */
+  .hb-tip{position:absolute;left:50%;bottom:100%;transform:translate(-50%,-8px);
+    z-index:5;padding:7px 11px;border-radius:8px;background:#1b1c2b;color:#fff;
+    font-size:12px;line-height:1.5;white-space:nowrap;pointer-events:none;
+    opacity:0;transition:opacity .14s ease}
+  .hb-tip b{font-weight:700}
+  .hb-tip em{font-style:normal;opacity:.72;margin-left:5px}
+  .hb-mcol.has:hover .hb-tip{opacity:1}
+  html[data-theme="dark"] .hb-tip{background:#3a3a40}
+
+  @media (max-width:760px){
+    .hb-mcols{height:150px;gap:3px}
+    .hb-mlabels{gap:3px}
+    .hb-mlabels span{font-size:10.5px}
+  }

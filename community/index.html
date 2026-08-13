@@ -17,6 +17,10 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/assets/base.css">
+<!-- ★ 2026-08-13 · 「커뮤니티 현황」이 쓰는 공용 짜임(.hb-*)입니다.
+       ★ 이 화면 전용 CSS 가 뒤에 오므로, 이미 갖고 있는
+         .cm-* · .hub-skel 규칙은 그대로 이깁니다. -->
+<link rel="stylesheet" href="/assets/hub.css">
 <style>
   /* ── OC커뮤니티 메인 전용 ── */
 
@@ -262,6 +266,37 @@
       </div>
     </div>
 
+    <!-- ★ 2026-08-13 · 커뮤니티 현황 (파트너 요청)
+           정보SPOT 현황과 같은 짜임입니다. 그림은 assets/stats-chart.js,
+           숫자는 Supabase 함수 community_stats() 한 번으로 받습니다. -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">커뮤니티 현황<em>STATISTICS</em></span>
+      </div>
+      <div class="hb-stat">
+        <div class="hb-panel" id="cmMonths" style="padding:16px 16px 8px"></div>
+        <div class="hb-figs">
+          <div class="hb-fig">
+            <span class="hb-figcap">전체 글</span>
+            <span class="hb-fignum"><b id="cmTotal">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig up">
+            <span class="hb-figcap">이번 달 새 글</span>
+            <span class="hb-fignum"><b id="cmMonth">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig gold">
+            <span class="hb-figcap">오늘 새 글</span>
+            <span class="hb-fignum"><b id="cmToday">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig">
+            <span class="hb-figcap">전체 댓글</span>
+            <span class="hb-fignum"><b id="cmCmt">—</b><i>건</i></span>
+          </div>
+        </div>
+      </div>
+      <div class="hb-compose" id="cmCompose"></div>
+    </section>
+
     <!-- Concert PR -->
     <section class="cm-sec" id="prWrap">
       <div class="cm-head">
@@ -351,6 +386,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
 <script src="/assets/hub.js"></script>
+<script src="/assets/stats-chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
 
@@ -423,6 +459,77 @@
           var el=document.querySelector(sel); if(el) el.textContent=n.toLocaleString();
         }).catch(function(){});
     });
+
+    /* ── 커뮤니티 현황 ──────────────────────────────────────
+       ★ 숫자·월별 분포·게시판별 구성비를 SQL 함수 한 번(community_stats)으로
+         받습니다. 게시판 열 곳을 따로 물으면 요청이 서른 번 넘습니다.
+       ★ 그림은 공용 엔진(assets/stats-chart.js · OCStats)이 그립니다 —
+         정보SPOT 현황과 같은 짜임입니다. */
+    (function(){
+      var box = document.getElementById('cmMonths');
+      if (!box || !window.OCStats) return;
+      var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/rpc/community_stats';
+      var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+      /* 게시판 이름과 빛깔 — 빠른 카드의 이름과 같게 맞췄습니다.
+         ★ 여기 없는 게시판이 함수에서 오면 이름 대신 열쇠말이 뜨고
+           빛깔은 회색이 됩니다(엔진의 fallback). 화면이 깨지지 않습니다. */
+      var BOARD = {
+        hottopic:            { label:'핫토픽',           color:'#d93a4c' },
+        opusnity:            { label:'오퍼니티',         color:'#7c63b0' },
+        gallery:             { label:'공연사진 / 영상',  color:'#3b6fc4' },
+        admission:           { label:'입시요강',         color:'#c08a3e' },
+        admission_community: { label:'입시커뮤니티',     color:'#e0a04a' },
+        qna:                 { label:'지식나눔',         color:'#0f9b8e' },
+        news:                { label:'뉴스 / 공지',      color:'#5b6b8c' },
+        modern_music:        { label:'현대음악',         color:'#9a5fb5' },
+        prenatal_music:      { label:'태교음악',         color:'#d8748f' },
+        utility:             { label:'유틸리티 / 자료',  color:'#8b95a8' }
+      };
+
+      OCStats.skeleton(box, '월별 새 글');
+
+      function fail(){
+        box.innerHTML = '<div class="hb-ptitle"><b>월별 새 글</b></div>'
+          + '<p class="bd-empty" style="padding:18px 0">현황을 불러오지 못했습니다.</p>';
+      }
+
+      fetch(U, { method:'POST',
+                 headers:{ apikey:K, Authorization:'Bearer '+K,
+                           'Content-Type':'application/json' },
+                 body:'{}' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){
+          if (!d) { fail(); return; }
+
+          OCStats.put('#cmTotal', d.total);
+          OCStats.put('#cmMonth', d.month);
+          OCStats.put('#cmToday', d.today);
+          OCStats.put('#cmCmt',   d.comments);
+
+          /* 월 이름 — '2026-08' 을 '8월' 로. 맨 끝 칸이 이번 달입니다. */
+          var ms = d.months || [];
+          var rows = ms.map(function(x, i){
+            var mm = parseInt(String(x.ym).slice(5), 10);
+            return { label: mm + '월', key: x.ym, n: x.n, now: (i === ms.length - 1) };
+          });
+          OCStats.months(box, rows, {
+            title:'월별 새 글',
+            note:'열 게시판에 올라온 글이 달마다 얼마나 쌓였는지 · 최근 열두 달',
+            unit:'건'
+          });
+
+          var bs = (d.boards || []).map(function(x){
+            var b = BOARD[x.key] || {};
+            return { label: b.label || x.key, color: b.color, n: x.n };
+          });
+          OCStats.compose('#cmCompose', bs, {
+            total: d.total,
+            empty:'글이 쌓이면 게시판별 구성비가 표시됩니다.'
+          });
+        })
+        .catch(fail);
+    })();
 
     /* 현대음악 — 갈래별로 탭을 나눕니다 */
     OCHub.boardTabs({
