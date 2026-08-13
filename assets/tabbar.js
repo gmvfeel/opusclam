@@ -96,6 +96,11 @@
     + '.oc-tab .on::before{content:"";position:absolute;top:0;width:28px;height:2px;'
     +   'border-radius:0 0 3px 3px;background:var(--violet-2,#7c63b0)}'
     + '.oc-tab a,.oc-tab button{position:relative}'
+    /* ★ 2026-08-14 · 전체메뉴·서랍이 열리면 띠를 감춥니다 (파트너 지시)
+         전체메뉴는 z-index 120, 서랍은 90 인데 띠는 1500 이라 메뉴 위에
+         띠가 남아 있었습니다. 띠의 z-index 를 내리면 맨위로 단추·PWA 띠
+         (200)에 가리므로, 열린 동안만 감추는 쪽이 맞습니다. */
+    + 'html.oc-menu-open .oc-tab{display:none !important}'
     /* 어두운 화면 */
     + 'html[data-theme="dark"] .oc-tab{background:#111;border-top-color:#2b2b2b}'
     + 'html[data-theme="dark"] .oc-tab a,html[data-theme="dark"] .oc-tab button{color:#9a9a9a}'
@@ -165,6 +170,36 @@
     /* 마이페이지 칸 — 로그인해 있으면 마이페이지, 아니면 로그인 화면 */
     syncMe();
     verifyMe();
+    watchMenu();
+  }
+
+  /* ── 메뉴가 열렸는지 지켜봅니다 ─────────────────────────
+     여는 곳이 셋입니다 — header.js(.fullmenu.open · nav.main.open) 와
+     auth.js(회원 화면의 .fullmenu.open). 어느 쪽이든 class 가 바뀌므로
+     class 변화만 봅니다. 화면이 무거워지지 않게 <b>class 속성 하나</b>만
+     지켜봅니다. */
+  function watchMenu() {
+    var SEL = '.fullmenu.open, nav.main.open';
+    var last = null;
+    function upd() {
+      var open = !!d.querySelector(SEL);
+      /* ★ <b>바뀔 때만</b> 씁니다. classList.add 는 이미 그 값이 있어도
+           class 를 다시 써서 변화로 기록됩니다 — 그대로 두면 관찰자가
+           자기 변경을 또 잡아 <b>끝없이 돌게 됩니다</b>. */
+      if (open === last) return;
+      last = open;
+      d.documentElement.classList[open ? 'add' : 'remove']('oc-menu-open');
+    }
+    upd();
+    try {
+      /* ★ 지켜보는 곳을 <b>body</b> 로 둡니다 — 우리가 바꾸는 것은
+           <html> 의 class 이므로 관찰 대상 밖입니다(이중 안전). */
+      new MutationObserver(upd).observe(d.body, {
+        subtree: true, attributes: true, attributeFilter: ['class']
+      });
+    } catch (e) {}
+    /* 회원 화면은 전체메뉴를 <b>누른 뒤에 만듭니다</b> — 그때는 위
+       관찰자가 이미 돌고 있으므로 새로 들어온 상자도 잡힙니다. */
   }
 
   /* 담긴 세션 값으로 즉시 판정 — 네트워크를 쓰지 않습니다 */

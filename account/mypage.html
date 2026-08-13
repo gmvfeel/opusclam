@@ -253,8 +253,16 @@
     border-bottom:1px solid var(--line);
     overflow-x:auto; -webkit-overflow-scrolling:touch;
     scrollbar-width:none;
+    /* ★ 2026-08-14 · <b>세로</b> 스크롤바가 함께 생겼습니다 (파트너 지적)
+         한 축을 auto 로 두면 <b>다른 축의 visible 은 auto 로 계산됩니다</b>.
+         켜진 탭 밑줄이 bottom:-1px 로 상자 밖 1px 을 넘어가 있어서
+         그 1px 이 세로 스크롤을 만들고, 아래 3px 규칙이 세로 스크롤바에도
+         걸려 오른쪽에 회색 막대가 보였습니다. */
+    overflow-y:hidden;
   }
   .mp-tabs::-webkit-scrollbar{display:none}
+  /* 세로 스크롤바는 어떤 경우에도 그리지 않습니다 */
+  .mp-tabs::-webkit-scrollbar:vertical{display:none;width:0}
   /* ★ 2026-08-13 · 좁은 화면에서는 <b>가느다란 줄을 보여 줍니다</b> (390px 실측)
        탭 넓이가 619px 인데 상자는 350px 입니다. 옆으로 밀 수 있는데
        표시가 없어 <b>탭이 더 있는 줄 모르고</b> 지나갑니다. */
@@ -274,7 +282,10 @@
   .mp-tab.on{color:var(--tx)}
   /* 켜진 탭 아래 밑줄 — 띠(border-bottom) 위에 겹쳐 놓습니다 */
   .mp-tab.on::after{
-    content:''; position:absolute; left:8px; right:8px; bottom:-1px;
+    content:''; position:absolute; left:8px; right:8px;
+    /* ★ bottom:-1px 이었습니다 → 0. 상자를 넘지 않게 해야 위 overflow-y:hidden
+         에서 밑줄이 잘리지 않습니다. 띠(border-bottom) 바로 위에 붙습니다. */
+    bottom:0;
     height:2px; border-radius:2px; background:var(--accent);
   }
 

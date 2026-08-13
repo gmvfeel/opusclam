@@ -275,7 +275,8 @@
   .mast-tools .search{width:34px;height:34px;border:1px solid var(--line-2);border-radius:50%;display:grid;place-items:center;color:var(--text-2);transition:.2s}
   .mast-tools .search:hover{background:var(--violet-2);color:#fff;border-color:var(--violet-2)}
   .mast-tools .school{background:var(--orange);color:#fff;font-weight:700;font-size:12px;padding:8px 14px;border-radius:20px}
-  .burger{display:none;flex-direction:column;gap:4px;width:40px;height:40px;border:1px solid var(--line-2);border-radius:8px;align-items:center;justify-content:center;cursor:pointer;background:none;padding:0}
+  /* ★ 2026-08-14 · 외곽선을 뺐습니다 (파트너 지시) */
+  .burger{display:none;flex-direction:column;gap:4px;width:40px;height:40px;border:0;border-radius:8px;align-items:center;justify-content:center;cursor:pointer;background:none;padding:0}
   .burger span{width:18px;height:2px;background:var(--ink);transition:transform .25s ease,opacity .2s ease}
   .burger.open span:nth-child(1){transform:translateY(6px) rotate(45deg)}
   .burger.open span:nth-child(2){opacity:0}
@@ -362,7 +363,6 @@
   .site-header:not(.solid) .subnav a{color:rgba(255,255,255,.72)}
   .site-header:not(.solid) .subnav a:hover{color:#fff}
   .site-header:not(.solid) .subnav a:not(:last-child)::after{background:rgba(255,255,255,.22)}
-  .site-header:not(.solid) .burger{border-color:rgba(255,255,255,.4)}
   .site-header:not(.solid) .burger span{background:#fff}
   /* solid state keeps the original (default) colors defined above */
 
