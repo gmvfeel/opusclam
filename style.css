@@ -1031,3 +1031,34 @@
   @media (max-width:768px){
     body .pdb{padding-top:120px}
   }
+
+  /* ══ 전체메뉴 안 회원 줄 (2026-08-13) ══════════════════════
+     ★ 왜 여기 두나
+       모바일에서 맨 위 줄을 감추고 아래 띠를 넣으면서 위쪽 ≡ 도
+       감췄습니다. 서랍을 열 길이 없어져 <b>로그인 길이 막혔습니다.</b>
+       전체메뉴는 여섯 대메뉴가 다 들어 있는 화면이라, 회원 줄이
+       그 아래 붙는 것이 자연스럽습니다.
+     ★ 안쪽 .m-actions 는 서랍과 같은 결입니다 — assets/app.js 가
+       그 선택자를 이미 보고 있어 로그인 상태가 저절로 반영됩니다. */
+  .fm-auth{margin-top:34px;padding-top:22px;border-top:1px solid rgba(255,255,255,.16)}
+  .fullmenu .fm-auth .m-actions{
+    display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:0;margin:0;
+  }
+  .fullmenu .fm-auth .m-actions a{
+    display:inline-flex;align-items:center;min-height:42px;
+    padding:0 20px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.28);
+    font-size:13.5px;font-weight:600;letter-spacing:-.01em;
+    color:rgba(255,255,255,.88);text-decoration:none;
+    transition:border-color .18s ease,color .18s ease,background .18s ease;
+  }
+  .fullmenu .fm-auth .m-actions a:hover{
+    border-color:var(--orange);color:#fff;background:rgba(255,255,255,.06);
+  }
+  /* 로그인한 뒤 app.js 가 넣는 「이너스페이스」도 같은 모양이 됩니다 */
+  .fullmenu .fm-auth .m-actions a[data-oc-inner]{border-style:dashed}
+  @media(max-width:600px){
+    .fm-auth{margin-top:26px;padding-top:18px}
+    .fullmenu .fm-auth .m-actions{gap:8px 12px}
+    .fullmenu .fm-auth .m-actions a{min-height:44px;padding:0 16px;font-size:13px}
+  }

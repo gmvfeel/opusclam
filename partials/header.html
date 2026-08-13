@@ -250,6 +250,22 @@
             <a href="/shop/apply.html">입점문의/안내</a>
           </div>
         </div>
+
+        <!-- ★ 2026-08-13 · 회원 줄을 전체메뉴 <b>안</b>에 두었습니다 (파트너 지적)
+               까닭 — 모바일에서 맨 위 줄을 감추고(로그인·회원가입이 그 줄에
+               있었습니다), 아래 띠를 넣으면서 위쪽 ≡ 도 감췄습니다. 그래서
+               서랍(nav.main)을 열 길이 없어져 <b>로그인 길이 막혔습니다.</b>
+             ★ 글자를 「로그인」·「회원가입」으로 <b>그대로</b> 둡니다 —
+               assets/app.js 의 collectAuthLinks() 가 그 글자를 찾아
+               로그인한 뒤 「이름님 · 마이페이지 · 이너스페이스 · 로그아웃」
+               으로 바꿔 줍니다. 자리만 만들어 주면 됩니다.
+             ★ 선택자에 .m-actions 가 이미 들어 있어 그 결을 그대로 씁니다. -->
+        <div class="fm-auth">
+          <div class="m-actions">
+            <a href="/account/login.html">로그인</a>
+            <a href="/account/join.html">회원가입</a>
+          </div>
+        </div>
       </div>
     </div>
   </div>

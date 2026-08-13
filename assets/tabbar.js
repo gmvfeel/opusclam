@@ -35,7 +35,10 @@
 (function (w, d) {
   'use strict';
 
-  var H = 58;                 /* 띠 높이 (px) */
+  /* 띠 높이 — 2026-08-13 · 58 → 68px (파트너 지적: 세로가 좁았습니다)
+     아이콘 21px + 사이 5px + 글자 10.5px ≒ 37px 이라 58px 로는
+     위아래 여백이 각 10px 밖에 남지 않았습니다. */
+  var H = 68;                 /* 띠 높이 (px) */
   var MAX = 880;              /* 이 폭 아래에서만 보입니다 */
 
   /* 아이콘 — 선으로만 그립니다(면을 채우면 작은 크기에서 뭉칩니다) */
@@ -66,15 +69,15 @@
     + '.oc-tab-in{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:' + H + 'px}'
     /* 한 칸 */
     + '.oc-tab a,.oc-tab button{display:flex;flex-direction:column;align-items:center;'
-    +   'justify-content:center;gap:3px;border:0;background:none;padding:0;cursor:pointer;'
+    +   'justify-content:center;gap:6px;border:0;background:none;padding:7px 2px 6px;cursor:pointer;'
     +   'font-family:inherit;font-size:10.5px;font-weight:600;letter-spacing:-.02em;'
     +   'color:var(--text-3,#8a8c9e);text-decoration:none;-webkit-tap-highlight-color:transparent}'
-    + '.oc-tab svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;'
+    + '.oc-tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;'
     +   'stroke-linecap:round;stroke-linejoin:round}'
     + '.oc-tab .on{color:var(--violet-2,#7c63b0)}'
     + '.oc-tab .on svg{stroke-width:2}'
     /* 지금 보고 있는 자리 — 위에 짧은 막대 */
-    + '.oc-tab .on::before{content:"";position:absolute;top:0;width:26px;height:2px;'
+    + '.oc-tab .on::before{content:"";position:absolute;top:0;width:28px;height:2px;'
     +   'border-radius:0 0 3px 3px;background:var(--violet-2,#7c63b0)}'
     + '.oc-tab a,.oc-tab button{position:relative}'
     /* 어두운 화면 */
