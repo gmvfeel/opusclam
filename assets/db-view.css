@@ -277,7 +277,6 @@ html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115d
 @media(max-width:600px){.pv-listtab{padding:13px 7px 13px 5px}.pv-listtab-text{font-size:11px}}
 @media(max-width:720px){
     .pdb{padding:140px 0 46px}
-    .pdb-title{font-size:34px}
     .pdb-titlebar{flex-direction:column;align-items:flex-start;gap:16px}
     .pdb-toolbar{margin-top:34px}
   }
