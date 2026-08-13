@@ -1193,9 +1193,10 @@ img.oc-imgload{
    ──────────────────────────────────────────────────────────────────
    ★ 왜 옮기나
      글쓰기가 목록 <b>맨 아래</b>에 있었습니다. 쪽수와 자리를 다투고,
-     글을 쓰려면 스무 줄을 끝까지 내려야 <b>있는 줄도 알 수 있었습니다.</b>
-     아래 고정 띠(assets/tabbar.js) 바로 위에 두면 어느 쪽에 있어도
-     엄지가 닿습니다.
+     글을 쓰려면 끝까지 내려야 <b>있는 줄도 알 수 있었습니다.</b>
+
+   ★ 모양 — 아래 고정 띠에 <b>딱 붙는 가로 꽉 찬 사각 단추</b>입니다.
+     (처음에 알약으로 냈다가 파트너 지시로 바꿨습니다)
 
    ★ 게시판 열일곱 곳에 <b>한 번에</b> 반영됩니다 — 단추는 assets/board.js
      가 `.board-actions` 안에 넣고, 그 상자는 열일곱 화면이 모두
@@ -1204,35 +1205,48 @@ img.oc-imgload{
    ★ 몇 가지 지킨 것
      · 띠 높이는 `--oc-tab-h`(tabbar.js 가 넣습니다)로 받습니다 —
        68 을 여기 다시 적으면 높이를 바꿀 때 어긋납니다
-     · 상자에 <b>바탕을 두지 않고</b> pointer-events:none 으로 둡니다 —
-       가로 전체를 막으면 그 줄의 목록·「맨위로」를 누를 수 없습니다
      · `:empty` 일 때 감춥니다 — 글쓰기 권한이 없는 사람에게는 board.js
-       가 단추를 넣지 않으므로, 감추지 않으면 <b>빈 상자가 자리를</b>
-       차지합니다
+       가 단추를 넣지 않으므로, 감추지 않으면 <b>빈 띠가 남습니다</b>
+     · 단추가 실제로 놓인 화면에서만 `html.oc-has-write` 가 붙습니다
+       (board.js). 그 표시로 <b>본문 아래 여백·맨위로·설치안내</b>를
+       단추 높이만큼 더 올립니다 — 그러지 않으면 푸터와 「맨위로」가
+       단추에 가립니다
      · 전체메뉴·서랍이 열리면 함께 감춥니다 (`html.oc-menu-open`)
    ══════════════════════════════════════════════════════════════════ */
 @media(max-width:880px){
   .board-actions{
     position:fixed; left:0; right:0;
-    bottom:calc(var(--oc-tab-h,68px) + 12px + env(safe-area-inset-bottom,0px));
+    bottom:calc(var(--oc-tab-h,68px) + env(safe-area-inset-bottom,0px));
     z-index:190;
-    display:flex; justify-content:center;
-    padding:0 14px;
+    display:block; padding:0; margin:0;
     pointer-events:none;
   }
   .board-actions:empty{display:none}
   .board-actions .board-write{
     pointer-events:auto;
-    border:0; border-radius:999px;
+    display:block; width:100%;
+    border:0; border-radius:0;
     background:var(--violet); color:#fff;
-    padding:13px 30px; font-size:14px; font-weight:700; letter-spacing:-.01em;
-    box-shadow:0 12px 28px -10px rgba(30,20,70,.55), 0 2px 6px rgba(0,0,0,.14);
+    height:var(--oc-write-h,52px); line-height:var(--oc-write-h,52px);
+    padding:0; text-align:center;
+    font-size:15px; font-weight:700; letter-spacing:-.01em;
+    box-shadow:0 -8px 20px -14px rgba(20,18,40,.45);
   }
-  .board-actions .board-write:hover{background:var(--violet)}
-  /* 쪽수 줄이 고정 단추에 가리지 않게 아래를 비웁니다 —
-     아래 고정 띠(68px)는 tabbar.js 가 body 에 이미 확보해 두었으므로,
-     여기서는 <b>단추 한 줄만큼</b>(약 60px) 더 비웁니다. */
-  .board-foot{padding-bottom:60px}
+  .board-actions .board-write:hover,
+  .board-actions .board-write:active{background:var(--violet)}
+
+  /* 단추가 놓인 화면만 아래를 더 비웁니다 */
+  html.oc-has-write body{
+    padding-bottom:calc(var(--oc-tab-h,68px) + var(--oc-write-h,52px) + env(safe-area-inset-bottom,0px));
+  }
+  html.oc-has-write .to-top{
+    bottom:calc(var(--oc-tab-h,68px) + var(--oc-write-h,52px) + 12px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  html.oc-has-write .pwa-install{
+    bottom:calc(var(--oc-tab-h,68px) + var(--oc-write-h,52px) + 10px + env(safe-area-inset-bottom,0px)) !important;
+  }
+
+  .board-foot{padding-bottom:0}
   html.oc-menu-open .board-actions{display:none}
 }
-html[data-theme="dark"] .board-actions .board-write{box-shadow:0 12px 28px -12px rgba(0,0,0,.7)}
+html[data-theme="dark"] .board-actions .board-write{box-shadow:0 -8px 20px -14px rgba(0,0,0,.8)}

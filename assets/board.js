@@ -965,8 +965,16 @@ window.OCBoard = (function () {
       gate().then(function (m) {
         if (!m) return;
         var bar = document.querySelector('.board-actions');
-        if (bar) bar.innerHTML = '<a class="board-write" href="' + cfg.writePage + '">'
-          + esc(cfg.writeLabel || '\uae00\uc4f0\uae30') + '</a>';
+        if (bar) {
+          bar.innerHTML = '<a class="board-write" href="' + cfg.writePage + '">'
+            + esc(cfg.writeLabel || '\uae00\uc4f0\uae30') + '</a>';
+          /* ★ 2026-08-14 · 좁은 화면에서 이 단추는 아래 고정 띠 위에 <b>가로로
+               꽉 차게</b> 붙습니다(assets/board.css). 그만큼 본문 아래 여백과
+               「맨위로」·설치안내를 올려야 하는데, <b>단추가 실제로 놓인
+               화면에서만</b> 그래야 합니다(권한이 없으면 단추가 없습니다).
+               그 판단을 CSS 가 할 수 없으므로 여기서 표시를 붙입니다. */
+          document.documentElement.classList.add('oc-has-write');
+        }
       });
     }
 
