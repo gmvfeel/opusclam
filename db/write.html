@@ -121,6 +121,8 @@
   .wr-actions::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:100%;height:1px;background:var(--line-2)}
 
   .wr-btn{font-family:inherit;font-size:14px;font-weight:600;padding:12px 26px;border-radius:11px;cursor:pointer;border:1px solid transparent;transition:background .15s,border-color .15s,color .15s}
+  /* ★ 2026-08-13 · 제출 뒤 「목록으로」 등은 링크입니다 — 같은 모양이 되게 */
+  a.wr-btn{display:inline-flex;align-items:center;text-decoration:none;line-height:1}
 
   .wr-ghost{background:var(--paper);border-color:var(--line-2);color:var(--text-2)}
 
@@ -293,7 +295,7 @@
         </div>
       </section>
 
-      <div class="wr-actions">
+      <div class="wr-actions" id="wrActions">
         <button type="button" class="wr-btn wr-cancel" onclick="history.back()">취소</button>
         <button type="button" class="wr-btn wr-ghost" id="wrPreview">미리보기</button>
         <button type="button" class="wr-btn wr-primary" id="wrSubmit">제출 (검수 요청)</button>
@@ -1240,6 +1242,33 @@ if('serviceWorker' in navigator){
   }
   function hush(){ if (msgBox) msgBox.hidden = true; }
 
+  /* ── 제출한 뒤 돌아갈 길 ──────────────────────────────────
+     ★ 2026-08-13 · 파트너 지적
+       제출하면 단추가 「제출됨」으로 바뀌는데, 남은 것은 취소·미리보기뿐이라
+       목록이나 원래 보던 항목으로 돌아갈 길이 없었습니다.
+       (취소는 history.back() 이라 제출한 뒤에 누르면 뜻이 어긋납니다)
+     ★ 그래서 단추 줄을 <b>통째로 바꿉니다</b> — 다시 낼 일이 없으니
+       제출·취소·미리보기를 남겨 둘 까닭이 없습니다.
+     ★ 주소는 db 열쇠말이 그대로 파일 이름입니다
+         person → /db/person.html · /db/person-view.html
+       일곱 DB 모두 이 규칙을 따릅니다(확인함). */
+  function doneActions(){
+    var box = document.getElementById('wrActions');
+    if (!box) return;
+    var db = curDb || 'person';
+    var label = (F[db] && F[db].label) || 'DB';
+    var html = '';
+    /* 보강이면 방금 고친 그 항목으로 곧장 돌아갈 수 있게 */
+    if (_mode === 'enhance' && _id && db === _db) {
+      html += '<a class="wr-btn wr-ghost" href="/db/' + encodeURIComponent(db)
+            + '-view.html?id=' + encodeURIComponent(_id) + '">이 항목 보기</a>';
+    }
+    html += '<a class="wr-btn wr-ghost" href="/account/mypage.html">마이페이지</a>'
+          + '<a class="wr-btn wr-primary" href="/db/' + encodeURIComponent(db) + '.html">'
+          + esc(label) + ' 목록으로</a>';
+    box.innerHTML = html;
+  }
+
   /* 폼에 적힌 것을 모읍니다 — 칸 이름(data-k)이 붙은 <b>입력칸</b>만.
 
      ★ 입력칸만 골라야 합니다 (2026-08-10 · 시험에서 잡았습니다)
@@ -1341,6 +1370,7 @@ if('serviceWorker' in navigator){
         '<b>제출했습니다.</b> 검수 뒤에 반영되며, 반영되면 액티브포인트가 쌓입니다.<br>'
         + '<a href="/account/mypage.html">마이페이지</a>에서 확인하실 수 있습니다.');
       subBtn.textContent = '제출됨';
+      doneActions();
     } catch (e) {
       var m = String(e.message || e);
       if (/로그인/.test(m)) m = '로그인이 풀렸습니다. 다시 로그인해 주십시오.';
