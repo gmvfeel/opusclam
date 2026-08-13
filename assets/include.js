@@ -431,7 +431,10 @@
           if (it.children[i].tagName === 'A') { a = it.children[i]; break; }
         }
         var d = it.querySelector('.dropdown');
-        if (a && d) dd[a.getAttribute('href') || ''] = d;
+        /* ★ 2026-08-13 · 본 헤더의 이름표(nav-item--shop 등)를 함께 나릅니다.
+             회원 헤더도 대메뉴마다 하위 메뉴 자리를 달리 잡아야 하는데,
+             무슨 메뉴인지 알 길이 없었습니다. */
+        if (a && d) dd[a.getAttribute('href') || ''] = { el: d, cls: (String(it.className).match(/nav-item--[a-z]+/) || [''])[0] };
       });
 
       [].slice.call(nav.children).forEach(function (a) {
@@ -441,7 +444,10 @@
         nav.replaceChild(box, a);
         box.appendChild(a);
         var d = dd[a.getAttribute('href') || ''];
-        if (d) box.appendChild(document.importNode(d, true));
+        if (d) {
+          if (d.cls) box.className += ' ga-item--' + d.cls.replace('nav-item--', '');
+          box.appendChild(document.importNode(d.el, true));
+        }
       });
     }
 
@@ -506,4 +512,98 @@
     injectSubnav();
   }
 
+})();
+
+/* ══ 하위 메뉴 자리 맞추기 — 2026-08-13 ═══════════════════════════
+   ★ 무엇을 하나
+     대메뉴 글자 아래에 정해 둔 항목이 오도록 하위 메뉴 줄을 좌우로 옮깁니다.
+       OC커뮤니티 → 지식나눔 / 정보SPOT → 지원금 / 리쿠르트 → 인재정보 /
+       SHOPPING → LIFEPOP
+     맞출 항목은 partials/header.html 의 data-dd-align 표시로 정합니다.
+     (표시가 없는 메뉴는 손대지 않습니다 — DATABASE 는 왼쪽 정렬입니다)
+
+   ★ 왜 CSS 숫자로는 안 되나
+     · 로그인하면 오른쪽이 넓어져 대메뉴가 밀립니다
+     · 언어를 바꾸면 항목 글자 길이가 달라져 줄 폭이 바뀝니다
+     · 화면 폭·글꼴 로딩에 따라도 달라집니다
+     값을 서른 개 넘게 두어야 하고 그래도 어긋납니다.
+   ▶ <b>마우스를 올리는 그 순간에 재서</b> 옮깁니다. 한 곳이면 끝납니다.
+
+   ★ 물러나는 경우 — 억지로 맞추면 더 나빠지는 자리입니다
+     · 좁은 화면(880px 아래) — 세로로 쌓입니다
+     · 항목이 <b>여러 줄로 감긴</b> 경우 — 가운데 정렬로 되돌립니다
+   ★ 넘치지 않게 — 옮긴 뒤 첫 항목이 왼쪽, 끝 항목이 오른쪽으로 화면을
+     벗어나면 들어오는 만큼만 옮깁니다.
+   ★ 두 헤더를 함께 봅니다 — 본 헤더(.nav-item) · 회원 헤더(.ga-item)
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+  if (window.__ocDdAlign) return;
+  window.__ocDdAlign = true;
+  var EDGE = 8;   /* 화면 가장자리에 남길 여백 */
+
+  function align(item) {
+    var inner = item.querySelector('.dropdown-inner');
+    if (!inner) return;
+    var target = inner.querySelector('[data-dd-align]');
+    var top = null, i;
+    for (i = 0; i < item.children.length; i++) {
+      if (item.children[i].tagName === 'A') { top = item.children[i]; break; }
+    }
+    if (!target || !top) return;
+
+    /* 좁은 화면은 그대로 둡니다 */
+    if (window.innerWidth <= 880) { inner.style.transform = ''; return; }
+
+    var kids = [], c = inner.children;
+    for (i = 0; i < c.length; i++) if (c[i].tagName === 'A') kids.push(c[i]);
+    if (!kids.length) return;
+
+    /* 재는 동안에는 옮기지 않은 상태로 둡니다 */
+    inner.style.transform = 'none';
+
+    var t = top.getBoundingClientRect();
+    var g = target.getBoundingClientRect();
+    var f = kids[0].getBoundingClientRect();
+    var l = kids[kids.length - 1].getBoundingClientRect();
+
+    /* 여러 줄로 감기면 물러납니다
+       ★ offsetTop 을 견주지 않습니다 — 한 줄에 있어도 글자에 따라 높이가
+         달라(한글·라틴 섞임) 2px 씩 어긋납니다. 실제로 <b>아랫줄로
+         내려간</b> 것만 잡습니다. */
+    for (i = 0; i < kids.length; i++) {
+      if (kids[i].getBoundingClientRect().top >= f.bottom - 2) {
+        inner.style.transform = '';
+        return;
+      }
+    }
+
+    /* 옮길 양 — 오른쪽(+) / 왼쪽(-) */
+    var move = (t.left + t.width / 2) - (g.left + g.width / 2);
+
+    /* 화면을 벗어나지 않는 범위로 자릅니다 */
+    var maxRight = (window.innerWidth - EDGE) - l.right;   /* 오른쪽 여유 */
+    var maxLeft = f.left - EDGE;                           /* 왼쪽 여유 */
+    if (move > maxRight) move = maxRight;
+    if (move < -maxLeft) move = -maxLeft;
+
+    inner.style.transform = move ? 'translateX(' + Math.round(move) + 'px)' : 'none';
+  }
+
+  var SEL = '.site-header .nav-item, .gnb .ga-item';
+
+  /* 마우스를 올리거나 키보드로 들어올 때 그 메뉴만 잽니다 */
+  function onEnter(e) {
+    var el = e.target;
+    if (!el || !el.closest) return;
+    var item = el.closest(SEL);
+    if (item) align(item);
+  }
+  document.addEventListener('mouseover', onEnter, true);
+  document.addEventListener('focusin', onEnter, true);
+
+  /* 창 크기가 바뀌면 옮긴 것을 지웁니다 — 다음에 올릴 때 다시 잽니다 */
+  window.addEventListener('resize', function () {
+    var all = document.querySelectorAll(SEL + ' .dropdown-inner');
+    for (var i = 0; i < all.length; i++) all[i].style.transform = '';
+  });
 })();

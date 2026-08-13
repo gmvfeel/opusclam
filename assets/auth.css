@@ -59,6 +59,10 @@ button,input,select,textarea{font-family:inherit}
    모바일에서만 10.5px 로 키웁니다(아래 @media). */
 .util a{color:var(--util-tx);font-size:8px;letter-spacing:.04em;font-weight:600;transition:color .2s}
 .util .l a{margin-right:18px}.util a:hover{color:var(--navh)}
+/* ★ 2026-08-13 · 위 줄 오른쪽에 로그인·회원가입이 놓입니다 (파트너 지시)
+     8px 는 읽기 어려워 키웁니다. 왼쪽 회사 링크는 그대로 8px 입니다. */
+.util .r a{font-size:12.5px}
+.util .r .authlink a + a{margin-left:14px}
 .mast{border-top:1px solid var(--hair)}
 .mast .in{display:flex;align-items:center;justify-content:space-between;height:78px;gap:24px}
 .logo img{height:34px;filter:var(--logo-filter)}
