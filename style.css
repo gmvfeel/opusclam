@@ -950,3 +950,18 @@
   .m-actions a{ min-height:40px; display:inline-flex; align-items:center; }
   .m-community{ min-height:40px; display:flex !important; align-items:center; font-size:11.5px; }
 }
+
+  /* ══ 모바일 · 맨 위 줄 감추기 (2026-08-13 · 파트너 지시) ══════
+     ★ 왜 한 곳으로 모았나
+       이 규칙이 <b>메인과 DB 목록 여덟 화면에만</b> 있었습니다. 그래서
+       화면을 옮길 때마다 맨 위가 달라졌습니다 —
+         DB 목록 : 위 줄 없음 · KO 가 로고 옆
+         커뮤니티·정보SPOT : 위 줄 있음 · 로그인 상태와 KO 가 그 줄에
+       이제 여기 한 줄이 모든 화면을 정합니다.
+     ★ 로그인 상태(이름님·이너스페이스·로그아웃)는 <b>서랍(≡) 안</b>에
+       있습니다 — 길이 막히지 않습니다.
+     ★ 언어 고르개는 assets/i18n.js 가 <b>보이는 자리</b>를 스스로 골라
+       로고 옆(.mast-tools)으로 옮깁니다. 손댈 것이 없습니다.
+     ※ 메인(home.html)은 style.css 를 부르지 않아 자기 안에 같은 줄을
+       갖고 있습니다. 값을 바꾸실 때 두 곳을 함께 보십시오. */
+  @media(max-width:768px){ .util{display:none} }
