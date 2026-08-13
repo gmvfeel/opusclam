@@ -503,8 +503,14 @@
 </script>
 <script src="/assets/app.js" defer></script>
 <!-- 오늘 업데이트 개수 — 카드 줄 맨 끝에 한 장을 더 놓습니다 (공용) -->
+<!-- ★ 2026-08-13 · 위 data-tables 에 opusnity 를 더했습니다 (파트너 요청)
+       그 목록이 「오늘 업데이트 ○건」을 세는 표들입니다. 새 게시판을 넣지
+       않으면 오퍼니티에 글이 올라와도 그 셈에 들어가지 않습니다.
+     ★ 주석을 <script> 태그의 <b>속성 사이</b>에 넣었다가 옮겼습니다 —
+       HTML 주석은 태그 안에 들어갈 수 없어 브라우저가 속성으로 잘못
+       읽을 수 있습니다. -->
 <script src="/assets/today-count.js"
-        data-tables="hottopic,gallery,admission,admission_community,qna,news,modern_music,prenatal_music,utility"
+        data-tables="hottopic,opusnity,gallery,admission,admission_community,qna,news,modern_music,prenatal_music,utility"
         data-label="오늘 업데이트"
         data-href="/community/hottopic.html"></script>
 <!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->

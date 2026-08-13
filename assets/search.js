@@ -140,6 +140,18 @@ window.OCSearch = (function () {
         return { t: r.title, s: join([r.category, r.author_name, ymd(r.created_at)]), d: cut(r.body, 70) };
       } },
 
+    /* ★ 2026-08-13 · 오퍼니티 (파트너 요청)
+         핫토픽 설정을 그대로 씁니다 — 표·이름·주소만 다릅니다.
+       ★ 핫토픽 바로 다음에 둡니다 — 검색 결과에서도 성격이 가까운 것끼리
+         나란히 있어야 고르기 쉽습니다. */
+    { key: 'opusnity', label: '오퍼니티', table: 'opusnity',
+      cols: ['title', 'body'],
+      sel: 'id,title,body,category,author_name,created_at',
+      list: '/community/opusnity.html', view: '/community/opusnity-view.html',
+      line: function (r) {
+        return { t: r.title, s: join([r.category, r.author_name, ymd(r.created_at)]), d: cut(r.body, 70) };
+      } },
+
     { key: 'gallery', label: '공연사진 · 영상', table: 'gallery',
       cols: ['title', 'body'],
       sel: 'id,title,body,category,author_name,created_at',
