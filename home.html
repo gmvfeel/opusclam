@@ -299,8 +299,9 @@
   .fullmenu-head{position:relative;z-index:1;width:100%;display:flex;align-items:center;justify-content:space-between;height:90px;border-bottom:1px solid rgba(255,255,255,.13);flex:0 0 auto}
   .fullmenu-head .fm-logo{height:32px;width:auto;display:block;filter:brightness(0) invert(1)}
   .fullmenu-head .fm-logolink{display:inline-flex;align-items:center}
-  .fullmenu-close{width:46px;height:46px;border-radius:12px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.06);display:grid;place-items:center;cursor:pointer;color:#fff;transition:background .2s,border-color .2s,transform .3s}
-  .fullmenu-close:hover{background:var(--orange);border-color:var(--orange);transform:rotate(90deg)}
+  /* ★ 2026-08-14 · 외곽선을 뺐습니다 (파트너 지시) */
+  .fullmenu-close{width:46px;height:46px;border-radius:12px;border:0;background:rgba(255,255,255,.06);display:grid;place-items:center;cursor:pointer;color:#fff;transition:background .2s,transform .3s}
+  .fullmenu-close:hover{background:var(--orange);transform:rotate(90deg)}
   .fullmenu .wrap{max-width:1560px;padding:0 48px}
   .fullmenu-body{position:relative;z-index:1;flex:1 1 auto;display:flex;align-items:center;padding:44px 0 64px;overflow-y:auto;min-height:0}
   .fullmenu-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:44px;width:100%}
@@ -1005,7 +1006,8 @@
       padding:64px 0 30px;overflow-y:auto;transform:translateX(105%);
       transition:transform .32s ease;z-index:90;box-shadow:-12px 0 40px rgba(10,13,36,.25)}
     nav.main.open{transform:none}
-    .nav-close{display:grid;place-items:center;position:absolute;top:14px;right:16px;width:40px;height:40px;border:1px solid rgba(255,255,255,.25);border-radius:9px;background:none;color:#fff;cursor:pointer;z-index:3}
+    /* ★ 2026-08-14 · 외곽선을 뺐습니다 (파트너 지시) — ≡ 단추와 결을 맞춥니다 */
+    .nav-close{display:grid;place-items:center;position:absolute;top:14px;right:16px;width:40px;height:40px;border:0;border-radius:9px;background:none;color:#fff;cursor:pointer;z-index:3}
     .nav-close:active{background:rgba(255,255,255,.1)}
     .nav-item{flex-direction:column;align-items:stretch;border-bottom:1px solid rgba(255,255,255,.08)}
     nav.main>.nav-item>a{padding:15px 24px;font-size:15px;position:relative;color:rgba(255,255,255,.85)}
