@@ -983,3 +983,37 @@
     html{overflow-x:hidden}
     body{overflow-x:hidden;max-width:100%}
   }
+
+  /* ★ 2026-08-13 · 언어 고르개를 <b>날씬하게</b> (파트너 지적)
+       ─────────────────────────────────────────────────────────
+       왜 뚱뚱해 보였나
+         i18n.js 가 넣는 기본 모양은 <b>어두운 알약</b>입니다
+         (background: rgba(16,14,32,.42)). 투명한 어두운 헤더 위에서
+         흰 글자를 받쳐 주려고 그렇게 두었습니다.
+         그런데 이제 모바일 헤더는 <b>늘 흰색</b>입니다. 흰 바탕에
+         회색 알약이 놓이니 옆의 명암(◑)·전체메뉴(≡) 단추보다
+         <b>혼자 튀었습니다.</b>
+       고침
+         흰 헤더에서는 알약을 없애고 <b>가는 테두리</b>만 둡니다 —
+         옆 두 단추와 같은 결이 됩니다. 크기도 40 → 34px.
+       ★ 어두운 투명 헤더(레슨:ON)에서는 <b>그대로</b> 둡니다 —
+         거기서는 알약이 흰 글자를 받쳐 주어야 읽힙니다. */
+  @media (max-width: 860px){
+    .site-header.solid .oc-lang > button{
+      min-height:34px !important; padding:0 9px !important;
+      font-size:11.5px !important; font-weight:700 !important;
+      border-radius:8px !important;
+      background:transparent !important;
+      color:var(--text-2,#3a3c52) !important;
+      border:1px solid var(--line,#e4e4ec) !important;
+    }
+    .site-header.solid .oc-lang > button:hover{
+      border-color:var(--violet-2,#7c63b0) !important;
+      color:var(--violet-2,#7c63b0) !important;
+    }
+    /* 어두운 투명 헤더에서는 알약을 남기고 크기만 줄입니다 */
+    .site-header:not(.solid) .oc-lang > button{
+      min-height:34px !important; padding:0 10px !important;
+      font-size:11.5px !important; border-radius:17px !important;
+    }
+  }
