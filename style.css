@@ -67,6 +67,11 @@
   .util .left a{margin-right:18px;color:rgba(255,255,255,.34);font-family:var(--serif);letter-spacing:.05em;font-size:8px;font-weight:600;transition:color .2s ease}
   .util .right a{color:rgba(255,255,255,.34);letter-spacing:.04em;font-size:8px;font-weight:600;transition:color .2s ease}
   .util a:hover{color:#fff}
+  /* ★ 2026-08-13 · 위 줄 오른쪽에 로그인·회원가입이 놓입니다 (파트너 지시)
+       두 링크가 붙어 보이지 않게 사이를 띄우고, 8px 보다 조금 키워
+       <b>누를 것</b>임을 알 수 있게 합니다. */
+  .util .right > a{font-size:11px}
+  .util .right > a + a{margin-left:14px}
   .m-community{display:none}
   @media(max-width:880px){
     .m-community{display:block;margin:10px 24px 4px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);font-family:var(--serif);letter-spacing:.12em;font-size:11px;font-weight:600;transition:color .2s ease}
@@ -142,7 +147,7 @@
          그만큼 되돌리면(110-29=81) 두 글자의 가운데가 맞습니다.
          ★ 하위 메뉴 항목이 늘거나 줄면 이 값을 다시 재야 합니다 —
            지금은 열한 개(핫토픽 … 태교음악) 기준입니다. */
-    --dd-nudge:min(81px, max(0px, (100vw - 1140px) / 2));
+    --dd-nudge:calc(24px + min(0px, (100vw - 1064px) / 2));
     transform:translateX(calc(var(--dd-nudge) * -1))}
   /* DATABASE 메뉴만 왼쪽 정렬 (형태·다른 메뉴는 그대로)
      ★ 이 메뉴는 왼쪽 정렬이라 밀면 화면 밖으로 나갑니다 — 그대로 둡니다. */
@@ -169,18 +174,16 @@
 
      ★ 넘치지 않게 min()·max() 로 감쌉니다 — 좁은 화면에서 화면 밖으로
        나가는 것을 막습니다(넓게 열릴 때만 제 값이 걸립니다). */
-  .nav-item--community .dropdown-inner{
-    --dd-nudge:min(81px, max(0px, (100vw - 1140px) / 2))}
-  .nav-item--spot .dropdown-inner{
-    --dd-nudge:min(-11px, max(-200px, (100vw - 1140px) / 2 - 92px))}
+  .nav-item--community .dropdown-inner{--dd-nudge:calc(24px + min(0px, (100vw - 1064px) / 2))}
+  .nav-item--spot .dropdown-inner{--dd-nudge:calc(-69px + min(0px, (100vw - 1064px) / 2))}
   .nav-item--shop .dropdown-inner{
     /* ★ 2026-08-13 · -265px → -155px (110px 왼쪽으로 되돌림)
          LIFEPOP 이 SHOPPING 보다 110px 오른쪽에 있었습니다. */
-    --dd-nudge:max(-236px, min(-155px, (100vw - 1140px) / 2 - 236px))}
+    --dd-nudge:calc(-322px + min(0px, (100vw - 1064px) / 2))}
   .nav-item--recruit .dropdown-inner{
     /* ★ 2026-08-13 · 리쿠르트 하위 메뉴를 오른쪽으로 (파트너 요청)
          기본값 81px 왼쪽이라 대메뉴보다 훨씬 왼쪽에 있었습니다. */
-    --dd-nudge:max(-211px, min(-130px, (100vw - 1140px) / 2 - 211px))}
+    --dd-nudge:calc(-191px + min(0px, (100vw - 1064px) / 2))}
   .dropdown a{position:relative;font-size:13px;color:#9a9baa;padding:5px 18px;white-space:nowrap;letter-spacing:-.01em;transition:color .15s}
   .dropdown a:not(:last-child)::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--line-2)}
   .dropdown a:hover{color:#363845}

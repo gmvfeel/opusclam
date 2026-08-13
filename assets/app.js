@@ -126,7 +126,9 @@
   }
   function collectAuthLinks(){
     var login=[], join=[];
-    var els=document.querySelectorAll(".mast-tools .link-txt, .m-actions a");
+    /* ★ 2026-08-13 · 로그인·회원가입이 <b>위 줄(.util .right)</b>로 옮겨졌습니다.
+       옛 자리(.mast-tools .link-txt)도 그대로 둡니다 — 다른 헤더가 아직 쓸 수 있습니다. */
+    var els=document.querySelectorAll(".util .right a, .mast-tools .link-txt, .m-actions a");
     for(var i=0;i<els.length;i++){
       var t=(els[i].textContent||"").trim();
       if(t==="로그인") login.push(els[i]);
