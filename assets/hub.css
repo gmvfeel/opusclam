@@ -786,3 +786,25 @@
     .hb-mlabels{gap:3px}
     .hb-mlabels span{font-size:10.5px}
   }
+
+  /* ══ 모바일 · 데이터 분석 칸 (2026-08-13) ═══════════════════
+     ★ 왜 필요한가 (390px 실기 확인)
+       .hb-two 가 화면 폭과 무관하게 <b>늘 2열</b>이었습니다. 390px 에서는
+       칸 하나가 163px 이 되어 —
+         · 제목이 「정보 완 / 성도」 처럼 글자 사이에서 끊겼습니다
+         · 제목과 설명이 <b>나란히</b> 놓여 서로를 밀었습니다
+           (「제자가 많은 스 / 승」 · 「동문이 많은 학 / 교」)
+
+     ★ 두 가지를 함께 고칩니다
+       ① 좁은 화면에서는 1열로
+       ② 제목줄에서 설명을 <b>아랫줄</b>로 내립니다
+
+     ★ 이 파일 끝에 둡니다 — hub.css 안에 .hb-two 규칙이 두 벌 있어
+       (416줄 · 511줄) 앞쪽에 넣으면 뒤쪽에 밀립니다. */
+  @media (max-width:760px){
+    .hb-two{grid-template-columns:minmax(0,1fr)}
+    .hb-ptitle{flex-wrap:wrap;gap:3px 8px}
+    .hb-ptitle b{flex:0 0 auto}
+    .hb-ptitle span{flex:1 1 100%}
+    .hb-ptitle u{margin-left:auto}
+  }
