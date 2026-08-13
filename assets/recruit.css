@@ -536,6 +536,19 @@ html[data-theme="dark"] .rc-fld input[type="text"] {
   .rc-table th.c-hit, .rc-table td.c-hit { display: none; }
   .rc-table th.c-no, .rc-table td.c-no { width: 40px; }
   .rc-table th.c-when, .rc-table td.c-when { width: 104px; }
+  /* ★ 2026-08-13 · 좁은 화면에서는 <b>table-layout 을 auto 로</b> (390px 실측)
+       fixed 로 두면 <b>감춘 칸의 폭이 계산에 그대로 남습니다.</b>
+       이름 132px + 조회수 62px 이 자리를 먹어, 제목 칸이 73px 밖에
+       못 받았습니다. 머리글이 「자기소 / 개」로 끊기고 표 오른쪽이
+       145px 비었습니다.
+     ★ %로 다시 주는 것(calc(100% - 144px))도 시험했는데 표 안에서
+       퍼센트가 엉뚱하게 풀려 73px 그대로였습니다.
+     ★ auto 로 두면 남은 폭을 제목 칸이 받습니다 —
+       No 42 · 제목 216 · 등록일 104 = 362px (칸을 꽉 채웁니다). */
+  .rc-table { table-layout: auto; }
+  /* 안내 줄(빈 목록·로그인 안내)은 <b>줄바꿈되게</b> 둡니다 —
+     nowrap 이면 긴 문장이 표를 옆으로 늘립니다 */
+  .rc-table .rc-empty, .rc-table .rc-gate, .rc-table .rc-loading { white-space: normal; }
 }
 
 @media (max-width: 640px) {
