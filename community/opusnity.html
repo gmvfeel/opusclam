@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오퍼니티 · OPUSCLAM</title>
+<meta name="description" content="음악을 좋아하는 사람들이 자유롭게 이야기 나누는 공간입니다. 수다·고민·자랑·질문·추천.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-orbit on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/community/index.html">OC커뮤니티</a><span>/</span><span class="on">오퍼니티</span>
+    </nav>
+
+    <!-- OC커뮤니티 하위 메뉴 — partials/subnav-community.html 한 곳에서 관리합니다 -->
+    <div id="oc-subnav"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OC COMMUNITY</div>
+          <h1 class="pdb-title">오퍼니티</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">음악을 좋아하는 사람들이 <b>자유롭게</b> 이야기 나누는 공간입니다. 무거운 이야기도 가벼운 이야기도 괜찮습니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="board">
+  <div class="board-bar pdb-toolbar">
+    <div class="board-search pdb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" placeholder="제목·내용 검색" aria-label="검색">
+      <button type="button" class="board-searchbtn pdb-searchbtn" aria-label="검색">검색</button>
+    </div>
+    <div class="pdb-selects">
+      <select class="board-catsel" aria-label="분류"></select>
+      <select class="board-sort" aria-label="정렬">
+        <option value="created_at">최신순</option>
+        <option value="view_count">인기순</option>
+        <option value="comment_count">댓글순</option>
+      </select>
+    </div>
+    <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+      <span class="fs-label">글자크기</span>
+      <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+      <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+      <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+    </div>
+  </div>
+
+  <div class="board-count pdb-count">전체 <b>0</b>건</div>
+  <div class="board-list"></div>
+
+  <div class="board-foot">
+    <div class="board-pager"></div>
+    <div class="board-actions"></div>
+  </div>
+</main>
+
+<section class="bigban">
+  <div class="wrap">
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+    <a class="ad-slot bigban-ad" href="#">
+      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="ad-badge">Advertisement</span>
+      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
+    </a>
+  </div>
+</section>
+
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script src="/assets/board.js"></script>
+<script>
+  /* ★★ 2026-08-13 · 오퍼니티 (파트너 요청) ★★
+     ─────────────────────────────────────────────────────────────
+     ★ 무엇인가
+       핫토픽보다 <b>더 자유롭게</b> 쓰는 커뮤니티 게시판입니다.
+       핫토픽은 「음악계의 화제와 이슈」라 글이 무거워지는데,
+       오퍼니티는 수다·고민·자랑도 괜찮은 자리입니다.
+
+     ★ 핫토픽 설정을 <b>그대로</b> 씁니다 — 표만 다릅니다.
+       엔진(assets/board.js)이 아홉 게시판을 한 코드로 다루므로
+       설정만 바꾸면 됩니다. 화면을 새로 만들지 않았습니다.
+
+     ★ 분류만 다릅니다
+       핫토픽 국내 / 해외
+       오퍼니티 <b>수다 · 고민 · 자랑 · 질문 · 추천</b>
+       ★ 표에 못을 박아 두었으므로(opusnity_category_ck) 이 다섯 가지
+         밖의 값은 저장되지 않습니다. 여기 목록과 <b>같아야 합니다.</b> */
+  document.addEventListener('DOMContentLoaded', function(){
+    OCBoard.list({
+      table:'opusnity', pageSize:20, viewPage:'opusnity-view.html', writePage:'opusnity-write.html',
+      searchCols:['title','body','keywords'],
+      categories:[{value:'',label:'전체'},
+                  {value:'수다',label:'수다'},
+                  {value:'고민',label:'고민'},
+                  {value:'자랑',label:'자랑'},
+                  {value:'질문',label:'질문'},
+                  {value:'추천',label:'추천'}],
+      twoCol:true, articleStyle:true, writeRole:'member', pinnedFirst:true, defaultSort:'created_at',
+      reactions:true, rowThumb:true
+    });
+  });
+</script>
+<script src="/assets/app.js" defer></script>
+<!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->
+<script src="/assets/pwa-install.js" defer></script>
+</body>
+</html>

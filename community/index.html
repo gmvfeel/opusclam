@@ -216,6 +216,13 @@
           <span class="cm-qlabel">핫토픽</span>
           <span class="cm-qcount"><b id="cHot">—</b><i>건</i></span>
         </a>
+        <!-- ★ 2026-08-13 · 오퍼니티 (파트너 요청)
+               핫토픽보다 자유롭게 쓰는 커뮤니티 게시판입니다.
+             ★ 핫토픽 바로 다음에 둡니다 — 성격이 가장 가깝습니다. -->
+        <a class="cm-qcard" href="/community/opusnity.html">
+          <span class="cm-qlabel">오퍼니티</span>
+          <span class="cm-qcount"><b id="cOpn">—</b><i>건</i></span>
+        </a>
         <a class="cm-qcard" href="/community/gallery.html">
           <span class="cm-qlabel">공연사진 / 영상</span>
           <span class="cm-qcount"><b id="cGal">—</b><i>건</i></span>
@@ -367,6 +374,7 @@
                   cols:'id,category,title,body,thumb_url,author_name,created_at,is_pinned',
                   view:'/community/hottopic-view.html', label:'핫토픽 목록' });
 
+
     /* 뉴스 · 입시 탭 */
     OCHub.boardTabs({
       tabsEl:'#tabBtns', listEl:'#tabList', kind:'rows', n:3,
@@ -396,9 +404,15 @@
     });
 
     /* 건수 — 탭에 들어간 게시판도 숫자를 채운다 */
-    ['#cAdm','#cAdc','#cQna','#cNews','#cMod','#cPre','#cUtl','#cSch'].forEach(function(sel,i){
+    /* ★ 2026-08-13 · 오퍼니티(#cOpn · opusnity)를 더했습니다 (파트너 요청)
+         ★ 처음에는 OCHub.board 에 countEl 만 주려 했는데, 그 함수는
+           <b>el 이 없으면 곧바로 나갑니다</b>(assets/hub.js 573줄) —
+           개수가 채워지지 않습니다. 이 화면이 이미 쓰는 방식으로 맞췄습니다.
+         ★ 두 목록의 <b>순서와 개수가 같아야</b> 합니다 — 어긋나면
+           엉뚱한 게시판 수가 들어갑니다. */
+    ['#cAdm','#cAdc','#cQna','#cNews','#cMod','#cPre','#cUtl','#cSch','#cOpn'].forEach(function(sel,i){
       var t=['admission','admission_community','qna','news',
-             'modern_music','prenatal_music','utility','monthly_school'][i];
+             'modern_music','prenatal_music','utility','monthly_school','opusnity'][i];
       fetch('https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/'+t+'?select=id&limit=1',
         { headers:{ apikey:'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',
                     Authorization:'Bearer sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',
