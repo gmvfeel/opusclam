@@ -252,14 +252,14 @@ async function main() {
     ? ALL_GENRES.filter((g) => g.code === ONLY)
     : ALL_GENRES.filter((g) => DEFAULT_CODES.includes(g.code));
   if (!genres.length) {
-    console.error(`--genre=${ONLY} 는 다루지 않는 갈래입니다.`);
+    console.error(`--genre=${ONLY} 는 다루지 않는 구분입니다.`);
     console.error('CCCA(클래식) 또는 CCCC(국악) 만 쓸 수 있습니다.');
     process.exit(1);
   }
 
   console.log('── KOPIS 공연정보 수집 ──');
   console.log(`기간 ${stdate} ~ ${eddate}${DRY ? ' · 담지 않음(dry)' : ''}`);
-  console.log(`갈래 ${genres.map((g) => g.name).join(' · ')}`);
+  console.log(`구분 ${genres.map((g) => g.name).join(' · ')}`);
 
   let got = 0, kept = 0, cut = 0, saved = 0;
 

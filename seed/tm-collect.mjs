@@ -709,7 +709,7 @@ function dropStockImages(rows) {
   for (const r of rows) {
     if (r.thumb_url && stock.has(r.thumb_url)) { r.thumb_url = null; cleared++; }
   }
-  console.log(`   ▶ 갈래 대표 사진을 걷어냈습니다 — 주소 ${stock.size}가지 · ${cleared}건`);
+  console.log(`   ▶ 장르 대표 사진을 걷어냈습니다 — 주소 ${stock.size}가지 · ${cleared}건`);
   return cleared;
 }
 
@@ -729,12 +729,12 @@ function dropStockImages(rows) {
   console.log(`   ▶ 담을 것 모두 ${uniq.length}건`);
 
   if (tally.size) {
-    console.log('   ▶ <담은 것>의 갈래 (많은 순 — 여기 대중음악이 보이면 새어 든 것입니다)');
+    console.log('   ▶ <담은 것>의 장르 (많은 순 — 여기 대중음악이 보이면 새어 든 것입니다)');
     [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12)
       .forEach(([g, n]) => console.log(`        ${String(n).padStart(4)}  ${g}`));
   }
   if (dtally.size) {
-    console.log('   ▶ <버린 것>의 갈래 (많은 순 — 여기 클래식이 보이면 너무 걸러낸 것입니다)');
+    console.log('   ▶ <버린 것>의 장르 (많은 순 — 여기 클래식이 보이면 너무 걸러낸 것입니다)');
     [...dtally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
       .forEach(([g, n]) => console.log(`        ${String(n).padStart(4)}  ${g}`));
   }

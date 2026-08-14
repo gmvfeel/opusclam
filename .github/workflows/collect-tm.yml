@@ -43,7 +43,7 @@ on:
           - 'yes'
           - 'no'
       strict:
-        description: '갈래에 클래식 표시가 반드시 있어야 담기 (이름만 적힌 정통 공연도 함께 빠집니다)'
+        description: '구분에 클래식 표시가 반드시 있어야 담기 (이름만 적힌 정통 공연도 함께 빠집니다)'
         required: true
         default: 'no'
         type: choice

@@ -34,7 +34,7 @@ on:
           - 'no'
           - 'yes'
       genre:
-        description: '갈래 (비우면 클래식만 · CCCC 는 국악)'
+        description: '구분 (비우면 클래식만 · CCCC 는 국악)'
         required: false
         default: ''
   schedule:

@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       section:
-        description: '갈래 (비우면 전체 · 페스티벌 / 콩쿨 / 지원금 / 공연정보 / 관련사이트)'
+        description: '구분 (비우면 전체 · 페스티벌 / 콩쿨 / 지원금 / 공연정보 / 관련사이트)'
         required: false
         default: ''
       limit:

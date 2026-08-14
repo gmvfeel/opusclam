@@ -571,8 +571,8 @@ async function runGroup(g, have, blocked) {
   [...whyCount.entries()].sort((a, b) => b[1] - a[1])
     .forEach(([k, v]) => console.log('   ' + String(v).padStart(5) + '  ' + k));
 
-  console.log('\n── 실제로 걸린 갈래 (위 20개) ──');
-  console.log('   ※ 여기 보이는 갈래가 우리가 몰랐던 대회의 종류입니다.');
+  console.log('\n── 실제로 걸린 구분 (위 20개) ──');
+  console.log('   ※ 여기 보이는 구분이 우리가 몰랐던 대회의 종류입니다.');
   [...typeCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20)
     .forEach(([k, v]) => console.log('   ' + String(v).padStart(5) + '  ' + k));
 
@@ -692,7 +692,7 @@ async function main() {
   if (anyStopped) {
     console.log('\n※ 위키데이터가 속도 제한을 걸어 다 받지 못했습니다.');
     console.log('  20~30분 뒤에 다시 돌리시면 이어서 받습니다.');
-    console.log('  급하시면 「한 갈래씩」(콩쿨만 → 페스티벌만) 나눠 돌리셔도 됩니다.');
+    console.log('  급하시면 「한 구분씩」(콩쿨만 → 페스티벌만) 나눠 돌리셔도 됩니다.');
   }
 
   if (!SAVE) {

@@ -524,7 +524,7 @@ async function main() {
 
   const gl = Object.keys(byGenre).sort((a, b) => byGenre[b] - byGenre[a])
     .map((k) => `${k} ${byGenre[k]}`);
-  if (gl.length) console.log(`  갈래별 : ${gl.join(' · ')}`);
+  if (gl.length) console.log(`  장르별 : ${gl.join(' · ')}`);
 
   if (DEBUG) {
     if (sampleHit.length) {

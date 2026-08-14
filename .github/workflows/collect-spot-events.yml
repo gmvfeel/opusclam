@@ -49,7 +49,7 @@ on:
           - 'concours'
           - 'festival'
       limit:
-        description: '한 갈래에서 최대 몇 개까지 볼까요 (3000 을 권합니다)'
+        description: '한 구분에서 최대 몇 개까지 볼까요 (3000 을 권합니다)'
         required: true
         default: '3000'
         type: string

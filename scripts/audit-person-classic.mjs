@@ -283,7 +283,7 @@ async function main() {
 
   const byReason = {};
   found.forEach((f) => { byReason[f.reason] = (byReason[f.reason] || 0) + 1; });
-  console.log('   갈래 — ' + Object.entries(byReason).map(([k, v]) => k + ' ' + v + '명').join(' · '));
+  console.log('   구분 — ' + Object.entries(byReason).map(([k, v]) => k + ' ' + v + '명').join(' · '));
 
   if (DRY_RUN) { console.log('✅ 미리보기만 했습니다 (DRY_RUN=1).'); return; }
   if (!found.length) { console.log('✅ 담을 후보가 없습니다.'); return; }

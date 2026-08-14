@@ -44,7 +44,7 @@ on:
           - 'no'
           - 'yes'
       force:
-        description: '갈래가 이미 있어도 덮어쓰기 (보통은 no)'
+        description: '장르가 이미 있어도 덮어쓰기 (보통은 no)'
         required: false
         default: 'no'
         type: choice

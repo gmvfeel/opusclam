@@ -524,7 +524,7 @@ async function main() {
   const pct = (n) => Math.round((n / total) * 1000) / 10;
 
   console.log('');
-  console.log('══ 받은 형식 — 갈래별 ══');
+  console.log('══ 받은 형식 — 장르별 ══');
   for (const kd of ['work', 'video', 'part', 'group', 'aside', '?', 'broad']) {
     const items = bag.get(kd);
     if (!items || !items.length) continue;
@@ -561,7 +561,7 @@ async function main() {
   console.log(`  편성도 함께 채울 것  ${genreFilled}개`);
   console.log(`  형식 가지수          ${formCount.size}가지`);
   console.log('');
-  console.log('  ── 갈래 셈 ──');
+  console.log('  ── 장르 셈 ──');
   for (const kd of ['work', 'video', 'part', 'group', 'aside', '?', 'broad']) {
     const n = kindCount.get(kd);
     if (!n) continue;

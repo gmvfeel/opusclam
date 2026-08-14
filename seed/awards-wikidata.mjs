@@ -373,11 +373,11 @@ async function main() {
   /* 갈래표를 DB 에서 읽습니다 */
   const nk = await loadKinds();
   if (!nk) {
-    console.log('★ 갈래표(oc_award_kinds)가 비어 있습니다.');
+    console.log('★ 구분표(oc_award_kinds)가 비어 있습니다.');
     console.log('  13-RUN-NOW-awards-schema.sql 을 먼저 실행해 주십시오.');
     return;
   }
-  console.log(`갈래표 ${nk}가지를 읽었습니다`);
+  console.log(`구분표 ${nk}가지를 읽었습니다`);
 
   const people = await pickPeople();
   if (!people.length) {
@@ -468,7 +468,7 @@ async function main() {
   }
 
   console.log('');
-  console.log('══ 갈래별 ══');
+  console.log('══ 구분별 ══');
   const KIND_KO_LOG = {
     competition: '콩쿠르  ★ 원래 찾던 것',
     order      : '훈장 · 기사단',
@@ -501,8 +501,8 @@ async function main() {
 
   if (noKind.size) {
     console.log('');
-    console.log('★ 갈래표에 없는 종류 — 이것을 알려 주십시오');
-    console.log('  (갈래가 other 로 담기고, 뒤에 SQL 한 줄로 채울 수 있습니다)');
+    console.log('★ 구분표에 없는 종류 — 이것을 알려 주십시오');
+    console.log('  (구분이 other 로 담기고, 뒤에 SQL 한 줄로 채울 수 있습니다)');
     const nt = [...noKind.entries()].sort((a, b) => b[1] - a[1]);
     for (const [k, v] of nt.slice(0, 40)) {
       console.log(`  ${String(v).padStart(5)}  ${k}`);
