@@ -44,6 +44,14 @@
         <div>
           <div class="pdb-eyebrow">OC COMMUNITY</div>
           <h1 class="pdb-title" id="bwHead">질문하기</h1>
+          <!-- ★ 2026-08-14 · 갈래 이름을 <b>제목 아래로</b> 내렸습니다 (파트너 요청)
+                 전에는 「질문하기 [ 음악지식 Q&A ]」 한 줄이라 좁은 화면에서
+                 두 줄로 감기고, 큰 글자에 대괄호가 섞여 어수선했습니다.
+                 「질문하기」가 하는 일이고 갈래는 <b>어디에 쓰는지</b>이므로
+                 크기를 달리하는 편이 뜻에 맞습니다.
+               ★ .pdb-lead 는 다른 화면이 부제에 쓰는 짜임입니다 —
+                 새 규칙을 만들지 않고 그것을 씁니다. -->
+          <p class="pdb-lead" id="bwSub" style="margin-top:8px"></p>
         </div>
       </div>
     </header>
@@ -70,7 +78,8 @@
       '전공별':   ['기악전공','성악전공','작곡전공','음악사/이론전공','교회음악전공','기타전공']
     };
     var label = TRACK === '전공별' ? '전공별 정보나눔' : '음악지식 Q&A';
-    document.getElementById('bwHead').textContent = '질문하기 [ ' + label + ' ]';
+    /* 제목은 「질문하기」 그대로 두고, 갈래는 아래 작은 줄에 둡니다 */
+    document.getElementById('bwSub').textContent = label;
 
     OCBoardWrite.init({
       table:'qna', bucket:'qna',

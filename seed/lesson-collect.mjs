@@ -356,6 +356,25 @@ function blocked(title) {
   return RE_BLOCK.some((re) => re.test(title));
 }
 
+/* ★★ 2026-08-14 · <b>비공개·삭제된 영상</b>을 걸러냅니다 (파트너 지적) ★★
+   ─────────────────────────────────────────────────────────────
+   ★ 무엇이 문제였나
+     재생목록에는 <b>지워지거나 비공개로 바뀐 영상도 자리만 남습니다.</b>
+     목록(playlistItems)에는 번호가 있는데 상세(videos)에는 없습니다.
+     그래서 제목이 빈 껍데기가 목록에 들어왔습니다 —
+     화면에 「-」 로 나오고 그림도 없습니다.
+
+   ★ 두 가지로 가려냅니다
+     ① 상세를 못 받은 것 (videos 응답에 그 번호가 없음) — 지워진 것
+     ② status.privacyStatus 가 public 이 아닌 것 — 비공개·미등재
+   ★ 제목이 빈 것도 함께 막습니다 — 위 둘을 지나도 쓸 수 없습니다. */
+function isGone(v) {
+  if (!v || v._missing) return true;                 /* 상세를 못 받음 */
+  if (v.privacy && v.privacy !== 'public') return true;
+  if (!String(v.title || '').trim()) return true;
+  return false;
+}
+
 /* ★ 2026-08-14 · Shorts 는 아예 받지 않습니다
      tonebase Guitar 채널 최신 15개 가운데 <b>열네 개</b>가 Shorts 였습니다.
      짧은 토막은 레슨이 아니고, 목록만 어지럽힙니다.
@@ -417,22 +436,26 @@ async function fromPlaylist(pl) {
 
     let detail = {};
     try {
-      const d = await yt('videos', { part: 'contentDetails,snippet', id: ids.join(',') });
+      /* ★ 2026-08-14 · status 를 함께 받습니다 — <b>비공개·삭제된 영상</b>을
+           가려내려는 것입니다(아래 isGone 참고). */
+      const d = await yt('videos', { part: 'contentDetails,snippet,status', id: ids.join(',') });
       for (const v of (d.items || [])) detail[v.id] = v;
     } catch (e) { /* 길이 점수만 못 받습니다 */ }
 
     for (const vid of ids) {
-      const d = detail[vid] || {};
-      const sn = d.snippet || {};
+      const d = detail[vid];
+      const sn = (d && d.snippet) || {};
       out.push({
         video_id: vid,
         title: sn.title || '',
         desc: sn.description || '',
-        sec: isoSec(d.contentDetails && d.contentDetails.duration),
+        sec: isoSec(d && d.contentDetails && d.contentDetails.duration),
         thumb: (sn.thumbnails && (sn.thumbnails.maxres || sn.thumbnails.high || sn.thumbnails.medium) || {}).url || null,
         channel: sn.channelTitle || pl.name,
         channel_id: sn.channelId || '',
         published: sn.publishedAt || null,
+        privacy: (d && d.status && d.status.privacyStatus) || null,
+        _missing: !d,                    /* ★ 상세를 못 받음 = 지워진 영상 */
         _ch: { trust: pl.trust, name: pl.name },
         _fromList: true,                 /* ★ 제목 문턱을 건너뜁니다 */
         _listName: pl.name || '',        /* 분야 힌트로 씁니다 */
@@ -476,13 +499,15 @@ async function fromChannel(ch) {
   } catch (e) { /* 없으면 길이 점수만 못 받습니다 */ }
 
   return ids.map((vid) => {
-    const d = detail[vid] || {};
-    const sn = d.snippet || {};
+    const d = detail[vid];
+    const sn = (d && d.snippet) || {};
     return {
       video_id: vid,
       title: sn.title || '',
       desc: sn.description || '',
-      sec: isoSec(d.contentDetails && d.contentDetails.duration),
+      privacy: (d && d.status && d.status.privacyStatus) || null,
+      _missing: !d,
+      sec: isoSec(d && d.contentDetails && d.contentDetails.duration),
       thumb: (sn.thumbnails && (sn.thumbnails.maxres || sn.thumbnails.high || sn.thumbnails.medium) || {}).url || null,
       channel: sn.channelTitle || ch.realName || ch.name,
       channel_id: sn.channelId || id,
@@ -508,11 +533,12 @@ async function fromSearch(q) {
   if (!ids.length) return [];
   let out = [];
   try {
-    const d = await yt('videos', { part: 'contentDetails,snippet', id: ids.join(',') });
+    const d = await yt('videos', { part: 'contentDetails,snippet,status', id: ids.join(',') });
     out = (d.items || []).map((v) => ({
       video_id: v.id,
       title: (v.snippet || {}).title || '',
       desc: (v.snippet || {}).description || '',
+      privacy: (v.status && v.status.privacyStatus) || null,
       sec: isoSec(v.contentDetails && v.contentDetails.duration),
       thumb: ((v.snippet || {}).thumbnails && ((v.snippet.thumbnails.maxres) || v.snippet.thumbnails.high) || {}).url || null,
       channel: (v.snippet || {}).channelTitle || '',
@@ -657,10 +683,16 @@ async function save(rows) {
         if (seen.has(v.video_id)) continue;
         seen.add(v.video_id);
         if (have.has(v.video_id)) { drop++; continue; }
+        /* ★ 비공개·삭제된 영상 — 가장 먼저 걸러냅니다 (2026-08-14) */
+        if (isGone(v)) { drop++; if (LIST === 'drop') console.log(`      버림(비공개·삭제) ${v.video_id}`); continue; }
         if (isShort(v)) { drop++; if (LIST === 'drop') console.log(`      버림(짧음) ${v.title}`); continue; }
         if (blocked(v.title)) { drop++; if (LIST === 'drop') console.log(`      버림(제목) ${v.title}`); continue; }
         const sc = score(v, v._ch);
         if (sc.s < MIN) { drop++; if (LIST === 'drop') console.log(`      버림(${sc.s}점) ${v.title}`); continue; }
+        /* ★ 재생목록 경로에도 <b>빈약 검사</b>를 둡니다 — 여기에 없어서
+           껍데기가 통과했습니다(채널 훑기에는 있었습니다). */
+        const row0 = toRow(v, sc, 'check');
+        if (!row0.title || !row0.video_id) { drop++; continue; }
         all.push({ v, sc }); keep++;
       }
       console.log(`   ${pl.name.slice(0, 44).padEnd(46)} 받음 ${String(vids.length).padStart(3)} · 담을 것 ${keep} · 버림 ${drop}`);
@@ -679,6 +711,7 @@ async function save(rows) {
       if (seen.has(v.video_id)) continue;
       seen.add(v.video_id);
       if (have.has(v.video_id)) { drop++; continue; }
+      if (isGone(v)) { drop++; if (LIST === 'drop') console.log(`      버림(비공개·삭제) ${v.video_id}`); continue; }
       if (isShort(v)) { drop++; if (LIST === 'drop') console.log(`      버림(짧음) ${v.title}`); continue; }
       if (blocked(v.title)) { drop++; if (LIST === 'drop') console.log(`      버림(제목) ${v.title}`); continue; }
       const sc = score(v, ch);
@@ -703,7 +736,7 @@ async function save(rows) {
       for (const v of vids) {
         if (seen.has(v.video_id) || have.has(v.video_id)) continue;
         seen.add(v.video_id);
-        if (isShort(v) || blocked(v.title)) continue;
+        if (isGone(v) || isShort(v) || blocked(v.title)) continue;
         const sc = score(v, null);       /* 채널 점수 0 — 나머지로 55점을 넘어야 합니다 */
         if (sc.s < MIN) continue;
         all.push({ v, sc }); keep++;
