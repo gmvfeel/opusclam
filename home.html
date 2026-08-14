@@ -632,6 +632,8 @@
   /* B 자리 — 같은 까닭입니다(감싸는 상자가 자리·폭을 받습니다) */
   .ad-rot.lower-ad{width:min(357px,100%);align-self:start;justify-self:center}
   .ad-rot.lower-ad > .ad-slot{align-self:auto;justify-self:auto}
+  /* C 자리 — 맨 아래 큰 배너 */
+  .ad-rot.bigban-ad{width:min(670px,100%)}
 
   /* ★ 광고 문의 자리표 (2026-08-14)
        사선 무늬·점선 테두리는 .ad-slot 이 이미 갖고 있습니다. 여기서는
@@ -993,7 +995,12 @@
   /* 670 + 24 + 446 = 1140 — 본문 틀 안쪽 너비와 정확히 맞습니다 */
   .bigban .wrap{display:grid;grid-template-columns:670px 446px;gap:24px;justify-content:center}
   .bigban-ad{width:min(670px,100%);aspect-ratio:670/190}
-  .bigban .ad-slot:nth-child(2){width:min(446px,100%);aspect-ratio:446/190}
+  /* ★ 2026-08-14 · `.bigban .ad-slot:nth-child(2)` 였습니다 →
+       <b>.wrap 의 직계</b>로 한정합니다.
+       C 자리를 회전 상자(.ad-rot)로 감싼 뒤, 그 <b>안쪽 둘째 광고</b>가
+       이 규칙에 걸려 D 자리 크기(446×190)로 찌그러졌습니다.
+       실측에서 문의 자리표가 446×190 으로 나와 잡았습니다. */
+  .bigban .wrap > .ad-slot:nth-child(2){width:min(446px,100%);aspect-ratio:446/190}
   /* 틀이 1140px 보다 좁아지면 두 칸이 <b>같은 비율로</b> 함께 줄어듭니다 */
   @media(max-width:1199px){ .bigban .wrap{grid-template-columns:minmax(0,670fr) minmax(0,446fr)} }
   /* 한 줄로 내려온 뒤에는 원래 크기보다 커지지 않게 합니다 —
@@ -1933,11 +1940,28 @@
 <!-- ===== bottom ad banners ===== -->
 <section class="bigban">
   <div class="wrap">
-    <a class="ad-slot bigban-ad" href="#">
-      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
-      <span class="ad-badge">Advertisement</span>
-      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
-    </a>
+    <!-- ★ 2026-08-14 · C 자리(670×190) — 광고 + 광고문의 자리표를 7초마다
+           번갈아 보여 줍니다(assets/ad-rotate.js).
+           그림은 두 배 크기(1340×380) · WebP 17KB.
+           ★ 이 묶음은 화면 42곳에 <b>똑같이</b> 들어 있습니다. 광고를 갈 때는
+             한 곳만 고치지 말고 <b>모두</b> 함께 고쳐야 합니다. -->
+    <div class="ad-rot bigban-ad" data-every="7000">
+      <a class="ad-slot bigban-ad has-img" href="https://www.ond2u.com/" target="_blank" rel="noopener"
+         aria-label="오늘의 편지 — 매일 한 편의 위로를 보냅니다 (새 창)">
+        <picture>
+          <source srcset="/assets/ads/ond2u-c-1340x380.webp" type="image/webp">
+          <img src="/assets/ads/ond2u-c-1340x380.jpg" width="1340" height="380"
+               loading="lazy" decoding="async"
+               alt="오늘 하루가 버거운 당신에게 한 편의 위로를 보냅니다">
+        </picture>
+      </a>
+      <a class="ad-slot bigban-ad ad-cta" aria-label="광고문의 — 광고안내 준비 중">
+        <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+        <span class="ad-badge">Advertisement</span>
+        <strong class="ad-ctat">광고문의</strong>
+        <span class="ad-desc">광고안내 바로가기 &rarr;</span>
+      </a>
+    </div>
     <a class="ad-slot bigban-ad" href="#">
       <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
       <span class="ad-badge">Advertisement</span>
