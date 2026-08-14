@@ -152,6 +152,8 @@ const NEUTRAL_GENRE = [
 const VENUE_BLOCK = [
   'state fair', 'county fair', 'fairgrounds', 'casino', 'racetrack',
   'speedway', 'brewery', 'winery', 'tavern', 'bar &',
+  /* 재즈 클럽 — 「Emily Bear · Blue Note London」이 이 자리였습니다 */
+  'blue note', 'jazz club', 'comedy club', 'nightclub',
 ];
 
 /* 갈래가 클래식이라도 이런 낱말이 제목에 있으면 버립니다 —
@@ -186,6 +188,46 @@ const TITLE_BLOCK = [
   'witcher', 'sonic ', 'train your dragon', 'casino royale',
   'game of thrones', 'aardman', 'songbook', 'proms in',
   'rocks -', ' rocks ',
+  /* ★ 2026-08-14 · <b>담을 것</b> 80건을 눈으로 훑고 더한 것들
+       ─────────────────────────────────────────────────────────
+       mystery ensemble  영화음악·팝 편곡을 연주하는 단체입니다.
+                         존 윌리엄스 · 팀 버튼 · 비발디 편곡이 모두
+                         이 이름으로 옵니다 — 단체 이름으로 막는 편이
+                         낱말을 하나씩 막는 것보다 확실합니다.
+       classically       「Classically Kate Bush」처럼 대중가요를
+                         관현악으로 편곡한 시리즈입니다.
+       sing a-long       「Big Christmas Sing A-Long」 — 관객이 함께
+                         부르는 자리입니다(앞서 넣은 singalong 과
+                         글자가 달라 걸리지 않았습니다).
+       hans zimmer · john williams · tim burton  영화음악입니다.
+       kingdom choir     가스펠 합창단입니다. */
+  'mystery ensemble', 'classically ', 'sing a-long', 'sing-a-long',
+  'hans zimmer', 'john williams', 'tim burton', 'kingdom choir',
+  'kate bush', 'a kingdom christmas', 'christmas sing',
+
+  /* ★ 2026-08-14 · <b>사람 이름으로 막는 것</b> — 아껴서 씁니다
+       ─────────────────────────────────────────────────────────
+       이름만 적힌 공연은 갈래도 Classical, 공연장도 정상 극장이라
+       코드로는 가릴 길이 없습니다. 그래서 <b>목록을 뒤덮는 것</b>만
+       골라 막습니다. 영국 한 나라에서 캐서린 젠킨스가 26건, 프랭크
+       시나트라 헌정이 여러 건이었습니다.
+
+       ★ 어떤 잣대로 골랐나 — <b>레퍼토리</b>를 봤습니다
+         katherine jenkins  클래식 창법이지만 부르는 것은 대중가요
+         collabro           뮤지컬 보컬 그룹
+         frank sinatra      재즈·스탠더드
+         jamie duffy · gibran alcocer  누리소통망에서 인기 있는
+                            네오클래식 피아노 — 연주회 성격이 다릅니다
+
+       ★ 반대로 <b>남긴</b> 것도 있습니다
+         andre rieu         요한 슈트라우스 왈츠 — 레퍼토리가 클래식
+         max richter        비발디 사계를 다시 쓴 현대 작곡가
+
+       ★ 이 목록은 <b>길게 늘리지 않습니다.</b> 이름을 하나씩 막는 일은
+         끝이 없습니다. 여기 없는 것이 눈에 걸리면 어드민에서 숨기는
+         편이 맞습니다(판단이 필요한 일은 도구로). */
+  'katherine jenkins', 'collabro', 'frank sinatra', 'jamie duffy',
+  'gibran alcocer',
 ];
 
 /* ★ <b>티켓 상품</b>은 공연이 아닙니다 (2026-08-14)
@@ -200,6 +242,10 @@ const PRODUCT_WORDS = [
   'venue premium', 'premium tickets', 'premium package', 'live lounge',
   'vip package', 'hospitality package', 'meet & greet', 'meet and greet',
   'car park', 'parking', 'gift voucher', 'season ticket',
+  /* ★ 2026-08-14 · 영국 목록에서 더 나온 상품 항목
+       premium ticket(단수) · hotel experience · weekly/day ticket */
+  'premium ticket', 'hotel experience', 'weekly ticket', 'day ticket',
+  'travel package', 'coach travel',
 ];
 
 /* ★ 제목 모양으로 걸러내는 것 — 낱말 목록으로는 못 잡는 것들
