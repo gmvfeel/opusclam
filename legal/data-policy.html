@@ -37,12 +37,51 @@ th{background:#f6f4fb;color:var(--text);font-weight:700}
 .lp-foot-links a:hover{color:var(--violet)}
 .lp-addr{color:var(--text-3);font-size:12px;margin-top:12px;line-height:1.8}
 a{color:var(--violet)}
-@media(max-width:560px){.lp-main h1{font-size:24px}.lp-nav a{margin-left:12px;font-size:12.5px}}
+/* ★ 2026-08-14 · 좁은 화면 머리글을 <b>두 줄</b>로 (파트너 지적)
+     ─────────────────────────────────────────────────────────────
+     무엇이 깨졌나 — 두 가지가 겹쳤습니다
+       ① 문서 네 개의 이름이 한 줄에 들어가지 않아 감겼는데, 머리글
+          높이가 60px 로 <b>못박혀</b> 있어 둘째 줄이 잘렸습니다
+          (「데이터 정책」이 「이터 정책」으로 보였습니다).
+       ② 언어 고르개(KO)는 머리글이 없는 화면에서 <b>화면에 떠 있는</b>
+          모양(position:fixed · 오른쪽 위)으로 붙습니다. 그래서 문서
+          이름 위에 겹쳤습니다.
+     ▶ 첫 줄은 이름표만, 둘째 줄에 문서 탭을 두고 옆으로 밀게 합니다.
+       첫 줄 오른쪽은 KO 가 앉을 자리만큼 비웁니다.
+     ★ 지금 보고 있는 문서에 밑줄을 둡니다 — 넷 중 어느 것인지
+       알 수 없었습니다(.lp-nav a.on). */
+@media(max-width:700px){
+  .lp-main h1{font-size:24px}
+  .lp-head .lp-wrap{
+    flex-wrap:wrap; height:auto; align-items:center;
+    padding:11px 22px 0; padding-right:74px;   /* 오른쪽은 KO 자리 */
+    row-gap:0;
+  }
+  .lp-brand{font-size:17px; letter-spacing:.3px}
+  .lp-nav{
+    order:3; width:100%; margin:9px -22px 0; padding:0 22px;
+    display:flex; flex-wrap:nowrap; gap:0;
+    overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; border-top:1px solid var(--line);
+  }
+  .lp-nav::-webkit-scrollbar{display:none}
+  .lp-nav a{
+    flex:0 0 auto; margin:0; padding:11px 12px;
+    font-size:12.5px; white-space:nowrap;
+    border-bottom:2px solid transparent;
+  }
+  .lp-nav a:first-child{padding-left:0}
+}
+/* 지금 보고 있는 문서 — 넓은 화면에서도 표시합니다 */
+.lp-nav a.on{color:var(--violet); font-weight:700}
+@media(max-width:700px){
+  .lp-nav a.on{border-bottom-color:var(--violet)}
+}
 </style>
 <script src="/assets/i18n.js"></script>
 </head>
 <body>
-<header class="lp-head"><div class="lp-wrap"><a class="lp-brand" href="/home.html">OPUSCLAM<span>.COM</span></a><nav class="lp-nav"><a href="/legal/terms.html">서비스약관</a><a href="/legal/privacy.html">개인정보처리방침</a><a href="/legal/data-policy.html">데이터 정책</a><a href="/legal/data-protection.html">무단수집 금지</a></nav></div></header>
+<header class="lp-head"><div class="lp-wrap"><a class="lp-brand" href="/home.html">OPUSCLAM<span>.COM</span></a><nav class="lp-nav"><a href="/legal/terms.html">서비스약관</a><a href="/legal/privacy.html">개인정보처리방침</a><a class="on" aria-current="page" href="/legal/data-policy.html">데이터 정책</a><a href="/legal/data-protection.html">무단수집 금지</a></nav></div></header>
 <main class="lp-wrap lp-main">
 <div class="callout">⚠️ 본 문서는 검토용 초안이며 법적 자문이 아닙니다. 실제 시행 전 법률 전문가의 검토를 권장합니다.</div>
 <h1>데이터 저작권·출처 정책</h1>
