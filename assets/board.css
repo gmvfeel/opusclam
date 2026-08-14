@@ -20,6 +20,15 @@
    새로 만든 이름이라 지금 있는 화면에는 아무 영향이 없습니다. */
 .board-datetabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px 2px}
 .board-datetabs:empty{display:none;margin:0}
+/* ★ 2026-08-14 · 지역 탭 (국내/해외/전체) — 날짜 탭과 같은 모양입니다.
+     ★ 두 줄이 이어지므로 <b>사이를 좁게</b> 둡니다(18 → 8px). 멀면
+       서로 다른 묶음처럼 보여 「함께 걸린다」는 것이 전해지지 않습니다.
+     ★ 칸이 비면 자리도 없앱니다 — 이 탭을 쓰지 않는 게시판에서
+       빈 여백이 생기지 않게 하려는 것입니다. */
+.board-regiontabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px 2px}
+.board-regiontabs:empty{display:none;margin:0}
+/* 지역 탭이 있는 화면에서는 날짜 탭의 위 여백을 두지 않습니다 */
+.board-regiontabs + .board-datetabs{margin-top:0}
 .board-cat-tab{font-family:var(--display);font-size:14px;font-weight:600;color:var(--text-3);background:none;border:1px solid var(--line-2);border-radius:999px;padding:7px 16px;cursor:pointer;transition:all .15s ease}
 .board-cat-tab:hover{color:var(--text);border-color:var(--text-3)}
 .board-cat-tab.on{color:#fff;background:var(--violet-2);border-color:var(--violet-2)}

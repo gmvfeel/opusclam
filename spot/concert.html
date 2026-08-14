@@ -83,6 +83,12 @@
     </div>
   </div>
 
+  <!-- ★ 2026-08-14 · 지역 탭 (파트너 요청) — 국내와 해외를 가릅니다.
+         해외 공연 791건이 국내 1,011건과 날짜순으로 섞여, 정작 갈 수 있는
+         공연이 뒤로 밀렸습니다. 내용은 board.js 가 cfg.regionTabs 를 보고
+         채웁니다. 날짜 탭과 <b>함께</b> 걸립니다. -->
+  <div class="board-regiontabs"></div>
+
   <!-- 날짜 탭 — 내용은 board.js 가 cfg.dateTabs 를 보고 채웁니다 -->
   <div class="board-datetabs"></div>
 
@@ -150,6 +156,16 @@
          기준 칸을 date_to(끝나는 날)로 잡은 까닭 —
          여러 날 하는 공연은 시작일이 지났어도 오늘 하고 있습니다.
          date_from 으로 자르면 그런 공연이 「지난 공연」으로 밀립니다. */
+      /* ★ 2026-08-14 · 지역 탭 — 기본은 <b>국내</b>입니다.
+           처음 들어온 분이 보아야 하는 것은 <b>갈 수 있는 공연</b>이고,
+           해외는 눌러서 보는 자리가 자연스럽습니다.
+         ★ 값은 region 칸에 담긴 그대로 씁니다. 빈 값은 「거르지 않음」. */
+      regionTabs:{
+        def:'국내',
+        tabs:[{value:'국내', label:'국내'},
+              {value:'해외', label:'해외'},
+              {value:'',     label:'전체'}]
+      },
       dateTabs:{
         col:'date_to', def:'upcoming',
         tabs:[{value:'upcoming', label:'진행중·예정', dir:'asc'},

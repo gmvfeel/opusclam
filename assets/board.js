@@ -349,6 +349,47 @@ window.OCBoard = (function () {
       });
     }
 
+    /* ── 지역 탭 (cfg.regionTabs) — 2026-08-14 ─────────────────────
+       ★ 왜 만드나 (파트너 요청)
+         공연정보에 해외 공연(Ticketmaster) 791건이 들어오면서 국내
+         1,011건과 <b>날짜순으로 섞였습니다.</b> 찾는 목적이 다릅니다 —
+         국내는 「가려고」 보고 해외는 「알아 두려고」 봅니다. 섞이면
+         정작 갈 수 있는 공연이 뒤로 밀립니다.
+
+       ★ 왜 고르개(.board-regionsel)가 아니라 탭인가
+         고르개는 눌러서 열어야 무엇이 있는지 보입니다. 탭은 <b>있다는
+         것 자체가 보입니다.</b> 해외 공연이 있다는 것을 알리는 것도
+         이 줄의 몫입니다.
+
+       설정 보기
+         regionTabs:{
+           def:'국내',                                   // 처음에 켜질 탭
+           tabs:[{value:'국내', label:'국내'},
+                 {value:'해외', label:'해외'},
+                 {value:'',     label:'전체'}]           // 빈 값이면 거르지 않습니다
+         }
+
+       ★ 값은 region 칸에 담긴 <b>그대로</b> 씁니다(국내 수집기는 '국내',
+         해외 수집기는 '해외'를 넣습니다). 빈 값은 「거르지 않음」입니다.
+       ★ 놓을 자리는 <div class="board-regiontabs"></div> 입니다.
+         그 칸이 없으면 아무것도 그리지 않습니다.
+       ★ 날짜 탭과 <b>함께</b> 걸립니다 — 「해외 + 진행중·예정」처럼
+         두 줄을 섞어 고를 수 있습니다. */
+    var rtEl = document.querySelector('.board-regiontabs');
+    if (rtEl && cfg.regionTabs && cfg.regionTabs.tabs && cfg.regionTabs.tabs.length) {
+      if (!region && cfg.regionTabs.def) region = cfg.regionTabs.def;
+      rtEl.innerHTML = cfg.regionTabs.tabs.map(function (c) {
+        return '<button type="button" class="board-cat-tab' + (c.value === region ? ' on' : '')
+             + '" data-rtab="' + esc(c.value) + '">' + esc(c.label || c.value || '전체') + '</button>';
+      }).join('');
+      rtEl.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('.board-cat-tab'); if (!b) return;
+        region = b.getAttribute('data-rtab') || '';
+        rtEl.querySelectorAll('.board-cat-tab').forEach(function (x) { x.classList.toggle('on', x === b); });
+        loadPage(1);
+      });
+    }
+
     /* 오늘 날짜 — 서울 기준으로 고정합니다.
        보는 분의 시계가 어느 나라로 맞춰져 있든 같은 결과가 나오게 합니다. */
     function todayKST() {
@@ -1019,6 +1060,13 @@ window.OCBoard = (function () {
           dtab = _sp.dtab;
           dtEl.querySelectorAll('.board-cat-tab').forEach(function (x) {
             x.classList.toggle('on', (x.getAttribute('data-dtab') || '') === dtab);
+          });
+        }
+        /* 지역 탭도 되돌립니다 — 글을 보고 뒤로 왔을 때 「해외」로 두었던
+           것이 「국내」로 돌아가면 처음부터 다시 찾아야 합니다 (2026-08-14) */
+        if (typeof rtEl !== 'undefined' && rtEl) {
+          rtEl.querySelectorAll('.board-cat-tab').forEach(function (x) {
+            x.classList.toggle('on', (x.getAttribute('data-rtab') || '') === region);
           });
         }
         loadPage(_sp.page || 1);
