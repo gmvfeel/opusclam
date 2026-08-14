@@ -1,0 +1,130 @@
+name: 레슨:ON · 마스터클래스 · 공개레슨 (주간)
+
+# ── 무엇을 하나 ──
+#  유튜브에서 마스터클래스 · 공개레슨 영상을 모아 lessons 표에
+#  <준비중(draft)> 으로 담습니다. draft 는 아무에게도 보이지 않습니다.
+#  파트너가 admin/lesson-review.html 에서 보시고 통과시키면 그때
+#  레슨:ON 목록에 나옵니다.
+#
+# ── 왜 검수를 두나 ──
+#  「masterclass」 낱말만 보면 반응 영상·요약·팬 편집이 잔뜩 들어옵니다.
+#  점수로 한 번 거르고, 사람이 한 번 더 봅니다. 정보SPOT 음원·동영상과
+#  같은 방식입니다.
+#
+# ── 처음 한 번은 「담기: no」로 ──
+#  무엇이 몇 개 오는지, 점수와 분야가 알맞은지 먼저 보십시오.
+#
+# ── 왜 주간인가 ──
+#  학교·축제 채널은 하루에 몇 개씩 올리지 않습니다. 주간이면 놓치는
+#  것이 없고, 유튜브 무료 한도(하루 10,000)에서 한 번에 60 안쪽입니다.
+on:
+  workflow_dispatch:
+    inputs:
+      per:
+        description: '채널마다 최신 몇 개까지 볼지'
+        required: true
+        default: '15'
+      min:
+        description: '점수 기준 (55 를 권합니다 · 낮추면 많이 들어옵니다)'
+        required: true
+        default: '55'
+      channels:
+        description: '채널 몇 곳만 볼지 (0 이면 모두)'
+        required: true
+        default: '0'
+      search:
+        description: '검색으로도 찾기 (목록에 없는 채널 · 하나에 100 씩 듭니다)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+      list:
+        description: '제목 목록 찍기 (잣대를 고칠 때)'
+        required: true
+        default: 'none'
+        type: choice
+        options:
+          - 'none'
+          - 'keep'
+          - 'drop'
+      save:
+        description: '실제로 담기 (처음에는 no 로 확인하세요)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+  schedule:
+    # 매주 수요일 오전 7시 30분(KST) = 화요일 22:30 UTC
+    # KOPIS(월) · Ticketmaster(화)와 겹치지 않게 두었습니다.
+    - cron: '30 22 * * 2'
+
+concurrency:
+  group: oc-collect-lesson
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 마스터클래스 · 공개레슨 수집 실행
+        env:
+          YOUTUBE_KEY: ${{ secrets.YOUTUBE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
+          P="${{ github.event.inputs.per }}"
+          M="${{ github.event.inputs.min }}"
+          C="${{ github.event.inputs.channels }}"
+          S="${{ github.event.inputs.search }}"
+          LS="${{ github.event.inputs.list }}"
+          SAVE="${{ github.event.inputs.save }}"
+
+          # 예약 실행이면 입력값이 비어 있습니다 — 그때는 15개·55점·담기
+          if [ -z "$P" ]; then P="15"; M="55"; C="0"; S="no"; LS="none"; SAVE="yes"; fi
+
+          OPTS="--per=$P --min=$M"
+          if [ "$C" != "0" ] && [ -n "$C" ]; then OPTS="$OPTS --channels=$C"; fi
+          if [ "$S" = "yes" ]; then OPTS="$OPTS --search"; fi
+          if [ "$LS" = "keep" ] || [ "$LS" = "drop" ]; then OPTS="$OPTS --list=$LS"; fi
+          if [ "$SAVE" = "yes" ]; then OPTS="$OPTS --save"; fi
+
+          echo "── 실행 : node seed/lesson-collect.mjs $OPTS ──"
+          try2 node seed/lesson-collect.mjs $OPTS
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  oc-notify-failure:
+    needs: collect
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi

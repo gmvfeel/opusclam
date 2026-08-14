@@ -1,0 +1,513 @@
+/* ============================================================
+   OPUSCLAM 레슨:ON — 마스터클래스 · 공개레슨 모으기
+   seed/lesson-collect.mjs
+
+   ── 왜 만들었나 ─────────────────────────────────────────────
+   지금까지는 파트너가 유튜브를 하나씩 보고 손으로 넣으셨습니다.
+   정보SPOT 음원·동영상은 이미 자동으로 모아 어드민에서 검수하는
+   방식(seed/youtube-collect.mjs + admin/media.html)인데, 레슨:ON 만
+   손으로 하고 있었습니다. 같은 결로 맞춥니다.
+
+   ── 어떻게 도나 ─────────────────────────────────────────────
+     ① 믿을 만한 채널을 훑어 마스터클래스 영상을 찾습니다
+     ② 점수를 매겨 못 미치는 것은 버립니다
+     ③ 통과한 것을 lessons 표에 <b>status='draft'</b> 로 담습니다
+        draft 는 아무에게도 보이지 않습니다 — 검수 대기 자리입니다
+     ④ 파트너가 admin/lesson-review.html 에서 보고 통과·버림
+     ⑤ 통과한 것만 status='open' 이 되어 목록에 나옵니다
+
+   ── 왜 점수인가 ─────────────────────────────────────────────
+   「masterclass」라는 낱말만 보면 반응 영상·요약·팬 편집이 잔뜩
+   들어옵니다. 채널 신뢰 · 제목 · 길이 · 설명을 함께 봐서 합계가
+   기준에 못 미치면 담지 않습니다. 해외 공연정보에서 배운 것과 같습니다 —
+   <b>낱말 하나로 거르면 반드시 새어 나옵니다.</b>
+
+   점수 배점 (합계 55점 이상만 담습니다)
+     채널 신뢰       trust 3 → 45 · 2 → 32 · 1 → 18
+     제목에 마스터클래스 낱말        20
+     분야를 알아냈음                 12
+     길이 적정 (8~180분)            12
+     설명 충실 (200자 이상)          6
+     작품·작곡가 이름이 보임         8
+
+   ── 마스터클래스와 공개레슨을 갈라 담습니다 ─────────────────
+     tab='master'  마스터클래스 — 「masterclass」가 제목에 있는 것
+     tab='open'    공개레슨   — 「open lesson」·「public lesson」·
+                   「lecture」·「tutorial」 쪽. 둘 다 kind='vod' 입니다.
+   ★ 어느 쪽인지 헷갈리면 <b>마스터클래스로</b> 둡니다 — 검수에서
+     옮기기 쉽습니다(어드민에 탭 바꾸는 단추가 있습니다).
+
+   ── 쓰는 법 ────────────────────────────────────────────────
+     node seed/lesson-collect.mjs                   세어만 봅니다(기본)
+     node seed/lesson-collect.mjs --save            실제로 담습니다
+     node seed/lesson-collect.mjs --per=15          채널마다 최신 몇 개까지
+     node seed/lesson-collect.mjs --min=55          점수 기준
+     node seed/lesson-collect.mjs --channels=8      채널 몇 곳만 (나눠 돌 때)
+     node seed/lesson-collect.mjs --list=keep       담을 것 제목을 모두
+     node seed/lesson-collect.mjs --list=drop       버린 것 제목을 모두
+     node seed/lesson-collect.mjs --search          검색으로도 찾습니다(보조)
+
+   ── 필요한 환경변수 ────────────────────────────────────────
+     YOUTUBE_KEY
+     SUPABASE_URL
+     SUPABASE_SERVICE_ROLE_KEY  (또는 SUPABASE_SERVICE_KEY)
+
+   ── 드는 비용 ──────────────────────────────────────────────
+   유튜브 무료 한도는 하루 10,000 입니다.
+     채널 하나 훑기 = playlistItems 1 + videos 1 ≒ 2~3
+     채널 스물이면 약 60. 검색을 켜면 검색 하나에 100 이 듭니다.
+   한도를 넘으면 과금이 아니라 그날 멈추고 다음날 초기화됩니다.
+   ============================================================ */
+
+const SB_URL = process.env.SUPABASE_URL;
+const SB_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const YT_KEY = process.env.YOUTUBE_KEY;
+
+const args = Object.fromEntries(
+  process.argv.slice(2).map((a) => {
+    const m = a.match(/^--([^=]+)=?(.*)$/);
+    return m ? [m[1], m[2] || true] : [a, true];
+  })
+);
+const SAVE     = !!args.save;
+const SEARCH   = !!args.search;
+const PER      = Number(args.per || 15);
+const MIN      = Number(args.min || 55);
+const CH_LIMIT = Number(args.channels || 0);
+const LIST     = String(args.list || '');
+
+if (!SB_URL || !SB_KEY) {
+  console.error('환경변수 SUPABASE_URL 과 SUPABASE_SERVICE_ROLE_KEY 가 필요합니다.');
+  process.exit(1);
+}
+if (!YT_KEY) {
+  console.error('환경변수 YOUTUBE_KEY 가 필요합니다.');
+  console.error('Google Cloud → OPUSCLAM 프로젝트 → YouTube Data API v3 키를 쓰십시오');
+  console.error('(정보SPOT 음원·동영상 수집기가 쓰는 것과 같은 키입니다).');
+  process.exit(1);
+}
+
+/* ============================================================
+   믿을 만한 채널
+   ------------------------------------------------------------
+   ★ 파트너가 손으로 넣으신 것들이 씨앗입니다 — 왕립음악대학(RCM),
+     Sarah Willis 같은 곳이 그것입니다. 거기에 세계 주요 음악학교와
+     축제를 더했습니다.
+   ★ trust 는 「그 채널이 올리는 것을 얼마나 믿을 수 있나」입니다.
+     3 = 학교·축제 공식 채널 (거의 다 쓸 만합니다)
+     2 = 연주자·단체 공식 채널
+     1 = 좋은 것이 섞여 있는 채널 (점수를 더 받아야 통과합니다)
+   ★ 채널 번호(UC…)는 유튜브 채널 주소에 있습니다. 모르면 handle 만
+     적어 두십시오 — 이 스크립트가 번호를 찾아 로그에 찍습니다.
+   ★ 새 채널을 더할 때는 이 목록에 한 줄만 넣으면 됩니다.
+   ============================================================ */
+const CHANNELS = [
+  /* 음악학교 · 음악원 */
+  { handle: '@RoyalCollegeofMusic',        trust: 3, name: 'Royal College of Music' },
+  { handle: '@juilliardschool',            trust: 3, name: 'The Juilliard School' },
+  { handle: '@CurtisInstitute',            trust: 3, name: 'Curtis Institute of Music' },
+  { handle: '@royalacademyofmusic',        trust: 3, name: 'Royal Academy of Music' },
+  { handle: '@guildhallschool',            trust: 3, name: 'Guildhall School' },
+  { handle: '@NewEnglandConservatory',     trust: 3, name: 'New England Conservatory' },
+  { handle: '@ManhattanSchoolofMusic',     trust: 3, name: 'Manhattan School of Music' },
+  { handle: '@ColburnSchool',              trust: 3, name: 'Colburn School' },
+
+  /* 축제 · 아카데미 */
+  { handle: '@verbierfestival',            trust: 3, name: 'Verbier Festival' },
+  { handle: '@menuhincompetition',         trust: 3, name: 'Menuhin Competition' },
+  { handle: '@tchaikovskycompetition',      trust: 2, name: 'Tchaikovsky Competition' },
+
+  /* 연주자 · 단체 */
+  { handle: '@SarahWillisHorn',            trust: 2, name: 'Sarah Willis' },
+  { handle: '@thecrossedeyedpianist',      trust: 1, name: 'Cross-Eyed Pianist' },
+  { handle: '@tonebase',                   trust: 2, name: 'tonebase' },
+  { handle: '@wigmorehall',                trust: 3, name: 'Wigmore Hall' },
+  { handle: '@carnegiehall',               trust: 3, name: 'Carnegie Hall' },
+];
+
+/* 검색으로도 찾을 때 쓰는 낱말 (--search) */
+const QUERIES = [
+  'piano masterclass full',
+  'violin masterclass full',
+  'cello masterclass',
+  'horn masterclass',
+  'trumpet masterclass',
+  'voice masterclass opera',
+  'conducting masterclass',
+];
+
+/* ── 제목으로 갈라내기 ───────────────────────────────────── */
+const RE_MASTER = /\b(master\s?class|masterclass|마스터\s?클래스)\b/i;
+const RE_OPEN   = /\b(open\s?lesson|public\s?lesson|open\s?rehearsal|lecture|tutorial|공개\s?레슨|공개\s?강의)\b/i;
+
+/* 버릴 것 — 반응·요약·팬 편집·광고
+   ★ 짧은 낱말은 <b>낱말 경계</b>를 붙입니다. 「rave」가 「Ravel」을
+     잡아먹은 일이 있었습니다(해외 공연 수집기, 같은 날). */
+const RE_BLOCK = [
+  /\breaction\b/i, /\breacts?\b/i, /\brecap\b/i, /\bhighlights?\b/i,
+  /\btrailer\b/i, /\bteaser\b/i, /\bpromo\b/i, /\bshorts?\b/i,
+  /\bepisode\s?\d+\s?of\b/i, /\bpart\s?\d+\s?\/\s?\d+/i,
+  /\bfan\s?(edit|made)\b/i, /\bAI\b/, /\bcompilation\b/i,
+  /\bbest\s?of\b/i, /\bfull\s?album\b/i, /\bplaylist\b/i,
+  /\blive\s?stream\s?(test|check)\b/i,
+];
+
+/* ── 분야 알아내기 ───────────────────────────────────────
+   lessons.field 는 여덟 가지입니다 (assets/lesson-list.js 의 FIELDS
+   와 <b>똑같아야</b> 합니다 — 다르면 목록 거르개에서 빠집니다).
+     PIANO · STRINGS · BRASS · WINDS · PERCUSSIONS · VOCAL ·
+     작곡/이론 · 기타                                         */
+const FIELD_WORDS = [
+  ['PIANO',       /\b(piano|pianist|klavier|피아노|fortepiano|harpsichord|organ|오르간)\b/i],
+  ['STRINGS',     /\b(violin|viola|cello|violoncello|double\s?bass|contrabass|harp|guitar|바이올린|비올라|첼로|하프|기타)\b/i],
+  ['BRASS',       /\b(horn|trumpet|trombone|tuba|euphonium|brass|호른|트럼펫|트롬본|튜바|금관)\b/i],
+  ['WINDS',       /\b(flute|oboe|clarinet|bassoon|saxophone|recorder|woodwind|플루트|오보에|클라리넷|바순|목관)\b/i],
+  ['PERCUSSIONS', /\b(percussion|timpani|marimba|drum|타악|팀파니|마림바)\b/i],
+  ['VOCAL',       /\b(voice|vocal|singing|soprano|tenor|baritone|mezzo|bass\s?baritone|lieder|opera\s?(singing|coach)|성악|소프라노|테너)\b/i],
+  ['작곡/이론',   /\b(composition|composing|orchestration|counterpoint|harmony|analysis|conducting|conductor|작곡|지휘|화성)\b/i],
+];
+
+/* 작품·작곡가 이름이 보이면 점수를 더합니다 */
+const RE_WORKISH = /\b(op\.?\s?\d|bwv|kv?\.?\s?\d{2,}|d\.?\s?\d{3}|hob|rv\s?\d|concerto|sonata|symphon|quartet|prelude|fugue|etude|nocturne|partita|suite|lied|aria)\b/i
+  || null;
+const RE_COMPOSER = /\b(bach|mozart|beethoven|brahms|chopin|liszt|schubert|schumann|debussy|ravel|rachmanin|prokofiev|shostakovich|tchaikovsky|handel|haydn|mahler|strauss|sibelius|dvorak|elgar|faure|poulenc|britten|bartok|verdi|puccini|wagner|scarlatti|vivaldi|saint-saens|franck|gurney)\b/i;
+
+/* ── 도우미 ──────────────────────────────────────────────── */
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function sb(path, opts = {}) {
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      apikey: SB_KEY,
+      Authorization: `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status} ${await res.text()}`);
+  const t = await res.text();
+  return t ? JSON.parse(t) : null;
+}
+
+const YT_BASE = String(args.ytbase || 'https://www.googleapis.com/youtube/v3');
+
+async function yt(path, params) {
+  const q = new URLSearchParams({ ...params, key: YT_KEY }).toString();
+  const res = await fetch(`${YT_BASE}/${path}?${q}`);
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`YouTube ${res.status} ${t.slice(0, 200)}`);
+  }
+  return res.json();
+}
+
+/* ISO 8601 기간(PT1H23M45S) → 초 */
+function isoSec(v) {
+  const m = /^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(String(v || ''));
+  if (!m) return 0;
+  return (+(m[1] || 0)) * 86400 + (+(m[2] || 0)) * 3600 + (+(m[3] || 0)) * 60 + (+(m[4] || 0));
+}
+
+function fieldOf(text) {
+  for (const [name, re] of FIELD_WORDS) if (re.test(text)) return name;
+  return null;
+}
+
+/* ── 점수 ───────────────────────────────────────────────── */
+function score(v, ch) {
+  const title = String(v.title || '');
+  const desc  = String(v.desc || '');
+  const all   = title + ' ' + desc;
+  const why   = [];
+  let s = 0;
+
+  const t = ch && ch.trust;
+  if (t === 3) { s += 45; why.push('채널45'); }
+  else if (t === 2) { s += 32; why.push('채널32'); }
+  else if (t === 1) { s += 18; why.push('채널18'); }
+
+  const isMaster = RE_MASTER.test(title);
+  const isOpen   = RE_OPEN.test(title);
+  if (isMaster || isOpen) { s += 20; why.push('제목20'); }
+
+  const field = fieldOf(all);
+  if (field) { s += 12; why.push('분야12'); }
+
+  const sec = v.sec || 0;
+  if (sec >= 480 && sec <= 10800) { s += 12; why.push('길이12'); }
+
+  if (desc.length >= 200) { s += 6; why.push('설명6'); }
+
+  if (RE_COMPOSER.test(all) || /\b(op\.?\s?\d|bwv|concerto|sonata|symphon|quartet)\b/i.test(all)) {
+    s += 8; why.push('작품8');
+  }
+
+  return { s, why, field, tab: isOpen && !isMaster ? 'open' : 'master' };
+}
+
+function blocked(title) {
+  return RE_BLOCK.some((re) => re.test(title));
+}
+
+/* ── 채널 번호 찾기 ─────────────────────────────────────── */
+async function resolveChannel(ch) {
+  if (ch.id) return ch.id;
+  try {
+    /* handle 로 찾습니다 — forHandle 은 키 하나에 1 만 듭니다 */
+    const j = await yt('channels', { part: 'contentDetails,snippet', forHandle: ch.handle });
+    const it = (j.items || [])[0];
+    if (it) {
+      ch.id = it.id;
+      ch.uploads = it.contentDetails && it.contentDetails.relatedPlaylists
+        && it.contentDetails.relatedPlaylists.uploads;
+      ch.realName = it.snippet && it.snippet.title;
+      return ch.id;
+    }
+  } catch (e) { /* 아래에서 알립니다 */ }
+  return null;
+}
+
+/* ── 채널 훑기 ──────────────────────────────────────────── */
+async function fromChannel(ch) {
+  const id = await resolveChannel(ch);
+  if (!id || !ch.uploads) {
+    console.log(`   ✘ ${ch.handle} — 채널을 찾지 못했습니다 (주소가 바뀌었을 수 있습니다)`);
+    return [];
+  }
+  let items = [];
+  try {
+    const j = await yt('playlistItems', {
+      part: 'snippet,contentDetails',
+      playlistId: ch.uploads,
+      maxResults: String(Math.min(PER, 50)),
+    });
+    items = j.items || [];
+  } catch (e) {
+    console.log(`   ✘ ${ch.handle} — ${e.message.slice(0, 80)}`);
+    return [];
+  }
+  if (!items.length) return [];
+
+  /* 길이·설명을 받으려면 videos 를 한 번 더 불러야 합니다 (한 번에 50개) */
+  const ids = items.map((x) => x.contentDetails && x.contentDetails.videoId).filter(Boolean);
+  let detail = {};
+  try {
+    const d = await yt('videos', { part: 'contentDetails,snippet,statistics', id: ids.join(',') });
+    for (const v of (d.items || [])) detail[v.id] = v;
+  } catch (e) { /* 없으면 길이 점수만 못 받습니다 */ }
+
+  return ids.map((vid) => {
+    const d = detail[vid] || {};
+    const sn = d.snippet || {};
+    return {
+      video_id: vid,
+      title: sn.title || '',
+      desc: sn.description || '',
+      sec: isoSec(d.contentDetails && d.contentDetails.duration),
+      thumb: (sn.thumbnails && (sn.thumbnails.maxres || sn.thumbnails.high || sn.thumbnails.medium) || {}).url || null,
+      channel: sn.channelTitle || ch.realName || ch.name,
+      channel_id: sn.channelId || id,
+      published: sn.publishedAt || null,
+      _ch: ch,
+    };
+  });
+}
+
+/* ── 검색 (보조) ────────────────────────────────────────── */
+async function fromSearch(q) {
+  let ids = [];
+  try {
+    const j = await yt('search', {
+      part: 'snippet', q, type: 'video', maxResults: '15',
+      order: 'relevance', videoDuration: 'long', relevanceLanguage: 'en',
+    });
+    ids = (j.items || []).map((x) => x.id && x.id.videoId).filter(Boolean);
+  } catch (e) {
+    console.log(`   ✘ 검색 「${q}」 — ${e.message.slice(0, 80)}`);
+    return [];
+  }
+  if (!ids.length) return [];
+  let out = [];
+  try {
+    const d = await yt('videos', { part: 'contentDetails,snippet', id: ids.join(',') });
+    out = (d.items || []).map((v) => ({
+      video_id: v.id,
+      title: (v.snippet || {}).title || '',
+      desc: (v.snippet || {}).description || '',
+      sec: isoSec(v.contentDetails && v.contentDetails.duration),
+      thumb: ((v.snippet || {}).thumbnails && ((v.snippet.thumbnails.maxres) || v.snippet.thumbnails.high) || {}).url || null,
+      channel: (v.snippet || {}).channelTitle || '',
+      channel_id: (v.snippet || {}).channelId || '',
+      published: (v.snippet || {}).publishedAt || null,
+      _ch: null,                          /* 검색에서 온 것은 채널 점수 0 */
+    }));
+  } catch (e) { /* 지나갑니다 */ }
+  return out;
+}
+
+/* ── 담을 모양으로 ──────────────────────────────────────── */
+function toRow(v, sc) {
+  const min = v.sec ? Math.round(v.sec / 60) : null;
+  const src = v.channel || '';
+  return {
+    /* member_id · instructor_id 는 비웁니다 — 사람이 올린 것이 아닙니다 */
+    kind: 'vod',
+    tab: sc.tab,
+    status: 'draft',                /* ★ 검수 대기. 아무에게도 보이지 않습니다 */
+    source: 'curated',
+    field: sc.field || '기타',
+    title: v.title.slice(0, 120),
+    subtitle: null,
+    /* ★ 소개문은 <b>지어내지 않습니다.</b> 「왜 이 영상을 골랐는지」는
+       사람이 쓸 몫입니다(레슨 등록 화면 안내에 그렇게 적혀 있습니다).
+       대신 검수에 쓸 정보를 적어 두고, 파트너가 지우고 다시 쓰십니다. */
+    summary: '[자동수집] ' + (src ? src + ' · ' : '')
+      + (min ? min + '분 · ' : '')
+      + '점수 ' + sc.s + ' (' + sc.why.join(' ') + ')'
+      + '\n\n' + String(v.desc || '').replace(/\s+/g, ' ').trim().slice(0, 500),
+    cover_url: v.thumb || null,
+    video_provider: 'youtube',
+    video_id: v.video_id,
+    sample_provider: 'none',
+    sample_id: null,
+    duration_min: min,
+    credit: src || null,
+    credit_url: 'https://www.youtube.com/watch?v=' + v.video_id,
+    price: 0,
+  };
+}
+
+/* ── 이미 있는 것은 건너뜁니다 ──────────────────────────── */
+async function existingIds() {
+  const out = new Set();
+  let from = 0;
+  /* ★ Supabase 는 한 번에 200줄까지 줍니다. 실수령 행 수만큼 전진해야
+     합니다 — 요청한 수와 견주면 첫 쪽에서 멈춥니다(이 저장소의 함정). */
+  for (;;) {
+    const res = await fetch(`${SB_URL}/rest/v1/lessons?select=video_id&video_id=not.is.null`, {
+      headers: {
+        apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
+        Range: `${from}-${from + 199}`,
+      },
+    });
+    if (!res.ok) throw new Error(`Supabase ${res.status} ${await res.text()}`);
+    const rows = await res.json();
+    if (!rows.length) break;
+    for (const r of rows) if (r.video_id) out.add(r.video_id);
+    from += rows.length;
+  }
+  return out;
+}
+
+async function save(rows) {
+  let done = 0;
+  for (let i = 0; i < rows.length; i += 100) {
+    const part = rows.slice(i, i + 100);
+    await sb('lessons', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify(part),
+    });
+    done += part.length;
+  }
+  return done;
+}
+
+/* ── 실행 ───────────────────────────────────────────────── */
+(async () => {
+  console.log('══ 레슨:ON — 마스터클래스 · 공개레슨 모으기 ══');
+  console.log(`   채널   : ${CH_LIMIT ? CH_LIMIT + '곳만' : CHANNELS.length + '곳'}`);
+  console.log(`   채널마다: 최신 ${PER}개`);
+  console.log(`   점수 기준: ${MIN}점 이상`);
+  console.log(`   검색   : ${SEARCH ? '켬 (보조)' : '끔'}`);
+  console.log(`   담기   : ${SAVE ? '예 (--save)' : '아니오 — 세어만 봅니다'}`);
+  console.log('');
+
+  const have = await existingIds();
+  console.log(`   이미 담긴 영상 ${have.size}개는 건너뜁니다`);
+  console.log('');
+
+  const list = CH_LIMIT ? CHANNELS.slice(0, CH_LIMIT) : CHANNELS;
+  const all = [];
+  const seen = new Set();
+
+  for (const ch of list) {
+    const vids = await fromChannel(ch);
+    let keep = 0, drop = 0;
+    for (const v of vids) {
+      if (seen.has(v.video_id)) continue;
+      seen.add(v.video_id);
+      if (have.has(v.video_id)) { drop++; continue; }
+      if (blocked(v.title)) { drop++; if (LIST === 'drop') console.log(`      버림(제목) ${v.title}`); continue; }
+      const sc = score(v, ch);
+      if (sc.s < MIN) {
+        drop++;
+        if (LIST === 'drop') console.log(`      버림(${sc.s}점) ${v.title}`);
+        continue;
+      }
+      all.push({ v, sc });
+      keep++;
+    }
+    console.log(`   ${(ch.realName || ch.name).padEnd(30)} 받음 ${String(vids.length).padStart(3)} · 담을 것 ${keep} · 버림 ${drop}`);
+    await sleep(200);
+  }
+
+  if (SEARCH) {
+    console.log('');
+    console.log('   ── 검색으로 더 찾습니다 (채널 목록에 없는 곳) ──');
+    for (const q of QUERIES) {
+      const vids = await fromSearch(q);
+      let keep = 0;
+      for (const v of vids) {
+        if (seen.has(v.video_id) || have.has(v.video_id)) continue;
+        seen.add(v.video_id);
+        if (blocked(v.title)) continue;
+        const sc = score(v, null);       /* 채널 점수 0 — 나머지로 55점을 넘어야 합니다 */
+        if (sc.s < MIN) continue;
+        all.push({ v, sc }); keep++;
+      }
+      console.log(`   「${q}」 → ${keep}개`);
+      await sleep(300);
+    }
+  }
+
+  console.log('');
+  const byTab = { master: 0, open: 0 };
+  all.forEach(({ sc }) => { byTab[sc.tab] = (byTab[sc.tab] || 0) + 1; });
+  console.log(`   ▶ 담을 것 모두 ${all.length}개 — 마스터클래스 ${byTab.master || 0} · 공개레슨 ${byTab.open || 0}`);
+
+  const fTally = new Map();
+  all.forEach(({ sc }) => fTally.set(sc.field || '기타', (fTally.get(sc.field || '기타') || 0) + 1));
+  if (fTally.size) {
+    console.log('   ▶ 분야별');
+    [...fTally.entries()].sort((a, b) => b[1] - a[1])
+      .forEach(([f, n]) => console.log(`        ${String(n).padStart(3)}  ${f}`));
+  }
+
+  if (LIST === 'keep' || !SAVE) {
+    console.log('   ▶ 표본 (점수 높은 순)');
+    [...all].sort((a, b) => b.sc.s - a.sc.s).slice(0, LIST === 'keep' ? all.length : 10)
+      .forEach(({ v, sc }, i) => {
+        console.log(`      ${String(i + 1).padStart(3)}. [${sc.tab === 'open' ? '공개' : '마스터'}·${sc.field || '기타'}·${sc.s}점] ${v.title}`);
+        console.log(`           ${v.channel} · ${v.sec ? Math.round(v.sec / 60) + '분' : '길이모름'}`);
+      });
+  }
+
+  if (!SAVE) {
+    console.log('');
+    console.log('   담지 않았습니다. 위 표본이 알맞아 보이면 --save 를 붙여 다시 돌리십시오.');
+    console.log('   담으면 <b>준비중(draft)</b> 으로 들어가므로 목록에는 나오지 않습니다 —');
+    console.log('   admin/lesson-review.html 에서 보시고 통과시키면 그때 공개됩니다.');
+    return;
+  }
+
+  const rows = all.map(({ v, sc }) => toRow(v, sc));
+  const n = await save(rows);
+  console.log('');
+  console.log(`   ▶ 담았습니다 — ${n}개 (모두 준비중 · 검수 대기)`);
+  console.log('   ▶ admin/lesson-review.html 에서 보시고 통과·버림을 정해 주십시오.');
+})().catch((e) => {
+  console.error('실패:', e.message);
+  process.exit(1);
+});

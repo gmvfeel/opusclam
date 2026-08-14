@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>OPUSCLAM · 마스터클래스 · 공개레슨 검토</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 18px 90px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  button{appearance:none;border:0;border-radius:7px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.ok{background:#0f9b8e}
+  button.no{background:#fff;color:#a01c1c;border:1px solid #f0c8c8}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input[type=text]{appearance:none;border:1px solid #d8d8e2;border-radius:7px;padding:8px 11px;font-size:13px;background:#fff;color:#20223a}
+
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#f4f7ff;border:1px solid #d6e0f7;color:#2c4a86;border-radius:8px;padding:11px 14px;font-size:12.5px;margin-bottom:16px}
+
+  .stat{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:18px}
+  .stat div{background:#f2f2f7;border-radius:7px;padding:9px 13px;font-size:12px;color:#5c5e70}
+  .stat b{font-size:17px;display:block;color:#20223a;font-variant-numeric:tabular-nums}
+
+  .tabs{display:flex;gap:0;border-bottom:1.5px solid #e3e3ec;margin:0 0 14px}
+  .tabs button{background:transparent;color:#8a8c9e;border:0;border-bottom:2px solid transparent;border-radius:0;padding:11px 17px;margin-bottom:-1.5px}
+  .tabs button.on{color:#20223a;border-bottom-color:#7C63B0}
+
+  .bar{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-bottom:14px}
+  .bar .spacer{flex:1}
+  .selinfo{font-size:12.5px;color:#6b6d80}
+
+  .row{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:13px;margin-bottom:10px}
+  .row.pick{border-color:#7C63B0;box-shadow:0 0 0 2px rgba(124,99,176,.14)}
+  .row .ck{flex:0 0 auto;padding-top:2px}
+  .row .th{flex:0 0 200px;width:200px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#ececf2;position:relative}
+  .row .th img{width:100%;height:100%;object-fit:cover;display:block}
+  .row .th .play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:22px;text-shadow:0 1px 6px rgba(0,0,0,.5);text-decoration:none}
+  .row .bd{flex:1;min-width:0}
+  .row .tt{font-size:14.5px;font-weight:700;line-height:1.4;margin-bottom:5px;word-break:keep-all}
+  .row .mt{font-size:12px;color:#6b6d80;margin-bottom:6px}
+  .row .mt b{color:#20223a}
+  .row .dsc{font-size:12.5px;color:#5c5e70;white-space:pre-wrap;max-height:5.4em;overflow:hidden}
+  .row .act{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;align-items:center}
+  .tag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;margin-right:5px}
+  .tag.master{background:#efe9fb;color:#5b4b9e}
+  .tag.open{background:#e6f5f3;color:#0f7d72}
+  .tag.field{background:#f2f2f7;color:#5c5e70}
+  .tag.score{background:#fff6e6;color:#8a5a00}
+
+  .empty{background:#fff;border:1px dashed #d8d8e2;border-radius:10px;padding:34px 18px;text-align:center;color:#8a8c9e}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(12px);background:#20223a;color:#fff;font-size:13px;padding:11px 18px;border-radius:9px;opacity:0;pointer-events:none;transition:.22s}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:700px){
+    .row{flex-wrap:wrap}
+    .row .th{flex:0 0 100%;width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="/admin/admin.html">← 어드민으로</a>
+
+  <h1>마스터클래스 · 공개레슨 검토</h1>
+  <p class="sub">
+    자동으로 모은 영상이 <b>준비중(draft)</b> 으로 들어옵니다. 여기서 통과시키면
+    레슨:ON 목록에 나오고, 버리면 지웁니다.
+  </p>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="note">
+    <b>보시는 요령</b> — 표지를 눌러 유튜브에서 잠깐 보시면 됩니다.
+    통과 전에 <b>소개문을 손보시는 것</b>을 권합니다. 지금 들어 있는 글은
+    검수에 쓰려고 적어 둔 것(채널·길이·점수·유튜브 설명)이고,
+    「왜 이 영상을 골랐는지」가 우리가 만드는 값입니다.
+    소개문은 레슨 등록 화면에서 고치실 수 있습니다.
+  </div>
+
+  <div class="stat" id="stat"></div>
+
+  <div class="tabs" id="tabs">
+    <button class="on" data-tab="draft">검토 대기</button>
+    <button data-tab="open">공개된 것</button>
+  </div>
+
+  <div class="bar">
+    <select id="fTab">
+      <option value="">마스터클래스 · 공개레슨 모두</option>
+      <option value="master">마스터클래스만</option>
+      <option value="open">공개레슨만</option>
+    </select>
+    <select id="fField">
+      <option value="">분야 모두</option>
+    </select>
+    <button class="ghost" id="pickAll">모두 고르기</button>
+    <button class="ghost" id="pickNone">고른 것 풀기</button>
+    <span class="spacer"></span>
+    <span class="selinfo" id="selinfo">고른 것 0개</span>
+    <button class="ok" id="bulkOk" disabled>고른 것 통과</button>
+    <button class="no" id="bulkNo" disabled>고른 것 버림</button>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- 관리자 로그인 지킴이 — 토큰이 만료되면 맨 위에 붉은 띠로 알려 줍니다 -->
+<script src="/assets/admin-guard.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  /* ★ 싱글턴을 씁니다 — createClient 를 또 부르면 인스턴스가 둘이 되어
+     admin-guard.js 가 보는 것과 달라지고 RLS 가 어긋납니다. */
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
+
+  /* lessons.field 는 여덟 가지입니다 — assets/lesson-list.js 의 FIELDS 와
+     같아야 합니다(다르면 목록 거르개에서 빠집니다). */
+  var FIELDS = ['PIANO','STRINGS','BRASS','WINDS','PERCUSSIONS','VOCAL','작곡/이론','기타'];
+
+  var TAB = 'draft';
+  var rows = [];
+  var picked = new Set();
+
+  function $(id){ return document.getElementById(id); }
+  function esc(v){ return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function warn(t){ var w = $('warn'); w.classList.add('on'); w.textContent = t; }
+  function toast(t){
+    var el = $('toast'); el.textContent = t; el.classList.add('on');
+    clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove('on'); }, 2200);
+  }
+
+  /* ── 관리자인지 확인 ── */
+  async function checkAdmin(){
+    var u = await sb.auth.getUser();
+    var user = u && u.data && u.data.user;
+    if (!user) {
+      warn('로그인되어 있지 않습니다. 사이트에서 관리자 계정으로 로그인한 뒤 이 화면을 다시 열어 주세요.');
+      return false;
+    }
+    var m = await sb.from('members').select('is_admin,name').eq('id', user.id).maybeSingle();
+    if (!m.data || !m.data.is_admin) {
+      warn('관리자 권한이 없는 계정입니다. (' + (user.email || '') + ')');
+      return false;
+    }
+    return true;
+  }
+
+  /* ── 숫자 ──
+     ★ 자동으로 모은 것만 셉니다(source='curated' · video_id 있음).
+       사람이 올린 레슨까지 세면 숫자가 뜻을 잃습니다. */
+  async function loadStat(){
+    var box = $('stat');
+    async function cnt(status){
+      var q = sb.from('lessons').select('id', { count:'exact', head:true })
+                .eq('kind','vod').eq('source','curated')
+                .not('video_id','is',null);
+      if (status) q = q.eq('status', status);
+      var r = await q;
+      return r.count || 0;
+    }
+    try {
+      var d = await cnt('draft'), o = await cnt('open'), all = await cnt(null);
+      box.innerHTML =
+          '<div>검토 대기<b>' + d.toLocaleString() + '</b></div>'
+        + '<div>공개<b>'     + o.toLocaleString() + '</b></div>'
+        + '<div>전체<b>'     + all.toLocaleString() + '</b></div>';
+    } catch (e) {
+      box.innerHTML = '<div>숫자를 불러오지 못했습니다</div>';
+    }
+  }
+
+  /* ── 목록 ── */
+  async function load(){
+    $('list').innerHTML = '<div class="empty">불러오는 중…</div>';
+    picked.clear(); syncSel();
+
+    var q = sb.from('lessons')
+      .select('id,tab,field,title,summary,cover_url,video_id,duration_min,credit,credit_url,status,created_at')
+      .eq('kind','vod').eq('source','curated')
+      .not('video_id','is',null)
+      .eq('status', TAB)
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    var ft = $('fTab').value, ff = $('fField').value;
+    if (ft) q = q.eq('tab', ft);
+    if (ff) q = q.eq('field', ff);
+
+    var r = await q;
+    if (r.error) { warn('목록을 불러오지 못했습니다 — ' + r.error.message); return; }
+    rows = r.data || [];
+    draw();
+  }
+
+  /* 소개문 앞에 적어 둔 점수를 꺼냅니다 (「점수 103 (…)」) */
+  function scoreOf(sum){
+    var m = /점수\s*(\d+)/.exec(String(sum || ''));
+    return m ? m[1] : null;
+  }
+
+  function draw(){
+    var box = $('list');
+    if (!rows.length) {
+      box.innerHTML = '<div class="empty">'
+        + (TAB === 'draft' ? '검토할 것이 없습니다. Actions 에서 수집을 돌리시면 여기에 쌓입니다.'
+                           : '공개된 것이 없습니다.')
+        + '</div>';
+      return;
+    }
+    box.innerHTML = rows.map(function(o){
+      var sc = scoreOf(o.summary);
+      var url = o.credit_url || ('https://www.youtube.com/watch?v=' + o.video_id);
+      return '<div class="row' + (picked.has(o.id) ? ' pick' : '') + '" data-id="' + esc(o.id) + '">'
+        + '<div class="ck"><input type="checkbox" ' + (picked.has(o.id) ? 'checked' : '')
+        +   ' data-ck="' + esc(o.id) + '" aria-label="고르기"></div>'
+        + '<div class="th">'
+        +   (o.cover_url ? '<img src="' + esc(o.cover_url) + '" alt="" loading="lazy">' : '')
+        +   '<a class="play" href="' + esc(url) + '" target="_blank" rel="noopener" title="유튜브에서 보기">&#9658;</a>'
+        + '</div>'
+        + '<div class="bd">'
+        +   '<div class="tt">' + esc(o.title || '') + '</div>'
+        +   '<div class="mt">'
+        +     '<span class="tag ' + (o.tab === 'open' ? 'open' : 'master') + '">'
+        +       (o.tab === 'open' ? '공개레슨' : '마스터클래스') + '</span>'
+        +     '<span class="tag field">' + esc(o.field || '기타') + '</span>'
+        +     (sc ? '<span class="tag score">' + esc(sc) + '점</span>' : '')
+        +     (o.duration_min ? '<b>' + o.duration_min + '분</b> · ' : '')
+        +     esc(o.credit || '')
+        +   '</div>'
+        +   '<div class="dsc">' + esc(o.summary || '') + '</div>'
+        +   '<div class="act">'
+        +     '<button class="ok" data-ok="' + esc(o.id) + '">통과</button>'
+        +     '<button class="no" data-no="' + esc(o.id) + '">버림</button>'
+        +     '<button class="ghost" data-swap="' + esc(o.id) + '">'
+        +       (o.tab === 'open' ? '마스터클래스로' : '공개레슨으로') + '</button>'
+        +     '<a class="backlink" style="margin:0" href="/lesson/lesson-write.html?id='
+        +       esc(o.id) + '" target="_blank" rel="noopener">소개문 손보기 &#8599;</a>'
+        +   '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function syncSel(){
+    $('selinfo').textContent = '고른 것 ' + picked.size + '개';
+    $('bulkOk').disabled = picked.size === 0;
+    $('bulkNo').disabled = picked.size === 0;
+  }
+
+  /* ── 통과 · 버림 ──
+     ★ 통과는 status 를 open 으로 바꿉니다(그 순간 목록에 나옵니다).
+     ★ 버림은 <b>지웁니다.</b> 남겨 두면 다음 수집 때 「이미 있다」로
+       건너뛰어 다시 올라오지 않습니다 — 그것이 우리가 바라는 바이니
+       지우는 대신 status 를 rejected 로 두는 편이 나을 수도 있으나,
+       lessons.status 에는 그런 값이 없습니다(draft·open·ongoing·closed).
+       그래서 <b>지우고</b>, 같은 영상이 다시 걸리면 그때 다시 판단합니다. */
+  async function setOpen(ids){
+    var r = await sb.from('lessons').update({ status: 'open' }).in('id', ids).select('id');
+    if (r.error) { toast('통과시키지 못했습니다 — ' + r.error.message); return false; }
+    return true;
+  }
+  async function remove(ids){
+    var r = await sb.from('lessons').delete().in('id', ids).select('id');
+    if (r.error) { toast('버리지 못했습니다 — ' + r.error.message); return false; }
+    return true;
+  }
+  async function swapTab(id){
+    var o = rows.filter(function(x){ return String(x.id) === String(id); })[0];
+    if (!o) return;
+    var to = (o.tab === 'open') ? 'master' : 'open';
+    var r = await sb.from('lessons').update({ tab: to }).eq('id', id).select('id');
+    if (r.error) { toast('바꾸지 못했습니다 — ' + r.error.message); return; }
+    o.tab = to; draw(); toast(to === 'open' ? '공개레슨으로 옮겼습니다' : '마스터클래스로 옮겼습니다');
+  }
+
+  function drop(ids){
+    rows = rows.filter(function(o){ return ids.indexOf(String(o.id)) < 0; });
+    ids.forEach(function(i){ picked.delete(i); });
+    syncSel(); draw(); loadStat();
+  }
+
+  /* ── 이어 매기 ── */
+  $('tabs').addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('button[data-tab]'); if (!b) return;
+    TAB = b.getAttribute('data-tab');
+    [].forEach.call(this.querySelectorAll('button'), function(x){ x.classList.toggle('on', x === b); });
+    load();
+  });
+  $('fTab').addEventListener('change', load);
+  $('fField').addEventListener('change', load);
+
+  $('list').addEventListener('click', async function(e){
+    var t = e.target;
+    var ok = t.getAttribute && t.getAttribute('data-ok');
+    var no = t.getAttribute && t.getAttribute('data-no');
+    var sw = t.getAttribute && t.getAttribute('data-swap');
+    if (ok) {
+      t.disabled = true;
+      if (await setOpen([ok])) { toast('통과시켰습니다 — 목록에 나옵니다'); drop([ok]); }
+      else t.disabled = false;
+      return;
+    }
+    if (no) {
+      if (!confirm('이 영상을 버립니다. 되돌릴 수 없습니다.\n\n계속하시겠습니까?')) return;
+      t.disabled = true;
+      if (await remove([no])) { toast('버렸습니다'); drop([no]); }
+      else t.disabled = false;
+      return;
+    }
+    if (sw) { swapTab(sw); return; }
+  });
+
+  $('list').addEventListener('change', function(e){
+    var id = e.target.getAttribute && e.target.getAttribute('data-ck');
+    if (!id) return;
+    if (e.target.checked) picked.add(id); else picked.delete(id);
+    var row = e.target.closest('.row'); if (row) row.classList.toggle('pick', e.target.checked);
+    syncSel();
+  });
+
+  $('pickAll').addEventListener('click', function(){
+    rows.forEach(function(o){ picked.add(String(o.id)); });
+    syncSel(); draw();
+  });
+  $('pickNone').addEventListener('click', function(){ picked.clear(); syncSel(); draw(); });
+
+  $('bulkOk').addEventListener('click', async function(){
+    /* ★ Set 은 [].slice.call 로 배열이 되지 않습니다 — 길이가 없어
+       <b>빈 배열</b>이 됩니다. 그래서 아무 일도 일어나지 않았습니다
+       (확인창조차 뜨지 않아 잡았습니다). Array.from 을 씁니다. */
+    var ids = Array.from(picked);
+    if (!ids.length) return;
+    if (!confirm(ids.length + '개를 통과시킵니다. 그 순간 목록에 나옵니다.\n\n계속하시겠습니까?')) return;
+    this.disabled = true;
+    if (await setOpen(ids)) { toast(ids.length + '개를 통과시켰습니다'); drop(ids); }
+    this.disabled = false;
+  });
+  $('bulkNo').addEventListener('click', async function(){
+    /* ★ Set 은 [].slice.call 로 배열이 되지 않습니다 — 길이가 없어
+       <b>빈 배열</b>이 됩니다. 그래서 아무 일도 일어나지 않았습니다
+       (확인창조차 뜨지 않아 잡았습니다). Array.from 을 씁니다. */
+    var ids = Array.from(picked);
+    if (!ids.length) return;
+    /* ★ 지우기 전에 <b>몇 개인지 눈으로</b> 보여 줍니다. 이 저장소에서
+       목록을 눈으로 확인하는 습관이 큰 사고를 여러 번 막았습니다. */
+    if (!confirm(ids.length + '개를 버립니다. 되돌릴 수 없습니다.\n\n계속하시겠습니까?')) return;
+    this.disabled = true;
+    if (await remove(ids)) { toast(ids.length + '개를 버렸습니다'); drop(ids); }
+    this.disabled = false;
+  });
+
+  /* ── 시작 ── */
+  (async function(){
+    FIELDS.forEach(function(f){
+      var o = document.createElement('option'); o.value = f; o.textContent = f;
+      $('fField').appendChild(o);
+    });
+    if (!(await checkAdmin())) return;
+    await loadStat();
+    await load();
+  })();
+})();
+</script>
+</body>
+</html>
