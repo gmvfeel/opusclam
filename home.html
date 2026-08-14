@@ -379,7 +379,11 @@
   .hslide{grid-area:1/1;opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
   .hslide.on{opacity:1;visibility:visible;transform:none}
   .hero .eyebrow{font-family:var(--serif);letter-spacing:.3em;font-size:12px;color:var(--violet-3);text-transform:uppercase;margin-bottom:16px}
-  .hero h1{font-family:var(--display);font-weight:600;font-size:52px;line-height:1.06;letter-spacing:-.01em;max-width:720px}
+  /* ★ 2026-08-14 · 낱말 중간에서 끊기던 것을 막습니다
+       「실내악 페스티벌 — 슈베르트의 밤」이 「…슈베르트 / 의 밤」으로
+       끊겼습니다. 한국어는 기본값에서 <b>글자 단위</b>로 넘어갑니다 —
+       keep-all 로 어절 단위로 바꿉니다(레슨:ON 빈 안내와 같은 처방). */
+  .hero h1{font-family:var(--display);font-weight:600;font-size:52px;line-height:1.06;letter-spacing:-.01em;max-width:720px;word-break:keep-all;overflow-wrap:break-word}
   .hero .sub{margin-top:16px;font-size:15px;color:#d9d3ea;letter-spacing:.01em}
   .hero .meta{margin-top:26px;display:flex;gap:22px;font-size:13px;color:#b9b2d4}
   .hero .meta b{color:#fff;font-weight:600}
@@ -3365,13 +3369,99 @@ if('serviceWorker' in navigator){
     }
   }
 
+  /* ============================================================
+     히어로 슬라이드를 <b>공연 자료로</b> 채우기 (2026-08-14 · 파트너 요청)
+
+     ★ 왜
+       맨 위 큰 자리에 공연 셋이 박혀 있었습니다(2013·2022년 것).
+       나중에 이 자리를 광고로 쓸 예정이므로, 그때까지는 <b>정보SPOT 의
+       공연정보</b>에서 스스로 뽑아 보여 줍니다.
+
+     ★ 어느 것을 뽑나
+       ① 오늘 이후에 열리는 공연을 날짜 가까운 순으로 스물넷까지 받고
+       ② 그 가운데 <b>무작위로 셋</b>을 고릅니다 (열 때마 다릅니다)
+       ③ 다가오는 공연이 없으면 <b>가장 최근에 담긴</b> 것으로 채웁니다
+
+     ★ 자리 우선순위는 그대로입니다
+       hero_slides 표에 등록된 것이 있으면 <b>그것이 먼저</b>입니다.
+       광고가 들어오면 그 표에 넣으시면 이 자동 채우기는 물러납니다.
+
+     ★ 제목은 두 줄로 나눕니다 — 한 줄이 너무 길면 큰 글자(52px)에서
+       화면을 넘칩니다. 낱말 경계에서만 끊습니다(낱말 가운데 끊김 방지).
+     ============================================================ */
+  function heroSplit(t){
+    var s = String(t || '').trim();
+    if (s.length <= 24) return s;                 /* 짧으면 한 줄 — 넘치면 브라우저가 어절 단위로 감습니다 */
+    var w = s.split(/\s+/);
+    if (w.length < 2) return s;                   /* 띄어쓰기가 없으면 그대로 */
+    var half = s.length / 2, acc = 0, cut = 0;
+    for (var i = 0; i < w.length - 1; i++) {
+      acc += w[i].length + 1;
+      cut = i + 1;
+      if (acc >= half) break;
+    }
+    return w.slice(0, cut).join(' ') + '\n' + w.slice(cut).join(' ');
+  }
+
+  async function feedHeroConcerts(n){
+    try{
+      const today = new Date();
+      const p2 = (v) => String(v).padStart(2, '0');
+      const from = today.getFullYear() + '-' + p2(today.getMonth()+1) + '-' + p2(today.getDate());
+      const cols = 'id,title,title_ko,date_from,date_to,date_text,venue_name,city,region,'
+                 + 'category,organizer,kopis_state';
+
+      let rows = await sbGet('spot?select=' + cols
+        + '&section=eq.' + encodeURIComponent('공연정보')
+        + '&hidden=is.false&date_from=gte.' + from
+        + '&order=date_from.asc&limit=24');
+
+      /* 다가오는 공연이 없으면 최근에 담긴 것으로 */
+      if(!Array.isArray(rows) || !rows.length){
+        rows = await sbGet('spot?select=' + cols
+          + '&section=eq.' + encodeURIComponent('공연정보')
+          + '&hidden=is.false&order=created_at.desc&limit=24');
+      }
+      if(!Array.isArray(rows) || !rows.length) return null;
+
+      /* 섞어서 앞에서 n 개 */
+      const bag = rows.slice();
+      for(let i = bag.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+      }
+      const pick = bag.slice(0, n || 3);
+
+      const dot = (v) => String(v || '').slice(0,10).replace(/-/g, '.');
+      return pick.map(function(r){
+        const df = dot(r.date_from), dt = dot(r.date_to);
+        let when = df;
+        if(dt && dt !== df){
+          when += ' — ' + (dt.slice(0,4) === df.slice(0,4) ? dt.slice(5) : dt);
+        }
+        if(!when) when = r.date_text || '';
+        return {
+          eyebrow: [r.category || 'Concert', r.region || r.city].filter(Boolean).join(' · '),
+          title:   heroSplit(r.title_ko || r.title || ''),
+          subtitle: r.organizer || '',
+          schedule: when,
+          venue:   r.venue_name || r.city || '',
+          time_text: r.kopis_state || '',
+          link:    '/spot/spot-view.html?id=' + encodeURIComponent(r.id),
+        };
+      });
+    }catch(e){ return null; }
+  }
+
   // 빅배너(히어로) 슬라이드
   async function loadHeroSlides(){
     const wrap = document.querySelector('.hero .wrap');
     const dotsBox = document.querySelector('.hero-dots');
     if(!wrap || !dotsBox) return;
     try{
-      const rows = await sbGet('hero_slides?select=eyebrow,title,subtitle,schedule,venue,time_text,image_url,link&order=sort_order.asc');
+      let rows = await sbGet('hero_slides?select=eyebrow,title,subtitle,schedule,venue,time_text,image_url,link&order=sort_order.asc');
+      /* 등록된 것이 없으면 정보SPOT 의 공연으로 채웁니다 (2026-08-14) */
+      if(!Array.isArray(rows) || !rows.length) rows = await feedHeroConcerts(3);
       if(!Array.isArray(rows) || !rows.length) return;
       wrap.innerHTML = '';
       dotsBox.innerHTML = '';
@@ -3380,10 +3470,20 @@ if('serviceWorker' in navigator){
         sl.className = 'hslide' + (idx === 0 ? ' on' : '');
         if(r.eyebrow){ const eb = document.createElement('div'); eb.className = 'eyebrow'; eb.textContent = r.eyebrow; sl.appendChild(eb); }
         const h1 = document.createElement('h1');
+        /* ★ 2026-08-14 · 주소가 있으면 <b>제목을 눌러</b> 그 공연으로 갑니다.
+             자동으로 뽑아 보여 주는 공연이니 보러 갈 길이 있어야 뜻이 있습니다.
+             제목만 링크로 둡니다 — 히어로 전체를 링크로 하면 배경을 눌러도
+             옮겨져 답답합니다. 색·굵기는 그대로 물려받습니다. */
+        const titleHost = r.link ? document.createElement('a') : h1;
+        if(r.link){
+          titleHost.href = r.link;
+          titleHost.style.cssText = 'color:inherit;text-decoration:none';
+        }
         String(r.title || '').split('\n').forEach(function(line, li){
-          if(li > 0) h1.appendChild(document.createElement('br'));
-          h1.appendChild(document.createTextNode(line));
+          if(li > 0) titleHost.appendChild(document.createElement('br'));
+          titleHost.appendChild(document.createTextNode(line));
         });
+        if(r.link) h1.appendChild(titleHost);
         sl.appendChild(h1);
         if(r.subtitle){ const sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = r.subtitle; sl.appendChild(sub); }
         const meta = document.createElement('div'); meta.className = 'meta';
