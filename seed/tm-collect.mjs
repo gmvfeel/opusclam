@@ -116,6 +116,21 @@ const BAD_GENRE = [
   'blues', 'folk', 'electronic', 'dance', 'latin', 'metal', 'punk',
   'reggae', 'soul', 'world', 'comedy', 'children', 'musical', 'variety',
   'film', 'soundtrack', 'video game', 'k-pop', 'j-pop', 'new age',
+  /* ★ 2026-08-14 · 두 번째 실행에서 드러난 것
+       프랑스에서 「Chanson Francaise」가 94건 걸렸습니다 — 샹송은
+       대중음악입니다. 프랑스가 474건으로 가장 많았던 까닭이 이것으로
+       보입니다. 카바레·풍자극도 함께 막습니다. */
+  'chanson', 'cabaret', 'humour', 'humor', 'stand-up', 'tango',
+  'flamenco', 'celtic', 'gospel', 'christmas', 'holiday',
+];
+
+/* ★ 공연장으로 걸러내기 (2026-08-14)
+     「Wisconsin State Fair」에서 열린 크로스오버 바이올린 공연이
+     갈래로는 걸리지 않고 통과했습니다. 박람회장·카지노 무대는
+     클래식 공연장이 아니므로 자리로 막습니다. */
+const VENUE_BLOCK = [
+  'state fair', 'county fair', 'fairgrounds', 'casino', 'racetrack',
+  'speedway', 'brewery', 'winery', 'tavern', 'bar &',
 ];
 
 /* 갈래가 클래식이라도 이런 낱말이 제목에 있으면 버립니다 —
@@ -228,6 +243,11 @@ function isClassical(ev) {
   if (TITLE_BLOCK.some((w) => t.includes(w))) return false;
   if (TITLE_RE.some((re) => re.test(raw))) return false;
 
+  /* ④ 공연장이 클래식을 하는 자리인지 */
+  const v = (ev._embedded && ev._embedded.venues && ev._embedded.venues[0]) || {};
+  const vn = String(v.name || '').toLowerCase();
+  if (vn && VENUE_BLOCK.some((w) => vn.includes(w))) return false;
+
   return hit || LOOSE;
 }
 
@@ -309,7 +329,12 @@ async function fetchCountry(cc, from, to) {
   const pages = Math.min(Math.ceil(LIMIT / SIZE), 5);   /* 1,000번째까지만 볼 수 있습니다 */
   const rows = [];
   let got = 0, dropped = 0;
-  const genreTally = new Map();
+  /* ★ 2026-08-14 · <b>담은 것</b>과 <b>버린 것</b>의 갈래를 따로 셉니다
+       전에는 둘을 섞어 세어서, 통계에 Pop·Film 이 보여도 그것이
+       「버렸다」는 뜻인지 「들어왔다」는 뜻인지 알 수 없었습니다.
+       담은 것의 갈래만 보면 <b>무엇이 새어 들어왔는지</b> 바로 보입니다. */
+  const genreTally = new Map();      /* 담은 것 */
+  const dropTally = new Map();       /* 버린 것 */
 
   for (let page = 0; page < pages; page++) {
     let json;
@@ -334,11 +359,12 @@ async function fetchCountry(cc, from, to) {
 
     for (const ev of list) {
       got++;
-      for (const g of genreNames(ev)) {
-        if (/^music$/i.test(g)) continue;
-        genreTally.set(g, (genreTally.get(g) || 0) + 1);
-      }
-      if (!isClassical(ev)) { dropped++; if (DEBUG) console.log(`     버림 · ${ev.name}`); continue; }
+      const gs = genreNames(ev).filter((g) => !/^music$/i.test(g));
+      const ok = isClassical(ev);
+      const tally = ok ? genreTally : dropTally;
+      for (const g of gs) tally.set(g, (tally.get(g) || 0) + 1);
+
+      if (!ok) { dropped++; if (DEBUG) console.log(`     버림 · ${ev.name}`); continue; }
       const row = toRow(ev, cc);
       /* 빈약한 것은 담지 않습니다 — 날짜나 공연장이 없으면 쓸모가 없습니다 */
       if (!row.title || !row.date_from || !row.venue_name) { dropped++; continue; }
@@ -351,7 +377,7 @@ async function fetchCountry(cc, from, to) {
     await sleep(250);                     /* 초당 5회를 넘지 않게 */
   }
 
-  return { rows, got, dropped, genreTally };
+  return { rows, got, dropped, genreTally, dropTally };
 }
 
 /* ============================================================
@@ -450,11 +476,13 @@ async function save(rows) {
 
   const all = [];
   const tally = new Map();
+  const dtally = new Map();
   for (const cc of COUNTRIES) {
-    const { rows, got, dropped, genreTally } = await fetchCountry(cc, from, to);
+    const { rows, got, dropped, genreTally, dropTally } = await fetchCountry(cc, from, to);
     console.log(`   ${cc} ${COUNTRY_KO[cc] || ''} — 받음 ${got} · 담을 것 ${rows.length} · 버림 ${dropped}`);
     all.push(...rows);
     for (const [g, n] of genreTally) tally.set(g, (tally.get(g) || 0) + n);
+    for (const [g, n] of dropTally) dtally.set(g, (dtally.get(g) || 0) + n);
     await sleep(300);
   }
 
@@ -473,17 +501,29 @@ async function save(rows) {
   console.log(`   ▶ 담을 것 모두 ${uniq.length}건`);
 
   if (tally.size) {
-    console.log('   ▶ 실제로 걸린 갈래 (많은 순 · 잣대를 고칠 때 봅니다)');
+    console.log('   ▶ <담은 것>의 갈래 (많은 순 — 여기 대중음악이 보이면 새어 든 것입니다)');
     [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12)
+      .forEach(([g, n]) => console.log(`        ${String(n).padStart(4)}  ${g}`));
+  }
+  if (dtally.size) {
+    console.log('   ▶ <버린 것>의 갈래 (많은 순 — 여기 클래식이 보이면 너무 걸러낸 것입니다)');
+    [...dtally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
       .forEach(([g, n]) => console.log(`        ${String(n).padStart(4)}  ${g}`));
   }
 
   if (uniq.length) {
-    console.log('   ▶ 표본 다섯 줄');
-    uniq.slice(0, 5).forEach((r) => {
-      console.log(`        ${r.date_from}  ${r.country} · ${r.venue_name}`);
-      console.log(`                     ${r.title}`);
-    });
+    /* ★ 표본을 <b>나라마다 하나씩</b> 보여 줍니다 — 앞에서 다섯 개만
+       뽑으면 늘 미국만 보여 다른 나라를 확인할 수 없었습니다. */
+    console.log('   ▶ 표본 (나라마다 두 줄)');
+    for (const cc of COUNTRIES) {
+      const ko = COUNTRY_KO[cc] || cc;
+      const mine = uniq.filter((r) => r.country === ko).slice(0, 2);
+      if (!mine.length) continue;
+      for (const r of mine) {
+        console.log(`        [${cc}] ${r.date_text}  ${r.venue_name}`);
+        console.log(`             ${r.title}`);
+      }
+    }
   }
 
   if (!SAVE) {
