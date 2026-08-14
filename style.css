@@ -486,6 +486,24 @@
      ★ 어두운 모드에서는 선을 옅게 둡니다 — 흰 소재가 그대로 밝으므로
        진한 선은 도리어 도드라집니다. */
   .ad-slot.has-img.has-frame{border:1px solid var(--line-2,#e4ded2)}
+  /* ★ 2026-08-14 · 좁은 화면에서 <b>자리표가 넘쳤습니다</b> (파트너 지적)
+       ─────────────────────────────────────────────────────────────
+       맨 아래 배너는 좁은 화면에서 105px 밖에 안 됩니다. 그런데 자리표
+       안에 아이콘·ADVERTISEMENT·「광고문의」·바로가기 넷이 들어 있어
+       높이가 86px + 여백이 되고, 상자가 잘라내면서(overflow:hidden)
+       아이콘이 반쯤 잘려 보였습니다.
+     ▶ 좁은 화면에서는 <b>아이콘과 위 작은 글자를 감춥니다.</b>
+       남길 것은 「광고문의」와 바로가기입니다 — 그 둘이면 뜻이 전해집니다.
+     ★ 자리가 넉넉한 A·B 는 그대로 둡니다(높이 153·284px). 여기서
+       줄이는 것은 <b>맨 아래 배너</b>(.bigban) 뿐입니다. */
+  @media (max-width:900px){
+    .bigban .ad-cta{padding:12px 14px;gap:2px}
+    .bigban .ad-cta .ad-mark{display:none}
+    .bigban .ad-cta .ad-badge{display:none}
+    .bigban .ad-cta .ad-ctat{font-size:17px;margin-top:0}
+    .bigban .ad-cta .ad-desc{font-size:11.5px}
+  }
+
   html[data-theme="dark"] .ad-slot.has-img.has-frame{border-color:rgba(255,255,255,.14)}
 
 
