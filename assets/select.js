@@ -44,7 +44,8 @@
     'select.board-yearsel',
     'select.sp-daysel',
     'select.sm-ymsel',
-    'select.ln-select'          /* 레슨:ON 분류 */
+    'select.ln-select',         /* 레슨:ON 분류 */
+    'select.wr-dbsel'           /* DB 등록 — 어느 DB 에 넣을지 (2026-08-14) */
   ].join(',');
 
   var CSS = ''
