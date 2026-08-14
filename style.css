@@ -206,9 +206,17 @@
   .burger.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
 
   /* full menu button */
-  .fullmenu-btn{width:42px;height:42px;border-radius:10px;background:var(--violet-2);border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:0;transition:background .2s;flex:0 0 auto}
-  .fullmenu-btn span{width:18px;height:2px;background:#fff;border-radius:2px;transition:.2s}
-  .fullmenu-btn:hover{background:var(--violet)}
+  /* ★ 2026-08-14 · <b>바탕 박스를 뺐습니다</b> (파트너 지시)
+     보라 사각형 안에 흰 줄 세 개였습니다. 줄만 남깁니다 —
+     좁은 화면의 ≡(.burger) 와도 결이 맞습니다.
+   ★ 줄 색은 <b>글자색을 따릅니다</b>(currentColor). 흰 헤더에서는
+     어둡게, 맨 위 투명 헤더에서는 아래 규칙이 흰색으로 바꿉니다.
+     흰색으로 못박아 두면 흰 헤더에서 <b>보이지 않습니다.</b> */
+  .fullmenu-btn{width:42px;height:42px;border-radius:10px;background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:0;color:var(--text);flex:0 0 auto}
+  .fullmenu-btn span{width:18px;height:2px;background:currentColor;border-radius:2px;transition:.2s}
+  .fullmenu-btn:hover{color:var(--violet-2)}
+  .site-header:not(.solid) .fullmenu-btn{color:#fff}
+  .site-header:not(.solid) .fullmenu-btn:hover{color:var(--violet-3)}
   .fullmenu-btn:hover span:nth-child(1){width:20px}
   .fullmenu-btn:hover span:nth-child(3){width:14px}
 
