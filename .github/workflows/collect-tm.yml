@@ -42,6 +42,14 @@ on:
         options:
           - 'yes'
           - 'no'
+      strict:
+        description: '갈래에 클래식 표시가 반드시 있어야 담기 (이름만 적힌 정통 공연도 함께 빠집니다)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
       list:
         description: '제목 목록 찍기 (잣대를 고칠 때 — 나라 하나만 넣고 보십시오)'
         required: true
@@ -93,9 +101,10 @@ jobs:
           SAVE="${{ github.event.inputs.save }}"
           MG="${{ github.event.inputs.merge }}"
           LS="${{ github.event.inputs.list }}"
+          ST="${{ github.event.inputs.strict }}"
 
           # 예약 실행이면 입력값이 비어 있습니다 — 그때는 여섯 달·800건·담기
-          if [ -z "$M" ]; then M="6"; L="800"; SAVE="yes"; MG="yes"; LS="none"; fi
+          if [ -z "$M" ]; then M="6"; L="800"; SAVE="yes"; MG="yes"; LS="none"; ST="no"; fi
 
           OPTS="--months=$M --limit=$L"
           if [ "$SAVE" = "yes" ]; then OPTS="$OPTS --save"; fi
@@ -103,6 +112,7 @@ jobs:
           if [ -n "$C" ]; then OPTS="$OPTS --countries=$C"; fi
           # 목록 찍기 — 잣대를 고칠 때만 씁니다(로그가 길어집니다)
           if [ "$LS" = "drop" ] || [ "$LS" = "keep" ]; then OPTS="$OPTS --list=$LS"; fi
+          if [ "$ST" = "yes" ]; then OPTS="$OPTS --strict"; fi
 
           echo "── 실행 : node seed/tm-collect.mjs $OPTS ──"
           try2 node seed/tm-collect.mjs $OPTS

@@ -39,6 +39,7 @@
      node seed/tm-collect.mjs --list=keep           담을 것 제목을 모두 찍습니다
      node seed/tm-collect.mjs --list=drop           버린 것 제목을 모두 찍습니다
      node seed/tm-collect.mjs --merge=no            회차를 묶지 않고 날짜마다 한 줄
+     node seed/tm-collect.mjs --strict              갈래에 클래식 신호를 반드시 요구
      node seed/tm-collect.mjs --loose               갈래 잣대를 느슨하게
      node seed/tm-collect.mjs --debug               한 줄씩 자세히
      node seed/tm-collect.mjs --base=http://…       (시험용) 다른 주소로
@@ -74,6 +75,7 @@ const MERGE = args.merge === 'no' ? false : true;   /* 같은 공연의 회차�
      학술DB 를 정리할 때 「삭제 전 목록을 눈으로 확인」한 것이
      번번이 큰 사고를 막았습니다 — 같은 방식입니다. */
 const LIST = String(args.list || '');
+const STRICT = !!args.strict;      /* 갈래에 클래식 신호를 반드시 요구합니다 */
 const BASE   = String(args.base || 'https://app.ticketmaster.com');
 
 /* 담을 나라 — 클래식 공연이 많고 Ticketmaster 가 다루는 곳부터.
@@ -133,6 +135,15 @@ const BAD_GENRE = [
   'chanson', 'cabaret', 'humour', 'humor', 'stand-up', 'tango',
   'flamenco', 'celtic', 'gospel', 'christmas', 'holiday',
 ];
+/* ★ 갈래가 아니라 <b>자리 표시</b>에 가까운 이름들 (2026-08-14)
+     Miscellaneous · Community/Civic · Undefined · Other · Event Style 은
+     「무엇인지 적지 않았다」는 뜻입니다. 이것 때문에 버리면 안 됩니다 —
+     오르가니스트 Anna Lapwood 공연이 이 갈래로 걸려 버려졌습니다.
+   ▶ 이 이름들은 <b>클래식 신호로도, 버릴 신호로도</b> 세지 않습니다. */
+const NEUTRAL_GENRE = [
+  'undefined', 'other', 'miscellaneous', 'community/civic', 'community',
+  'event style', 'concert', 'arts & theatre', 'music', 'spectacular',
+];
 
 /* ★ 공연장으로 걸러내기 (2026-08-14)
      「Wisconsin State Fair」에서 열린 크로스오버 바이올린 공연이
@@ -167,6 +178,28 @@ const TITLE_BLOCK = [
   'ministry of sound', 'miyazaki', 'ghibli', 'homenatge', 'homenaje',
   'homage', 'dinner', ' cena', 'brunch', 'silent disco', 'yoga',
   'immersive', 'rave', 'club classics', 'ibiza',
+  /* ★ 2026-08-14 · 영국 99건을 눈으로 훑고 더한 것들
+       영화 상영 연주회가 가장 많았습니다 — 반지의 제왕 · 나홀로집에 ·
+       위쳐 · 소닉 · 드래곤 길들이기 · 카지노 로얄.
+       「film with live orchestra」는 그 갈래를 통째로 가리키는 말입니다. */
+  'film with live orchestra', 'lord of the rings', 'home alone',
+  'witcher', 'sonic ', 'train your dragon', 'casino royale',
+  'game of thrones', 'aardman', 'songbook', 'proms in',
+  'rocks -', ' rocks ',
+];
+
+/* ★ <b>티켓 상품</b>은 공연이 아닙니다 (2026-08-14)
+     ─────────────────────────────────────────────────────────────
+     같은 공연의 좌석 등급을 <b>따로 파는 항목</b>이 함께 옵니다 —
+       「Venue Premium - …」 · 「… - Premium Tickets」 · 「Live Lounge …」
+     이것은 공연이 아니라 상품이므로 목록에 낼 것이 아닙니다.
+     ★ 이 낱말은 제목 <b>어디에 있어도</b> 버립니다. 갈래 검사보다
+       먼저 봅니다 — 「Venue Premium - Anna Lapwood」처럼 정통
+       연주자여도 그 항목 자체는 상품이기 때문입니다. */
+const PRODUCT_WORDS = [
+  'venue premium', 'premium tickets', 'premium package', 'live lounge',
+  'vip package', 'hospitality package', 'meet & greet', 'meet and greet',
+  'car park', 'parking', 'gift voucher', 'season ticket',
 ];
 
 /* ★ 제목 모양으로 걸러내는 것 — 낱말 목록으로는 못 잡는 것들
@@ -249,27 +282,47 @@ function genreNames(ev) {
 }
 
 function isClassical(ev) {
-  const names = genreNames(ev).map((s) => s.toLowerCase());
+  const rawName = String(ev.name || '');
+  const lower = rawName.toLowerCase();
+
+  /* ⓞ 티켓 상품이면 공연이 아닙니다 — 가장 먼저 봅니다 */
+  if (PRODUCT_WORDS.some((w) => lower.includes(w))) return false;
+
+  /* 갈래 이름 — 「무엇인지 적지 않았다」는 뜻의 이름은 셈에서 뺍니다.
+     그것들이 섞여 있으면 판단이 흐려집니다(Anna Lapwood 사례). */
+  const all = genreNames(ev).map((s) => s.toLowerCase());
+  const names = all.filter((n) => !NEUTRAL_GENRE.some((g) => n === g || n.includes(g)));
 
   /* ① 버릴 갈래가 하나라도 있으면 끝 — 통과보다 힘이 셉니다 */
   if (names.some((n) => BAD_GENRE.some((g) => n.includes(g)))) return false;
 
-  /* ② 클래식 신호가 있어야 합니다 */
+  /* ② 클래식 신호가 있어야 합니다.
+     ★ 다만 갈래가 <b>전부 「적지 않았다」</b>인 경우(Undefined ·
+       Community/Civic 등)에는 신호를 요구하지 않습니다.
+       ─────────────────────────────────────────────────────────
+       오르가니스트 Anna Lapwood 공연이 그런 모양이어서 버려졌습니다.
+       이 목록은 <b>검색을 Classical 로 걸어</b> 받아 온 것이므로,
+       Ticketmaster 가 이미 클래식으로 분류한 것들입니다. 갈래 칸이
+       비었다는 이유로 버리면 <b>이름만 적힌 정통 연주회</b>를 잃습니다.
+     ★ 그 대신 제목·공연장 검사는 그대로 지나야 합니다(아래 ③④).
+     ★ 이 판단이 넓다고 보시면 --strict 를 붙이십시오 — 그때는
+       갈래에 클래식 신호가 <b>반드시</b> 있어야 합니다.
+       (그러면 「Frank Sinatra & Friends」 같은 것도 함께 막히지만
+        이름만 적힌 정통 공연도 함께 사라집니다) */
   const hit = names.some((n) => OK_GENRE.some((g) => n.includes(g)));
-  if (!hit && !LOOSE) return false;
+  const blank = names.length === 0;          /* 갈래가 전부 「적지 않았다」 */
+  if (!hit && !(blank && !STRICT) && !LOOSE) return false;
 
   /* ③ 제목에 막을 낱말·모양이 있으면 버립니다 */
-  const raw = String(ev.name || '');
-  const t = raw.toLowerCase();
-  if (TITLE_BLOCK.some((w) => t.includes(w))) return false;
-  if (TITLE_RE.some((re) => re.test(raw))) return false;
+  if (TITLE_BLOCK.some((w) => lower.includes(w))) return false;
+  if (TITLE_RE.some((re) => re.test(rawName))) return false;
 
   /* ④ 공연장이 클래식을 하는 자리인지 */
   const v = (ev._embedded && ev._embedded.venues && ev._embedded.venues[0]) || {};
   const vn = String(v.name || '').toLowerCase();
   if (vn && VENUE_BLOCK.some((w) => vn.includes(w))) return false;
 
-  return hit || LOOSE;
+  return hit || blank || LOOSE;
 }
 
 /* 가장 큰 16:9 그림 — 없으면 가장 큰 것 */
