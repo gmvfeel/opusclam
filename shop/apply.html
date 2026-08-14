@@ -37,6 +37,27 @@
     .rg-cards{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   }
 
+  /* ══ 바깥 테두리를 <b>주황 그라데이션</b>으로 (2026-08-14 · 파트너 지시)
+     ──────────────────────────────────────────────────────────────
+     .rg-wrap 은 리쿠르트 안내·콩쿨 안내도 함께 쓰는 짜임이라
+     recruit.css 를 고치면 그 두 화면까지 주황이 됩니다.
+     그래서 <b>이 화면에서만</b> 덮습니다.
+   ★ CSS 의 border 에는 그라데이션을 넣을 수 없습니다. 그래서
+     <b>바탕칠 두 겹</b>을 씁니다 —
+       ① 안쪽(padding-box) : 카드 바탕색
+       ② 바깥(border-box)  : 주황 그라데이션
+     테두리 두께만큼 ②가 드러나 그라데이션 테두리가 됩니다.
+   ★ 다크모드에서도 안쪽 색만 var(--paper) 로 따라가므로 따로 적지 않습니다. */
+  .rg-wrap{
+    border: 3px solid transparent !important;
+    background-image:
+      linear-gradient(var(--paper), var(--paper)),
+      linear-gradient(115deg, #f7b64a 0%, #ec7a1c 40%, #d8541a 72%, #f5a623 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: 0 6px 20px -8px rgba(236,122,28,.34) !important;
+  }
+
   /* ★ 묶음 제목에 <b>번호와 영문</b>을 붙입니다 (2026-08-06 · 파트너 요청)
      리쿠르트의 .rg-h 에는 번호 자리가 없어 여기서만 더합니다.
      ★ 영문은 rg-intro-en 과 <b>같은 결</b>로 맞췄습니다 — 작게, 자간 넓게,

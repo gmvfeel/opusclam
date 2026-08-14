@@ -311,7 +311,12 @@
   .fullmenu-close{width:46px;height:46px;border-radius:12px;border:0;background:rgba(255,255,255,.06);display:grid;place-items:center;cursor:pointer;color:#fff;transition:background .2s,transform .3s}
   .fullmenu-close:hover{background:var(--orange);transform:rotate(90deg)}
   .fullmenu .wrap{max-width:1560px;padding:0 48px}
-  .fullmenu-body{position:relative;z-index:1;flex:1 1 auto;display:flex;align-items:center;padding:44px 0 64px;overflow-y:auto;min-height:0}
+  /* ★ 2026-08-14 · 본문을 <b>위쪽으로</b> 올립니다 (파트너 지시)
+       세로 가운데 정렬(align-items:center)이었습니다. 부메뉴를 거두어
+       목록이 짧아지니 덩어리가 아래로 내려가 <b>머리글과 멀어졌습니다.</b>
+       위에서부터 쌓게 두고 위 여백만 조금 둡니다 —
+       좁은 화면(980px 아래)은 이미 이렇게 하고 있었습니다. */
+  .fullmenu-body{position:relative;z-index:1;flex:1 1 auto;display:flex;align-items:flex-start;padding:30px 0 64px;overflow-y:auto;min-height:0}
   .fullmenu-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:44px;width:100%}
   .fm-col .fm-num{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--orange);margin-bottom:12px}
   .fm-col h4{font-weight:800;font-size:20px;letter-spacing:-.01em;color:#fff;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.2)}

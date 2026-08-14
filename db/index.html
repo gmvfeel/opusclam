@@ -67,6 +67,12 @@
         인물 사이의 사사관계 · 소속 · 출신학교가 서로 연결되어 있습니다.
       </p>
     </div>
+    <!-- ★ 2026-08-14 · 진행 라인을 <b>숫자 아래 → 글과 숫자 사이</b>로
+           옮겼습니다 (파트너 지시). 숫자 아래 3px 선은 눈에 잘 들어오지
+           않았습니다. 가운데 빈 자리를 가로로 채우면 「지금 세고 있다」가
+           한눈에 보입니다. 자리 규칙은 assets/hub.css 에 있습니다. -->
+    <span class="hb-bar hb-bar--mid" id="totalBar" aria-hidden="true"><i></i></span>
+
     <div class="hb-total">
       <div class="hb-totalcap">현재 등록된 전체 DB</div>
       <span class="hb-totalnum">0</span><span class="hb-totalunit">건</span>
@@ -78,7 +84,6 @@
              가득 채운 뒤 숫자가 올라가며 선은 조용히 사라집니다.
            ★ 짜임은 assets/hub.js 가 넣습니다(.hb-bar) — 다른 화면에서도
              같은 자리에 쓸 수 있게 하려는 것입니다. -->
-      <span class="hb-bar" id="totalBar" aria-hidden="true"><i></i></span>
     </div>
   </div>
 
