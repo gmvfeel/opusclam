@@ -718,6 +718,15 @@
        776px 이 되어 가로 스크롤이 생겼습니다.
        min() 은 부모 크기를 되묻지 않으므로 이런 되돌이가 없습니다. */
   .ad-slot{min-width:0;overflow:hidden;margin-left:auto;margin-right:auto}
+  /* ★ 2026-08-14 · <b>그림이 든</b> 광고 자리
+       자리표일 때는 점선 테두리와 사선 무늬가 필요하지만, 실제 소재가
+       들어가면 그것들이 그림을 가립니다. has-img 를 붙이면 상자를
+       비우고 그림만 남깁니다.
+     ★ 크기는 .board-ad 등 자리 규칙이 그대로 정합니다 — 여기서 다시
+       적지 않습니다(두 곳에 적으면 어긋납니다). */
+  .ad-slot.has-img{padding:0;border:0;background:none;gap:0}
+  .ad-slot.has-img picture{display:block;width:100%;height:100%}
+  .ad-slot.has-img img{width:100%;height:100%;object-fit:cover;display:block}
 
   .ad-tall{min-height:430px}
   .ad-mid{min-height:350px}
@@ -1603,11 +1612,21 @@
       </div>
     </div>
 
-    <!-- ad: horizontal banner across both columns -->
-    <a class="ad-slot board-ad" href="#">
-      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
-      <span class="ad-badge">Advertisement</span>
-      <span class="ad-desc">광고 영역 · 가로형 반응형 디스플레이</span>
+    <!-- ad: horizontal banner across both columns
+         ★ 2026-08-14 · LPSTOCK 광고를 넣었습니다 (A 자리 · 756×310)
+             그림은 <b>두 배 크기(1512×620)</b>로 두어 고해상도 화면에서도
+             흐려지지 않습니다. WebP 를 먼저 주고, 못 읽는 브라우저에는
+             JPG 를 줍니다(picture) — 52KB 대 109KB 로 절반 이하입니다.
+           ★ 자리표(ADVERTISEMENT 안내)는 지우지 않고 <b>바꿔 끼웠습니다</b>.
+             다음 광고로 갈 때 이 묶음만 갈아 주시면 됩니다. -->
+    <a class="ad-slot board-ad has-img" href="https://lpstock.co.kr" target="_blank" rel="noopener"
+       aria-label="LPSTOCK.CO.KR — 중고 클래식 LP 거래 (새 창)">
+      <picture>
+        <source srcset="/assets/ads/lpstock-a-1512x620.webp" type="image/webp">
+        <img src="/assets/ads/lpstock-a-1512x620.jpg" width="1512" height="620"
+             loading="lazy" decoding="async"
+             alt="LPSTOCK.CO.KR — Used Classical Music LP Exchange">
+      </picture>
     </a>
     </div><!-- /board-main -->
 

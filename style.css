@@ -469,6 +469,13 @@
     background:repeating-linear-gradient(45deg,#f5f3fa 0 16px,#efedf7 16px 32px);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
     text-align:center;padding:26px 20px;color:var(--text-3)}
+  /* ★ 2026-08-14 · <b>그림이 든</b> 광고 자리 (home.html 과 같은 값)
+       자리표의 점선·사선 무늬를 걷고 그림만 남깁니다. 크기는 자리 규칙
+       (.bigban-ad 등)이 정합니다. */
+  .ad-slot.has-img{padding:0;border:0;background:none;gap:0}
+  .ad-slot.has-img picture{display:block;width:100%;height:100%}
+  .ad-slot.has-img img{width:100%;height:100%;object-fit:cover;display:block}
+
   .ad-slot .ad-badge{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--violet-2);font-weight:700}
   .ad-slot .ad-desc{font-size:12px;color:var(--text-3)}
   .ad-slot .ad-mark{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;color:var(--violet-2);margin-bottom:2px}
