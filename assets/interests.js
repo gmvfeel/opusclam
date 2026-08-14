@@ -348,7 +348,7 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       var r = on ? await remove(big, key) : await add(big, key);
       b.disabled = false;
       if (!r.ok) {
-        if (r.why === 'type') toast('이 갈래는 단체·기업·학교 회원만 담을 수 있습니다.');
+        if (r.why === 'type') toast('이 분야는 단체·기업·학교 회원만 담을 수 있습니다.');
         else toast('처리하지 못했습니다. 잠시 뒤에 다시 해 주십시오.');
         return;
       }

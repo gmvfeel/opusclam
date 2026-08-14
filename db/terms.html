@@ -139,8 +139,10 @@
         <select aria-label="구분" id="tmCat">
           <option value="">구분 전체</option>
         </select>
-        <select aria-label="갈래" id="tmGenre">
-          <option value="">갈래 전체</option>
+        <!-- ★ 2026-08-14 · 이 칸은 <b>장르</b>입니다 (위 tmCat 이 「구분」).
+               두 칸이 서로 다른 것이므로 이름도 달라야 합니다. -->
+        <select aria-label="장르" id="tmGenre">
+          <option value="">장르 전체</option>
         </select>
         <select aria-label="시대">
           <option value="">시대 전체</option>
@@ -423,7 +425,8 @@
           }
           var keep = gen.value;
           var list = Object.keys(tally).sort(function(a,b){ return tally[b] - tally[a]; });
-          gen.innerHTML = '<option value="">갈래 전체</option>'
+          /* ★ 이 고르개는 <b>장르</b>입니다 — 위 cat 이 「구분」입니다 */
+          gen.innerHTML = '<option value="">장르 전체</option>'
             + list.map(function(g){
                 return '<option value="' + esc(g) + '">' + esc(g) + ' (' + tally[g] + ')</option>';
               }).join('');

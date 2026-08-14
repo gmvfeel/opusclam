@@ -194,7 +194,7 @@
   <div class="iv-head">
     <span class="tag">MY INTEREST</span>
     <h1>관심분야 관리</h1>
-    <p>담아 두신 갈래로 <b>메인 화면이 채워집니다</b> — 나만의 오퍼스클램입니다.<br>
+    <p>담아 두신 분야로 <b>메인 화면이 채워집니다</b> — 나만의 오퍼스클램입니다.<br>
       <b>위에 있는 것이 먼저</b> 나옵니다. 화살표로 순서를 바꿀 수 있습니다.</p>
   </div>
 
@@ -207,14 +207,14 @@
     <ul class="iv-list" id="mine"></ul>
     <div class="iv-empty" id="empty" style="display:none">
       아직 담은 것이 없습니다.<br>
-      아래에서 <b>관심 있는 갈래를 골라</b> 주십시오 —
+      아래에서 <b>관심 있는 분야를 골라</b> 주십시오 —
       그러면 메인이 그것으로 채워집니다.
     </div>
   </div>
 
   <!-- ── 고르기 ──────────────────────────────────── -->
   <div class="iv-card">
-    <h2>갈래 고르기</h2>
+    <h2>구분 고르기</h2>
     <p class="note">눌러서 담고, 다시 눌러서 뺍니다.
       게시판에서 <b>☆ 관심분야</b>를 눌러도 담깁니다.</p>
     <div id="picker"></div>
@@ -401,7 +401,7 @@
     btn.disabled = false;
     busy = false;
     if (!r.ok){
-      if (r.why === 'type') say('no', '이 갈래는 단체·기업·학교 회원만 담을 수 있습니다.');
+      if (r.why === 'type') say('no', '이 분야는 단체·기업·학교 회원만 담을 수 있습니다.');
       else say('no', '처리하지 못했습니다. 잠시 뒤에 다시 해 주십시오.');
       return;
     }

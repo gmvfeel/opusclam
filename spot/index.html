@@ -702,7 +702,7 @@
         if (!el) return;
         if (!rows || !rows.length) {
           el.innerHTML = '<p class="bd-empty" style="padding:8px 0">'
-            + '자료가 등록되면 갈래별 비율이 표시됩니다.</p>';
+            + '자료가 등록되면 구분별 비율이 표시됩니다.</p>';
           return;
         }
         var sum = Number(total) || rows.reduce(function(a,r){ return a + (Number(r.n)||0); }, 0);

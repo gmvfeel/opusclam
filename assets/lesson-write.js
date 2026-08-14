@@ -196,10 +196,10 @@
           '<div class="ln-box">'
         +   '<h3 class="ln-box-h">강의 정보</h3>'
 
-        +   fld('갈래', '<select id="lwKind">'
+        +   fld('구분', '<select id="lwKind">'
               + KINDS.map(function (k) { return '<option value="' + k.v + '">' + esc(k.label) + '</option>'; }).join('')
               + '</select>',
-              '고른 갈래에 따라 <b>아래 칸이 달라집니다.</b> 어느 탭에 놓일지도 저절로 정해집니다.', true)
+              '고른 구분에 따라 <b>아래 칸이 달라집니다.</b> 어느 탭에 놓일지도 저절로 정해집니다.', true)
 
         +   fld('출처', '<select id="lwSource">'
               + '<option value="own">자체 강의 — 우리 인스트럭터가 만든 것</option>'

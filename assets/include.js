@@ -352,7 +352,7 @@
     wrap.className = 'pdb-subnav-sel';
 
     var sel = document.createElement('select');
-    sel.setAttribute('aria-label', '갈래 고르기');
+    sel.setAttribute('aria-label', '구분 고르기');
 
     links.forEach(function (a) {
       var op = document.createElement('option');
@@ -367,7 +367,7 @@
     if (!nav.querySelector('a.active')) {
       var op0 = document.createElement('option');
       op0.value = '';
-      op0.textContent = '갈래 고르기';
+      op0.textContent = '구분 고르기';
       op0.selected = true;
       sel.insertBefore(op0, sel.firstChild);
     }

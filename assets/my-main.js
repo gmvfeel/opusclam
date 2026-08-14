@@ -219,7 +219,7 @@
       + '<div class="sec-head"><div class="t">'
       +   '<span class="en-s">' + esc(cat.en || '') + '</span>'
       +   '<span class="ko">' + esc(cat.label) + '</span>'
-      +   '<span class="oc-my-tag" title="내 관심분야로 담아 두신 갈래입니다">'
+      +   '<span class="oc-my-tag" title="내 관심분야로 담아 두신 분야입니다">'
       +     '<i>★</i>내 관심분야</span>'
       + '</div><a class="more en" href="' + esc(cat.href) + '">VIEW MORE +</a></div>'
       + '<ul class="list" style="margin-top:12px">' + lis + '</ul>'
@@ -320,7 +320,7 @@
   function inviteHtml() {
     return '<div class="oc-my-invite">'
       + '<b>관심분야를 담아 보세요.</b>'
-      + ' 담아 두시면 이 자리가 <b>그 갈래로 채워집니다</b> — 나만의 오퍼스클램이 됩니다.'
+      + ' 담아 두시면 이 자리가 <b>그 분야로 채워집니다</b> — 나만의 오퍼스클램이 됩니다.'
       + ' <a href="/account/interests.html">관심분야 고르기 →</a>'
       + '</div>';
   }
@@ -473,7 +473,7 @@
       if (!t || t.querySelector('.oc-my-tag')) return;
       var tag = document.createElement('span');
       tag.className = 'oc-my-tag';
-      tag.title = '내 관심분야로 담아 두신 갈래입니다';
+      tag.title = '내 관심분야로 담아 두신 분야입니다';
       tag.innerHTML = '<i>&#9733;</i>내 관심분야';
       t.appendChild(tag);
     });
@@ -491,7 +491,7 @@
         if (!t2 || t2.querySelector('.oc-my-tag')) continue;
         var tag2 = document.createElement('span');
         tag2.className = 'oc-my-tag';
-        tag2.title = '내 관심분야로 담아 두신 갈래입니다';
+        tag2.title = '내 관심분야로 담아 두신 분야입니다';
         tag2.innerHTML = '<i>&#9733;</i>내 관심분야';
         t2.appendChild(tag2);
       }

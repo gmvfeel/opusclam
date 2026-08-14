@@ -2451,5 +2451,19 @@
   "공연 · 콩쿨 · 페스티벌": "Concerts · Competitions · Festivals",
   "각 분야별 악보 등록": "Add sheet music",
   "국내+해외": "Korea + Overseas",
-  "전체 기간": "All dates"
+  "전체 기간": "All dates",
+  "구분 고르기": "Choose a category",
+  "구분을 고르시면 그에 맞는 칸만 나옵니다. 다 채우신 뒤 상태를": "Choose a category and only the relevant fields appear. Once filled in, set the status",
+  "관심 있는 분야를 골라": "Choose the fields you care about",
+  "담아 두신 분야로": "by the fields you saved",
+  "아직 이 구분으로 담긴 곡이 없습니다.": "No pieces saved under this category yet.",
+  "어느 게시판에 얼마나": "how much on each board",
+  "자료가 등록되면 구분별 비율이 표시됩니다.": "Once entries are added, the share by category appears here.",
+  "장르": "Genre",
+  "장르 전체": "All genres",
+  "구분별 비율": "share by category",
+  "쓴 게시판": "Boards used",
+  "모든 분야": "All fields",
+  "구분마다 하나씩": "one per type",
+  "으로 골랐습니다. 야상곡·자장가·간주곡처럼 본래 조용하게 쓰인 장르를 모았습니다. 음악이 아기에게 무엇을 해 준다고 말하지 않습니다.": "These were chosen on that basis — nocturnes, lullabies, intermezzi and other genres written to be quiet. We make no claim about what music does for a baby."
 }

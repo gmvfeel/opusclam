@@ -546,7 +546,7 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       if (!mine.length) {
         box.innerHTML = '<h4>내 관심분야 통계</h4>'
           + '<div class="ins-none">아직 관심분야를 담지 않으셨습니다<br>'
-          + '담아 두시면 <b>나의 메인</b>이 그 갈래로 채워집니다<br>'
+          + '담아 두시면 <b>나의 메인</b>이 그 분야로 채워집니다<br>'
           + '<a class="ins-more" href="/account/interests.html">관심분야 고르기 &#8594;</a></div>';
         return;
       }
@@ -565,7 +565,7 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
                 + '<span class="nm">' + esc(x.cat) + '</span></div>';
             }).join('')
           + '</div>'
-          + '<div class="ins-hint" style="margin:12px 0 0">담으신 갈래에 아직 자료가 없습니다</div>';
+          + '<div class="ins-hint" style="margin:12px 0 0">담으신 분야에 아직 자료가 없습니다</div>';
         return;
       }
 
@@ -588,7 +588,7 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       box.innerHTML = '<h4>내 관심분야 통계 <em>담은 것 ' + mine.length + '개</em></h4>'
         + '<div class="ins-pie-wrap">'
         +   '<svg width="132" height="132" viewBox="0 0 132 132" role="img"'
-        +     ' aria-label="담은 갈래별 자료 비율">' + segs + '</svg>'
+        +     ' aria-label="담은 분야별 자료 비율">' + segs + '</svg>'
         +   '<div class="ins-legend">'
         +     mine.slice(0, 8).map(function (x, i) {
               var pc = Math.round(x.n / total * 100);
@@ -854,7 +854,7 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
 
     if (!mine.length) {
       box.innerHTML = head
-        + '<div class="ins-none">관심분야를 담으시면 <b>그 갈래의 새 글</b>을'
+        + '<div class="ins-none">관심분야를 담으시면 <b>그 분야의 새 글</b>을'
         + ' 여기에 모아 드립니다 · '
         + '<a class="ins-more" href="/account/interests.html">관심분야 담기 &#8594;</a></div>';
       return;
@@ -904,7 +904,7 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
 
     if (!rows.length) {
       box.innerHTML = head
-        + '<div class="ins-none">담으신 갈래에 <b>최근 7일간 새 글이 없습니다.</b></div>';
+        + '<div class="ins-none">담으신 분야에 <b>최근 7일간 새 글이 없습니다.</b></div>';
       return;
     }
 
