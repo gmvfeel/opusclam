@@ -36,6 +36,7 @@
      node seed/tm-collect.mjs --months=6            앞으로 몇 달까지
      node seed/tm-collect.mjs --countries=US,GB,DE  나라 고르기
      node seed/tm-collect.mjs --limit=200           나라마다 최대 몇 건
+     node seed/tm-collect.mjs --merge=no            회차를 묶지 않고 날짜마다 한 줄
      node seed/tm-collect.mjs --loose               갈래 잣대를 느슨하게
      node seed/tm-collect.mjs --debug               한 줄씩 자세히
      node seed/tm-collect.mjs --base=http://…       (시험용) 다른 주소로
@@ -61,14 +62,25 @@ const SAVE   = !!args.save;
 const DEBUG  = !!args.debug;
 const LOOSE  = !!args.loose;
 const MONTHS = Number(args.months || 6);
-const LIMIT  = Number(args.limit || 400);        /* 나라마다 최대 */
+const LIMIT  = Number(args.limit || 800);        /* 나라마다 최대 */
+const MERGE = args.merge === 'no' ? false : true;   /* 같은 공연의 회차를 묶습니다 */
 const BASE   = String(args.base || 'https://app.ticketmaster.com');
 
 /* 담을 나라 — 클래식 공연이 많고 Ticketmaster 가 다루는 곳부터.
    ※ 나라를 늘릴 때는 호출 수를 함께 보십시오. 한 나라에 최대
      (LIMIT/200 + 1) 번 부릅니다. 열 나라면 서른 번쯤이니 하루 한도
      5,000 회에는 넉넉합니다. */
-const COUNTRIES = String(args.countries || 'US,GB,DE,AT,FR,NL,IT,ES,CA,AU')
+/* ★ 2026-08-14 · 첫 실행 결과를 보고 나라를 손봤습니다
+     ─────────────────────────────────────────────────────────────
+     자료가 실제로 있는 곳만 남깁니다 (첫 실행에서 센 것) —
+       미국 400↑ · 프랑스 400↑ · 독일 311 · 영국 220 · 캐나다 72
+       네덜란드 41 · 스페인 37
+     뺀 곳 — 오스트리아 <b>1건</b> · 이탈리아 20 · 호주 15.
+       특히 오스트리아는 빈 필·빈 국립오페라가 <b>자체 판매</b>라
+       이 API 에 없습니다. 호출만 늘고 얻는 것이 없습니다.
+   ★ 자체 판매하는 명문 악단(베를린 필 등)은 이 길로는 영영 오지
+     않습니다 — 나중에 공식 캘린더 피드로 따로 붙일 자리입니다. */
+const COUNTRIES = String(args.countries || 'US,FR,DE,GB,CA,NL,ES')
   .split(',').map((s) => s.trim().toUpperCase()).filter(Boolean);
 
 /* 나라 이름 — 화면에 한국어로 보여 주기 위해서입니다.
@@ -342,6 +354,68 @@ async function fetchCountry(cc, from, to) {
   return { rows, got, dropped, genreTally };
 }
 
+/* ============================================================
+   같은 공연의 <회차>를 하나로 묶습니다 (2026-08-14 · 파트너 지시)
+   ------------------------------------------------------------
+   ★ 왜
+     해외는 <b>날짜마다 한 줄</b>로 옵니다. 히사이시 공연이 8월에 여섯 번
+     있으면 목록 여섯 줄을 먹습니다. 국내(KOPIS)는 「공연 하나 = 한 줄,
+     기간으로 표시」이므로 같은 목록에서 두 방식이 섞여 어수선했습니다.
+   ★ 무엇을 같은 공연으로 보나
+     <b>제목 + 공연장</b>이 같으면 한 공연으로 봅니다. 도시가 달라도
+     공연장이 다르면 따로 남습니다(순회 공연은 갈라 두는 편이 맞습니다).
+   ★ 어느 회차의 번호(tm_id)를 쓰나
+     <b>가장 이른 회차</b>입니다. 열쇠가 한결같아야 다음에 돌릴 때
+     늘어나지 않고 갱신됩니다.
+   ★ 무엇을 잃나
+     「몇 월 며칠 몇 회차」입니다. 그것은 예매 링크로 들어가면 바로
+     보이므로 우리가 안고 있을 정보가 아닙니다.
+     대신 본문 표에 <b>회차 수</b>를 적어 둡니다.
+   ============================================================ */
+function mergeRuns(rows) {
+  const key = (r) => `${(r.title || '').trim().toLowerCase()}||${(r.venue_name || '').trim().toLowerCase()}`;
+  const box = new Map();
+
+  for (const r of rows) {
+    const k = key(r);
+    const cur = box.get(k);
+    if (!cur) { box.set(k, { ...r, _runs: 1 }); continue; }
+    cur._runs += 1;
+    /* 가장 이른 날 · 가장 늦은 날로 넓힙니다 */
+    if (r.date_from && (!cur.date_from || r.date_from < cur.date_from)) {
+      cur.date_from = r.date_from;
+      cur.tm_id = r.tm_id;                 /* 열쇠도 가장 이른 회차의 것으로 */
+      cur.link_url = r.link_url || cur.link_url;
+      cur.source_url = r.source_url || cur.source_url;
+    }
+    const last = r.date_to || r.date_from;
+    if (last && (!cur.date_to || last > cur.date_to)) cur.date_to = last;
+    /* 그림이 없던 줄에 그림이 있으면 채웁니다 */
+    if (!cur.thumb_url && r.thumb_url) cur.thumb_url = r.thumb_url;
+  }
+
+  /* 날짜 글자와 본문의 날짜 줄을 다시 씁니다 */
+  const out = [];
+  for (const r of box.values()) {
+    const df = r.date_from, dt = r.date_to;
+    const same = !dt || dt === df;
+    r.date_text = df ? (same ? df : `${df} ~ ${dt}`) : null;
+    if (!same) r.date_to = dt; else r.date_to = null;
+
+    if (r._runs > 1) {
+      /* 본문 표의 「날짜」 칸을 기간으로 바꾸고 회차 수를 덧붙입니다 */
+      r.body = String(r.body || '').replace(
+        /<tr><th>날짜<\/th><td>[^<]*<\/td><\/tr>/,
+        `<tr><th>기간</th><td>${df}${same ? '' : ' ~ ' + dt}</td></tr>`
+        + `<tr><th>회차</th><td>${r._runs}회</td></tr>`
+      );
+    }
+    delete r._runs;
+    out.push(r);
+  }
+  return out;
+}
+
 /* ── 담기 ───────────────────────────────────────────────── */
 async function save(rows) {
   if (!rows.length) return 0;
@@ -386,10 +460,17 @@ async function save(rows) {
 
   /* 같은 공연이 두 번 온 경우(나라 코드가 겹칠 때) 번호로 하나만 남깁니다 */
   const seen = new Set();
-  const uniq = all.filter((r) => (seen.has(r.tm_id) ? false : (seen.add(r.tm_id), true)));
+  let uniq = all.filter((r) => (seen.has(r.tm_id) ? false : (seen.add(r.tm_id), true)));
 
   console.log('');
-  console.log(`   ▶ 담을 것 모두 ${uniq.length}건 (겹친 것 ${all.length - uniq.length}건 뺐습니다)`);
+  console.log(`   ▶ 받아서 걸러낸 것 ${uniq.length}건 (겹친 번호 ${all.length - uniq.length}건 뺐습니다)`);
+
+  if (MERGE) {
+    const before = uniq.length;
+    uniq = mergeRuns(uniq);
+    console.log(`   ▶ 같은 공연의 회차를 묶었습니다 — ${before} → ${uniq.length}건`);
+  }
+  console.log(`   ▶ 담을 것 모두 ${uniq.length}건`);
 
   if (tally.size) {
     console.log('   ▶ 실제로 걸린 갈래 (많은 순 · 잣대를 고칠 때 봅니다)');

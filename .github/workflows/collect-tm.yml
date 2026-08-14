@@ -27,13 +27,21 @@ on:
         required: true
         default: '6'
       countries:
-        description: '나라 (비우면 US,GB,DE,AT,FR,NL,IT,ES,CA,AU)'
+        description: '나라 (비우면 US,FR,DE,GB,CA,NL,ES)'
         required: false
         default: ''
       limit:
-        description: '나라마다 최대 몇 건'
+        description: '나라마다 최대 몇 건 (최대 1000)'
         required: true
-        default: '400'
+        default: '800'
+      merge:
+        description: '같은 공연의 회차를 묶기 (no 로 하면 날짜마다 한 줄)'
+        required: true
+        default: 'yes'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
       save:
         description: '실제로 담기 (처음에는 no 로 확인하세요)'
         required: true
@@ -74,12 +82,14 @@ jobs:
           C="${{ github.event.inputs.countries }}"
           L="${{ github.event.inputs.limit }}"
           SAVE="${{ github.event.inputs.save }}"
+          MG="${{ github.event.inputs.merge }}"
 
-          # 예약 실행이면 입력값이 비어 있습니다 — 그때는 여섯 달·400건·담기
-          if [ -z "$M" ]; then M="6"; L="400"; SAVE="yes"; fi
+          # 예약 실행이면 입력값이 비어 있습니다 — 그때는 여섯 달·800건·담기
+          if [ -z "$M" ]; then M="6"; L="800"; SAVE="yes"; MG="yes"; fi
 
           OPTS="--months=$M --limit=$L"
           if [ "$SAVE" = "yes" ]; then OPTS="$OPTS --save"; fi
+          if [ "$MG" = "no" ]; then OPTS="$OPTS --merge=no"; fi
           if [ -n "$C" ]; then OPTS="$OPTS --countries=$C"; fi
 
           echo "── 실행 : node seed/tm-collect.mjs $OPTS ──"
