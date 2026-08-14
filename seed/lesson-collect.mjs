@@ -214,7 +214,13 @@ const FIELD_WORDS = [
        「pianist」가 함께 적힙니다. 피아노를 앞에 두면 성악 수업이
        전부 PIANO 로 들어갑니다(첫 실행에서 여덟 개가 그랬습니다).
      ★ 노래·가곡 이름(lied · song · aria · SongStudio)도 성악 신호입니다. */
-  ['VOCAL',       /\b(voice|vocal|singing|singer|soprano|tenor|baritone|mezzo|contralto|countertenor|lieder|lied|song\s?studio|art\s?song|aria|recitative|opera\s?(singing|coach|scenes)|diction|성악|소프라노|테너|가곡)\b/i],
+  /* ★ 2026-08-14 · 줄임말과 <b>「성악가 & 반주자」 짝</b>을 더했습니다
+       「Maritina Tampakopoulos, <b>sop.</b> & Chris Reynolds, pianist」가
+       PIANO 로 갔습니다 — sop. 이 줄임말이라 못 잡고 pianist 가 걸린
+       것입니다. 성악 마스터클래스는 대개 이 모양(가수 + 반주자)입니다.
+     ★ 「… & … pianist」 짝은 반주자가 있다는 뜻이므로 <b>성악</b>입니다
+       (아래 RE_VOCAL_PAIR). */
+  ['VOCAL',       /\b(voice|vocal|singing|singer|soprano|sop\.|tenor|ten\.|baritone|bar\.|bass-baritone|mezzo|mezzo-soprano|contralto|countertenor|lieder|lied|song\s?studio|art\s?song|aria|recitative|opera\s?(singing|coach|scenes)|diction|성악|소프라노|테너|가곡)\b/i],
   ['STRINGS',     /\b(violin|violinist|viola|cello|violoncello|double\s?bass|contrabass|harp|guitar|lute|바이올린|비올라|첼로|하프|기타)\b/i],
   ['BRASS',       /\b(horn|trumpet|trombone|tuba|euphonium|cornet|brass|호른|트럼펫|트롬본|튜바|금관)\b/i],
   ['WINDS',       /\b(flute|flutist|oboe|clarinet|bassoon|saxophone|recorder|woodwind|플루트|오보에|클라리넷|바순|목관)\b/i],
@@ -275,7 +281,15 @@ function isoSec(v) {
    ★ 그리고 성악을 <b>맨 앞</b>에 둡니다 — 성악 마스터클래스에는 반드시
      반주자가 나오므로 피아노 낱말이 함께 나옵니다. 순서가 곧 우선순위입니다.
      (아래 FIELD_WORDS 의 순서를 바꿨습니다) */
+/* 「… , sop. & … , pianist」 처럼 <b>가수와 반주자가 짝</b>으로 적힌 제목은
+   성악 마스터클래스입니다. 반주자 낱말(pianist)이 먼저 걸리는 것을 막습니다. */
+/* ★ 줄임말은 <b>낱말 경계 뒤에 두면 안 됩니다</b> — 「sop.」의 마침표는
+     경계가 아니어서 \b 를 붙이면 걸리지 않습니다(검증에서 드러났습니다).
+     그래서 마침표까지 규칙에 넣고 \b 는 앞쪽에만 둡니다. */
+const RE_VOCAL_PAIR = /\b(soprano|sop\.|tenor|ten\.|baritone|bar\.|mezzo|contralto|countertenor|bass)[^|]*&[^|]*\bpianist\b/i;
+
 function fieldOf(title, desc) {
+  if (RE_VOCAL_PAIR.test(title)) return 'VOCAL';
   for (const [name, re] of FIELD_WORDS) if (re.test(title)) return name;
   for (const [name, re] of FIELD_WORDS) if (re.test(desc || '')) return name;
   return null;
