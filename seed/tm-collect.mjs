@@ -179,7 +179,7 @@ const TITLE_BLOCK = [
        낫습니다 — 그래서 아래 --list 로 목록을 뽑아 볼 수 있게 했습니다. */
   'ministry of sound', 'miyazaki', 'ghibli', 'homenatge', 'homenaje',
   'homage', 'dinner', ' cena', 'brunch', 'silent disco', 'yoga',
-  'immersive', 'rave', 'club classics', 'ibiza',
+  'immersive', 'club classics', 'ibiza',
   /* ★ 2026-08-14 · 영국 99건을 눈으로 훑고 더한 것들
        영화 상영 연주회가 가장 많았습니다 — 반지의 제왕 · 나홀로집에 ·
        위쳐 · 소닉 · 드래곤 길들이기 · 카지노 로얄.
@@ -257,6 +257,13 @@ const PRODUCT_WORDS = [
 const TITLE_RE = [
   /\s[x×]\s/i,          /* A x B  협업 */
   /\bvs\b/i,            /* A vs B */
+  /* ★ 2026-08-14 · 「rave」를 <b>글자 포함</b>으로 막았더니
+       <b>Ravel</b>(라벨)·Stravinsky 가 함께 걸려 사라졌습니다.
+       낱말 경계를 붙여 「rave」라는 낱말일 때만 막습니다.
+     ★ 짧은 낱말은 반드시 이 자리(정규식)에 두어야 합니다 —
+       글자 포함으로 막으면 엉뚱한 것이 함께 걸립니다. */
+  /\brave\b/i,          /* 레이브 파티 (Ravel 은 걸리지 않습니다) */
+  /\bpops?\b/i,         /* Pops 콘서트 (Popper 같은 이름은 안 걸립니다) */
 ];
 
 /* ── 준비가 되었는지 ─────────────────────────────────────── */
@@ -394,9 +401,21 @@ function toRow(ev, cc) {
     || cc;
   const cityName = (v.city && v.city.name) || null;
   const genres = genreNames(ev).filter((g) => !/^music$/i.test(g));
-  const promoter = (ev.promoter && ev.promoter.name)
+  /* ★ 2026-08-14 · 주최 이름에 <b>쓸모 없는 값</b>이 옵니다 (파트너 지적)
+       화면에 「PROMOTER NOT DEFINED」가 그대로 보였습니다. 뜻이 없는
+       값은 <b>비워 두는 편</b>이 낫습니다 — 빈 칸은 화면에서 아예
+       사라지지만, 이런 글자는 남아서 자료가 엉성해 보입니다. */
+  const rawPromoter = (ev.promoter && ev.promoter.name)
     || (ev.promoters && ev.promoters[0] && ev.promoters[0].name)
-    || null;
+    || '';
+  const promoter = (function (v) {
+    const t = String(v || '').trim();
+    if (!t) return null;
+    const low = t.toLowerCase();
+    if (low.includes('not defined') || low.includes('undefined')
+        || low.includes('no promoter') || low === 'n/a' || low === '-') return null;
+    return t;
+  })(rawPromoter);
   const timeText = start.localTime ? String(start.localTime).slice(0, 5) : null;
 
   const bits = [];
@@ -427,7 +446,9 @@ function toRow(ev, cc) {
     title: ev.name || '',
     body,
     date_from: df,
-    date_to: dt,
+    /* 하루 공연이면 끝나는 날을 <b>같은 날로</b> 채웁니다 — 위 mergeRuns 의
+       주석과 같은 까닭입니다(진행중·예정 탭이 date_to 로 자릅니다) */
+    date_to: dt || df,
     date_text: df ? (dt && dt !== df ? `${df} ~ ${dt}` : df) : null,
     venue_name: v.name || null,
     thumb_url: pickImage(ev),
@@ -552,7 +573,13 @@ function mergeRuns(rows) {
     const df = r.date_from, dt = r.date_to;
     const same = !dt || dt === df;
     r.date_text = df ? (same ? df : `${df} ~ ${dt}`) : null;
-    if (!same) r.date_to = dt; else r.date_to = null;
+    /* ★ 2026-08-14 · 하루 공연도 date_to 를 <b>채웁니다</b> (파트너 지적)
+         「진행중·예정」 탭은 <b>date_to 로</b> 자릅니다(여러 날 하는 공연이
+         시작일이 지났어도 오늘 하고 있으니 그쪽이 맞습니다).
+         그런데 하루 공연의 date_to 를 비워 두었더니 그 탭에서 통째로
+         빠졌습니다 — 해외 공연이 「전체」에만 보인 까닭입니다.
+       ★ 국내(KOPIS)는 늘 채우고 있었습니다. 결을 맞춥니다. */
+    r.date_to = same ? df : dt;
 
     if (r._runs > 1) {
       /* 본문 표의 「날짜」 칸을 기간으로 바꾸고 회차 수를 덧붙입니다 */
@@ -614,7 +641,41 @@ async function save(rows) {
     await sleep(300);
   }
 
-  /* 같은 공연이 두 번 온 경우(나라 코드가 겹칠 때) 번호로 하나만 남깁니다 */
+  /* ============================================================
+   갈래 대표 사진을 걷어냅니다 (2026-08-14 · 파트너 지적)
+   ------------------------------------------------------------
+   ★ 무엇이 문제였나
+     목록의 포스터가 <b>전부 같은 사진 두 장</b>이었습니다.
+     Ticketmaster 문서에 이렇게 적혀 있습니다 — 「공연에 그 크기의
+     사진이 없으면 <b>갈래 대표 사진</b>을 대신 준다」.
+     즉 우리가 받은 것은 그 공연 포스터가 아니라 「클래식」 갈래의
+     기본 그림입니다.
+   ★ 어떻게 가려내나 — <b>같은 주소가 여러 공연에 쓰이면</b> 대표
+     사진입니다. 실제 포스터는 공연마다 다릅니다.
+     세 번 넘게 겹치는 주소를 골라 비웁니다.
+   ★ 비우면 어떻게 되나 — 화면이 사진 없는 모양으로 그립니다.
+     엉뚱한 사진이 붙어 있는 것보다 없는 편이 낫습니다.
+   ============================================================ */
+function dropStockImages(rows) {
+  const count = new Map();
+  for (const r of rows) {
+    if (!r.thumb_url) continue;
+    count.set(r.thumb_url, (count.get(r.thumb_url) || 0) + 1);
+  }
+  /* 세 건 이상 겹치면 대표 사진으로 봅니다. 실제 포스터가 세 공연에
+     같이 쓰이는 일은 드뭅니다(있다면 순회 공연이니 그것도 대표 사진에
+     가깝습니다). */
+  const stock = new Set([...count.entries()].filter(([, n]) => n >= 3).map(([u]) => u));
+  if (!stock.size) return 0;
+  let cleared = 0;
+  for (const r of rows) {
+    if (r.thumb_url && stock.has(r.thumb_url)) { r.thumb_url = null; cleared++; }
+  }
+  console.log(`   ▶ 갈래 대표 사진을 걷어냈습니다 — 주소 ${stock.size}가지 · ${cleared}건`);
+  return cleared;
+}
+
+/* 같은 공연이 두 번 온 경우(나라 코드가 겹칠 때) 번호로 하나만 남깁니다 */
   const seen = new Set();
   let uniq = all.filter((r) => (seen.has(r.tm_id) ? false : (seen.add(r.tm_id), true)));
 
@@ -626,6 +687,7 @@ async function save(rows) {
     uniq = mergeRuns(uniq);
     console.log(`   ▶ 같은 공연의 회차를 묶었습니다 — ${before} → ${uniq.length}건`);
   }
+  dropStockImages(uniq);
   console.log(`   ▶ 담을 것 모두 ${uniq.length}건`);
 
   if (tally.size) {
