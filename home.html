@@ -316,18 +316,10 @@
   .fm-col .fm-num{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--orange);margin-bottom:12px}
   .fm-col h4{font-weight:800;font-size:20px;letter-spacing:-.01em;color:#fff;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.2)}
   .fm-col a{display:block;font-size:13px;color:rgba(255,255,255,.6);padding:8px 0;transition:color .18s ease,transform .18s ease;position:relative;border-bottom:1px solid rgba(255,255,255,.07)}
-  /* ★ 2026-08-13 · 부메뉴 (파트너 요청)
-       입시·지식나눔·태교음악 안의 갈래를 전체메뉴에 펼쳐 둡니다.
-     ★ 어미 항목은 아래 선을 뗍니다 — 바로 밑에 자식이 붙으므로
-       선이 있으면 남남처럼 보입니다. 마지막 자식이 선을 갖습니다. */
-  .fm-col a.fm-parent{border-bottom:0;padding-bottom:3px}
-  .fm-col a.fm-sub{font-size:11.5px;padding:4px 0 4px 12px;
-    color:rgba(255,255,255,.42);border-bottom:0}
-  .fm-col a.fm-sub.fm-sub-last{padding-bottom:9px;border-bottom:1px solid rgba(255,255,255,.07)}
-  .fm-col a.fm-sub:hover{color:rgba(255,255,255,.92)}
-  /* 칸의 맨 마지막 줄은 선을 뗍니다 — 다른 칸과 끝 모양이 같아야 합니다.
-     (.fm-col a:last-child 보다 점수가 높아야 이깁니다) */
-  .fm-col a.fm-sub.fm-sub-last:last-child{border-bottom:0}
+  /* ★ 2026-08-14 · 부메뉴(.fm-parent · .fm-sub) 규칙을 <b>거두었습니다</b> —
+       전체메뉴에서 하위 갈래를 모두 뺐으므로 쓰이는 곳이 없습니다
+       (partials/header.html). 남겨 두면 다음에 읽는 사람이 아직 쓰는
+       규칙으로 오해합니다. */
   .fm-col a:last-child{border-bottom:0}
   .fm-col a:hover{color:#fff;transform:translateX(8px)}
   .fm-col a:hover::before{content:"";position:absolute;left:-13px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:var(--orange)}
