@@ -380,11 +380,27 @@
   /* 자료가 닿기 전 — 켜진 장까지 감춥니다 (높이는 그대로) */
   .hero .wrap.hero-boot .hslide{visibility:hidden !important;opacity:0 !important}
   .hslide.on{opacity:1;visibility:visible;transform:none}
-  .hero .eyebrow{font-family:var(--serif);letter-spacing:.3em;font-size:12px;color:var(--violet-3);text-transform:uppercase;margin-bottom:16px}
-  /* ★ 2026-08-14 · 낱말 중간에서 끊기던 것을 막습니다
-       「실내악 페스티벌 — 슈베르트의 밤」이 「…슈베르트 / 의 밤」으로
-       끊겼습니다. 한국어는 기본값에서 <b>글자 단위</b>로 넘어갑니다 —
-       keep-all 로 어절 단위로 바꿉니다(레슨:ON 빈 안내와 같은 처방). */
+  /* ★ 2026-08-14 · 눈썹 글자 위에 <b>작은 화살표</b> (파트너 요청)
+       ─────────────────────────────────────────────────────────────
+       히어로 제목을 누르면 그 공연으로 갑니다. 그런데 <b>누를 수 있다는
+       것을 알 길이 없었습니다.</b> 작은 화살표 하나가 「여기 볼 것이
+       있다」를 알려 줍니다.
+     ★ 마크업을 늘리지 않고 ::before 로 그립니다 — 히어로 슬라이드는
+       자료에서 다시 그려지므로(loadHeroSlides) 마크업에 넣으면 사라집니다.
+     ★ 선과 화살촉을 <b>SVG 한 장</b>으로 그립니다. 처음에는 배경칠 두
+       겹으로 만들었더니 화살촉이 선에서 어긋났습니다(눈으로 잡았습니다).
+     ★ 살짝 오른쪽으로 흐릅니다 — 멈춰 있으면 그림처럼 보입니다.
+       움직임을 줄이는 설정에서는 흐르지 않습니다. */
+  .hero .eyebrow{position:relative;font-family:var(--serif);letter-spacing:.3em;font-size:12px;color:var(--violet-3);text-transform:uppercase;margin-bottom:16px;padding-top:24px}
+  .hero .eyebrow::before{
+    content:"";position:absolute;left:2px;top:4px;width:66px;height:10px;
+    background:no-repeat center/contain
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 66 10'%3E%3Cpath d='M0 5h56' stroke='%239C7FD6' stroke-width='1.4'/%3E%3Cpath d='M52 1.6 58.5 5 52 8.4z' fill='%239C7FD6'/%3E%3C/svg%3E");
+    opacity:.9;
+    animation:heroArrow 2.6s ease-in-out infinite;
+  }
+  @keyframes heroArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(7px)}}
+  @media (prefers-reduced-motion:reduce){ .hero .eyebrow::before{animation:none} }
   .hero h1{font-family:var(--display);font-weight:600;font-size:52px;line-height:1.06;letter-spacing:-.01em;max-width:720px;word-break:keep-all;overflow-wrap:break-word}
   .hero .sub{margin-top:16px;font-size:15px;color:#d9d3ea;letter-spacing:.01em}
   .hero .meta{margin-top:26px;display:flex;gap:22px;font-size:13px;color:#b9b2d4}
