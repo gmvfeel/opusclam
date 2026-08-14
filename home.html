@@ -377,6 +377,8 @@
   .hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,transparent 38%,rgba(14,18,48,.92) 100%)}
   .hero .wrap{position:relative;z-index:2;min-height:510px;display:grid;align-items:center;padding-top:128px;padding-bottom:48px}
   .hslide{grid-area:1/1;opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+  /* 자료가 닿기 전 — 켜진 장까지 감춥니다 (높이는 그대로) */
+  .hero .wrap.hero-boot .hslide{visibility:hidden !important;opacity:0 !important}
   .hslide.on{opacity:1;visibility:visible;transform:none}
   .hero .eyebrow{font-family:var(--serif);letter-spacing:.3em;font-size:12px;color:var(--violet-3);text-transform:uppercase;margin-bottom:16px}
   /* ★ 2026-08-14 · 낱말 중간에서 끊기던 것을 막습니다
@@ -1430,40 +1432,38 @@
       </svg>
     </div>
   </div>
-  <div class="wrap">
+  <!-- ★ 2026-08-14 · hero-boot — <b>자료가 오기 전에는 글자를 감춥니다</b>
+         (파트너 지적: 새로 고치면 옛 더미 공연이 잠깐 스쳤습니다)
+       아래 세 장은 <b>자료를 못 받았을 때만</b> 쓰는 대비책입니다. 그런데
+       화면에 박혀 있으니 브라우저가 먼저 그리고, 그다음 공연 자료로
+       갈리면서 옛 공연이 한순간 보였습니다.
+     ▶ 처음에는 감춰 두고(visibility) 자료가 닿는 순간 보여 줍니다.
+       display 가 아니라 visibility 이므로 <b>높이는 그대로</b>여서 화면이
+       덜컥거리지 않습니다.
+     ▶ 자료를 못 받거나 늦으면 3초 뒤 <b>그냥 보여 줍니다</b> — 대비책이
+         영영 감춰지면 히어로가 빈 채로 남습니다. -->
+  <div class="wrap hero-boot">
+    <!-- ★ 2026-08-14 · 대비책을 <b>사이트 소개</b>로 바꿨습니다 (파트너 지시)
+           전에는 2022·2013년 공연 셋이 박혀 있었습니다. 자료를 못 받는
+           드문 경우에 <b>지난 공연</b>이 보이는 것이 어색했습니다.
+         ★ 한 장만 둡니다 — 대비책은 「빈 화면을 막는 것」이 몫이므로
+           여러 장이 필요하지 않습니다. 점(dots)도 자료가 오면 그 수에
+           맞춰 다시 만들어집니다. -->
     <div class="hslide on">
-      <div class="eyebrow">Wixon Orchestra Series · Seoul</div>
-      <h1>Wiener Philharmoniker<br>&amp; Franz Welser-Möst</h1>
-      <div class="sub">빈 필하모닉 &amp; 프란츠 벨저-뫼스트 내한공연</div>
+      <div class="eyebrow">OPUSCLAM.COM</div>
+      <h1>클래식 전문<br>음악 포털 플랫폼</h1>
+      <div class="sub">인물 · 음악단체 · 공연장 · 음악학교 · 현대음악 · 기관재단 · 학술 자료를 하나로 잇습니다.</div>
       <div class="meta">
-        <span>일정 <b>2022.11.03 — 11.04</b></span>
-        <span>장소 <b>예술의전당 콘서트홀</b></span>
-        <span>19:30</span>
-      </div>
-    </div>
-    <div class="hslide">
-      <div class="eyebrow">Special Concert · Seoul</div>
-      <h1>The Little Singers<br>of Paris</h1>
-      <div class="sub">파리나무십자가 소년합창단 내한공연</div>
-      <div class="meta">
-        <span>일정 <b>2022.12.10 — 12.11</b></span>
-        <span>장소 <b>롯데콘서트홀</b></span>
-        <span>20:00</span>
-      </div>
-    </div>
-    <div class="hslide">
-      <div class="eyebrow">Outdoor Concert · Seoul</div>
-      <h1>한여름밤<br>우리가곡 야외음악회</h1>
-      <div class="sub">서울사이버대학교 &times; 하나은행 야외음악회</div>
-      <div class="meta">
-        <span>일정 <b>2013.08.03 — 08.24</b></span>
-        <span>장소 <b>예술의전당 신세계스퀘어</b></span>
-        <span>무료입장</span>
+        <span>DATABASE <b>5만여 건</b></span>
+        <span>공연 · 콩쿨 · 페스티벌 <b>정보SPOT</b></span>
+        <span>레슨:ON</span>
       </div>
     </div>
   </div>
   <div class="wxn-eyebrow"><span class="wxn-run">ALLIANCE WXN</span></div>
-  <div class="hero-dots"><i class="on"></i><i></i><i></i></div>
+  <!-- 점은 자료가 오면 개수에 맞춰 다시 만들어집니다(loadHeroSlides).
+       대비책이 한 장이므로 여기서도 하나만 둡니다. -->
+  <div class="hero-dots"><i class="on"></i></div>
 </section>
 
 <!-- ===== triple banner ===== -->
@@ -3519,8 +3519,16 @@ if('serviceWorker' in navigator){
         const dot = document.createElement('i'); if(idx === 0) dot.className = 'on'; dotsBox.appendChild(dot);
       });
       if(window.initHeroRotation) window.initHeroRotation();
-    }catch(e){ console.error('hero_slides 로드 실패:', e); }
+      heroShow();
+    }catch(e){ console.error('hero_slides 로드 실패:', e); heroShow(); }
   }
+
+  /* 히어로를 보여 줍니다 — 자료가 닿았을 때, 또는 3초가 지났을 때 */
+  function heroShow(){
+    const w = document.querySelector('.hero .wrap');
+    if(w) w.classList.remove('hero-boot');
+  }
+  setTimeout(heroShow, 3000);
 
   // 상단 뉴스 티커
   /* 티커에 쓸 글을 지식나눔 게시판에서 가져온다 (여러 건 — 차례로 돌아갑니다)
