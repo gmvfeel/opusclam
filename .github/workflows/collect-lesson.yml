@@ -21,9 +21,9 @@ on:
   workflow_dispatch:
     inputs:
       per:
-        description: '채널마다 최신 몇 개까지 볼지'
+        description: '채널마다 최신 몇 개까지 볼지 (50 이 최대 · 호출 수는 같습니다)'
         required: true
-        default: '15'
+        default: '50'
       min:
         description: '점수 기준 (55 를 권합니다 · 낮추면 많이 들어옵니다)'
         required: true
@@ -93,7 +93,7 @@ jobs:
           SAVE="${{ github.event.inputs.save }}"
 
           # 예약 실행이면 입력값이 비어 있습니다 — 그때는 15개·55점·담기
-          if [ -z "$P" ]; then P="15"; M="55"; C="0"; S="no"; LS="none"; SAVE="yes"; fi
+          if [ -z "$P" ]; then P="50"; M="55"; C="0"; S="no"; LS="none"; SAVE="yes"; fi
 
           OPTS="--per=$P --min=$M"
           if [ "$C" != "0" ] && [ -n "$C" ]; then OPTS="$OPTS --channels=$C"; fi

@@ -127,6 +127,14 @@ const PLAYLISTS = [
        영상(「Chopin: Ballade No.4」)의 분야를 이 이름으로 알아냅니다. */
   { id: 'PLZfH5K5Yr2DdRZyP58S9kg2gbM0DmOUld', trust: 3,
     name: 'RCM piano masterclass — Stephen Hough', tab: 'master' },
+  /* 줄리아드 — 세계적인 연주자가 학생을 지도하는 실황을 모아 둔 목록입니다.
+     여러 악기가 섞여 있으므로 이름에 악기를 적지 않습니다(제목·설명으로 갈립니다). */
+  { id: 'PLd2lYJmTbj9qbfCMcKCYJG7jVXngVJz3l', trust: 3,
+    name: 'Juilliard Master Classes', tab: 'master' },
+  { id: 'PLd2lYJmTbj9qQuwFHeTKH94LsHHKJgGEg', trust: 3,
+    name: 'Juilliard piano master class — Murray Perahia', tab: 'master' },
+  { id: 'PLd2lYJmTbj9q5VGZNXyVUkz0_HXqnNdu7', trust: 3,
+    name: 'Juilliard piano master class — Robert Levin', tab: 'master' },
   /* ★ 여기에 한 줄씩 더하시면 됩니다. 보기 —
        { id: 'PL…', trust: 3, name: '줄리아드 마스터클래스', tab: 'master' },
        { id: 'PL…', trust: 3, name: '카네기홀 SongStudio',   tab: 'master' },
