@@ -663,8 +663,15 @@
         var creditBar = (o.source === 'curated')
           ? '<div class="ln-credit">'
             + '<span class="k">큐레이션</span>'
-            + '<span class="v">이 영상은 <b>' + esc(o.credit || '원작자')
-            + '</b> 가 공개한 것입니다. 오퍼스클램은 <b>골라서 소개</b>합니다.'
+            /* ★ 2026-08-14 · 글월을 <b>쪼개지 않습니다</b> (파트너 지적 — 일문·영문
+                 화면에서 이 줄이 한국어로 남았습니다)
+                 assets/i18n.js 는 <b>글자 조각 하나가 사전과 똑같을 때</b> 바꿉니다.
+                 전에는 「이 영상은 」 <b>기관 이름</b> 「 가 공개한 것입니다…」 로
+                 쪼개져 있었습니다. 조각마다 사전에 넣어도 영어·일본어는
+                 <b>말 순서가 달라</b> 제대로 된 글월이 되지 않습니다.
+               ▶ 기관 이름을 글월 밖으로 빼고 글월은 한 덩어리로 둡니다. */
+            + '<span class="v"><b class="cr-name">' + esc(o.credit || '원작자') + '</b> '
+            + '<span>이 영상은 원작자가 공개한 것입니다. 오퍼스클램은 골라서 소개합니다.</span>'
             + (o.credit_url
                 ? ' <a href="' + esc(o.credit_url) + '" target="_blank" rel="noopener">원본 보기 &#8599;</a>'
                 : '')
@@ -675,7 +682,7 @@
             '<div class="ln-sample">'
           +   '<span class="k">&#9656; CLASS SAMPLE</span>'
           +   '<span class="v">' + (byRole === 'SOURCE' ? 'Source' : 'Instructor') + ' : ' + esc(byName)
-          +     (o.duration_min ? '<i>강의길이: ' + esc(dur(o.duration_min)) + '</i>' : '') + '</span>'
+          +     (o.duration_min ? '<i><span>강의길이</span> ' + esc(dur(o.duration_min)) + '</i>' : '') + '</span>'
           + '</div>';
 
         /* ★ 큐레이션에는 <b>회차라는 것이 없습니다</b> — 우리 강사가 짠
@@ -704,8 +711,10 @@
 
           plan = '<div class="oc-cv"><dl>' + rows + '</dl>'
             + '<p class="oc-cv-note">'
-            + '오퍼스클램은 이 영상을 <b>골라서 소개</b>합니다. 유튜브가 공식으로 열어 둔 방식으로 '
-            + '보여 드리므로 <b>조회수는 원작자에게</b> 갑니다. 좋으셨다면 원본 채널도 찾아가 보십시오.'
+            /* 강조(<b>)를 문장 <b>가운데가 아니라 문장 단위</b>로 둡니다 —
+               가운데를 감싸면 글월이 조각나 번역이 걸리지 않습니다. */
+            + '<b>오퍼스클램은 이 영상을 골라서 소개합니다.</b> '
+            + '<span>유튜브가 공식으로 열어 둔 방식으로 보여 드리므로 조회수는 원작자에게 갑니다. 좋으셨다면 원본 채널도 찾아가 보십시오.</span>'
             + '</p></div>';
         } else {
           plan = cur.length
