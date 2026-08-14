@@ -102,27 +102,34 @@ if (!YT_KEY) {
    ★ 새 채널을 더할 때는 이 목록에 한 줄만 넣으면 됩니다.
    ============================================================ */
 const CHANNELS = [
-  /* 음악학교 · 음악원 */
-  { handle: '@RoyalCollegeofMusic',        trust: 3, name: 'Royal College of Music' },
+  /* 음악학교 · 음악원
+     ★ 2026-08-14 · 첫 실행에서 <b>여섯 곳을 찾지 못했습니다.</b>
+       handle(@이름)은 유튜브가 바꾸는 일이 있어 <b>번호(UC…)를 적는 편이
+       튼튼합니다.</b> 번호를 알면 id 로 적고, 모르면 handle 로 두십시오
+       (이 스크립트가 번호를 찾아 씁니다).
+     ★ 번호를 알아내는 방법 — 그 채널 화면에서 아무 영상이나 열고
+       주소창의 채널 링크를 보면 /channel/UC… 로 나옵니다. */
+  { id: 'UCjUQsk6a-IvdSeUboCifDxQ', trust: 3, name: 'Royal College of Music' },
+  { id: 'UC1q29EwuKfkZaD0G0mNw0aQ', trust: 3, name: 'Manhattan School of Music' },
   { handle: '@juilliardschool',            trust: 3, name: 'The Juilliard School' },
   { handle: '@CurtisInstitute',            trust: 3, name: 'Curtis Institute of Music' },
   { handle: '@royalacademyofmusic',        trust: 3, name: 'Royal Academy of Music' },
   { handle: '@guildhallschool',            trust: 3, name: 'Guildhall School' },
-  { handle: '@NewEnglandConservatory',     trust: 3, name: 'New England Conservatory' },
-  { handle: '@ManhattanSchoolofMusic',     trust: 3, name: 'Manhattan School of Music' },
-  { handle: '@ColburnSchool',              trust: 3, name: 'Colburn School' },
 
   /* 축제 · 아카데미 */
   { handle: '@verbierfestival',            trust: 3, name: 'Verbier Festival' },
   { handle: '@menuhincompetition',         trust: 3, name: 'Menuhin Competition' },
-  { handle: '@tchaikovskycompetition',      trust: 2, name: 'Tchaikovsky Competition' },
 
-  /* 연주자 · 단체 */
+  /* 연주자 · 단체 · 공연장 */
   { handle: '@SarahWillisHorn',            trust: 2, name: 'Sarah Willis' },
-  { handle: '@thecrossedeyedpianist',      trust: 1, name: 'Cross-Eyed Pianist' },
-  { handle: '@tonebase',                   trust: 2, name: 'tonebase' },
   { handle: '@wigmorehall',                trust: 3, name: 'Wigmore Hall' },
   { handle: '@carnegiehall',               trust: 3, name: 'Carnegie Hall' },
+  { handle: '@tonebase',                   trust: 2, name: 'tonebase' },
+
+  /* ★ 첫 실행에서 못 찾은 곳은 <b>뺐습니다</b> — 헛되게 호출만 씁니다.
+       주소를 확인하신 뒤 번호로 다시 넣으시면 됩니다.
+         New England Conservatory · Colburn School ·
+         Tchaikovsky Competition · Cross-Eyed Pianist */
 ];
 
 /* 검색으로도 찾을 때 쓰는 낱말 (--search) */
@@ -138,7 +145,10 @@ const QUERIES = [
 
 /* ── 제목으로 갈라내기 ───────────────────────────────────── */
 const RE_MASTER = /\b(master\s?class|masterclass|마스터\s?클래스)\b/i;
-const RE_OPEN   = /\b(open\s?lesson|public\s?lesson|open\s?rehearsal|lecture|tutorial|공개\s?레슨|공개\s?강의)\b/i;
+/* ★ 2026-08-14 · 공개레슨이 0개였습니다 — 낱말이 좁았습니다.
+     학교 채널은 「open lesson」이라 적지 않고 「lecture」·「workshop」·
+     「how to」·「tips」·「coaching session」처럼 씁니다. */
+const RE_OPEN   = /\b(open\s?lesson|public\s?lesson|open\s?rehearsal|lecture|lecture[-\s]?demonstration|workshop|tutorial|how\s?to\s|technique|warm[-\s]?up|exercises?|fundamentals?|practice\s?(tips|guide)|tips\s?(for|and)|coaching\s?session|공개\s?레슨|공개\s?강의|강의)\b/i;
 
 /* 버릴 것 — 반응·요약·팬 편집·광고
    ★ 짧은 낱말은 <b>낱말 경계</b>를 붙입니다. 「rave」가 「Ravel」을
@@ -150,6 +160,16 @@ const RE_BLOCK = [
   /\bfan\s?(edit|made)\b/i, /\bAI\b/, /\bcompilation\b/i,
   /\bbest\s?of\b/i, /\bfull\s?album\b/i, /\bplaylist\b/i,
   /\blive\s?stream\s?(test|check)\b/i,
+  /* ★ 2026-08-14 · 첫 실행에서 <b>연주회 영상</b>이 섞였습니다
+       「Junior Academy Symphony Orchestra <b>Performs</b> …」
+       「Septura <b>SIDE-BY-SIDE</b> | Suite from Rinaldo」
+     이것들은 훌륭한 연주지만 <b>가르치는 영상이 아닙니다.</b>
+     레슨:ON 은 배우는 자리이므로 연주 실황은 정보SPOT 음원·동영상
+     쪽이 맞습니다. */
+  /\bperforms?\b/i, /\bside[-\s]?by[-\s]?side\b/i,
+  /\bin\s?recital\b/i, /\bconcert\b/i, /\bgala\b/i,
+  /\bprize\s?winners?\b/i, /\bfinal\s?round\b/i, /\bsemi[-\s]?final/i,
+  /\bopening\s?night\b/i, /\bencore\b/i,
 ];
 
 /* ── 분야 알아내기 ───────────────────────────────────────
@@ -158,13 +178,18 @@ const RE_BLOCK = [
      PIANO · STRINGS · BRASS · WINDS · PERCUSSIONS · VOCAL ·
      작곡/이론 · 기타                                         */
 const FIELD_WORDS = [
-  ['PIANO',       /\b(piano|pianist|klavier|피아노|fortepiano|harpsichord|organ|오르간)\b/i],
-  ['STRINGS',     /\b(violin|viola|cello|violoncello|double\s?bass|contrabass|harp|guitar|바이올린|비올라|첼로|하프|기타)\b/i],
-  ['BRASS',       /\b(horn|trumpet|trombone|tuba|euphonium|brass|호른|트럼펫|트롬본|튜바|금관)\b/i],
-  ['WINDS',       /\b(flute|oboe|clarinet|bassoon|saxophone|recorder|woodwind|플루트|오보에|클라리넷|바순|목관)\b/i],
-  ['PERCUSSIONS', /\b(percussion|timpani|marimba|drum|타악|팀파니|마림바)\b/i],
-  ['VOCAL',       /\b(voice|vocal|singing|soprano|tenor|baritone|mezzo|bass\s?baritone|lieder|opera\s?(singing|coach)|성악|소프라노|테너)\b/i],
+  /* ★ 순서가 <b>우선순위</b>입니다. 성악을 맨 앞에 두는 까닭 —
+       성악 마스터클래스에는 반드시 반주자가 나오므로 「piano」·
+       「pianist」가 함께 적힙니다. 피아노를 앞에 두면 성악 수업이
+       전부 PIANO 로 들어갑니다(첫 실행에서 여덟 개가 그랬습니다).
+     ★ 노래·가곡 이름(lied · song · aria · SongStudio)도 성악 신호입니다. */
+  ['VOCAL',       /\b(voice|vocal|singing|singer|soprano|tenor|baritone|mezzo|contralto|countertenor|lieder|lied|song\s?studio|art\s?song|aria|recitative|opera\s?(singing|coach|scenes)|diction|성악|소프라노|테너|가곡)\b/i],
+  ['STRINGS',     /\b(violin|violinist|viola|cello|violoncello|double\s?bass|contrabass|harp|guitar|lute|바이올린|비올라|첼로|하프|기타)\b/i],
+  ['BRASS',       /\b(horn|trumpet|trombone|tuba|euphonium|cornet|brass|호른|트럼펫|트롬본|튜바|금관)\b/i],
+  ['WINDS',       /\b(flute|flutist|oboe|clarinet|bassoon|saxophone|recorder|woodwind|플루트|오보에|클라리넷|바순|목관)\b/i],
+  ['PERCUSSIONS', /\b(percussion|timpani|marimba|vibraphone|drum|타악|팀파니|마림바)\b/i],
   ['작곡/이론',   /\b(composition|composing|orchestration|counterpoint|harmony|analysis|conducting|conductor|작곡|지휘|화성)\b/i],
+  ['PIANO',       /\b(piano|pianist|klavier|fortepiano|harpsichord|organ|피아노|오르간)\b/i],
 ];
 
 /* 작품·작곡가 이름이 보이면 점수를 더합니다 */
@@ -209,8 +234,19 @@ function isoSec(v) {
   return (+(m[1] || 0)) * 86400 + (+(m[2] || 0)) * 3600 + (+(m[3] || 0)) * 60 + (+(m[4] || 0));
 }
 
-function fieldOf(text) {
-  for (const [name, re] of FIELD_WORDS) if (re.test(text)) return name;
+/* ★ 2026-08-14 · 분야 판정이 <b>제목보다 설명을 먼저</b> 보고 있었습니다
+     ─────────────────────────────────────────────────────────────
+     카네기홀 성악 마스터클래스(SongStudio) 여덟 개가 모두 PIANO 로
+     들어갔습니다. 설명에 「piano accompaniment」·「pianist」가 나와서
+     그 낱말이 먼저 걸린 것입니다.
+   ▶ <b>제목으로 먼저</b> 정합니다. 제목은 그 영상이 무엇인지 가장
+     또렷하게 말해 줍니다. 제목에서 못 찾을 때만 설명을 봅니다.
+   ★ 그리고 성악을 <b>맨 앞</b>에 둡니다 — 성악 마스터클래스에는 반드시
+     반주자가 나오므로 피아노 낱말이 함께 나옵니다. 순서가 곧 우선순위입니다.
+     (아래 FIELD_WORDS 의 순서를 바꿨습니다) */
+function fieldOf(title, desc) {
+  for (const [name, re] of FIELD_WORDS) if (re.test(title)) return name;
+  for (const [name, re] of FIELD_WORDS) if (re.test(desc || '')) return name;
   return null;
 }
 
@@ -227,11 +263,20 @@ function score(v, ch) {
   else if (t === 2) { s += 32; why.push('채널32'); }
   else if (t === 1) { s += 18; why.push('채널18'); }
 
+  /* ★ 2026-08-14 · 제목에 <b>가르침을 뜻하는 낱말이 없으면 버립니다</b>
+       ─────────────────────────────────────────────────────────
+       첫 실행에서 연주회 영상이 섞였습니다. 채널이 훌륭하면(45점)
+       나머지 점수만으로 55점을 넘어 「masterclass」라는 말이 없어도
+       통과했기 때문입니다.
+     ▶ 이제 이 낱말은 <b>있어야 하는 것</b>입니다. 점수가 아니라 문턱입니다.
+       Ticketmaster 에서 배운 것과 같습니다 — 채널·갈래를 믿되
+       <b>가장 또렷한 신호는 반드시 요구</b>해야 합니다. */
   const isMaster = RE_MASTER.test(title);
   const isOpen   = RE_OPEN.test(title);
-  if (isMaster || isOpen) { s += 20; why.push('제목20'); }
+  if (!isMaster && !isOpen) return { s: 0, why: ['제목에 마스터클래스·공개레슨 낱말이 없음'], field: null, tab: 'master' };
+  s += 20; why.push('제목20');
 
-  const field = fieldOf(all);
+  const field = fieldOf(title, desc);
   if (field) { s += 12; why.push('분야12'); }
 
   const sec = v.sec || 0;
@@ -252,10 +297,14 @@ function blocked(title) {
 
 /* ── 채널 번호 찾기 ─────────────────────────────────────── */
 async function resolveChannel(ch) {
-  if (ch.id) return ch.id;
+  /* ★ 번호를 직접 적었어도 <b>uploads 목록</b>은 받아야 합니다.
+       예전에는 id 가 있으면 곧바로 돌려주어 uploads 가 비었고,
+       그러면 「채널을 찾지 못했습니다」로 잘못 찍혔습니다. */
+  if (ch.id && ch.uploads) return ch.id;
   try {
-    /* handle 로 찾습니다 — forHandle 은 키 하나에 1 만 듭니다 */
-    const j = await yt('channels', { part: 'contentDetails,snippet', forHandle: ch.handle });
+    const j = ch.id
+      ? await yt('channels', { part: 'contentDetails,snippet', id: ch.id })
+      : await yt('channels', { part: 'contentDetails,snippet', forHandle: ch.handle });
     const it = (j.items || [])[0];
     if (it) {
       ch.id = it.id;
@@ -272,7 +321,7 @@ async function resolveChannel(ch) {
 async function fromChannel(ch) {
   const id = await resolveChannel(ch);
   if (!id || !ch.uploads) {
-    console.log(`   ✘ ${ch.handle} — 채널을 찾지 못했습니다 (주소가 바뀌었을 수 있습니다)`);
+    console.log(`   ✘ ${ch.handle || ch.id} (${ch.name}) — 채널을 찾지 못했습니다`);
     return [];
   }
   let items = [];
@@ -284,7 +333,7 @@ async function fromChannel(ch) {
     });
     items = j.items || [];
   } catch (e) {
-    console.log(`   ✘ ${ch.handle} — ${e.message.slice(0, 80)}`);
+    console.log(`   ✘ ${ch.handle || ch.id} (${ch.name}) — ${e.message.slice(0, 80)}`);
     return [];
   }
   if (!items.length) return [];
