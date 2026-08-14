@@ -36,6 +36,8 @@
      node seed/tm-collect.mjs --months=6            앞으로 몇 달까지
      node seed/tm-collect.mjs --countries=US,GB,DE  나라 고르기
      node seed/tm-collect.mjs --limit=200           나라마다 최대 몇 건
+     node seed/tm-collect.mjs --list=keep           담을 것 제목을 모두 찍습니다
+     node seed/tm-collect.mjs --list=drop           버린 것 제목을 모두 찍습니다
      node seed/tm-collect.mjs --merge=no            회차를 묶지 않고 날짜마다 한 줄
      node seed/tm-collect.mjs --loose               갈래 잣대를 느슨하게
      node seed/tm-collect.mjs --debug               한 줄씩 자세히
@@ -64,6 +66,14 @@ const LOOSE  = !!args.loose;
 const MONTHS = Number(args.months || 6);
 const LIMIT  = Number(args.limit || 800);        /* 나라마다 최대 */
 const MERGE = args.merge === 'no' ? false : true;   /* 같은 공연의 회차를 묶습니다 */
+/* ★ --list=keep  담을 것의 제목을 모두 찍습니다
+   ★ --list=drop  버린 것의 제목을 모두 찍습니다
+     ─────────────────────────────────────────────────────────────
+     잣대를 고치는 일은 <b>눈으로 봐야</b> 합니다. 「버린 것에 클래식이
+     279건」처럼 숫자만 보면 그것이 잘 버린 것인지 알 수 없습니다.
+     학술DB 를 정리할 때 「삭제 전 목록을 눈으로 확인」한 것이
+     번번이 큰 사고를 막았습니다 — 같은 방식입니다. */
+const LIST = String(args.list || '');
 const BASE   = String(args.base || 'https://app.ticketmaster.com');
 
 /* 담을 나라 — 클래식 공연이 많고 Ticketmaster 가 다루는 곳부터.
@@ -146,6 +156,17 @@ const TITLE_BLOCK = [
   'live in concert', 'in concert', 'cinema', 'disney', 'harry potter',
   'star wars', 'anime', 'gospel brunch', 'dj ', 'candlelight',
   'vs.', 'sing-along', 'singalong', 'holiday pops', 'christmas pops',
+  /* ★ 2026-08-14 · 세 번째 실행에서 새어 든 것들
+       ministry of sound  클럽음악을 관현악으로 편곡한 시리즈(영국)
+       miyazaki / ghibli  지브리 영화음악
+       homenatge/homage/tribute  헌정 공연 (대개 대중음악)
+       dinner/cena/brunch  식사와 함께 하는 공연 — 공연이 곁들이입니다
+     ★ 사람 이름을 하나씩 막지는 않습니다. 끝이 없습니다.
+       Stephan Moccio 처럼 이름만 있는 것은 <b>어드민에서 숨기는</b> 편이
+       낫습니다 — 그래서 아래 --list 로 목록을 뽑아 볼 수 있게 했습니다. */
+  'ministry of sound', 'miyazaki', 'ghibli', 'homenatge', 'homenaje',
+  'homage', 'dinner', ' cena', 'brunch', 'silent disco', 'yoga',
+  'immersive', 'rave', 'club classics', 'ibiza',
 ];
 
 /* ★ 제목 모양으로 걸러내는 것 — 낱말 목록으로는 못 잡는 것들
@@ -335,6 +356,7 @@ async function fetchCountry(cc, from, to) {
        담은 것의 갈래만 보면 <b>무엇이 새어 들어왔는지</b> 바로 보입니다. */
   const genreTally = new Map();      /* 담은 것 */
   const dropTally = new Map();       /* 버린 것 */
+  const dropList = [];               /* --list=drop 일 때 제목을 모읍니다 */
 
   for (let page = 0; page < pages; page++) {
     let json;
@@ -364,7 +386,12 @@ async function fetchCountry(cc, from, to) {
       const tally = ok ? genreTally : dropTally;
       for (const g of gs) tally.set(g, (tally.get(g) || 0) + 1);
 
-      if (!ok) { dropped++; if (DEBUG) console.log(`     버림 · ${ev.name}`); continue; }
+      if (!ok) {
+        dropped++;
+        if (DEBUG) console.log(`     버림 · ${ev.name}`);
+        if (LIST === 'drop') dropList.push(`[${cc}] ${ev.name}  ·  ${gs.join('/')}`);
+        continue;
+      }
       const row = toRow(ev, cc);
       /* 빈약한 것은 담지 않습니다 — 날짜나 공연장이 없으면 쓸모가 없습니다 */
       if (!row.title || !row.date_from || !row.venue_name) { dropped++; continue; }
@@ -377,7 +404,7 @@ async function fetchCountry(cc, from, to) {
     await sleep(250);                     /* 초당 5회를 넘지 않게 */
   }
 
-  return { rows, got, dropped, genreTally, dropTally };
+  return { rows, got, dropped, genreTally, dropTally, dropList };
 }
 
 /* ============================================================
@@ -477,8 +504,10 @@ async function save(rows) {
   const all = [];
   const tally = new Map();
   const dtally = new Map();
+  const drops = [];
   for (const cc of COUNTRIES) {
-    const { rows, got, dropped, genreTally, dropTally } = await fetchCountry(cc, from, to);
+    const { rows, got, dropped, genreTally, dropTally, dropList } = await fetchCountry(cc, from, to);
+    if (LIST === 'drop') drops.push(...dropList);
     console.log(`   ${cc} ${COUNTRY_KO[cc] || ''} — 받음 ${got} · 담을 것 ${rows.length} · 버림 ${dropped}`);
     all.push(...rows);
     for (const [g, n] of genreTally) tally.set(g, (tally.get(g) || 0) + n);
@@ -526,9 +555,21 @@ async function save(rows) {
     }
   }
 
+  if (LIST === 'keep') {
+    console.log('');
+    console.log(`   ▶ 담을 것 제목 모두 (${uniq.length}건) — 눈으로 훑어 보십시오`);
+    uniq.forEach((r, i) => console.log(`      ${String(i + 1).padStart(4)}. [${r.country}] ${r.title}  ·  ${r.venue_name}`));
+  }
+  if (LIST === 'drop') {
+    console.log('');
+    console.log(`   ▶ 버린 것 제목 모두 (${drops.length}건) — 여기 클래식이 있으면 잣대가 너무 좁습니다`);
+    drops.forEach((t, i) => console.log(`      ${String(i + 1).padStart(4)}. ${t}`));
+  }
+
   if (!SAVE) {
     console.log('');
     console.log('   담지 않았습니다. 위 표본이 알맞아 보이면 --save 를 붙여 다시 돌리십시오.');
+    console.log('   목록을 눈으로 훑고 싶으시면 --list=keep (담을 것) · --list=drop (버린 것)');
     return;
   }
 

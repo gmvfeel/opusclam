@@ -42,6 +42,15 @@ on:
         options:
           - 'yes'
           - 'no'
+      list:
+        description: '제목 목록 찍기 (잣대를 고칠 때 — 나라 하나만 넣고 보십시오)'
+        required: true
+        default: 'none'
+        type: choice
+        options:
+          - 'none'
+          - 'drop'
+          - 'keep'
       save:
         description: '실제로 담기 (처음에는 no 로 확인하세요)'
         required: true
@@ -83,14 +92,17 @@ jobs:
           L="${{ github.event.inputs.limit }}"
           SAVE="${{ github.event.inputs.save }}"
           MG="${{ github.event.inputs.merge }}"
+          LS="${{ github.event.inputs.list }}"
 
           # 예약 실행이면 입력값이 비어 있습니다 — 그때는 여섯 달·800건·담기
-          if [ -z "$M" ]; then M="6"; L="800"; SAVE="yes"; MG="yes"; fi
+          if [ -z "$M" ]; then M="6"; L="800"; SAVE="yes"; MG="yes"; LS="none"; fi
 
           OPTS="--months=$M --limit=$L"
           if [ "$SAVE" = "yes" ]; then OPTS="$OPTS --save"; fi
           if [ "$MG" = "no" ]; then OPTS="$OPTS --merge=no"; fi
           if [ -n "$C" ]; then OPTS="$OPTS --countries=$C"; fi
+          # 목록 찍기 — 잣대를 고칠 때만 씁니다(로그가 길어집니다)
+          if [ "$LS" = "drop" ] || [ "$LS" = "keep" ]; then OPTS="$OPTS --list=$LS"; fi
 
           echo "── 실행 : node seed/tm-collect.mjs $OPTS ──"
           try2 node seed/tm-collect.mjs $OPTS
