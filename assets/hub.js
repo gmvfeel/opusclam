@@ -1399,15 +1399,28 @@ window.OCHub = (function () {
         + '<span class="hub-skel w5"></span><span class="hub-skel w7"></span></div>';
     });
 
-    fetch(SB_URL + '/rest/v1/rpc/db_insight', { headers: HDR })
-      .then(function (r) {
-        if (!r.ok) {
-          return r.text().then(function (t) {
-            throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 160));
-          });
-        }
-        return r.json();
-      })
+    /* ★ 2026-08-14 · 받아 온 자료를 <b>담아 둡니다</b>
+         DB 메인에서 이 함수를 두 번 부릅니다 — 처음에 「시대별 인물 분포」
+         하나만 그리고, 「전체 그래프 보기」를 누를 때 나머지를 그립니다.
+         담아 두지 않으면 같은 RPC 를 두 번 부르게 됩니다(비용·시간 2배).
+       ★ 숨긴 칸에 미리 그릴 수는 없습니다 — 폭을 0 으로 재기 때문입니다. */
+    var _got = (function () {
+      if (window.__ocInsightData) return Promise.resolve(window.__ocInsightData);
+      if (window.__ocInsightWait) return window.__ocInsightWait;
+      window.__ocInsightWait = fetch(SB_URL + '/rest/v1/rpc/db_insight', { headers: HDR })
+        .then(function (r) {
+          if (!r.ok) {
+            return r.text().then(function (t) {
+              throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 160));
+            });
+          }
+          return r.json();
+        })
+        .then(function (d) { window.__ocInsightData = d; return d; });
+      return window.__ocInsightWait;
+    })();
+
+    _got
       .then(function (d) {
         if (!d) throw new Error('분석 자료를 받지 못했습니다');
 

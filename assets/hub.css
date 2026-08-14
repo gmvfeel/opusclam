@@ -276,9 +276,15 @@
 
   /* 인트로 — 서비스 소개 + 전체 건수
      위쪽 여백 44px 은 서브페이지 검색·필터 줄(.pdb-toolbar)과 같은 값이다 */
+  /* ★ 2026-08-14 · 외곽선을 <b>더 또렷하게</b> (파트너 지시)
+       흰 바탕에 옅은 회색 1px 이라 상자가 있는 줄도 모르고 지나쳤습니다.
+       테두리를 보라 계열 1.5px 로 올리고, 왼쪽에 굵은 색 띠를 둡니다 —
+       사이트 안 다른 제목 표시(.pv-h · .hb-title)와 같은 결입니다. */
   .hb-intro{display:flex;align-items:center;gap:34px;margin:44px 0 0;
-    padding:30px 34px;border:1px solid var(--line,#e4e4ec);border-radius:18px;
-    background:var(--paper,#fff);box-shadow:0 10px 30px rgba(24,24,50,.05)}
+    padding:30px 34px 30px 30px;border:2px solid #d5cbe9;border-left:5px solid var(--violet-2,#7C63B0);
+    border-radius:18px;
+    background:var(--paper,#fff);box-shadow:0 12px 34px -14px rgba(60,45,110,.22)}
+  html[data-theme="dark"] .hb-intro{border-color:#3a3550;border-left-color:#8b74c9}
   .hb-introtxt{flex:1;min-width:0}
   .hb-brand{font-size:12px;font-weight:800;letter-spacing:.18em;color:var(--violet-2,#7C63B0)}
   .hb-h1{margin:7px 0 5px;font-size:29px;font-weight:600;letter-spacing:-.025em;
