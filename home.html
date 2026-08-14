@@ -758,6 +758,18 @@
   .ad-slot.has-img{padding:0;border:0;background:none;gap:0}
   .ad-slot.has-img picture{display:block;width:100%;height:100%}
   .ad-slot.has-img img{width:100%;height:100%;object-fit:cover;display:block}
+  /* ★ 2026-08-14 · <b>바탕이 흰 광고</b>에 연한 테두리 (파트너 요청)
+       ─────────────────────────────────────────────────────────────
+       흰 바탕 소재는 흰 화면에 놓이면 <b>어디까지가 광고인지</b>
+       보이지 않습니다. 가는 선 하나로 자리를 알려 줍니다.
+     ★ 어두운 소재에는 붙이지 않습니다 — 그쪽은 스스로 경계가 보이고,
+       선을 두르면 오히려 답답합니다. 그래서 클래스로 가릅니다
+       (마크업에 has-frame 을 더하면 됩니다).
+     ★ 어두운 모드에서는 선을 옅게 둡니다 — 흰 소재가 그대로 밝으므로
+       진한 선은 도리어 도드라집니다. */
+  .ad-slot.has-img.has-frame{border:1px solid var(--line-2,#e4ded2)}
+  html[data-theme="dark"] .ad-slot.has-img.has-frame{border-color:rgba(255,255,255,.14)}
+
 
   .ad-tall{min-height:430px}
   .ad-mid{min-height:350px}
@@ -1002,7 +1014,13 @@
        C 자리를 회전 상자(.ad-rot)로 감싼 뒤, 그 <b>안쪽 둘째 광고</b>가
        이 규칙에 걸려 D 자리 크기(446×190)로 찌그러졌습니다.
        실측에서 문의 자리표가 446×190 으로 나와 잡았습니다. */
-  .bigban .wrap > .ad-slot:nth-child(2){width:min(446px,100%);aspect-ratio:446/190}
+  /* ★ 2026-08-14 · D 자리가 이제 회전 상자(.ad-rot)라 <b>둘 다</b> 봐야 합니다.
+       .ad-slot 만 보고 있어서 D 자리 높이가 190 → 126px 로 찌그러졌습니다
+       (C 자리 폭 670 에 446/190 비율이 걸린 값입니다). */
+  .bigban .wrap > .ad-slot:nth-child(2),
+  .bigban .wrap > .ad-rot:nth-child(2){width:min(446px,100%);aspect-ratio:446/190}
+  /* 회전 상자 안쪽 광고는 상자 크기를 그대로 받습니다 */
+  .bigban .wrap > .ad-rot:nth-child(2) > .ad-slot{width:100%;aspect-ratio:auto}
   /* 틀이 1140px 보다 좁아지면 두 칸이 <b>같은 비율로</b> 함께 줄어듭니다 */
   @media(max-width:1199px){ .bigban .wrap{grid-template-columns:minmax(0,670fr) minmax(0,446fr)} }
   /* 한 줄로 내려온 뒤에는 원래 크기보다 커지지 않게 합니다 —
@@ -1946,7 +1964,7 @@
            ★ 이 묶음은 화면 42곳에 <b>똑같이</b> 들어 있습니다. 광고를 갈 때는
              한 곳만 고치지 말고 <b>모두</b> 함께 고쳐야 합니다. -->
     <div class="ad-rot bigban-ad" data-every="7000">
-      <a class="ad-slot bigban-ad has-img" href="https://www.ond2u.com/" target="_blank" rel="noopener"
+      <a class="ad-slot bigban-ad has-img has-frame" href="https://www.ond2u.com/" target="_blank" rel="noopener"
          aria-label="오늘의 편지 — 매일 한 편의 위로를 보냅니다 (새 창)">
         <picture>
           <source srcset="/assets/ads/ond2u-c-1340x380.webp" type="image/webp">
@@ -1962,11 +1980,27 @@
         <span class="ad-desc">광고안내 바로가기 &rarr;</span>
       </a>
     </div>
-    <a class="ad-slot bigban-ad" href="#">
-      <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
-      <span class="ad-badge">Advertisement</span>
-      <span class="ad-desc">광고 영역 · 반응형 디스플레이</span>
-    </a>
+    <!-- ★ 2026-08-14 · D 자리(446×190) — 광고 + 광고문의 자리표를 번갈아.
+           그림은 두 배 크기(892×380) · WebP 10KB.
+           ★ 이 묶음도 화면 41곳에 <b>똑같이</b> 있습니다. 광고를 갈 때는
+             한 곳만 고치지 말고 모두 함께 고쳐야 합니다. -->
+    <div class="ad-rot bigban-ad" data-every="7000">
+      <a class="ad-slot bigban-ad has-img" href="https://booklps.vercel.app/" target="_blank" rel="noopener"
+         aria-label="booklps — 절판 도서·음반 통합 검색 (새 창)">
+        <picture>
+          <source srcset="/assets/ads/booklps-d-892x380.webp" type="image/webp">
+          <img src="/assets/ads/booklps-d-892x380.jpg" width="892" height="380"
+               loading="lazy" decoding="async"
+               alt="booklps — 어딘가엔, 분명히 있습니다 · 절판 도서·음반 통합 검색">
+        </picture>
+      </a>
+      <a class="ad-slot bigban-ad ad-cta" aria-label="광고문의 — 광고안내 준비 중">
+        <span class="ad-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></span>
+        <span class="ad-badge">Advertisement</span>
+        <strong class="ad-ctat">광고문의</strong>
+        <span class="ad-desc">광고안내 바로가기 &rarr;</span>
+      </a>
+    </div>
   </div>
 </section>
 
