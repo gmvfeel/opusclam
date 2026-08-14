@@ -88,12 +88,48 @@ const OK_GENRE = [
   'classical', 'opera', 'symphonic', 'chamber', 'choral', 'recital',
   'baroque', 'orchestral', 'oratorio', 'lieder', 'sacred',
 ];
+
+/* ★ 2026-08-14 · <b>버릴 갈래</b>를 따로 둡니다 (첫 실행 로그를 보고 더함)
+     ─────────────────────────────────────────────────────────────
+     첫 실행에서 1,120건을 담겠다고 했는데 표본 다섯 가운데 셋이 클래식이
+     아니었습니다 — 영화음악·크로스오버 바이올린·「Brahms X Radiohead」.
+     걸린 갈래를 세어 보니 Pop 50 · Jazz 42 · Theatre 164 가 섞여 있었습니다.
+   ★ 왜 이런 일이 생기나
+     한 공연에 갈래가 <b>여럿</b> 붙습니다. 그중 하나만 Classical 이면
+     통과하도록 두었더니, Pop 이면서 Classical 인 것들이 다 들어왔습니다.
+   ▶ 버릴 갈래가 하나라도 붙어 있으면 <b>통과시키지 않습니다</b>
+     (버리는 쪽이 통과보다 힘이 셉니다). */
+const BAD_GENRE = [
+  'pop', 'rock', 'jazz', 'country', 'hip-hop', 'hip hop', 'rap', 'r&b',
+  'blues', 'folk', 'electronic', 'dance', 'latin', 'metal', 'punk',
+  'reggae', 'soul', 'world', 'comedy', 'children', 'musical', 'variety',
+  'film', 'soundtrack', 'video game', 'k-pop', 'j-pop', 'new age',
+];
+
 /* 갈래가 클래식이라도 이런 낱말이 제목에 있으면 버립니다 —
-   「크리스마스 팝스」·「영화음악 콘서트」처럼 결이 다른 것들입니다. */
+   「영화음악 콘서트」·「게임음악」처럼 결이 다른 것들입니다.
+   ★ 2026-08-14 · 첫 실행에서 새어 나온 것을 더했습니다
+        film music / music of / soundtrack / in concert(영화 상영 연주)
+        candlelight(대중가요 편곡이 많은 시리즈)
+   ★ 밴드 이름을 하나씩 막지는 않습니다 — 끝이 없습니다.
+     「Brahms X Radiohead」 같은 협업물은 어드민에서 숨기는 편이 낫습니다. */
 const TITLE_BLOCK = [
   'tribute', 'rock', 'pop ', 'k-pop', 'jazz night', 'video game',
-  'movie', 'film score', 'cinema', 'disney', 'harry potter',
-  'star wars', 'anime', 'gospel brunch', 'dj ',
+  'movie', 'film score', 'film music', 'music of', 'soundtrack',
+  'live in concert', 'in concert', 'cinema', 'disney', 'harry potter',
+  'star wars', 'anime', 'gospel brunch', 'dj ', 'candlelight',
+  'vs.', 'sing-along', 'singalong', 'holiday pops', 'christmas pops',
+];
+
+/* ★ 제목 모양으로 걸러내는 것 — 낱말 목록으로는 못 잡는 것들
+     「CSO: Brahms X Radiohead」처럼 <b>사이에 x 를 둔 협업물</b>은
+     대중음악과 함께 하는 공연이 대부분입니다. 밴드 이름을 하나씩
+     막는 것은 끝이 없으므로 <b>모양</b>으로 잡습니다.
+   ※ 정통 공연 제목은 「Brahms: Symphony No.1」처럼 쓰므로 이 모양에
+     걸리지 않습니다. */
+const TITLE_RE = [
+  /\s[x×]\s/i,          /* A x B  협업 */
+  /\bvs\b/i,            /* A vs B */
 ];
 
 /* ── 준비가 되었는지 ─────────────────────────────────────── */
@@ -166,11 +202,20 @@ function genreNames(ev) {
 
 function isClassical(ev) {
   const names = genreNames(ev).map((s) => s.toLowerCase());
+
+  /* ① 버릴 갈래가 하나라도 있으면 끝 — 통과보다 힘이 셉니다 */
+  if (names.some((n) => BAD_GENRE.some((g) => n.includes(g)))) return false;
+
+  /* ② 클래식 신호가 있어야 합니다 */
   const hit = names.some((n) => OK_GENRE.some((g) => n.includes(g)));
   if (!hit && !LOOSE) return false;
 
-  const t = String(ev.name || '').toLowerCase();
+  /* ③ 제목에 막을 낱말·모양이 있으면 버립니다 */
+  const raw = String(ev.name || '');
+  const t = raw.toLowerCase();
   if (TITLE_BLOCK.some((w) => t.includes(w))) return false;
+  if (TITLE_RE.some((re) => re.test(raw))) return false;
+
   return hit || LOOSE;
 }
 
