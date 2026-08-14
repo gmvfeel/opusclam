@@ -311,6 +311,40 @@ async function tm(params, tries = 0) {
   return res.json();
 }
 
+/* ============================================================
+   깨진 물음표를 <b>되살립니다</b> (2026-08-14 · 파트너 지적)
+   ------------------------------------------------------------
+   ★ 무엇이 문제였나
+     화면에 「The Cleveland Orchestra: Prokofiev<b>???</b>s Romeo &
+     Juliet」로 나왔습니다. 처음에는 GitHub 로그 화면이 못 그리는
+     것으로 봤지만, 실제 화면에도 그대로 나와 <b>받은 값 자체가</b>
+     그렇다는 것이 드러났습니다. 아포스트로피(’)가 물음표 셋으로
+     바뀌어 오는 것입니다 — 보내는 쪽에서 생긴 일이라 우리가 막을
+     길은 없고, <b>받은 뒤에 되살리는</b> 수밖에 없습니다.
+
+   ★ 어떻게 되살리나
+     ① 「글자 + ??? + s(또는 t·re·ve·ll·d·m)」 → 아포스트로피로
+        Prokofiev???s → Prokofiev’s · Don???t → Don’t
+     ② 그 밖에 남은 연속 물음표는 <b>지웁니다</b>
+        Mozart ??? Requiem → Mozart Requiem
+     ★ 물음표가 <b>하나</b>일 때는 손대지 않습니다 —
+        「What Is Music?」·「Quo Vadis?」는 제 물음표입니다.
+
+   ★ 파이썬으로 <b>양방향 검증</b>을 먼저 했습니다
+     고쳐야 하는 여덟 가지와 건드리면 안 되는 아홉 가지(Boléro ·
+     Dvořák · Saint-Saëns 등)를 함께 넣어 모두 통과한 뒤 옮겼습니다.
+   ============================================================ */
+const RE_APOS  = /([A-Za-z\u00C0-\u024F])\?{2,3}(s|t|re|ve|ll|d|m)\b/g;
+const RE_MULTI = /\s*\?{2,}\s*/g;
+
+function fixQ(v) {
+  var t = String(v == null ? '' : v);
+  if (t.indexOf('??') < 0) return t;          /* 대부분은 여기서 끝냅니다 */
+  t = t.replace(RE_APOS, function (m, a, b) { return a + '\u2019' + b; });
+  t = t.replace(RE_MULTI, ' ');
+  return t.replace(/\s{2,}/g, ' ').trim();
+}
+
 function esc(v) {
   return String(v == null ? '' : v)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -399,7 +433,7 @@ function toRow(ev, cc) {
   const countryKo = COUNTRY_KO[cc]
     || (v.country && (v.country.name || v.country.countryCode))
     || cc;
-  const cityName = (v.city && v.city.name) || null;
+  const cityName = (v.city && v.city.name) ? fixQ(v.city.name) : null;
   const genres = genreNames(ev).filter((g) => !/^music$/i.test(g));
   /* ★ 2026-08-14 · 주최 이름에 <b>쓸모 없는 값</b>이 옵니다 (파트너 지적)
        화면에 「PROMOTER NOT DEFINED」가 그대로 보였습니다. 뜻이 없는
@@ -414,12 +448,16 @@ function toRow(ev, cc) {
     const low = t.toLowerCase();
     if (low.includes('not defined') || low.includes('undefined')
         || low.includes('no promoter') || low === 'n/a' || low === '-') return null;
-    return t;
+    return fixQ(t);
   })(rawPromoter);
   const timeText = start.localTime ? String(start.localTime).slice(0, 5) : null;
 
+  /* ★ 깨진 물음표는 <b>한 번만</b> 되살려 아래 모두에서 함께 씁니다
+       (제목·본문·표에 같은 값이 들어가므로 곳마다 부르면 어긋납니다) */
+  const venueName = v.name ? fixQ(v.name) : null;
+
   const bits = [];
-  if (v.name) bits.push(v.name);
+  if (venueName) bits.push(venueName);
   if (cityName) bits.push(cityName);
   if (countryKo) bits.push(countryKo);
   if (df) bits.push(dt && dt !== df ? `${df} ~ ${dt}` : df);
@@ -427,7 +465,7 @@ function toRow(ev, cc) {
   const body =
       '<p>' + esc(bits.join(' · ')) + '</p>'
     + '<h3>알아두면 좋은 것</h3><table>'
-    + (v.name ? `<tr><th>공연장</th><td>${esc(v.name)}</td></tr>` : '')
+    + (venueName ? `<tr><th>공연장</th><td>${esc(venueName)}</td></tr>` : '')
     + (cityName ? `<tr><th>도시</th><td>${esc(cityName)}</td></tr>` : '')
     + `<tr><th>나라</th><td>${esc(countryKo)}</td></tr>`
     + (df ? `<tr><th>날짜</th><td>${df}${dt && dt !== df ? ' ~ ' + dt : ''}${timeText ? ' ' + timeText : ''}</td></tr>` : '')
@@ -443,14 +481,14 @@ function toRow(ev, cc) {
     region: '해외',
     country: countryKo,
     city: cityName,
-    title: ev.name || '',
+    title: fixQ(ev.name || ''),
     body,
     date_from: df,
     /* 하루 공연이면 끝나는 날을 <b>같은 날로</b> 채웁니다 — 위 mergeRuns 의
        주석과 같은 까닭입니다(진행중·예정 탭이 date_to 로 자릅니다) */
     date_to: dt || df,
     date_text: df ? (dt && dt !== df ? `${df} ~ ${dt}` : df) : null,
-    venue_name: v.name || null,
+    venue_name: venueName,
     thumb_url: pickImage(ev),
     link_url: ev.url || null,
     organizer: promoter,
