@@ -83,14 +83,20 @@
     </div>
   </div>
 
-  <!-- ★ 2026-08-14 · 지역 탭 (파트너 요청) — 국내와 해외를 가릅니다.
-         해외 공연 791건이 국내 1,011건과 날짜순으로 섞여, 정작 갈 수 있는
-         공연이 뒤로 밀렸습니다. 내용은 board.js 가 cfg.regionTabs 를 보고
-         채웁니다. 날짜 탭과 <b>함께</b> 걸립니다. -->
-  <div class="board-regiontabs"></div>
-
-  <!-- 날짜 탭 — 내용은 board.js 가 cfg.dateTabs 를 보고 채웁니다 -->
-  <div class="board-datetabs"></div>
+  <!-- ★ 2026-08-14 · 거르개 <b>한 줄</b> — 지역과 기간을 세로선으로 가릅니다
+         ─────────────────────────────────────────────────────────────
+         처음에는 두 줄로 두었는데 파트너가 「정리해 달라」 하셨습니다.
+         두 줄이면 「어느 쪽이 먼저인가」를 생각하게 됩니다 — 실제로는
+         두 조건이 <b>함께</b> 걸리는데 서로 배타적인 것처럼 읽힙니다.
+         모바일에서는 목록 첫 줄이 화면 밖으로 밀리기도 했습니다.
+       ▶ 한 줄에 담고 사이에 가는 세로선을 둡니다. 줄을 나누는 대신
+         선 하나로 갈래를 표시하는 것입니다.
+       ★ 안쪽 두 칸은 board.js 가 cfg.regionTabs · cfg.dateTabs 를 보고
+         채웁니다. 순서를 바꾸려면 이 두 줄의 자리를 바꾸면 됩니다. -->
+  <div class="board-filterbar">
+    <div class="board-regiontabs"></div>
+    <div class="board-datetabs"></div>
+  </div>
 
   <div class="board-count pdb-count">전체 <b>0</b>건</div>
   <div class="board-list"></div>
@@ -162,15 +168,17 @@
          ★ 값은 region 칸에 담긴 그대로 씁니다. 빈 값은 「거르지 않음」. */
       regionTabs:{
         def:'국내',
+        /* ★ 「전체」가 두 묶음에 다 있으면 어느 전체인지 헷갈립니다.
+             지역은 <b>무엇을 합친 것인지</b> 그 자리에서 보이게 적습니다. */
         tabs:[{value:'국내', label:'국내'},
               {value:'해외', label:'해외'},
-              {value:'',     label:'전체'}]
+              {value:'',     label:'국내+해외'}]
       },
       dateTabs:{
         col:'date_to', def:'upcoming',
         tabs:[{value:'upcoming', label:'진행중·예정', dir:'asc'},
               {value:'past',     label:'지난 공연',   dir:'desc'},
-              {value:'all',      label:'전체',        dir:'desc'}]
+              {value:'all',      label:'전체 기간',   dir:'desc'}]
       },
       /* 공연은 「무엇을·언제·어디서」 가 한눈에 보여야 하므로
          포스터와 일시·장소를 함께 보여 주는 모양을 씁니다 (시안 04_공연정보) */

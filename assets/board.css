@@ -27,8 +27,29 @@
        빈 여백이 생기지 않게 하려는 것입니다. */
 .board-regiontabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px 2px}
 .board-regiontabs:empty{display:none;margin:0}
-/* 지역 탭이 있는 화면에서는 날짜 탭의 위 여백을 두지 않습니다 */
-.board-regiontabs + .board-datetabs{margin-top:0}
+
+/* ══ 거르개 한 줄 (2026-08-14 · 파트너 요청) ═══════════════════════
+   ★ 지역 묶음과 기간 묶음을 <b>한 줄</b>에 담고 사이에 가는 세로선을
+     둡니다. 두 줄로 두면 「어느 쪽이 먼저인가」를 생각하게 되는데,
+     실제로는 두 조건이 함께 걸립니다.
+   ★ 좁은 화면에서는 <b>줄이 저절로 감깁니다.</b> 그때는 세로선이
+     어색하므로 감춥니다(아래 720px 규칙).
+   ★ 이 상자 안에서는 안쪽 두 칸의 아래 여백을 없앱니다 — 여백은
+     이 상자가 한 번만 갖습니다. */
+.board-filterbar{display:flex;align-items:center;flex-wrap:wrap;
+  gap:6px 14px;margin:0 0 18px 2px}
+.board-filterbar > .board-regiontabs,
+.board-filterbar > .board-datetabs{margin:0}
+/* 가는 세로선 — 지역 묶음 뒤에 둡니다.
+   ★ 두 칸이 <b>모두 채워졌을 때만</b> 그립니다(:empty 로 가립니다) */
+.board-filterbar > .board-regiontabs:not(:empty) + .board-datetabs::before{
+  content:"";flex:0 0 auto;width:1px;height:18px;margin:0 8px 0 0;
+  background:var(--line-2,#e4ded2);border-radius:1px}
+@media (max-width:720px){
+  /* 줄이 감기면 세로선이 엉뚱한 자리에 놓입니다 — 감춥니다 */
+  .board-filterbar{gap:8px 10px}
+  .board-filterbar > .board-regiontabs:not(:empty) + .board-datetabs::before{display:none}
+}
 .board-cat-tab{font-family:var(--display);font-size:14px;font-weight:600;color:var(--text-3);background:none;border:1px solid var(--line-2);border-radius:999px;padding:7px 16px;cursor:pointer;transition:all .15s ease}
 .board-cat-tab:hover{color:var(--text);border-color:var(--text-3)}
 .board-cat-tab.on{color:#fff;background:var(--violet-2);border-color:var(--violet-2)}
