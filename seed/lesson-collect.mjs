@@ -362,7 +362,13 @@ function blocked(title) {
    ★ 두 가지로 봅니다 — 제목의 #shorts 표시, 그리고 <b>3분 미만</b>. */
 function isShort(v) {
   if (/#shorts?\b/i.test(String(v.title || ''))) return true;
-  if (v.sec && v.sec < 180) return true;
+  /* ★ 2026-08-14 · 3분 → <b>6분</b> 으로 올렸습니다
+       「Hough: Pedalling Techniques In Liszt's …」가 <b>4분</b>이었습니다.
+       마스터클래스는 학생이 연주하고 스승이 짚어 주는 자리라 그렇게
+       짧을 수 없습니다 — 4분짜리는 발췌·토막입니다.
+     ★ 「공개레슨」은 짧을 수 있지만(요령 하나만 다루는 강의) 그런 것은
+       레슨:ON 보다 유틸리티 쪽 성격이라 여기서는 함께 막습니다. */
+  if (v.sec && v.sec < 360) return true;
   return false;
 }
 
@@ -519,11 +525,13 @@ async function fromSearch(q) {
 }
 
 /* ── 담을 모양으로 ──────────────────────────────────────── */
-function toRow(v, sc) {
+function toRow(v, sc, memberId) {
   const min = v.sec ? Math.round(v.sec / 60) : null;
   const src = v.channel || '';
   return {
-    /* member_id · instructor_id 는 비웁니다 — 사람이 올린 것이 아닙니다 */
+    /* ★ 올린 사람 — 관리자 계정입니다(위 adminId 주석 참고).
+         instructor_id 는 비웁니다 — 우리 강사가 아니라 남의 공개 영상입니다. */
+    member_id: memberId,
     kind: 'vod',
     tab: sc.tab,
     status: 'draft',                /* ★ 검수 대기. 아무에게도 보이지 않습니다 */
@@ -548,6 +556,27 @@ function toRow(v, sc) {
     credit_url: 'https://www.youtube.com/watch?v=' + v.video_id,
     price: 0,
   };
+}
+
+/* ── 담는 사람(member_id) 찾기 ─────────────────────────────
+   ★ 2026-08-14 · <b>member_id 는 비울 수 없는 칸입니다</b> (실행에서 드러남)
+     ─────────────────────────────────────────────────────────────
+     사람이 올린 것이 아니니 비워 두었는데 표가 거부했습니다 —
+       null value in column "member_id" … violates not-null constraint
+     레슨은 「누가 올렸나」가 있어야 하는 자료입니다(등록·수정 권한이
+     그것으로 갈립니다).
+   ▶ <b>관리자 계정</b>을 올린 사람으로 둡니다. 자동수집한 것이니
+     관리자가 들여온 것으로 보는 편이 뜻에 맞고, 어드민에서 고치거나
+     지울 수 있습니다(source='curated' 로 구분됩니다).
+   ★ 번호를 코드에 적어 두지 않습니다 — is_admin 으로 찾습니다.
+     계정이 바뀌어도 스크립트를 고칠 일이 없습니다.
+   ★ 환경변수 OC_ADMIN_ID 를 주면 그것을 먼저 씁니다(여러 관리자가
+     있을 때 어느 계정으로 담을지 정하고 싶을 때). */
+async function adminId() {
+  if (process.env.OC_ADMIN_ID) return process.env.OC_ADMIN_ID;
+  const rows = await sb('members?select=id,name&is_admin=is.true&order=created_at.asc&limit=1');
+  if (!Array.isArray(rows) || !rows.length) return null;
+  return rows[0].id;
 }
 
 /* ── 이미 있는 것은 건너뜁니다 ──────────────────────────── */
@@ -596,6 +625,20 @@ async function save(rows) {
   console.log(`   검색   : ${SEARCH ? '켬 (보조)' : '끔'}`);
   console.log(`   담기   : ${SAVE ? '예 (--save)' : '아니오 — 세어만 봅니다'}`);
   console.log('');
+
+  /* ★ 담기 전에 <b>먼저</b> 확인합니다 — 백오십 개를 다 모은 뒤
+     저장에서 실패하면 유튜브 호출을 헛되게 씁니다. */
+  let MEMBER = null;
+  if (SAVE) {
+    MEMBER = await adminId();
+    if (!MEMBER) {
+      console.error('관리자 계정을 찾지 못했습니다 (members.is_admin = true 인 줄이 없습니다).');
+      console.error('환경변수 OC_ADMIN_ID 로 회원 번호를 직접 주실 수도 있습니다.');
+      process.exit(1);
+    }
+    console.log(`   담는 사람 : 관리자 계정 (${MEMBER})`);
+    console.log('');
+  }
 
   const have = await existingIds();
   console.log(`   이미 담긴 영상 ${have.size}개는 건너뜁니다`);
@@ -700,7 +743,7 @@ async function save(rows) {
     return;
   }
 
-  const rows = all.map(({ v, sc }) => toRow(v, sc));
+  const rows = all.map(({ v, sc }) => toRow(v, sc, MEMBER));
   const n = await save(rows);
   console.log('');
   console.log(`   ▶ 담았습니다 — ${n}개 (모두 준비중 · 검수 대기)`);
