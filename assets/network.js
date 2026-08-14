@@ -330,7 +330,11 @@
     if (needH !== G.H || needW !== G.W) {
       G.H = needH;
       G.W = needW;
-      if (G.svg) G.svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.H);
+      if (G.svg) {
+        G.svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.H);
+        G.svg.setAttribute('width', String(G.W));
+        G.svg.setAttribute('height', String(G.H));
+      }
     }
 
     Object.keys(byDepth).forEach(function (d) {
@@ -460,6 +464,12 @@
     svg.setAttribute('class', 'ocn-svg');
     svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.H);
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    /* ★ 2026-08-14 · 픽셀 크기를 <b>함께</b> 적습니다.
+         좁은 화면에서 「줄이지 않고 밀어 보기」로 두려면 width:auto 가
+         되는데, SVG 는 viewBox 만 있으면 제 크기를 모릅니다(0 이 됩니다).
+         넓은 화면에서는 CSS 의 width:100% 가 이 값을 덮으므로 해가 없습니다. */
+    svg.setAttribute('width', String(G.W));
+    svg.setAttribute('height', String(G.H));
 
     // 아주 옅은 그림자 · 동그라미가 배경에서 살짝 떠 보이게 합니다.
     var defs = document.createElementNS(ns, 'defs');
@@ -691,7 +701,12 @@
       + '.ocn-wrap{margin-top:12px;border:1px solid #e8eaee;border-radius:14px;overflow:hidden;'
       +   'background:radial-gradient(120% 90% at 50% 0%,#fdfdfe 0%,#f6f7f9 100%);'
       +   'box-shadow:0 1px 3px rgba(15,23,42,.05)}'
-      + '.ocn-svg{display:block;width:100%;height:auto;touch-action:none}'
+      /* ★ 2026-08-14 · width 를 <b>!important</b> 로 못박습니다.
+           SVG 에 픽셀 크기(width="1280")를 붙였더니 넓은 화면에서 그 값이
+           이겨 그림이 1296px 로 나왔습니다(창보다 넓어짐).
+           픽셀 크기는 <b>좁은 화면에서만</b> 쓸 것이므로, 기본은 100% 로
+           못박고 좁은 화면 규칙에서 auto 로 풀어 줍니다. */
+      + '.ocn-svg{display:block;width:100% !important;height:auto;touch-action:none}'
       // 줄 · 사제는 또렷하게, 문헌은 점선으로 물러나게
       + '.ocn-edge{fill:none;stroke-linecap:round;stroke:var(--ocn-edge,#d8d5e2);stroke-width:1.1;transition:stroke .12s,stroke-width .12s}'
       + '.ocn-edge.is-teach{stroke:var(--ocn-teach,#bdb4d2);stroke-width:1.5}'
@@ -734,10 +749,41 @@
       + '.ocn-mbody{flex:1;min-height:0;overflow:auto;padding:8px 12px 12px}'
       + '.ocn-mbody .ocn-wrap{margin-top:4px;border:0;box-shadow:none;border-radius:10px}'
       + '.ocn-loading{padding:64px 0;text-align:center;color:#8a9099;font-size:13px}'
+      /* 밀어 보기 안내 — 넓은 화면에서는 감춥니다(좁은 화면 규칙이 뒤에서 켭니다).
+         ★ 이 줄이 <b>뒤에</b> 있으면 좁은 화면 규칙을 덮어 버립니다 —
+           실측에서 안내가 안 보여 잡았습니다. */
+      + '.ocn-mhint{display:none}'
       + '@media (max-width:640px){.ocn-label{font-size:11.5px;stroke-width:3.6px}'
       +   '.ocn-bar{font-size:11px;gap:10px}'
       +   '.ocn-ov{padding:10px}.ocn-modal{width:100%;max-height:96vh}'
-      +   '.ocn-msub{display:none}}';
+      +   '.ocn-msub{display:none}'
+
+      /* ★★ 2026-08-14 · 좁은 화면에서 <b>그림이 거의 안 보였습니다</b> (파트너 지적) ★★
+         ─────────────────────────────────────────────────────────────
+         「관계망 크게 보기」를 눌러도 390px 화면에서는 글자가 읽히지
+         않았습니다. 큰 화면용으로 <b>1280×660</b> 으로 그린 그림을
+         width:100% 로 밀어 넣으니 <b>3분의 1</b>로 줄어든 것입니다.
+         (1280 → 370px · 12px 글자가 3.5px 이 됩니다)
+
+       ▶ 좁은 화면에서는 <b>줄이지 않습니다.</b> 제 크기로 두고 옆으로
+         밀어 보게 합니다. 지도는 원래 한눈에 다 담기지 않는 것이고,
+         읽히지 않는 그림은 없는 것과 같습니다.
+       ★ 상자에 -webkit-overflow-scrolling 을 주어 손가락으로 부드럽게
+         밀리게 합니다.
+       ★ touch-action 을 auto 로 되돌립니다 — 큰 화면에서는 점을 끌어
+         옮기려고 none 으로 두었는데, 좁은 화면에서는 그것 때문에
+         <b>밀어 볼 수조차 없습니다.</b> 좁은 화면에서는 「끌어 옮기기」
+         보다 「밀어서 보기」가 먼저입니다. */
+      +   '.ocn-mbody{overflow:auto;-webkit-overflow-scrolling:touch}'
+      /* ★ 상자 높이를 <b>화면에 맞춰 자릅니다</b> — 그림이 660px 이라
+           그대로 두면 세로로 화면을 다 먹고 아래 범례가 안 보입니다.
+           위아래로도 밀어 보게 둡니다(지도는 그러는 것이 자연스럽습니다). */
+      +   '.ocn-mbody .ocn-wrap{overflow:auto;-webkit-overflow-scrolling:touch;'
+      +     'max-height:62vh;overscroll-behavior:contain}'
+      +   '.ocn-mbody .ocn-svg{width:auto !important;max-width:none;height:auto;touch-action:auto}'
+      /* 밀어 볼 수 있다는 것을 알려 주는 한 줄 */
+      +   '.ocn-mhint{display:block !important;width:100%;padding:6px 2px 0;font-size:11.5px;color:#8a9099}'
+      + '}';
     var st = document.createElement('style');
     st.id = 'ocn-css';
     st.textContent = css;
@@ -823,6 +869,7 @@
         '<div class="ocn-mhead">' +
           '<b class="ocn-mtitle">관계 지도</b>' +
           '<span class="ocn-msub"></span>' +
+          '<span class="ocn-mhint">옆으로 밀어서 보십시오 · 점을 누르면 이어서 펼쳐집니다</span>' +
           '<button type="button" class="ocn-close" aria-label="닫기">✕</button>' +
         '</div>' +
         '<div class="ocn-mbody"><div class="ocn-loading">불러오는 중…</div></div>' +
