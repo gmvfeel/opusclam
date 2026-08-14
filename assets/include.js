@@ -554,6 +554,21 @@
     /* 좁은 화면은 그대로 둡니다 */
     if (window.innerWidth <= 880) { inner.style.transform = ''; return; }
 
+    /* ★ 2026-08-14 · <b>한국어가 아닐 때는 맞추지 않습니다</b> (파트너 지적 —
+         영문·일문에서 정보SPOT 하위 목록이 엉뚱한 곳에 열렸습니다)
+       ─────────────────────────────────────────────────────────────
+       영문은 항목 글자가 길어 다섯 개가 한 줄에 들어가지 않고 <b>두 줄로
+       감깁니다.</b> 두 줄이 된 목록을 특정 항목 기준으로 옮기면 목록 전체가
+       한쪽으로 쏠립니다. 아래 「여러 줄이면 물러나기」가 있지만, 목록이
+       열리기 전에 재면 줄 수를 알 수 없어 걸리지 않는 경우가 있었습니다.
+     ▶ 다른 말에서는 <b>화면 가운데 정렬</b>로 둡니다(assets/i18n.js 가
+       --dd-nudge 도 0 으로 맞춥니다). 언어마다 자리를 다시 재는 것은
+       끝이 없습니다. */
+    if ((document.documentElement.getAttribute('data-oc-lang') || 'ko') !== 'ko') {
+      inner.style.transform = '';
+      return;
+    }
+
     var kids = [], c = inner.children;
     for (i = 0; i < c.length; i++) if (c[i].tagName === 'A') kids.push(c[i]);
     if (!kids.length) return;
@@ -563,6 +578,9 @@
 
     var t = top.getBoundingClientRect();
     var g = target.getBoundingClientRect();
+    /* 아직 자리를 잡지 않았으면(폭 0) 재지 않습니다 — 그대로 재면
+       0 을 기준으로 옮겨 목록이 화면 밖으로 튑니다 */
+    if (!g.width || !t.width) { inner.style.transform = ''; return; }
     var f = kids[0].getBoundingClientRect();
     var l = kids[kids.length - 1].getBoundingClientRect();
 

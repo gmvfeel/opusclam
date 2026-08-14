@@ -873,7 +873,17 @@
         'html[data-oc-lang] .board-main{grid-template-rows:auto 1fr}' +
         'html[data-oc-lang] .board-main .board-ad{align-self:stretch;height:auto;' +
         'aspect-ratio:auto;min-height:310px}' +
-      '}';
+      '}' +
+      /* ★ 2026-08-14 · 큰 메뉴 <b>하위 목록의 자리</b> (파트너 지적 — 정보SPOT
+           하위 메뉴가 영문·일문에서 엉뚱한 곳에 열렸습니다)
+         ─────────────────────────────────────────────────────────────
+         style.css 는 메뉴마다 --dd-nudge 를 <b>손으로 잰 px</b> 로 갖고
+         있습니다(정보SPOT −69px · SHOPPING −322px …). 그 값은 <b>한국어
+         글자 폭</b>에 맞춘 것이라, 「정보SPOT → Info SPOT」 처럼 글자가
+         바뀌면 그만큼 어긋납니다. 언어마다 다시 재는 것은 끝이 없습니다.
+       ▶ 다른 말에서는 <b>옮기지 않습니다</b>(0). 화면 가운데를 기준으로
+         고르게 놓입니다. DATABASE 는 왼쪽 정렬이라 그대로 둡니다. */
+      'html[data-oc-lang] .dropdown-inner{--dd-nudge:0px}';
     var st = document.createElement('style');
     st.id = 'oc-i18n-css';
     st.textContent = css;
