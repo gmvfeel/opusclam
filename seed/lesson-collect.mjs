@@ -71,7 +71,10 @@ const args = Object.fromEntries(
 );
 const SAVE     = !!args.save;
 const SEARCH   = !!args.search;
-const PER      = Number(args.per || 15);
+/* ★ 2026-08-14 · 15 → <b>50</b> (한 번에 받을 수 있는 최대치)
+     학교 채널은 하루에도 여러 개 올려서 최신 15개에는 마스터클래스가
+     들어오지 않았습니다. 50개까지 받아도 <b>호출은 그대로 1회</b>입니다. */
+const PER      = Number(args.per || 50);
 const MIN      = Number(args.min || 55);
 const CH_LIMIT = Number(args.channels || 0);
 const LIST     = String(args.list || '');
@@ -101,35 +104,55 @@ if (!YT_KEY) {
      적어 두십시오 — 이 스크립트가 번호를 찾아 로그에 찍습니다.
    ★ 새 채널을 더할 때는 이 목록에 한 줄만 넣으면 됩니다.
    ============================================================ */
+/* ============================================================
+   ① 재생목록 (PLAYLISTS) — <b>가장 정확한 길</b>
+   ------------------------------------------------------------
+   ★ 왜 재생목록인가 (2026-08-14 · 세 번째 실행에서 배운 것)
+     채널 최신 15개를 훑었더니 열두 채널에서 <b>열 개</b>만 나왔습니다.
+     버린 목록을 눈으로 보니 잣대가 틀린 것이 아니었습니다 —
+     학교 채널의 최근 영상이 졸업식·오페라 공연·Shorts·연주 실황이라
+     <b>마스터클래스가 그 안에 없었습니다.</b>
+   ▶ 학교들은 마스터클래스를 <b>재생목록으로 묶어</b> 둡니다. 그 목록만
+     읽으면 거를 것이 거의 없고, 호출도 채널 훑기와 같습니다(1~3회).
+   ★ 재생목록 번호(PL…) 찾는 법
+     유튜브에서 그 채널 → 재생목록 → 마스터클래스 목록을 열면
+     주소창에 list=PL… 로 나옵니다. 그것을 아래에 한 줄 넣으십시오.
+   ★ 점수는 그대로 매깁니다 — 재생목록에도 예고편이 섞일 수 있습니다.
+     다만 <b>제목 문턱은 낮춥니다</b>(아래 fromPlaylist 참고) —
+     목록 자체가 「마스터클래스」라고 말하고 있으므로 제목에 그 낱말이
+     없어도 됩니다.
+   ============================================================ */
+const PLAYLISTS = [
+  /* ★ 이름에 <b>악기를 적어 두십시오</b> — 제목·설명에 악기가 없는
+       영상(「Chopin: Ballade No.4」)의 분야를 이 이름으로 알아냅니다. */
+  { id: 'PLZfH5K5Yr2DdRZyP58S9kg2gbM0DmOUld', trust: 3,
+    name: 'RCM piano masterclass — Stephen Hough', tab: 'master' },
+  /* ★ 여기에 한 줄씩 더하시면 됩니다. 보기 —
+       { id: 'PL…', trust: 3, name: '줄리아드 마스터클래스', tab: 'master' },
+       { id: 'PL…', trust: 3, name: '카네기홀 SongStudio',   tab: 'master' },
+     ★ tab 은 'master'(마스터클래스) 또는 'open'(공개레슨)입니다.
+       목록이 강의·워크숍이면 'open' 으로 두십시오. */
+];
+
+/* ============================================================
+   ② 채널 훑기 (CHANNELS) — 보조
+   ------------------------------------------------------------
+   재생목록이 없는 곳, 또는 재생목록에 안 담은 새 영상을 잡습니다.
+   ★ handle(@이름)보다 번호(UC…)가 튼튼합니다 — 유튜브가 handle 을
+     바꾸는 일이 있습니다(첫 실행에서 여섯 곳을 못 찾았습니다).
+   ============================================================ */
 const CHANNELS = [
-  /* 음악학교 · 음악원
-     ★ 2026-08-14 · 첫 실행에서 <b>여섯 곳을 찾지 못했습니다.</b>
-       handle(@이름)은 유튜브가 바꾸는 일이 있어 <b>번호(UC…)를 적는 편이
-       튼튼합니다.</b> 번호를 알면 id 로 적고, 모르면 handle 로 두십시오
-       (이 스크립트가 번호를 찾아 씁니다).
-     ★ 번호를 알아내는 방법 — 그 채널 화면에서 아무 영상이나 열고
-       주소창의 채널 링크를 보면 /channel/UC… 로 나옵니다. */
   { id: 'UCjUQsk6a-IvdSeUboCifDxQ', trust: 3, name: 'Royal College of Music' },
   { id: 'UC1q29EwuKfkZaD0G0mNw0aQ', trust: 3, name: 'Manhattan School of Music' },
-  { handle: '@juilliardschool',            trust: 3, name: 'The Juilliard School' },
-  { handle: '@CurtisInstitute',            trust: 3, name: 'Curtis Institute of Music' },
-  { handle: '@royalacademyofmusic',        trust: 3, name: 'Royal Academy of Music' },
-  { handle: '@guildhallschool',            trust: 3, name: 'Guildhall School' },
-
-  /* 축제 · 아카데미 */
-  { handle: '@verbierfestival',            trust: 3, name: 'Verbier Festival' },
-  { handle: '@menuhincompetition',         trust: 3, name: 'Menuhin Competition' },
-
-  /* 연주자 · 단체 · 공연장 */
-  { handle: '@SarahWillisHorn',            trust: 2, name: 'Sarah Willis' },
-  { handle: '@wigmorehall',                trust: 3, name: 'Wigmore Hall' },
-  { handle: '@carnegiehall',               trust: 3, name: 'Carnegie Hall' },
-  { handle: '@tonebase',                   trust: 2, name: 'tonebase' },
-
-  /* ★ 첫 실행에서 못 찾은 곳은 <b>뺐습니다</b> — 헛되게 호출만 씁니다.
-       주소를 확인하신 뒤 번호로 다시 넣으시면 됩니다.
-         New England Conservatory · Colburn School ·
-         Tchaikovsky Competition · Cross-Eyed Pianist */
+  { handle: '@juilliardschool',     trust: 3, name: 'The Juilliard School' },
+  { handle: '@CurtisInstitute',     trust: 3, name: 'Curtis Institute of Music' },
+  { handle: '@royalacademyofmusic', trust: 3, name: 'Royal Academy of Music' },
+  { handle: '@guildhallschool',     trust: 3, name: 'Guildhall School' },
+  { handle: '@carnegiehall',        trust: 3, name: 'Carnegie Hall' },
+  { handle: '@wigmorehall',         trust: 3, name: 'Wigmore Hall' },
+  { handle: '@verbierfestival',     trust: 3, name: 'Verbier Festival' },
+  { handle: '@SarahWillisHorn',     trust: 2, name: 'Sarah Willis' },
+  { handle: '@tonebase',            trust: 2, name: 'tonebase' },
 ];
 
 /* 검색으로도 찾을 때 쓰는 낱말 (--search) */
@@ -273,10 +296,24 @@ function score(v, ch) {
        <b>가장 또렷한 신호는 반드시 요구</b>해야 합니다. */
   const isMaster = RE_MASTER.test(title);
   const isOpen   = RE_OPEN.test(title);
-  if (!isMaster && !isOpen) return { s: 0, why: ['제목에 마스터클래스·공개레슨 낱말이 없음'], field: null, tab: 'master' };
-  s += 20; why.push('제목20');
+  if (!isMaster && !isOpen) {
+    /* ★ 재생목록에서 온 것은 <b>목록이 이미 말해 줍니다</b> — 제목에
+       그 낱말이 없어도 통과시킵니다(「Brahms: Intermezzo …」처럼
+       곡 이름만 적힌 것이 많습니다). */
+    if (!v._fromList) {
+      return { s: 0, why: ['제목에 마스터클래스·공개레슨 낱말이 없음'], field: null, tab: 'master' };
+    }
+    s += 20; why.push('목록20');
+  } else {
+    s += 20; why.push('제목20');
+  }
 
-  const field = fieldOf(title, desc);
+  /* ★ 재생목록에서 온 것은 <b>목록 이름</b>도 힌트가 됩니다.
+       「Stephen Hough <b>piano</b> Masterclasses」 목록의 「Chopin:
+       Ballade No.4」는 제목·설명에 악기가 없어 기타로 갔습니다.
+       목록 이름을 마지막 힌트로 봅니다(제목 → 설명 → 목록 이름). */
+  const field = fieldOf(title, desc)
+    || (v._listName ? fieldOf(v._listName, '') : null);
   if (field) { s += 12; why.push('분야12'); }
 
   const sec = v.sec || 0;
@@ -288,11 +325,23 @@ function score(v, ch) {
     s += 8; why.push('작품8');
   }
 
-  return { s, why, field, tab: isOpen && !isMaster ? 'open' : 'master' };
+  /* 탭 — 재생목록이 정해 준 것이 우선입니다 */
+  const tab = v._tab ? v._tab : (isOpen && !isMaster ? 'open' : 'master');
+  return { s, why, field, tab };
 }
 
 function blocked(title) {
   return RE_BLOCK.some((re) => re.test(title));
+}
+
+/* ★ 2026-08-14 · Shorts 는 아예 받지 않습니다
+     tonebase Guitar 채널 최신 15개 가운데 <b>열네 개</b>가 Shorts 였습니다.
+     짧은 토막은 레슨이 아니고, 목록만 어지럽힙니다.
+   ★ 두 가지로 봅니다 — 제목의 #shorts 표시, 그리고 <b>3분 미만</b>. */
+function isShort(v) {
+  if (/#shorts?\b/i.test(String(v.title || ''))) return true;
+  if (v.sec && v.sec < 180) return true;
+  return false;
 }
 
 /* ── 채널 번호 찾기 ─────────────────────────────────────── */
@@ -315,6 +364,58 @@ async function resolveChannel(ch) {
     }
   } catch (e) { /* 아래에서 알립니다 */ }
   return null;
+}
+
+/* ── 재생목록에서 읽기 ─────────────────────────────────────
+   ★ 채널 훑기와 거의 같습니다. 다른 점은 <b>제목 문턱을 두지 않는</b>
+     것입니다 — 목록 자체가 「마스터클래스」라고 말하고 있습니다.
+   ★ 한 쪽에 50개까지 옵니다. 더 있으면 다음 쪽으로 이어 받습니다
+     (nextPageToken). 쪽마다 videos 를 한 번 더 부르므로 쪽당 2 씩 듭니다. */
+async function fromPlaylist(pl) {
+  const out = [];
+  let token = '';
+  for (let page = 0; page < 4; page++) {          /* 최대 200개까지 */
+    let j;
+    try {
+      const params = { part: 'contentDetails', playlistId: pl.id, maxResults: '50' };
+      if (token) params.pageToken = token;
+      j = await yt('playlistItems', params);
+    } catch (e) {
+      console.log(`   ✘ ${pl.name} — ${e.message.slice(0, 80)}`);
+      break;
+    }
+    const ids = (j.items || []).map((x) => x.contentDetails && x.contentDetails.videoId).filter(Boolean);
+    if (!ids.length) break;
+
+    let detail = {};
+    try {
+      const d = await yt('videos', { part: 'contentDetails,snippet', id: ids.join(',') });
+      for (const v of (d.items || [])) detail[v.id] = v;
+    } catch (e) { /* 길이 점수만 못 받습니다 */ }
+
+    for (const vid of ids) {
+      const d = detail[vid] || {};
+      const sn = d.snippet || {};
+      out.push({
+        video_id: vid,
+        title: sn.title || '',
+        desc: sn.description || '',
+        sec: isoSec(d.contentDetails && d.contentDetails.duration),
+        thumb: (sn.thumbnails && (sn.thumbnails.maxres || sn.thumbnails.high || sn.thumbnails.medium) || {}).url || null,
+        channel: sn.channelTitle || pl.name,
+        channel_id: sn.channelId || '',
+        published: sn.publishedAt || null,
+        _ch: { trust: pl.trust, name: pl.name },
+        _fromList: true,                 /* ★ 제목 문턱을 건너뜁니다 */
+        _listName: pl.name || '',        /* 분야 힌트로 씁니다 */
+        _tab: pl.tab || 'master',
+      });
+    }
+    token = j.nextPageToken || '';
+    if (!token) break;
+    await sleep(200);
+  }
+  return out;
 }
 
 /* ── 채널 훑기 ──────────────────────────────────────────── */
@@ -466,6 +567,7 @@ async function save(rows) {
 /* ── 실행 ───────────────────────────────────────────────── */
 (async () => {
   console.log('══ 레슨:ON — 마스터클래스 · 공개레슨 모으기 ══');
+  console.log(`   재생목록: ${PLAYLISTS.length}개`);
   console.log(`   채널   : ${CH_LIMIT ? CH_LIMIT + '곳만' : CHANNELS.length + '곳'}`);
   console.log(`   채널마다: 최신 ${PER}개`);
   console.log(`   점수 기준: ${MIN}점 이상`);
@@ -477,10 +579,34 @@ async function save(rows) {
   console.log(`   이미 담긴 영상 ${have.size}개는 건너뜁니다`);
   console.log('');
 
-  const list = CH_LIMIT ? CHANNELS.slice(0, CH_LIMIT) : CHANNELS;
   const all = [];
   const seen = new Set();
 
+  /* ── ① 재생목록 (가장 정확) ── */
+  if (PLAYLISTS.length) {
+    console.log('   ── 재생목록 ──');
+    for (const pl of PLAYLISTS) {
+      const vids = await fromPlaylist(pl);
+      let keep = 0, drop = 0;
+      for (const v of vids) {
+        if (seen.has(v.video_id)) continue;
+        seen.add(v.video_id);
+        if (have.has(v.video_id)) { drop++; continue; }
+        if (isShort(v)) { drop++; if (LIST === 'drop') console.log(`      버림(짧음) ${v.title}`); continue; }
+        if (blocked(v.title)) { drop++; if (LIST === 'drop') console.log(`      버림(제목) ${v.title}`); continue; }
+        const sc = score(v, v._ch);
+        if (sc.s < MIN) { drop++; if (LIST === 'drop') console.log(`      버림(${sc.s}점) ${v.title}`); continue; }
+        all.push({ v, sc }); keep++;
+      }
+      console.log(`   ${pl.name.slice(0, 44).padEnd(46)} 받음 ${String(vids.length).padStart(3)} · 담을 것 ${keep} · 버림 ${drop}`);
+      await sleep(200);
+    }
+    console.log('');
+  }
+
+  /* ── ② 채널 훑기 (보조) ── */
+  console.log('   ── 채널 훑기 ──');
+  const list = CH_LIMIT ? CHANNELS.slice(0, CH_LIMIT) : CHANNELS;
   for (const ch of list) {
     const vids = await fromChannel(ch);
     let keep = 0, drop = 0;
@@ -488,6 +614,7 @@ async function save(rows) {
       if (seen.has(v.video_id)) continue;
       seen.add(v.video_id);
       if (have.has(v.video_id)) { drop++; continue; }
+      if (isShort(v)) { drop++; if (LIST === 'drop') console.log(`      버림(짧음) ${v.title}`); continue; }
       if (blocked(v.title)) { drop++; if (LIST === 'drop') console.log(`      버림(제목) ${v.title}`); continue; }
       const sc = score(v, ch);
       if (sc.s < MIN) {
@@ -511,7 +638,7 @@ async function save(rows) {
       for (const v of vids) {
         if (seen.has(v.video_id) || have.has(v.video_id)) continue;
         seen.add(v.video_id);
-        if (blocked(v.title)) continue;
+        if (isShort(v) || blocked(v.title)) continue;
         const sc = score(v, null);       /* 채널 점수 0 — 나머지로 55점을 넘어야 합니다 */
         if (sc.s < MIN) continue;
         all.push({ v, sc }); keep++;
