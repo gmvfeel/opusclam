@@ -61,7 +61,7 @@
     (d.head || d.documentElement).appendChild(st);
   }
 
-  function setup(box) {
+  function setup(box, idx) {
     var ads = [];
     for (var i = 0; i < box.children.length; i++) {
       if (box.children[i].classList.contains('ad-slot')) ads.push(box.children[i]);
@@ -72,16 +72,37 @@
     if (ads.length === 1) { ads[0].classList.add('on'); return; }
 
     var every = parseInt(box.getAttribute('data-every'), 10) || 7000;
+
+    /* ★ 2026-08-14 · 자리마다 <b>시차를 둡니다</b> (파트너 요청)
+         A 자리와 B 자리가 같은 순간에 넘어가니 화면 두 곳이 함께 깜빡였습니다.
+         첫 넘김을 자리 순서만큼 늦추면 서로 엇갈려 조용해집니다.
+       ★ data-delay 로 직접 정할 수 있고, 없으면 <b>간격을 자리 수로 나눠</b>
+         스스로 흩습니다 — 자리가 셋이 되어도 고르게 엇갈립니다. */
+    var delay = parseInt(box.getAttribute('data-delay'), 10);
+    if (isNaN(delay)) delay = Math.round(every / 3) * (idx || 0);
+
     var at = Math.floor(Math.random() * ads.length);   /* 시작 장을 흩습니다 */
-    var timer = null;
+    var timer = null, first = null;
 
     function show(k) {
       at = (k + ads.length) % ads.length;
       for (var i = 0; i < ads.length; i++) ads[i].classList.toggle('on', i === at);
     }
     function next() { show(at + 1); }
-    function start() { stop(); timer = setInterval(next, every); }
-    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    /* 처음에는 시차만큼 기다린 뒤 넘기기 시작합니다.
+       (마우스가 지나간 뒤 다시 켤 때는 기다리지 않습니다 — 이미 흩어져 있습니다) */
+    function start(useDelay) {
+      stop();
+      if (useDelay && delay > 0) {
+        first = setTimeout(function () { first = null; next(); timer = setInterval(next, every); }, delay);
+      } else {
+        timer = setInterval(next, every);
+      }
+    }
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+      if (first) { clearTimeout(first); first = null; }
+    }
 
     show(at);
 
@@ -91,18 +112,18 @@
     } catch (e) {}
 
     box.addEventListener('mouseenter', stop);
-    box.addEventListener('mouseleave', start);
+    box.addEventListener('mouseleave', function () { start(false); });
     d.addEventListener('visibilitychange', function () {
-      if (d.hidden) stop(); else start();
+      if (d.hidden) stop(); else start(false);
     });
-    start();
+    start(true);
   }
 
   function run() {
     var boxes = d.querySelectorAll('.ad-rot');
     if (!boxes.length) return;      /* 광고 회전이 없는 화면 — 아무 일도 하지 않습니다 */
     injectCss();
-    for (var i = 0; i < boxes.length; i++) setup(boxes[i]);
+    for (var i = 0; i < boxes.length; i++) setup(boxes[i], i);
   }
 
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', run);
