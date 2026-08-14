@@ -324,7 +324,13 @@
        ★ 알약은 그대로 둡니다 — 데스크톱에서 「지금 어디에 있나」 를
          보여 주는 몫을 합니다. 풀다운만 놓지 않습니다. */
     var f = fileOf(location.pathname);
-    if (/-?write$/.test(f) || f === 'write') return;
+    /* ★ 2026-08-14 · <b>정보SPOT 글쓰기 일곱 화면이 새어 나왔습니다</b> (파트너 지적)
+         이름 규칙이 두 가지입니다 —
+           news-write · qna-write …        (write 가 <b>뒤</b>)
+           spot-write-concert · -festival … (write 가 <b>가운데</b>)
+         앞의 규칙만 보고 있어서 정보SPOT 일곱 화면에 풀다운이 그대로
+         놓였습니다. 이제 <b>write 가 이름 어디에 있어도</b> 잡습니다. */
+    if (/(^|-)write(-|$)/.test(f)) return;
 
     /* ★ <b>넓은 화면에서는 아예 만들지 않습니다.</b>
        (2026-08-04 · 파트너 지적)
