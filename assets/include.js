@@ -670,3 +670,18 @@
   s.defer = true;
   document.head.appendChild(s);
 })();
+
+/* 광고 자리 돌리개 싣기 — 2026-08-14
+   ★ 한 자리에 광고가 둘 이상이면 번갈아 보여 줍니다.
+     광고 회전이 없는 화면에서는 스스로 아무 일도 하지 않습니다
+     (.ad-rot 를 못 찾으면 곧바로 끝냅니다).
+   ★ 앞으로 C·D 배너(모든 화면 아래)에도 광고가 여럿 들어오면
+     마크업만 .ad-rot 로 감싸면 됩니다 — 화면을 고칠 일이 없습니다. */
+(function () {
+  if (window.__ocAdRotJs) return;
+  window.__ocAdRotJs = true;
+  var s = document.createElement('script');
+  s.src = '/assets/ad-rotate.js';
+  s.defer = true;
+  document.head.appendChild(s);
+})();

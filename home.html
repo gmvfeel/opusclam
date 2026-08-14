@@ -621,6 +621,10 @@
          단가를 매길 수 없습니다.
        start 로 두면 아래 min-height 값으로 고정됩니다. */
   .board-ad{grid-area:ad;align-self:start}
+  /* ★ 2026-08-14 · 광고 둘을 감싸는 상자(.ad-rot)가 격자 자리를 받습니다.
+       안쪽 <a> 들은 겹쳐 놓이므로 자리를 차지하지 않습니다. */
+  .ad-rot.board-ad{width:min(756px,100%);margin-left:auto;margin-right:auto;margin-top:8px}
+  .ad-rot.board-ad > .ad-slot{margin-top:0}
   @media(max-width:1080px){.board .wrap{grid-template-columns:1fr}.side{grid-column:1/-1;min-width:0}}
 
   /* ★ 2026-08-11 · 제목 아래 여백 16px → <b>11px</b>
@@ -1619,15 +1623,30 @@
              JPG 를 줍니다(picture) — 52KB 대 109KB 로 절반 이하입니다.
            ★ 자리표(ADVERTISEMENT 안내)는 지우지 않고 <b>바꿔 끼웠습니다</b>.
              다음 광고로 갈 때 이 묶음만 갈아 주시면 됩니다. -->
-    <a class="ad-slot board-ad has-img" href="https://lpstock.co.kr" target="_blank" rel="noopener"
-       aria-label="LPSTOCK.CO.KR — 중고 클래식 LP 거래 (새 창)">
-      <picture>
-        <source srcset="/assets/ads/lpstock-a-1512x620.webp" type="image/webp">
-        <img src="/assets/ads/lpstock-a-1512x620.jpg" width="1512" height="620"
-             loading="lazy" decoding="async"
-             alt="LPSTOCK.CO.KR — Used Classical Music LP Exchange">
-      </picture>
-    </a>
+    <!-- ★ 2026-08-14 · 이 자리에 광고가 <b>둘</b>이 되었습니다 —
+           7초마다 번갈아 보여 줍니다(assets/ad-rotate.js).
+           들어온 순간 무작위로 골라 시작하므로 두 광고의 노출이
+           고르게 나뉩니다. 셋째가 생기면 <a> 를 하나 더 넣으면 됩니다. -->
+    <div class="ad-rot board-ad" data-every="7000">
+      <a class="ad-slot board-ad has-img" href="https://lpstock.co.kr" target="_blank" rel="noopener"
+         aria-label="LPSTOCK.CO.KR — 중고 클래식 LP 거래 (새 창)">
+        <picture>
+          <source srcset="/assets/ads/lpstock-a-1512x620.webp" type="image/webp">
+          <img src="/assets/ads/lpstock-a-1512x620.jpg" width="1512" height="620"
+               loading="lazy" decoding="async"
+               alt="LPSTOCK.CO.KR — Used Classical Music LP Exchange">
+        </picture>
+      </a>
+      <a class="ad-slot board-ad has-img" href="https://wxn.co.kr/" target="_blank" rel="noopener"
+         aria-label="(주)윅슨어소시에이츠 — 디지털 서비스 그룹 (새 창)">
+        <picture>
+          <source srcset="/assets/ads/wixon-a-1512x620.webp" type="image/webp">
+          <img src="/assets/ads/wixon-a-1512x620.jpg" width="1512" height="620"
+               loading="lazy" decoding="async"
+               alt="the wixon associates inc. — Digital service group since 2002">
+        </picture>
+      </a>
+    </div>
     </div><!-- /board-main -->
 
     <!-- sidebar -->
