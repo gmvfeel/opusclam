@@ -367,7 +367,20 @@
     }
 
     sel.addEventListener('change', function () {
-      if (sel.value) location.href = sel.value;
+      if (!sel.value) return;
+      /* ★ 2026-08-14 · <b>말이 풀리던 것</b>을 고쳤습니다 (파트너 지적)
+           영문·일문 화면에서 이 고르개로 옮기면 한국어로 돌아왔습니다.
+           주소가 `/db/person.html` 처럼 <b>언어 없는 경로</b>였기 때문입니다
+           (링크 <a href> 는 assets/i18n.js 가 알아서 붙여 주는데,
+            고르개의 option 값은 그 손이 닿지 않습니다).
+         ▶ 옮기기 직전에 i18n 에게 물어 `/ja/db/person.html` 로 바꿉니다.
+           한국어에서는 그대로 돌려주므로 조건을 나눌 필요가 없습니다.
+           이미 언어가 붙어 있어도 두 번 붙지 않습니다. */
+      var to = sel.value;
+      try {
+        if (window.OCI18N && typeof OCI18N.url === 'function') to = OCI18N.url(to);
+      } catch (e) {}
+      location.href = to;
     });
 
     wrap.appendChild(sel);
