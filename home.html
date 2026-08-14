@@ -2416,6 +2416,80 @@ if('serviceWorker' in navigator){
   if(next)next.addEventListener('click',function(){step(-1);});
 })();
 
+/* ★★ 2026-08-14 · 빠른 아이콘 다섯 개를 <b>좌우로 오갑니다</b> (파트너 요청) ★★
+   ─────────────────────────────────────────────────────────────────
+   ★ 왜
+     좁은 화면에서 이 줄은 옆으로 밀어 보는 것인데, 셋만 보이고 <b>둘이
+     숨어 있다는 것을 알 수 없습니다.</b> 살짝 오가면 「더 있다」가 보입니다.
+
+   ★ 언제만 하나
+     · 좁은 화면(880px 아래)에서만 — 넓은 화면은 다섯 개가 다 보입니다
+     · <b>한국어에서만</b> (파트너 지시). 다른 말에서는 하지 않습니다.
+       판정은 html[data-oc-lang] 유무입니다 — 한국어는 그 표시가 붙지
+       않습니다(assets/i18n.js 는 한국어면 앞에서 끝냅니다).
+     · 화면에 <b>들어와 있을 때만</b> — 아래쪽에 있는데 도는 것은 뜻이
+       없고 배터리만 씁니다(IntersectionObserver).
+     · 움직임을 줄이는 설정이면 하지 않습니다.
+
+   ★ 손을 대면 <b>그만둡니다</b>
+     한 번 만지신 뒤에는 그 줄이 보시는 분의 것입니다. 다시 움직이면
+     읽는 중에 밀려 성가십니다. 그래서 되돌아오지 않습니다.
+
+   ★ 어떻게 오가나
+     양 끝에서 <b>2.4초 머물고</b> 부드럽게 움직입니다. 쉬지 않고
+     흐르면 눈이 따라가느라 도리어 읽기 어렵습니다. */
+(function(){
+  var box = document.querySelector('.quick .wrap');
+  if (!box) return;
+
+  /* 한국어가 아니면 하지 않습니다 */
+  if (document.documentElement.getAttribute('data-oc-lang')) return;
+  try {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  } catch (e) {}
+
+  var timer = null, dir = 1, touched = false, seen = false;
+  var WAIT = 2400;
+
+  function narrow(){ return window.innerWidth <= 880; }
+  function room(){ return box.scrollWidth - box.clientWidth; }
+
+  function step(){
+    if (touched || !seen || !narrow() || room() < 24) return;
+    var to = dir > 0 ? room() : 0;
+    try { box.scrollTo({ left: to, behavior: 'smooth' }); }
+    catch (e) { box.scrollLeft = to; }     /* 옛 브라우저 */
+    dir = -dir;
+  }
+  function start(){ stop(); timer = setInterval(step, WAIT); }
+  function stop(){ if (timer) { clearInterval(timer); timer = null; } }
+
+  /* 손을 대면 그만둡니다 */
+  ['pointerdown','touchstart','wheel','keydown'].forEach(function(ev){
+    box.addEventListener(ev, function(){ touched = true; stop(); }, { passive: true });
+  });
+
+  /* 화면에 들어와 있을 때만 돕니다 */
+  if (window.IntersectionObserver) {
+    new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        seen = e.isIntersecting;
+        if (seen && !touched) start(); else stop();
+      });
+    }, { threshold: 0.35 }).observe(box);
+  } else {
+    seen = true; start();
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) stop(); else if (seen && !touched) start();
+  });
+  window.addEventListener('resize', function(){
+    if (!narrow()) { stop(); box.scrollLeft = 0; }
+    else if (seen && !touched) start();
+  });
+})();
+
 /* Dark / White theme toggle */
 (function(){
   var btn=document.getElementById('themeToggle');
