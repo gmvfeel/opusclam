@@ -43,6 +43,10 @@
   .k-mid{background:#fff4e0;color:#8a6a2a}
   .k-low{background:#fdeaea;color:#a01c1c}
   .k-lang{background:#eeecf7;color:#5b4a92}
+  /* ★ 2026-08-15 · 다음 묶음 단추 옆 알림 */
+  .nextsay{font-size:12.5px;color:#5c5e70;margin-left:4px}
+  .nextsay.ok{color:#1a7f4b;font-weight:600}
+  .nextsay.no{color:#a01c1c;font-weight:600}
   .meta{color:#8a8ca0;font-size:12px}
   .meta a{color:#5b4a92}
   .body{margin:10px 0 0;padding:12px 14px;background:#fbfbfd;border:1px solid #eeeef4;border-radius:8px;
@@ -105,6 +109,14 @@
         <option value="low">low — 낮음(꼭 확인)</option>
       </select>
       <button id="btn-load">다시 불러오기</button>
+      <!-- ★ 2026-08-15 · 다음 묶음 명단 뽑기 (파트너 요청)
+             예전에는 SQL 편집기를 열어 OFFSET 숫자를 고치고 돌린 뒤
+             표를 긁어 붙이셔야 했습니다. 그 네 걸음을 한 번으로 줄입니다.
+             ★ 이 단추가 핏을 부르지는 <b>못합니다.</b> 화면은 브라우저에서
+               돌고 핏은 대화창에 있습니다. 대신 <b>붙여넣기 좋은 꼴</b>로
+               클립보드에 담아 드립니다. -->
+      <button id="btn-next" class="ghost">다음 50명 명단 복사</button>
+      <span id="next-say" class="nextsay"></span>
     </div>
     <div class="tabs" id="tabs"></div>
 
@@ -218,12 +230,16 @@
     var 대기 = got.pending || 0, 넣음 = got.applied || 0, 버림 = got.rejected || 0;
     var 검수 = 넣음 + 버림;
     var g = document.getElementById('gap');
+    /* ★ 2026-08-15 · 재촉하는 문구를 걷어냈습니다 (파트너 지시)
+         예전에는 대기가 검수의 세 배를 넘으면 「초안을 더 만들기 전에
+         검수를 이어가 주십시오」라고 알렸습니다. 그런데 파트너는
+         <b>먼저 쌓아 두고 시간 날 때마다 천천히 보시는</b> 방식으로
+         하기로 하셨습니다. 그 방식에서는 이 문구가 계속 거슬립니다.
+       ▶ 이제 숫자만 알리고 판단은 하지 않습니다. */
     var 말 = '';
     if (!대기 && !검수) 말 = '아직 초안이 없습니다.';
-    else if (대기 > 검수 * 3 && 대기 > 30)
-      말 = '★ 대기가 검수보다 많이 쌓였습니다. 초안을 더 만들기 전에 검수를 이어가 주십시오.';
-    else if (!대기) 말 = '대기가 없습니다. 초안을 더 만들 수 있습니다.';
-    else 말 = '검수가 잘 따라오고 있습니다.';
+    else if (!대기) 말 = '대기가 없습니다.';
+    else 말 = '천천히 보셔도 됩니다. 승인한 것만 화면에 나갑니다.';
     g.innerHTML = '<b>검수 대기 ' + 대기 + '개</b> · 넣음 ' + 넣음 + '개 · 버림 ' + 버림 + '개'
       + '<br>' + esc(말);
   }
@@ -458,7 +474,138 @@
   }
 
   /* ── 시작 ───────────────────────────────────────────────── */
+
+  /* ══ 다음 묶음 명단 뽑기 — 2026-08-15 (파트너 요청) ══════════
+     ★ 무엇을 하나
+       소개문이 없고 · 영문은 있고 · 아직 초안도 없는 사람 50명을
+       찾아, 대화창에 붙이기 좋은 꼴로 <b>클립보드에 담습니다.</b>
+
+     ★ OFFSET 을 기억할 필요가 없습니다
+       예전에는 SQL 의 숫자를 손으로 50·100·150 … 으로 올리셔야 했고,
+       건너뛰면 그 50명이 영영 빠졌습니다.
+       ▶ 이제 「이미 초안이 있는 사람」을 그때그때 빼고 앞에서부터
+         50명을 집으므로, 숫자를 셀 일이 없습니다. 겹치지도 빠지지도
+         않습니다.
+
+     ★ 왜 두 번 나눠 물어보나
+       PostgREST 에는 「다른 표에 없는 것만」을 한 번에 묻는 깔끔한
+       길이 없습니다. 그래서 ① 초안이 있는 사람 번호를 먼저 받고
+       ② 후보를 넉넉히 받아 걸러 냅니다.
+       ★ 응답 상한이 있으므로 후보는 여러 번 나눠 받습니다 —
+         0행이 올 때만 멈춥니다(받은 수가 적다고 멈추면 안 됩니다).
+
+     ★ 영문은 2,500자에서 자릅니다
+       그보다 길어도 앞부분에 생애의 뼈대가 다 들어 있고,
+       통째로 담으면 클립보드가 너무 커집니다. */
+  async function nextBatch() {
+    var btn = document.getElementById('btn-next');
+    var say = document.getElementById('next-say');
+    function tell(msg, kind) {
+      say.textContent = msg;
+      say.className = 'nextsay' + (kind ? ' ' + kind : '');
+    }
+
+    var c = sb();
+    if (!c) { tell('준비되지 않았습니다.', 'no'); return; }
+
+    btn.disabled = true;
+    tell('찾는 중…');
+
+    try {
+      /* ① 이미 초안이 있는 사람 번호 모으기 */
+      var done = new Set(), from = 0;
+      for (;;) {
+        var r = await c.from('oc_person_drafts')
+          .select('person_id').range(from, from + 999);
+        if (r.error) throw r.error;
+        var got = r.data || [];
+        if (!got.length) break;              /* 0행일 때만 멈춥니다 */
+        got.forEach(function (x) { done.add(x.person_id); });
+        from += got.length;
+      }
+
+      /* ② 후보 받아 걸러 내기 */
+      var NEED = 50, picked = [], off = 0;
+      var COLS = 'id,name_ko,name_en,field,instrument,life,nationality,description_en';
+      for (;;) {
+        var q = await c.from('persons').select(COLS)
+          .not('description_en', 'is', null)
+          .neq('description_en', '')
+          .or('description.is.null,description.eq.')
+          /* ★ neq('hidden', true) 는 <b>hidden 이 비어 있는 사람을 빠뜨립니다</b>
+               — SQL 에서 NULL <> true 는 참이 아니라 NULL 이기 때문입니다.
+               SQL 쪽 조건(hidden IS NOT TRUE)과 맞추려면 not.is.true 를 써야
+               합니다. 인물 대부분이 hidden 을 비워 두고 있어, 이 한 글자
+               차이로 거의 전부가 빠질 뻔했습니다. */
+          .not('hidden', 'is', true)
+          .order('id')
+          .range(off, off + 199);
+        if (q.error) throw q.error;
+        var rows = q.data || [];
+        if (!rows.length) break;             /* 0행일 때만 멈춥니다 */
+        off += rows.length;
+        for (var i = 0; i < rows.length && picked.length < NEED; i++) {
+          var x = rows[i];
+          if (done.has(x.id)) continue;
+          if (String(x.description_en).length < 200) continue;   /* 옮길 것이 적음 */
+          picked.push(x);
+        }
+        if (picked.length >= NEED) break;
+        if (off > 20000) break;              /* 안전장치 */
+      }
+
+      if (!picked.length) {
+        tell('더 만들 것이 없습니다.', 'ok');
+        btn.disabled = false;
+        return;
+      }
+
+      /* ③ 붙이기 좋은 꼴로 */
+      function cell(v) {
+        var t = (v == null ? '' : String(v)).replace(/[\r\n\t]+/g, ' ').trim();
+        return t.indexOf(',') >= 0 || t.indexOf('"') >= 0
+          ? '"' + t.replace(/"/g, '""') + '"' : t;
+      }
+      var lines = ['id,name_ko,name_en,field,instrument,life,nationality,en_intro'];
+      picked.forEach(function (x) {
+        lines.push([x.id, cell(x.name_ko), cell(x.name_en), cell(x.field),
+                    cell(x.instrument), cell(x.life), cell(x.nationality),
+                    cell(String(x.description_en).slice(0, 2500))].join(','));
+      });
+      var text = lines.join('\n');
+
+      /* ④ 클립보드에 */
+      var ok = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          ok = true;
+        }
+      } catch (e) {}
+      if (!ok) {
+        /* 클립보드가 막힌 환경 — 새 창에 띄워 직접 복사하시게 합니다 */
+        var w = window.open('', '_blank');
+        if (w) {
+          w.document.write('<meta charset="utf-8"><title>다음 묶음 명단</title>'
+            + '<p style="font:13px sans-serif;color:#5c5e70">아래를 모두 골라 복사해 대화창에 붙여 주십시오.</p>'
+            + '<textarea style="width:99%;height:80vh;font:12px monospace"></textarea>');
+          w.document.querySelector('textarea').value = text;
+          w.document.querySelector('textarea').select();
+          tell(picked.length + '명 — 새 창에서 복사해 주십시오', 'ok');
+        } else {
+          tell('복사하지 못했습니다. 팝업을 허용해 주십시오.', 'no');
+        }
+      } else {
+        tell(picked.length + '명 복사했습니다 — 대화창에 붙여넣으십시오', 'ok');
+      }
+    } catch (e) {
+      tell('가져오지 못했습니다 — ' + (e.message || e), 'no');
+    }
+    btn.disabled = false;
+  }
+
   document.getElementById('btn-load').addEventListener('click', load);
+  document.getElementById('btn-next').addEventListener('click', nextBatch);
   document.getElementById('f-conf').addEventListener('change', load);
   document.getElementById('f-q').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') load();
