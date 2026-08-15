@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>국제 콩쿠르 아카이브 · OPUSCLAM</title>
+<meta name="description" content="쇼팽·차이콥스키·퀸 엘리자베스·리즈·부조니 — 1927년부터 오늘까지 세계 주요 국제 콩쿠르 입상자 기록을 한곳에 모았습니다.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<style>
+/* ============================================================
+   국제 콩쿠르 아카이브 — spot/concours-archive.html
+   ------------------------------------------------------------
+   2026-08-15 · 파트너와 함께 만든 새 갈래
+
+   ★ 무엇을 보여 주나
+     다섯 대회 입상자 1,165명을 <b>연도별</b>로 보여 줍니다.
+       쇼팽 1927~2025 · 차이콥스키 1958~2023 · 퀸 엘리자베스 1937~2026
+       리즈 1963~2024 · 부조니 1949~2025
+
+   ★ 왜 값어치가 있나
+     이 기록은 대회 홈페이지에 흩어져 있고, 옛날 것은 찾기 어렵습니다.
+     한곳에 모아 <b>연도별로 훑을 수 있게</b> 한 곳이 세계에 거의 없습니다.
+
+   ★ 인물DB 와 아직 이어지지 않았습니다
+     이름만으로 자동으로 합치면 동명이인이 엉킵니다. 이어진 사람만
+     이름을 누를 수 있게 하고, 나머지는 글자로만 보여 줍니다.
+     이어 붙이는 일은 관리자 도구에서 사람이 판단합니다.
+
+   ★ 짜임은 이 파일 안에만 둡니다 — 이 화면 하나만 쓰는 규칙입니다.
+     색·글꼴은 style.css 변수를 그대로 씁니다.
+   ============================================================ */
+
+.ca{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+
+/* ── 대회 고르개 ─────────────────────────────────────── */
+.ca-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 26px}
+.ca-tabs button{appearance:none;border:1px solid var(--line-2);background:var(--paper);
+  color:var(--text-2);border-radius:22px;padding:10px 20px;font-size:13.5px;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:all .15s ease}
+.ca-tabs button:hover{border-color:var(--violet-2);color:var(--violet-2)}
+.ca-tabs button.on{background:var(--violet-2);border-color:var(--violet-2);color:#fff}
+
+/* ── 대회 머리 ───────────────────────────────────────── */
+.ca-head{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;
+  padding:24px 26px;margin:0 0 26px}
+.ca-head h2{font-size:21px;font-weight:800;margin:0 0 6px;color:var(--text);letter-spacing:-.02em}
+.ca-head .en{font-size:13px;color:var(--text-3);margin:0 0 16px}
+.ca-head dl{display:flex;flex-wrap:wrap;gap:10px 28px;margin:0;font-size:13px}
+.ca-head dt{color:var(--text-3);display:inline;margin-right:7px}
+.ca-head dd{color:var(--text-2);display:inline;margin:0;font-weight:600}
+.ca-head .wiki{display:inline-block;margin-top:14px;font-size:12.5px;color:var(--violet-2);text-decoration:none}
+.ca-head .wiki:hover{text-decoration:underline}
+
+/* ── 찾기 ────────────────────────────────────────────── */
+.ca-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 20px}
+.ca-bar input[type=search]{flex:1;min-width:200px;padding:11px 14px;border:1px solid var(--line-2);
+  border-radius:10px;font-size:13.5px;font-family:inherit;background:var(--paper);color:var(--text)}
+.ca-bar input[type=search]:focus{outline:none;border-color:var(--violet-2)}
+.ca-bar select{padding:11px 12px;border:1px solid var(--line-2);border-radius:10px;
+  font-size:13.5px;font-family:inherit;background:var(--paper);color:var(--text)}
+.ca-count{font-size:13px;color:var(--text-3);margin-left:auto}
+
+/* ── 연도 묶음 ───────────────────────────────────────── */
+.ca-year{border-top:1px solid var(--line);padding:22px 0}
+.ca-year:first-of-type{border-top:0}
+.ca-yhead{display:flex;align-items:baseline;gap:12px;margin:0 0 14px}
+.ca-yhead b{font-family:var(--display);font-size:24px;font-weight:900;color:var(--text);
+  letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.ca-yhead span{font-size:12.5px;color:var(--text-3)}
+
+.ca-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px}
+.ca-item{display:flex;align-items:center;gap:11px;padding:10px 13px;
+  background:var(--paper);border:1px solid var(--line);border-radius:10px}
+.ca-item .rk{flex:0 0 auto;min-width:30px;height:26px;padding:0 7px;border-radius:7px;
+  display:grid;place-items:center;font-family:var(--display);font-size:12px;font-weight:800;
+  background:var(--paper-3);color:var(--text-2)}
+/* 1·2·3위는 눈에 띄게 — 금·은·동 */
+.ca-item .rk.r1{background:#C9A94E;color:#2a2005}
+.ca-item .rk.r2{background:#c3c6ce;color:#2a2a2e}
+.ca-item .rk.r3{background:#c8956a;color:#2e1c0c}
+.ca-item .nm{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ca-item a.nm{color:var(--violet-2);text-decoration:none}
+.ca-item a.nm:hover{text-decoration:underline}
+.ca-item .ct{flex:0 0 auto;font-size:11.5px;color:var(--text-3);max-width:110px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.ca-empty{text-align:center;padding:60px 20px;color:var(--text-3);font-size:14px}
+.ca-note{margin:34px 0 0;padding:16px 18px;border-left:3px solid var(--line-2);
+  font-size:12.5px;line-height:1.9;color:var(--text-3)}
+.ca-more{display:block;width:100%;margin-top:22px;padding:14px;border:1px solid var(--line-2);
+  background:var(--paper);border-radius:11px;font-size:13.5px;font-weight:600;color:var(--text-2);
+  cursor:pointer;font-family:inherit}
+.ca-more:hover{border-color:var(--violet-2);color:var(--violet-2)}
+
+@media(max-width:640px){
+  .ca-head{padding:20px}
+  .ca-yhead b{font-size:21px}
+}
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-spot on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">국제 콩쿠르 아카이브</span>
+    </nav>
+
+    <div id="oc-subnav" data-src="/partials/subnav-spot.html"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">CONCOURS ARCHIVE</div>
+          <h1 class="pdb-title">국제 콩쿠르 아카이브</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">쇼팽·차이콥스키·퀸 엘리자베스·리즈·부조니 — 1927년부터 오늘까지 입상자 기록을 한곳에 모았습니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="ca">
+  <div class="ca-tabs" id="tabs"></div>
+  <div id="head"></div>
+
+  <div class="ca-bar">
+    <input type="search" id="q" placeholder="이름으로 찾기 (예: Cho · Zimerman)" aria-label="이름으로 찾기">
+    <select id="rank" aria-label="등수">
+      <option value="">등수 전부</option>
+      <option value="top3">1~3위만</option>
+      <option value="1">1위만</option>
+    </select>
+    <span class="ca-count" id="count"></span>
+  </div>
+
+  <div id="list"><div class="ca-empty">불러오는 중…</div></div>
+
+  <p class="ca-note">
+    입상자 기록은 각 대회의 공개 자료와 위키백과에서 모았습니다.
+    이름 표기는 원 기록을 그대로 옮겼습니다.<br>
+    인물DB에 이어진 분은 이름을 누르면 상세로 갑니다. 아직 이어지지 않은 분이 많습니다 —
+    이어 붙이는 일은 사람이 하나씩 확인하며 진행합니다.<br>
+    잘못된 부분을 보시면 <a href="mailto:cser@wixon.co.kr?subject=%5B%EC%98%A4%ED%8D%BC%EC%8A%A4%ED%81%B4%EB%9E%A8%5D%20%EC%BD%A9%EC%BF%A0%EB%A5%B4%20%EA%B8%B0%EB%A1%9D%20%EC%A0%9C%EB%B3%B4" style="color:var(--violet-2)">알려 주십시오</a>.
+  </p>
+</main>
+
+<div id="oc-bigban"></div>
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function () {
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* window.__ocSb 싱글턴 — 다른 화면과 같은 방식입니다 */
+  function sb() {
+    if (window.__ocSb) return window.__ocSb;
+    if (!window.supabase || !window.supabase.createClient) return null;
+    window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY);
+    return window.__ocSb;
+  }
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  var COMPS = [], CUR = null, ROWS = [], SHOWN = 0;
+  var PAGE = 12;                 /* 연도 묶음 단위로 늘려 보여 줍니다 */
+
+  /* ── 대회 목록 ──────────────────────────────────────── */
+  async function loadComps() {
+    var c = sb();
+    if (!c) return;
+    var r = await c.from('oc_concours')
+      .select('key,name_ko,name_en,country,city,field,founded,cycle_years,wiki_url')
+      .neq('hidden', true).order('founded');
+    if (r.error) { $('list').innerHTML = '<div class="ca-empty">대회를 불러오지 못했습니다.</div>'; return; }
+    COMPS = r.data || [];
+    if (!COMPS.length) { $('list').innerHTML = '<div class="ca-empty">아직 담긴 대회가 없습니다.</div>'; return; }
+
+    $('tabs').innerHTML = COMPS.map(function (x, i) {
+      return '<button data-k="' + esc(x.key) + '"' + (i === 0 ? ' class="on"' : '') + '>'
+        + esc(x.name_ko) + '</button>';
+    }).join('');
+    [].forEach.call($('tabs').querySelectorAll('button'), function (b) {
+      b.addEventListener('click', function () {
+        [].forEach.call($('tabs').querySelectorAll('button'), function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+        pick(b.getAttribute('data-k'));
+      });
+    });
+    pick(COMPS[0].key);
+  }
+
+  /* ── 대회 하나 ──────────────────────────────────────── */
+  async function pick(key) {
+    CUR = COMPS.filter(function (x) { return x.key === key; })[0];
+    if (!CUR) return;
+
+    $('head').innerHTML = '<div class="ca-head">'
+      + '<h2>' + esc(CUR.name_ko) + '</h2>'
+      + '<p class="en">' + esc(CUR.name_en) + '</p>'
+      + '<dl>'
+      +   (CUR.country ? '<dt>여는 곳</dt><dd>' + esc([CUR.country, CUR.city].filter(Boolean).join(' · ')) + '</dd>' : '')
+      +   (CUR.field ? '<dt>부문</dt><dd>' + esc(CUR.field) + '</dd>' : '')
+      +   (CUR.founded ? '<dt>시작</dt><dd>' + esc(CUR.founded) + '년</dd>' : '')
+      +   (CUR.cycle_years ? '<dt>주기</dt><dd>' + esc(CUR.cycle_years) + '년마다</dd>' : '')
+      + '</dl>'
+      + (CUR.wiki_url ? '<a class="wiki" href="' + esc(CUR.wiki_url) + '" target="_blank" rel="noopener">위키백과에서 이 대회 보기 &nearr;</a>' : '')
+      + '</div>';
+
+    $('list').innerHTML = '<div class="ca-empty">불러오는 중…</div>';
+    $('count').textContent = '';
+
+    /* ★ 응답 상한이 있으므로 <b>나눠 받습니다</b>.
+         0행이 올 때만 멈춥니다 — 받은 수가 적다고 멈추면 마지막 묶음을
+         놓칩니다(다른 수집기에서 겪은 함정과 같습니다). */
+    var c = sb(), all = [], from = 0;
+    for (;;) {
+      var r = await c.from('oc_concours_prize')
+        .select('year,edition,rank,rank_no,name_en,name_ko,country,person_id')
+        .eq('concours', key)
+        .order('year', { ascending: false })
+        .order('rank_no', { ascending: true, nullsFirst: false })
+        .range(from, from + 499);
+      if (r.error) { $('list').innerHTML = '<div class="ca-empty">기록을 불러오지 못했습니다.</div>'; return; }
+      var got = r.data || [];
+      if (!got.length) break;
+      all = all.concat(got);
+      from += got.length;
+      if (from > 5000) break;         /* 안전장치 */
+    }
+    ROWS = all;
+    SHOWN = PAGE;
+    draw();
+  }
+
+  /* ── 그리기 ─────────────────────────────────────────── */
+  function draw() {
+    var q = ($('q').value || '').trim().toLowerCase();
+    var rk = $('rank').value;
+
+    var rows = ROWS.filter(function (p) {
+      if (q) {
+        var hay = ((p.name_en || '') + ' ' + (p.name_ko || '')).toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      if (rk === '1' && p.rank_no !== 1) return false;
+      if (rk === 'top3' && !(p.rank_no >= 1 && p.rank_no <= 3)) return false;
+      return true;
+    });
+
+    $('count').textContent = rows.length
+      ? (rows.length.toLocaleString() + '명' + (rows.length !== ROWS.length ? ' / 모두 ' + ROWS.length.toLocaleString() + '명' : ''))
+      : '';
+
+    if (!rows.length) {
+      $('list').innerHTML = '<div class="ca-empty">'
+        + (q || rk ? '찾으시는 조건에 맞는 기록이 없습니다.' : '아직 담긴 기록이 없습니다.') + '</div>';
+      return;
+    }
+
+    /* 연도별로 묶습니다 */
+    var byYear = {}, years = [];
+    rows.forEach(function (p) {
+      if (!byYear[p.year]) { byYear[p.year] = []; years.push(p.year); }
+      byYear[p.year].push(p);
+    });
+    years.sort(function (a, b) { return b - a; });
+
+    var show = years.slice(0, SHOWN);
+    var html = show.map(function (y) {
+      var list = byYear[y];
+      var ed = list[0].edition;
+      return '<div class="ca-year">'
+        + '<div class="ca-yhead"><b>' + y + '</b>'
+        + '<span>' + (ed ? '제' + ed + '회 · ' : '') + list.length + '명</span></div>'
+        + '<div class="ca-list">' + list.map(itemHtml).join('') + '</div>'
+        + '</div>';
+    }).join('');
+
+    if (years.length > SHOWN) {
+      html += '<button type="button" class="ca-more" id="more">'
+        + '나머지 ' + (years.length - SHOWN) + '개 회차 더 보기</button>';
+    }
+    $('list').innerHTML = html;
+
+    var more = $('more');
+    if (more) more.addEventListener('click', function () { SHOWN += PAGE; draw(); });
+  }
+
+  function itemHtml(p) {
+    var r = String(p.rank || '-');
+    var cls = 'rk' + (p.rank_no === 1 ? ' r1' : p.rank_no === 2 ? ' r2' : p.rank_no === 3 ? ' r3' : '');
+    var label = p.rank_no ? p.rank_no : (r === 'HM' ? '입선' : r === 'F' ? '결선' : r);
+    var nm = esc(p.name_ko || p.name_en);
+
+    /* ★ 인물DB 에 <b>이어진 사람만</b> 누를 수 있게 합니다.
+         이어지지 않은 이름을 링크로 만들면 누르고 빈 화면이 나옵니다. */
+    var name = p.person_id
+      ? '<a class="nm" href="/db/person-view.html?id=' + encodeURIComponent(p.person_id) + '">' + nm + '</a>'
+      : '<span class="nm">' + nm + '</span>';
+
+    return '<div class="ca-item">'
+      + '<span class="' + cls + '">' + esc(label) + '</span>'
+      + name
+      + (p.country ? '<span class="ct">' + esc(p.country) + '</span>' : '')
+      + '</div>';
+  }
+
+  /* ── 찾기 ───────────────────────────────────────────── */
+  var t = null;
+  $('q').addEventListener('input', function () {
+    clearTimeout(t);
+    t = setTimeout(function () { SHOWN = PAGE; draw(); }, 200);
+  });
+  $('rank').addEventListener('change', function () { SHOWN = PAGE; draw(); });
+
+  /* Supabase 가 실릴 때까지 기다립니다 */
+  (function wait(n) {
+    n = n || 0;
+    if (sb()) { loadComps(); return; }
+    if (n > 40) { $('list').innerHTML = '<div class="ca-empty">준비되지 않았습니다. 새로 고쳐 주십시오.</div>'; return; }
+    setTimeout(function () { wait(n + 1); }, 150);
+  })();
+})();
+</script>
+
+<script src="/assets/app.js"></script>
+<script src="/assets/pwa-install.js?v=20260815" defer></script>
+</body>
+</html>
