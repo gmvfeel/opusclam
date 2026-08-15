@@ -245,6 +245,10 @@ export const ORCHESTRAS = [
     base: 'https://www.concertgebouworkest.nl',
     home: 'https://www.concertgebouworkest.nl/en/',
 
+    /* ★ 이 화면은 그림을 <b>배경으로</b> 깔아 받은 글에 남지 않습니다.
+         빈 필과 달리 그림이 0건인 것이 정상이므로 경고하지 않습니다. */
+    noImage: true,
+
     /* ★ 이 화면은 <b>스무 건씩 일곱 쪽</b>으로 나뉩니다.
          offset 을 20씩 올리며 부르고, 0건이 오면 멈춥니다. */
     pages(i) {
@@ -371,6 +375,25 @@ export const ORCHESTRAS = [
               'Milan':'Italy', 'Rome':'Italy', 'Brussels':'Belgium', 'Warsaw':'Poland',
               'Prague':'Czech Republic', 'Budapest':'Hungary', 'New York':'USA',
               'Tokyo':'Japan', 'Seoul':'South Korea', 'Shanghai':'China',
+              /* ★ 2026-08-15 · 실제 수집에서 나라를 못 읽은 10건을 보고 더했습니다.
+                   스페인 순회가 열 건이라 그쪽이 컸습니다. */
+              'Madrid':'Spain', 'Barcelona':'Spain', 'Valencia':'Spain',
+              'Bilbao':'Spain', 'Zaragoza':'Spain', 'Seville':'Spain',
+              'Sevilla':'Spain', 'Granada':'Spain', 'Oviedo':'Spain',
+              'A Coruña':'Spain', 'San Sebastián':'Spain', 'Pamplona':'Spain',
+              'Antwerp':'Belgium', 'Bruges':'Belgium', 'Ghent':'Belgium',
+              'Luxembourg':'Luxembourg', 'Dortmund':'Germany', 'Essen':'Germany',
+              'Frankfurt':'Germany', 'Düsseldorf':'Germany', 'Stuttgart':'Germany',
+              'Baden-Baden':'Germany', 'Dresden':'Germany', 'Leipzig':'Germany',
+              'Lyon':'France', 'Toulouse':'France', 'Aix-en-Provence':'France',
+              'Linz':'Austria', 'Graz':'Austria', 'Grafenegg':'Austria',
+              'Basel':'Switzerland', 'Bern':'Switzerland', 'Geneve':'Switzerland',
+              'Birmingham':'United Kingdom', 'Manchester':'United Kingdom',
+              'Edinburgh':'United Kingdom', 'Dublin':'Ireland',
+              'Copenhagen':'Denmark', 'Stockholm':'Sweden', 'Oslo':'Norway',
+              'Helsinki':'Finland', 'Lisbon':'Portugal', 'Porto':'Portugal',
+              'Athens':'Greece', 'Istanbul':'Türkiye', 'Naples':'Italy',
+              'Florence':'Italy', 'Turin':'Italy', 'Bologna':'Italy',
             };
             country = known[city] || '';
           }
@@ -685,14 +708,22 @@ async function main() {
     /* 나라별로 몇 건인지 — 국내 공연이 있으면 눈에 띄게 */
     const byC = {};
     kept.forEach(o => { const c = DE_COUNTRY[o.country] || o.country || '(없음)'; byC[c] = (byC[c] || 0) + 1; });
+    /* ★ 나라를 못 읽은 도시를 <b>이름까지</b> 알립니다.
+         「(없음) 10」만으로는 어느 도시인지 알 수 없어 사전을 못 늘립니다. */
+    const noC = [...new Set(kept.filter(o => !o.country).map(o => o.city).filter(Boolean))];
+    if (noC.length) console.log('   나라를 못 읽은 도시 : ' + noC.join(' · '));
     console.log('   나라별 : ' + Object.entries(byC).sort((a, b) => b[1] - a[1])
       .map(([k, v]) => `${k} ${v}`).join(' · '));
 
     /* 그림이 얼마나 붙었나 — 0 이면 그림 읽기가 깨진 것입니다 */
     const withImg = kept.filter(o => o.thumb).length;
     const kinds = new Set(kept.map(o => o.thumb).filter(Boolean)).size;
-    console.log(`   그림 : ${withImg}건에 붙음 (${kinds}가지) · 없음 ${kept.length - withImg}건`);
-    if (!withImg) console.log('   ★ 그림을 하나도 읽지 못했습니다 — 화면 짜임을 확인해 주십시오');
+    if (orch.noImage) {
+      console.log(`   그림 : 이 화면은 그림을 내보내지 않습니다 (배경으로 깔림)`);
+    } else {
+      console.log(`   그림 : ${withImg}건에 붙음 (${kinds}가지) · 없음 ${kept.length - withImg}건`);
+      if (!withImg) console.log('   ★ 그림을 하나도 읽지 못했습니다 — 화면 짜임을 확인해 주십시오');
+    }
 
     if (SAVE) {
       if (!SB_URL || !SB_KEY) {
