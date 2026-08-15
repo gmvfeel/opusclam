@@ -532,7 +532,7 @@ window.OCBoard = (function () {
         + '<span class="bc-info">'
         +   '<span class="bc-title">'
         +     (rec.category ? '<em class="bc-cat">[ ' + esc(rec.category) + ' ]</em> ' : '')
-        +     esc(head) + newHtml(rec) + ccHtml(rec)
+        +     esc(head) + langHtml(rec) + newHtml(rec) + ccHtml(rec)
         +   '</span>'
         +   (sub ? '<span class="bc-orig">' + esc(sub) + '</span>' : '')
         +   '<span class="bc-meta">' + meta.join('<i>·</i>') + '</span>'
@@ -547,7 +547,7 @@ window.OCBoard = (function () {
       return '<a class="board-item' + pin + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur + '">'
         + '<span class="board-item-no">' + noText(no) + '</span>'
         + '<span class="board-cat ' + catClass(rec.category) + '">' + esc(rec.category || '') + '</span>'
-        + '<span class="board-title">' + paidHtml(rec) + esc(rec.title || '') + linkIcon + '</span>'
+        + '<span class="board-title">' + paidHtml(rec) + esc(rec.title || '') + langHtml(rec) + linkIcon + '</span>'
         + '<span class="board-meta"><span class="board-date">' + fmtDate(rec.created_at) + '</span>'
         + '<span class="board-views">\uc870\ud68c ' + (rec.view_count || 0) + '</span></span>'
         + '</a>';
@@ -559,6 +559,29 @@ window.OCBoard = (function () {
       return src && au ? src + ' \u00b7 ' + au : (src || au);
     }
     function ccHtml(rec) { var c = rec.comment_count || 0; return c > 0 ? '<span class="board-cc">[' + c + ']</span>' : ''; }
+    /* ★★ 2026-08-15 · 언어 배지 (파트너 요청) ★★
+       ──────────────────────────────────────────────────────────────
+       ★ 왜 다나
+         앞으로 영어·일본어로 쓴 글이 <b>한국어 글과 섞여</b> 올라옵니다.
+         언어로 거르지 않기로 했습니다 — 영어를 읽는 한국분도, 한국어를
+         읽는 외국분도 계시니까요(파트너 결정).
+         다만 <b>눌러 보기 전에는 무슨 언어인지 알 수 없어</b> 배지를 답니다.
+
+       ★ 한국어 글에는 붙이지 않습니다
+         거의 모든 글이 한국어라, 다 붙이면 온 목록이 배지밭이 됩니다.
+         <b>다른 언어일 때만</b> 눈에 띄면 됩니다.
+
+       ★ 일본어는 「日」 한 글자로
+         'JA' 보다 알아보기 쉽고 자리를 덜 먹습니다.
+
+       ★ lang 칸이 없는 표에도 안전합니다 — 값이 없으면 빈 글자를
+         돌려주므로, 아직 SQL 을 돌리지 않은 게시판도 그대로 돕니다. */
+    function langHtml(rec) {
+      var l = rec && rec.lang;
+      if (!l || l === 'ko') return '';
+      var label = l === 'ja' ? '\u65e5' : String(l).toUpperCase();
+      return '<span class="board-lang" data-lang="' + esc(l) + '">' + esc(label) + '</span>';
+    }
     function newHtml(rec) { if (!cfg.newDays || !rec.created_at) return ''; var d = new Date(rec.created_at); if (isNaN(d)) return ''; return ((Date.now() - d.getTime()) / 86400000) <= cfg.newDays ? '<span class="board-new">NEW</span>' : ''; }
     function tagHtml(rec) { return rec.category ? '<span class="board-tag" data-cat="' + esc(rec.category) + '">' + esc(rec.category) + '</span>' : ''; }
     function featuredHtml(rec, related) {
@@ -577,7 +600,7 @@ window.OCBoard = (function () {
         + '<a class="board-feat-body' + (img ? ' has-img' : '') + '" href="' + cfg.viewPage + '?id=' + encodeURIComponent(rec.id) + '&p=' + cur + '">'
         + img
         + '<div class="board-feat-text">'
-        + '<div class="board-feat-titlerow"><div class="board-feat-title">' + esc(rec.title || '') + ccHtml(rec) + newHtml(rec) + '</div>' + react + '</div>'
+        + '<div class="board-feat-titlerow"><div class="board-feat-title">' + esc(rec.title || '') + langHtml(rec) + ccHtml(rec) + newHtml(rec) + '</div>' + react + '</div>'
         + '<p class="board-prev board-feat-prev">' + previewText(rec.body, 200) + '</p>'
         + '<div class="board-feat-meta">' + tagHtml(rec) + '<span>' + metaLine(rec) + '</span><span>' + fmtDate(rec.created_at) + '</span></div>'
         + '</div>'
@@ -614,7 +637,7 @@ window.OCBoard = (function () {
         + th
         + '<span class="board-row-main">'
         +   head
-        +   '<span class="board-row-title">' + esc(rec.title || '') + ccHtml(rec) + newHtml(rec) + '</span>'
+        +   '<span class="board-row-title">' + esc(rec.title || '') + langHtml(rec) + ccHtml(rec) + newHtml(rec) + '</span>'
         +   '<span class="board-prev">' + previewText(rec.body, 140) + '</span>'
         + '</span>'
         + '</a>';
@@ -1370,7 +1393,7 @@ window.OCBoard = (function () {
         } else {
         box.innerHTML =
           '<div class="bv-head">'
-          + '<h1 class="bv-title">' + esc(o.title || '') + '</h1>'
+          + '<h1 class="bv-title">' + esc(o.title || '') + langHtml(o) + '</h1>'
           + '<div class="bv-meta">' + tag + (srcAu ? '<span>' + srcAu + lkSlot + '</span>' : '')
           + '<span>' + fmtDate(o.created_at) + '</span><span>\uc870\ud68c ' + (o.view_count || 0) + '</span></div>'
           + '</div>'

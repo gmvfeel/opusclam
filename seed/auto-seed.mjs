@@ -36,6 +36,39 @@
      · 회원 글이 많은 게시판은 손대지 않음(GUARD_REAL_POSTS)
      · onlyCategory · requireThumb 조건
    ★ 예약(크론)에는 영향이 없습니다 — 옵션을 주지 않으면 예전과 같습니다.
+
+   ★★ 2026-08-15 · 영어·일본어 글을 함께 담습니다 (파트너 요청) ★★
+   ────────────────────────────────────────────────────────────
+   ★ 무엇을 하나
+     한국어 글만 담던 것을 <b>영어·일본어 글도</b> 담도록 넓혔습니다.
+     번역이 아닙니다 — 그 언어권 사람이 <b>처음부터 그 말로 쓴 글</b>입니다.
+     연습실 예약 다툼(영어권), 방음실 임대(일본) 처럼 부딪히는 벽이
+     나라마다 달라서, 한국어 글을 옮겨서는 결이 살지 않습니다.
+
+   ★ 언어로 거르지 않습니다 (파트너 결정)
+     한국어 화면에도 영어 글이 함께 보이고, 그 반대도 마찬가지입니다.
+     영어를 읽는 한국분도, 한국어를 읽는 외국분도 계시니까요.
+     목록에서는 board.js 가 제목 옆에 <b>EN · 日 배지</b>를 답니다.
+
+   ★ 게시판마다 <b>켜고 끕니다</b> — langs 를 보십시오
+     입시는 <b>한국어만</b> 돕니다. 한국 음대 입시 이야기를 영어권
+     사람이 쓸 일이 없습니다. 없는 글을 지어내면 그 순간 들킵니다.
+
+   ★ 언어 비율을 정해 둡니다 — 왜 필요한가
+     그냥 섞어 두면 <b>한국어가 거의 다 뽑힙니다.</b> 한국어 후보가
+     300개인데 영어가 12개면 영어가 뽑힐 확률이 4%입니다. 그래서
+     <b>언어를 먼저 고르고</b> 그 안에서 글을 뽑습니다.
+
+   ★ 상한도 언어마다 따로 셉니다
+     한 게시판 300개 상한을 언어가 나눠 쓰면, 한국어가 다 차지한 뒤
+     영어는 한 편도 못 올라갑니다. 언어별로 셉니다.
+
+   ★ lang 칸이 아직 없으면 <b>예전처럼 돕니다</b>
+     sql/community-lang-RUN-NOW.sql 을 아직 안 돌리셨어도 멈추지
+     않습니다. 칸이 있는지 먼저 보고, 없으면 한국어만 담습니다.
+
+     node seed/auto-seed.mjs --fill=12 --board=hottopic --lang=en
+                                        핫토픽 영어 글만 12건
    ============================================================ */
 
 import { POOL } from './content-pool.mjs';
@@ -64,6 +97,12 @@ const FILL = /^\d+$/.test(String(ARGS.fill)) ? Number(ARGS.fill) : 0;
 const ONLY_BOARD = typeof ARGS.board === 'string' ? ARGS.board : null;
 /* --dry → 담지 않고 무엇이 올라갈지만 */
 const DRY = !!ARGS.dry;
+/* --lang=en → 그 언어 글만 (적지 않으면 게시판 설정의 비율대로 섞습니다) */
+const ONLY_LANG = typeof ARGS.lang === 'string' ? ARGS.lang : null;
+if (ONLY_LANG && !['ko', 'en', 'ja'].includes(ONLY_LANG)) {
+  console.error('--lang 은 ko · en · ja 만 받습니다 : ' + ONLY_LANG);
+  process.exit(1);
+}
 
 /* ============================================================
    1) 게시판 설정
@@ -81,12 +120,29 @@ const DRY = !!ARGS.dry;
    onlyCategory 이 분류만 자동 등록 (설계에 없는 분류가 들어가는 것을 막는 장치)
    perRun       한 회차에 올릴 새 글 수 [최소, 최대]
    weekly       true 면 대략 주 1~2회만 올림 (매 회차마다 확률로 건너뜀)
+   langs        이 게시판이 다루는 언어와 비율 (2026-08-15 신설)
+                적지 않으면 { ko: 1 } — <b>예전과 똑같이</b> 한국어만 돕니다.
+                { ko: 0.6, en: 0.25, ja: 0.15 } 이면 열 번에 여섯 번쯤
+                한국어, 두세 번 영어, 한두 번 일본어를 고릅니다.
+                ★ 고른 언어에 남은 글이 없으면 다른 언어로 넘어갑니다 —
+                  영어가 바닥났다고 그 회차를 버리지 않습니다.
    ============================================================ */
+
+/* ── 언어 비율 ──────────────────────────────────────────────
+   ★ 왜 게시판마다 다른가
+     연습·악기·공연 이야기는 <b>국경이 없습니다</b> — 셋 다 돕니다.
+     한국 음대 입시는 <b>한국 이야기</b>입니다 — 한국어만 돕니다.
+   ★ 지금은 한국어 글이 압도적으로 많으니 한국어 비율을 높게 둡니다.
+     영어·일본어 글이 쌓이면 이 숫자를 고쳐 균형을 맞추면 됩니다
+     (여기 한 줄만 고치면 됩니다 — 다른 곳은 손댈 것이 없습니다). */
+const MIX_ALL  = { ko: 0.6, en: 0.25, ja: 0.15 };   // 국경 없는 이야기
+const MIX_KO   = { ko: 1 };                          // 한국 이야기만
+
 const BOARDS = {
   hottopic: {
     table: 'hottopic', commentTable: 'hottopic_comments', fk: 'news_id',
     body: 'html', authorName: true, likes: true, dislikes: true,
-    perRun: [0, 1],
+    perRun: [0, 1], langs: MIX_ALL,
   },
   /* ★ 2026-08-13 · 오퍼니티 (파트너 요청)
        핫토픽보다 자유롭게 쓰는 커뮤니티 게시판입니다.
@@ -97,31 +153,33 @@ const BOARDS = {
   opusnity: {
     table: 'opusnity', commentTable: 'opusnity_comments', fk: 'news_id',
     body: 'html', authorName: true, likes: true, dislikes: true,
-    perRun: [0, 1],
+    perRun: [0, 1], langs: MIX_ALL,
   },
   admission_community: {
     table: 'admission_community', commentTable: 'admission_community_comments', fk: 'news_id',
     body: 'html', authorName: true, likes: true, dislikes: true,
-    perRun: [0, 1],
+    /* ★ 한국어만 — 한국 음대 입시 이야기입니다 */
+    perRun: [0, 1], langs: MIX_KO,
   },
   qna: {
     table: 'qna', commentTable: 'qna_comments', fk: 'news_id',
     body: 'html', authorName: true, likes: true, dislikes: true,
     extraCols: ['track', 'keywords'],
-    perRun: [0, 1],
+    perRun: [0, 1], langs: MIX_ALL,
     // comment_count 는 trg_qna_cmt 트리거가 자동으로 셉니다 → 직접 넣지 않음
   },
   gallery: {
     table: 'gallery', commentTable: 'gallery_comments', fk: 'news_id',
     body: 'html', authorName: true, likes: true, dislikes: true,
     requireThumb: true,
-    perRun: [0, 1], weekly: true,
+    /* ★ 한국어만 — 사진이 있어야 올라가는 게시판이라 뒤로 미룹니다 */
+    perRun: [0, 1], weekly: true, langs: MIX_KO,
   },
   news: {
     table: 'news', commentTable: 'news_comments', fk: 'news_id',
     body: 'html', authorName: false, likes: false, dislikes: false,
     onlyCategory: ['국내', '해외'],
-    perRun: [0, 1], weekly: true,
+    perRun: [0, 1], weekly: true, langs: MIX_ALL,
   },
 
   /* ★ 세 게시판을 새로 넣습니다.
@@ -131,17 +189,17 @@ const BOARDS = {
   modern_music: {
     table: 'modern_music', commentTable: 'modern_music_comments', fk: 'news_id',
     body: 'html', authorName: true, likes: true, dislikes: true,
-    perRun: [0, 1], weekly: true,
+    perRun: [0, 1], weekly: true, langs: MIX_ALL,
   },
   prenatal_music: {
     table: 'prenatal_music', commentTable: 'prenatal_music_comments', fk: 'news_id',
     body: 'html', authorName: true, likes: true, dislikes: true,
-    perRun: [0, 1], weekly: true,
+    perRun: [0, 1], weekly: true, langs: MIX_ALL,
   },
   utility: {
     table: 'utility', commentTable: 'utility_comments', fk: 'news_id',
     body: 'html', authorName: true, likes: true, dislikes: true,
-    perRun: [0, 1], weekly: true,
+    perRun: [0, 1], weekly: true, langs: MIX_ALL,
   },
 };
 
@@ -258,6 +316,50 @@ function moodFactor() {
 }
 
 /* ============================================================
+   3-b) 언어 (2026-08-15 신설)
+   ============================================================ */
+
+/* ── lang 칸이 있나 ──────────────────────────────────────────
+   ★ 왜 확인하나
+     sql/community-lang-RUN-NOW.sql 을 아직 안 돌리셨는데 크론이 먼저
+     돌 수 있습니다. 그때 lang 을 넣어 저장하면 <b>글이 하나도 안 올라갑니다.</b>
+     한 번 물어보고, 없으면 예전처럼 한국어만 담습니다.
+   ★ 한 번만 물어봅니다 — 게시판마다 물으면 헛걸음이 아홉 번입니다. */
+let HAS_LANG = null;
+async function checkLangColumn() {
+  if (HAS_LANG !== null) return HAS_LANG;
+  try {
+    await sbGet('hottopic?select=lang&limit=1');
+    HAS_LANG = true;
+    console.log('※ lang 칸 확인 — 영어·일본어 글도 담습니다');
+  } catch (e) {
+    HAS_LANG = false;
+    console.log('※ lang 칸이 없습니다 — 한국어만 담습니다');
+    console.log('   (sql/community-lang-RUN-NOW.sql 을 돌리시면 켜집니다)');
+  }
+  return HAS_LANG;
+}
+
+/** 글의 언어 — 적지 않았으면 한국어로 봅니다(옛 풀은 모두 한국어입니다) */
+const langOf = (p) => p.lang || 'ko';
+
+/* ── 어느 언어로 담을까 ──────────────────────────────────────
+   ★ 비율대로 하나를 고릅니다. 다만 <b>후보가 있는 언어</b>만 놓고
+     고릅니다 — 영어가 바닥났는데 영어를 골라 놓고 「없음」으로
+     끝내면 그 회차를 통째로 버리게 됩니다.
+   ★ 비율은 남은 언어끼리 다시 나눕니다(정규화). 영어가 바닥나면
+     그 몫이 한국어·일본어로 자동으로 넘어갑니다. */
+function pickLang(mix, available) {
+  const usable = Object.entries(mix || { ko: 1 })
+    .filter(([l, w]) => w > 0 && available.has(l));
+  if (!usable.length) return null;
+  const total = usable.reduce((a, [, w]) => a + w, 0);
+  let r = Math.random() * total;
+  for (const [l, w] of usable) { r -= w; if (r <= 0) return l; }
+  return usable[usable.length - 1][0];
+}
+
+/* ============================================================
    4) 새 글 올리기
    ============================================================ */
 /**
@@ -270,6 +372,8 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
   const posts = POOL.posts.filter((p) => p.board === key);
   if (!posts.length) return 0;
 
+  const hasLang = await checkLangColumn();
+
   // 상한·가드 확인
   const [realCnt, seedCnt] = await Promise.all([
     sbCount(cfg.table, 'author_id=not.is.null'),
@@ -279,7 +383,18 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
     console.log(`[skip] ${key} — 실제 회원 글 ${realCnt}개, 자동 등록 중단`);
     return 0;
   }
-  if (seedCnt >= GUARD_SEED_POSTS) {
+  /* ★ 상한은 <b>언어마다 따로</b> 셉니다 (2026-08-15)
+       한 게시판 300개를 언어가 나눠 쓰면, 한국어가 다 차지한 뒤
+       영어는 한 편도 못 올라갑니다. 언어마다 300개를 줍니다. */
+  const seedByLang = {};
+  if (hasLang) {
+    for (const l of ['ko', 'en', 'ja']) {
+      seedByLang[l] = await sbCount(cfg.table, `author_id=is.null&lang=eq.${l}`);
+    }
+  } else {
+    seedByLang.ko = seedCnt;
+  }
+  if (!hasLang && seedCnt >= GUARD_SEED_POSTS) {
     console.log(`[skip] ${key} — 시드 글 상한(${GUARD_SEED_POSTS}) 도달`);
     return 0;
   }
@@ -293,6 +408,29 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
   let cand = posts.filter((p) => !used.has(p.title));
   if (cfg.onlyCategory) cand = cand.filter((p) => cfg.onlyCategory.includes(p.category));
   if (cfg.requireThumb) cand = cand.filter((p) => !!p.thumb_url);
+
+  /* ── 언어로 한 번 더 거릅니다 (2026-08-15) ──────────────────
+     ★ lang 칸이 없으면 한국어만 — 저장할 자리가 없으니까요.
+     ★ --lang=en 을 주셨으면 그 언어만.
+     ★ 게시판이 다루지 않는 언어(입시의 영어 등)는 여기서 빠집니다.
+     ★ 언어별 상한에 닿은 언어도 빠집니다. */
+  const allowed = new Set(
+    hasLang ? Object.keys(cfg.langs || { ko: 1 }) : ['ko']
+  );
+  if (ONLY_LANG) {
+    if (!allowed.has(ONLY_LANG)) {
+      console.log(`[skip] ${key} — ${ONLY_LANG} 글을 다루지 않는 게시판입니다`);
+      return 0;
+    }
+    allowed.clear(); allowed.add(ONLY_LANG);
+  }
+  for (const l of Array.from(allowed)) {
+    if ((seedByLang[l] || 0) >= GUARD_SEED_POSTS) {
+      console.log(`[skip] ${key}/${l} — 시드 글 상한(${GUARD_SEED_POSTS}) 도달`);
+      allowed.delete(l);
+    }
+  }
+  cand = cand.filter((p) => allowed.has(langOf(p)));
   if (!cand.length) {
     console.log(`[pool] ${key} — 남은 글 없음 (댓글만 계속 달립니다)`);
     return 0;
@@ -312,7 +450,8 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
   if (DRY) {
     console.log(`[dry] ${key} — ${want}건 올릴 수 있습니다 (남은 글 ${cand.length}개)`);
     cand.slice(0, Math.min(want, 5)).forEach((p, i) => {
-      console.log(`        ${i + 1}. ${p.category} · ${p.title}`);
+      const tag = langOf(p) === 'ko' ? '' : `[${langOf(p).toUpperCase()}] `;
+      console.log(`        ${i + 1}. ${p.category} · ${tag}${p.title}`);
     });
     if (want > 5) console.log(`        … 그리고 ${want - 5}건`);
     return want;
@@ -320,7 +459,18 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
 
   let made = 0;
   for (let i = 0; i < want; i++) {
-    const p = cand.splice(Math.floor(Math.random() * cand.length), 1)[0];
+    /* ★ 언어를 <b>먼저</b> 고르고 그 안에서 글을 뽑습니다 (2026-08-15)
+         그냥 섞어 뽑으면 후보가 많은 한국어가 거의 다 뽑힙니다.
+         한국어 300개 · 영어 12개면 영어가 뽑힐 확률이 4%입니다. */
+    const have = new Set(cand.map(langOf));
+    const useLang = pickLang(
+      ONLY_LANG ? { [ONLY_LANG]: 1 } : (hasLang ? cfg.langs : { ko: 1 }),
+      have
+    );
+    const bucket = cand.filter((p) => langOf(p) === useLang);
+    const chosen = bucket[Math.floor(Math.random() * bucket.length)];
+    cand.splice(cand.indexOf(chosen), 1);
+    const p = chosen;
     const row = {
       category: p.category,
       title: p.title,
@@ -331,14 +481,24 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
       created_at: FILL ? spreadDate(i, want) : jitterNow(),
       view_count: rnd(3, 40),
     };
-    if (cfg.authorName) row.author_name = p.author || pick(POOL.authors);
+    /* ★ 어느 말로 쓴 글인지 적어 둡니다 — 목록의 EN·日 배지가 이걸 봅니다.
+         칸이 없으면 넣지 않습니다(넣으면 저장이 통째로 실패합니다). */
+    if (hasLang) row.lang = langOf(p);
+    /* ★ 글쓴이 이름은 <b>그 나라 이름</b>이어야 합니다. 영어 글에
+         「새벽연습」이 붙으면 그 자리에서 들킵니다. 풀에 적힌 이름을
+         쓰고, 없을 때만 한국어 글에 한해 공용 이름을 씁니다. */
+    if (cfg.authorName) {
+      row.author_name = p.author || (langOf(p) === 'ko' ? pick(POOL.authors) : null);
+      if (!row.author_name) delete row.author_name;
+    }
     if (cfg.likes) row.like_count = rnd(0, 3);
     if (cfg.dislikes) row.dislike_count = chance(0.15) ? rnd(1, 2) : 0;
     if (p.thumb_url) row.thumb_url = p.thumb_url;
     (cfg.extraCols || []).forEach((c) => { if (p[c] !== undefined) row[c] = p[c]; });
 
     const saved = await sbInsert(cfg.table, row);
-    console.log(`[post] ${key} · ${p.category} · ${p.title}`);
+    const tag = langOf(p) === 'ko' ? '' : `[${langOf(p).toUpperCase()}] `;
+    console.log(`[post] ${key} · ${p.category} · ${tag}${p.title}`);
     made++;
 
     // 갓 올라온 글에 댓글 하나가 바로 붙는 경우가 있음 (사람 같은 패턴)

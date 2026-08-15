@@ -70,6 +70,21 @@
             뉴스 본문 평균 677자 · 문단 7개(예전 5~7문단)
           ★ 사진은 넣지 않았습니다. 아래 「사진」 항목과 같은 까닭입니다.
 
+    12차  hottopic-en(12) · hottopic-ja(12)          = 24
+          ★ 2026-08-15 · <b>첫 외국어 배치</b>입니다 (파트너 요청).
+            번역이 아니라 <b>그 말로 처음부터 쓴 글</b>입니다.
+            한국어 풀의 「아파트 층간소음」에 해당하는 것이
+            영어권에서는 <b>연습실 예약 다툼·리스 조항·오디션 투어 비용</b>,
+            일본에서는 <b>방음실·습도·만원전철·발표회</b>였습니다.
+          ★ 글쓴이 이름을 <b>반드시</b> 적어 두었습니다. 비워 두면
+            auto-seed 가 AUTHORS(한국어 이름)를 붙여, 영어 글에
+            「새벽연습」이 달립니다.
+          ★ category 는 한국어 그대로 '해외' 입니다. 영어를 적으면
+            어느 분류에도 잡히지 않습니다(화면에서 사전이 바꿉니다).
+          ★ 앞으로 늘릴 때 — 게시판 하나가 살아 보이려면 언어마다
+            열다섯 편쯤은 있어야 합니다. 지금은 열두 편이라
+            핫토픽 하나로 결을 확인하는 단계입니다.
+
    ★ 사진 게시판(gallery)은 아직 넣지 않았습니다.
      requireThumb 설정 때문에 그림 주소가 있어야 올라가는데,
      함부로 쓸 수 없는 사진을 붙이면 저작권 문제가 됩니다.
@@ -107,6 +122,9 @@ import { HOTTOPIC5 } from './pool/hottopic-5.mjs';
 import { MODERN3 } from './pool/modern-3.mjs';
 import { PRENATAL3 } from './pool/prenatal-3.mjs';
 import { UTILITY3 } from './pool/utility-3.mjs';
+/* ★ 2026-08-15 · 외국어 풀 — 파일 이름 끝의 en · ja 가 언어입니다 */
+import { HOTTOPIC_EN } from './pool/hottopic-en.mjs';
+import { HOTTOPIC_JA } from './pool/hottopic-ja.mjs';
 // 사진 준비 뒤: import { GALLERY } from './pool/gallery.mjs';
 
 /* 일반 게시판용 닉네임 풀 (글에 author 가 지정돼 있으면 그것을 씁니다)
@@ -155,6 +173,8 @@ export const POOL = {
     ...MODERN3,
     ...PRENATAL3,
     ...UTILITY3,
+    ...HOTTOPIC_EN,
+    ...HOTTOPIC_JA,
     // ...GALLERY,
   ],
 };
