@@ -39,6 +39,8 @@
      node seed/orch-collect.mjs --save           실제로 담습니다
      node seed/orch-collect.mjs --only=wph       한 악단만
      node seed/orch-collect.mjs --dump           받은 것을 눈으로
+     node seed/orch-collect.mjs --raw            <b>받은 글 그대로</b>를 봅니다
+                                                 (0건이 나올 때 원인을 찾는 용도)
 
    환경변수 : SUPABASE_URL, SUPABASE_SERVICE_KEY
    ============================================================ */
@@ -54,6 +56,11 @@ const ARGS = Object.fromEntries(process.argv.slice(2).map(a => {
 }));
 const SAVE = !!ARGS.save;
 const DUMP = !!ARGS.dump;
+/* ★ 0건이 나왔을 때 <b>무엇을 받았는지</b> 보는 눈입니다.
+     짐작으로 파서를 고치면 또 0건이 납니다. 실제 응답을 봐야
+     ① 아예 막혔는지 ② 자바스크립트로 그리는 화면인지
+     ③ 짜임이 짐작과 다른지 가릴 수 있습니다. */
+const RAW = !!ARGS.raw;
 const ONLY = typeof ARGS.only === 'string' ? ARGS.only : null;
 
 const UA = 'OpusclamBot/1.0 (+https://opusclam.com; classical music database)';
@@ -554,6 +561,28 @@ async function main() {
          멈추면 마지막 쪽을 놓칩니다(Supabase 200행 상한에서 겪은 것과
          같은 함정입니다).
        ★ 쪽마다 1.5초씩 쉽니다 — 상대 사이트에 부담을 주지 않으려는 것입니다. */
+    /* ── 받은 글 그대로 보기 ─────────────────────────────── */
+    if (RAW) {
+      const url0 = (typeof orch.pages === 'function') ? orch.pages(0) : orch.url;
+      try {
+        const res = await fetch(url0, {
+          headers: { 'User-Agent': UA, 'Accept': 'text/html,application/xhtml+xml' },
+        });
+        const html = await res.text();
+        console.log(`   주소 : ${url0}`);
+        console.log(`   응답 : ${res.status} ${res.statusText} · ${res.headers.get('content-type')}`);
+        console.log(`   길이 : ${html.length} 글자`);
+        const t = toText(html);
+        console.log(`   ── 다듬은 글 앞 2,500자 ──`);
+        console.log(t.slice(0, 2500));
+        console.log(`   ── 여기까지 (모두 ${t.length} 글자) ──`);
+      } catch (e) {
+        console.log(`   ★ 받지 못했습니다 — ${e.message}`);
+      }
+      await sleep(1500);
+      continue;
+    }
+
     let list = [];
     try {
       if (typeof orch.pages === 'function') {

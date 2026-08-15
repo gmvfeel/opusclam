@@ -47,6 +47,12 @@ on:
         default: 'no'
         type: choice
         options: ['no', 'yes']
+      raw:
+        description: '받은 글 그대로 보기 (0건이 나올 때 원인 찾기)'
+        required: true
+        default: 'no'
+        type: choice
+        options: ['no', 'yes']
       save:
         description: '실제로 담기'
         required: true
@@ -76,6 +82,7 @@ jobs:
           OPTS=""
           if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
           if [ "${{ github.event.inputs.dump }}" = "yes" ]; then OPTS="$OPTS --dump"; fi
+          if [ "${{ github.event.inputs.raw }}" = "yes" ]; then OPTS="$OPTS --raw"; fi
 
           ONLY="${{ github.event.inputs.only }}"
           if [ -n "$ONLY" ]; then OPTS="$OPTS --only=$ONLY"; fi
