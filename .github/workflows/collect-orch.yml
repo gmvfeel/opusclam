@@ -1,0 +1,120 @@
+name: SPOT · 명문 악단 공식 일정 (주간)
+
+# ── 무엇을 하나 ──
+#  Ticketmaster 에 없는 악단의 공연을 그 악단 <공식 일정 화면>에서 받아
+#  정보SPOT 「공연정보」에 담습니다(region='해외').
+#
+#  ★ 왜 필요했나
+#    빈 필·베를린 필은 표를 자기 사이트에서 직접 팝니다. 그래서
+#    Ticketmaster 로 받은 해외 공연 784건에 <세계 최고 악단들이
+#    통째로 빠져> 있었습니다. 클래식 포털에서 눈에 띄는 구멍입니다.
+#
+#  ★ 기계용 창구(ics·RSS)가 없어 공개 일정 화면을 읽습니다.
+#    · 악단이 알리고 싶어 하는 공연 홍보 정보만 받습니다
+#    · 출처를 밝히고 원본 링크로 보냅니다 — 예매는 그쪽에서
+#    · 값·좌석은 적지 않습니다
+#    · 한 곳을 한 번만 부르고 곧바로 쉽니다
+#
+# ── 처음 한 번은 반드시 「담기: no」로 ──
+#  로그에 몇 건을 읽었는지, 나라별로 몇 건인지 찍힙니다.
+#  「보기: yes」를 함께 켜면 실제 공연 열둘을 눈으로 보실 수 있습니다.
+#
+# ── 0건이면 무엇이 잘못된 것인가 ──
+#  악단이 사이트를 고치면 읽어내지 못하고 0건이 됩니다. 그때 실패로
+#  끝내지 않고 ★★ 표시로 알립니다. 로그에 그 표시가 보이면
+#  화면 짜임이 바뀐 것이니 파서를 손봐야 합니다.
+#
+# ── 왜 주간인가 ──
+#  공연 일정은 몇 달 앞서 발표되고 자주 바뀌지 않습니다.
+#  자주 부르면 상대 사이트에 부담만 됩니다.
+
+on:
+  schedule:
+    - cron: '40 21 * * 3'   # KST 매주 목 06:40
+  workflow_dispatch:
+    inputs:
+      months:
+        description: '앞으로 몇 달까지 받을지'
+        required: true
+        default: '14'
+      only:
+        description: '한 악단만 (비우면 전부 · 예: wph)'
+        required: false
+        default: ''
+      dump:
+        description: '받은 공연을 눈으로 보기'
+        required: true
+        default: 'no'
+        type: choice
+        options: ['no', 'yes']
+      save:
+        description: '실제로 담기'
+        required: true
+        default: 'no'
+        type: choice
+        options: ['no', 'yes']
+
+concurrency:
+  group: oc-orch-collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 저장소 가져오기
+        uses: actions/checkout@v4
+
+      - name: Node 준비
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 악단 일정 수집
+        run: |
+          OPTS=""
+          if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
+          if [ "${{ github.event.inputs.dump }}" = "yes" ]; then OPTS="$OPTS --dump"; fi
+
+          ONLY="${{ github.event.inputs.only }}"
+          if [ -n "$ONLY" ]; then OPTS="$OPTS --only=$ONLY"; fi
+
+          # 예약 실행(schedule)에는 inputs 가 없습니다 — 그때는 담습니다
+          if [ -z "${{ github.event.inputs.save }}" ]; then OPTS="--save"; fi
+
+          echo "── 실행 : node seed/orch-collect.mjs $OPTS ──"
+          node seed/orch-collect.mjs $OPTS
+        env:
+          MONTHS: ${{ github.event.inputs.months || '14' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+  # ── 실패를 알려 줍니다 ──────────────────────────────────────
+  #  ★ 예약 실행이 실패해도 눌러 보지 않으면 모릅니다.
+  #  ※ Settings → Actions → General → Workflow permissions 를
+  #    「Read and write permissions」 로 두셔야 이슈를 만들 수 있습니다.
+  oc-notify-failure:
+    needs: collect
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다"
+          fi
