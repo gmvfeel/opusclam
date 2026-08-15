@@ -139,7 +139,7 @@ export const ORCHESTRAS = [
         if (!mon) continue;                     /* 모르는 달 이름 — 건너뜁니다 */
 
         /* 이 날짜 아래에서 다음 날짜가 나오기 전까지가 한 공연입니다 */
-        let title = '', link = '', time = '', place = '', sub = '';
+        let title = '', link = '', time = '', place = '', sub = '', thumb = '';
         const conductors = [], composers = [];
         let mode = '';
 
@@ -148,6 +148,16 @@ export const ORCHESTRAS = [
           const t = raw.trim();
           if (DATE_RE.test(t)) break;           /* 다음 공연 */
           if (!t) continue;
+
+          /* 그림 — 「![설명](주소)」 · 링크에 싸여 있어도 잡습니다.
+             ★ 이 화면의 그림은 <b>포스터가 아니라 홍보 사진</b>입니다
+               (지휘자·공연장·여행 공연용). 같은 사진이 여러 공연에
+               되풀이되는 것이 정상이므로 겹친다고 버리지 않습니다 —
+               목록에 빈 자리가 죽 늘어서면 죽어 보입니다. */
+          if (!thumb) {
+            const mi = /!\[[^\]]*\]\((https?:[^)]+)\)/.exec(t);
+            if (mi) { thumb = mi[1]; continue; }
+          }
 
           /* 제목 — ## [이름](주소) */
           if (!title) {
@@ -203,7 +213,7 @@ export const ORCHESTRAS = [
 
         out.push({
           date: `${year}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
-          time, title, sub, link, venue, city, country, conductors, composers,
+          time, title, sub, link, venue, city, country, conductors, composers, thumb,
         });
       }
       return out;
@@ -251,6 +261,24 @@ export function toText(html) {
   });
   s = s.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (m, t) => `\n### ${strip(t)}\n`);
   s = s.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (m, t) => `\n- ${strip(t)}\n`);
+  /* 그림 — 「![설명](주소)」 꼴로 남깁니다
+     ★ 요즘 사이트는 화면에 보일 때까지 그림을 미루느라 주소를
+       src 가 아니라 <b>data-src·data-original</b> 에 넣어 둡니다.
+       src 만 보면 빈 그림(1픽셀 자리표)을 잡게 됩니다.
+     ★ srcset 은 「주소 1x, 주소 2x」 꼴이라 <b>첫 주소</b>만 뗍니다. */
+  s = s.replace(/<img\b([^>]*)>/gi, (m, attr) => {
+    const pick = (name) => {
+      const r = new RegExp(name + '\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\'|([^\\s>]+))', 'i').exec(attr);
+      return r ? (r[1] || r[2] || r[3] || '') : '';
+    };
+    let src = pick('data-src') || pick('data-original') || pick('src');
+    if (!src) {
+      const ss = pick('srcset') || pick('data-srcset');
+      if (ss) src = ss.split(',')[0].trim().split(/\s+/)[0];
+    }
+    if (!src) return ' ';
+    return `\n![${strip(pick('alt'))}](${src})\n`;
+  });
   s = s.replace(/<br\s*\/?>/gi, '\n');
   s = s.replace(/<\/(p|div|section|article|h1|h2|h3|h4|tr)>/gi, '\n');
   s = s.replace(/<[^>]+>/g, ' ');
@@ -320,6 +348,7 @@ export function toRow(o, orch) {
     date_to: o.date,
     date_text: o.date,
     venue_name: o.venue || '',
+    thumb_url: o.thumb || null,
     link_url: link,
     organizer: orch.nameEn,
     /* tm_id 자리를 씁니다 — 같은 표에서 겹치지 않게 하는 열쇠입니다.
@@ -438,6 +467,12 @@ async function main() {
     kept.forEach(o => { const c = DE_COUNTRY[o.country] || o.country || '(없음)'; byC[c] = (byC[c] || 0) + 1; });
     console.log('   나라별 : ' + Object.entries(byC).sort((a, b) => b[1] - a[1])
       .map(([k, v]) => `${k} ${v}`).join(' · '));
+
+    /* 그림이 얼마나 붙었나 — 0 이면 그림 읽기가 깨진 것입니다 */
+    const withImg = kept.filter(o => o.thumb).length;
+    const kinds = new Set(kept.map(o => o.thumb).filter(Boolean)).size;
+    console.log(`   그림 : ${withImg}건에 붙음 (${kinds}가지) · 없음 ${kept.length - withImg}건`);
+    if (!withImg) console.log('   ★ 그림을 하나도 읽지 못했습니다 — 화면 짜임을 확인해 주십시오');
 
     if (SAVE) {
       if (!SB_URL || !SB_KEY) {
