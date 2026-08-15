@@ -84,8 +84,16 @@
     /* ★ 2026-08-14 · 흰 띠 → <b>검정</b> (파트너 지시)
          밝은 모드·어두운 모드 <b>둘 다</b> 검정입니다. 그래서 아래쪽
          글자·아이콘 색도 흰 계열로 함께 바꿉니다 — 바탕만 바꾸면
-         회색 글자가 묻힙니다. */
-    +   'background:#0d0d12;border-top:1px solid rgba(255,255,255,.10);'
+         회색 글자가 묻힙니다.
+
+       ★ 2026-08-15 · #0d0d12 → <b>#272524</b> (파트너 시험)
+         푸른끼가 도는 검정에서 <b>따뜻한 먹빛</b>으로 바꿉니다.
+         되돌리시려면 아래 두 곳을 예전 값으로 돌리면 됩니다 —
+             밝은 모드   #272524  ← 예전 #0d0d12
+             어두운 모드 #1c1a19  ← 예전 #0a0a0a
+         글자 대비는 확인했습니다(안 고른 글자 6.4 · 고른 글자 6.9 —
+         기준 4.5 를 넘습니다). 색만 바꾸면 되고 다른 손댈 곳은 없습니다. */
+    +   'background:#272524;border-top:1px solid rgba(255,255,255,.10);'
     +   'box-shadow:0 -8px 22px -14px rgba(0,0,0,.55)}'
     + '.oc-tab-in{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:' + H + 'px}'
     /* 한 칸 */
@@ -109,9 +117,11 @@
          띠가 남아 있었습니다. 띠의 z-index 를 내리면 맨위로 단추·PWA 띠
          (200)에 가리므로, 열린 동안만 감추는 쪽이 맞습니다. */
     + 'html.oc-menu-open .oc-tab{display:none !important}'
-    /* 어두운 화면 — 바탕을 순수 블랙에 가깝게 한 단계만 더 낮춥니다
-       (밝은 모드도 이미 검정이므로 색을 다시 적지 않습니다) */
-    + 'html[data-theme="dark"] .oc-tab{background:#0a0a0a;border-top-color:rgba(255,255,255,.08)}'
+    /* 어두운 화면 — 바탕을 한 단계만 더 낮춥니다
+       ★ 2026-08-15 · 밝은 모드를 #272524 로 바꾸면서 여기도 같은 결로
+         내렸습니다(#1c1a19). 예전처럼 #0a0a0a 로 두면 두 모드의 띠가
+         <b>서로 다른 색</b>이 되어, 색을 견주어 보실 때 헷갈립니다. */
+    + 'html[data-theme="dark"] .oc-tab{background:#1c1a19;border-top-color:rgba(255,255,255,.08)}'
     /* 좁은 화면에서만 보입니다 */
     + '@media (max-width:' + MAX + 'px){'
     +   '.oc-tab{display:block}'
