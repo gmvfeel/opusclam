@@ -15,6 +15,13 @@
       ]
     },
     {
+      "_comment": "광고 소재 — 2026-08-15. 광고를 갈 때 파일 이름을 그대로 두고 그림만 덮어씁니다. 캐시를 두면 옛 광고가 계속 보이므로 매번 새로 확인하게 합니다. 소재는 수십 KB라 느려지지 않습니다.",
+      "source": "/assets/ads/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
       "source": "/assets/:path*.css",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
