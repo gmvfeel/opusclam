@@ -105,6 +105,7 @@
   font-size:13.5px;font-family:inherit;background:var(--paper);color:var(--text);cursor:pointer}
 .ca-bar > select:focus{outline:none;border-color:var(--violet-2)}
 .ca-count{font-size:13px;color:var(--text-3);margin-left:auto;white-space:nowrap}
+.ca-bar .pdb-fontsize{flex:0 0 auto}
 
 /* ── 연도 묶음 ───────────────────────────────────────── */
 .ca-year{border-top:1px solid var(--line);padding:22px 0}
@@ -124,7 +125,9 @@
 .ca-item .rk.r1{background:#C9A94E;color:#2a2005}
 .ca-item .rk.r2{background:#c3c6ce;color:#2a2a2e}
 .ca-item .rk.r3{background:#c8956a;color:#2e1c0c}
-.ca-item .nm{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--text);
+/* ★ 글자 크기 단추가 --ca-fs 를 바꿉니다(13~21px).
+     이름만 키웁니다 — 등수·나라까지 키우면 줄이 깨집니다. */
+.ca-item .nm{flex:1;min-width:0;font-size:var(--ca-fs,13.5px);font-weight:600;color:var(--text);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ca-item a.nm{color:var(--violet-2);text-decoration:none}
 .ca-item a.nm:hover{text-decoration:underline}
@@ -221,6 +224,10 @@
           <div class="pdb-eyebrow">CONCOURS ARCHIVE</div>
           <h1 class="pdb-title">국제 콩쿠르 아카이브</h1>
         </div>
+        <!-- ★ 관심분야 단추가 여기 붙습니다 — assets/interests.js 가
+               갈래 목록에서 concours-archive 를 찾아 스스로 만듭니다.
+               다른 정보SPOT 화면과 같은 자리·같은 모양입니다. -->
+        <div id="favSlot"></div>
       </div>
       <p class="pdb-lead">쇼팽·차이콥스키·퀸 엘리자베스·리즈·부조니 — 1927년부터 오늘까지 입상자 기록을 한곳에 모았습니다.</p>
     </header>
@@ -241,12 +248,35 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input type="search" id="q" placeholder="이름으로 찾기 (예: Cho · Zimerman)" aria-label="이름으로 찾기">
     </div>
+    <!-- ★ 2026-08-15 · 조건을 넷으로 늘렸습니다 (파트너 요청)
+           이 자료에 있는 것만 조건으로 둡니다 — 지어내지 않습니다.
+             등수   1~3위·입선까지
+             나라   입상자 나라 (자료에서 뽑아 만듭니다)
+             연대   1920년대 … 2020년대
+             차례   최근순·오래된순 -->
     <select id="rank" aria-label="등수">
       <option value="">등수 전부</option>
       <option value="top3">1~3위만</option>
       <option value="1">1위만</option>
+      <option value="2">2위만</option>
+      <option value="3">3위만</option>
+      <option value="hm">입선·결선</option>
+    </select>
+    <select id="ctry" aria-label="나라"><option value="">나라 전부</option></select>
+    <select id="dec" aria-label="연대"><option value="">연대 전부</option></select>
+    <select id="sort" aria-label="차례">
+      <option value="desc">최근순</option>
+      <option value="asc">오래된순</option>
     </select>
     <span class="ca-count" id="count"></span>
+
+    <!-- 글자 크기 — 다른 정보SPOT 화면과 같은 짜임(pdb-fontsize) -->
+    <div class="pdb-fontsize" role="group" aria-label="글자 크기 조절">
+      <span class="fs-label">글자크기</span>
+      <button type="button" class="fs-btn" data-fs="down" aria-label="글자 작게">가–</button>
+      <button type="button" class="fs-btn" data-fs="reset" aria-label="기본 크기">가</button>
+      <button type="button" class="fs-btn" data-fs="up" aria-label="글자 크게">가+</button>
+    </div>
   </div>
 
  <div class="ca-wrap">
@@ -382,6 +412,26 @@
       if (from > 5000) break;         /* 안전장치 */
     }
     ROWS = all;
+
+    /* ★ 나라·연대 고르개는 <b>자료에서 뽑아</b> 만듭니다.
+         미리 적어 두면 이 대회에 없는 나라가 목록에 남고, 새 대회를
+         더할 때마다 손봐야 합니다. 있는 것만 보여 주는 편이 맞습니다.
+       ★ 대회를 바꿀 때마다 다시 만듭니다 — 쇼팽과 차이콥스키는
+         입상자 나라가 다릅니다. */
+    var cs = {}, ds = {};
+    ROWS.forEach(function (p) {
+      if (p.country) cs[p.country] = (cs[p.country] || 0) + 1;
+      if (p.year) { var d = Math.floor(p.year / 10) * 10; ds[d] = (ds[d] || 0) + 1; }
+    });
+    $('ctry').innerHTML = '<option value="">나라 전부</option>'
+      + Object.keys(cs).sort(function (a, b) { return cs[b] - cs[a] || a.localeCompare(b); })
+        .map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + ' (' + cs[c] + ')</option>'; })
+        .join('');
+    $('dec').innerHTML = '<option value="">연대 전부</option>'
+      + Object.keys(ds).sort(function (a, b) { return b - a; })
+        .map(function (d) { return '<option value="' + esc(d) + '">' + d + '년대 (' + ds[d] + ')</option>'; })
+        .join('');
+
     SHOWN = PAGE;
     draw();
   }
@@ -391,13 +441,20 @@
     var q = ($('q').value || '').trim().toLowerCase();
     var rk = $('rank').value;
 
+    var ct = $('ctry').value;
+    var dc = $('dec').value;
+
     var rows = ROWS.filter(function (p) {
       if (q) {
         var hay = ((p.name_en || '') + ' ' + (p.name_ko || '')).toLowerCase();
         if (hay.indexOf(q) < 0) return false;
       }
-      if (rk === '1' && p.rank_no !== 1) return false;
-      if (rk === 'top3' && !(p.rank_no >= 1 && p.rank_no <= 3)) return false;
+      if (rk === 'top3') { if (!(p.rank_no >= 1 && p.rank_no <= 3)) return false; }
+      else if (rk === 'hm') { if (p.rank_no) return false; }   /* 등수 없는 것 = 입선·결선 */
+      else if (rk) { if (String(p.rank_no) !== rk) return false; }
+
+      if (ct && p.country !== ct) return false;
+      if (dc && Math.floor(p.year / 10) * 10 !== +dc) return false;
       return true;
     });
 
@@ -417,7 +474,8 @@
       if (!byYear[p.year]) { byYear[p.year] = []; years.push(p.year); }
       byYear[p.year].push(p);
     });
-    years.sort(function (a, b) { return b - a; });
+    var asc = $('sort').value === 'asc';
+    years.sort(function (a, b) { return asc ? a - b : b - a; });
 
     var show = years.slice(0, SHOWN);
     var html = show.map(function (y) {
@@ -465,7 +523,45 @@
     clearTimeout(t);
     t = setTimeout(function () { SHOWN = PAGE; draw(); }, 200);
   });
-  $('rank').addEventListener('change', function () { SHOWN = PAGE; draw(); });
+  ['rank', 'ctry', 'dec', 'sort'].forEach(function (id) {
+    $(id).addEventListener('change', function () { SHOWN = PAGE; draw(); });
+  });
+
+  /* ── 글자 크기 ────────────────────────────────────────
+     board.js 와 <b>같은 단계</b>를 씁니다(13·15·17·19·21px).
+     화면마다 크기가 다르면 옮겨 다닐 때 글씨가 튑니다. */
+  (function () {
+    var btns = document.querySelectorAll('.pdb-fontsize .fs-btn');
+    var host = $('list');
+    if (!btns.length || !host) return;
+    var sizes = [13, 15, 17, 19, 21], idx = 1;
+    function apply() { host.style.setProperty('--ca-fs', sizes[idx] + 'px'); }
+    [].forEach.call(btns, function (b) {
+      b.addEventListener('click', function () {
+        var k = b.getAttribute('data-fs');
+        if (k === 'up') idx = Math.min(sizes.length - 1, idx + 1);
+        else if (k === 'down') idx = Math.max(0, idx - 1);
+        else idx = 1;
+        apply();
+      });
+    });
+    apply();
+  })();
+
+  /* ── 관심분야 단추 ────────────────────────────────────
+     assets/interests.js 가 실린 뒤에 붙입니다. 그 파일이 갈래 목록에서
+     concours-archive 를 찾아 스스로 만듭니다. */
+  (function favWait(n) {
+    n = n || 0;
+    try {
+      if (window.OCInterests && window.OCInterests.button) {
+        window.OCInterests.button($('favSlot'), 'spot', 'concours-archive');
+        return;
+      }
+    } catch (e) {}
+    if (n > 40) return;
+    setTimeout(function () { favWait(n + 1); }, 150);
+  })();
 
   /* Supabase 가 실릴 때까지 기다립니다 */
   (function wait(n) {

@@ -67,6 +67,13 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       en:'Score',      tb:'spot', view:'/spot/spot-view.html' },
     { big:'spot', key:'sites',     label:'관련사이트',         href:'/spot/sites.html',     sec:'관련사이트',
       en:'Sites',      tb:'spot', view:'/spot/spot-view.html' },
+    /* ★ 2026-08-15 · 국제 콩쿠르 아카이브 (새 갈래)
+         ★ 다른 갈래와 달리 <b>spot 표를 쓰지 않습니다</b> —
+           oc_concours_prize 라는 제 표를 봅니다. 그래서 tb·view 를 비웁니다.
+           관심분야에 담아 두면 「내 메인」에 이 갈래가 앞자리로 옵니다. */
+    { big:'spot', key:'concours-archive', label:'국제 콩쿠르 아카이브',
+      href:'/spot/concours-archive.html', sec:'콩쿠르 아카이브',
+      en:'Concours Archive', tb:null, view:null },
 
     /* ── OC커뮤니티 ── */
     { big:'community', key:'hottopic',   label:'핫토픽',          href:'/community/hottopic.html',
