@@ -70,6 +70,18 @@ async function raw(title) {
 /* [[Martha Argerich]] · [[Martha Argerich|Argerich]] · Martha Argerich */
 function clean(s) {
   return String(s || '')
+    /* ★ 위키 표는 칸에 꾸밈을 붙입니다 —
+         「rowspan="8" | 이름」·「align="center" |€25,000」
+       「|」 앞의 속성 부분을 걷어내지 않으면 그것이 통째로 이름이 됩니다
+       (첫 시험에서 「rowspan="8" | · Yuri Bryushkov」가 나왔습니다). */
+    .replace(/^\s*(?:[a-z-]+\s*=\s*"[^"]*"\s*)+\|/i, '')
+    .replace(/^\s*(?:[a-z-]+\s*=\s*'[^']*'\s*)+\|/i, '')
+    .replace(/^\s*(?:[a-z-]+\s*=\s*[\w:;#%.-]+\s*)+\|/i, '')
+    .replace(/<br\s*\/?>/gi, ' ')
+    /* ★ 그림은 <b>통째로</b> 지웁니다 — [[File:Gold medal.svg|20px]]
+         일반 링크보다 <b>먼저</b> 해야 합니다. 나중에 하면 「20px」만
+         남아 그것이 이름이 됩니다(시험에서 잡았습니다). */
+    .replace(/\[\[(?:File|Image|파일|그림):[^\]]*\]\]/gi, ' ')
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
     .replace(/\[\[([^\]]+)\]\]/g, '$1')
     .replace(/\{\{[^}]*\}\}/g, '')
@@ -79,6 +91,22 @@ function clean(s) {
     .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/* 이름 자리에 오면 안 되는 것들
+   ★ 상금(€30,000 · 40,000zł)이 이름 칸으로 밀려드는 일이 잦습니다.
+     통화 기호가 앞에 오기도 뒤에 오기도 해서 둘 다 봅니다.
+   ★ 「not awarded」처럼 <b>주지 않았다</b>는 표시도 이름이 아닙니다. */
+function isNotName(c) {
+  const t = String(c || '').trim();
+  if (!t) return true;
+  if (/^[€$£¥]?\s*[\d.,]+\s*(zł|€|\$|£|PLN|EUR|USD|zl)?$/i.test(t)) return true;
+  if (/not\s*awarded|nie\s*przyznano|없음|—|–/i.test(t)) return true;
+  if (/^(prize|winner|country|total|special|medal|award)s?$/i.test(t)) return true;
+  if (/^(1st|2nd|3rd|\d+th|HM|F)$/i.test(t)) return true;
+  if (/^\d+\s*px$/i.test(t)) return true;              /* 그림 크기 찌꺼기 */
+  if (t.length < 2 || t.length > 60) return true;
+  return false;
 }
 
 /* 등수 — 「1st」·「2nd」·「1」·「HM」 */
@@ -104,7 +132,7 @@ function parseTemplate(wt) {
     /* 「등수 · 상금 · 이름 · 나라」가 흔한 차례입니다.
        상금 칸은 숫자와 통화 기호로 되어 있어 알아볼 수 있습니다. */
     const rank = rankOf(cols[0]);
-    const rest = cols.slice(1).filter(c => !/^[\d.,]+\s*(zł|€|\$|PLN|EUR|USD)?$/i.test(c));
+    const rest = cols.slice(1).filter(c => !isNotName(c));
     if (!rest.length) continue;
     out.push({ rank, name: rest[0], country: rest[1] || '' });
   }
@@ -119,6 +147,11 @@ function parseTable(wt) {
     /* 입상자 표인지 — 머리에 Prize·Winner 가 있어야 합니다 */
     if (!/prize|winner|nagrod/i.test(tb.slice(0, 400))) continue;
     const rows = tb.split(/\n\|-/).slice(1);
+    /* ★ 최근 회차는 1·2·3위 칸에 <b>메달 그림</b>을 넣어 등수 글자가
+         아예 없습니다. 대신 <b>나오는 차례가 곧 등수</b>입니다.
+         그래서 등수를 못 읽으면 차례로 매깁니다 — 다만 이미 4위·5위가
+         읽힌 표에서는 건드리지 않습니다(뒤엉킵니다). */
+    let seq = 0;
     for (const row of rows) {
       /* ★ 위키 표는 칸을 <b>두 가지</b>로 나눕니다 —
            줄마다 「| 값」으로 쓰거나, 한 줄에 「| 값 || 값 || 값」으로 잇습니다.
@@ -133,10 +166,15 @@ function parseTable(wt) {
         }
       }
       if (cells.length < 2) continue;
-      const rank = rankOf(cells[0]);
-      const rest = cells.slice(1).filter(c => !/^[\d.,]+\s*(zł|€|\$|PLN|EUR|USD)?$/i.test(c));
+      let rank = rankOf(cells[0]);
+      const rest = cells.slice(1).filter(c => !isNotName(c));
       if (!rest.length) continue;
-      out.push({ rank, name: rest[0], country: rest[1] || '' });
+      /* 첫 칸이 이름이면(등수 칸이 없는 표) 이름 자리를 앞으로 당깁니다 */
+      const names = isNotName(cells[0]) ? rest : cells.filter(c => !isNotName(c));
+      if (!names.length) continue;
+      seq++;
+      if (!rank && seq <= 3) rank = String(seq);      /* 차례로 매김 */
+      out.push({ rank, name: names[0], country: names[1] || '' });
     }
   }
   return out;
@@ -150,7 +188,7 @@ function parseLines(wt) {
   while ((m = re.exec(wt)) !== null) {
     const rank = rankOf(m[1]);
     const parts = clean(m[2]).split(';').map(x => x.trim()).filter(Boolean);
-    const rest = parts.filter(c => !/^[\d.,]+\s*(zł|€|\$|PLN|EUR|USD)?$/i.test(c));
+    const rest = parts.filter(c => !isNotName(c));
     if (!rest.length) continue;
     out.push({ rank, name: rest[0], country: rest[1] || '' });
   }
@@ -180,15 +218,20 @@ function parseAll(wt) {
 }
 
 /* 문서에서 열린 해 읽기 — 「1965」 꼴 */
+/* ★ 첫 시험에서 <b>모든 회가 2021</b>로 나왔습니다 — 문서 아래쪽
+     각주·참고문헌의 연도를 집은 것입니다.
+   ▶ 그래서 <b>대조표를 먼저</b> 씁니다. 회차별 개최 연도는 바뀌지
+     않는 사실이고, 문서에서 읽는 것보다 확실합니다.
+     문서 값은 대조표에 없는 회차에서만 씁니다. */
 function yearOf(wt, no) {
-  const m = /\|\s*date\s*=\s*[^|}\n]*?(\d{4})/i.exec(wt)
-         || /held from[^.]*?(\d{4})/i.exec(wt)
-         || /was held[^.]*?(\d{4})/i.exec(wt);
+  if (YEARS[no]) return YEARS[no];
+  const head = wt.slice(0, 2000);        /* 머리말 안에서만 찾습니다 */
+  const m = /was held[^.]*?\b(19|20)(\d{2})\b/i.exec(head);
   if (m) {
-    const y = +m[1];
+    const y = +(m[1] + m[2]);
     if (y >= 1920 && y <= 2030) return y;
   }
-  return YEARS[no] || 0;
+  return 0;
 }
 
 
@@ -248,7 +291,7 @@ function yearOf(wt, no) {
       + `  입상 ${String(list.length).padStart(2)}명 · 1~3위 ${top3}/3 · 꼴「${how}」`);
 
     if (DUMP && list.length) {
-      list.slice(0, 8).forEach(p =>
+      list.slice(0, 6).forEach(p =>
         console.log(`            ${(p.rank || '-').padStart(3)}  ${p.name}${p.country ? ' · ' + p.country : ''}`));
       if (list.length > 8) console.log(`            … 그리고 ${list.length - 8}명`);
     }
