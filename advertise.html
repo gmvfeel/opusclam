@@ -77,14 +77,20 @@
 .adp-cta:hover{filter:brightness(1.07);transform:translateY(-2px)}
 
 /* ══ 숫자 띠 ═══════════════════════════════════════════ */
-.adp-stats{background:var(--paper);border-bottom:1px solid var(--line);padding:34px 20px}
+.adp-stats{background:var(--paper);border-bottom:1px solid var(--line);padding:44px 20px 40px}
 .adp-stats-in{max-width:980px;margin:0 auto;display:grid;
   grid-template-columns:repeat(4,1fr);gap:0;text-align:center}
 .adp-stat{padding:6px 12px;border-left:1px solid var(--line)}
 .adp-stat:first-child{border-left:0}
-.adp-stat b{display:block;font-family:var(--display);font-size:29px;font-weight:800;
-  color:var(--text);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
-.adp-stat span{display:block;font-size:12.5px;color:var(--text-3);margin-top:9px}
+/* ★ 2026-08-15 · 숫자를 <b>크고 굵게</b> · 세면서 올라가게 (파트너 요청)
+     ▶ tabular-nums 가 중요합니다 — 폭이 같은 숫자꼴이라 세는 동안
+       칸이 덜컹거리지 않습니다. 이것이 없으면 1 과 8 의 폭이 달라
+       숫자가 흔들려 보입니다. */
+.adp-stat b{display:block;font-family:var(--display);font-size:clamp(34px,4.6vw,46px);
+  font-weight:900;color:var(--text);letter-spacing:-.035em;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;line-height:1.05}
+.adp-stat span{display:block;font-size:13px;color:var(--text-3);margin-top:12px;
+  letter-spacing:.02em}
 .adp-asof{text-align:center;font-size:12px;color:var(--text-3);margin:22px 0 0}
 
 /* ══ 공통 구역 ═════════════════════════════════════════
@@ -209,12 +215,13 @@
      머리 구역(히어로)만 가운데인 것은 맞습니다 — 그건 표지니까요.
      ▶ 왼쪽에 글, 오른쪽에 메일 주소를 두어 <b>두 칸</b>으로 폅니다.
        가로가 넓은 구역이라 한 줄로 늘어놓으면 허전합니다. */
-/* ★ 2026-08-15 · var(--ink) 를 쓰면 <b>어두운 모드에서 뒤집힙니다</b>
-     (#0E1230 → #ededed). 바탕이 밝아지는데 글자는 흰색이라 묻혔습니다.
-     ▶ 고정 남색을 <b>직접</b> 적습니다. 이 구역만은 두 모드에서
-       같은 색으로 두는 것이 맞습니다 — 마무리 띠라서 그렇습니다. */
-.adp-contact{background:#0E1230;color:#fff;padding:76px 20px;border-top:1px solid var(--line)}
-html[data-theme="dark"] .adp-contact{background:#141414;border-top-color:#2b2b2b}
+/* ★ 2026-08-15 · 남색 바탕을 <b>걷어냈습니다</b> (파트너 지적)
+     ─────────────────────────────────────────────────
+     위 구역들을 모두 선으로 가르기로 했는데 여기만 색을 깔면
+     혼자 튑니다. 다른 구역과 같은 결로 맞춥니다.
+     ▶ 색을 쓰지 않으니 어두운 모드 보정도 필요 없어졌습니다 —
+       --text 계열이 알아서 뒤집힙니다. */
+.adp-contact{padding:78px 20px 84px;border-top:1px solid var(--line)}
 
 /* ══ 어두운 모드 보정 ══════════════════════════════════
    ★ 2026-08-15 · --violet-2 는 어두운 모드에서 <b>회색(#a2a2a2)</b>이 됩니다.
@@ -235,16 +242,16 @@ html[data-theme="dark"] .adp-eyebrow{color:#9a9a9a}
 html[data-theme="dark"] .adp-ad{outline-color:#bebebe}
 .adp-contact-in{max-width:1080px;margin:0 auto;display:grid;
   grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
-.adp-contact h2{font-size:26px;font-weight:800;margin:0 0 14px;color:#fff;letter-spacing:-.025em}
-.adp-contact p{font-size:14.5px;line-height:1.9;color:rgba(255,255,255,.72);margin:0;max-width:480px}
-.adp-mailbox{border-left:1px solid rgba(255,255,255,.14);padding-left:44px}
+.adp-contact h2{font-size:26px;font-weight:800;margin:0 0 14px;color:var(--text);letter-spacing:-.025em}
+.adp-contact p{font-size:14.5px;line-height:1.9;color:var(--text-2);margin:0;max-width:480px}
+.adp-mailbox{border-left:1px solid var(--line-2);padding-left:44px}
 .adp-mailbox span{display:block;font-family:var(--display);font-size:10.5px;
-  letter-spacing:.18em;color:rgba(255,255,255,.4);font-weight:800;margin:0 0 12px}
+  letter-spacing:.18em;color:var(--text-3);font-weight:800;margin:0 0 12px}
 .adp-mail{display:inline-flex;align-items:center;gap:9px;font-family:var(--display);
-  font-size:21px;font-weight:800;color:#C9A94E;text-decoration:none;
+  font-size:21px;font-weight:800;color:var(--violet-2);text-decoration:none;
   border-bottom:2px solid transparent;transition:border-color .2s ease}
-.adp-mail:hover{border-bottom-color:#C9A94E}
-.adp-who{font-size:12.5px;color:rgba(255,255,255,.45);margin:20px 0 0;line-height:1.9}
+.adp-mail:hover{border-bottom-color:var(--violet-2)}
+.adp-who{font-size:12.5px;color:var(--text-3);margin:20px 0 0;line-height:1.9}
 
 @media(max-width:860px){
   .adp-top{padding:132px 20px 58px}
@@ -253,7 +260,7 @@ html[data-theme="dark"] .adp-ad{outline-color:#bebebe}
   .adp-stat:nth-child(3){border-left:0}
   .adp-step::after{display:none}
   .adp-contact-in{grid-template-columns:1fr;gap:32px}
-  .adp-mailbox{border-left:0;border-top:1px solid rgba(255,255,255,.14);
+  .adp-mailbox{border-left:0;border-top:1px solid var(--line-2);
     padding-left:0;padding-top:28px}
 }
 </style>
@@ -281,10 +288,10 @@ html[data-theme="dark"] .adp-ad{outline-color:#bebebe}
   <!-- ══ 숫자 ══════════════════════════════════════════ -->
   <section class="adp-stats">
     <div class="adp-stats-in">
-      <div class="adp-stat"><b>15,250</b><span>인물</span></div>
-      <div class="adp-stat"><b>16,642</b><span>작품</span></div>
-      <div class="adp-stat"><b>1,795</b><span>공연정보</span></div>
-      <div class="adp-stat"><b>15,000</b><span>학술자료</span></div>
+      <div class="adp-stat"><b data-to="15250">15,250</b><span>인물</span></div>
+      <div class="adp-stat"><b data-to="16642">16,642</b><span>작품</span></div>
+      <div class="adp-stat"><b data-to="1795">1,795</b><span>공연정보</span></div>
+      <div class="adp-stat"><b data-to="15000">15,000</b><span>학술자료</span></div>
     </div>
     <p class="adp-asof">2026년 8월 기준 · 자동수집과 회원 보강으로 날마다 늘어납니다</p>
   </section>
@@ -574,6 +581,59 @@ html[data-theme="dark"] .adp-ad{outline-color:#bebebe}
          지나갑니다. 다른 화면 42곳에는 그대로 붙습니다. -->
 <div id="oc-footer"></div>
 
+
+<script>
+/* ── 숫자 세기 — 2026-08-15 (파트너 요청) ────────────────────
+   ★ 어떻게 도나
+     화면에 <b>들어왔을 때</b> 한 번만 셉니다(IntersectionObserver).
+     들어오기 전에 세면 아무도 못 보고 끝납니다.
+
+   ★ 처음에 <b>이미 완성된 숫자</b>를 써 둡니다
+     자바스크립트가 늦게 실려도, 꺼져 있어도 숫자는 보입니다.
+     세기가 시작될 때 비로소 0 으로 되돌리고 올립니다.
+     ▶ 검색 봇도 완성된 숫자를 읽습니다.
+
+   ★ 끝이 느려지는 곡선(ease-out)으로 셉니다
+     일정한 속도로 세면 기계 같습니다. 끝에서 천천히 멎어야
+     「도착했다」는 느낌이 납니다.
+
+   ★ 움직임을 꺼 둔 분에게는 세지 않습니다
+     (prefers-reduced-motion) — 어지럼을 느끼시는 분들이 있습니다. */
+(function () {
+  var els = [].slice.call(document.querySelectorAll('.adp-stat b[data-to]'));
+  if (!els.length) return;
+
+  var still = false;
+  try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  if (still || !('IntersectionObserver' in window)) return;   /* 완성된 숫자 그대로 */
+
+  function run(el) {
+    var to = +el.getAttribute('data-to') || 0;
+    var dur = 1400, t0 = null;
+    function step(t) {
+      if (t0 === null) t0 = t;
+      var p = Math.min(1, (t - t0) / dur);
+      /* 끝에서 천천히 — 1-(1-p)^3 */
+      var e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(to * e).toLocaleString('ko-KR');
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = to.toLocaleString('ko-KR');   /* 끝값을 정확히 */
+    }
+    el.textContent = '0';
+    requestAnimationFrame(step);
+  }
+
+  var io = new IntersectionObserver(function (rows) {
+    rows.forEach(function (r) {
+      if (!r.isIntersecting) return;
+      io.unobserve(r.target);      /* 한 번만 */
+      run(r.target);
+    });
+  }, { threshold: .4 });
+
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
 <script src="/assets/app.js"></script>
 <script src="/assets/pwa-install.js?v=20260815" defer></script>
 </body>
