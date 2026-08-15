@@ -237,6 +237,32 @@ window.OCBoard = (function () {
   }
 
   /* 본문 미리보기: 줄바꿈·공백 정리 후 잘라내기 (CSS로 2줄 제한) */
+  /* ★★ 2026-08-15 · 언어 배지 (파트너 요청) ★★
+     ──────────────────────────────────────────────────────────────
+     ★ 왜 다나
+       앞으로 영어·일본어로 쓴 글이 <b>한국어 글과 섞여</b> 올라옵니다.
+       언어로 거르지 않기로 했습니다 — 영어를 읽는 한국분도, 한국어를
+       읽는 외국분도 계시니까요(파트너 결정).
+       다만 <b>눌러 보기 전에는 무슨 언어인지 알 수 없어</b> 배지를 답니다.
+
+     ★ 한국어 글에는 붙이지 않습니다
+       거의 모든 글이 한국어라, 다 붙이면 온 목록이 배지밭이 됩니다.
+       <b>다른 언어일 때만</b> 눈에 띄면 됩니다.
+
+     ★ 일본어는 「日」 한 글자로
+       'JA' 보다 알아보기 쉽고 자리를 덜 먹습니다.
+
+     ★ list() 와 view() 가 <b>함께</b> 씁니다 — 그래서 두 함수 <b>바깥</b>에
+       둡니다. 안쪽에 두면 상세 화면에서 「불러오지 못했습니다」가 납니다.
+     ★ lang 칸이 없는 표에도 안전합니다 — 값이 없으면 빈 글자를
+       돌려주므로, 아직 SQL 을 돌리지 않은 게시판도 그대로 돕니다. */
+  function langHtml(rec) {
+    var l = rec && rec.lang;
+    if (!l || l === 'ko') return '';
+    var label = l === 'ja' ? '\u65e5' : String(l).toUpperCase();
+    return '<span class="board-lang" data-lang="' + esc(l) + '">' + esc(label) + '</span>';
+  }
+
   function previewText(s, n) {
     var t = (s == null ? '' : String(s)).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
     n = n || 120;
@@ -559,29 +585,6 @@ window.OCBoard = (function () {
       return src && au ? src + ' \u00b7 ' + au : (src || au);
     }
     function ccHtml(rec) { var c = rec.comment_count || 0; return c > 0 ? '<span class="board-cc">[' + c + ']</span>' : ''; }
-    /* ★★ 2026-08-15 · 언어 배지 (파트너 요청) ★★
-       ──────────────────────────────────────────────────────────────
-       ★ 왜 다나
-         앞으로 영어·일본어로 쓴 글이 <b>한국어 글과 섞여</b> 올라옵니다.
-         언어로 거르지 않기로 했습니다 — 영어를 읽는 한국분도, 한국어를
-         읽는 외국분도 계시니까요(파트너 결정).
-         다만 <b>눌러 보기 전에는 무슨 언어인지 알 수 없어</b> 배지를 답니다.
-
-       ★ 한국어 글에는 붙이지 않습니다
-         거의 모든 글이 한국어라, 다 붙이면 온 목록이 배지밭이 됩니다.
-         <b>다른 언어일 때만</b> 눈에 띄면 됩니다.
-
-       ★ 일본어는 「日」 한 글자로
-         'JA' 보다 알아보기 쉽고 자리를 덜 먹습니다.
-
-       ★ lang 칸이 없는 표에도 안전합니다 — 값이 없으면 빈 글자를
-         돌려주므로, 아직 SQL 을 돌리지 않은 게시판도 그대로 돕니다. */
-    function langHtml(rec) {
-      var l = rec && rec.lang;
-      if (!l || l === 'ko') return '';
-      var label = l === 'ja' ? '\u65e5' : String(l).toUpperCase();
-      return '<span class="board-lang" data-lang="' + esc(l) + '">' + esc(label) + '</span>';
-    }
     function newHtml(rec) { if (!cfg.newDays || !rec.created_at) return ''; var d = new Date(rec.created_at); if (isNaN(d)) return ''; return ((Date.now() - d.getTime()) / 86400000) <= cfg.newDays ? '<span class="board-new">NEW</span>' : ''; }
     function tagHtml(rec) { return rec.category ? '<span class="board-tag" data-cat="' + esc(rec.category) + '">' + esc(rec.category) + '</span>' : ''; }
     function featuredHtml(rec, related) {
