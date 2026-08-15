@@ -567,11 +567,22 @@ function toRow(v, sc, memberId) {
     subtitle: null,
     /* ★ 소개문은 <b>지어내지 않습니다.</b> 「왜 이 영상을 골랐는지」는
        사람이 쓸 몫입니다(레슨 등록 화면 안내에 그렇게 적혀 있습니다).
-       대신 검수에 쓸 정보를 적어 두고, 파트너가 지우고 다시 쓰십니다. */
-    summary: '[자동수집] ' + (src ? src + ' · ' : '')
+       유튜브 설명을 그대로 넣어 두고, 검수하실 때 고쳐 쓰십니다.
+
+       ★★ 2026-08-15 · 검수용 기록을 소개문에서 <b>뺐습니다</b> (파트너 지적)
+       ─────────────────────────────────────────────────────────
+       예전에는 소개문 첫 줄에 이렇게 적었습니다 —
+           [자동수집] The Juilliard School · 28분 · 점수 89 (채널45 …)
+       검수할 때 쓰려던 것인데, 통과시키면 <b>그대로 공개</b>되어
+       손님 화면에 「점수 89」가 나왔습니다. 우리 사정이지 손님이
+       볼 것이 아닙니다.
+       ▶ 이제 admin_note 칸에 따로 적습니다. 그 칸은 검수 화면만
+         읽습니다. 소개문에는 유튜브 설명만 들어갑니다. */
+    summary: String(v.desc || '').replace(/\s+/g, ' ').trim().slice(0, 500),
+    /* 검수용 — 관리자만 봅니다 (admin/lesson-review.html) */
+    admin_note: '[자동수집] ' + (src ? src + ' · ' : '')
       + (min ? min + '분 · ' : '')
-      + '점수 ' + sc.s + ' (' + sc.why.join(' ') + ')'
-      + '\n\n' + String(v.desc || '').replace(/\s+/g, ' ').trim().slice(0, 500),
+      + '점수 ' + sc.s + ' (' + sc.why.join(' ') + ')',
     cover_url: v.thumb || null,
     video_provider: 'youtube',
     video_id: v.video_id,

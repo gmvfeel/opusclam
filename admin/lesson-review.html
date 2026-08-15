@@ -53,6 +53,8 @@
   .tag.open{background:#e6f5f3;color:#0f7d72}
   .tag.field{background:#f2f2f7;color:#5c5e70}
   .tag.score{background:#fff6e6;color:#8a5a00}
+  /* ★ 2026-08-15 · 소개문이 아직 유튜브 원문인 것 — 손볼 차례를 알려 줍니다 */
+  .tag.raw{background:#fdeaea;color:#a32d2d}
 
   .empty{background:#fff;border:1px dashed #d8d8e2;border-radius:10px;padding:34px 18px;text-align:center;color:#8a8c9e}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(12px);background:#20223a;color:#fff;font-size:13px;padding:11px 18px;border-radius:9px;opacity:0;pointer-events:none;transition:.22s}
@@ -190,7 +192,7 @@
     picked.clear(); syncSel();
 
     var q = sb.from('lessons')
-      .select('id,tab,field,title,summary,cover_url,video_id,duration_min,credit,credit_url,status,created_at')
+      .select('id,tab,field,title,summary,admin_note,cover_url,video_id,duration_min,credit,credit_url,status,created_at')
       .eq('kind','vod').eq('source','curated')
       .not('video_id','is',null)
       .eq('status', TAB)
@@ -207,10 +209,22 @@
     draw();
   }
 
-  /* 소개문 앞에 적어 둔 점수를 꺼냅니다 (「점수 103 (…)」) */
-  function scoreOf(sum){
-    var m = /점수\s*(\d+)/.exec(String(sum || ''));
+  /* 점수를 꺼냅니다 (「점수 103 (…)」)
+     ★ 2026-08-15 · 검수 기록이 소개문에서 <b>admin_note</b> 로 옮겨졌습니다.
+       예전에 담긴 것들은 아직 소개문에 남아 있을 수 있어 <b>둘 다</b> 봅니다.
+       옛것이 다 정리되면 summary 쪽은 빼도 됩니다. */
+  function scoreOf(o){
+    var m = /점수\s*(\d+)/.exec(String((o && o.admin_note) || (o && o.summary) || ''));
     return m ? m[1] : null;
+  }
+
+  /* 소개문이 아직 <b>유튜브 원문 그대로</b>인지 — 검수 우선순위를 알려 줍니다.
+     사람이 손댄 글에는 이런 흔적이 거의 없습니다. */
+  function isRaw(o){
+    var t = String((o && o.summary) || '');
+    if (!t.trim()) return true;                       /* 비어 있음 */
+    if (/\[자동수집\]/.test(t)) return true;           /* 옛 기록이 남음 */
+    return /#\S|https?:\/\/|구독|subscribe|Subscribe/.test(t);
   }
 
   function draw(){
@@ -223,7 +237,7 @@
       return;
     }
     box.innerHTML = rows.map(function(o){
-      var sc = scoreOf(o.summary);
+      var sc = scoreOf(o);
       var url = o.credit_url || ('https://www.youtube.com/watch?v=' + o.video_id);
       return '<div class="row' + (picked.has(o.id) ? ' pick' : '') + '" data-id="' + esc(o.id) + '">'
         + '<div class="ck"><input type="checkbox" ' + (picked.has(o.id) ? 'checked' : '')
@@ -239,6 +253,7 @@
         +       (o.tab === 'open' ? '공개레슨' : '마스터클래스') + '</span>'
         +     '<span class="tag field">' + esc(o.field || '기타') + '</span>'
         +     (sc ? '<span class="tag score">' + esc(sc) + '점</span>' : '')
+        +     (isRaw(o) ? '<span class="tag raw">소개문 손볼 것</span>' : '')
         +     (o.duration_min ? '<b>' + o.duration_min + '분</b> · ' : '')
         +     esc(o.credit || '')
         +   '</div>'
