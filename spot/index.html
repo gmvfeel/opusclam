@@ -90,6 +90,26 @@
   /* 달력 아래 빈 자리에 놓이는 덩어리 (관련사이트) */
   .sp-under{margin-top:34px}
 
+  /* ── 국제 콩쿨 아카이브 (2026-08-15) ──────────────────────
+     대회마다 <b>최근 우승자</b>와 담긴 사람 수를 보여 줍니다.
+     지나간 기록이라 목록 모양보다 이 편이 뜻이 있습니다. */
+  .sp-ca{display:flex;flex-direction:column;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .sp-ca a{display:flex;align-items:center;gap:12px;padding:13px 15px;
+    background:var(--paper);text-decoration:none;transition:background .15s ease}
+  .sp-ca a:hover{background:#322152}
+  .sp-ca a:hover .can,.sp-ca a:hover .caw,.sp-ca a:hover .cac{color:#fff}
+  .sp-ca .cay{flex:0 0 auto;font-family:var(--display);font-size:12px;font-weight:800;
+    color:#C9A94E;letter-spacing:-.02em;font-variant-numeric:tabular-nums;min-width:34px}
+  .sp-ca .cab{flex:1;min-width:0}
+  .sp-ca .can{display:block;font-size:13px;font-weight:700;color:var(--text);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sp-ca .caw{display:block;font-size:11.5px;color:var(--text-3);margin-top:2px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sp-ca .cac{flex:0 0 auto;font-size:11px;color:var(--text-3);white-space:nowrap}
+  .sp-ca .caempty{padding:20px;text-align:center;font-size:13px;color:var(--text-3);
+    background:var(--paper)}
+
   @media (max-width:980px){
     .sp-two64{grid-template-columns:minmax(0,1fr);gap:38px}
   }
@@ -429,6 +449,19 @@ function ocN(tpl) {
             </div>
             <div id="stList"></div>
           </div>
+
+          <!-- ★ 2026-08-15 · 국제 콩쿨 아카이브 (파트너 요청)
+                 ★ 다른 칸과 달리 <b>게시판 목록이 아닙니다.</b> 대회별로
+                   몇 명이 담겼는지와 <b>가장 최근 우승자</b>를 보여 줍니다.
+                   지나간 기록이라 「최신 글 몇 개」가 뜻이 없습니다.
+                 ★ 자리를 만들려고 위 관련사이트를 6→4 로 줄였습니다. -->
+          <div class="sp-under">
+            <div class="cm-head">
+              <span class="cm-title">국제 콩쿨 아카이브<em>CONCOURS ARCHIVE</em></span>
+              <a class="cm-more" href="/spot/concours-archive.html">VIEW MORE +</a>
+            </div>
+            <div id="caList" class="sp-ca"></div>
+          </div>
         </div>
         <div>
           <div class="cm-head">
@@ -537,7 +570,10 @@ function ocN(tpl) {
 
     /* ── 관련사이트 ── */
     OCHub.board({
-      el:'#stList', table:'spot', kind:'compact', n:6, cols:COLS + ',region',
+      /* ★ 2026-08-15 · 6 → 4 로 줄였습니다 (파트너 지시)
+           아래에 「국제 콩쿨 아카이브」를 넣을 자리를 만들려는 것입니다.
+           관련사이트는 전체보기로 가면 다 볼 수 있습니다. */
+      el:'#stList', table:'spot', kind:'compact', n:4, cols:COLS + ',region',
       badges:['region','category'],
       filter: sec('관련사이트') + '&hidden=is.false',
       order:'sort_order.asc.nullslast,created_at.desc.nullslast',
@@ -558,6 +594,81 @@ function ocN(tpl) {
       view:VIEW, label:'음원·동영상',
       emptyText:'등록된 음원·동영상이 아직 없습니다.'
     });
+
+    /* ── 국제 콩쿨 아카이브 (2026-08-15 · 파트너 요청) ──────────
+       ★ 다른 칸과 달리 <b>OCHub.board 를 쓰지 않습니다.</b>
+         그 엔진은 spot 표의 게시글을 목록으로 그리는데, 콩쿨 기록은
+         다른 표(oc_concours_prize)에 있고 「최신 글」이라는 것이
+         뜻이 없습니다 — 1927년 기록이 2025년 것만큼 값어치가 있습니다.
+       ★ 그래서 대회마다 <b>가장 최근 우승자</b>와 담긴 사람 수를 보여 줍니다.
+         「쇼팽 2025 · 에릭 루 · 266명」처럼요.
+       ★ 부르는 횟수 — 대회 목록 한 번 + 우승자 한 번, 모두 <b>두 번</b>입니다.
+         대회마다 따로 물으면 다섯 번이 됩니다. */
+    (function caPanel() {
+      var host = document.getElementById('caList');
+      if (!host) return;
+      var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/';
+      var H = { apikey: 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu',
+                Authorization: 'Bearer sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu' };
+      function esc(x) {
+        return String(x == null ? '' : x)
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+      function t(x) { try { return (window.OCI18N && window.OCI18N.t) ? window.OCI18N.t(x) : x; } catch (e) { return x; } }
+      function n(tpl, v) {
+        try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n(tpl, v); } catch (e) {}
+        return String(tpl).replace('{n}', v);
+      }
+
+      fetch(U + 'oc_concours?select=key,name_ko,founded&hidden=not.is.true&order=founded.asc', { headers: H })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (comps) {
+          if (!comps || !comps.length) {
+            host.innerHTML = '<div class="caempty">' + esc(t('아직 담긴 기록이 없습니다.')) + '</div>';
+            return;
+          }
+          /* 1위만 받아 대회별로 <b>가장 최근 해</b>를 고릅니다.
+             1위는 대회당 스무 줄 안쪽이라 한 번에 받아도 가볍습니다. */
+          return fetch(U + 'oc_concours_prize?select=concours,year,name_en,name_ko,person_id'
+                         + '&rank_no=eq.1&order=year.desc', { headers: H })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (rows) {
+              var top = {}, cnt = {};
+              (rows || []).forEach(function (p) {
+                if (!top[p.concours] || p.year > top[p.concours].year) top[p.concours] = p;
+              });
+              /* 담긴 사람 수 — 목록을 다시 부르지 않고 헤더로만 셉니다 */
+              var jobs = comps.map(function (c) {
+                return fetch(U + 'oc_concours_prize?select=id&concours=eq.' + encodeURIComponent(c.key),
+                  { headers: Object.assign({ Prefer: 'count=exact', Range: '0-0' }, H) })
+                  .then(function (r) {
+                    /* 몇 건인지는 헤더 「0-0/266」의 <b>슬래시 뒤</b>에 있습니다.
+                       정규식보다 쪼개기가 읽기 쉽고 실수가 적습니다
+                       (이 화면 아래쪽 다른 코드도 같은 방식입니다). */
+                    var cr = r.headers.get('content-range') || '';
+                    cnt[c.key] = parseInt((cr.split('/')[1] || '0'), 10) || 0;
+                  }).catch(function () { cnt[c.key] = 0; });
+              });
+              return Promise.all(jobs).then(function () {
+                host.innerHTML = comps.map(function (c) {
+                  var w = top[c.key];
+                  var who = w ? (w.name_ko || w.name_en) : '';
+                  return '<a href="/spot/concours-archive.html">'
+                    + '<span class="cay">' + (w ? w.year : '') + '</span>'
+                    + '<span class="cab">'
+                    +   '<span class="can">' + esc(t(c.name_ko)) + '</span>'
+                    +   (who ? '<span class="caw">' + esc(t('우승')) + ' · ' + esc(who) + '</span>' : '')
+                    + '</span>'
+                    + (cnt[c.key] ? '<span class="cac">' + esc(n('{n}명', cnt[c.key])) + '</span>' : '')
+                    + '</a>';
+                }).join('');
+              });
+            });
+        })
+        .catch(function () {
+          host.innerHTML = '<div class="caempty">' + esc(t('아직 담긴 기록이 없습니다.')) + '</div>';
+        });
+    })();
 
     /* ── 정보SPOT 현황 ──
        숫자·월별 분포·갈래별 구성비·국가별을 SQL 함수 한 번(spot_stats)으로 받습니다.
