@@ -86,9 +86,9 @@
      ▶ tabular-nums 가 중요합니다 — 폭이 같은 숫자꼴이라 세는 동안
        칸이 덜컹거리지 않습니다. 이것이 없으면 1 과 8 의 폭이 달라
        숫자가 흔들려 보입니다. */
-.adp-stat b{display:block;font-family:var(--display);font-size:clamp(34px,4.6vw,46px);
-  font-weight:900;color:var(--text);letter-spacing:-.035em;
-  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;line-height:1.05}
+.adp-stat b{display:block;font-family:var(--display);font-size:clamp(40px,5.6vw,58px);
+  font-weight:900;color:var(--text);letter-spacing:-.06em;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;line-height:1}
 .adp-stat span{display:block;font-size:13px;color:var(--text-3);margin-top:12px;
   letter-spacing:.02em}
 .adp-asof{text-align:center;font-size:12px;color:var(--text-3);margin:22px 0 0}
@@ -256,7 +256,9 @@ html[data-theme="dark"] .adp-ad{outline-color:#bebebe}
 @media(max-width:860px){
   .adp-top{padding:132px 20px 58px}
   .adp-sec{padding:60px 20px}
-  .adp-stats-in{grid-template-columns:repeat(2,1fr);gap:24px 0}
+  .adp-stats-in{grid-template-columns:repeat(2,1fr);gap:28px 0}
+  /* 두 칸으로 접히면 폭이 넉넉해지므로 vw 로 커지는 것을 막습니다 */
+  .adp-stat b{font-size:clamp(38px,9vw,50px)}
   .adp-stat:nth-child(3){border-left:0}
   .adp-step::after{display:none}
   .adp-contact-in{grid-template-columns:1fr;gap:32px}
