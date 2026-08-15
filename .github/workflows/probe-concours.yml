@@ -1,0 +1,49 @@
+name: 시험 · 콩쿠르 입상자 (될지 봅니다)
+
+# ── 무엇을 하나 ──
+#  쇼팽 콩쿠르 19회의 위키 문서를 받아, <몇 회를 읽어낼 수 있는지>만 셉니다.
+#  ★ 담지 않습니다. Supabase 를 건드리지 않습니다. 세어만 봅니다.
+#
+#  ★ 왜 「수집기」가 아니라 「시험」인가
+#    파트너가 예전에 한 번 시도해 하루를 쓰고 접으셨습니다.
+#    그러니 만들기 전에 <될지부터> 봅니다.
+#
+#  ★ 판단 기준 (파트너와 정한 것)
+#    · 15회 넘게 읽히면 → 다른 대회로 넓힙니다
+#    · 절반도 안 되면  → 접습니다
+#
+#  ★ 못 읽은 회가 있으면
+#    「원문 볼 회차」에 그 번호를 넣고 다시 돌리십시오.
+#    그 회 문서가 어떤 꼴인지 그대로 보여 줍니다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dump:
+        description: '읽어낸 입상자를 눈으로 보기'
+        required: true
+        default: 'yes'
+        type: choice
+        options: ['yes', 'no']
+      raw:
+        description: '원문 볼 회차 (비우면 전체 시험 · 예: 7)'
+        required: false
+        default: ''
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 콩쿠르 입상자 시험
+        run: |
+          OPTS=""
+          if [ "${{ github.event.inputs.dump }}" = "yes" ]; then OPTS="$OPTS --dump"; fi
+          RAWNO="${{ github.event.inputs.raw }}"
+          if [ -n "$RAWNO" ]; then OPTS="--raw=$RAWNO"; fi
+          echo "── 실행 : node seed/concours-probe.mjs $OPTS ──"
+          node seed/concours-probe.mjs $OPTS
