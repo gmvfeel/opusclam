@@ -524,8 +524,32 @@
         from += got.length;
       }
 
-      /* ② 후보 받아 걸러 내기 */
+      /* ② ★ <b>콩쿠르 입상자를 먼저</b> 집습니다 (2026-08-15 · 파트너 요청)
+           ─────────────────────────────────────────────────────
+           소개문이 없는 사람이 8,855명인데, 그중에는 이름만 알려진
+           사람도 많습니다. 어차피 다 채울 것이라면 <b>사람들이 실제로
+           찾는 인물</b>부터 하는 편이 낫습니다.
+           ▶ 쇼팽·차이콥스키·퀸 엘리자베스 입상자는 콩쿠르 아카이브에서
+             이름을 눌러 들어오는 길이 이미 있습니다. 그런데 눌러 보면
+             소개문이 비어 있습니다. 그 구멍부터 메웁니다.
+           ★ 이 사람들을 다 쓰면 <b>그다음부터는 예전처럼</b> 앞에서부터
+             집습니다. 아래 두 벌로 나눠 받는 까닭입니다. */
+      var vip = new Set();
+      try {
+        var vf = 0;
+        for (;;) {
+          var vr = await c.from('oc_concours_prize')
+            .select('person_id').not('person_id', 'is', null).range(vf, vf + 999);
+          if (vr.error) break;                 /* 표가 아직 없으면 조용히 지납니다 */
+          var vg = vr.data || [];
+          if (!vg.length) break;
+          vg.forEach(function (x) { vip.add(x.person_id); });
+          vf += vg.length;
+        }
+      } catch (e) { /* 콩쿠르 표가 없어도 초안 뽑기는 그대로 됩니다 */ }
+
       var NEED = 50, picked = [], off = 0;
+      var later = [];                          /* 콩쿠르 입상자가 아닌 사람 */
       var COLS = 'id,name_ko,name_en,field,instrument,life,nationality,description_en';
       for (;;) {
         var q = await c.from('persons').select(COLS)
@@ -544,15 +568,21 @@
         var rows = q.data || [];
         if (!rows.length) break;             /* 0행일 때만 멈춥니다 */
         off += rows.length;
-        for (var i = 0; i < rows.length && picked.length < NEED; i++) {
+        for (var i = 0; i < rows.length; i++) {
           var x = rows[i];
           if (done.has(x.id)) continue;
           if (String(x.description_en).length < 200) continue;   /* 옮길 것이 적음 */
-          picked.push(x);
+          /* 콩쿠르 입상자면 먼저 담고, 아니면 뒤로 미뤄 둡니다 */
+          if (vip.has(x.id)) { if (picked.length < NEED) picked.push(x); }
+          else if (later.length < NEED) later.push(x);
         }
         if (picked.length >= NEED) break;
         if (off > 20000) break;              /* 안전장치 */
       }
+
+      /* 콩쿠르 입상자를 다 썼으면 나머지로 채웁니다 */
+      var vipCount = picked.length;
+      for (var k = 0; k < later.length && picked.length < NEED; k++) picked.push(later[k]);
 
       if (!picked.length) {
         tell('더 만들 것이 없습니다.', 'ok');
@@ -591,12 +621,16 @@
             + '<textarea style="width:99%;height:80vh;font:12px monospace"></textarea>');
           w.document.querySelector('textarea').value = text;
           w.document.querySelector('textarea').select();
-          tell(picked.length + '명 — 새 창에서 복사해 주십시오', 'ok');
+          tell(picked.length + '명'
+            + (vipCount ? ' (콩쿠르 입상자 ' + vipCount + '명)' : '')
+            + ' — 새 창에서 복사해 주십시오', 'ok');
         } else {
           tell('복사하지 못했습니다. 팝업을 허용해 주십시오.', 'no');
         }
       } else {
-        tell(picked.length + '명 복사했습니다 — 대화창에 붙여넣으십시오', 'ok');
+        tell(picked.length + '명 복사했습니다'
+          + (vipCount ? ' (콩쿠르 입상자 ' + vipCount + '명)' : '')
+          + ' — 대화창에 붙여넣으십시오', 'ok');
       }
     } catch (e) {
       tell('가져오지 못했습니다 — ' + (e.message || e), 'no');
