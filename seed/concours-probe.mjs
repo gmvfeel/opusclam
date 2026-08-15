@@ -84,6 +84,25 @@ function clean(s) {
     .replace(/\[\[(?:File|Image|파일|그림):[^\]]*\]\]/gi, ' ')
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
     .replace(/\[\[([^\]]+)\]\]/g, '$1')
+    /* ★★ 틀을 <b>통째로 지우면 안 됩니다</b> (2026-08-15 · 제9회 원문을
+         보고 알았습니다). 위키 표는 등수·나라·이름을 <b>틀로</b> 씁니다 —
+             !{{Gold1}}                  ← 1위
+             |{{flag|Poland|1928}}       ← 나라
+             |{{ill|Tatyana Fedkina|pl}} ← 이름
+         지우면 등수와 나라가 빈칸이 되어 그 회를 통째로 놓칩니다.
+       ▶ 아는 틀은 <b>속을 꺼내</b> 쓰고, 모르는 틀만 지웁니다. */
+    .replace(/\{\{\s*Gold1?\s*\}\}/gi, '1st')
+    .replace(/\{\{\s*Silver2?\s*\}\}/gi, '2nd')
+    .replace(/\{\{\s*Bronze3?\s*\}\}/gi, '3rd')
+    /* {{flag|Poland|1928}} · {{flagicon|USA}} → 첫 값이 나라 이름 */
+    .replace(/\{\{\s*flag(?:icon|country)?\s*\|\s*([^|}]+)[^}]*\}\}/gi, '$1')
+    /* {{ill|이름|pl|다른말이름}} → 첫 값이 우리가 쓸 이름 */
+    .replace(/\{\{\s*ill\s*\|\s*([^|}]+)[^}]*\}\}/gi, '$1')
+    /* {{tooltip|HM|Honorable mentions}} → 첫 값 */
+    .replace(/\{\{\s*tooltip\s*\|\s*([^|}]+)[^}]*\}\}/gi, '$1')
+    /* {{sortname|Martha|Argerich}} → 이름 두 조각을 잇습니다 */
+    .replace(/\{\{\s*sortname\s*\|\s*([^|}]+)\|\s*([^|}]+)[^}]*\}\}/gi, '$1 $2')
+    /* 나머지 모르는 틀은 지웁니다 */
     .replace(/\{\{[^}]*\}\}/g, '')
     .replace(/''+/g, '')
     .replace(/<ref[^>]*>[\s\S]*?<\/ref>/g, '')
