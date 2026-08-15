@@ -1188,20 +1188,6 @@
   .to-top svg{width:20px;height:20px}
   @media(max-width:880px){.to-top{right:16px;bottom:16px;width:42px;height:42px}}
 
-  /* ---------- PWA install banner ---------- */
-  .pwa-install{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(14px);z-index:200;display:none;align-items:center;gap:14px;max-width:calc(100vw - 32px);padding:11px 12px 11px 13px;background:rgba(22,24,38,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:14px;box-shadow:0 18px 44px -14px rgba(0,0,0,.6);opacity:0;transition:opacity .3s ease,transform .3s ease}
-  .pwa-install.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
-  .pwa-ico{flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--violet-2),var(--violet-3));display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:14px;color:#fff}
-  .pwa-txt{font-size:13.5px;line-height:1.4;color:#d7d5e4;white-space:nowrap}
-  .pwa-btn{flex:0 0 auto;background:var(--gold);color:#3a2c05;font-weight:700;font-size:13px;border:0;border-radius:9px;padding:9px 18px;cursor:pointer;transition:filter .2s ease}
-  .pwa-btn:hover{filter:brightness(1.08)}
-  .pwa-close{flex:0 0 auto;background:none;border:0;color:#9a9bb0;cursor:pointer;display:grid;place-items:center;padding:5px;border-radius:6px;transition:color .2s ease,background .2s ease}
-  .pwa-close:hover{color:#fff;background:rgba(255,255,255,.08)}
-  @media(max-width:600px){
-    .pwa-install{left:14px;right:14px;bottom:14px;transform:translateY(14px);max-width:none;gap:11px}
-    .pwa-install.show{transform:translateY(0)}
-    .pwa-txt{white-space:normal;font-size:12.5px}
-  }
   /* ---------- hover interactions (desktop) ---------- */
   .lead .thumb,.split .thumb{transition:transform .3s ease,box-shadow .3s ease}
   .lead:hover .thumb,.split:hover .thumb{transform:translateY(-3px);box-shadow:0 12px 26px -12px rgba(30,20,60,.32)}
@@ -2045,15 +2031,6 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
 </button>
 
-<!-- ===== PWA install banner ===== -->
-<div class="pwa-install" id="pwaInstall" role="dialog" aria-label="앱 설치 안내">
-  <span class="pwa-ico">OC</span>
-  <span class="pwa-txt">홈 화면에 설치하면 앱처럼 바로 열 수 있어요.</span>
-  <button class="pwa-btn" id="pwaInstallBtn">설치</button>
-  <button class="pwa-close" id="pwaInstallClose" aria-label="닫기">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-  </button>
-</div>
 
 <script>
 /* hero animated backgrounds — 4 scenes on rotation */
@@ -2358,33 +2335,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&fm.classList.contains('open'))closeFm();});
 })();
 
-/* PWA install banner */
-(function(){
-  var banner=document.getElementById('pwaInstall');
-  var installBtn=document.getElementById('pwaInstallBtn');
-  var closeBtn=document.getElementById('pwaInstallClose');
-  if(!banner||!installBtn||!closeBtn)return;
-  var deferred=null;
-  window.addEventListener('beforeinstallprompt',function(e){
-    e.preventDefault();
-    deferred=e;
-    banner.classList.add('show');
-  });
-  installBtn.addEventListener('click',function(){
-    if(!deferred)return;
-    deferred.prompt();
-    deferred.userChoice.then(function(){deferred=null;banner.classList.remove('show');});
-  });
-  closeBtn.addEventListener('click',function(){banner.classList.remove('show');});
-  window.addEventListener('appinstalled',function(){banner.classList.remove('show');});
-})();
 
-/* 서비스워커 등록 (PWA 설치 가능 조건) */
-if('serviceWorker' in navigator){
-  window.addEventListener('load',function(){
-    navigator.serviceWorker.register('/sw.js').catch(function(){});
-  });
-}
 
 /* WXN project showcase — infinite marquee */
 (function(){
@@ -3955,5 +3906,6 @@ if('serviceWorker' in navigator){
 <script src="/assets/app.js" defer></script>
 <script src="/assets/interests.js"></script>
 <script src="/assets/my-main.js"></script>
+<script src="/assets/pwa-install.js?v=20260815" defer></script>
 </body>
 </html>

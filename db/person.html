@@ -438,15 +438,6 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
 </button>
 
-<!-- ===== PWA install banner ===== -->
-<div class="pwa-install" id="pwaInstall" role="dialog" aria-label="앱 설치 안내">
-  <span class="pwa-ico">OC</span>
-  <span class="pwa-txt">홈 화면에 설치하면 앱처럼 바로 열 수 있어요.</span>
-  <button class="pwa-btn" id="pwaInstallBtn">설치</button>
-  <button class="pwa-close" id="pwaInstallClose" aria-label="닫기">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-  </button>
-</div>
 
 <script>
 /* hero animated backgrounds — 4 scenes on rotation */
@@ -680,33 +671,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&fm.classList.contains('open'))closeFm();});
 })();
 
-/* PWA install banner */
-(function(){
-  var banner=document.getElementById('pwaInstall');
-  var installBtn=document.getElementById('pwaInstallBtn');
-  var closeBtn=document.getElementById('pwaInstallClose');
-  if(!banner||!installBtn||!closeBtn)return;
-  var deferred=null;
-  window.addEventListener('beforeinstallprompt',function(e){
-    e.preventDefault();
-    deferred=e;
-    banner.classList.add('show');
-  });
-  installBtn.addEventListener('click',function(){
-    if(!deferred)return;
-    deferred.prompt();
-    deferred.userChoice.then(function(){deferred=null;banner.classList.remove('show');});
-  });
-  closeBtn.addEventListener('click',function(){banner.classList.remove('show');});
-  window.addEventListener('appinstalled',function(){banner.classList.remove('show');});
-})();
 
-/* 서비스워커 등록 (PWA 설치 가능 조건) */
-if('serviceWorker' in navigator){
-  window.addEventListener('load',function(){
-    navigator.serviceWorker.register('/sw.js').catch(function(){});
-  });
-}
 
 /* WXN project showcase — infinite marquee */
 (function(){
@@ -1289,6 +1254,6 @@ if('serviceWorker' in navigator){
 </script>
 <script src="/assets/app.js" defer></script>
 <!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->
-<script src="/assets/pwa-install.js" defer></script>
+<script src="/assets/pwa-install.js?v=20260815" defer></script>
 </body>
 </html>
