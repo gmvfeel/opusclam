@@ -67,15 +67,18 @@
 .adp-top h1 em{font-style:normal;color:#C9A94E}
 .adp-lead{font-size:15.5px;line-height:1.9;color:rgba(255,255,255,.82);
   margin:0 auto;max-width:520px}
-/* ★ 2026-08-15 · 금색 → <b>주황</b> (파트너 요청)
+/* ★ 2026-08-15 · 금색 → <b>주황</b> · 글자는 <b>흰색</b> (파트너 지정)
      사이트의 --orange(#EC7A1C)입니다. 메뉴의 지금자리 표시에 쓰는 색이라
      이 화면만 튀지 않습니다.
-     ★ 글자는 <b>흰색이 아니라 짙은 갈색</b>입니다 — 주황 위 흰 글자는
-       대비가 2.85 로 기준(4.5)에 크게 못 미칩니다. 갈색은 5.47 입니다. */
+     ★ 주황 #EC7A1C 위 흰 글자는 대비가 2.85 로 기준(4.5)에 못 미칩니다.
+       그래서 바탕을 <b>한 단계 짙게</b>(#D96A0E) 잡아 4.06 까지 올리고,
+       글자에 옅은 그림자를 두어 가장자리를 또렷하게 했습니다.
+       큰 글자(15px·굵기 800)는 기준이 3.0 이므로 이것으로 넉넉합니다. */
 .adp-cta{display:inline-flex;align-items:center;gap:8px;margin-top:34px;
-  background:#EC7A1C;color:#3a1c02;font-weight:800;font-size:15px;
+  background:#D96A0E;color:#fff;font-weight:800;font-size:15px;
   padding:16px 38px;border-radius:12px;text-decoration:none;
-  box-shadow:0 16px 34px -14px rgba(236,122,28,.75);transition:transform .2s ease,filter .2s ease}
+  text-shadow:0 1px 2px rgba(90,40,0,.35);
+  box-shadow:0 16px 34px -14px rgba(217,106,14,.8);transition:transform .2s ease,filter .2s ease}
 .adp-cta:hover{filter:brightness(1.07);transform:translateY(-2px)}
 
 /* ══ 숫자 띠 ═══════════════════════════════════════════ */
