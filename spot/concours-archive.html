@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>국제 콩쿠르 아카이브 · OPUSCLAM</title>
-<meta name="description" content="쇼팽·차이콥스키·퀸 엘리자베스·리즈·부조니 — 1927년부터 오늘까지 세계 주요 국제 콩쿠르 입상자 기록을 한곳에 모았습니다.">
+<title>국제 콩쿨 아카이브 · OPUSCLAM</title>
+<meta name="description" content="쇼팽·차이콥스키·퀸 엘리자베스·리즈·부조니 — 1927년부터 오늘까지 세계 주요 국제 콩쿨 입상자 기록을 한곳에 모았습니다.">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#0a0d24">
@@ -20,7 +20,7 @@
 <link rel="stylesheet" href="/assets/board.css">
 <style>
 /* ============================================================
-   국제 콩쿠르 아카이브 — spot/concours-archive.html
+   국제 콩쿨 아카이브 — spot/concours-archive.html
    ------------------------------------------------------------
    2026-08-15 · 파트너와 함께 만든 새 갈래
 
@@ -175,8 +175,12 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
      이름만 키웁니다 — 등수·나라까지 키우면 줄이 깨집니다. */
 .ca-item .nm{flex:1;min-width:0;font-size:var(--ca-fs,13.5px);font-weight:600;color:var(--text);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ★ 인물DB 에 이어진 사람 — 누를 수 있음을 <b>보이게</b> 합니다.
+     글자색만 바꾸면 색맹인 분에게는 차이가 없습니다. 작은 화살표를
+     붙여 색이 아닌 <b>모양</b>으로도 알 수 있게 합니다. */
 .ca-item a.nm{color:var(--violet-2);text-decoration:none}
 .ca-item a.nm:hover{text-decoration:underline}
+.ca-item a.nm::after{content:"›";margin-left:5px;opacity:.55;font-weight:800}
 .ca-item .ct{flex:0 0 auto;font-size:11.5px;color:var(--text-3);max-width:110px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -265,7 +269,7 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
   <div class="pdb-inner">
 
     <nav class="pdb-crumb" aria-label="위치">
-      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">국제 콩쿠르 아카이브</span>
+      <a href="/home.html">홈</a><span>/</span><a href="/spot/index.html">정보SPOT</a><span>/</span><span class="on">국제 콩쿨 아카이브</span>
     </nav>
 
     <div id="oc-subnav" data-src="/partials/subnav-spot.html"></div>
@@ -274,12 +278,13 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
       <div class="pdb-titlebar">
         <div>
           <div class="pdb-eyebrow">CONCOURS ARCHIVE</div>
-          <h1 class="pdb-title">국제 콩쿠르 아카이브</h1>
+          <h1 class="pdb-title">국제 콩쿨 아카이브</h1>
         </div>
-        <!-- ★ 관심분야 단추가 여기 붙습니다 — assets/interests.js 가
-               갈래 목록에서 concours-archive 를 찾아 스스로 만듭니다.
-               다른 정보SPOT 화면과 같은 자리·같은 모양입니다. -->
-        <div id="favSlot"></div>
+        <!-- ★ 관심분야 단추는 <b>여기서 만들지 않습니다.</b>
+               assets/include.js 가 주소를 보고 .pdb-titlebar 안에
+               스스로 붙입니다(interests.js 의 갈래 목록에서 찾아).
+               여기서 또 부르면 <b>단추가 둘</b> 생깁니다 —
+               2026-08-15 에 실제로 그랬습니다. -->
       </div>
       <p class="pdb-lead">쇼팽·차이콥스키·퀸 엘리자베스·리즈·부조니 — 1927년부터 오늘까지 입상자 기록을 한곳에 모았습니다.</p>
     </header>
@@ -319,6 +324,12 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
     <select id="sort" aria-label="차례">
       <option value="desc">최근순</option>
       <option value="asc">오래된순</option>
+    </select>
+    <!-- ★ 인물DB 에 이어진 사람만 — 상세로 갈 수 있는 사람을
+           바로 훑고 싶을 때 씁니다. -->
+    <select id="lnk" aria-label="인물DB 연결">
+      <option value="">전부</option>
+      <option value="y">인물DB 있는 사람만</option>
     </select>
     <span class="ca-count" id="count"></span>
 
@@ -512,6 +523,7 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
 
     var ct = $('ctry').value;
     var dc = $('dec').value;
+    var lk = $('lnk').value;
 
     var rows = ROWS.filter(function (p) {
       if (q) {
@@ -524,11 +536,16 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
 
       if (ct && p.country !== ct) return false;
       if (dc && Math.floor(p.year / 10) * 10 !== +dc) return false;
+      if (lk === 'y' && !p.person_id) return false;
       return true;
     });
 
+    /* 이어진 사람 수도 함께 알립니다 — 얼마나 이어졌는지 한눈에 */
+    var linked = rows.filter(function (p) { return p.person_id; }).length;
     $('count').textContent = rows.length
-      ? (rows.length.toLocaleString() + '명' + (rows.length !== ROWS.length ? ' / 모두 ' + ROWS.length.toLocaleString() + '명' : ''))
+      ? (rows.length.toLocaleString() + '명'
+         + (rows.length !== ROWS.length ? ' / 모두 ' + ROWS.length.toLocaleString() + '명' : '')
+         + (linked ? ' · 인물DB ' + linked.toLocaleString() + '명' : ''))
       : '';
 
     if (!rows.length) {
@@ -592,7 +609,7 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
     clearTimeout(t);
     t = setTimeout(function () { SHOWN = PAGE; draw(); }, 200);
   });
-  ['rank', 'ctry', 'dec', 'sort'].forEach(function (id) {
+  ['rank', 'ctry', 'dec', 'sort', 'lnk'].forEach(function (id) {
     $(id).addEventListener('change', function () { SHOWN = PAGE; draw(); });
   });
 
@@ -617,20 +634,8 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
     apply();
   })();
 
-  /* ── 관심분야 단추 ────────────────────────────────────
-     assets/interests.js 가 실린 뒤에 붙입니다. 그 파일이 갈래 목록에서
-     concours-archive 를 찾아 스스로 만듭니다. */
-  (function favWait(n) {
-    n = n || 0;
-    try {
-      if (window.OCInterests && window.OCInterests.button) {
-        window.OCInterests.button($('favSlot'), 'spot', 'concours-archive');
-        return;
-      }
-    } catch (e) {}
-    if (n > 40) return;
-    setTimeout(function () { favWait(n + 1); }, 150);
-  })();
+  /* ★ 관심분야 단추를 여기서 부르지 않습니다 —
+       assets/include.js 가 이미 붙입니다. 두 번 부르면 둘이 생깁니다. */
 
   /* ── 고정 헤더 높이 재기 ──────────────────────────────
      스티키 찾기 줄이 헤더 <b>바로 아래</b> 붙게 하려면 헤더 높이를
