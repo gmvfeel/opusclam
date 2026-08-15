@@ -409,6 +409,26 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
   }
 
   function $(id) { return document.getElementById(id); }
+
+  /* ── 낱말·문장 옮기기 ────────────────────────────────
+     ★ 2026-08-15 · 이 화면의 글이 <b>영어·일본어에서 한국어로 남았습니다</b>
+       (파트너 지적). 자바스크립트가 만들어 내는 글은 i18n 엔진이
+       화면을 훑을 때 이미 지나간 뒤라 저절로 바뀌지 않습니다.
+     ▶ 만들 때 <b>직접</b> 사전을 태웁니다.
+     ★ 숫자가 섞인 글은 자리표(ocN)를 씁니다 — 어순이 언어마다 다릅니다.
+       「266명」이 영어로는 「266 people」이고, 일본어는 「266名」입니다. */
+  function t(x) {
+    try { if (window.OCI18N && window.OCI18N.t) return window.OCI18N.t(x); } catch (e) {}
+    return x;
+  }
+  function ocN(tpl) {
+    var vals = [].slice.call(arguments, 1);
+    try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments); } catch (e) {}
+    return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+      var v = (k === 'n') ? vals[0] : vals[Number(k)];
+      return (v === undefined || v === null) ? m : String(v);
+    });
+  }
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -432,9 +452,12 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
     /* 왼쪽 목록은 자리가 넉넉하므로 <b>여는 나라와 시작 해</b>도 함께
        보여 줍니다. 알약 단추일 때는 넣을 수 없던 것입니다. */
     $('tabs').innerHTML = COMPS.map(function (x, i) {
-      var sub = [x.country, x.founded ? x.founded + '년~' : ''].filter(Boolean).join(' · ');
+      /* 대회 이름과 나라는 <b>사전에 있으면</b> 옮깁니다.
+         없으면 한국어 그대로 — 지어내지 않습니다. */
+      var sub = [t(x.country), x.founded ? ocN('{n}년~', x.founded) : '']
+        .filter(Boolean).join(' · ');
       return '<button data-k="' + esc(x.key) + '"' + (i === 0 ? ' class="on"' : '') + '>'
-        + esc(x.name_ko)
+        + esc(t(x.name_ko))
         + (sub ? '<i>' + esc(sub) + '</i>' : '')
         + '</button>';
     }).join('');
@@ -444,8 +467,8 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
 
     /* 좁은 화면용 풀다운 — 같은 목록을 다른 꼴로 보여 줍니다 */
     $('pick').innerHTML = COMPS.map(function (x) {
-      return '<option value="' + esc(x.key) + '">' + esc(x.name_ko)
-        + (x.founded ? ' (' + x.founded + '년~)' : '') + '</option>';
+      return '<option value="' + esc(x.key) + '">' + esc(t(x.name_ko))
+        + (x.founded ? ' (' + ocN('{n}년~', x.founded) + ')' : '') + '</option>';
     }).join('');
     $('pick').addEventListener('change', function () { pick(this.value); });
 
@@ -468,7 +491,7 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
     /* 항목 한 칸 — 값이 없으면 칸 자체를 만들지 않습니다.
        빈 칸이 남으면 선만 그어져 어수선합니다. */
     function f(label, val) {
-      return val ? '<div class="f"><dt>' + esc(label) + '</dt><dd>' + esc(val) + '</dd></div>' : '';
+      return val ? '<div class="f"><dt>' + esc(t(label)) + '</dt><dd>' + esc(val) + '</dd></div>' : '';
     }
 
     /* ★ 글자로 만든 표지 — 대회 이름 첫 글자와 여는 해.
@@ -482,15 +505,16 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
       +   (CUR.founded ? '<span>SINCE ' + esc(CUR.founded) + '</span>' : '')
       + '</div>'
       + '<div class="ca-hbody">'
-      +   '<h2>' + esc(CUR.name_ko) + '</h2>'
+      +   '<h2>' + esc(t(CUR.name_ko)) + '</h2>'
       +   '<p class="en">' + esc(CUR.name_en) + '</p>'
       +   '<dl>'
-      +     f('여는 곳', [CUR.country, CUR.city].filter(Boolean).join(' · '))
-      +     f('부문', CUR.field)
-      +     f('시작', CUR.founded ? CUR.founded + '년' : '')
-      +     f('주기', CUR.cycle_years ? CUR.cycle_years + '년마다' : '')
+      +     f('여는 곳', [t(CUR.country), t(CUR.city)].filter(Boolean).join(' · '))
+      +     f('부문', t(CUR.field))
+      +     f('시작', CUR.founded ? ocN('{n}년', CUR.founded) : '')
+      +     f('주기', CUR.cycle_years ? ocN('{n}년마다', CUR.cycle_years) : '')
       +   '</dl>'
-      +   (CUR.wiki_url ? '<a class="wiki" href="' + esc(CUR.wiki_url) + '" target="_blank" rel="noopener">위키백과에서 이 대회 보기 &nearr;</a>' : '')
+      +   (CUR.wiki_url ? '<a class="wiki" href="' + esc(CUR.wiki_url) + '" target="_blank" rel="noopener">'
+      +     esc(t('위키백과에서 이 대회 보기')) + ' &nearr;</a>' : '')
       + '</div>'
       + '</div>';
 
@@ -567,14 +591,14 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
     /* 이어진 사람 수도 함께 알립니다 — 얼마나 이어졌는지 한눈에 */
     var linked = rows.filter(function (p) { return p.person_id; }).length;
     $('count').textContent = rows.length
-      ? (rows.length.toLocaleString() + '명'
-         + (rows.length !== ROWS.length ? ' / 모두 ' + ROWS.length.toLocaleString() + '명' : '')
-         + (linked ? ' · 인물DB ' + linked.toLocaleString() + '명' : ''))
+      ? (ocN('{n}명', rows.length)
+         + (rows.length !== ROWS.length ? ' / ' + ocN('모두 {n}명', ROWS.length) : '')
+         + (linked ? ' · ' + ocN('인물DB {n}명', linked) : ''))
       : '';
 
     if (!rows.length) {
       $('list').innerHTML = '<div class="ca-empty">'
-        + (q || rk ? '찾으시는 조건에 맞는 기록이 없습니다.' : '아직 담긴 기록이 없습니다.') + '</div>';
+        + esc(t(q || rk ? '찾으시는 조건에 맞는 기록이 없습니다.' : '아직 담긴 기록이 없습니다.')) + '</div>';
       return;
     }
 
@@ -593,14 +617,14 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
       var ed = list[0].edition;
       return '<div class="ca-year">'
         + '<div class="ca-yhead"><b>' + y + '</b>'
-        + '<span>' + (ed ? '제' + ed + '회 · ' : '') + list.length + '명</span></div>'
+        + '<span>' + (ed ? ocN('제{n}회', ed) + ' · ' : '') + ocN('{n}명', list.length) + '</span></div>'
         + '<div class="ca-list">' + list.map(itemHtml).join('') + '</div>'
         + '</div>';
     }).join('');
 
     if (years.length > SHOWN) {
       html += '<button type="button" class="ca-more" id="more">'
-        + '나머지 ' + (years.length - SHOWN) + '개 회차 더 보기</button>';
+        + esc(ocN('나머지 {n}개 회차 더 보기', years.length - SHOWN)) + '</button>';
     }
     $('list').innerHTML = html;
 
@@ -611,7 +635,7 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
   function itemHtml(p) {
     var r = String(p.rank || '-');
     var cls = 'rk' + (p.rank_no === 1 ? ' r1' : p.rank_no === 2 ? ' r2' : p.rank_no === 3 ? ' r3' : '');
-    var label = p.rank_no ? p.rank_no : (r === 'HM' ? '입선' : r === 'F' ? '결선' : r);
+    var label = p.rank_no ? p.rank_no : (r === 'HM' ? t('입선') : r === 'F' ? t('결선') : r);
     var nm = esc(p.name_ko || p.name_en);
 
     /* ★ 인물DB 에 <b>이어진 사람만</b> 누를 수 있게 합니다.
@@ -628,10 +652,14 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
   }
 
   /* ── 찾기 ───────────────────────────────────────────── */
-  var t = null;
+  /* ★ 이름을 qTimer 로 둡니다. 예전에는 t 였는데, 위에 있는
+       <b>t(낱말 옮기기) 함수를 덮어썼습니다.</b> var 선언이 함수 선언보다
+       뒤에 있어도 끌어올려지면서 가려, 영어·일본어 화면이 통째로
+       멈췄습니다(2026-08-15 시험에서 잡음). */
+  var qTimer = null;
   $('q').addEventListener('input', function () {
-    clearTimeout(t);
-    t = setTimeout(function () { SHOWN = PAGE; draw(); }, 200);
+    clearTimeout(qTimer);
+    qTimer = setTimeout(function () { SHOWN = PAGE; draw(); }, 200);
   });
   ['rank', 'ctry', 'dec', 'sort', 'lnk'].forEach(function (id) {
     $(id).addEventListener('change', function () { SHOWN = PAGE; draw(); });
