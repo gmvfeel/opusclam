@@ -25,15 +25,19 @@ on:
         default: 'yes'
         type: choice
         options: ['yes', 'no']
+      only:
+        description: '한 대회만 (비우면 전부 · chopin · tchaikovsky · queen-elisabeth · cliburn · leeds · busoni)'
+        required: false
+        default: ''
       raw:
-        description: '원문 볼 회차 (비우면 전체 시험 · 예: 7)'
+        description: '원문 보기 (쇼팽은 회차 숫자 · 다른 대회는 이름 · 예: 9 또는 tchaikovsky)'
         required: false
         default: ''
 
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -43,6 +47,8 @@ jobs:
         run: |
           OPTS=""
           if [ "${{ github.event.inputs.dump }}" = "yes" ]; then OPTS="$OPTS --dump"; fi
+          ONLY="${{ github.event.inputs.only }}"
+          if [ -n "$ONLY" ]; then OPTS="$OPTS --only=$ONLY"; fi
           RAWNO="${{ github.event.inputs.raw }}"
           if [ -n "$RAWNO" ]; then OPTS="--raw=$RAWNO"; fi
           echo "── 실행 : node seed/concours-probe.mjs $OPTS ──"

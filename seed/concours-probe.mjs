@@ -50,6 +50,65 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
   'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX'];
 
+/* ══ 대회 목록 ═══════════════════════════════════════════════
+   ★ 대회마다 문서 짜임이 <b>크게 다릅니다.</b> 두 가지가 있습니다 —
+
+     ① 회차별 문서 (쇼팽)
+        「IX International Chopin Piano Competition」처럼 회마다 문서가
+        따로 있고, 그 안에 그 회 입상자 표가 있습니다.
+
+     ② 한 문서에 전 회차 (차이콥스키·퀸 엘리자베스 등)
+        한 문서 안에 <b>연도가 줄이 되는</b> 큰 표가 있습니다.
+            | 1958 | Van Cliburn (USA) | Lev Vlassenko (USSR) …
+        칸 하나에 여러 사람이 들어가기도 합니다.
+
+   ▶ 어느 쪽인지 kind 로 적어 둡니다. 새 대회를 더할 때는 여기 한 줄만
+     쓰면 됩니다. */
+const COMPS = [
+  {
+    key: 'chopin', kind: 'per-edition',
+    nameKo: '쇼팽 국제 피아노 콩쿠르',
+    nameEn: 'International Chopin Piano Competition',
+    editions: 19,
+    title: (no) => `${ROMAN[no]} International Chopin Piano Competition`,
+    years: {
+      1:1927, 2:1932, 3:1937, 4:1949, 5:1955, 6:1960, 7:1965, 8:1970, 9:1975,
+      10:1980, 11:1985, 12:1990, 13:1995, 14:2000, 15:2005, 16:2010, 17:2015,
+      18:2021, 19:2025,
+    },
+  },
+  {
+    key: 'tchaikovsky', kind: 'one-page',
+    nameKo: '차이콥스키 국제 콩쿠르',
+    nameEn: 'International Tchaikovsky Competition',
+    title: () => 'International Tchaikovsky Competition',
+  },
+  {
+    key: 'queen-elisabeth', kind: 'one-page',
+    nameKo: '퀸 엘리자베스 콩쿠르',
+    nameEn: 'Queen Elisabeth Competition',
+    title: () => 'Queen Elisabeth Competition',
+  },
+  {
+    key: 'cliburn', kind: 'one-page',
+    nameKo: '반 클라이번 국제 피아노 콩쿠르',
+    nameEn: 'Van Cliburn International Piano Competition',
+    title: () => 'Van Cliburn International Piano Competition',
+  },
+  {
+    key: 'leeds', kind: 'one-page',
+    nameKo: '리즈 국제 피아노 콩쿠르',
+    nameEn: 'Leeds International Piano Competition',
+    title: () => 'Leeds International Piano Competition',
+  },
+  {
+    key: 'busoni', kind: 'one-page',
+    nameKo: '부조니 국제 피아노 콩쿠르',
+    nameEn: 'Ferruccio Busoni International Piano Competition',
+    title: () => 'Ferruccio Busoni International Piano Competition',
+  },
+];
+
 /* 회차 → 열린 해 (문서에서 못 읽을 때 쓰는 대조표)
    ★ 지어낸 것이 아니라 널리 알려진 사실입니다. 다만 문서에서 읽어낸
      값을 <b>먼저</b> 쓰고, 이것은 못 읽었을 때만 씁니다. */
@@ -124,6 +183,7 @@ function isNotName(c) {
   if (/^(prize|winner|country|total|special|medal|award)s?$/i.test(t)) return true;
   if (/^(1st|2nd|3rd|\d+th|HM|F)$/i.test(t)) return true;
   if (/^\d+\s*px$/i.test(t)) return true;              /* 그림 크기 찌꺼기 */
+  if (/^(19|20)\d{2}(\/\d{2,4})?$/.test(t)) return true;  /* 연도 */
   if (t.length < 2 || t.length > 60) return true;
   return false;
 }
@@ -226,12 +286,77 @@ function parseLines(wt) {
   return out;
 }
 
+/* ── ④ 연도가 줄이 되는 표 (차이콥스키·퀸 엘리자베스 등) ────
+   한 문서에 전 회차가 들어 있고, 줄마다 「연도 | 1위 | 2위 | 3위」 꼴입니다.
+       | 1958 | Van Cliburn (USA) | Lev Vlassenko (USSR) Liu Shikun | …
+   ★ 칸 하나에 <b>여러 사람</b>이 들어가기도 합니다(공동 수상).
+     줄바꿈이나 「<br>」로 나뉘므로 그것으로 가릅니다.
+   ★ 나라가 「(USA)」처럼 괄호로 붙습니다 — 떼어 나라 칸에 넣습니다.
+   ★ 갈래(피아노·바이올린·첼로)가 표마다 다릅니다. 표 앞의 제목을
+     함께 가져와 어느 갈래인지 적어 둡니다. */
+function parseYearTable(wt) {
+  const out = [];
+  const tables = wt.match(/\{\|[\s\S]*?\|\}/g) || [];
+  for (const tb of tables) {
+    if (/best performance|special prize|jury|juror/i.test(tb.slice(0, 400))) continue;
+    /* 머리에 연도·1위 같은 낱말이 있어야 입상자 표입니다 */
+    if (!/year|1st|first prize|gold/i.test(tb.slice(0, 500))) continue;
+
+    const rows = tb.split(/\n\|-/).slice(1);
+    for (const row of rows) {
+      const cells = [];
+      for (const line of row.split('\n')) {
+        if (!/^[|!]/.test(line)) continue;
+        for (const c of line.replace(/^[|!]+\s*/, '').split(/\s*\|\||\s*!!/)) {
+          cells.push(clean(c));      /* 빈 칸도 자리를 지켜야 등수가 맞습니다 */
+        }
+      }
+      if (cells.length < 2) continue;
+
+      /* 첫 칸이 연도여야 합니다 */
+      const my = /\b(19|20)(\d{2})\b/.exec(cells[0] || '');
+      if (!my) continue;
+      const year = +(my[1] + my[2]);
+      if (year < 1900 || year > 2030) continue;
+
+      /* 나머지 칸이 차례로 1위·2위·3위… */
+      for (let i = 1; i < cells.length && i <= 6; i++) {
+        const raw = cells[i];
+        if (!raw || isNotName(raw)) continue;
+        /* 한 칸에 여러 사람 — 「이름 (나라) 이름2 (나라2)」 */
+        const people = raw.split(/\s{2,}|·|;|\n/).map(x => x.trim()).filter(Boolean);
+        for (const one of people) {
+          /* 나라가 이름에 붙는 꼴이 <b>두 가지</b>입니다 —
+               「Van Cliburn (USA)」   괄호로 뒤에
+               「USA Van Cliburn」     깃발 틀이 풀려 앞에
+             ★ 뒤엣것을 안 떼면 이름이 「USA Van Cliburn」이 되어
+               인물DB와 이어 붙일 수 없습니다. */
+          let name = '', country = '';
+          const mp = /^(.+?)\s*\(([^)]{2,30})\)\s*$/.exec(one);
+          if (mp) { name = clean(mp[1]); country = clean(mp[2]); }
+          else {
+            /* 앞에 붙은 나라 — 깃발 틀이 풀린 자리입니다.
+               아는 나라 이름일 때만 뗍니다(사람 이름을 자르면 안 됩니다). */
+            const mf = /^(USA|USSR|UK|China|Japan|Russia|France|Poland|Italy|Germany|Korea|South Korea|Canada|Spain|Israel|Ukraine|Belgium|Netherlands|Austria|Hungary|Bulgaria|Romania|Georgia|Armenia|Latvia|Lithuania|Estonia|Serbia|Croatia|Slovenia|Czech Republic|Slovakia|Turkey|Greece|Sweden|Norway|Finland|Denmark|Switzerland|Portugal|Brazil|Argentina|Mexico|Australia|New Zealand|Vietnam|Taiwan|Hong Kong|Singapore|India|United States|United Kingdom|Soviet Union)\s+(.+)$/i.exec(one);
+            if (mf) { country = clean(mf[1]); name = clean(mf[2]); }
+            else name = clean(one);
+          }
+          if (!name || isNotName(name)) continue;
+          out.push({ rank: String(i), name, country, year });
+        }
+      }
+    }
+  }
+  return out;
+}
+
 /* 셋 가운데 가장 많이 읽어낸 것을 씁니다 */
 function parseAll(wt) {
   const tries = [
     { how: '틀', got: parseTemplate(wt) },
     { how: '표', got: parseTable(wt) },
     { how: '줄글', got: parseLines(wt) },
+    { how: '연도표', got: parseYearTable(wt) },
   ];
   tries.sort((a, b) => b.got.length - a.got.length);
   const best = tries[0];
@@ -268,72 +393,118 @@ function yearOf(wt, no) {
 
 /* ══ 실행 ═══════════════════════════════════════════════════ */
 (async () => {
-  console.log('══ 쇼팽 콩쿠르 입상자 — 될지 봅니다 ══');
+  console.log('══ 콩쿠르 입상자 — 될지 봅니다 ══');
   console.log('   담지 않습니다. 몇 회를 읽어낼 수 있는지만 셉니다.');
   console.log('');
 
-  /* 원문 그대로 보기 */
+  /* 원문 그대로 보기 — --raw=9 (쇼팽 9회) · --raw=tchaikovsky */
   if (RAW) {
-    const no = +RAW;
-    const title = `${ROMAN[no]} International Chopin Piano Competition`;
+    let title;
+    if (/^\d+$/.test(RAW)) title = COMPS[0].title(+RAW);
+    else {
+      const c = COMPS.find(x => x.key === RAW);
+      if (!c) { console.log('그런 대회가 없습니다 : ' + RAW); return; }
+      title = c.title();
+    }
     console.log(`── ${title} 원문 ──`);
     try {
       const wt = await raw(title);
       console.log(`길이 ${wt.length} 글자\n`);
-      /* 입상자 대목만 — 「prize」가 나오는 언저리 */
-      const i = wt.search(/following prizes|\{\|[^]*?prize/i);
-      console.log(i >= 0 ? wt.slice(i, i + 2500) : wt.slice(0, 2500));
+      const i = wt.search(/following prizes|\{\|[^]*?(prize|year)/i);
+      console.log(i >= 0 ? wt.slice(i, i + 3000) : wt.slice(0, 3000));
     } catch (e) {
       console.log('받지 못했습니다 —', e.message);
     }
     return;
   }
 
-  let ok = 0, fail = 0, total = 0;
-  const byHow = {};
-  const bad = [];
-
-  for (let no = 1; no <= 19; no++) {
-    const title = `${ROMAN[no]} International Chopin Piano Competition`;
-    let wt = '';
-    try {
-      wt = await raw(title);
-    } catch (e) {
-      console.log(`제${String(no).padStart(2)}회  ★ 문서를 받지 못했습니다 — ${e.message}`);
-      fail++; bad.push(no);
-      await sleep(600);
-      continue;
-    }
-    await sleep(600);          /* 위키에 부담을 주지 않게 */
-
-    const year = yearOf(wt, no);
-    const { how, list } = parseAll(wt);
-
-    /* 1~3위가 다 있어야 「읽었다」로 봅니다 —
-       이름 몇 개 걸린 것을 성공으로 세면 판단이 흐려집니다. */
-    const top3 = ['1', '2', '3'].filter(r => list.some(p => p.rank === r)).length;
-    const good = top3 === 3;
-
-    if (good) { ok++; byHow[how] = (byHow[how] || 0) + 1; }
-    else { fail++; bad.push(no); }
-    total += list.length;
-
-    console.log(`제${String(no).padStart(2)}회 ${year || '????'}  ${good ? '읽음' : '★못읽음'}`
-      + `  입상 ${String(list.length).padStart(2)}명 · 1~3위 ${top3}/3 · 꼴「${how}」`);
-
-    if (DUMP && list.length) {
-      list.slice(0, 6).forEach(p =>
-        console.log(`            ${(p.rank || '-').padStart(3)}  ${p.name}${p.country ? ' · ' + p.country : ''}`));
-      if (list.length > 8) console.log(`            … 그리고 ${list.length - 8}명`);
-    }
+  const only = typeof ARGS.only === 'string' ? ARGS.only : null;
+  const targets = only ? COMPS.filter(c => c.key === only) : COMPS;
+  if (!targets.length) {
+    console.log('그런 대회가 없습니다 : ' + only);
+    console.log('쓸 수 있는 이름 : ' + COMPS.map(c => c.key).join(' · '));
+    return;
   }
 
-  console.log('');
-  console.log(`=== 19회 가운데 ${ok}회 읽음 · ${fail}회 못 읽음 · 입상자 모두 ${total}명 ===`);
-  console.log(`    꼴별 : ${Object.entries(byHow).map(([k, v]) => k + ' ' + v).join(' · ') || '없음'}`);
-  if (bad.length) console.log(`    못 읽은 회 : ${bad.join(' · ')}`);
-  console.log('');
-  if (ok >= 15) console.log('▶ 15회를 넘겼습니다. 다른 대회로 넓혀 볼 만합니다.');
-  else if (ok >= 10) console.log('▶ 어중간합니다. 못 읽은 회를 --raw=번호 로 보시고 정하십시오.');
-  else console.log('▶ 절반에 못 미칩니다. 접는 편이 낫겠습니다.');
+  let grandOk = 0, grandFail = 0, grandNames = 0;
+
+  for (const comp of targets) {
+    console.log(`── ${comp.nameKo} (${comp.key})`);
+
+    /* ① 회차별 문서 (쇼팽) ─────────────────────────── */
+    if (comp.kind === 'per-edition') {
+      let ok = 0, fail = 0, total = 0;
+      const bad = [];
+      for (let no = 1; no <= comp.editions; no++) {
+        const title = comp.title(no);
+        let wt = '';
+        try { wt = await raw(title); }
+        catch (e) {
+          console.log(`   제${String(no).padStart(2)}회  ★ 문서를 받지 못했습니다`);
+          fail++; bad.push(no); await sleep(600); continue;
+        }
+        await sleep(600);
+        const year = comp.years[no] || 0;
+        const { how, list } = parseAll(wt);
+        const top3 = ['1', '2', '3'].filter(r => list.some(p => p.rank === r)).length;
+        const good = top3 === 3;
+        if (good) ok++; else { fail++; bad.push(no); }
+        total += list.length;
+        console.log(`   제${String(no).padStart(2)}회 ${year || '????'}  ${good ? '읽음' : '★못읽음'}`
+          + `  입상 ${String(list.length).padStart(2)}명 · 1~3위 ${top3}/3 · 꼴「${how}」`);
+        if (DUMP && list.length) {
+          list.slice(0, 4).forEach(p =>
+            console.log(`            ${(p.rank || '-').padStart(3)}  ${p.name}${p.country ? ' · ' + p.country : ''}`));
+          if (list.length > 4) console.log(`            … 그리고 ${list.length - 4}명`);
+        }
+      }
+      console.log(`   ▶ ${comp.editions}회 가운데 ${ok}회 읽음 · 입상자 ${total}명`);
+      if (bad.length) console.log(`     못 읽은 회 : ${bad.join(' · ')}`);
+      grandOk += ok; grandFail += fail; grandNames += total;
+      console.log('');
+      continue;
+    }
+
+    /* ② 한 문서에 전 회차 ────────────────────────────── */
+    let wt = '';
+    try { wt = await raw(comp.title()); }
+    catch (e) {
+      console.log(`   ★ 문서를 받지 못했습니다 — ${e.message}`);
+      grandFail++; console.log(''); continue;
+    }
+    await sleep(600);
+
+    const { how, list } = parseAll(wt);
+    if (!list.length) {
+      console.log('   ★★ 한 명도 읽지 못했습니다 — --raw=' + comp.key + ' 로 원문을 보십시오');
+      grandFail++; console.log(''); continue;
+    }
+
+    /* 연도별로 몇 명씩인지 */
+    const byYear = {};
+    list.forEach(p => { const y = p.year || 0; byYear[y] = (byYear[y] || 0) + 1; });
+    const years = Object.keys(byYear).filter(y => +y > 0).sort();
+    console.log(`   입상자 ${list.length}명 · 꼴「${how}」`);
+    if (years.length) {
+      console.log(`   회차 ${years.length}개 (${years[0]} ~ ${years[years.length - 1]})`);
+    } else {
+      console.log('   ★ 연도를 읽지 못했습니다 — 담을 때 문제가 됩니다');
+    }
+    /* 1위가 몇 회분 있는지 — 이것이 「제대로 읽었나」의 기준 */
+    const firsts = new Set(list.filter(p => p.rank === '1' && p.year).map(p => p.year));
+    console.log(`   1위를 읽은 회차 : ${firsts.size}개`);
+
+    if (DUMP) {
+      const show = list.filter(p => p.rank === '1').slice(0, 8);
+      show.forEach(p => console.log(`      ${p.year || '????'}  1위  ${p.name}${p.country ? ' · ' + p.country : ''}`));
+      if (list.filter(p => p.rank === '1').length > 8)
+        console.log(`      … 그리고 ${list.filter(p => p.rank === '1').length - 8}회`);
+    }
+
+    if (firsts.size >= 5) grandOk++; else grandFail++;
+    grandNames += list.length;
+    console.log('');
+  }
+
+  console.log(`=== 잘 읽은 것 ${grandOk} · 못 읽은 것 ${grandFail} · 이름 모두 ${grandNames}명 ===`);
 })().catch(e => { console.error('■ 실패:', e); process.exit(1); });
