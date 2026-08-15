@@ -231,6 +231,19 @@
   .cm-qcount b{font-size:20px}
 }
 </style>
+<script>
+/* 숫자가 섞인 글 — 2026-08-15
+   「8월 12건」·「2026년 8월 공연 0건」이 영어·일본어 화면에서 한국어로
+   남던 것을 고칩니다. 자리표를 사전에 넘겨 언어마다 어순을 달리 둡니다. */
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments); } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
+</script>
 </head>
 <body data-header="overlay">
 <div id="oc-header"></div>
@@ -559,7 +572,7 @@
           var ms = d.months || [];
           var rows = ms.map(function(x, i){
             var mm = parseInt(String(x.ym).slice(5), 10);
-            return { label: mm + '월', key: x.ym, n: x.n, now: (i === ms.length - 1) };
+            return { label: ocN('{n}월', mm), key: x.ym, n: x.n, now: (i === ms.length - 1) };
           });
           OCStats.months(box, rows, {
             title:'월별 새 글',
@@ -637,7 +650,8 @@
             /* 로고가 없으면 모아둔 사진으로 대신합니다 */
             var img = r.logo_url || (ph ? (ph.thumb || ph.src) : '');
             var nm = /[가-힣]/.test(String(r.name_ko||'')) ? r.name_ko : (r.name_ko || r.name_en || '');
-            var ymTxt = String(m.ym||'').replace('-','년 ') + '월';
+            var _ym = String(m.ym||'').split('-');
+      var ymTxt = ocN('{0}년 {1}월', _ym[0], parseInt(_ym[1], 10) || _ym[1]);
             box.innerHTML = '<div class="cm-school">'
               + '<span class="cm-schoollogo">'
               +   (img ? '<img src="'+esc(img)+'" alt="" loading="lazy">' : '')

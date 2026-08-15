@@ -220,6 +220,19 @@
   .cm-qcount b{font-size:20px}
 }
 </style>
+<script>
+/* 숫자가 섞인 글 — 2026-08-15
+   「8월 12건」·「2026년 8월 공연 0건」이 영어·일본어 화면에서 한국어로
+   남던 것을 고칩니다. 자리표를 사전에 넘겨 언어마다 어순을 달리 둡니다. */
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments); } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
+</script>
 </head>
 <body data-header="overlay">
 <div id="oc-header"></div>
@@ -614,9 +627,9 @@
             : '';
           return '<div class="sp-mcol' + (n > 0 ? ' has' : '') + '"'
             + (n > 0 ? ' data-m="' + r.m + '" role="button" tabindex="0"'
-                     + ' aria-label="' + r.m + '월 ' + n + '건 · 달력에서 보기"' : '')
+                     + ' aria-label="' + ocN('{0}월 {1}건', r.m, n) + ' · 달력에서 보기"' : '')
             + '>'
-            + (n > 0 ? '<span class="sp-tip"><b>' + r.m + '월</b> ' + num(n) + '건'
+            + (n > 0 ? '<span class="sp-tip">' + ocN('<b>{0}월</b> {1}건', r.m, num(n))
                      + '<em>달력에서 보기</em></span>' : '')
             + (n > 0 ? '<span class="sp-mdot" style="bottom:' + h.toFixed(1) + '%"></span>' : '')
             + '<span class="sp-mbar"' + (bg ? ' style="height:' + h.toFixed(1) + '%;background:' + bg + '"' : '') + '>'
@@ -710,7 +723,7 @@
           var w = max ? Math.max(n / max * 100, 2) : 2;
           var pct = sum ? (n / sum * 100) : 0;
           return '<div class="sp-crow">'
-            + '<span class="sp-tip"><b>' + esc(r.name) + '</b> ' + num(n) + '건'
+            + '<span class="sp-tip">' + ocN('<b>{0}</b> {1}건', esc(r.name), num(n))
             +   '<em>' + pct.toFixed(1) + '%</em></span>'
             + '<span class="sp-cname" title="' + esc(r.name) + '">' + esc(r.name) + '</span>'
             + '<span class="sp-ctrack"><i style="width:' + w.toFixed(1) + '%"></i></span>'
@@ -897,13 +910,13 @@
             if (dx !== dy) return dx - dy;                 /* 기간이 짧은 것 먼저 */
             return String(x.title || '').localeCompare(String(y.title || ''), 'ko');
           });
-          label = dotDate(picked) + ' 공연 ' + rows.length + '건';
+          label = ocN('{0} 공연 {1}건', dotDate(picked), rows.length);
         } else {
           var seen = {}; rows = [];
           Object.keys(byDay).sort().forEach(function(k){
             byDay[k].forEach(function(o){ if (!seen[o.id]) { seen[o.id] = 1; rows.push(o); } });
           });
-          label = y + '년 ' + (m + 1) + '월 공연 ' + rows.length + '건';
+          label = ocN('{0}년 {1}월 공연 {2}건', y, m + 1, rows.length);
         }
         headEl.textContent = label;
         if (!rows.length) {

@@ -14,6 +14,22 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
      건너뛰고 나머지는 정상 표시한다. 실패 내역은 콘솔에 남는다.
    ============================================================ */
 window.OCSearch = (function () {
+
+/* ── 숫자가 섞인 글 (2026-08-15) ──────────────────────────────
+   ★ 「전체 206건」처럼 숫자와 글자가 붙은 문장은 사전이 통짜로는
+     알아보지 못해, 영어·일본어 화면에서 한국어로 남았습니다.
+     OCI18N.n 에 자리표를 넘겨 언어마다 어순을 달리 둡니다.
+   ★ i18n.js 가 아직 안 실렸을 때를 대비해 원문에 값만 채웁니다. */
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try {
+    if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments);
+  } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
   'use strict';
 
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
@@ -255,7 +271,7 @@ window.OCSearch = (function () {
     var sec = res.sec;
     var more = res.total > res.rows.length
       ? '<a class="osr-more" href="' + esc(sec.list + '?q=' + encodeURIComponent(q)) + '">'
-        + '전체 ' + res.total.toLocaleString() + '건 <span>&rsaquo;</span></a>'
+        + ocN('전체 {n}건', res.total) + ' <span>&rsaquo;</span></a>'
       : '';
     return '<section class="osr-group" data-k="' + esc(sec.key) + '">'
       + '<h2 class="osr-h"><span class="osr-label">' + esc(sec.label) + '</span>'
@@ -321,7 +337,7 @@ window.OCSearch = (function () {
       if (sum) {
         sum.innerHTML = '<b>' + esc(q) + '</b> 검색 결과 '
           + '<strong>' + total.toLocaleString() + '</strong>건'
-          + (ok.length ? ' · ' + ok.length + '개 영역' : '');
+          + (ok.length ? ' · ' + ocN('{n}개 영역', ok.length) : '');
       }
       if (!ok.length) {
         box.innerHTML = '<p class="osr-empty">'

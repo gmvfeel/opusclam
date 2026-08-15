@@ -1,0 +1,20 @@
+{
+  "전체 {n}건": "{n} in total",
+  "{n}개 영역": "{n} sections",
+  "나머지 {n}건 더 보기": "Show {n} more",
+  "+ {n}개 더 보기": "+ {n} more",
+  "조건 {n}개": "{n} filters",
+  "{n}개 올렸습니다.": "{n} uploaded.",
+  "{n}명": "{n} people",
+  "{n}월": "Month {n}",
+  "{0}년 {1}월": "{1}/{0}",
+  "{0}월 {1}건": "{1} in month {0}",
+  "<b>{0}월</b> {1}건": "<b>Month {0}</b> {1} items",
+  "<b>{0}</b> {1}건": "<b>{0}</b> {1} items",
+  "{0} 공연 {1}건": "{1} concerts on {0}",
+  "{0}년 {1}월 공연 {2}건": "{2} concerts in {1}/{0}",
+  "수상 · 이력 ({n}건)": "Awards & career ({n})",
+  "점 {0} · 줄 {1}": "{0} nodes · {1} links",
+  "종류마다 {0}개까지만 그렸습니다({1}개 생략)": "Showing up to {0} per type ({1} omitted)",
+  "담은 것 <b>{0}개</b> 가운데 <b>앞 {1}개</b>를 놓았습니다": "Showing the first <b>{1}</b> of <b>{0}</b> saved"
+}

@@ -34,6 +34,22 @@
      <script src="/assets/my-main.js"></script>
    ============================================================ */
 (function () {
+
+/* ── 숫자가 섞인 글 (2026-08-15) ──────────────────────────────
+   ★ 「전체 206건」처럼 숫자와 글자가 붙은 문장은 사전이 통짜로는
+     알아보지 못해, 영어·일본어 화면에서 한국어로 남았습니다.
+     OCI18N.n 에 자리표를 넘겨 언어마다 어순을 달리 둡니다.
+   ★ i18n.js 가 아직 안 실렸을 때를 대비해 원문에 값만 채웁니다. */
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try {
+    if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments);
+  } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
   'use strict';
 
   /* ★ <b>아홉</b>까지 놓습니다 (2026-08-04 · 처음에는 여섯이었습니다)
@@ -230,7 +246,7 @@
   function moreLine(total) {
     if (total <= MAX) return '';
     return '<div class="oc-my-more">'
-      + '담은 것 <b>' + total + '개</b> 가운데 <b>앞 ' + MAX + '개</b>를 놓았습니다'
+      + ocN('담은 것 <b>{0}개</b> 가운데 <b>앞 {1}개</b>를 놓았습니다', total, MAX)
       + ' · 나머지는 <b>순서를 올리면</b> 나옵니다'
       + ' <a href="/account/interests.html">순서 바꾸기 →</a>'
       + '</div>';

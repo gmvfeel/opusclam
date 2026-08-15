@@ -152,6 +152,19 @@
     .sp-go{flex-wrap:wrap}
   }
 </style>
+<script>
+/* 숫자가 섞인 글 — 2026-08-15
+   「8월 12건」·「2026년 8월 공연 0건」이 영어·일본어 화면에서 한국어로
+   남던 것을 고칩니다. 자리표를 사전에 넘겨 언어마다 어순을 달리 둡니다. */
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments); } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
+</script>
 </head>
 <body data-header="overlay">
 <div id="oc-header"></div>
@@ -395,7 +408,7 @@
     /* ★ 수상 이력 — 담긴 것이 있을 때만 */
     if (p._awards && p._awards.length) {
       var as = p._awards.slice(0, 10);
-      secs += section('수상 · 이력 (' + p._awards.length + '건)',
+      secs += section(ocN('수상 · 이력 ({n}건)', p._awards.length),
         '<ul class="sp-list">' + as.map(function (a) {
           var ti = has(a.title_ko) ? a.title_ko : (a.title || '');
           var yr = has(a.year_text) ? a.year_text : (a.year || '');

@@ -23,6 +23,22 @@
    ※ 컬럼/필터/정렬이 바뀌어도 이 엔진은 안 건드리고 각 페이지 config만 수정하면 된다.
    ============================================================ */
 window.OCList = (function () {
+
+/* ── 숫자가 섞인 글 (2026-08-15) ──────────────────────────────
+   ★ 「전체 206건」처럼 숫자와 글자가 붙은 문장은 사전이 통짜로는
+     알아보지 못해, 영어·일본어 화면에서 한국어로 남았습니다.
+     OCI18N.n 에 자리표를 넘겨 언어마다 어순을 달리 둡니다.
+   ★ i18n.js 가 아직 안 실렸을 때를 대비해 원문에 값만 채웁니다. */
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try {
+    if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments);
+  } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
   'use strict';
 
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
@@ -588,7 +604,7 @@ window.OCList = (function () {
       }
       function label() {
         var n = activeCount();
-        btn.textContent = n ? ('조건 ' + n + '개' + (bar.classList.contains('filopen') ? ' 접기' : '')) 
+        btn.textContent = n ? (ocN('조건 {n}개', n) + (bar.classList.contains('filopen') ? ' 접기' : '')) 
                             : (bar.classList.contains('filopen') ? '조건 접기' : '조건으로 걸러 보기');
         btn.classList.toggle('on', n > 0);
       }

@@ -7,6 +7,22 @@
    ※ 페이지엔 supabase-js, DOMPurify, auth.js 가 먼저 로드돼야 함.
    ============================================================ */
 (function () {
+
+/* ── 숫자가 섞인 글 (2026-08-15) ──────────────────────────────
+   ★ 「전체 206건」처럼 숫자와 글자가 붙은 문장은 사전이 통짜로는
+     알아보지 못해, 영어·일본어 화면에서 한국어로 남았습니다.
+     OCI18N.n 에 자리표를 넘겨 언어마다 어순을 달리 둡니다.
+   ★ i18n.js 가 아직 안 실렸을 때를 대비해 원문에 값만 채웁니다. */
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try {
+    if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments);
+  } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
   'use strict';
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
@@ -291,7 +307,7 @@
 
       (function next(i) {
         if (i >= arr.length) {
-          var msg = okN ? (okN + '개 올렸습니다.') : '';
+          var msg = okN ? ocN('{n}개 올렸습니다.', okN) : '';
           if (failN) msg += (msg ? ' ' : '') + failN + '개 실패 — ' + fails.slice(0, 2).join(' / ');
           $('bwMsg').textContent = msg;
           return;

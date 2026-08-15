@@ -29,6 +29,21 @@
    ============================================================ */
 
 (function () {
+
+/* ── 숫자가 섞인 글 (2026-08-15) ──────────────────────────────
+   「점 12 · 줄 30」처럼 숫자와 글자가 붙은 문장은 사전이 통짜로는
+   알아보지 못해, 영어·일본어 화면에서 한국어로 남았습니다.
+   OCI18N.n 에 자리표를 넘겨 언어마다 어순을 달리 둡니다. */
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try {
+    if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments);
+  } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
   'use strict';
   if (window.OCNetwork) return;                 // 중복 로드 방지
 
@@ -681,8 +696,8 @@
   function updateCounter() {
     if (!G.counter) return;
     // 잘린 것이 있으면 알립니다. 조용히 감추면 이것이 전부인 줄 알게 됩니다.
-    G.counter.textContent = '점 ' + G.nodes.length + ' · 줄 ' + G.edges.length
-      + (G.trimmed ? ' · 종류마다 ' + CAP_PER_KIND + '개까지만 그렸습니다(' + G.trimmed + '개 생략)' : '')
+    G.counter.textContent = ocN('점 {0} · 줄 {1}', G.nodes.length, G.edges.length)
+      + (G.trimmed ? ' · ' + ocN('종류마다 {0}개까지만 그렸습니다({1}개 생략)', CAP_PER_KIND, G.trimmed) : '')
       + (G.nodes.length >= MAX_NODES ? ' · 더 펼칠 수 없습니다' : '');
   }
 

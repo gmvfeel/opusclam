@@ -1425,6 +1425,19 @@
     .fullmenu-body{align-items:flex-start;padding-top:26px}
   }
 </style>
+<script>
+/* 숫자가 섞인 글 — 2026-08-15
+   「8월 12건」·「2026년 8월 공연 0건」이 영어·일본어 화면에서 한국어로
+   남던 것을 고칩니다. 자리표를 사전에 넘겨 언어마다 어순을 달리 둡니다. */
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments); } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
+</script>
 </head>
 <body>
 
@@ -3134,7 +3147,8 @@ document.querySelectorAll('.tabs').forEach(function(t){
       const ph = await sbGet('entity_photos?select=thumb,src&entity_type=eq.school&entity_id=eq.'
         + encodeURIComponent(m.school_id) + '&hidden=eq.false&order=is_primary.desc,sort_no.asc&limit=1');
       const im = (Array.isArray(ph) && ph[0]) ? (ph[0].thumb || ph[0].src) : '';
-      const ymTxt = String(m.ym || '').replace('-', '년 ') + '월';
+      const _ym = String(m.ym || '').split('-');
+      const ymTxt = ocN('{0}년 {1}월', _ym[0], parseInt(_ym[1], 10) || _ym[1]);
       return {
         title: '<' + ymTxt + '> ' + nm,
         summary: toSummary(m.intro_ko || x.description, 150) || (x.location || ''),

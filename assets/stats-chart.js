@@ -18,6 +18,33 @@
      옮기면 됩니다 — 이름이 달라 함께 있어도 부딪히지 않습니다.
    ============================================================ */
 (function (w) {
+
+/* ── 숫자가 섞인 글 (2026-08-15) ──────────────────────────────
+   ★ 「전체 206건」처럼 숫자와 글자가 붙은 문장은 사전이 통짜로는
+     알아보지 못해, 영어·일본어 화면에서 한국어로 남았습니다.
+     OCI18N.n 에 자리표를 넘겨 언어마다 어순을 달리 둡니다.
+   ★ i18n.js 가 아직 안 실렸을 때를 대비해 원문에 값만 채웁니다. */
+/* 단위 낱말 하나를 사전에 태웁니다 (건 → items · 件)
+   ★ stats-chart 는 게시판·인물·공연 등 여러 곳이 함께 쓰는 엔진이라,
+     단위가 화면마다 다릅니다(건·명·곳·개). 통짜로 묶지 않고 낱말만
+     갈아 끼웁니다 — 사전에 이미 들어 있는 낱말들입니다. */
+function unitT(u) {
+  try {
+    if (window.OCI18N && window.OCI18N.t) return window.OCI18N.t(u);
+  } catch (e) {}
+  return u;
+}
+
+function ocN(tpl) {
+  var vals = [].slice.call(arguments, 1);
+  try {
+    if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n.apply(null, arguments);
+  } catch (e) {}
+  return String(tpl).replace(/\{(n|\d+)\}/g, function (m, k) {
+    var v = (k === 'n') ? vals[0] : vals[Number(k)];
+    return (v === undefined || v === null) ? m : String(v);
+  });
+}
   'use strict';
 
   function esc(v) {
@@ -80,10 +107,10 @@
       return '<div class="' + cls + '"'
         + (n > 0 && pick
             ? ' data-k="' + esc(r.key == null ? r.label : r.key) + '" role="button" tabindex="0"'
-              + ' aria-label="' + esc(r.label) + ' ' + n + unit + '"'
+              + ' aria-label="' + esc(r.label) + ' ' + ocN('{0}{1}', n, unitT(unit)) + '"'
             : '')
         + '>'
-        + (n > 0 ? '<span class="hb-tip"><b>' + esc(r.label) + '</b> ' + num(n) + unit
+        + (n > 0 ? '<span class="hb-tip"><b>' + esc(r.label) + '</b> ' + num(n) + unitT(unit)
                  + (opts.tipNote ? '<em>' + esc(opts.tipNote) + '</em>' : '') + '</span>' : '')
         + (n > 0 ? '<span class="hb-mdot" style="bottom:' + h.toFixed(1) + '%"></span>' : '')
         + '<span class="hb-mbar"'
