@@ -87,9 +87,15 @@
 .adp-stat span{display:block;font-size:12.5px;color:var(--text-3);margin-top:9px}
 .adp-asof{text-align:center;font-size:12px;color:var(--text-3);margin:22px 0 0}
 
-/* ══ 공통 구역 ═════════════════════════════════════════ */
-.adp-sec{padding:82px 20px}
-.adp-sec.tint{background:var(--paper-3)}
+/* ══ 공통 구역 ═════════════════════════════════════════
+   ★ 2026-08-15 · 바탕색으로 가르던 것을 <b>선</b>으로 바꿨습니다 (파트너 지적)
+     ─────────────────────────────────────────────────
+     어두운 모드에서 --paper-3 은 #1f1f1f 로, 바탕(#0b0b0b)과 차이가
+     거의 없습니다. 밝은 모드에서만 보이던 구분이었습니다.
+     ▶ 선은 두 모드 모두에서 같은 세기로 보입니다.
+     ▶ 위아래 여백을 넉넉히 두어, 선이 없어도 덩이가 갈립니다. */
+.adp-sec{padding:78px 20px;border-top:1px solid var(--line)}
+.adp-sec:first-of-type{border-top:0}
 .adp-in{max-width:1080px;margin:0 auto}
 .adp-head{margin:0 0 38px}
 .adp-num{display:inline-flex;align-items:center;justify-content:center;
@@ -186,7 +192,8 @@
 .adp-step .no{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;
   background:var(--violet-2);color:#fff;font-family:var(--display);font-size:15px;
   font-weight:800;margin:0 0 16px;position:relative;z-index:2;
-  box-shadow:0 0 0 5px var(--paper-3)}
+  /* 칸 바탕과 같은 색으로 테를 둘러, 선이 원을 뚫고 지나가 보이지 않게 합니다 */
+  box-shadow:0 0 0 5px var(--paper)}
 /* 원과 원을 잇는 선 — 칸 밖으로 뻗어 다음 칸에 닿습니다 */
 .adp-step::after{content:"";position:absolute;left:calc(22px + 36px);top:calc(24px + 18px);
   height:2px;width:calc(100% - 22px - 36px + 16px);background:var(--line-2);z-index:1}
@@ -202,7 +209,30 @@
      머리 구역(히어로)만 가운데인 것은 맞습니다 — 그건 표지니까요.
      ▶ 왼쪽에 글, 오른쪽에 메일 주소를 두어 <b>두 칸</b>으로 폅니다.
        가로가 넓은 구역이라 한 줄로 늘어놓으면 허전합니다. */
-.adp-contact{background:var(--ink,#0E1230);color:#fff;padding:72px 20px}
+/* ★ 2026-08-15 · var(--ink) 를 쓰면 <b>어두운 모드에서 뒤집힙니다</b>
+     (#0E1230 → #ededed). 바탕이 밝아지는데 글자는 흰색이라 묻혔습니다.
+     ▶ 고정 남색을 <b>직접</b> 적습니다. 이 구역만은 두 모드에서
+       같은 색으로 두는 것이 맞습니다 — 마무리 띠라서 그렇습니다. */
+.adp-contact{background:#0E1230;color:#fff;padding:76px 20px;border-top:1px solid var(--line)}
+html[data-theme="dark"] .adp-contact{background:#141414;border-top-color:#2b2b2b}
+
+/* ══ 어두운 모드 보정 ══════════════════════════════════
+   ★ 2026-08-15 · --violet-2 는 어두운 모드에서 <b>회색(#a2a2a2)</b>이 됩니다.
+     그 위에 흰 글자를 얹으면 대비가 2.55 로, 기준(4.5)에 크게 못 미칩니다.
+     번호 원과 자리 배지가 그랬습니다.
+     ▶ 어두운 모드에서는 <b>글자를 검게</b> 뒤집습니다 — 대비 6.09.
+     ▶ 색을 새로 정하지 않고 글자만 뒤집는 까닭은, 사이트 전체가
+       어두운 모드에서 무채색으로 가도록 짜여 있기 때문입니다.
+       여기만 보라를 남기면 튑니다. */
+html[data-theme="dark"] .adp-num,
+html[data-theme="dark"] .adp-tag i,
+html[data-theme="dark"] .adp-step .no{color:#1a1a1a}
+/* 머리 구역 — 어두운 모드에서는 사이트 히어로와 같은 무채색으로 */
+html[data-theme="dark"] .adp-top{
+  background:linear-gradient(115deg,#0a0a0a 0%,#131313 45%,#1c1c1c 75%,#232323 100%)}
+html[data-theme="dark"] .adp-eyebrow{color:#9a9a9a}
+/* 미리보기 테두리 — 회색 위 회색이 되지 않게 한 단계 밝힙니다 */
+html[data-theme="dark"] .adp-ad{outline-color:#bebebe}
 .adp-contact-in{max-width:1080px;margin:0 auto;display:grid;
   grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
 .adp-contact h2{font-size:26px;font-weight:800;margin:0 0 14px;color:#fff;letter-spacing:-.025em}
@@ -424,7 +454,7 @@
   </section>
 
   <!-- ══ ② 한눈에 보기 ═════════════════════════════════ -->
-  <section class="adp-sec tint">
+  <section class="adp-sec">
     <div class="adp-in">
       <div class="adp-head">
         <span class="adp-num">2</span>
@@ -479,7 +509,7 @@
   </section>
 
   <!-- ══ ④ 절차 ════════════════════════════════════════ -->
-  <section class="adp-sec tint">
+  <section class="adp-sec">
     <div class="adp-in">
       <div class="adp-head">
         <span class="adp-num">4</span>
