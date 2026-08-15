@@ -41,6 +41,10 @@ const ARGS = Object.fromEntries(process.argv.slice(2).map(a => {
   return m ? [m[1], m[2] === undefined ? true : m[2]] : [a, true];
 }));
 const DUMP = !!ARGS.dump;
+const SAVE = !!ARGS.save;
+
+const SB_URL = process.env.SUPABASE_URL || '';
+const SB_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const RAW = ARGS.raw ? String(ARGS.raw) : null;
 
 const UA = 'OpusclamBot/1.0 (+https://opusclam.com; classical music database)';
@@ -69,6 +73,7 @@ const COMPS = [
     key: 'chopin', kind: 'per-edition',
     nameKo: '쇼팽 국제 피아노 콩쿠르',
     nameEn: 'International Chopin Piano Competition',
+    field: '피아노',
     editions: 19,
     title: (no) => `${ROMAN[no]} International Chopin Piano Competition`,
     years: {
@@ -81,30 +86,35 @@ const COMPS = [
     key: 'tchaikovsky', kind: 'one-page',
     nameKo: '차이콥스키 국제 콩쿠르',
     nameEn: 'International Tchaikovsky Competition',
+    field: '피아노·바이올린·첼로·성악',
     title: () => 'International Tchaikovsky Competition',
   },
   {
     key: 'queen-elisabeth', kind: 'one-page',
     nameKo: '퀸 엘리자베스 콩쿠르',
     nameEn: 'Queen Elisabeth Competition',
+    field: '바이올린·피아노·성악·첼로',
     title: () => 'Queen Elisabeth Competition',
   },
   {
     key: 'cliburn', kind: 'one-page',
     nameKo: '반 클라이번 국제 피아노 콩쿠르',
     nameEn: 'Van Cliburn International Piano Competition',
+    field: '피아노',
     title: () => 'Van Cliburn International Piano Competition',
   },
   {
     key: 'leeds', kind: 'one-page',
     nameKo: '리즈 국제 피아노 콩쿠르',
     nameEn: 'Leeds International Piano Competition',
+    field: '피아노',
     title: () => 'Leeds International Piano Competition',
   },
   {
     key: 'busoni', kind: 'one-page',
     nameKo: '부조니 국제 피아노 콩쿠르',
     nameEn: 'Ferruccio Busoni International Piano Competition',
+    field: '피아노',
     title: () => 'Ferruccio Busoni International Piano Competition',
   },
 ];
@@ -469,10 +479,83 @@ function yearOf(wt, no) {
 }
 
 
+/* ══ 담기 ═══════════════════════════════════════════════════
+   ★ oc_concours_prize 에 담습니다. source_id 로 겹침을 막으므로
+     여러 번 돌려도 늘어나지 않고 덮어쓰기만 합니다.
+   ★ <b>인물과 잇지 않습니다</b> — person_id 는 비운 채로 둡니다.
+     이름만으로 자동으로 합치면 동명이인이 엉킵니다. 잇는 일은
+     따로 만든 도구에서 사람이 판단합니다. */
+async function sb(path, opts = {}) {
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json', ...(opts.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status} ${await res.text()}`);
+  const t = await res.text();
+  return t ? JSON.parse(t) : null;
+}
+
+/* 등수를 셈하기 좋은 숫자로 — HM·F 는 비웁니다 */
+function rankNo(r) {
+  const m = /^(\d{1,2})$/.exec(String(r || ''));
+  return m ? +m[1] : null;
+}
+
+function toRows(comp, list, wikiUrl) {
+  const out = [];
+  const seen = new Set();
+  for (const p of list) {
+    if (!p.name || !p.year) continue;
+    /* 「대회|연도|등수|이름」이 겹침을 막는 열쇠입니다.
+       같은 사람이 같은 해 같은 등수로 두 번 나올 일은 없습니다. */
+    const sid = `${comp.key}|${p.year}|${p.rank || '-'}|${p.name}`;
+    if (seen.has(sid)) continue;
+    seen.add(sid);
+    out.push({
+      concours: comp.key,
+      year: p.year,
+      edition: p.edition || null,
+      rank: String(p.rank || '-'),
+      rank_no: rankNo(p.rank),
+      name_en: p.name,
+      country: p.country || null,
+      field: comp.field || null,
+      person_id: null,
+      link_status: 'none',
+      source: 'wikipedia',
+      source_url: wikiUrl || null,
+      source_id: sid,
+    });
+  }
+  return out;
+}
+
+async function save(rows) {
+  let done = 0;
+  for (let i = 0; i < rows.length; i += 200) {
+    const part = rows.slice(i, i + 200);
+    await sb('oc_concours_prize?on_conflict=source_id', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(part),
+    });
+    done += part.length;
+  }
+  return done;
+}
+
+
 /* ══ 실행 ═══════════════════════════════════════════════════ */
 (async () => {
   console.log('══ 콩쿠르 입상자 — 될지 봅니다 ══');
-  console.log('   담지 않습니다. 몇 회를 읽어낼 수 있는지만 셉니다.');
+  console.log(SAVE ? '   담습니다 (--save)' : '   담지 않습니다 — 세어만 봅니다');
+  if (SAVE && (!SB_URL || !SB_KEY)) {
+    console.log('   ★ SUPABASE_URL · SUPABASE_SERVICE_KEY 가 없습니다. 담지 못합니다.');
+    process.exit(1);
+  }
   console.log('');
 
   /* 원문 그대로 보기 — --raw=9 (쇼팽 9회) · --raw=tchaikovsky */
@@ -511,7 +594,7 @@ function yearOf(wt, no) {
 
     /* ① 회차별 문서 (쇼팽) ─────────────────────────── */
     if (comp.kind === 'per-edition') {
-      let ok = 0, fail = 0, total = 0;
+      let ok = 0, fail = 0, total = 0, saved = 0;
       const bad = [];
       for (let no = 1; no <= comp.editions; no++) {
         const title = comp.title(no);
@@ -530,6 +613,12 @@ function yearOf(wt, no) {
         total += list.length;
         console.log(`   제${String(no).padStart(2)}회 ${year || '????'}  ${good ? '읽음' : '★못읽음'}`
           + `  입상 ${String(list.length).padStart(2)}명 · 1~3위 ${top3}/3 · 꼴「${how}」`);
+
+        if (SAVE && list.length && year) {
+          const rows = toRows(comp, list.map(p => ({ ...p, year, edition: no })),
+            `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`);
+          saved += await save(rows);
+        }
         if (DUMP && list.length) {
           list.slice(0, 4).forEach(p =>
             console.log(`            ${(p.rank || '-').padStart(3)}  ${p.name}${p.country ? ' · ' + p.country : ''}`));
@@ -538,6 +627,7 @@ function yearOf(wt, no) {
       }
       console.log(`   ▶ ${comp.editions}회 가운데 ${ok}회 읽음 · 입상자 ${total}명`);
       if (bad.length) console.log(`     못 읽은 회 : ${bad.join(' · ')}`);
+      if (SAVE) console.log(`     담음 : ${saved}건`);
       grandOk += ok; grandFail += fail; grandNames += total;
       console.log('');
       continue;
@@ -577,6 +667,12 @@ function yearOf(wt, no) {
       show.forEach(p => console.log(`      ${p.year || '????'}  1위  ${p.name}${p.country ? ' · ' + p.country : ''}`));
       if (list.filter(p => p.rank === '1').length > 8)
         console.log(`      … 그리고 ${list.filter(p => p.rank === '1').length - 8}회`);
+    }
+
+    if (SAVE) {
+      const rows = toRows(comp, list, `https://en.wikipedia.org/wiki/${encodeURIComponent(comp.title())}`);
+      const n = await save(rows);
+      console.log(`   담음 : ${n}건`);
     }
 
     if (firsts.size >= 5) grandOk++; else grandFail++;

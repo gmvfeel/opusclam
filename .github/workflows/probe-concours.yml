@@ -1,4 +1,4 @@
-name: 시험 · 콩쿠르 입상자 (될지 봅니다)
+name: 콩쿠르 입상자 수집
 
 # ── 무엇을 하나 ──
 #  쇼팽 콩쿠르 19회의 위키 문서를 받아, <몇 회를 읽어낼 수 있는지>만 셉니다.
@@ -33,6 +33,12 @@ on:
         description: '원문 보기 (쇼팽은 회차 숫자 · 다른 대회는 이름 · 예: 9 또는 tchaikovsky)'
         required: false
         default: ''
+      save:
+        description: '실제로 담기 (먼저 sql/concours-01-table.sql 을 돌리십시오)'
+        required: true
+        default: 'no'
+        type: choice
+        options: ['no', 'yes']
 
 jobs:
   probe:
@@ -51,5 +57,10 @@ jobs:
           if [ -n "$ONLY" ]; then OPTS="$OPTS --only=$ONLY"; fi
           RAWNO="${{ github.event.inputs.raw }}"
           if [ -n "$RAWNO" ]; then OPTS="--raw=$RAWNO"; fi
+          if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
           echo "── 실행 : node seed/concours-probe.mjs $OPTS ──"
           node seed/concours-probe.mjs $OPTS
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
