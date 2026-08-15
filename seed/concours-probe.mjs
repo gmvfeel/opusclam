@@ -146,6 +146,18 @@ function parseTable(wt) {
   for (const tb of tables) {
     /* 입상자 표인지 — 머리에 Prize·Winner 가 있어야 합니다 */
     if (!/prize|winner|nagrod/i.test(tb.slice(0, 400))) continue;
+
+    /* ★★ <b>특별상 표를 빼야 합니다</b> (2026-08-15 · 시험에서 잡음)
+       ─────────────────────────────────────────────────────
+       「Best Performance of Mazurkas」 같은 특별상도 같은 꼴의 표입니다.
+       그 표에는 등수 칸이 없어, 차례로 매기는 규칙이 <b>1·2·3위를
+       특별상 수상자에게 붙여 버립니다.</b>
+         제9회 → 짐머만이 <b>1위가 아니라 「마주르카상 1」</b>로 잡혔고,
+                 진짜 1~3위 표는 통째로 놓쳤습니다.
+       이 하나 때문에 여섯 회가 못 읽혔습니다.
+       ▶ 표 안에 「Best Performance」·「Special prize」가 보이면 건너뜁니다. */
+    if (/best performance|special prize|audience (award|prize)|nagroda specjalna/i
+        .test(tb.slice(0, 600))) continue;
     const rows = tb.split(/\n\|-/).slice(1);
     /* ★ 최근 회차는 1·2·3위 칸에 <b>메달 그림</b>을 넣어 등수 글자가
          아예 없습니다. 대신 <b>나오는 차례가 곧 등수</b>입니다.
