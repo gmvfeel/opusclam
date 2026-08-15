@@ -96,6 +96,12 @@ const COMPS = [
     field: '바이올린·피아노·성악·첼로',
     title: () => 'Queen Elisabeth Competition',
   },
+  /* ★ 반 클라이번은 <b>잠시 빼 둡니다</b> (2026-08-15)
+       위키 문서 짜임이 달라 두 명밖에 못 읽습니다. 그런데 담기를 켜면
+       oc_concours 표에 없는 대회라 <b>실행이 통째로 멈춥니다</b> —
+       퀸 엘리자베스까지 담고 거기서 끊겼습니다.
+     ▶ 읽어내게 되면 여기 설정을 되살리고 sql 에도 한 줄 더하면 됩니다.
+       두 곳을 <b>함께</b> 고쳐야 합니다.
   {
     key: 'cliburn', kind: 'one-page',
     nameKo: '반 클라이번 국제 피아노 콩쿠르',
@@ -103,6 +109,7 @@ const COMPS = [
     field: '피아노',
     title: () => 'Van Cliburn International Piano Competition',
   },
+  */
   {
     key: 'leeds', kind: 'one-page',
     nameKo: '리즈 국제 피아노 콩쿠르',
@@ -615,9 +622,13 @@ async function save(rows) {
           + `  입상 ${String(list.length).padStart(2)}명 · 1~3위 ${top3}/3 · 꼴「${how}」`);
 
         if (SAVE && list.length && year) {
-          const rows = toRows(comp, list.map(p => ({ ...p, year, edition: no })),
-            `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`);
-          saved += await save(rows);
+          try {
+            const rows = toRows(comp, list.map(p => ({ ...p, year, edition: no })),
+              `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`);
+            saved += await save(rows);
+          } catch (e) {
+            console.log(`            ★ 담지 못했습니다 — ${e.message}`);
+          }
         }
         if (DUMP && list.length) {
           list.slice(0, 4).forEach(p =>
@@ -670,9 +681,16 @@ async function save(rows) {
     }
 
     if (SAVE) {
-      const rows = toRows(comp, list, `https://en.wikipedia.org/wiki/${encodeURIComponent(comp.title())}`);
-      const n = await save(rows);
-      console.log(`   담음 : ${n}건`);
+      /* ★ 한 대회가 담기에 실패해도 <b>나머지는 이어 갑니다.</b>
+           예전에는 실행이 통째로 멈춰, 뒤쪽 대회가 담기지 않았습니다. */
+      try {
+        const rows = toRows(comp, list, `https://en.wikipedia.org/wiki/${encodeURIComponent(comp.title())}`);
+        const n = await save(rows);
+        console.log(`   담음 : ${n}건`);
+      } catch (e) {
+        console.log(`   ★ 담지 못했습니다 — ${e.message}`);
+        grandFail++;
+      }
     }
 
     if (firsts.size >= 5) grandOk++; else grandFail++;
