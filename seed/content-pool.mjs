@@ -70,6 +70,21 @@
             뉴스 본문 평균 677자 · 문단 7개(예전 5~7문단)
           ★ 사진은 넣지 않았습니다. 아래 「사진」 항목과 같은 까닭입니다.
 
+    13차  opusnity-en(12) · opusnity-ja(12)
+          qna-en(12) · qna-ja(12)                     = 48
+          ★ 2026-08-15 · 사람이 가장 많이 오는 두 게시판입니다.
+          ★ 게시판마다 <b>결이 다릅니다</b> —
+              오퍼니티  가벼운 수다. 본문 150자쯤. 핫토픽처럼 길게 쓰면
+                        게시판 성격이 무너집니다.
+              지식나눔  본문은 <b>질문</b>이고 댓글이 답입니다.
+                        결론을 갖고 시작하면 이 게시판이 아닙니다.
+          ★ 지식나눔은 <b>track 칸</b>을 반드시 적습니다 —
+              '음악지식' 또는 '전공별'. category 와 <b>둘 다</b> 있어야
+              화면의 갈래 고르개에 걸립니다. 값은 한국어 그대로입니다.
+          ★ '입시/진로관련'·'해외유학' 은 <b>그 나라 사정</b>으로 썼습니다.
+              일본판은 音高·音大受験 이야기입니다. 한국 입시를 옮기면
+              그 자리에서 들킵니다.
+
     12차  hottopic-en(12) · hottopic-ja(12)          = 24
           ★ 2026-08-15 · <b>첫 외국어 배치</b>입니다 (파트너 요청).
             번역이 아니라 <b>그 말로 처음부터 쓴 글</b>입니다.
@@ -125,6 +140,10 @@ import { UTILITY3 } from './pool/utility-3.mjs';
 /* ★ 2026-08-15 · 외국어 풀 — 파일 이름 끝의 en · ja 가 언어입니다 */
 import { HOTTOPIC_EN } from './pool/hottopic-en.mjs';
 import { HOTTOPIC_JA } from './pool/hottopic-ja.mjs';
+import { OPUSNITY_EN } from './pool/opusnity-en.mjs';
+import { OPUSNITY_JA } from './pool/opusnity-ja.mjs';
+import { QNA_EN } from './pool/qna-en.mjs';
+import { QNA_JA } from './pool/qna-ja.mjs';
 // 사진 준비 뒤: import { GALLERY } from './pool/gallery.mjs';
 
 /* 일반 게시판용 닉네임 풀 (글에 author 가 지정돼 있으면 그것을 씁니다)
@@ -175,6 +194,10 @@ export const POOL = {
     ...UTILITY3,
     ...HOTTOPIC_EN,
     ...HOTTOPIC_JA,
+    ...OPUSNITY_EN,
+    ...OPUSNITY_JA,
+    ...QNA_EN,
+    ...QNA_JA,
     // ...GALLERY,
   ],
 };

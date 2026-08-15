@@ -282,12 +282,33 @@ function jitterNow(maxHours = 5) {
 
    ★ 앞뒤 순서는 걱정하지 않아도 됩니다
      목록은 created_at 으로 정렬하므로, 흩어 놓으면 저절로 섞입니다. */
-function spreadDate(idx, total) {
-  /* 건수에 맞춘 기간 — 하루 1.5건쯤으로 봅니다. 가장 짧게 3일, 길게 90일 */
-  const days = Math.max(3, Math.min(90, Math.ceil(total / 1.5)));
+/* ★★ 2026-08-15 · <b>이미 있는 글과 같은 기간</b>에 흩습니다 (파트너 지적) ★★
+   ─────────────────────────────────────────────────────────────
+   ★ 무엇이 문제였나
+     영어 12편을 --fill 로 담았더니 <b>최근 여드레</b>에 몰렸습니다.
+     건수에 맞춰 기간을 잡기 때문입니다(12건 ÷ 1.5 = 8일).
+     한국어 글은 몇 달에 걸쳐 있는데 외국어만 맨 위에 뭉쳐 있으면,
+     목록을 열자마자 <b>한꺼번에 넣은 것</b>이 보입니다.
+
+   ★ 어떻게 고쳤나
+     그 게시판에 <b>이미 있는 시드 글이 걸쳐 있는 기간</b>을 받아,
+     같은 기간에 흩습니다. 한국어가 넉 달에 걸쳐 있으면 영어도
+     넉 달에 흩어져 서로 섞입니다.
+
+   ★ spanDays 를 주지 않으면 예전과 똑같이 돕니다 — 게시판이 비어
+     있어 견줄 것이 없을 때가 그렇습니다. */
+function spreadDate(idx, total, spanDays) {
+  /* 기간 — 있는 글에 맞추되, 없으면 건수로 잡습니다(하루 1.5건) */
+  const days = spanDays
+    ? Math.max(3, Math.min(400, spanDays))
+    : Math.max(3, Math.min(90, Math.ceil(total / 1.5)));
   /* idx 를 기준으로 삼되 앞뒤로 흔들어 고르지 않게 만듭니다 */
-  const base = (idx + Math.random()) * (days / Math.max(1, total));
-  const back = Math.min(days, Math.max(0.02, base + (Math.random() - 0.5) * 1.6));
+  const step = days / Math.max(1, total);
+  const base = (idx + Math.random()) * step;
+  /* 흔들림은 <b>간격에 비례</b>합니다. 예전에는 늘 ±0.8일이라, 기간이
+     넉 달로 늘어나면 거의 일정한 간격으로 줄을 서 버립니다. */
+  const jitter = (Math.random() - 0.5) * step * 1.6;
+  const back = Math.min(days, Math.max(0.02, base + jitter));
 
   const d = new Date(Date.now() - back * 86400000);
   /* 시각 — 새벽 3~6시는 피하고 저녁에 조금 더 몰리게 */
@@ -402,6 +423,20 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
        평소에는 이 줄이 현대음악·태교음악·유틸리티를 대개 넘겨 줍니다. */
   if (!want0 && cfg.weekly && !chance(0.28)) return 0;   // 느린 게시판
 
+  /* ★ 2026-08-15 · 이미 있는 시드 글이 <b>얼마나 긴 기간</b>에 걸쳐
+       있는지 재어 둡니다. 새 글을 그 기간 안에 흩어 섞기 위해서입니다.
+       ★ --fill 일 때만 씁니다. 평소 회차는 지금 시각 근처가 맞습니다.
+       ★ 게시판이 비어 있으면 잴 것이 없으므로 0 을 둡니다. */
+  let spanDays = 0;
+  if (FILL) {
+    const first = await sbGet(
+      `${cfg.table}?select=created_at&author_id=is.null&order=created_at.asc&limit=1`);
+    if (first.length && first[0].created_at) {
+      const d = (Date.now() - new Date(first[0].created_at).getTime()) / 86400000;
+      if (d > 0) spanDays = Math.round(d);
+    }
+  }
+
   // 이미 올라간 제목은 건너뜀
   const rows = await sbGet(`${cfg.table}?select=title&author_id=is.null&limit=1000`);
   const used = new Set(rows.map((r) => r.title));
@@ -447,6 +482,10 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
   }
   if (want <= 0) return 0;
 
+  if (FILL && spanDays) {
+    console.log(`[날짜] ${key} — 이미 있는 글이 ${spanDays}일에 걸쳐 있어 같은 기간에 흩습니다`);
+  }
+
   if (DRY) {
     console.log(`[dry] ${key} — ${want}건 올릴 수 있습니다 (남은 글 ${cand.length}개)`);
     cand.slice(0, Math.min(want, 5)).forEach((p, i) => {
@@ -478,7 +517,7 @@ async function seedPosts(key, cfg, mood, want0 = 0) {
       /* ★ 평소 회차는 지금 시각 근처(jitterNow) —
            한꺼번에 채울 때는 <b>여러 날에 흩습니다</b>(spreadDate).
            그러지 않으면 담은 것이 모두 오늘 날짜가 됩니다. */
-      created_at: FILL ? spreadDate(i, want) : jitterNow(),
+      created_at: FILL ? spreadDate(i, want, spanDays) : jitterNow(),
       view_count: rnd(3, 40),
     };
     /* ★ 어느 말로 쓴 글인지 적어 둡니다 — 목록의 EN·日 배지가 이걸 봅니다.
