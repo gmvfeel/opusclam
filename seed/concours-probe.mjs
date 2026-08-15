@@ -171,6 +171,37 @@ function clean(s) {
     .trim();
 }
 
+/* 나라 이름 — <b>나라인지 아닌지 가리는</b> 데 씁니다
+   ★ 퀸 엘리자베스 표에는 「결선 연주곡」 칸이 있어, 그것이 나라 자리로
+     들어갔습니다(「David Oistrakh · Tchaikovsky」). 나라 사전이 없으면
+     무엇이 나라인지 알 수 없어 이런 일이 생깁니다.
+   ★ 여기 없는 나라는 <b>나라가 아닌 것으로</b> 봅니다 — 틀린 나라를
+     적는 것보다 비워 두는 편이 낫습니다. */
+const COUNTRY = new Set(['USA','USSR','UK','U.S.','U.K.','US','United States','United Kingdom',
+  'Soviet Union','Russia','China','Japan','France','Poland','Italy','Germany','West Germany',
+  'East Germany','Korea','South Korea','North Korea','Canada','Spain','Israel','Ukraine',
+  'Belgium','Netherlands','Austria','Hungary','Bulgaria','Romania','Georgia','Armenia',
+  'Latvia','Lithuania','Estonia','Serbia','Croatia','Slovenia','Czech Republic','Czechoslovakia',
+  'Slovakia','Turkey','Türkiye','Greece','Sweden','Norway','Finland','Denmark','Iceland',
+  'Switzerland','Portugal','Ireland','Brazil','Argentina','Mexico','Chile','Venezuela','Cuba',
+  'Colombia','Peru','Uruguay','Australia','New Zealand','Vietnam','Taiwan','Hong Kong',
+  'Singapore','India','Iran','Indonesia','Thailand','Philippines','Malaysia','Kazakhstan',
+  'KAZ','Uzbekistan','Azerbaijan','Belarus','Moldova','Mongolia','South Africa','Egypt',
+  'Yugoslavia','Bosnia and Herzegovina','North Macedonia','Albania','Cyprus','Malta',
+  'Luxembourg','Monaco','Puerto Rico','Costa Rica','Ecuador','Bolivia','Paraguay',
+].map(x => x.toLowerCase()));
+
+function isCountry(t) {
+  const v = String(t || '').trim().toLowerCase();
+  if (!v) return false;
+  if (COUNTRY.has(v)) return true;
+  /* 「Italy Italy」·「Russia Lithuania」·「Argentina / Switzerland」처럼
+     둘이 이어진 것도 나라로 봅니다(이중국적·표기 겹침) */
+  const parts = v.split(/\s*[\/·]\s*|\s+/).filter(Boolean);
+  if (parts.length === 2 && COUNTRY.has(parts[0]) && COUNTRY.has(parts[1])) return true;
+  return false;
+}
+
 /* 이름 자리에 오면 안 되는 것들
    ★ 상금(€30,000 · 40,000zł)이 이름 칸으로 밀려드는 일이 잦습니다.
      통화 기호가 앞에 오기도 뒤에 오기도 해서 둘 다 봅니다.
@@ -323,25 +354,72 @@ function parseYearTable(wt) {
       for (let i = 1; i < cells.length && i <= 6; i++) {
         const raw = cells[i];
         if (!raw || isNotName(raw)) continue;
-        /* 한 칸에 여러 사람 — 「이름 (나라) 이름2 (나라2)」 */
-        const people = raw.split(/\s{2,}|·|;|\n/).map(x => x.trim()).filter(Boolean);
+
+        /* ── 한 칸에 여러 사람 ─────────────────────────
+           공동 수상이 흔합니다. 한 사람으로 묶이면 <b>사람 수가 틀리고</b>
+           나중에 인물DB 와 이을 때 둘 다 못 찾습니다.
+               「Vladimir Ashkenazy (USSR) John Ogdon (UK)」  ← 둘
+           ★ <b>「(나라)」가 끝나는 자리</b>에서 가릅니다. 그것이 한 사람의
+             끝이라는 가장 또렷한 표입니다. */
+        let chunk = raw
+          .replace(/<\/?[a-z][^>]*>/gi, ' ')     /* </ref> 같은 찌꺼기 */
+          .replace(/[}\]]{2,}/g, ' ')
+          .trim();
+
+        const people = [];
+        const RE_ONE = /([^()]+?)\s*\(([^)]{2,40})\)/g;
+        let mo, last = 0, found = false;
+        while ((mo = RE_ONE.exec(chunk)) !== null) {
+          found = true;
+          people.push({ name: mo[1], country: mo[2] });
+          last = RE_ONE.lastIndex;
+        }
+        if (found) {
+          const tail = chunk.slice(last).trim();
+          if (tail) people.push({ name: tail, country: '' });
+        } else {
+          /* 괄호가 없으면 두 칸 이상 띄기·가운뎃점으로 가릅니다 */
+          chunk.split(/\s{2,}|·|;/).map(x => x.trim()).filter(Boolean)
+            .forEach(x => people.push({ name: x, country: '' }));
+        }
+
         for (const one of people) {
-          /* 나라가 이름에 붙는 꼴이 <b>두 가지</b>입니다 —
-               「Van Cliburn (USA)」   괄호로 뒤에
-               「USA Van Cliburn」     깃발 틀이 풀려 앞에
-             ★ 뒤엣것을 안 떼면 이름이 「USA Van Cliburn」이 되어
-               인물DB와 이어 붙일 수 없습니다. */
-          let name = '', country = '';
-          const mp = /^(.+?)\s*\(([^)]{2,30})\)\s*$/.exec(one);
-          if (mp) { name = clean(mp[1]); country = clean(mp[2]); }
-          else {
-            /* 앞에 붙은 나라 — 깃발 틀이 풀린 자리입니다.
-               아는 나라 이름일 때만 뗍니다(사람 이름을 자르면 안 됩니다). */
-            const mf = /^(USA|USSR|UK|China|Japan|Russia|France|Poland|Italy|Germany|Korea|South Korea|Canada|Spain|Israel|Ukraine|Belgium|Netherlands|Austria|Hungary|Bulgaria|Romania|Georgia|Armenia|Latvia|Lithuania|Estonia|Serbia|Croatia|Slovenia|Czech Republic|Slovakia|Turkey|Greece|Sweden|Norway|Finland|Denmark|Switzerland|Portugal|Brazil|Argentina|Mexico|Australia|New Zealand|Vietnam|Taiwan|Hong Kong|Singapore|India|United States|United Kingdom|Soviet Union)\s+(.+)$/i.exec(one);
-            if (mf) { country = clean(mf[1]); name = clean(mf[2]); }
-            else name = clean(one);
+          let name = clean(one.name);
+          let country = clean(one.country);
+
+          /* 나라가 앞에 붙은 꼴 — 「USA Van Cliburn」·「KAZ Alim Beisembayev」
+             ★ 아는 나라일 때만 뗍니다. 사람 이름을 자르면 안 됩니다.
+             ★ 나라가 <b>앞뒤로 두 번</b> 오기도 합니다 —
+               「{{flag|USSR}} Vladimir Ashkenazy (USSR)」
+               깃발 틀이 풀려 앞에 남고 괄호에도 있는 경우입니다.
+               그래서 괄호에서 나라를 이미 얻었어도 <b>앞을 한 번 더</b> 봅니다. */
+          {
+            const w = name.split(/\s+/);
+            for (let k = 2; k >= 1; k--) {
+              if (w.length > k && isCountry(w.slice(0, k).join(' '))) {
+                if (!country) country = w.slice(0, k).join(' ');
+                name = w.slice(k).join(' ');
+                break;
+              }
+            }
           }
+          /* 「ArgentinaSwitzerland Martha Argerich」처럼 붙어 버린 것 */
+          if (!country) {
+            const mj = /^([A-Z][a-z]+)([A-Z][a-z]+)\s+(.+)$/.exec(name);
+            if (mj && isCountry(mj[1]) && isCountry(mj[2])) {
+              country = mj[1] + ' / ' + mj[2];
+              name = mj[3];
+            }
+          }
+
+          /* ★ 나라 자리에 <b>나라가 아닌 것</b>이 오면 비웁니다.
+               퀸 엘리자베스 표의 「Tchaikovsky」·「Sibelius」는 연주곡입니다.
+               틀린 나라를 적느니 없는 편이 낫습니다. */
+          if (country && !isCountry(country)) country = '';
+
+          name = name.replace(/^[\s,\-–—]+|[\s,\-–—]+$/g, '');
           if (!name || isNotName(name)) continue;
+          if (isCountry(name)) continue;          /* 나라만 남은 칸 */
           out.push({ rank: String(i), name, country, year });
         }
       }
