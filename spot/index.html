@@ -532,7 +532,8 @@ function ocN(tpl) {
 
     /* ── 페스티벌 · 콩쿨 (왼쪽 칸) ── */
     OCHub.boardTabs({
-      tabsEl:'#fcTabs', listEl:'#fcList', kind:'compact', n:5,
+      /* ★ 2026-08-15 · 5 → 4 (파트너 지시) — 옆칸들과 줄 수를 맞춥니다 */
+      tabsEl:'#fcTabs', listEl:'#fcList', kind:'compact', n:4,
       tabs:[
         { label:'페스티벌', table:'spot', view:VIEW, list:'/spot/festival.html',
           cols:COLS + ',region', filter: sec('페스티벌') + '&hidden=is.false',
@@ -563,7 +564,8 @@ function ocN(tpl) {
       };
     };
     OCHub.boardTabs({
-      tabsEl:'#fnTabs', listEl:'#fnList', kind:'compact', n:5,
+      /* ★ 2026-08-15 · 5 → 4 (파트너 지시) */
+      tabsEl:'#fnTabs', listEl:'#fnList', kind:'compact', n:4,
       tabs:[ fnTab('전체', null), fnTab('창작지원','창작지원'),
              fnTab('단체지원','단체지원'), fnTab('국제교류','국제교류') ]
     });
