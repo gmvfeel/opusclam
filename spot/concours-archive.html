@@ -45,7 +45,13 @@
 /* ★ 2026-08-15 · 히어로와 <b>사이를 벌립니다</b> (파트너 지적)
      본문이 곧바로 붙어 있어 답답했습니다. 다른 정보SPOT 화면은
      board 짜임이 여백을 주는데, 이 화면은 자체 짜임이라 없었습니다. */
-.ca{max-width:1180px;margin:0 auto;padding:44px 20px 80px}
+/* ★ 2026-08-15 · 다른 화면과 <b>폭을 맞춥니다</b> (파트너 지적)
+     이 화면만 1180px·좌우 20px 로 잡아, 왼쪽 대회 목록이 위 히어로
+     제목보다 안쪽으로 들어가 어긋나 보였습니다.
+   ▶ 이 사이트의 표준은 <b>1360px · 좌우 24px</b> 입니다
+     (style.css 의 .pdb-inner · assets/board.css 의 .board).
+     같은 값을 쓰면 히어로 제목과 왼쪽 목록이 한 줄에 섭니다. */
+.ca{max-width:1360px;margin:0 auto;padding:44px 24px 80px}
 
 /* ══ 두 칸 — 왼쪽 대회 목록 · 오른쪽 기록 ══════════════
    ★ 2026-08-15 · 알약 단추를 <b>왼쪽 목록</b>으로 바꿨습니다 (파트너 지적)
@@ -125,18 +131,25 @@
   cursor:pointer;font-family:inherit}
 .ca-more:hover{border-color:var(--violet-2);color:var(--violet-2)}
 
+/* 좁은 화면용 풀다운 — 넓은 화면에서는 감춥니다 */
+.ca-pick{display:none;width:100%;padding:13px 14px;border:1px solid var(--line-2);
+  border-radius:11px;font-size:14px;font-weight:600;font-family:inherit;
+  background:var(--paper);color:var(--text);margin:0 0 22px}
+.ca-pick:focus{outline:none;border-color:var(--violet-2)}
+
 @media(max-width:900px){
-  /* 좁은 화면에서는 왼쪽 목록을 <b>위로</b> 올리고 가로로 폅니다 */
-  .ca-wrap{grid-template-columns:1fr;gap:24px}
-  .ca-side{position:static}
-  .ca-side h3{display:none}
-  .ca-nav{flex-direction:row;flex-wrap:wrap;gap:7px}
-  .ca-nav button{border-left:0;border:1px solid var(--line-2);border-radius:9px;padding:9px 14px}
-  .ca-nav button.on{border-color:var(--violet-2);background:var(--paper-2)}
-  .ca-nav button i{display:none}
+  /* ★ 2026-08-15 · 좁은 화면에서는 <b>풀다운</b>으로 (파트너 지적)
+       알약을 가로로 펴 보니 다섯이 세 줄로 늘어져 자리를 크게 먹었습니다.
+       게다가 바로 위 하위 메뉴가 이미 풀다운이라 결도 어긋났습니다.
+     ▶ 목록을 감추고 풀다운 하나만 둡니다. 고르는 값은 같으므로
+       두 가지가 <b>서로 따라</b>갑니다(어느 쪽으로 골라도 맞습니다). */
+  .ca-wrap{grid-template-columns:1fr;gap:0}
+  .ca-side{display:none}
+  .ca-pick{display:block}
 }
 @media(max-width:640px){
-  .ca{padding:30px 20px 70px}
+  /* 좁은 화면 좌우 여백도 board.css 와 같은 16px 로 */
+  .ca{padding:30px 16px 70px}
   .ca-yhead b{font-size:21px}
 }
 </style>
@@ -187,6 +200,9 @@
   </aside>
 
   <div>
+    <!-- 좁은 화면에서만 보이는 대회 고르개 -->
+    <select class="ca-pick" id="pick" aria-label="대회 고르기"></select>
+
     <div id="head"></div>
 
     <div class="ca-bar">
@@ -263,12 +279,16 @@
         + '</button>';
     }).join('');
     [].forEach.call($('tabs').querySelectorAll('button'), function (b) {
-      b.addEventListener('click', function () {
-        [].forEach.call($('tabs').querySelectorAll('button'), function (x) { x.classList.remove('on'); });
-        b.classList.add('on');
-        pick(b.getAttribute('data-k'));
-      });
+      b.addEventListener('click', function () { pick(b.getAttribute('data-k')); });
     });
+
+    /* 좁은 화면용 풀다운 — 같은 목록을 다른 꼴로 보여 줍니다 */
+    $('pick').innerHTML = COMPS.map(function (x) {
+      return '<option value="' + esc(x.key) + '">' + esc(x.name_ko)
+        + (x.founded ? ' (' + x.founded + '년~)' : '') + '</option>';
+    }).join('');
+    $('pick').addEventListener('change', function () { pick(this.value); });
+
     pick(COMPS[0].key);
   }
 
@@ -276,6 +296,14 @@
   async function pick(key) {
     CUR = COMPS.filter(function (x) { return x.key === key; })[0];
     if (!CUR) return;
+
+    /* ★ 두 고르개를 <b>함께</b> 맞춥니다. 화면 폭이 바뀌어도 고른 것이
+         그대로 보이게 하려는 것입니다 — 하나만 맞추면 폭을 늘렸을 때
+         엉뚱한 대회가 켜져 있습니다. */
+    [].forEach.call($('tabs').querySelectorAll('button'), function (x) {
+      x.classList.toggle('on', x.getAttribute('data-k') === key);
+    });
+    if ($('pick').value !== key) $('pick').value = key;
 
     $('head').innerHTML = '<div class="ca-head">'
       + '<h2>' + esc(CUR.name_ko) + '</h2>'
