@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>광고안내 · OPUSCLAM</title>
+<meta name="description" content="클래식 음악 한 분야만 다루는 종합 데이터베이스, 오퍼스클램의 광고 자리를 안내합니다. 자리마다 최대 다섯 곳까지 함께 실립니다.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<style>
+/* ============================================================
+   광고안내 — advertise.html
+   ------------------------------------------------------------
+   2026-08-15 · 파트너 요청 (김박사넷 광고 소개 화면을 참고)
+
+   ★ 왜 필요한가
+     화면 42곳에 「광고문의」 자리표가 떠 있는데, 눌러도 갈 곳이
+     없었습니다. 자리표의 <a> 에 href 를 넣는 순간 손 모양 커서와
+     hover 가 함께 켜집니다(.ad-cta[href] 규칙이 이미 있습니다).
+
+   ★ 숫자를 지어내지 않습니다
+     참고한 화면은 「월 방문자 200만」을 앞세우지만, 우리는 아직
+     런칭 전이라 그런 숫자가 없습니다. <b>데이터 규모</b>를 앞세웁니다 —
+     광고주에게는 「누가 오는 곳인가」가 더 중요하고, 이것은 사실입니다.
+     방문자 지표는 쌓인 뒤에 넣을 자리만 비워 둡니다(아래 ad-later).
+
+   ★ 요금을 적지 않습니다 (파트너 결정)
+     한 번 적으면 올리기 어렵고, 초기에는 상대에 따라 달리 가는 편이
+     낫습니다. 참고한 화면도 같은 방식입니다.
+
+   ★ 자리마다 <b>최대 다섯 곳</b>입니다 (파트너 지시)
+     일곱 초마다 돌아가며 한 곳씩 보입니다. 이것을 숨기지 않고
+     그대로 적습니다 — 광고주가 노출 빈도를 계산할 수 있어야 합니다.
+
+   ★ 짜임은 이 파일 안에만 둡니다
+     이 화면 하나만 쓰는 규칙이라 style.css 를 늘릴 까닭이 없습니다.
+     색·글꼴은 style.css 의 변수를 그대로 씁니다 — 밝은 화면·어두운
+     화면이 저절로 따라옵니다.
+   ============================================================ */
+
+.adp{max-width:1080px;margin:0 auto;padding:0 20px 96px}
+
+/* ── 머리 ─────────────────────────────────────────────── */
+.adp-hero{padding:96px 0 56px;text-align:center}
+.adp-eyebrow{font-family:var(--display);font-size:12px;letter-spacing:.28em;
+  color:var(--violet-2);font-weight:700;margin:0 0 18px}
+.adp-hero h1{font-size:clamp(28px,4.6vw,46px);line-height:1.28;margin:0 0 20px;
+  font-weight:800;letter-spacing:-.02em;color:var(--text)}
+.adp-hero h1 em{font-style:normal;color:var(--violet-2)}
+.adp-lead{font-size:16px;line-height:1.85;color:var(--text-2);margin:0 auto;max-width:640px}
+.adp-cta{display:inline-flex;align-items:center;gap:8px;margin-top:32px;
+  background:var(--violet-2);color:#fff;font-weight:700;font-size:15px;
+  padding:15px 34px;border-radius:12px;text-decoration:none;
+  box-shadow:0 14px 30px -12px rgba(124,99,176,.6);transition:filter .2s ease,transform .2s ease}
+.adp-cta:hover{filter:brightness(1.08);transform:translateY(-1px)}
+
+/* ── 숫자 ─────────────────────────────────────────────── */
+.adp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:56px 0 0}
+.adp-stat{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;
+  padding:24px 18px;text-align:center}
+.adp-stat b{display:block;font-family:var(--display);font-size:28px;font-weight:800;
+  color:var(--text);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.adp-stat span{display:block;font-size:13px;color:var(--text-3);margin-top:7px}
+.adp-asof{text-align:center;font-size:12.5px;color:var(--text-3);margin:14px 0 0}
+
+/* ── 구역 머리 ─────────────────────────────────────────── */
+.adp-sec{margin-top:88px}
+.adp-sec > h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px;color:var(--text)}
+.adp-sec > p.adp-desc{font-size:14.5px;line-height:1.8;color:var(--text-2);margin:0 0 28px;max-width:720px}
+
+/* ── 상품 카드 ─────────────────────────────────────────── */
+.adp-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px}
+.adp-item{background:var(--paper);border:1px solid var(--line-2);border-radius:16px;
+  padding:24px 24px 22px;display:flex;flex-direction:column}
+.adp-item .k{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);
+  font-size:11.5px;font-weight:800;letter-spacing:.14em;color:var(--violet-2);margin:0 0 12px}
+.adp-item .k i{width:22px;height:22px;border-radius:6px;background:var(--violet-2);color:#fff;
+  display:grid;place-items:center;font-style:normal;font-size:12px;letter-spacing:0}
+.adp-item h3{font-size:17.5px;font-weight:700;margin:0 0 8px;color:var(--text)}
+.adp-item .why{font-size:13.5px;line-height:1.75;color:var(--text-2);margin:0 0 18px;flex:1}
+.adp-item dl{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:0;
+  padding-top:16px;border-top:1px solid var(--line);font-size:13px}
+.adp-item dt{color:var(--text-3);white-space:nowrap}
+.adp-item dd{margin:0;color:var(--text-2);font-weight:600}
+
+/* 자리 그림 — 화면 어디에 붙는지 */
+.adp-map{background:var(--paper-3);border-radius:10px;padding:14px;margin:0 0 18px}
+.adp-map .scr{background:var(--paper);border:1px solid var(--line-2);border-radius:6px;
+  padding:7px;display:flex;flex-direction:column;gap:5px}
+.adp-map .bar{height:7px;border-radius:3px;background:var(--line-2)}
+.adp-map .bar.hd{height:9px}
+.adp-map .body{display:flex;gap:5px}
+.adp-map .body .col{flex:1;display:flex;flex-direction:column;gap:5px}
+.adp-map .blk{height:7px;border-radius:3px;background:var(--line)}
+.adp-map .blk.tall{height:22px}
+.adp-map .on{background:var(--violet-2)}
+.adp-map .foot{display:flex;gap:5px}
+.adp-map .foot .l{flex:3}
+.adp-map .foot .r{flex:2}
+
+/* ── 한눈에 보기 ───────────────────────────────────────── */
+.adp-tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.adp-tbl{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+.adp-tbl th{text-align:left;padding:14px 12px;color:var(--text-2);font-weight:700;
+  border-bottom:2px solid var(--text);white-space:nowrap}
+.adp-tbl td{padding:15px 12px;border-bottom:1px solid var(--line);color:var(--text-2);vertical-align:top}
+.adp-tbl td:first-child{font-weight:700;color:var(--text);white-space:nowrap}
+.adp-tbl .sz{font-variant-numeric:tabular-nums;white-space:nowrap}
+.adp-note{font-size:13px;color:var(--text-3);margin:16px 0 0;line-height:1.8}
+
+/* ── 함께한 곳 ─────────────────────────────────────────── */
+.adp-partners{display:flex;flex-wrap:wrap;gap:10px}
+.adp-partners span{border:1px solid var(--line-2);border-radius:20px;
+  padding:9px 20px;font-size:13.5px;color:var(--text-2);background:var(--paper)}
+
+/* ── 절차 ─────────────────────────────────────────────── */
+.adp-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.adp-step{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:22px 20px}
+.adp-step b{display:block;font-family:var(--display);font-size:11px;letter-spacing:.16em;
+  color:var(--violet-2);font-weight:800;margin:0 0 10px}
+.adp-step h4{font-size:15.5px;font-weight:700;margin:0 0 7px;color:var(--text)}
+.adp-step p{font-size:13px;line-height:1.7;color:var(--text-2);margin:0}
+
+/* ── 문의 ─────────────────────────────────────────────── */
+.adp-contact{margin-top:88px;background:var(--paper-2);border:1px solid var(--line);
+  border-radius:18px;padding:44px 32px;text-align:center}
+.adp-contact h2{font-size:22px;font-weight:800;margin:0 0 12px;color:var(--text)}
+.adp-contact p{font-size:14.5px;line-height:1.85;color:var(--text-2);margin:0 auto 26px;max-width:560px}
+.adp-mail{display:inline-flex;align-items:center;gap:9px;font-family:var(--display);
+  font-size:19px;font-weight:800;color:var(--violet-2);text-decoration:none;
+  border-bottom:2px solid transparent;transition:border-color .2s ease}
+.adp-mail:hover{border-bottom-color:var(--violet-2)}
+.adp-who{font-size:13px;color:var(--text-3);margin:22px 0 0;line-height:1.85}
+
+/* 나중에 채울 자리 */
+.adp-later{border:1px dashed var(--line-2);border-radius:12px;padding:18px 20px;
+  margin-top:22px;font-size:13px;line-height:1.8;color:var(--text-3);background:transparent}
+
+@media(max-width:860px){
+  .adp-stats{grid-template-columns:repeat(2,1fr)}
+  .adp-hero{padding:72px 0 44px}
+  .adp-sec{margin-top:66px}
+}
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+
+<main class="adp">
+
+  <!-- ══ 머리 ══════════════════════════════════════════ -->
+  <section class="adp-hero">
+    <p class="adp-eyebrow">A D V E R T I S E   W I T H   U S</p>
+    <h1>클래식 음악을 찾아온 사람들에게,<br><em>그 자리에서</em> 닿는 광고</h1>
+    <p class="adp-lead">
+      오퍼스클램은 클래식 음악 한 분야만 다루는 종합 데이터베이스입니다.
+      연주자를 찾고, 공연을 고르고, 악보와 자료를 뒤지는 사람들이 모입니다.
+      음반·악기·공연·교육처럼 이분들과 맞닿은 일을 하신다면, 여기가 그 자리입니다.
+    </p>
+    <a class="adp-cta" href="mailto:cser@wixon.co.kr?subject=%5B%EC%98%A4%ED%8D%BC%EC%8A%A4%ED%81%B4%EB%9E%A8%5D%20%EA%B4%91%EA%B3%A0%20%EB%AC%B8%EC%9D%98">
+      광고 문의하기 &rarr;
+    </a>
+
+    <div class="adp-stats">
+      <div class="adp-stat"><b>15,250</b><span>인물</span></div>
+      <div class="adp-stat"><b>16,642</b><span>작품</span></div>
+      <div class="adp-stat"><b>1,795</b><span>공연정보</span></div>
+      <div class="adp-stat"><b>15,000</b><span>학술자료</span></div>
+    </div>
+    <p class="adp-asof">2026년 8월 기준 · 자동수집과 회원 보강으로 날마다 늘어납니다</p>
+  </section>
+
+
+  <!-- ══ 광고 자리 ═════════════════════════════════════ -->
+  <section class="adp-sec">
+    <h2>광고 자리</h2>
+    <p class="adp-desc">
+      다섯 자리가 있습니다. 자리마다 <strong>최대 다섯 곳</strong>까지 함께 실리며,
+      일곱 초마다 돌아가며 한 곳씩 보입니다. 마우스를 올리면 멈춥니다.
+    </p>
+
+    <div class="adp-items">
+
+      <!-- 히어로 -->
+      <article class="adp-item">
+        <p class="k"><i>H</i>HERO</p>
+        <div class="adp-map" aria-hidden="true">
+          <div class="scr">
+            <div class="bar hd"></div>
+            <div class="blk tall on"></div>
+            <div class="body"><div class="col"><div class="blk"></div><div class="blk"></div></div>
+                              <div class="col"><div class="blk"></div><div class="blk"></div></div></div>
+          </div>
+        </div>
+        <h3>히어로 · 공연 소개</h3>
+        <p class="why">
+          첫 화면 맨 위, 큰 그림 위에 얹히는 글자 자리입니다. 들어오자마자 가장 먼저 보입니다.
+          공연 이름을 누르면 그 공연의 상세 화면으로 이어집니다.
+        </p>
+        <dl>
+          <dt>어디에</dt><dd>메인 화면 최상단</dd>
+          <dt>구좌</dt><dd>최대 5곳</dd>
+          <dt>알맞은 곳</dt><dd>공연·페스티벌·콩쿠르</dd>
+          <dt>주실 것</dt><dd>공연명 · 한 줄 소개 · 연결 주소</dd>
+        </dl>
+      </article>
+
+      <!-- A -->
+      <article class="adp-item">
+        <p class="k"><i>A</i>MAIN WIDE</p>
+        <div class="adp-map" aria-hidden="true">
+          <div class="scr">
+            <div class="bar hd"></div>
+            <div class="blk tall"></div>
+            <div class="blk on" style="height:14px"></div>
+            <div class="body"><div class="col"><div class="blk"></div></div>
+                              <div class="col"><div class="blk"></div></div></div>
+          </div>
+        </div>
+        <h3>A · 본문 가로</h3>
+        <p class="why">
+          메인 화면 본문 한가운데를 가로로 가득 채웁니다. 다섯 자리 가운데 가장 큽니다.
+          그림 한 장으로 이야기를 다 하실 수 있는 자리입니다.
+        </p>
+        <dl>
+          <dt>어디에</dt><dd>메인 화면 본문</dd>
+          <dt>표기 크기</dt><dd class="sz">756 × 310</dd>
+          <dt>소재 크기</dt><dd class="sz">1512 × 620</dd>
+          <dt>구좌</dt><dd>최대 5곳</dd>
+        </dl>
+      </article>
+
+      <!-- B -->
+      <article class="adp-item">
+        <p class="k"><i>B</i>MAIN SIDE</p>
+        <div class="adp-map" aria-hidden="true">
+          <div class="scr">
+            <div class="bar hd"></div>
+            <div class="blk tall"></div>
+            <div class="body">
+              <div class="col"><div class="blk"></div><div class="blk"></div><div class="blk"></div></div>
+              <div class="col"><div class="blk on" style="height:26px"></div></div>
+            </div>
+          </div>
+        </div>
+        <h3>B · 하단 오른쪽</h3>
+        <p class="why">
+          메인 화면 아래쪽 오른편에 세로로 놓입니다. 본문을 끝까지 읽고 내려온 분들이 봅니다.
+          네모에 가까운 꼴이라 로고와 글자를 함께 담기 좋습니다.
+        </p>
+        <dl>
+          <dt>어디에</dt><dd>메인 화면 하단</dd>
+          <dt>표기 크기</dt><dd class="sz">357 × 284</dd>
+          <dt>소재 크기</dt><dd class="sz">714 × 568</dd>
+          <dt>구좌</dt><dd>최대 5곳</dd>
+        </dl>
+      </article>
+
+      <!-- C -->
+      <article class="adp-item">
+        <p class="k"><i>C</i>ALL PAGES</p>
+        <div class="adp-map" aria-hidden="true">
+          <div class="scr">
+            <div class="bar hd"></div>
+            <div class="body"><div class="col"><div class="blk"></div><div class="blk"></div></div>
+                              <div class="col"><div class="blk"></div><div class="blk"></div></div></div>
+            <div class="foot"><div class="l blk on" style="height:14px"></div>
+                              <div class="r blk" style="height:14px"></div></div>
+          </div>
+        </div>
+        <h3>C · 맨 아래 큰 자리</h3>
+        <p class="why">
+          <strong>사이트 전체 42개 화면</strong> 맨 아래에 같은 자리로 들어갑니다.
+          어느 화면을 보든 끝까지 내려오면 만나므로, 다섯 자리 가운데 가장 많이 보입니다.
+        </p>
+        <dl>
+          <dt>어디에</dt><dd>전 화면 하단 (42곳)</dd>
+          <dt>표기 크기</dt><dd class="sz">670 × 190</dd>
+          <dt>소재 크기</dt><dd class="sz">1340 × 380</dd>
+          <dt>구좌</dt><dd>최대 5곳</dd>
+        </dl>
+      </article>
+
+      <!-- D -->
+      <article class="adp-item">
+        <p class="k"><i>D</i>ALL PAGES</p>
+        <div class="adp-map" aria-hidden="true">
+          <div class="scr">
+            <div class="bar hd"></div>
+            <div class="body"><div class="col"><div class="blk"></div><div class="blk"></div></div>
+                              <div class="col"><div class="blk"></div><div class="blk"></div></div></div>
+            <div class="foot"><div class="l blk" style="height:14px"></div>
+                              <div class="r blk on" style="height:14px"></div></div>
+          </div>
+        </div>
+        <h3>D · 맨 아래 작은 자리</h3>
+        <p class="why">
+          C 자리 오른쪽에 나란히 놓입니다. 역시 <strong>42개 화면 전체</strong>에 들어갑니다.
+          작은 만큼 가벼운 값으로 오래 걸어 두시기에 알맞습니다.
+        </p>
+        <dl>
+          <dt>어디에</dt><dd>전 화면 하단 (42곳)</dd>
+          <dt>표기 크기</dt><dd class="sz">446 × 190</dd>
+          <dt>소재 크기</dt><dd class="sz">892 × 380</dd>
+          <dt>구좌</dt><dd>최대 5곳</dd>
+        </dl>
+      </article>
+
+    </div>
+  </section>
+
+
+  <!-- ══ 한눈에 보기 ═══════════════════════════════════ -->
+  <section class="adp-sec">
+    <h2>한눈에 보기</h2>
+    <p class="adp-desc">
+      소재는 표기 크기의 <strong>두 배</strong>로 주십시오. 화면이 촘촘한 기기에서 흐리게 보이지 않게 하려는 것입니다.
+    </p>
+
+    <div class="adp-tblwrap">
+      <table class="adp-tbl">
+        <thead>
+          <tr><th>자리</th><th>노출 화면</th><th>표기 크기</th><th>소재 크기</th><th>구좌</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>히어로</td><td>메인 최상단</td><td class="sz">글자</td><td class="sz">—</td><td>5</td></tr>
+          <tr><td>A · 본문 가로</td><td>메인 본문</td><td class="sz">756 × 310</td><td class="sz">1512 × 620</td><td>5</td></tr>
+          <tr><td>B · 하단 오른쪽</td><td>메인 하단</td><td class="sz">357 × 284</td><td class="sz">714 × 568</td><td>5</td></tr>
+          <tr><td>C · 맨 아래 큰</td><td><strong>전 화면 42곳</strong></td><td class="sz">670 × 190</td><td class="sz">1340 × 380</td><td>5</td></tr>
+          <tr><td>D · 맨 아래 작은</td><td><strong>전 화면 42곳</strong></td><td class="sz">446 × 190</td><td class="sz">892 × 380</td><td>5</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="adp-note">
+      · 파일은 <strong>WebP</strong>와 <strong>JPG</strong> 두 벌로 주시면 좋습니다. 한 벌만 주셔도 저희가 만들어 드립니다.<br>
+      · 흰 바탕 소재에는 연한 테두리를 더해, 화면에 묻히지 않게 합니다.<br>
+      · 그림 만들기가 어려우시면 말씀해 주십시오. 저희가 도와드립니다.
+    </p>
+  </section>
+
+
+  <!-- ══ 함께한 곳 ═════════════════════════════════════ -->
+  <section class="adp-sec">
+    <h2>함께하고 있는 곳</h2>
+    <p class="adp-desc">지금 오퍼스클램에 실려 있는 곳들입니다.</p>
+    <div class="adp-partners">
+      <span>LPSTOCK</span>
+      <span>WIXON ASSOCIATES</span>
+      <span>booklps</span>
+      <span>오늘의 편지</span>
+      <span>VHILLS</span>
+      <span>PinHome</span>
+    </div>
+
+    <div class="adp-later">
+      오퍼스클램은 지금 문을 여는 중입니다. 방문자 수와 회원 수는 쌓이는 대로
+      이 자리에 밝히겠습니다. 없는 숫자를 앞세우지 않으려 합니다.
+    </div>
+  </section>
+
+
+  <!-- ══ 절차 ═════════════════════════════════════════ -->
+  <section class="adp-sec">
+    <h2>이렇게 진행됩니다</h2>
+    <p class="adp-desc">문의를 주시면 이틀 안에 답을 드립니다.</p>
+    <div class="adp-steps">
+      <div class="adp-step">
+        <b>STEP 1</b><h4>문의</h4>
+        <p>메일로 원하시는 자리와 기간을 알려 주십시오. 정하지 않으셨어도 괜찮습니다.</p>
+      </div>
+      <div class="adp-step">
+        <b>STEP 2</b><h4>자리 확인 · 견적</h4>
+        <p>그 기간에 자리가 남아 있는지 보고, 값과 조건을 알려 드립니다.</p>
+      </div>
+      <div class="adp-step">
+        <b>STEP 3</b><h4>소재 주고받기</h4>
+        <p>그림과 연결 주소를 받습니다. 만들기 어려우시면 저희가 도와드립니다.</p>
+      </div>
+      <div class="adp-step">
+        <b>STEP 4</b><h4>게재</h4>
+        <p>정한 날에 올립니다. 끝나면 어떻게 나갔는지 알려 드립니다.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══ 문의 ═════════════════════════════════════════ -->
+  <section class="adp-contact">
+    <h2>광고 문의</h2>
+    <p>
+      어느 자리가 맞을지 모르시겠다면 하시는 일만 알려 주십시오.
+      맞을 만한 자리를 골라 알려 드리겠습니다.
+    </p>
+    <a class="adp-mail" href="mailto:cser@wixon.co.kr?subject=%5B%EC%98%A4%ED%8D%BC%EC%8A%A4%ED%81%B4%EB%9E%A8%5D%20%EA%B4%91%EA%B3%A0%20%EB%AC%B8%EC%9D%98">
+      cser@wixon.co.kr
+    </a>
+    <p class="adp-who">
+      (주)윅슨어소시에이츠 · 서울 마포구 동교로 215-1<br>
+      OPUSCLAM.COM
+    </p>
+  </section>
+
+</main>
+
+<div id="oc-bigban"></div>
+<div id="oc-footer"></div>
+
+<script src="/assets/app.js"></script>
+<script src="/assets/pwa-install.js?v=20260815" defer></script>
+</body>
+</html>
