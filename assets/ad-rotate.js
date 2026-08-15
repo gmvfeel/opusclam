@@ -119,11 +119,21 @@
     start(true);
   }
 
+  /* ★ 2026-08-15 · run() 을 <b>여러 번 불러도</b> 안전하게 했습니다
+       맨 아래 큰 광고(C·D)가 partials/bigban.html 로 빠지면서, 문서를
+       다 읽은 뒤에 붙게 됐습니다. 그때 회전 엔진을 다시 불러 주어야
+       하는데, 예전 판은 두 번 부르면 <b>같은 상자에 시계가 두 개</b>
+       걸려 광고가 두 배 빠르게 넘어갔습니다.
+       한 번 맡은 상자에 표시를 남겨 두 번째부터는 건너뜁니다. */
   function run() {
     var boxes = d.querySelectorAll('.ad-rot');
     if (!boxes.length) return;      /* 광고 회전이 없는 화면 — 아무 일도 하지 않습니다 */
     injectCss();
-    for (var i = 0; i < boxes.length; i++) setup(boxes[i], i);
+    for (var i = 0; i < boxes.length; i++) {
+      if (boxes[i].getAttribute('data-oc-rot') === '1') continue;   /* 이미 맡은 상자 */
+      boxes[i].setAttribute('data-oc-rot', '1');
+      setup(boxes[i], i);
+    }
   }
 
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', run);

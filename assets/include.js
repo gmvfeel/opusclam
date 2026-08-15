@@ -531,6 +531,62 @@
     injectSubnav();
   }
 
+  /* ── 맨 아래 큰 광고 두 자리 (C·D) ─────────────────────────
+     ★ 2026-08-15 · 화면 42곳에 복붙돼 있던 것을 partials/bigban.html
+       한 곳으로 모았습니다 (파트너 요청).
+       광고주가 바뀔 때마다 42곳을 함께 고쳐야 했고, 한 번은 38곳을
+       빠뜨려 화면마다 다른 광고가 나온 적이 있습니다.
+
+     ★ 하위 메뉴와 마찬가지로 <b>문서를 다 읽은 뒤</b>에 넣습니다 —
+       광고 자리는 본문 아래에 있어, 문서를 읽는 중에는 아직 그 자리가
+       없습니다.
+
+     ★ 넣은 <b>다음에</b> 회전 엔진을 깨웁니다.
+       ad-rotate.js 는 문서를 읽자마자 .ad-rot 을 찾는데, 그때는 광고가
+       아직 붙기 전이라 하나도 못 찾습니다. 붙인 뒤에 다시 부르지 않으면
+       <b>광고가 돌지 않고 첫 장에서 멈춥니다.</b> */
+  function injectBigban() {
+    if (!document.getElementById('oc-bigban')) return;
+    inject('oc-bigban', '/partials/bigban.html');
+    loadAdRotate();
+  }
+
+  /* ── 광고 회전 엔진 싣기 ─────────────────────────────────
+     ★★ 2026-08-15 · <b>광고가 돌지 않고 있었습니다</b> ★★
+       C·D 마크업은 42개 화면에 들어 있었는데, assets/ad-rotate.js 를
+       부르는 화면은 <b>home.html 단 하나</b>였습니다.
+       나머지 41곳은 엔진이 없어 <b>첫 장에서 멈춰</b> 있었습니다.
+       광고주가 둘인데 늘 같은 쪽만 보이고 있었던 셈입니다.
+
+     ★ 왜 여기서 싣나
+       화면마다 <script> 를 한 줄씩 넣으면 또 42곳을 손대야 하고,
+       새 화면이 생길 때마다 빠뜨리게 됩니다. tabbar.js 와 같은
+       방식으로 <b>이 파일이 대신 싣습니다</b>.
+
+     ★ 이미 실려 있어도 안전합니다
+       home.html 처럼 직접 부르는 화면에서는 두 번 실리지 않도록
+       표시를 남기고, ad-rotate.js 쪽도 같은 상자를 두 번 맡지 않게
+       고쳐 두었습니다(data-oc-rot). */
+  function loadAdRotate() {
+    /* 이미 실려 돌고 있으면 새로 붙은 광고만 맡기면 됩니다 */
+    if (window.OCAdRotate && window.OCAdRotate.run) { window.OCAdRotate.run(); return; }
+    if (window.__ocAdJs) return;
+    window.__ocAdJs = true;
+    var s = document.createElement('script');
+    s.src = '/assets/ad-rotate.js';
+    /* 다 실리면 곧바로 한 번 돌립니다 — 스스로도 돌지만, 문서를 이미
+       다 읽은 뒤라 DOMContentLoaded 를 놓칠 수 있습니다. */
+    s.onload = function () {
+      try { if (window.OCAdRotate && window.OCAdRotate.run) window.OCAdRotate.run(); } catch (e) {}
+    };
+    document.head.appendChild(s);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectBigban);
+  } else {
+    injectBigban();
+  }
+
 })();
 
 /* ══ 하위 메뉴 자리 맞추기 — 2026-08-13 ═══════════════════════════
