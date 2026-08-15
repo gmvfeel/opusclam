@@ -168,40 +168,63 @@
 .adp-later{border-left:3px solid var(--violet-2);border-radius:0;padding:4px 0 4px 18px;
   margin-top:30px;font-size:13.5px;line-height:1.9;color:var(--text-2);max-width:620px}
 
-/* ══ 절차 — 선으로 잇습니다 ════════════════════════════ */
-.adp-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;
-  position:relative}
-.adp-step{padding:0 20px;position:relative}
-.adp-step:first-child{padding-left:0}
-.adp-step .dot{width:13px;height:13px;border-radius:50%;background:var(--violet-2);
-  position:relative;z-index:1;margin:0 0 18px}
-.adp-step .line{position:absolute;left:0;top:6px;height:1px;width:100%;
-  background:var(--line-2);z-index:0}
-.adp-step:first-child .line{left:0}
-.adp-step:last-child .line{width:0}
-.adp-step b{display:block;font-family:var(--display);font-size:10.5px;letter-spacing:.16em;
-  color:var(--violet-2);font-weight:800;margin:0 0 9px}
-.adp-step h4{font-size:15.5px;font-weight:700;margin:0 0 8px;color:var(--text)}
-.adp-step p{font-size:13px;line-height:1.8;color:var(--text-2);margin:0}
+/* ══ 절차 ══════════════════════════════════════════════
+   ★ 2026-08-15 · 「진행 프로세스가 약하다」 (파트너 지적)
+     ─────────────────────────────────────────────────
+     예전에는 작은 점 하나에 옅은 선뿐이라, 넷이 <b>이어진 흐름</b>으로
+     보이지 않고 그냥 네 덩이 글로 보였습니다.
+     ▶ 큰 <b>번호 원</b>을 두어 차례가 눈에 들어오게 합니다.
+     ▶ 원과 원 사이를 <b>선으로 잇습니다.</b> 마지막 칸은 선을 지웁니다 —
+       그래야 「여기서 끝」이 보입니다.
+     ▶ 칸마다 바탕과 테두리를 두어 덩이가 또렷해집니다.
+     ▶ 선은 원 <b>가운데 높이</b>(18px)에 둡니다. 위쪽에 걸치면
+       원과 어긋나 보입니다. */
+.adp-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(212px,1fr));gap:16px}
+.adp-step{position:relative;background:var(--paper);border:1px solid var(--line-2);
+  border-radius:14px;padding:24px 22px 22px}
+/* 번호 원 */
+.adp-step .no{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;
+  background:var(--violet-2);color:#fff;font-family:var(--display);font-size:15px;
+  font-weight:800;margin:0 0 16px;position:relative;z-index:2;
+  box-shadow:0 0 0 5px var(--paper-3)}
+/* 원과 원을 잇는 선 — 칸 밖으로 뻗어 다음 칸에 닿습니다 */
+.adp-step::after{content:"";position:absolute;left:calc(22px + 36px);top:calc(24px + 18px);
+  height:2px;width:calc(100% - 22px - 36px + 16px);background:var(--line-2);z-index:1}
+.adp-step:last-child::after{display:none}
+.adp-step b{display:block;font-family:var(--display);font-size:10.5px;letter-spacing:.18em;
+  color:var(--text-3);font-weight:800;margin:0 0 7px}
+.adp-step h4{font-size:16px;font-weight:700;margin:0 0 9px;color:var(--text);letter-spacing:-.01em}
+.adp-step p{font-size:13px;line-height:1.85;color:var(--text-2);margin:0}
 
-/* ══ 문의 ═════════════════════════════════════════════ */
-.adp-contact{background:var(--ink,#0E1230);color:#fff;padding:76px 20px;text-align:center}
-.adp-contact h2{font-size:25px;font-weight:800;margin:0 0 14px;color:#fff;letter-spacing:-.02em}
-.adp-contact p{font-size:14.5px;line-height:1.9;color:rgba(255,255,255,.72);
-  margin:0 auto 30px;max-width:520px}
+/* ══ 문의 ══════════════════════════════════════════════
+   ★ 2026-08-15 · 가운데 정렬을 <b>왼쪽으로</b> 옮겼습니다 (파트너 지적)
+     위 네 구역이 모두 왼쪽에서 시작하는데 여기만 가운데라 어긋났습니다.
+     머리 구역(히어로)만 가운데인 것은 맞습니다 — 그건 표지니까요.
+     ▶ 왼쪽에 글, 오른쪽에 메일 주소를 두어 <b>두 칸</b>으로 폅니다.
+       가로가 넓은 구역이라 한 줄로 늘어놓으면 허전합니다. */
+.adp-contact{background:var(--ink,#0E1230);color:#fff;padding:72px 20px}
+.adp-contact-in{max-width:1080px;margin:0 auto;display:grid;
+  grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.adp-contact h2{font-size:26px;font-weight:800;margin:0 0 14px;color:#fff;letter-spacing:-.025em}
+.adp-contact p{font-size:14.5px;line-height:1.9;color:rgba(255,255,255,.72);margin:0;max-width:480px}
+.adp-mailbox{border-left:1px solid rgba(255,255,255,.14);padding-left:44px}
+.adp-mailbox span{display:block;font-family:var(--display);font-size:10.5px;
+  letter-spacing:.18em;color:rgba(255,255,255,.4);font-weight:800;margin:0 0 12px}
 .adp-mail{display:inline-flex;align-items:center;gap:9px;font-family:var(--display);
   font-size:21px;font-weight:800;color:#C9A94E;text-decoration:none;
   border-bottom:2px solid transparent;transition:border-color .2s ease}
 .adp-mail:hover{border-bottom-color:#C9A94E}
-.adp-who{font-size:12.5px;color:rgba(255,255,255,.45);margin:28px 0 0;line-height:1.9}
+.adp-who{font-size:12.5px;color:rgba(255,255,255,.45);margin:20px 0 0;line-height:1.9}
 
 @media(max-width:860px){
   .adp-top{padding:132px 20px 58px}
   .adp-sec{padding:60px 20px}
   .adp-stats-in{grid-template-columns:repeat(2,1fr);gap:24px 0}
   .adp-stat:nth-child(3){border-left:0}
-  .adp-step{padding:0 0 30px}
-  .adp-step .line{display:none}
+  .adp-step::after{display:none}
+  .adp-contact-in{grid-template-columns:1fr;gap:32px}
+  .adp-mailbox{border-left:0;border-top:1px solid rgba(255,255,255,.14);
+    padding-left:0;padding-top:28px}
 }
 </style>
 </head>
@@ -465,22 +488,22 @@
       </div>
       <div class="adp-steps">
         <div class="adp-step">
-          <span class="line" aria-hidden="true"></span><span class="dot" aria-hidden="true"></span>
+          <span class="no" aria-hidden="true">1</span>
           <b>STEP 1</b><h4>문의</h4>
           <p>원하시는 자리와 기간을 알려 주십시오. 정하지 않으셨어도 괜찮습니다.</p>
         </div>
         <div class="adp-step">
-          <span class="line" aria-hidden="true"></span><span class="dot" aria-hidden="true"></span>
+          <span class="no" aria-hidden="true">2</span>
           <b>STEP 2</b><h4>자리 확인 · 견적</h4>
           <p>그 기간에 자리가 남아 있는지 보고, 값과 조건을 알려 드립니다.</p>
         </div>
         <div class="adp-step">
-          <span class="line" aria-hidden="true"></span><span class="dot" aria-hidden="true"></span>
+          <span class="no" aria-hidden="true">3</span>
           <b>STEP 3</b><h4>소재 주고받기</h4>
           <p>그림과 연결 주소를 받습니다. 만들기 어려우시면 저희가 도와드립니다.</p>
         </div>
         <div class="adp-step">
-          <span class="line" aria-hidden="true"></span><span class="dot" aria-hidden="true"></span>
+          <span class="no" aria-hidden="true">4</span>
           <b>STEP 4</b><h4>게재</h4>
           <p>정한 날에 올립니다. 끝나면 어떻게 나갔는지 알려 드립니다.</p>
         </div>
@@ -490,18 +513,25 @@
 
   <!-- ══ 문의 ═════════════════════════════════════════ -->
   <section class="adp-contact">
-    <h2>광고 문의</h2>
-    <p>
-      어느 자리가 맞을지 모르시겠다면 하시는 일만 알려 주십시오.
-      맞을 만한 자리를 골라 알려 드리겠습니다.
-    </p>
-    <a class="adp-mail" href="mailto:cser@wixon.co.kr?subject=%5B%EC%98%A4%ED%8D%BC%EC%8A%A4%ED%81%B4%EB%9E%A8%5D%20%EA%B4%91%EA%B3%A0%20%EB%AC%B8%EC%9D%98">
-      cser@wixon.co.kr
-    </a>
-    <p class="adp-who">
-      (주)윅슨어소시에이츠 · 서울 마포구 동교로 215-1<br>
-      OPUSCLAM.COM
-    </p>
+    <div class="adp-contact-in">
+      <div>
+        <h2>광고 문의</h2>
+        <p>
+          어느 자리가 맞을지 모르시겠다면 하시는 일만 알려 주십시오.
+          맞을 만한 자리를 골라 알려 드리겠습니다.
+        </p>
+      </div>
+      <div class="adp-mailbox">
+        <span>C O N T A C T</span>
+        <a class="adp-mail" href="mailto:cser@wixon.co.kr?subject=%5B%EC%98%A4%ED%8D%BC%EC%8A%A4%ED%81%B4%EB%9E%A8%5D%20%EA%B4%91%EA%B3%A0%20%EB%AC%B8%EC%9D%98">
+          cser@wixon.co.kr
+        </a>
+        <p class="adp-who">
+          (주)윅슨어소시에이츠 · 서울 마포구 동교로 215-1<br>
+          OPUSCLAM.COM
+        </p>
+      </div>
+    </div>
   </section>
 
 </main>
