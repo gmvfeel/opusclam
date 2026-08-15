@@ -70,6 +70,28 @@
             뉴스 본문 평균 677자 · 문단 7개(예전 5~7문단)
           ★ 사진은 넣지 않았습니다. 아래 「사진」 항목과 같은 까닭입니다.
 
+    14차  news-en(12) · news-ja(12) · modern-en(12) · modern-ja(12)
+          prenatal-intl(24) · utility-intl(24)         = 96
+          ★ 2026-08-15 · 이것으로 <b>일곱 게시판이 모두</b> 세 언어를
+            갖췄습니다(입시·공연사진영상은 한국어만 — 그쪽이 맞습니다).
+          ★ 게시판마다 결이 크게 다릅니다. 다음에 늘리실 때 참고 —
+              뉴스      이름은 뉴스지만 <b>기사가 아닙니다.</b> 안내·해설입니다.
+                        진짜 기사처럼 쓰면 <b>없는 사실을 지어내게 됩니다.</b>
+                        날짜·이름·수치가 든 소식은 쓰지 않습니다.
+                        본문 790자로 가장 깁니다. 댓글 없음.
+              현대음악  짧게 던지고 댓글에서 갈립니다(420자).
+                        실존 작곡가를 다루므로 <b>널리 알려진 것만</b> 씁니다.
+                        「어떻게 들리는가」는 감상이라 안전하고,
+                        초연 연도·위촉자는 확인이 필요해 쓰지 않습니다.
+              태교음악  <b>가장 조심스러운 게시판</b>입니다.
+                        지능·발달 효과는 학계에서 정리되지 않았습니다.
+                        「내가 편했다」는 경험이라 안전하고
+                        「아이에게 좋다」는 주장이라 위험합니다.
+                        겪은 것만 조용히 적습니다. 댓글 없음.
+              유틸리티  손수 만든 도구·정리법을 나눕니다(600자).
+                        특정 앱·제품 이름은 쓰지 않습니다 — 값과 기능이
+                        바뀌면 글이 틀린 것이 됩니다. 방법만 적습니다.
+
     13차  opusnity-en(12) · opusnity-ja(12)
           qna-en(12) · qna-ja(12)                     = 48
           ★ 2026-08-15 · 사람이 가장 많이 오는 두 게시판입니다.
@@ -144,6 +166,15 @@ import { OPUSNITY_EN } from './pool/opusnity-en.mjs';
 import { OPUSNITY_JA } from './pool/opusnity-ja.mjs';
 import { QNA_EN } from './pool/qna-en.mjs';
 import { QNA_JA } from './pool/qna-ja.mjs';
+import { NEWS_EN } from './pool/news-en.mjs';
+import { NEWS_JA } from './pool/news-ja.mjs';
+import { MODERN_EN } from './pool/modern-en.mjs';
+import { MODERN_JA } from './pool/modern-ja.mjs';
+/* ★ 태교음악·유틸리티는 영어·일본어를 <b>한 파일</b>에 담았습니다 —
+     댓글이 없는 게시판이라 분량이 작아, 파일을 나누면 오히려 찾기
+     어려워집니다. 파일 이름 끝의 intl 이 그 표시입니다. */
+import { PRENATAL_EN, PRENATAL_JA } from './pool/prenatal-intl.mjs';
+import { UTILITY_EN, UTILITY_JA } from './pool/utility-intl.mjs';
 // 사진 준비 뒤: import { GALLERY } from './pool/gallery.mjs';
 
 /* 일반 게시판용 닉네임 풀 (글에 author 가 지정돼 있으면 그것을 씁니다)
@@ -198,6 +229,14 @@ export const POOL = {
     ...OPUSNITY_JA,
     ...QNA_EN,
     ...QNA_JA,
+    ...NEWS_EN,
+    ...NEWS_JA,
+    ...MODERN_EN,
+    ...MODERN_JA,
+    ...PRENATAL_EN,
+    ...PRENATAL_JA,
+    ...UTILITY_EN,
+    ...UTILITY_JA,
     // ...GALLERY,
   ],
 };
