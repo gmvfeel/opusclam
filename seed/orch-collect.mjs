@@ -71,6 +71,8 @@ const MONTHS = parseInt(process.env.MONTHS || '14', 10);
    url        일정 화면 주소
    base       상대 주소를 절대 주소로 만들 때 쓸 뿌리
    parse      화면 글에서 공연을 뽑아내는 함수
+   pages      (없어도 됨) 여러 쪽으로 나뉜 화면일 때 주소를 만드는 함수
+              — 쪽 번호를 받아 주소를 돌려줍니다. 0건이 오면 멈춥니다.
    ══════════════════════════════════════════════════════════ */
 
 /* 독일어 달 이름 → 숫자
@@ -91,6 +93,14 @@ const DE_COUNTRY = {
   'Tschechische Republik': '체코', 'Spanien': '스페인', 'Italien': '이탈리아',
   'Niederlande': '네덜란드', 'Belgien': '벨기에', 'Polen': '폴란드',
   'Republik Korea': '대한민국', 'Südkorea': '대한민국', 'Korea': '대한민국',
+  /* ★ 콘세르트헤바우는 영어 화면이라 나라 이름도 영어로 옵니다.
+       한 사전에 함께 둡니다 — 두 벌로 나누면 어긋납니다. */
+  'Austria': '오스트리아', 'Germany': '독일', 'Switzerland': '스위스',
+  'Netherlands': '네덜란드', 'France': '프랑스', 'Poland': '폴란드',
+  'Belgium': '벨기에', 'Italy': '이탈리아', 'Spain': '스페인',
+  'United Kingdom': '영국', 'Czech Republic': '체코', 'Hungary': '헝가리',
+  'Luxembourg': '룩셈부르크', 'South Korea': '대한민국', 'Japan': '일본',
+  'China': '중국', 'Denmark': '덴마크', 'Sweden': '스웨덴', 'Norway': '노르웨이',
 };
 
 export const ORCHESTRAS = [
@@ -214,6 +224,124 @@ export const ORCHESTRAS = [
         out.push({
           date: `${year}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
           time, title, sub, link, venue, city, country, conductors, composers, thumb,
+        });
+      }
+      return out;
+    },
+  },
+
+  {
+    key: 'rco',
+    nameKo: '로열 콘세르트헤바우',
+    nameEn: 'Royal Concertgebouw Orchestra',
+    url: 'https://www.concertgebouworkest.nl/en/calendar/',
+    base: 'https://www.concertgebouworkest.nl',
+    home: 'https://www.concertgebouworkest.nl/en/',
+
+    /* ★ 이 화면은 <b>스무 건씩 일곱 쪽</b>으로 나뉩니다.
+         offset 을 20씩 올리며 부르고, 0건이 오면 멈춥니다. */
+    pages(i) {
+      if (i > 12) return null;                    /* 안전장치 */
+      return `https://www.concertgebouworkest.nl/en/calendar/?limit=20&locale=en&offset=${i * 20}`;
+    },
+
+    /* ── 콘세르트헤바우 화면 읽기 ──────────────────────────
+       빈 필과 짜임이 아주 다릅니다 —
+
+           ## August 2026                      ← 달 머리 (이것이 해·달을 정합니다)
+           ### 26 Wed20:00                     ← 날·요일·시각이 <b>붙어</b> 있습니다
+           ![](그림주소)
+           20:00Concertgebouw, Amsterdam       ← 시각과 장소도 붙어 있습니다
+           ### 제목
+           부제 (지휘자·곡목이 한 줄로)
+           Starting € 39
+           [Tickets & info](상세주소)
+
+       ★ 날짜가 「26 Wed20:00」처럼 <b>띄어쓰기 없이</b> 이어집니다.
+         눈으로 보면 알아보지만 규칙으로 가르려면 주의가 필요합니다.
+       ★ 해와 달은 위쪽 「## August 2026」에서 가져옵니다. 각 공연 줄에는
+         날짜(일)만 있습니다.
+       ★ 지휘자를 따로 적어 두지 않고 부제에 녹여 씁니다
+         (「Santtu-Matias Rouvali conducts Prokofiev's Fifth」).
+         ▶ 그래서 <b>지휘자를 뽑아내지 않습니다.</b> 부제를 그대로 싣습니다 —
+           억지로 가르면 틀린 이름이 들어갑니다. */
+    parse(text) {
+      const out = [];
+      const lines = text.split('\n');
+
+      const EN_MONTH = {
+        january:1, february:2, march:3, april:4, may:5, june:6,
+        july:7, august:8, september:9, october:10, november:11, december:12,
+      };
+      /* 「## August 2026」 */
+      const MONTH_RE = /^##\s+([A-Za-z]+)\s+(\d{4})\s*$/;
+      /* 「### 26 Wed20:00」 · 요일 뒤에 시각이 붙습니다 */
+      const DAY_RE = /^###\s+(\d{1,2})\s*[A-Za-z]{3}(\d{1,2}:\d{2})\s*$/;
+
+      let year = 0, mon = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        const t = lines[i].trim();
+
+        const mm = MONTH_RE.exec(t);
+        if (mm) {
+          const k = EN_MONTH[mm[1].toLowerCase()];
+          if (k) { mon = k; year = +mm[2]; }
+          continue;
+        }
+
+        const md = DAY_RE.exec(t);
+        if (!md || !mon) continue;
+
+        const day = +md[1], time = md[2];
+        let thumb = '', place = '', title = '', sub = '', link = '';
+
+        for (let j = i + 1; j < lines.length && j < i + 20; j++) {
+          const u = lines[j].trim();
+          if (!u) continue;
+          if (DAY_RE.test(u) || MONTH_RE.test(u)) break;   /* 다음 공연 */
+
+          if (!thumb) {
+            const mi = /!\[[^\]]*\]\((https?:[^)]+)\)/.exec(u);
+            if (mi) { thumb = mi[1]; continue; }
+          }
+          /* 「20:00Concertgebouw, Amsterdam」 — 시각이 앞에 붙어 있습니다 */
+          if (!place) {
+            const mp = /^\d{1,2}:\d{2}(.+)$/.exec(u);
+            if (mp) { place = mp[1].trim(); continue; }
+          }
+          /* 제목 — 날짜 줄과 같은 ### 이지만 숫자로 시작하지 않습니다 */
+          if (!title && /^###\s+/.test(u)) { title = u.replace(/^###\s+/, '').trim(); continue; }
+          /* 상세 주소 */
+          if (!link) {
+            const ml = /\[(?:Tickets & info|Sold out|Order now)\]\((https?:[^)]+)\)/.exec(u);
+            if (ml) { link = ml[1]; continue; }
+          }
+          /* 부제 — 제목 다음의 보통 글줄 (값·단추는 뺍니다) */
+          if (title && !sub && !/^[-#!\[]/.test(u)
+              && !/^Starting/.test(u) && u.length < 160) { sub = u; continue; }
+        }
+
+        if (!title) continue;
+
+        /* 「Concertgebouw, Amsterdam」 · 「Wolkenturm (open-air), Grafenegg - Austria」
+           ★ 나라는 <b>「 - 」</b> 뒤에 옵니다. 없으면 네덜란드 공연입니다
+             (자기 나라는 굳이 적지 않는 것이 이 화면의 방식입니다). */
+        let venue = place, city = '', country = '';
+        if (place) {
+          let rest = place;
+          const mc = /\s+-\s+([^,\-]+)$/.exec(rest);
+          if (mc) { country = mc[1].trim(); rest = rest.slice(0, mc.index).trim(); }
+          const parts = rest.split(',').map(x => x.trim()).filter(Boolean);
+          if (parts.length >= 2) { city = parts[parts.length - 1]; venue = parts.slice(0, -1).join(', '); }
+          else { venue = rest; }
+          if (!country) country = 'Netherlands';
+        }
+
+        out.push({
+          date: `${year}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+          time, title, sub, link, venue, city, country,
+          conductors: [], composers: [], thumb,
         });
       }
       return out;
@@ -420,21 +548,37 @@ async function main() {
 
   for (const orch of targets) {
     console.log(`── ${orch.nameKo} (${orch.key})`);
-    let text = '';
-    try {
-      text = toText(await fetchText(orch.url));
-    } catch (e) {
-      console.log(`   ★ 화면을 받지 못했습니다 — ${e.message}`);
-      warned++;
-      continue;
-    }
-    await sleep(1500);           /* 사이트에 부담을 주지 않게 */
 
+    /* 여러 쪽으로 나뉜 화면이면 pages(i) 로 주소를 만들어 차례로 부릅니다.
+       ★ <b>0건이 올 때만</b> 멈춥니다. 「받은 것이 적으니 끝이겠지」로
+         멈추면 마지막 쪽을 놓칩니다(Supabase 200행 상한에서 겪은 것과
+         같은 함정입니다).
+       ★ 쪽마다 1.5초씩 쉽니다 — 상대 사이트에 부담을 주지 않으려는 것입니다. */
     let list = [];
     try {
-      list = orch.parse(text) || [];
+      if (typeof orch.pages === 'function') {
+        const seen = new Set();
+        for (let i = 0; ; i++) {
+          const url = orch.pages(i);
+          if (!url) break;
+          const got = orch.parse(toText(await fetchText(url))) || [];
+          await sleep(1500);
+          if (!got.length) break;
+          let added = 0;
+          for (const o of got) {
+            const k = o.date + '|' + o.title + '|' + (o.venue || '');
+            if (seen.has(k)) continue;      /* 쪽이 겹쳐도 두 번 담지 않게 */
+            seen.add(k); list.push(o); added++;
+          }
+          console.log(`   ${i + 1}쪽 : ${got.length}건 (새것 ${added}건)`);
+          if (!added) break;                /* 같은 쪽이 되풀이되면 끝 */
+        }
+      } else {
+        list = orch.parse(toText(await fetchText(orch.url))) || [];
+        await sleep(1500);
+      }
     } catch (e) {
-      console.log(`   ★ 읽는 중 오류 — ${e.message}`);
+      console.log(`   ★ 받거나 읽는 중 오류 — ${e.message}`);
       warned++;
       continue;
     }
