@@ -38,6 +38,25 @@ on:
         required: false
         default: ''
         type: string
+      # ★ 2026-08-15 · 언어를 골라 채웁니다 (파트너 요청)
+      #
+      #  ★ 왜 필요한가
+      #    평소에는 게시판 설정의 비율대로 섞습니다(한국어 60 · 영어 25 ·
+      #    일본어 15). 그런데 새 언어를 처음 넣을 때는 그 언어만 몰아서
+      #    담아 화면에서 결을 봐야 합니다.
+      #
+      #  ★ 비워 두면 예전과 똑같이 비율대로 섞습니다.
+      #  ★ 그 언어를 다루지 않는 게시판(입시의 영어 등)은 건너뜁니다.
+      lang:
+        description: '한 언어만 (비우면 비율대로 섞음)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - 'ko'
+          - 'en'
+          - 'ja'
       dry:
         description: '담지 않고 무엇이 올라갈지만 보기'
         required: false
@@ -73,6 +92,9 @@ jobs:
 
           BOARD="${{ github.event.inputs.board }}"
           if [ -n "$BOARD" ]; then OPTS="$OPTS --board=$BOARD"; fi
+
+          LANG_IN="${{ github.event.inputs.lang }}"
+          if [ -n "$LANG_IN" ]; then OPTS="$OPTS --lang=$LANG_IN"; fi
 
           if [ "${{ github.event.inputs.dry }}" = "yes" ]; then OPTS="$OPTS --dry"; fi
 
