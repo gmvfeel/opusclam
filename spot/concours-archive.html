@@ -64,7 +64,9 @@
        · 다섯이 아니라 열 곳이 되어도 그대로 씁니다 */
 .ca-wrap{display:grid;grid-template-columns:236px minmax(0,1fr);gap:32px;align-items:start}
 
-.ca-side{position:sticky;top:96px}
+/* 왼쪽 대회 목록도 붙습니다 — 찾기 줄 <b>아래</b>에 오도록
+   높이를 더해 둡니다(찾기 줄 70px + 여백 20px). */
+.ca-side{position:sticky;top:calc(var(--feat-top,76px) + 90px)}
 .ca-side h3{font-family:var(--display);font-size:11px;letter-spacing:.16em;color:var(--text-3);
   font-weight:800;margin:0 0 14px;padding:0 4px}
 .ca-nav{display:flex;flex-direction:column;gap:2px}
@@ -126,8 +128,18 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
 /* ── 찾기 줄 ──────────────────────────────────────────
    ★ 다른 정보SPOT 화면(board.css 의 .board-bar)과 같은 결로 —
      제목 아래 가로 전체 · 돋보기 그림 · 아래 실선으로 목록과 가릅니다. */
+/* ★ 2026-08-15 · 스크롤할 때 <b>위에 붙습니다</b> (파트너 요청)
+     입상자가 천 명이 넘어 스크롤이 깁니다. 아래에서 다른 조건으로
+     바꾸려면 맨 위까지 되돌아가야 했습니다.
+   ★ board.css 의 .board-bar 와 <b>같은 방식</b>입니다 —
+     · top 은 --feat-top (고정 헤더 높이를 실제로 재어 넣습니다)
+     · 좌우 그림자로 배경을 <b>화면 끝까지</b> 늘립니다.
+       이것이 없으면 본문 폭 밖으로 목록이 비쳐 지나갑니다. */
 .ca-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;
-  padding:0 0 18px;margin:0 0 26px;border-bottom:1px solid var(--line)}
+  position:sticky;top:var(--feat-top,76px);z-index:20;
+  background:var(--paper);padding:12px 0 14px;margin:0 0 26px;
+  border-bottom:1px solid var(--line);
+  box-shadow:-50vw 0 0 var(--paper),50vw 0 0 var(--paper)}
 .ca-search{flex:1;min-width:220px;display:flex;align-items:center;gap:9px;
   padding:0 15px;height:44px;border:1px solid var(--line-2);border-radius:10px;
   background:var(--paper);transition:border-color .15s ease}
@@ -214,11 +226,17 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
   .ca-pick{display:block}
 }
 @media(max-width:560px){
-  /* 아주 좁으면 찾기와 등수를 <b>두 줄</b>로 — 한 줄에 넣으면
+  /* 아주 좁으면 찾기와 조건을 <b>여러 줄</b>로 — 한 줄에 넣으면
      찾기 칸이 글자 몇 개 넓이로 쪼그라듭니다 */
   .ca-search{flex:1 1 100%}
-  .ca-bar > select{flex:1}
+  .ca-bar > select{flex:1 1 44%}
   .ca-count{margin-left:0}
+  /* ★ 좁은 화면에서는 스티키를 <b>풀어 둡니다.</b>
+       조건이 여러 줄로 접히면 높이가 화면의 절반을 먹어, 붙어 있으면
+       정작 목록이 안 보입니다. 글자 크기 단추도 감춥니다 —
+       손가락으로 쓰기에는 너무 작고 자리만 차지합니다. */
+  .ca-bar{position:static;box-shadow:none}
+  .ca-bar .pdb-fontsize{display:none}
 }
 @media(max-width:640px){
   /* 좁은 화면 좌우 여백도 board.css 와 같은 16px 로 */
@@ -612,6 +630,28 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
     } catch (e) {}
     if (n > 40) return;
     setTimeout(function () { favWait(n + 1); }, 150);
+  })();
+
+  /* ── 고정 헤더 높이 재기 ──────────────────────────────
+     스티키 찾기 줄이 헤더 <b>바로 아래</b> 붙게 하려면 헤더 높이를
+     알아야 합니다. 기기·로그인 여부에 따라 달라지므로 <b>실제로</b>
+     재어 넣습니다(board.js 와 같은 방식).
+     ★ 여러 번 재는 까닭 — 헤더는 include.js 가 나중에 넣고,
+       글꼴이 실리면 높이가 또 바뀝니다. */
+  (function () {
+    function applyTop() {
+      var h = document.querySelector('.site-header')
+           || document.querySelector('header.masthead')
+           || document.querySelector('header');
+      if (h && h.offsetHeight) {
+        document.documentElement.style.setProperty('--feat-top', h.offsetHeight + 'px');
+      }
+    }
+    applyTop();
+    window.addEventListener('load', applyTop);
+    window.addEventListener('resize', applyTop);
+    setTimeout(applyTop, 300);
+    setTimeout(applyTop, 1000);
   })();
 
   /* Supabase 가 실릴 때까지 기다립니다 */
