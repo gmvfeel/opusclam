@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>광고 수익 계산 · OPUSCLAM ADMIN</title>
+<style>
+/* ============================================================
+   광고 수익 계산 — admin/ad-revenue.html
+   ------------------------------------------------------------
+   2026-08-15 · 파트너 요청
+
+   ★ 무엇에 쓰나
+     단가와 채움률을 넣어 보며 <b>월·연 수익이 얼마가 되는지</b> 봅니다.
+     광고 문의가 왔을 때 그 자리에서 값을 부를 수 있게 하려는 것입니다.
+
+   ★ 왜 채움률이 핵심인가
+     스물다섯 구좌가 <b>다 차는 일은 거의 없습니다.</b>
+     「다 차면 얼마」로 계산하면 실제와 크게 어긋납니다.
+     40%를 기준으로 잡고, 그 상태에서 만족스러운 금액이 나오도록
+     단가를 정하는 것이 맞습니다.
+
+   ★ 정해진 값을 저장하지 않습니다
+     표를 만들지 않고 화면 안에서만 셈합니다. 요금을 아직 확정하지
+     않았고, 확정하기 전에 여러 번 만져 보실 것이기 때문입니다.
+     ▶ 정해지시면 그때 광고안내 화면(/advertise.html)에 표를 넣으면
+       됩니다. 그 자리는 비워 두었습니다.
+
+   ★ 값은 <b>주소에 남습니다</b>
+     슬라이더를 움직이면 주소가 바뀌므로, 그 주소를 복사해 두시면
+     같은 셈을 다시 열어 보실 수 있습니다. 저장 기능을 따로 만들지
+     않은 까닭입니다.
+
+   ★ 어드민 화면 짜임을 그대로 씁니다 (work-clean.html 과 같은 결)
+   ============================================================ */
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
+  .wrap{max-width:1000px;margin:0 auto;padding:28px 18px 120px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:20px 22px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+  .card h2 .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:#20223a;color:#fff;font-size:12px;align-items:center;justify-content:center}
+  .card p.d{margin:0 0 16px;color:#5c5e70;font-size:13px;line-height:1.75}
+  button{appearance:none;border:0;border-radius:7px;padding:9px 15px;font-size:12.5px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.ghost:hover{border-color:#7C63B0;color:#7C63B0}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:13px 15px;font-size:12.5px;line-height:1.8;margin-top:14px}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:13px 15px;font-size:12.5px;line-height:1.8;margin-top:14px}
+
+  /* 등급 줄 */
+  .tier{display:grid;grid-template-columns:170px 1fr 108px;gap:14px;align-items:center;
+    padding:14px 0;border-bottom:1px solid #f1f1f6}
+  .tier:last-of-type{border-bottom:0}
+  .tier .lb b{display:block;font-size:13.5px}
+  .tier .lb span{display:block;font-size:11.5px;color:#8a8c9e;margin-top:2px}
+  .tier .out{text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:#7C63B0;height:22px}
+  input[type=number]{width:104px;padding:8px 10px;border:1px solid #d8d8e2;border-radius:7px;
+    font-size:13px;font-family:inherit;text-align:right;font-variant-numeric:tabular-nums}
+
+  /* 결과 */
+  .res{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px}
+  .res div{background:#f2f2f7;border-radius:9px;padding:16px 14px;text-align:center}
+  .res span{display:block;font-size:12px;color:#6b6d80;margin-bottom:6px}
+  .res b{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .res .hi b{color:#7C63B0}
+  .hint{margin:14px 0 0;font-size:12.5px;line-height:1.75;color:#5c5e70;text-align:center}
+
+  /* 채움률 표 */
+  .tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  .tbl th{text-align:left;padding:9px 10px;color:#5c5e70;font-weight:700;border-bottom:2px solid #20223a;white-space:nowrap}
+  .tbl td{padding:11px 10px;border-bottom:1px solid #f1f1f6;font-variant-numeric:tabular-nums}
+  .tbl tr.now{background:#f7f4fc}
+  .tbl tr.now td{font-weight:700}
+  .tbl td:first-child{font-weight:600}
+
+  /* 미리 담아 둔 값 */
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+
+  @media(max-width:720px){
+    .tier{grid-template-columns:1fr;gap:6px}
+    .tier .out{text-align:left}
+    .res{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="admin.html">← 관리자 페이지</a>
+
+  <h1>광고 수익 계산</h1>
+  <div class="sub">
+    단가와 채움률을 움직이며 월·연 수익을 봅니다.
+    <b>어디에도 저장되지 않습니다</b> — 값은 주소에만 남으므로, 복사해 두시면 같은 셈을 다시 여실 수 있습니다.
+  </div>
+
+  <!-- ══ 1. 단가 ══════════════════════════════════════ -->
+  <div class="card">
+    <h2><span class="n">1</span>구좌당 월 단가</h2>
+    <p class="d">
+      다섯 자리를 세 등급으로 묶었습니다. 자리마다 <b>다섯 구좌</b>이므로 모두 <b>스물다섯 구좌</b>입니다.
+      숫자 칸에 직접 넣으셔도 됩니다.
+    </p>
+
+    <div class="presets">
+      <button class="ghost" data-pre="launch">런칭 기념가</button>
+      <button class="ghost" data-pre="normal">정식가(안)</button>
+      <button class="ghost" data-pre="market">국내 시세</button>
+      <button class="ghost" data-pre="zero">모두 0</button>
+    </div>
+
+    <div class="tier">
+      <div class="lb"><b>프리미엄</b><span>히어로 · A 본문가로 · 10구좌</span></div>
+      <input type="range" id="r1" min="0" max="500000" step="5000" value="50000">
+      <input type="number" id="n1" min="0" step="5000" value="50000">
+    </div>
+
+    <div class="tier">
+      <div class="lb"><b>스탠다드</b><span>C 맨아래 큰 · 전 화면 42곳 · 5구좌</span></div>
+      <input type="range" id="r2" min="0" max="500000" step="5000" value="40000">
+      <input type="number" id="n2" min="0" step="5000" value="40000">
+    </div>
+
+    <div class="tier">
+      <div class="lb"><b>라이트</b><span>B 하단오른쪽 · D 맨아래 작은 · 10구좌</span></div>
+      <input type="range" id="r3" min="0" max="500000" step="5000" value="30000">
+      <input type="number" id="n3" min="0" step="5000" value="30000">
+    </div>
+
+    <div class="note">
+      <b>C 자리를 크기로 값매기지 마십시오.</b> 670×190 으로 작지만
+      <b>화면 42곳 전부</b>에 들어가 노출이 가장 많습니다.
+      크기가 아니라 「어디에 몇 번 보이는가」가 값의 근거입니다.
+    </div>
+  </div>
+
+  <!-- ══ 2. 채움률 ════════════════════════════════════ -->
+  <div class="card">
+    <h2><span class="n">2</span>채움률</h2>
+    <p class="d">
+      스물다섯 구좌가 다 차는 일은 <b>거의 없습니다.</b>
+      「다 차면 얼마」로 계획을 세우면 실제와 크게 어긋납니다.
+      <b>40%</b>를 기준으로 보시고, 그 상태에서 만족스러운 금액이 나오도록 단가를 잡으십시오.
+    </p>
+
+    <div class="tier">
+      <div class="lb"><b>채움률</b><span>스물다섯 구좌 가운데 찬 비율</span></div>
+      <input type="range" id="rf" min="0" max="100" step="4" value="40">
+      <div class="out"><span id="of">40%</span></div>
+    </div>
+
+    <div class="res">
+      <div><span>찬 구좌</span><b id="oSlots">10</b></div>
+      <div class="hi"><span>월 수익</span><b id="oMon">380,000</b></div>
+      <div><span>연 수익</span><b id="oYear">456만</b></div>
+      <div><span>구좌 평균</span><b id="oAvg">38,000</b></div>
+    </div>
+    <p class="hint" id="hint"></p>
+  </div>
+
+  <!-- ══ 3. 채움률별 ══════════════════════════════════ -->
+  <div class="card">
+    <h2><span class="n">3</span>채움률에 따라</h2>
+    <p class="d">지금 넣으신 단가로, 채움률만 달리했을 때입니다.</p>
+    <table class="tbl">
+      <thead><tr><th>채움률</th><th>찬 구좌</th><th>월 수익</th><th>연 수익</th><th>어떤 상태</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- ══ 4. 잊지 마실 것 ═══════════════════════════════ -->
+  <div class="card">
+    <h2><span class="n">4</span>계약서에 꼭 넣으실 한 줄</h2>
+    <p class="d">
+      초기에 싸게 드리면 그 금액이 <b>그 광고주의 영원한 가격</b>이 됩니다.
+      나중에 방문자가 열 배가 되어도 「작년엔 이 값이었잖아요」가 나옵니다.
+      초기 매체가 가장 자주 하는 실수입니다.
+    </p>
+    <div class="warn">
+      본 요금은 서비스 초기 안내 요금이며, 정식 요금은 <b>2026년 ○월</b>부터 적용됩니다.
+    </div>
+    <div class="note">
+      <b>가장 정확한 조사</b> — 지금 실려 계신 다섯 곳(윅슨 제외)에 직접 여쭤보십시오.
+      「런칭 뒤 정식 요금으로 전환할 예정입니다. 얼마 정도면 계속 하시겠습니까?」
+      이미 우리 자리의 값어치를 아는 분들이라 어떤 시장 조사보다 정확합니다.
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:22px">
+    <button class="ghost" id="btnCopy">지금 값의 주소 복사</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* 등급마다 몇 구좌인가 — 자리 하나에 다섯 구좌씩 */
+  var TIERS = [
+    { id: 1, slots: 10 },   /* 프리미엄 — 히어로 + A */
+    { id: 2, slots: 5  },   /* 스탠다드 — C */
+    { id: 3, slots: 10 }    /* 라이트  — B + D */
+  ];
+  var TOTAL = 25;
+
+  /* 미리 담아 둔 값
+     ★ market 은 국내 소형 사이트의 실제 시세 범위입니다(월 15~30만원 선).
+       우리가 지금 그 값을 받을 수 있다는 뜻이 아니라, <b>위쪽 눈금</b>으로
+       두고 견주어 보시라는 것입니다. */
+  var PRESETS = {
+    launch: [50000, 40000, 30000],
+    normal: [250000, 200000, 120000],
+    market: [300000, 250000, 150000],
+    zero:   [0, 0, 0]
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function won(v) { return Math.round(v).toLocaleString('ko-KR'); }
+
+  /* 채움률 구간 설명 — 숫자만 보면 어느 쪽이 현실인지 알기 어렵습니다 */
+  function state(f) {
+    if (f === 0)  return '아직 한 곳도 없는 상태입니다.';
+    if (f <= 20)  return '런칭 직후입니다. 지금 여섯 곳이 여기에 해당합니다.';
+    if (f <= 40)  return '현실적인 목표입니다. 이 상태를 기준으로 단가를 잡으십시오.';
+    if (f <= 60)  return '자리 잡은 매체 수준입니다. 방문자가 뒷받침되어야 닿습니다.';
+    if (f <= 80)  return '드문 상태입니다. 계획의 근거로 삼기에는 낙관적입니다.';
+    return '스물다섯이 다 차는 일은 거의 없습니다. 참고만 하십시오.';
+  }
+
+  function prices() {
+    return TIERS.map(function (t) { return Math.max(0, +$('n' + t.id).value || 0); });
+  }
+
+  /* 어느 채움률에서 얼마가 나오는가 — 표와 결과가 같은 셈을 씁니다 */
+  function revenueAt(f) {
+    var p = prices(), sum = 0, slots = 0;
+    TIERS.forEach(function (t, i) {
+      var filled = Math.round(t.slots * f / 100);
+      sum += p[i] * filled;
+      slots += filled;
+    });
+    return { sum: sum, slots: slots };
+  }
+
+  function draw() {
+    var f = +$('rf').value;
+    var r = revenueAt(f);
+
+    $('of').textContent = f + '%';
+    $('oSlots').textContent = r.slots + ' / ' + TOTAL;
+    $('oMon').textContent = won(r.sum);
+    $('oYear').textContent = won(r.sum * 12 / 10000) + '만';
+    $('oAvg').textContent = r.slots ? won(r.sum / r.slots) : '0';
+    $('hint').textContent = state(f);
+
+    /* 채움률별 표 */
+    var rows = '';
+    [20, 40, 60, 80, 100].forEach(function (p) {
+      var x = revenueAt(p);
+      rows += '<tr' + (Math.abs(p - f) < 10 ? ' class="now"' : '') + '>'
+        + '<td>' + p + '%</td>'
+        + '<td>' + x.slots + '</td>'
+        + '<td>' + won(x.sum) + '원</td>'
+        + '<td>' + won(x.sum * 12 / 10000) + '만원</td>'
+        + '<td style="color:#6b6d80;font-weight:400">' + state(p) + '</td>'
+        + '</tr>';
+    });
+    $('tbody').innerHTML = rows;
+
+    saveUrl(f);
+  }
+
+  /* 값을 주소에 남깁니다 — 따로 저장하지 않는 대신입니다 */
+  function saveUrl(f) {
+    try {
+      var p = prices();
+      var q = '?p1=' + p[0] + '&p2=' + p[1] + '&p3=' + p[2] + '&f=' + f;
+      history.replaceState(null, '', location.pathname + q);
+    } catch (e) {}
+  }
+
+  function loadUrl() {
+    try {
+      var q = new URLSearchParams(location.search);
+      [1, 2, 3].forEach(function (i) {
+        var v = q.get('p' + i);
+        if (v !== null && !isNaN(v)) { $('n' + i).value = +v; $('r' + i).value = +v; }
+      });
+      var f = q.get('f');
+      if (f !== null && !isNaN(f)) $('rf').value = +f;
+    } catch (e) {}
+  }
+
+  /* 슬라이더와 숫자칸을 서로 묶습니다 —
+     ★ 슬라이더는 50만원까지지만 숫자칸은 그보다 크게도 넣을 수 있습니다.
+       그때 슬라이더는 끝에 붙습니다. 값 자체는 넣으신 대로 셉니다. */
+  TIERS.forEach(function (t) {
+    var r = $('r' + t.id), n = $('n' + t.id);
+    r.addEventListener('input', function () { n.value = r.value; draw(); });
+    n.addEventListener('input', function () {
+      var v = Math.max(0, +n.value || 0);
+      r.value = Math.min(v, +r.max);
+      draw();
+    });
+  });
+  $('rf').addEventListener('input', draw);
+
+  document.querySelectorAll('[data-pre]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var v = PRESETS[b.getAttribute('data-pre')];
+      TIERS.forEach(function (t, i) {
+        $('n' + t.id).value = v[i];
+        $('r' + t.id).value = Math.min(v[i], +$('r' + t.id).max);
+      });
+      draw();
+    });
+  });
+
+  $('btnCopy').addEventListener('click', function () {
+    var btn = this;
+    var url = location.href;
+    function done(ok) {
+      btn.textContent = ok ? '복사했습니다' : '복사하지 못했습니다 — 주소창을 쓰십시오';
+      setTimeout(function () { btn.textContent = '지금 값의 주소 복사'; }, 2200);
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
+      } else { done(false); }
+    } catch (e) { done(false); }
+  });
+
+  loadUrl();
+  draw();
+})();
+</script>
+</body>
+</html>
