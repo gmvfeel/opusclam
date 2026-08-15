@@ -253,104 +253,151 @@ export const ORCHESTRAS = [
     },
 
     /* ── 콘세르트헤바우 화면 읽기 ──────────────────────────
-       빈 필과 짜임이 아주 다릅니다 —
+       ★★ 이 화면은 <b>줄바꿈이 없습니다</b> — 모든 공연이 한 줄로 이어집니다.
+         (2026-08-15 · 실제 응답을 받아 보고서야 알았습니다. 처음에는
+          줄 단위로 훑다가 0건이 났습니다.)
 
-           ## August 2026                      ← 달 머리 (이것이 해·달을 정합니다)
-           ### 26 Wed20:00                     ← 날·요일·시각이 <b>붙어</b> 있습니다
-           ![](그림주소)
-           20:00Concertgebouw, Amsterdam       ← 시각과 장소도 붙어 있습니다
-           ### 제목
-           부제 (지휘자·곡목이 한 줄로)
-           Starting € 39
-           [Tickets & info](상세주소)
+           …Show 127 results ## August 2026 ### 26 Wed 20 : 00 20 : 00
+           Concertgebouw, Amsterdam ### Víkingur Ólafsson and… Santtu-Matias
+           Rouvali conducts… Starting € 39 Sold out Order now ### 28 Fri…
 
-       ★ 날짜가 「26 Wed20:00」처럼 <b>띄어쓰기 없이</b> 이어집니다.
-         눈으로 보면 알아보지만 규칙으로 가르려면 주의가 필요합니다.
-       ★ 해와 달은 위쪽 「## August 2026」에서 가져옵니다. 각 공연 줄에는
-         날짜(일)만 있습니다.
-       ★ 지휘자를 따로 적어 두지 않고 부제에 녹여 씁니다
-         (「Santtu-Matias Rouvali conducts Prokofiev's Fifth」).
-         ▶ 그래서 <b>지휘자를 뽑아내지 않습니다.</b> 부제를 그대로 싣습니다 —
-           억지로 가르면 틀린 이름이 들어갑니다. */
+       ★ 시각이 <b>「20 : 00」</b> 꼴입니다 — 콜론 둘레에 공백이 있습니다.
+         「20:00」으로 찾으면 하나도 안 걸립니다.
+
+       ★ 그래서 줄이 아니라 <b>글 전체를 한 덩어리로</b> 훑습니다.
+         「### 날 요일 시각」이 나올 때마다 <b>다음 그것이 나오기 전까지</b>를
+         한 공연으로 봅니다.
+
+       ★ 이 화면에는 <b>그림도 링크도 글 안에 남지 않습니다.</b>
+         그림은 배경으로 깔리고 링크는 단추라, 다듬은 글에는 「Tickets &
+         info」라는 <b>글자만</b> 남습니다.
+         ▶ 그래서 이 악단은 그림 없이 담고, 링크는 달력 화면으로 보냅니다.
+           없는 것을 지어내지 않습니다. */
     parse(text) {
       const out = [];
-      const lines = text.split('\n');
+      /* 줄바꿈을 공백으로 눌러 한 덩어리로 만듭니다 */
+      const flat = text.replace(/\s+/g, ' ');
 
       const EN_MONTH = {
         january:1, february:2, march:3, april:4, may:5, june:6,
         july:7, august:8, september:9, october:10, november:11, december:12,
       };
-      /* 「## August 2026」 */
-      const MONTH_RE = /^##\s+([A-Za-z]+)\s+(\d{4})\s*$/;
-      /* 「### 26 Wed20:00」 · 요일 뒤에 시각이 붙습니다 */
-      const DAY_RE = /^###\s+(\d{1,2})\s*[A-Za-z]{3}(\d{1,2}:\d{2})\s*$/;
 
-      let year = 0, mon = 0;
+      /* 달 머리(## August 2026)가 나오는 자리를 미리 모읍니다 —
+         공연마다 그 앞쪽의 가장 가까운 달을 씁니다. */
+      const months = [];
+      const MRE = /##\s+([A-Za-z]+)\s+(\d{4})\s/g;
+      let mm;
+      while ((mm = MRE.exec(flat)) !== null) {
+        const k = EN_MONTH[mm[1].toLowerCase()];
+        if (k) months.push({ at: mm.index, mon: k, year: +mm[2] });
+      }
+      if (!months.length) return out;
 
-      for (let i = 0; i < lines.length; i++) {
-        const t = lines[i].trim();
+      /* 「### 26 Wed 20 : 00」 — 날·요일·시각
+         ★ 콜론 둘레 공백을 받아 줍니다(\s*:\s*). */
+      const DRE = /###\s+(\d{1,2})\s+[A-Za-z]{3}\s+(\d{1,2})\s*:\s*(\d{2})\s/g;
+      const hits = [];
+      let dm;
+      while ((dm = DRE.exec(flat)) !== null) {
+        hits.push({ at: dm.index, end: DRE.lastIndex, day: +dm[1], h: dm[2], mi: dm[3] });
+      }
 
-        const mm = MONTH_RE.exec(t);
-        if (mm) {
-          const k = EN_MONTH[mm[1].toLowerCase()];
-          if (k) { mon = k; year = +mm[2]; }
-          continue;
-        }
+      for (let i = 0; i < hits.length; i++) {
+        const h = hits[i];
+        /* 이 공연 앞쪽의 가장 가까운 달 */
+        let cur = null;
+        for (const m of months) { if (m.at < h.at) cur = m; else break; }
+        if (!cur) continue;
 
-        const md = DAY_RE.exec(t);
-        if (!md || !mon) continue;
+        /* 다음 공연(또는 다음 달 머리) 앞까지가 이 공연의 몫입니다 */
+        let stop = flat.length;
+        if (i + 1 < hits.length) stop = hits[i + 1].at;
+        for (const m of months) { if (m.at > h.at && m.at < stop) { stop = m.at; break; } }
+        let body = flat.slice(h.end, stop).trim();
 
-        const day = +md[1], time = md[2];
-        let thumb = '', place = '', title = '', sub = '', link = '';
+        /* 시각이 한 번 더 되풀이됩니다 — 「20 : 00 Concertgebouw, Amsterdam」 */
+        body = body.replace(/^\d{1,2}\s*:\s*\d{2}\s*/, '');
 
-        for (let j = i + 1; j < lines.length && j < i + 20; j++) {
-          const u = lines[j].trim();
-          if (!u) continue;
-          if (DAY_RE.test(u) || MONTH_RE.test(u)) break;   /* 다음 공연 */
+        /* 장소 — 다음 「###」(제목) 앞까지 */
+        const ti = body.indexOf('###');
+        if (ti < 0) continue;
+        const place = body.slice(0, ti).trim();
+        let rest = body.slice(ti + 3).trim();
 
-          if (!thumb) {
-            const mi = /!\[[^\]]*\]\((https?:[^)]+)\)/.exec(u);
-            if (mi) { thumb = mi[1]; continue; }
-          }
-          /* 「20:00Concertgebouw, Amsterdam」 — 시각이 앞에 붙어 있습니다 */
-          if (!place) {
-            const mp = /^\d{1,2}:\d{2}(.+)$/.exec(u);
-            if (mp) { place = mp[1].trim(); continue; }
-          }
-          /* 제목 — 날짜 줄과 같은 ### 이지만 숫자로 시작하지 않습니다 */
-          if (!title && /^###\s+/.test(u)) { title = u.replace(/^###\s+/, '').trim(); continue; }
-          /* 상세 주소 */
-          if (!link) {
-            const ml = /\[(?:Tickets & info|Sold out|Order now)\]\((https?:[^)]+)\)/.exec(u);
-            if (ml) { link = ml[1]; continue; }
-          }
-          /* 부제 — 제목 다음의 보통 글줄 (값·단추는 뺍니다) */
-          if (title && !sub && !/^[-#!\[]/.test(u)
-              && !/^Starting/.test(u) && u.length < 160) { sub = u; continue; }
-        }
+        /* 제목과 부제 — 값·단추 글자가 뒤에 붙습니다 */
+        rest = rest.replace(/\s*(Starting\s*€\s*[\d.,]+|Sold out|Order now|Tickets & info|Waiting list|Free)\s*/g, ' | ');
+        const seg = rest.split('|').map(x => x.trim()).filter(Boolean);
+        if (!seg.length) continue;
 
-        if (!title) continue;
+        /* 첫 덩어리에 <b>제목과 부제가 붙어</b> 있습니다.
+             「…Emperor' Concerto Santtu-Matias Rouvali conducts Prokofiev's Fifth Symphony」
+           ★ 가르는 표가 없어 규칙을 세우기 어렵습니다. 지휘자 이름을
+             찾아 자르려 했더니 아홉 중 하나만 걸렸습니다 — 이름 앞에
+             오는 낱말이 제각각이라 규칙이 서지 않습니다.
+
+           ★ 그래서 <b>같은 제목이 여러 번 나오는 것</b>을 씁니다.
+             순회 공연은 같은 글이 여러 날에 되풀이됩니다. 즉 이 화면
+             전체에서 <b>거듭 나오는 앞부분</b>이 진짜 제목입니다.
+             ▶ 아래 finish() 에서 한꺼번에 처리합니다. 여기서는 통째로
+               둡니다 — 한 건씩 보고 자르면 틀립니다. */
+        const title = seg[0].trim();
+        if (!title || title.length < 3) continue;
 
         /* 「Concertgebouw, Amsterdam」 · 「Wolkenturm (open-air), Grafenegg - Austria」
-           ★ 나라는 <b>「 - 」</b> 뒤에 옵니다. 없으면 네덜란드 공연입니다
-             (자기 나라는 굳이 적지 않는 것이 이 화면의 방식입니다). */
+           ★ 나라는 「 - 」 뒤에 옵니다. 없으면 네덜란드 공연입니다. */
         let venue = place, city = '', country = '';
         if (place) {
-          let rest = place;
-          const mc = /\s+-\s+([^,\-]+)$/.exec(rest);
-          if (mc) { country = mc[1].trim(); rest = rest.slice(0, mc.index).trim(); }
-          const parts = rest.split(',').map(x => x.trim()).filter(Boolean);
+          let r = place;
+          const mc = /\s+-\s+([^,\-]+)$/.exec(r);
+          if (mc) { country = mc[1].trim(); r = r.slice(0, mc.index).trim(); }
+          const parts = r.split(',').map(x => x.trim()).filter(Boolean);
           if (parts.length >= 2) { city = parts[parts.length - 1]; venue = parts.slice(0, -1).join(', '); }
-          else { venue = rest; }
-          if (!country) country = 'Netherlands';
+          else { venue = r; }
+          /* ★ 「 - 나라」가 없으면 네덜란드로 보는 것이 이 화면의 방식인데,
+               <b>늘 맞지는 않습니다</b> — 「Kultur- und Kongresszentrum, Lucerne」는
+               스위스인데 나라 표시가 없습니다(홀 이름 속 하이픈 탓입니다).
+             ▶ 잘 알려진 도시는 바로잡고, 모르면 <b>비워 둡니다.</b>
+               틀린 나라를 적는 것보다 없는 편이 낫습니다. */
+          if (!country) {
+            const known = {
+              'Amsterdam':'Netherlands', 'Rotterdam':'Netherlands', 'Utrecht':'Netherlands',
+              'The Hague':'Netherlands', 'Den Haag':'Netherlands', 'Eindhoven':'Netherlands',
+              'Groningen':'Netherlands', 'Breda':'Netherlands', 'Nijmegen':'Netherlands',
+              'Lucerne':'Switzerland', 'Luzern':'Switzerland', 'Zurich':'Switzerland',
+              'Geneva':'Switzerland', 'Vienna':'Austria', 'Salzburg':'Austria',
+              'Berlin':'Germany', 'Hamburg':'Germany', 'Munich':'Germany', 'Cologne':'Germany',
+              'Paris':'France', 'London':'United Kingdom', 'Madrid':'Spain',
+              'Milan':'Italy', 'Rome':'Italy', 'Brussels':'Belgium', 'Warsaw':'Poland',
+              'Prague':'Czech Republic', 'Budapest':'Hungary', 'New York':'USA',
+              'Tokyo':'Japan', 'Seoul':'South Korea', 'Shanghai':'China',
+            };
+            country = known[city] || '';
+          }
         }
 
         out.push({
-          date: `${year}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
-          time, title, sub, link, venue, city, country,
-          conductors: [], composers: [], thumb,
+          date: `${cur.year}-${String(cur.mon).padStart(2, '0')}-${String(h.day).padStart(2, '0')}`,
+          time: `${h.h.padStart(2, '0')}:${h.mi}`,
+          title, sub: '', link: '', venue, city, country,
+          conductors: [], composers: [], thumb: '',
         });
       }
+
+      /* ── 제목과 부제를 <b>가르지 않습니다</b> ─────────────
+         이 화면은 「제목 + 부제」를 한 덩어리로 내보냅니다.
+           「…'Emperor' Concerto Santtu-Matias Rouvali conducts…」
+
+         두 가지를 해 봤습니다 —
+           ① 지휘자 이름을 찾아 자르기 → 아홉 중 하나만 걸렸습니다.
+              이름 앞에 오는 낱말이 제각각이라 규칙이 서지 않습니다.
+           ② 60자에서 자르기 → 「…Santtu-Matias」처럼 <b>낱말 중간</b>에서
+              끊겼습니다. 짧아지는 대신 뜻이 깨집니다.
+
+         ▶ 그래서 통째로 둡니다. 목록 화면(board.css)이 이미 넘치는
+           제목을 「…」로 줄여 주므로 길어도 깨지지 않고, 상세로 들어가면
+           온전한 글을 봅니다. <b>뜻을 깨뜨리며 짧게 만드는 것보다
+           낫습니다.</b> */
       return out;
     },
   },
