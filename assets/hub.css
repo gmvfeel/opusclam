@@ -48,12 +48,13 @@
     .cm-more{font-size:11.5px;white-space:nowrap;flex:0 0 auto}
     .cm-headright{gap:9px}
     /* 「이번 주 공연」의 기간 표시 — 좁으면 제목 줄이 터집니다.
-       감추는 대신 <b>줄 아래</b>로 내려 그대로 보이게 합니다.
-       ★ :has() 를 쓰지 않고 클래스로 — 옛 브라우저에서 :has() 가
-         통하지 않으면 그 규칙 <b>덩어리 전체</b>가 죽습니다. */
-    .cm-head.has-range{flex-wrap:wrap}
-    .cm-head.has-range .cm-headright{flex-wrap:wrap}
-    .wk-range{order:9;flex:1 0 100%;margin-top:3px}
+       ★ 2026-08-16 (두 번째) · 앞서 order:9 · flex:1 0 100% 를 주었더니
+         <b>VIEW MORE 가 제목 위로 올라갔습니다.</b> 이 span 은
+         .cm-head 의 직계가 아니라 <b>.cm-headright 안</b>에 있어서,
+         100% 를 차지하며 옆엣것을 밀어낸 것입니다.
+       ▶ 좁은 화면에서는 기간을 <b>감춥니다.</b> 「이번 주」라는 제목만으로
+         뜻이 통하고, 정확한 날짜는 목록의 날짜 칸에 이미 있습니다. */
+    .wk-range{display:none}
   }
   .cm-more{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:12.5px;
     font-weight:700;letter-spacing:.02em;color:var(--violet-2);text-decoration:none}
@@ -865,10 +866,32 @@
   .cm-qcard{
     flex-direction:row; align-items:center; justify-content:space-between;
     gap:10px; padding:14px 15px;
+    /* ★ 2026-08-16 · 영문 화면에서 <b>오른쪽이 잘렸습니다</b> (파트너 지적)
+         「Concours Archive」 + 「1,165 people」이 한 줄에 들어가지 못해
+         숫자가 카드 밖으로 밀려났습니다. 한국어(「콩쿨 아카이브 1,165명」)
+         에서는 짧아 드러나지 않던 문제입니다.
+       ▶ 넘치는 것을 <b>가둡니다.</b> 그리고 아래에서 이름·숫자가
+         저마다 줄어들 수 있게 최소 폭을 풉니다. */
+    overflow:hidden;
   }
-  .cm-qlabel{min-width:0; white-space:normal; line-height:1.35}
-  .cm-qcount{flex:0 0 auto}
+  .cm-qlabel{min-width:0; white-space:normal; line-height:1.35;
+    overflow-wrap:anywhere}
+  /* 숫자 칸도 줄어들 수 있어야 합니다 — flex:0 0 auto 는 <b>절대</b>
+     안 줄어들어, 이름이 아무리 좁아져도 숫자가 밖으로 나갑니다. */
+  .cm-qcount{flex:0 1 auto; min-width:0; white-space:nowrap}
   .cm-qcount b{font-size:20px}
+  /* 단위(items·people)는 좁으면 감춥니다 — 숫자만으로 뜻이 통하고,
+     영문 단위가 한국어보다 서너 배 깁니다. */
+  .cm-qcount i{font-size:11px}
+}
+@media (max-width:480px){
+  /* 아주 좁으면 자리를 더 아낍니다 — 카드 하나가 169px 밖에 안 되는데
+     안쪽 여백 30 + 이름 + 숫자를 다 넣어야 합니다. */
+  .cm-quick{gap:8px}
+  .cm-qcard{padding:12px 11px; gap:7px}
+  .cm-qcount i{display:none}         /* items·people — 숫자만으로 통합니다 */
+  .cm-qcount b{font-size:18px}
+  .cm-qlabel{font-size:11.5px}
 }
 
 /* ══════════════════════════════════════════════════════════════════
