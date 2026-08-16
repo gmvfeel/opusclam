@@ -307,6 +307,39 @@ function ocN(tpl) {
       <p class="pdb-lead">순수음악 관련 국내외 페스티벌·콩쿨정보, 공연정보와 지원금·정책자금 정보까지 한곳에 모았습니다.</p>
     </header>
 
+    <!-- 정보SPOT 현황 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">정보SPOT 현황<em>STATISTICS</em></span>
+      </div>
+      <div class="hb-stat">
+        <div class="hb-panel" id="spMonths" style="padding:16px 16px 8px"></div>
+        <div class="hb-figs">
+          <div class="hb-fig">
+            <span class="hb-figcap">전체 등록</span>
+            <span class="hb-fignum"><b id="spTotal">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig up">
+            <span class="hb-figcap">이번 달 열리는 일정</span>
+            <span class="hb-fignum"><b id="spMonth">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig gold">
+            <span class="hb-figcap">마감 임박 지원사업</span>
+            <span class="hb-fignum"><b id="spClosing">—</b><i>건</i></span>
+          </div>
+          <div class="hb-fig">
+            <span class="hb-figcap">이번 주 신규</span>
+            <span class="hb-fignum"><b id="spWeek">—</b><i>건</i></span>
+          </div>
+        </div>
+      </div>
+      <div class="hb-compose" id="spCompose"></div>
+      <div class="hb-panel" id="spCountryPanel" style="margin-top:16px">
+        <div class="hb-ptitle"><b>국가별 분포</b><span>등록된 정보가 많은 순 · 상위 8곳</span></div>
+        <div id="spCountry"></div>
+      </div>
+    </section>
+
     <!-- 갈래 바로가기 -->
     <section class="cm-sec">
       <div class="cm-quick">
@@ -317,15 +350,6 @@ function ocN(tpl) {
         <a class="cm-qcard" href="/spot/concours.html">
           <span class="cm-qlabel">국내/외콩쿨정보</span>
           <span class="cm-qcount"><b id="cCoK">—</b><i>건</i></span>
-        </a>
-        <!-- ★ 2026-08-16 · 국제 콩쿨 아카이브 (개편)
-               어제 만든 갈래인데 바로가기에 빠져 있었습니다.
-             ★ 다른 카드는 spot 표를 세지만 이것은 <b>제 표</b>
-               (oc_concours_prize)를 셉니다. 단위도 「건」이 아니라 「명」 —
-               입상자 수이기 때문입니다. -->
-        <a class="cm-qcard" href="/spot/concours-archive.html">
-          <span class="cm-qlabel">국제 콩쿨 아카이브</span>
-          <span class="cm-qcount"><b id="cArc">—</b><i>명</i></span>
         </a>
         <a class="cm-qcard" href="/spot/funding.html">
           <span class="cm-qlabel">지원금 / 정책자금</span>
@@ -373,9 +397,35 @@ function ocN(tpl) {
       <div class="cm-track as-poster" id="ciBox"></div>
     </section>
 
-    <!-- ★ 2026-08-16 · 「새로 등록된 정보」를 없앴습니다 (개편)
-           큰 카드 한 건뿐이라 섹션 하나를 쓰기에 빈약했고, 바로 위
-           「공연정보」와 성격이 겹쳤습니다. -->
+    <!-- New Information — 큰 글 한 건 + 갈래별 탭 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">새로 등록된 정보<em>NEW INFORMATION</em></span>
+      </div>
+      <div id="niFeat"></div>
+    </section>
+
+    <!-- 페스티벌·콩쿨 | 지원금 -->
+    <section class="cm-sec">
+      <div class="cm-two">
+        <div>
+          <div class="cm-head">
+            <span class="cm-title">페스티벌 · 콩쿨<em>FESTIVAL &amp; COMPETITION</em></span>
+            <a class="cm-more" href="/spot/festival.html">VIEW MORE +</a>
+          </div>
+          <div class="bd-tabs" id="fcTabs"></div>
+          <div id="fcList"></div>
+        </div>
+        <div>
+          <div class="cm-head">
+            <span class="cm-title">지원금 / 정책자금<em>FUNDING</em></span>
+            <a class="cm-more" href="/spot/funding.html">VIEW MORE +</a>
+          </div>
+          <div class="bd-tabs" id="fnTabs"></div>
+          <div id="fnList"></div>
+        </div>
+      </div>
+    </section>
 
     <!-- 날짜별 공연정보 | 음원·동영상 -->
     <section class="cm-sec">
@@ -408,17 +458,15 @@ function ocN(tpl) {
             </div>
           </div>
 
-        </div>
-        <div>
-          <div class="cm-head">
-            <span class="cm-title">음원 / 동영상<em>MEDIA</em></span>
-            <a class="cm-more" href="/spot/media.html">VIEW MORE +</a>
+          <!-- 관련사이트 — 달력 아래 빈 자리에 놓습니다 -->
+          <div class="sp-under">
+            <div class="cm-head">
+              <span class="cm-title">관련사이트<em>RELATED SITES</em></span>
+              <a class="cm-more" href="/spot/sites.html">VIEW MORE +</a>
+            </div>
+            <div id="stList"></div>
           </div>
-          <div id="mdList" class="bd-cards1"></div>
 
-          <!-- ★ 2026-08-16 · 관련사이트·콩쿨 아카이브를 <b>오른쪽 칸</b>으로
-                 옮겼습니다. 왼쪽은 달력이 세로로 길어 그 아래가 비었는데,
-                 오른쪽 음원 카드도 길어 두 칸 높이가 어긋났습니다. -->
           <!-- ★ 2026-08-15 · 국제 콩쿨 아카이브 (파트너 요청)
                  ★ 다른 칸과 달리 <b>게시판 목록이 아닙니다.</b> 대회별로
                    몇 명이 담겼는지와 <b>가장 최근 우승자</b>를 보여 줍니다.
@@ -431,80 +479,16 @@ function ocN(tpl) {
             </div>
             <div id="caList" class="sp-ca"></div>
           </div>
-          <!-- 관련사이트 — 달력 아래 빈 자리에 놓습니다 -->
-          <div class="sp-under">
-            <div class="cm-head">
-              <span class="cm-title">관련사이트<em>RELATED SITES</em></span>
-              <a class="cm-more" href="/spot/sites.html">VIEW MORE +</a>
-            </div>
-            <div id="stList"></div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ★ 2026-08-16 · 공연정보와 <b>날짜별 공연정보</b>를 붙였습니다 (개편)
-           둘 사이에 섹션 셋이 끼어 있어, 같은 자료인데 다른 것으로
-           보였습니다. 페스티벌·지원금을 그 뒤로 옮겨 붙였습니다. -->
-    <!-- 페스티벌·콩쿨 | 지원금 -->
-    <section class="cm-sec">
-      <div class="cm-two">
-        <div>
-          <div class="cm-head">
-            <span class="cm-title">페스티벌 · 콩쿨<em>FESTIVAL &amp; COMPETITION</em></span>
-            <a class="cm-more" href="/spot/festival.html">VIEW MORE +</a>
-          </div>
-          <div class="bd-tabs" id="fcTabs"></div>
-          <div id="fcList"></div>
         </div>
         <div>
           <div class="cm-head">
-            <span class="cm-title">지원금 / 정책자금<em>FUNDING</em></span>
-            <a class="cm-more" href="/spot/funding.html">VIEW MORE +</a>
+            <span class="cm-title">음원 / 동영상<em>MEDIA</em></span>
+            <a class="cm-more" href="/spot/media.html">VIEW MORE +</a>
           </div>
-          <div class="bd-tabs" id="fnTabs"></div>
-          <div id="fnList"></div>
+          <div id="mdList" class="bd-cards1"></div>
         </div>
       </div>
     </section>
-
-    <!-- ★ 2026-08-16 · 「현황」을 <b>맨 아래</b>로 내렸습니다 (개편)
-           숫자는 이 자료를 이미 아는 사람에게 값어치가 있지, 처음 온
-           사람에게는 아닙니다. DATABASE 메인과 같은 판단입니다. -->
-    <!-- 정보SPOT 현황 -->
-    <section class="cm-sec">
-      <div class="cm-head">
-        <span class="cm-title">정보SPOT 현황<em>STATISTICS</em></span>
-      </div>
-      <div class="hb-stat">
-        <div class="hb-panel" id="spMonths" style="padding:16px 16px 8px"></div>
-        <div class="hb-figs">
-          <div class="hb-fig">
-            <span class="hb-figcap">전체 등록</span>
-            <span class="hb-fignum"><b id="spTotal">—</b><i>건</i></span>
-          </div>
-          <div class="hb-fig up">
-            <span class="hb-figcap">이번 달 열리는 일정</span>
-            <span class="hb-fignum"><b id="spMonth">—</b><i>건</i></span>
-          </div>
-          <div class="hb-fig gold">
-            <span class="hb-figcap">마감 임박 지원사업</span>
-            <span class="hb-fignum"><b id="spClosing">—</b><i>건</i></span>
-          </div>
-          <div class="hb-fig">
-            <span class="hb-figcap">이번 주 신규</span>
-            <span class="hb-fignum"><b id="spWeek">—</b><i>건</i></span>
-          </div>
-        </div>
-      </div>
-      <div class="hb-compose" id="spCompose"></div>
-      <div class="hb-panel" id="spCountryPanel" style="margin-top:16px">
-        <div class="hb-ptitle"><b>국가별 분포</b><span>등록된 정보가 많은 순 · 상위 8곳</span></div>
-        <div id="spCountry"></div>
-      </div>
-    </section>
-
 
   </div>
 </section>
@@ -654,17 +638,6 @@ function ocN(tpl) {
         try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n(tpl, v); } catch (e) {}
         return String(tpl).replace('{n}', v);
       }
-
-      /* 바로가기 카드의 입상자 수 — 이 자리에서 함께 셉니다.
-         따로 부르면 요청이 한 번 더 늘어납니다. */
-      fetch(U + 'oc_concours_prize?select=id', {
-        headers: Object.assign({ Prefer: 'count=exact', Range: '0-0' }, H)
-      }).then(function (r) {
-        var cr = r.headers.get('content-range') || '';
-        var v = parseInt((cr.split('/')[1] || '0'), 10) || 0;
-        var el = document.getElementById('cArc');
-        if (el && v) el.textContent = v.toLocaleString();
-      }).catch(function () {});
 
       fetch(U + 'oc_concours?select=key,name_ko,founded&hidden=not.is.true&order=founded.asc', { headers: H })
         .then(function (r) { return r.ok ? r.json() : []; })
