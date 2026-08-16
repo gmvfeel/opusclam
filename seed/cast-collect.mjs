@@ -249,32 +249,66 @@ function parseCast(text) {
 
   if (DRY) { console.log('\n담지 않았습니다 (--dry)'); return; }
 
-  /* 담기 — 200개씩 나눠 */
-  let saved = 0;
+  /* ★★ 담기 전에 <b>묶음 전체</b>로 한 번 더 겹침을 거릅니다
+     ─────────────────────────────────────────────────────────
+     공연 하나 안에서는 이미 걸렀는데, 그것만으로는 모자랐습니다 —
+     같은 (공연, 이름)이 한 묶음에 두 번 들어가면 Supabase 가
+     통째로 거부합니다(21000 · ON CONFLICT DO UPDATE cannot affect
+     row a second time). 250건을 다 부르고 나서 담기에서 막혀
+     <b>API 호출을 통째로 버렸습니다</b>(2026-08-16 첫 실행).
+   ▶ 같은 공연이 목록에 두 번 나오거나, 상세를 다시 부르는 일이
+     있을 수 있으므로 마지막에 한 번 더 봅니다. */
+  {
+    const seenAll = new Set();
+    const before = rows.length;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const k = rows[i].spot_id + '|' + rows[i].name.toLowerCase();
+      if (seenAll.has(k)) rows.splice(i, 1); else seenAll.add(k);
+    }
+    if (before !== rows.length) {
+      console.log(`    (같은 이름 ${before - rows.length}건을 걸렀습니다)`);
+    }
+  }
+
+  /* 담기 — 200개씩 나눠
+     ★ 한 묶음이 실패해도 <b>나머지는 담습니다.</b> 예전에는 하나가
+       막히면 통째로 멈춰, 250건을 부른 API 호출을 다 버렸습니다. */
+  let saved = 0, lost = 0;
+  const badSpots = new Set();
   for (let i = 0; i < rows.length; i += 200) {
     const part = rows.slice(i, i + 200);
-    await sb('oc_cast?on_conflict=spot_id,name', {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify(part),
-    });
-    saved += part.length;
+    try {
+      await sb('oc_cast?on_conflict=spot_id,name', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(part),
+      });
+      saved += part.length;
+    } catch (e) {
+      lost += part.length;
+      part.forEach((r) => badSpots.add(r.spot_id));
+      console.log(`    ★ ${part.length}건을 담지 못했습니다 — ${String(e.message).slice(0, 90)}`);
+    }
   }
-  console.log(`    담음 ${saved}건`);
+  console.log(`    담음 ${saved}건` + (lost ? ` · 못 담음 ${lost}건` : ''));
 
   /* ★ 부른 공연에 표시를 남깁니다. 이것이 없으면 다음번에 같은 것을
        또 불러 API 호출만 버립니다. 출연자가 없던 공연도 표시합니다 —
        없다는 것도 알아낸 결과입니다. */
+  /* ★ 담지 못한 공연은 <b>표시하지 않습니다</b> — 다음번에 다시 부릅니다.
+       표시해 버리면 그 공연의 출연자를 영영 못 얻습니다. */
   const now = new Date().toISOString();
-  for (let i = 0; i < donee.length; i += 100) {
-    const part = donee.slice(i, i + 100);
+  const mark = donee.filter((id) => !badSpots.has(id));
+  for (let i = 0; i < mark.length; i += 100) {
+    const part = mark.slice(i, i + 100);
     await sb('spot?id=in.(' + part.join(',') + ')', {
       method: 'PATCH',
       headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ cast_fetched_at: now }),
     });
   }
-  console.log(`    표시함 ${donee.length}건`);
+  console.log(`    표시함 ${mark.length}건`
+    + (donee.length !== mark.length ? ` (${donee.length - mark.length}건은 다음에 다시 부릅니다)` : ''));
 
   /* 얼마나 남았나 */
   const left = await fetch(SB_URL + '/rest/v1/spot?select=id'
