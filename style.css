@@ -600,12 +600,30 @@
   .dl li a:hover{color:var(--link-hover)}
 
   /* ---------- big banners ---------- */
+  /* ★★ 2026-08-16 · 서브 화면 배너 비율이 <b>메인과 달랐습니다</b> (파트너 지적)
+     ─────────────────────────────────────────────────────────
+       무엇이 달랐나
+         메인(home.html)   width:min(670px,100%) · aspect-ratio:670/190
+         서브(여기)        min-height:190px 만 있고 <b>비율이 없었음</b>
+       ▶ 폭이 좁아져도 높이가 190px 에 묶여, 그림 위아래로 <b>흰 자리</b>가
+         남았습니다. 좁은 화면일수록 심해집니다(그림은 비율대로 줄어드는데
+         상자만 190px 를 지키므로).
+       ▶ 칸 비율도 1.5:1 이었는데, 실제 소재는 670:446 (=1.5:1 에 가깝지만
+         정확히는 다릅니다). 메인처럼 <b>소재 크기 그대로</b> 둡니다.
+     ★ 이제 메인과 <b>같은 값</b>입니다. 같은 소재가 화면마다 다르게
+       보이면 안 됩니다. */
   .bigban{padding:6px 0 50px}
-  .bigban .wrap{display:grid;grid-template-columns:1.5fr 1fr;gap:24px}
-  .bigban-ad{min-height:190px}
-  /* ★ 2026-08-14 · 광고 <b>둘을 감싸는 상자</b>가 격자 칸을 받습니다
-       (안쪽 <a> 들은 겹쳐 놓이므로 자리를 차지하지 않습니다) */
-  .ad-rot.bigban-ad{min-height:190px}
+  /* 670 + 24 + 446 = 1140 — 본문 틀 안쪽 너비와 정확히 맞습니다 */
+  .bigban .wrap{display:grid;grid-template-columns:670px 446px;gap:24px;justify-content:center}
+  .bigban-ad{width:min(670px,100%);aspect-ratio:670/190}
+  /* ★ D 자리(446×190) — 회전 상자와 낱개 광고 <b>둘 다</b> 봅니다.
+       .ad-slot 만 보면 회전 상자를 쓴 자리에서 높이가 찌그러집니다. */
+  .bigban .wrap > .ad-slot:nth-child(2),
+  .bigban .wrap > .ad-rot:nth-child(2){width:min(446px,100%);aspect-ratio:446/190}
+  /* 회전 상자 안쪽 광고는 상자 크기를 그대로 받습니다 */
+  .bigban .wrap > .ad-rot:nth-child(2) > .ad-slot{width:100%;aspect-ratio:auto}
+  /* 틀이 1140px 보다 좁아지면 두 칸이 <b>같은 비율로</b> 함께 줄어듭니다 */
+  @media (max-width:1199px){ .bigban .wrap{grid-template-columns:minmax(0,670fr) minmax(0,446fr)} }
   /* ★ 광고 문의 자리표 — home.html 과 같은 값입니다.
        사선 무늬·점선은 .ad-slot 이 갖고 있고 여기서는 글자만 얹습니다.
      ★ 주소가 아직 없어 손 모양을 내지 않습니다. href 가 붙으면
@@ -617,7 +635,9 @@
   .ad-cta .ad-desc{font-weight:600;color:var(--violet-2)}
   .ad-cta[href]:hover .ad-ctat{color:var(--violet-2)}
   .ad-cta[href]:hover{border-color:var(--violet-2)}
-  @media(max-width:900px){.bigban .wrap{grid-template-columns:1fr}}
+  /* ★ minmax(0,1fr) — 그냥 1fr 이면 안쪽 내용이 넓을 때 칸이 부풀어
+     화면 밖으로 넘칩니다. home.html 과 같은 값으로 맞춥니다. */
+  @media(max-width:900px){.bigban .wrap{grid-template-columns:minmax(0,1fr)}}
   .bb{border-radius:12px;overflow:hidden;position:relative;color:#fff;min-height:180px;display:flex;align-items:flex-end}
   .bb .bb-in{position:relative;z-index:2;padding:26px 28px}
   .bb .en-s{font-family:var(--serif);letter-spacing:.2em;font-size:11px;color:var(--violet-3)}
