@@ -128,21 +128,34 @@
       </a>
     </section>
 
-    <!-- ── 둘러보기 ────────────────────────────────────── -->
+    <!-- ── 인물 훑어보기 ──────────────────────────────────
+         ★ 2026-08-16 · 「둘러보기」를 다시 짰습니다 (파트너 지적)
+           예전에는 「시대로 / 낭만주의 39」라고만 적혀 있어 <b>39가 무슨
+           숫자인지, 눌러서 무엇이 되는지</b> 알 수 없었습니다.
+         ▶ 고친 것
+           · 제목을 「인물 훑어보기」로 — 무엇을 하는 자리인지 밝힙니다
+           · 안내 한 줄을 붙여 「누르면 그 조건의 목록으로 간다」고 알립니다
+           · 숫자에 「명」을 붙입니다
+           · 사진 있는 인물 여섯을 함께 놓습니다 — 글자만 이어지면
+             화면이 죽습니다. 사진은 6,321명에게 있는데 여태
+             「오늘의 인물」 한 장뿐이었습니다. -->
     <section class="hb-sec">
       <div class="hb-head">
-        <span class="hb-title">둘러보기<em>BROWSE</em></span>
+        <span class="hb-title">인물 훑어보기<em>BROWSE PEOPLE</em></span>
+        <a class="hb-more" href="/db/person.html">인물DB 전체보기 &rsaquo;</a>
       </div>
+      <p class="brw-note">누르면 그 조건에 맞는 인물 목록으로 갑니다.</p>
       <div class="brw">
         <div class="brw-row">
-          <span class="brw-cap">시대로</span>
+          <span class="brw-cap">시대로 찾기</span>
           <div class="brw-chips" id="brwEra"></div>
         </div>
         <div class="brw-row">
-          <span class="brw-cap">분야로</span>
+          <span class="brw-cap">분야로 찾기</span>
           <div class="brw-chips" id="brwField"></div>
         </div>
       </div>
+      <div class="brw-faces" id="brwFaces" hidden></div>
     </section>
 
     <!-- 새로 등록된 Database -->
@@ -530,12 +543,15 @@
     }
   })();
 
-  /* ── 둘러보기 ────────────────────────────────────────
-     ★ 갈래 목록을 <b>코드에 적지 않습니다.</b> 인물DB 에 실제로 든 것을
-       세어 많은 것부터 보여 줍니다. 적어 두면 데이터가 늘 때마다
-       손봐야 하고, 없는 갈래가 목록에 남습니다.
-     ★ 「기타」처럼 뜻이 옅은 값과 <b>한 자리 수</b>는 뺍니다 —
-       눌러 봐야 볼 것이 없으면 오히려 실망합니다. */
+  /* ── 인물 훑어보기 ───────────────────────────────────
+     ★ 2026-08-16 · 세는 방식을 바꿨습니다 (파트너 지적)
+       예전에는 인물 <b>목록을 통째로 받아</b> 화면에서 셌습니다. 그런데
+       1,000명쯤에서 끊겨 「현대 76」처럼 <b>실제와 다른 숫자</b>가 나왔습니다
+       (실제로는 5,366명). 잘못된 숫자를 크게 보여 주면 신뢰가 깎입니다.
+     ▶ 이제 갈래마다 <b>건수만</b> 묻습니다. 목록을 안 받으니 정확하고
+       빠릅니다(응답에 실리는 것은 숫자 한 줄뿐입니다).
+     ★ 갈래 이름은 여전히 코드에 적지 않습니다 — 한 번 훑어 어떤 값이
+       있는지 알아낸 뒤, 그 값들만 세러 갑니다. */
   (function browse() {
     var eraBox = document.getElementById('brwEra');
     var fldBox = document.getElementById('brwField');
@@ -545,54 +561,87 @@
     eraBox.innerHTML = skel + skel + skel + skel + skel;
     fldBox.innerHTML = skel + skel + skel + skel;
 
-    /* 한 번에 받아 화면에서 셉니다 — 갈래마다 물으면 열두 번이 됩니다.
-       200행 상한이 있으므로 나눠 받되 <b>0행일 때만</b> 멈춥니다. */
-    (function pull(off, acc) {
-      off = off || 0; acc = acc || [];
-      get('persons?select=era_name,field&hidden=not.is.true&limit=1000&offset=' + off)
-        .then(function (rows) {
-          if (rows && rows.length) {
-            acc = acc.concat(rows);
-            if (rows.length >= 1000 && off < 30000) return pull(off + rows.length, acc);
-          }
-          done(acc);
-        })
-        .catch(function () { done(acc); });
-    })();
+    /* 시대는 <b>흐른 차례</b>로 — 많은 것부터 늘어놓으면 뒤죽박죽입니다 */
+    var ERA_ORDER = ['고대','중세','르네상스','바로크','고전주의','낭만주의','근대','근·현대','현대'];
+    var SKIP = /^(기타|미상|불명)$/;
 
-    function done(rows) {
-      if (!rows.length) { eraBox.innerHTML = ''; fldBox.innerHTML = ''; return; }
-      var e = {}, f = {};
-      rows.forEach(function (r) {
-        if (r.era_name) e[r.era_name] = (e[r.era_name] || 0) + 1;
-        if (r.field)    f[r.field]    = (f[r.field]    || 0) + 1;
-      });
-      /* 시대는 <b>흐른 차례</b>로 — 많은 것부터 늘어놓으면 뒤죽박죽입니다 */
-      var ORDER = ['고대','중세','르네상스','바로크','고전주의','낭만주의','근대','근·현대','현대'];
-      eraBox.innerHTML = chips(e, ORDER) || '';
-      fldBox.innerHTML = chips(f, null) || '';
+    /* 어떤 값이 있는지 먼저 알아봅니다 — 2,000명만 훑어도 갈래는 다 나옵니다.
+       (갈래는 열 몇 개뿐이라, 전부 받을 까닭이 없습니다) */
+    fetch(U + 'persons?select=era_name,field&hidden=not.is.true&limit=2000', { headers: H })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        var eSet = {}, fSet = {};
+        (rows || []).forEach(function (x) {
+          if (x.era_name && !SKIP.test(x.era_name)) eSet[x.era_name] = 1;
+          if (x.field    && !SKIP.test(x.field))    fSet[x.field]    = 1;
+        });
+
+        var eras = Object.keys(eSet).sort(function (a, b) {
+          var ia = ERA_ORDER.indexOf(a), ib = ERA_ORDER.indexOf(b);
+          return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+        });
+        var flds = Object.keys(fSet);
+
+        /* 갈래마다 건수를 묻습니다. 시대 아홉 + 분야 열 = 스무 번 남짓이지만
+           <b>숫자만</b> 받으므로 목록 한 번보다 가볍습니다. */
+        return Promise.all([
+          Promise.all(eras.map(function (k) { return one('era_name', k); })),
+          Promise.all(flds.map(function (k) { return one('field', k); })),
+        ]).then(function (res) {
+          eraBox.innerHTML = chips(res[0], false);
+          fldBox.innerHTML = chips(res[1], true);
+        });
+      })
+      .catch(function () { eraBox.innerHTML = ''; fldBox.innerHTML = ''; });
+
+    function one(col, val) {
+      return count('persons?hidden=not.is.true&' + col + '=eq.' + encodeURIComponent(val))
+        .then(function (c) { return { k: val, c: c }; });
     }
 
-    function chips(map, order) {
-      var keys = Object.keys(map).filter(function (k) {
-        return map[k] >= 10 && !/^(기타|미상|불명)$/.test(k);
-      });
-      if (order) {
-        keys.sort(function (a, b) {
-          var ia = order.indexOf(a), ib = order.indexOf(b);
-          if (ia < 0) ia = 99; if (ib < 0) ib = 99;
-          return ia - ib || map[b] - map[a];
-        });
-      } else {
-        keys.sort(function (a, b) { return map[b] - map[a]; });
-        keys = keys.slice(0, 10);
+    function chips(list, sortByCount) {
+      list = list.filter(function (x) { return x.c >= 10; });
+      if (sortByCount) {
+        list.sort(function (a, b) { return b.c - a.c; });
+        list = list.slice(0, 10);
       }
-      return keys.map(function (k) {
-        return '<a href="/db/person.html?sel=' + encodeURIComponent(k) + '">'
-          + esc(t(k)) + '<b>' + map[k].toLocaleString() + '</b></a>';
+      return list.map(function (x) {
+        return '<a href="/db/person.html?sel=' + encodeURIComponent(x.k) + '">'
+          + esc(t(x.k)) + '<b>' + n('{n}명', x.c) + '</b></a>';
       }).join('');
     }
   })();
+
+  /* ── 사진으로 보는 인물 ──────────────────────────────
+     ★ 아래가 글자만 이어지면 화면이 죽습니다. 사진이 6,321명에게
+       있는데 여태 「오늘의 인물」 한 장뿐이었습니다.
+     ★ 무작위로 뽑되 <b>고를 자리를 흔듭니다</b> — 늘 앞에서부터 받으면
+       같은 얼굴만 나옵니다. 새로 고칠 때마다 다른 사람이 나오는 편이
+       「많이 있구나」를 더 잘 전합니다.
+     ★ 소개문이 있는 사람만 — 눌러 들어갔는데 비어 있으면 실망합니다. */
+  (function faces() {
+    var box = document.getElementById('brwFaces');
+    if (!box) return;
+    var off = Math.floor(Math.random() * 1200);
+    fetch(U + 'persons?select=id,name_ko,name_en,field,image_url'
+            + '&hidden=not.is.true&image_url=not.is.null&description=not.is.null'
+            + '&limit=6&offset=' + off, { headers: H })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        if (!rows || !rows.length) return;
+        box.innerHTML = rows.map(function (p) {
+          var nm = p.name_ko || p.name_en || '';
+          return '<a class="fce" href="/db/person-view.html?id=' + encodeURIComponent(p.id) + '">'
+            + '<span class="fce-img"><img src="' + esc(p.image_url) + '" alt="" loading="lazy"></span>'
+            + '<span class="fce-nm">' + esc(nm) + '</span>'
+            + (p.field ? '<span class="fce-f">' + esc(t(p.field)) + '</span>' : '')
+            + '</a>';
+        }).join('');
+        box.hidden = false;
+      })
+      .catch(function () { /* 없으면 감춘 채로 */ });
+  })();
+
 })();
 </script>
 </body>
