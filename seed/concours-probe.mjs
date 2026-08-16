@@ -54,6 +54,21 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
   'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX'];
 
+/* 반 클라이번은 <b>영어 서수 낱말</b>로 문서 이름을 씁니다 */
+const ORDINAL = ['', 'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth',
+  'Seventh', 'Eighth', 'Ninth', 'Tenth', 'Eleventh', 'Twelfth', 'Thirteenth',
+  'Fourteenth', 'Fifteenth', 'Sixteenth', 'Seventeenth', 'Eighteenth'];
+
+/* 반 클라이번 회차 → 열린 해
+   ★ 넉 해마다 열리지만 <b>고르지 않습니다</b> — 3회는 3년 만에(1969),
+     16회는 코로나로 한 해 미뤄져 2022 입니다. 그래서 계산하지 않고
+     적어 둡니다. 문서에서 읽은 값이 있으면 그것을 먼저 씁니다. */
+const CLIBURN_YEARS = {
+  1: 1962, 2: 1966, 3: 1969, 4: 1973, 5: 1977, 6: 1981, 7: 1985, 8: 1989,
+  9: 1993, 10: 1997, 11: 2001, 12: 2005, 13: 2009, 14: 2013, 15: 2017,
+  16: 2022, 17: 2025,
+};
+
 /* ══ 대회 목록 ═══════════════════════════════════════════════
    ★ 대회마다 문서 짜임이 <b>크게 다릅니다.</b> 두 가지가 있습니다 —
 
@@ -96,20 +111,36 @@ const COMPS = [
     field: '바이올린·피아노·성악·첼로',
     title: () => 'Queen Elisabeth Competition',
   },
-  /* ★ 반 클라이번은 <b>잠시 빼 둡니다</b> (2026-08-15)
-       위키 문서 짜임이 달라 두 명밖에 못 읽습니다. 그런데 담기를 켜면
-       oc_concours 표에 없는 대회라 <b>실행이 통째로 멈춥니다</b> —
-       퀸 엘리자베스까지 담고 거기서 끊겼습니다.
-     ▶ 읽어내게 되면 여기 설정을 되살리고 sql 에도 한 줄 더하면 됩니다.
-       두 곳을 <b>함께</b> 고쳐야 합니다.
+  /* ★ 반 클라이번 — 되살렸습니다 (2026-08-17)
+       ─────────────────────────────────────────────────────────
+       ① 문서가 <b>회차마다 따로</b>입니다. 그런데 쇼팽처럼 로마 숫자가
+          아니라 <b>영어 서수 낱말</b>입니다 —
+              Sixteenth Van Cliburn International Piano Competition
+       ② 게다가 표가 아니라 <b>문장 속</b>에 적혀 있습니다 —
+              It was won by X, while Y and Z were awarded
+              the silver and bronze medals respectively.
+          그래서 표를 읽는 네 가지 꼴로는 한 명도 못 잡았습니다.
+       ▶ 서수 낱말 문서명(kind: 'per-edition-word')과
+         문장을 읽는 다섯째 꼴(parseProse)을 더했습니다.
+       ★ 문서 이름이 회마다 다를 수 있어 <b>후보를 여럿</b> 두고 차례로
+         두드립니다. 하나라도 열리면 그것을 씁니다.
+       ★ 본 문서(mainTitle)도 <b>함께</b> 읽어 합칩니다. 회차 문서가
+         없는 회를 본 문서 표가 채워 주기 때문입니다. */
   {
-    key: 'cliburn', kind: 'one-page',
+    key: 'cliburn', kind: 'per-edition-word',
     nameKo: '반 클라이번 국제 피아노 콩쿠르',
     nameEn: 'Van Cliburn International Piano Competition',
     field: '피아노',
+    editions: 17,
+    mainTitle: 'Van Cliburn International Piano Competition',
+    titles: (no) => [
+      `${ORDINAL[no]} Van Cliburn International Piano Competition`,
+      `${CLIBURN_YEARS[no]} Van Cliburn International Piano Competition`,
+      `Van Cliburn International Piano Competition ${CLIBURN_YEARS[no]}`,
+    ],
     title: () => 'Van Cliburn International Piano Competition',
+    years: CLIBURN_YEARS,
   },
-  */
   {
     key: 'leeds', kind: 'one-page',
     nameKo: '리즈 국제 피아노 콩쿠르',
@@ -445,8 +476,125 @@ function parseYearTable(wt) {
   return out;
 }
 
-/* 셋 가운데 가장 많이 읽어낸 것을 씁니다 */
-function parseAll(wt) {
+/* ── ⑤ 문장 꼴 (반 클라이번) ──────────────────────────────
+   표가 아니라 <b>줄글 문장</b>에 입상자가 적혀 있습니다 —
+       It was won by [[Yunchan Lim]] of [[South Korea]], while
+       [[Anna Geniushene]] and [[Dmytro Choni]] were awarded the
+       silver and bronze medals respectively.
+   ★ 어떻게 읽나 — 문장을 <b>절</b>로 잘라 절마다 봅니다.
+     ① 절 안의 메달 낱말(gold·silver·bronze·first prize…)을 차례대로
+     ② 절 안의 사람 이름 후보를 차례대로
+     ③ 메달이 여럿이면 <b>나온 차례로</b> 짝짓고,
+        하나뿐이면 첫 사람에게 줍니다.
+     ④ 다만 「shared·jointly」가 보이면 공동 수상이므로 여럿에게 줍니다.
+   ★ 「won by」에는 메달 낱말이 없습니다 — 이것은 1위로 봅니다. */
+const MEDAL_RANK = {
+  gold: '1', silver: '2', bronze: '3',
+  first: '1', second: '2', third: '3',
+};
+
+/* 사람 이름이 아닌 것 — 기관·장소·대회 이름이 이름 자리에 잘 들어옵니다 */
+const NOT_PERSON = /competition|foundation|festival|orchestra|symphon|philharmon|univers|conservator|academy|institute|school|college|award|prize|medal|jury|juror|hall|center|centre|society|committee|records|label|round|final|recital|concerto|sonata|etude|piano|texas|worth|america|amateur|edition|series/i;
+
+function looksPerson(n) {
+  const t = String(n || '').trim();
+  if (!t || t.length < 4 || t.length > 50) return false;
+  if (NOT_PERSON.test(t)) return false;
+  if (/^van cliburn$/i.test(t)) return false;     /* 대회 이름의 주인 */
+  if (isCountry(t)) return false;
+  if (/[\d@#|]/.test(t)) return false;
+  const w = t.split(/\s+/);
+  if (w.length < 2 || w.length > 4) return false;
+  /* 낱말마다 큰 글자로 시작해야 합니다 (of·de·van 같은 이음말은 뺍니다) */
+  return w.every(x => /^[A-Z\u00C0-\u024F]/.test(x) || /^(?:de|van|von|der|den|di|da|del|la|le)$/i.test(x));
+}
+
+/* 이름 뒤에 붙은 나라 — 「of [[South Korea]]」·「([[Ukraine]])」 */
+function countryNear(seg, from) {
+  const tail = seg.slice(from, from + 90);
+  const cands = [];
+  let m;
+  const re1 = /\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/g;
+  while ((m = re1.exec(tail)) !== null) cands.push(m[1]);
+  const re2 = /\(([^)]{2,30})\)/g;
+  while ((m = re2.exec(tail)) !== null) cands.push(m[1].replace(/[[\]]/g, ''));
+  for (const c of cands) { if (isCountry(c)) return clean(c); }
+  return '';
+}
+
+/* 절에서 사람 이름 후보를 <b>나온 차례대로</b> */
+function nameCandsAt(seg) {
+  const out = [];
+  const seen = new Set();
+  /* ① 링크가 있으면 그것이 가장 또렷합니다 */
+  const re = /\[\[([^\]|]+)(?:\|([^\]]*))?\]\]/g;
+  let m;
+  while ((m = re.exec(seg)) !== null) {
+    /* 「[[Yunchan Lim (pianist)|Yunchan Lim]]」 → 괄호 설명을 뗍니다 */
+    const n = m[1].replace(/\s*\([^)]*\)\s*$/, '').trim();
+    if (!looksPerson(n) || seen.has(n)) continue;
+    seen.add(n);
+    out.push({ name: n, country: countryNear(seg, m.index + m[0].length) });
+  }
+  if (out.length) return out;
+  /* ② 링크가 없으면 큰 글자로 이어진 낱말을 봅니다 */
+  const flat = clean(seg);
+  const re2 = /([A-Z\u00C0-\u024F][\p{L}'’.-]+(?:\s+(?:de|van|von|der|den|di|da|del|la|le)\b)?(?:\s+[A-Z\u00C0-\u024F][\p{L}'’.-]+){1,3})/gu;
+  while ((m = re2.exec(flat)) !== null) {
+    const n = m[1].trim();
+    if (!looksPerson(n) || seen.has(n)) continue;
+    seen.add(n);
+    out.push({ name: n, country: countryNear(flat, m.index + m[0].length) });
+  }
+  return out;
+}
+
+function parseProse(wt) {
+  const out = [];
+  /* 참고문헌·심사위원 뒤는 보지 않습니다 — 엉뚱한 이름이 많습니다 */
+  const body = wt.split(/\n=+\s*(?:References|External links|Notes|Sources|Bibliography|Further reading|Jury|Jurors|Judges|Repertoire|See also)\b/i)[0];
+  /* 다른 대회 이야기가 섞인 문장은 건너뜁니다
+     (「그는 차이콥스키 콩쿠르에서 금메달을 땄다」 같은 서술) */
+  const OTHER = /tchaikovsky|chopin|leeds|busoni|queen elisabeth|rubinstein|geneva|montreal|hamamatsu|sydney|dublin|honens|naumburg/i;
+
+  /* 절로 자릅니다 — 줄바꿈 · 마침표 · 「, while」·「, with」 */
+  /* ★ 콜론에서는 <b>자르지 않습니다</b> — 「* Gold Medal: [[이름]]」이
+       등수 쪽과 이름 쪽으로 갈라져 둘 다 못 쓰게 됩니다(시험에서 잡음). */
+  const clauses = body.split(/\n+|(?<=[.;])\s+|,\s*(?:while|whilst|with|whereas|although)\s+/);
+  for (const seg of clauses) {
+    if (!seg || seg.length < 12 || seg.length > 600) continue;
+    if (OTHER.test(seg)) continue;
+
+    const ranks = [];
+    const reR = /\b(gold|silver|bronze)\b|\b(first|second|third)\s+(?:prize|place)\b/gi;
+    let m;
+    while ((m = reR.exec(seg)) !== null) {
+      const k = (m[1] || m[2]).toLowerCase();
+      if (MEDAL_RANK[k]) ranks.push(MEDAL_RANK[k]);
+    }
+    const wonBy = /\b(?:won by|shared by|awarded to|went to|winner was|first place went)\b/i.test(seg);
+    if (!ranks.length && !wonBy) continue;
+
+    const cands = nameCandsAt(seg);
+    if (!cands.length) continue;
+
+    const rs = ranks.length ? ranks : ['1'];
+    if (rs.length === 1) {
+      /* 공동 수상일 때만 여럿 — 아니면 첫 사람만 (엉뚱한 이름 방지) */
+      const joint = /\b(shared|jointly|joint|ex aequo|both|tie[ds]?)\b/i.test(seg);
+      (joint ? cands.slice(0, 3) : cands.slice(0, 1))
+        .forEach(c => out.push({ rank: rs[0], name: c.name, country: c.country }));
+    } else {
+      for (let i = 0; i < Math.min(rs.length, cands.length); i++) {
+        out.push({ rank: rs[i], name: cands[i].name, country: cands[i].country });
+      }
+    }
+  }
+  return out;
+}
+
+/* 다섯 가운데 가장 많이 읽어낸 것을 씁니다 */
+function parseAll(wt, opt = {}) {
   const tries = [
     { how: '틀', got: parseTemplate(wt) },
     { how: '표', got: parseTable(wt) },
@@ -454,7 +602,23 @@ function parseAll(wt) {
     { how: '연도표', got: parseYearTable(wt) },
   ];
   tries.sort((a, b) => b.got.length - a.got.length);
-  const best = tries[0];
+  let best = tries[0];
+
+  /* ★★ 문장 꼴은 <b>끼워 넣지 않고 따로</b> 봅니다 (2026-08-17)
+       ─────────────────────────────────────────────────────
+       네 꼴과 나란히 놓고 「많이 읽은 쪽」을 고르게 하면, 이미 잘
+       읽고 있는 <b>다섯 대회 1,165건의 결과가 흔들립니다.</b>
+       그래서 문장 꼴은 두 자리에서만 씁니다 —
+         ① 문장을 먼저 보라고 한 대회 (반 클라이번)
+         ② 네 꼴이 <b>한 명도</b> 못 읽었을 때
+       이러면 기존 대회의 결과는 한 글자도 바뀌지 않습니다. */
+  if (opt.proseFirst || !best.got.length) {
+    const prose = parseProse(wt);
+    const top3 = ['1', '2', '3'].filter(r => prose.some(p => p.rank === r)).length;
+    if (opt.proseFirst ? top3 >= 2 : prose.length > 0) {
+      best = { how: '문장', got: prose };
+    }
+  }
 
   /* 이름 같은 것이 두 번 나오면 하나로 */
   const seen = new Set(), list = [];
@@ -568,8 +732,15 @@ async function save(rows) {
   /* 원문 그대로 보기 — --raw=9 (쇼팽 9회) · --raw=tchaikovsky */
   if (RAW) {
     let title;
+    /* 「cliburn16」처럼 <b>대회 이름＋회차</b>도 받습니다 —
+       회차별 문서를 눈으로 볼 수 있어야 짜임을 고칠 수 있습니다. */
+    const mm = /^([a-z-]+?)(\d{1,2})$/.exec(RAW);
     if (/^\d+$/.test(RAW)) title = COMPS[0].title(+RAW);
-    else {
+    else if (mm && COMPS.some(x => x.key === mm[1])) {
+      const c = COMPS.find(x => x.key === mm[1]);
+      const no = +mm[2];
+      title = c.titles ? c.titles(no)[0] : c.title(no);
+    } else {
       const c = COMPS.find(x => x.key === RAW);
       if (!c) { console.log('그런 대회가 없습니다 : ' + RAW); return; }
       title = c.title();
@@ -578,7 +749,7 @@ async function save(rows) {
     try {
       const wt = await raw(title);
       console.log(`길이 ${wt.length} 글자\n`);
-      const i = wt.search(/following prizes|\{\|[^]*?(prize|year)/i);
+      const i = wt.search(/following prizes|won by|gold medal|\{\|[^]*?(prize|year)/i);
       console.log(i >= 0 ? wt.slice(i, i + 3000) : wt.slice(0, 3000));
     } catch (e) {
       console.log('받지 못했습니다 —', e.message);
@@ -599,23 +770,40 @@ async function save(rows) {
   for (const comp of targets) {
     console.log(`── ${comp.nameKo} (${comp.key})`);
 
-    /* ① 회차별 문서 (쇼팽) ─────────────────────────── */
-    if (comp.kind === 'per-edition') {
+    /* ① 회차별 문서 (쇼팽 · 반 클라이번) ─────────────── */
+    if (comp.kind === 'per-edition' || comp.kind === 'per-edition-word') {
+      const proseFirst = comp.kind === 'per-edition-word';
       let ok = 0, fail = 0, total = 0, saved = 0;
       const bad = [];
+      const gotKey = new Set();      /* 「연도|등수」 — 본 문서와 겹침 막기 */
       for (let no = 1; no <= comp.editions; no++) {
-        const title = comp.title(no);
-        let wt = '';
-        try { wt = await raw(title); }
-        catch (e) {
-          console.log(`   제${String(no).padStart(2)}회  ★ 문서를 받지 못했습니다`);
-          fail++; bad.push(no); await sleep(600); continue;
+        /* ★ 문서 이름 후보를 차례로 두드립니다.
+             회마다 이름 짜임이 다를 수 있어, 하나가 없다고 그 회를
+             놓치면 안 됩니다. */
+        const names = comp.titles ? comp.titles(no) : [comp.title(no)];
+        let wt = '', title = names[0], hit = false;
+        for (const t0 of names) {
+          try {
+            const got = await raw(t0);
+            await sleep(600);
+            /* ★ 「#REDIRECT [[…]]」는 <b>넘겨보내기</b>일 뿐 내용이 없습니다.
+                 「1962 Van Cliburn…」처럼 본 문서로 넘겨보내는 이름이
+                 흔해서, 이것을 받아들이면 같은 본 문서를 열일곱 번
+                 읽고 회차마다 같은 이름이 나옵니다. */
+            if (/^\s*#\s*(REDIRECT|넘겨주기)/i.test(got.slice(0, 40))) continue;
+            wt = got; title = t0; hit = true; break;
+          } catch (e) { await sleep(400); }
         }
-        await sleep(600);
-        const year = comp.years[no] || 0;
-        const { how, list } = parseAll(wt);
+        if (!hit) {
+          console.log(`   제${String(no).padStart(2)}회  ★ 문서를 받지 못했습니다`
+            + (names.length > 1 ? `  (후보 ${names.length}개 모두)` : ''));
+          fail++; bad.push(no); continue;
+        }
+        const year = (comp.years && comp.years[no]) || 0;
+        const { how, list } = parseAll(wt, { proseFirst });
         const top3 = ['1', '2', '3'].filter(r => list.some(p => p.rank === r)).length;
         const good = top3 === 3;
+        list.forEach(p => { if (year && p.rank) gotKey.add(year + '|' + p.rank); });
         if (good) ok++; else { fail++; bad.push(no); }
         total += list.length;
         console.log(`   제${String(no).padStart(2)}회 ${year || '????'}  ${good ? '읽음' : '★못읽음'}`
@@ -636,6 +824,34 @@ async function save(rows) {
           if (list.length > 4) console.log(`            … 그리고 ${list.length - 4}명`);
         }
       }
+      /* ★ 본 문서도 <b>함께</b> 봅니다 (2026-08-17)
+           회차 문서가 없거나 문장이 다른 회를, 본 문서의 연도별 표가
+           채워 줍니다. 이미 얻은 「연도|등수」는 건너뛰므로 회차 문서
+           쪽이 늘 이깁니다 — 그쪽이 더 자세합니다. */
+      if (comp.mainTitle) {
+        let mwt = '';
+        try { mwt = await raw(comp.mainTitle); await sleep(600); }
+        catch (e) { console.log(`   본 문서를 받지 못했습니다 — ${e.message}`); }
+        if (mwt) {
+          const { how, list } = parseAll(mwt);
+          const add = list.filter(p => p.year && p.rank && !gotKey.has(p.year + '|' + p.rank));
+          console.log(`   본 문서 「${how}」에서 ${list.length}명 · 새로 더할 것 ${add.length}명`);
+          if (DUMP && add.length) {
+            add.slice(0, 10).forEach(p =>
+              console.log(`            ${p.year}  ${p.rank}위  ${p.name}${p.country ? ' · ' + p.country : ''}`));
+            if (add.length > 10) console.log(`            … 그리고 ${add.length - 10}명`);
+          }
+          total += add.length;
+          if (SAVE && add.length) {
+            try {
+              const rows = toRows(comp, add,
+                `https://en.wikipedia.org/wiki/${encodeURIComponent(comp.mainTitle)}`);
+              saved += await save(rows);
+            } catch (e) { console.log(`   ★ 본 문서분을 담지 못했습니다 — ${e.message}`); }
+          }
+        }
+      }
+
       console.log(`   ▶ ${comp.editions}회 가운데 ${ok}회 읽음 · 입상자 ${total}명`);
       if (bad.length) console.log(`     못 읽은 회 : ${bad.join(' · ')}`);
       if (SAVE) console.log(`     담음 : ${saved}건`);
