@@ -239,7 +239,7 @@
       if (LEAD[sec]) info = { list: info.list, name: info.name, lead: LEAD[sec] };
       start(info);
       linkPersons(id);
-      if (sec === '공연정보') { concertHead(id); linkCast(id); }
+      if (sec === '공연정보') { concertHead(id); linkOrgs(id); linkCast(id); }
     })
     .catch(function(){ start(FALLBACK); });
 
@@ -449,6 +449,61 @@
       /* 공연 안내표(spConcert) 바로 아래에 놓습니다 */
       var head = document.getElementById('spConcert');
       if (head && head.parentNode) head.parentNode.insertBefore(wrap, head.nextSibling);
+      else body.parentNode.insertBefore(wrap, body);
+    }, 120);
+  }
+
+  /* ============================================================
+     연주 단체 보여 주기 (2026-08-16)
+
+     ★ 공연 제목에서 단체 이름을 찾아 단체DB 와 이어 두었습니다
+       (oc_spot_org). 출연자(사람)와는 <b>따로</b> 보여 줍니다 —
+       「빈 필하모닉」과 「정명훈」은 성격이 다릅니다.
+     ★ 자료가 없으면 아무것도 그리지 않습니다.
+     ============================================================ */
+  function linkOrgs(vid){
+    if(!vid) return;
+    fetch(SB + '/rest/v1/oc_spot_org?select=org:org_id(id,name_ko,name_en)'
+          + '&spot_id=eq.' + encodeURIComponent(vid) + '&limit=8',
+          { headers:{ apikey:KEY, Authorization:'Bearer ' + KEY } })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){
+        var list = (rows||[]).filter(function(x){ return x.org && x.org.id; });
+        if(!list.length) return;
+        drawOrgs(list.map(function(x){ return x.org; }));
+      })
+      .catch(function(){});
+  }
+
+  function drawOrgs(orgs){
+    var tries = 0;
+    var tick = setInterval(function(){
+      var body = document.querySelector('.board-view .bv-body')
+              || document.querySelector('.board-view');
+      tries++;
+      if(!body){ if(tries > 40) clearInterval(tick); return; }
+      clearInterval(tick);
+      if(document.getElementById('spOrgs')) return;
+
+      var wrap = document.createElement('div');
+      wrap.id = 'spOrgs';
+      wrap.className = 'sp-cast';        /* 출연자와 같은 짜임을 씁니다 */
+      var h = '<div class="sp-ph">연주 단체</div>'
+        + '<p class="sp-cnote">이름을 누르면 단체 정보로 갑니다.</p>'
+        + '<div class="sp-clist">';
+      orgs.forEach(function(o){
+        var nm = o.name_ko || o.name_en || '';
+        h += '<a class="sp-cname" href="/db/org-view.html?id=' + encodeURIComponent(o.id) + '">'
+          + esc(nm) + '<i class="sp-cgo" aria-hidden="true">&rsaquo;</i></a>';
+      });
+      h += '</div>';
+      wrap.innerHTML = h;
+
+      /* 출연자(spCast) 바로 위에 — 단체가 먼저, 사람이 그다음입니다 */
+      var cast = document.getElementById('spCast');
+      var head = document.getElementById('spConcert');
+      if (cast && cast.parentNode) cast.parentNode.insertBefore(wrap, cast);
+      else if (head && head.parentNode) head.parentNode.insertBefore(wrap, head.nextSibling);
       else body.parentNode.insertBefore(wrap, body);
     }, 120);
   }

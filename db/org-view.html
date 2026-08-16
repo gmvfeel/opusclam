@@ -231,6 +231,19 @@
         </section>
       </div>
 
+      <!-- ★★ 2026-08-16 · 공연 일정 (파트너 아이디어)
+             공연 제목에서 단체 이름을 찾아 이어 두었습니다(oc_spot_org).
+             단체 화면에서 <b>이 단체가 언제 어디서 연주하는지</b> 볼 수
+             있게 합니다. 해외 공연과 국내 내한공연이 <b>함께</b> 보입니다.
+           ★ 자료가 없으면 통째로 감춥니다. -->
+      <section class="pv-sec" id="ovStageSec" hidden>
+        <div class="pv-sechead">
+          <h2 class="pv-h">공연 일정 <span class="pv-h-en">Concerts</span></h2>
+          <span class="pv-auto">공연정보에서 자동으로 이었습니다</span>
+        </div>
+        <div id="ovStage"></div>
+      </section>
+
       <section class="pv-sec">
         <div class="pv-sechead"><h2 class="pv-h">사진 · 갤러리</h2><span class="pv-auto">자동 수집 영역</span></div>
         <div class="pv-carousel">
@@ -992,6 +1005,61 @@ document.querySelectorAll('.tabs').forEach(function(t){
   if(id){ var _eb=document.querySelector('.pv-enhance'); if(_eb) _eb.setAttribute('href','write.html?mode=enhance&db=org&id='+encodeURIComponent(id)); }
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fact(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
+  /* ★★ 공연 일정 (2026-08-16) ─────────────────────────────
+     oc_spot_org 로 이어진 공연을 보여 줍니다.
+     ★ 해외 공연과 국내 내한공연이 <b>함께</b> 보입니다 — 이런 것을
+       해 놓은 곳이 국내에 거의 없습니다.
+     ★ <b>앞으로 열릴 공연을 먼저</b> — 지난 것은 기록이지만
+       앞으로 열릴 것은 가서 볼 수 있습니다.
+     ★ 자료가 없으면 통째로 감춘 채로 둡니다. */
+  (function orgStage(){
+    var sec=document.getElementById('ovStageSec');
+    var box=document.getElementById('ovStage');
+    if(!sec||!box) return;
+
+    fetch(URL+'/rest/v1/oc_spot_org?select=spot:spot_id(id,title,venue_name,city,'
+          +'date_from,date_to,region)&org_id=eq.'+encodeURIComponent(id)+'&limit=80',
+          {headers:H})
+      .then(function(r){return r.ok?r.json():[];})
+      .then(function(rows){
+        var list=(rows||[]).filter(function(x){return x.spot&&x.spot.id;});
+        if(!list.length) return;
+
+        var seen={},uniq=[];
+        list.forEach(function(x){ if(seen[x.spot.id])return; seen[x.spot.id]=1; uniq.push(x.spot); });
+
+        var today=new Date().toISOString().slice(0,10);
+        uniq.sort(function(a,b){
+          var ea=(a.date_to||a.date_from||''), eb=(b.date_to||b.date_from||'');
+          var fa=ea>=today?0:1, fb=eb>=today?0:1;
+          if(fa!==fb) return fa-fb;
+          return fa===0
+            ? String(a.date_from||'').localeCompare(String(b.date_from||''))
+            : String(b.date_from||'').localeCompare(String(a.date_from||''));
+        });
+
+        var soonN=uniq.filter(function(o){return (o.date_to||o.date_from||'')>=today;}).length;
+        box.innerHTML =
+          (soonN ? '<p class="ov-scount">앞으로 열릴 공연 '+soonN+'건</p>' : '')
+          + uniq.slice(0,15).map(function(o){
+            var d=String(o.date_from||'').slice(0,10).replace(/-/g,'.');
+            var dt=String(o.date_to||'').slice(0,10).replace(/-/g,'.');
+            var when=d+(dt&&dt!==d?' ~ '+dt.slice(5):'');
+            var soon=(o.date_to||o.date_from||'')>=today;
+            var where=[o.venue_name,o.city].filter(Boolean).join(' · ');
+            return '<a class="pv-stage" href="/spot/spot-view.html?id='+encodeURIComponent(o.id)
+              +'&sec='+encodeURIComponent('공연정보')+'">'
+              +'<span class="pv-sday'+(soon?' is-soon':'')+'">'+(soon?'예정':'지난')+'</span>'
+              +'<span class="pv-sbody"><b>'+esc(o.title||'')+'</b>'
+              +'<span>'+esc([when,where].filter(Boolean).join(' · '))+'</span></span>'
+              +(o.region==='해외'?'<span class="pv-srole">해외</span>':'')
+              +'</a>';
+          }).join('');
+        sec.hidden=false;
+      })
+      .catch(function(){});
+  })();
+
   fetch(URL+'/rest/v1/orgs?select=*&id=eq.'+encodeURIComponent(id),{headers:H}).then(function(r){return r.json();})
    .then(function(a){if(!a||!a.length)return;var o=a[0];var nm=(o.name_ko||'').trim();
      var por=document.querySelector('.pv-portrait span');if(por)por.textContent=nm?nm[0]:'?';
