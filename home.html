@@ -317,7 +317,14 @@
        위에서부터 쌓게 두고 위 여백만 조금 둡니다 —
        좁은 화면(980px 아래)은 이미 이렇게 하고 있었습니다. */
   .fullmenu-body{position:relative;z-index:1;flex:1 1 auto;display:flex;align-items:flex-start;padding:30px 0 64px;overflow-y:auto;min-height:0}
-  .fullmenu-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:44px;width:100%}
+/* ★ 2026-08-16 · 칸 사이를 넓혔습니다 44 → 64px (파트너 지시)
+     여섯 칸이 빡빡해 옆 칸 글이 이어져 보였습니다. 세로 여백은
+     그대로 두고 <b>가로만</b> 벌립니다(column-gap).
+   ★ home.html 과 style.css <b>두 곳</b>에 같은 규칙이 있습니다 —
+     home.html 은 style.css 를 부르지 않아 제 짜임을 갖습니다.
+     한쪽만 고치면 메인과 서브 화면의 전체 메뉴가 달라집니다. */
+  .fullmenu-grid{display:grid;grid-template-columns:repeat(6,1fr);
+    column-gap:64px;row-gap:44px;width:100%}
   .fm-col .fm-num{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--orange);margin-bottom:12px}
   .fm-col h4{font-weight:800;font-size:20px;letter-spacing:-.01em;color:#fff;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.2)}
   .fm-col a{display:block;font-size:13px;color:rgba(255,255,255,.6);padding:8px 0;transition:color .18s ease,transform .18s ease;position:relative;border-bottom:1px solid rgba(255,255,255,.07)}
