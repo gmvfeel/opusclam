@@ -446,9 +446,12 @@
       });
       h += '</div>';
       wrap.innerHTML = h;
-      /* 공연 안내표(spConcert) 바로 아래에 놓습니다 */
+      /* ★ 자리 — <b>단체 뒤</b>, 없으면 공연 안내표 뒤.
+           단체(spOrgs)가 아직 안 왔을 수도 있으므로 둘 다 봅니다. */
+      var orgs = document.getElementById('spOrgs');
       var head = document.getElementById('spConcert');
-      if (head && head.parentNode) head.parentNode.insertBefore(wrap, head.nextSibling);
+      if (orgs && orgs.parentNode) orgs.parentNode.insertBefore(wrap, orgs.nextSibling);
+      else if (head && head.parentNode) head.parentNode.insertBefore(wrap, head.nextSibling);
       else body.parentNode.insertBefore(wrap, body);
     }, 120);
   }
@@ -499,11 +502,14 @@
       h += '</div>';
       wrap.innerHTML = h;
 
-      /* 출연자(spCast) 바로 위에 — 단체가 먼저, 사람이 그다음입니다 */
-      var cast = document.getElementById('spCast');
+      /* ★ 2026-08-16 (두 번째) · <b>차례가 뒤바뀌었습니다</b>
+           「단체 → 사람」으로 두려 했는데 「사람 → 단체」로 나왔습니다.
+           linkCast 가 먼저 끝나 spCast 가 이미 있었고, 그 <b>앞</b>에
+           넣었는데도 순서가 틀어졌습니다.
+         ▶ 자리를 spConcert(공연 안내표) <b>바로 뒤</b>로 못박습니다.
+           그러면 누가 먼저 끝나든 단체가 위에 옵니다. */
       var head = document.getElementById('spConcert');
-      if (cast && cast.parentNode) cast.parentNode.insertBefore(wrap, cast);
-      else if (head && head.parentNode) head.parentNode.insertBefore(wrap, head.nextSibling);
+      if (head && head.parentNode) head.parentNode.insertBefore(wrap, head.nextSibling);
       else body.parentNode.insertBefore(wrap, body);
     }, 120);
   }
