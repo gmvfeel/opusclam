@@ -175,11 +175,24 @@ function parseCast(text) {
   console.log('');
 
   /* 아직 안 부른 공연을 가져옵니다.
-     ★ 최근 것부터 — 지난 공연보다 앞으로 열릴 것이 쓸모 있습니다. */
-  const todo = await sb('spot?select=id,kopis_id,title'
-    + '&section=eq.' + encodeURIComponent('공연정보')
-    + '&kopis_id=not.is.null&cast_fetched_at=is.null'
-    + '&order=date_from.desc.nullslast&limit=' + LIMIT);
+     ★ 최근 것부터 — 지난 공연보다 앞으로 열릴 것이 쓸모 있습니다.
+     ★★ Supabase 는 <b>한 번에 200줄까지</b>만 줍니다. limit 을 250 으로
+        적어도 200건만 왔습니다(첫 시험에서 확인). Range 머리말로
+        나눠 받아야 요청한 만큼 채워집니다. */
+  const todo = [];
+  for (let from = 0; from < LIMIT; from += 200) {
+    const to = Math.min(from + 199, LIMIT - 1);
+    const part = await fetch(SB_URL + '/rest/v1/spot?select=id,kopis_id,title'
+      + '&section=eq.' + encodeURIComponent('공연정보')
+      + '&kopis_id=not.is.null&cast_fetched_at=is.null'
+      + '&order=date_from.desc.nullslast', {
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
+                 Range: `${from}-${to}` },
+    }).then((r) => (r.ok ? r.json() : []));
+    if (!part || !part.length) break;      /* 0행일 때만 멈춥니다 */
+    todo.push(...part);
+    if (part.length < to - from + 1) break;
+  }
 
   if (!todo || !todo.length) {
     console.log('부를 공연이 없습니다. 모두 마쳤습니다.');
