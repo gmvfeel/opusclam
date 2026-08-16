@@ -36,9 +36,16 @@
 
 .pv2{max-width:900px;margin:0 auto;padding:36px 24px 90px}
 
-/* ── 영상 ────────────────────────────────────────────── */
-.pv-video{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;
-  overflow:hidden;background:var(--ink,#0E1230);margin:0 0 22px}
+/* ── 영상 ──────────────────────────────────────────────
+   ★ 2026-08-16 · 영상<b>만</b> 넓힙니다 (파트너 지시)
+     852 → 1,092px. 글은 852px 그대로 둡니다 — 한 줄이 너무 길면
+     눈이 다음 줄 첫 글자를 찾기 어려워집니다(40~55자가 읽기 좋습니다).
+   ★ 가운데를 지키며 양옆으로만 벌립니다. 화면이 좁으면 저절로
+     본문 폭에 맞춰집니다. */
+.pv-video{position:relative;width:min(1092px, calc(100vw - 48px));
+  margin:0 auto 22px;left:50%;transform:translateX(-50%);
+  aspect-ratio:16/9;border-radius:14px;
+  overflow:hidden;background:var(--ink,#0E1230)}
 .pv-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 
 /* ── 머리 ────────────────────────────────────────────── */
@@ -120,26 +127,27 @@ html[data-theme="dark"] .pv-msg.err{background:#2a1616;color:#e8a0a0;border-colo
 .pv-load{padding:80px 20px;text-align:center;color:var(--text-3);font-size:14px}
 
 /* ── 맨 아래 돌아가기 (2026-08-16) ────────────────────────
-   ★ 파트너 지적 — 조언을 남기고 나면 <b>갈 곳이 없었습니다.</b>
-     길잡이(맨 위)뿐이었는데, 조언 칸까지 내려온 사람은 다시 위로
-     올라가야 했습니다.
-   ★ 「목록으로」를 왼쪽에, 「연주 올리기」를 오른쪽에 둡니다 —
-     조언을 남긴 사람이 <b>자기 연주도 올려 보고 싶어지는</b> 자리입니다. */
-.pv-back{display:flex;align-items:center;gap:10px;margin-top:40px;
+   ★ 2026-08-16 (두 번째) · 다른 뷰 화면과 <b>같은 방식</b>으로 (파트너 지시)
+     넓은 화면에서는 <b>왼쪽에 붙어 따라다니는 세로 탭</b>(.pv-sidetabs)을
+     씁니다 — 핫토픽·오퍼니티 등 게시판 뷰가 다 그렇습니다. 짜임은
+     assets/board.css 에 이미 있으므로 마크업만 두면 됩니다.
+   ★ 좁은 화면에서는 세로 탭이 자리를 가려 감춰집니다. 그래서 맨 아래
+     단추를 <b>남겨</b> 둡니다(.pv-tolist-m 과 같은 몫). */
+.pv-back{display:none;align-items:center;gap:10px;margin-top:40px;
   padding-top:24px;border-top:1px solid var(--line)}
-.pv-back a{display:inline-flex;align-items:center;gap:7px;height:46px;padding:0 20px;
+.pv-back a{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  flex:1;height:46px;padding:0 20px;
   border-radius:12px;font-size:13.5px;font-weight:700;text-decoration:none;
   border:1px solid var(--line-2);background:var(--paper);color:var(--text-2);
   transition:border-color .15s ease,color .15s ease}
 .pv-back a:hover{border-color:var(--violet-2);color:var(--violet-2)}
-.pv-back a.go{margin-left:auto;background:var(--violet-2);border-color:var(--violet-2);color:#fff}
+.pv-back a.go{background:var(--violet-2);border-color:var(--violet-2);color:#fff}
 .pv-back a.go:hover{background:#4a3d7e;color:#fff}
 .pv-back svg{width:15px;height:15px}
 
-@media (max-width:520px){
-  .pv-back{flex-direction:column;align-items:stretch}
-  .pv-back a{justify-content:center;margin-left:0}
-}
+/* 세로 탭이 사라지는 폭(board.css 의 1040px)부터 아래 단추를 보입니다 */
+@media (max-width:1040px){ .pv-back{display:flex} }
+@media (max-width:520px){ .pv-back{flex-direction:column;align-items:stretch} }
 
 @media (max-width:620px){
   .pv2{padding:24px 16px 80px}
@@ -176,6 +184,22 @@ html[data-theme="dark"] .pv-msg.err{background:#2a1616;color:#e8a0a0;border-colo
 <main class="pv2">
   <div id="body"><div class="pv-load">불러오는 중…</div></div>
 </main>
+
+<!-- ★ 2026-08-16 · 왼쪽에 붙어 따라다니는 세로 탭
+       다른 게시판 뷰 화면(핫토픽·오퍼니티 등)과 같은 방식입니다.
+       짜임은 assets/board.css 에 이미 있어 마크업만 두면 됩니다.
+     ★ 1040px 아래에서는 board.css 가 이것을 감춥니다. 그때는 본문
+       맨 아래 단추(.pv-back)가 대신 보입니다. -->
+<div class="pv-sidetabs">
+  <a class="pv-listtab" href="/community/play.html" aria-label="목록으로 가기">
+    <span class="pv-listtab-arrow">&#8249;</span>
+    <span class="pv-listtab-text">목록</span>
+  </a>
+  <a class="pv-writetab" href="/community/play-write.html" aria-label="연주 올리기">
+    <span class="pv-writetab-ic">&#43;</span>
+    <span class="pv-writetab-text">올리기</span>
+  </a>
+</div>
 
 <div id="oc-bigban"></div>
 <div id="oc-footer"></div>
