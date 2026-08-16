@@ -894,19 +894,37 @@ html[data-theme="dark"] .board-card:hover{background:#000}
      흐리게 두어, 눌러도 갈 데가 없다는 것이 보이게 합니다. */
 .sp-cast{margin:26px 0 4px;padding-top:20px;border-top:1px solid var(--line)}
 .sp-clist{display:flex;flex-wrap:wrap;gap:8px}
-.sp-cname{display:inline-flex;align-items:baseline;gap:6px;
-  padding:8px 14px;border:1px solid var(--line-2);border-radius:18px;
-  font-size:13.5px;font-weight:600;color:var(--violet-2);text-decoration:none;
+/* ★ 2026-08-16 (두 번째) · <b>눈에 잘 안 띈다</b>는 지적 (파트너)
+     이어진 이름과 아닌 이름이 얼핏 비슷해 보였습니다.
+   ▶ 이어진 것은 <b>바탕에 옅은 색</b>을 깔고 테두리도 보라로 둡니다.
+     안 이어진 것은 테두리를 <b>점선</b>으로 — 누를 수 없다는 것이
+     모양으로도 드러납니다. */
+.sp-cname{display:inline-flex;align-items:center;gap:6px;
+  padding:9px 15px;border:1px solid var(--violet-2);border-radius:18px;
+  background:rgba(124,99,176,.09);
+  font-size:13.5px;font-weight:700;color:var(--violet-2);text-decoration:none;
   transition:background .15s ease,border-color .15s ease,color .15s ease}
 .sp-cname:hover{background:#322152;border-color:#322152;color:#fff}
-.sp-cname.is-plain{color:var(--text-2);background:var(--paper-2);border-color:var(--line)}
+/* 이어지지 않은 이름 — 점선 테두리에 채움 없음 */
+.sp-cname.is-plain{color:var(--text-3);background:none;
+  border:1px dashed var(--line-2);font-weight:600;cursor:default}
+html[data-theme="dark"] .sp-cname{background:rgba(159,140,214,.14)}
 .sp-crole{font-size:11.5px;font-weight:500;color:var(--text-3)}
 .sp-cname:hover .sp-crole{color:rgba(255,255,255,.66)}
 /* ★ 이어진 이름에 붙는 화살표 — 색이 아니라 <b>모양</b>으로 알립니다.
      색만 쓰면 색맹인 분이 구분할 수 없습니다. */
-.sp-cgo{font-style:normal;font-weight:800;margin-left:1px;opacity:.55}
-.sp-cname:hover .sp-cgo{opacity:.9}
-.sp-cnote{margin:0 0 12px;font-size:12.5px;color:var(--text-3)}
+/* 화살표 — 동그라미 안에 넣어 「누르는 것」임을 분명히 */
+.sp-cgo{font-style:normal;font-weight:800;font-size:13px;line-height:1;
+  width:17px;height:17px;border-radius:50%;display:grid;place-items:center;
+  background:var(--violet-2);color:#fff;padding-right:1px;margin-left:1px}
+.sp-cname:hover .sp-cgo{background:rgba(255,255,255,.28)}
+/* 안내 — 흐려서 안 읽혔습니다. 글자를 키우고 색을 올립니다 */
+.sp-cnote{display:flex;align-items:center;gap:6px;margin:0 0 13px;
+  font-size:13px;font-weight:600;color:var(--text-2)}
+.sp-cnote::before{content:'';flex:0 0 auto;width:15px;height:15px;border-radius:50%;
+  background:var(--violet-2);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 100 20 10 10 0 000-20z'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 100 20 10 10 0 000-20z'/%3E%3C/svg%3E") center/contain no-repeat}
 @media (max-width:560px){
   .sp-clist{gap:6px}
   .sp-cname{padding:7px 12px;font-size:12.5px}
