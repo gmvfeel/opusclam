@@ -105,14 +105,63 @@
   /* 달력 아래 빈 자리에 놓이는 덩어리 (관련사이트) */
   .sp-under{margin-top:34px}
 
+
+  /* ══ 이번 주 공연 (2026-08-16) ═════════════════════════════
+     ★ 카드가 아니라 <b>목록</b>입니다. 「무엇이 있나」를 훑는 자리이지
+       하나를 골라 보는 자리가 아닙니다.
+     ★ 날짜 칸을 왼쪽에 세로로 세웁니다 — 눈이 날짜를 따라 내려가며
+       「오늘·내일·모레」를 잡습니다. */
+  .wk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+  .wk a{display:flex;align-items:stretch;gap:0;text-decoration:none;
+    border:1px solid var(--line);border-radius:11px;overflow:hidden;
+    background:var(--paper);transition:border-color .15s ease,box-shadow .15s ease}
+  .wk a:hover{border-color:var(--violet-2);box-shadow:0 8px 20px -14px rgba(30,20,60,.35)}
+
+  .wk .wd{flex:0 0 66px;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:1px;padding:12px 6px;background:var(--paper-2);
+    border-right:1px solid var(--line)}
+  .wk .wd b{font-family:var(--display);font-size:19px;font-weight:900;
+    letter-spacing:-.04em;color:var(--text);line-height:1;font-variant-numeric:tabular-nums}
+  .wk .wd i{font-style:normal;font-size:10.5px;color:var(--text-3)}
+  /* 오늘·내일은 <b>글자로</b> — 숫자만 보면 세어 봐야 합니다 */
+  .wk a.is-today .wd{background:var(--ink,#0E1230)}
+  .wk a.is-today .wd b{color:#C9A94E;font-size:13.5px;font-family:inherit;font-weight:800}
+  .wk a.is-today .wd i{color:rgba(255,255,255,.55)}
+  .wk a.is-tmr .wd{background:var(--paper-3)}
+  .wk a.is-tmr .wd b{font-size:13.5px;font-family:inherit;font-weight:800;color:var(--violet-2)}
+
+  .wk .wb{flex:1;min-width:0;padding:11px 13px;display:flex;flex-direction:column;
+    justify-content:center;gap:3px}
+  .wk .wt{font-size:13px;font-weight:700;letter-spacing:-.02em;color:var(--text);
+    line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .wk a:hover .wt{color:var(--violet-2)}
+  .wk .wp{font-size:11.5px;color:var(--text-3);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wk .wp em{font-style:normal;color:var(--violet-2);font-weight:700;margin-right:5px}
+
+  .wk-range{font-size:12px;color:var(--text-3);white-space:nowrap}
+
+  @media (max-width:980px){ .wk{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media (max-width:620px){ .wk{grid-template-columns:1fr} }
+
   /* ── 국제 콩쿨 아카이브 (2026-08-15) ──────────────────────
      대회마다 <b>최근 우승자</b>와 담긴 사람 수를 보여 줍니다.
      지나간 기록이라 목록 모양보다 이 편이 뜻이 있습니다. */
-  .sp-ca{display:flex;flex-direction:column;gap:1px;background:var(--line);
-    border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  .sp-ca a{display:flex;align-items:center;gap:12px;padding:13px 15px;
-    background:var(--paper);text-decoration:none;transition:background .15s ease}
-  .sp-ca a:hover{background:#322152}
+  /* ★ 2026-08-16 · <b>두 칸 격자</b>로 바꿨습니다 (파트너 지적)
+       한 줄씩 다섯이면 340px 를 먹는데, 담긴 것은 「대회명·연도·우승자·
+       인원」뿐이라 자리에 견줘 알맹이가 적었습니다.
+       옆 「관련사이트」는 네 줄에 비슷한 높이인데 소개문까지 있습니다.
+     ▶ 둘씩 놓으면 세 줄(≈200px)로 줄고, 대회 이름이 짧아 한 줄에
+       둘이 넉넉히 들어갑니다.
+     ★ 낱장 카드 사이를 1px 선으로 잇던 방식(gap:1px + 바탕색)은
+       격자에서 쓸 수 없습니다 — 줄 끝에 선이 떠 보입니다.
+       카드마다 테두리를 두는 방식으로 바꿉니다. */
+  .sp-ca{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .sp-ca a{display:flex;align-items:center;gap:11px;padding:12px 14px;
+    background:var(--paper);text-decoration:none;border:1px solid var(--line);
+    border-radius:10px;transition:background .15s ease,border-color .15s ease}
+  .sp-ca a:hover{background:#322152;border-color:#322152}
   .sp-ca a:hover .can,.sp-ca a:hover .caw,.sp-ca a:hover .cac{color:#fff}
   .sp-ca .cay{flex:0 0 auto;font-family:var(--display);font-size:12px;font-weight:800;
     color:#C9A94E;letter-spacing:-.02em;font-variant-numeric:tabular-nums;min-width:34px}
@@ -122,8 +171,12 @@
   .sp-ca .caw{display:block;font-size:11.5px;color:var(--text-3);margin-top:2px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .sp-ca .cac{flex:0 0 auto;font-size:11px;color:var(--text-3);white-space:nowrap}
-  .sp-ca .caempty{padding:20px;text-align:center;font-size:13px;color:var(--text-3);
-    background:var(--paper)}
+  .sp-ca .caempty{grid-column:1/-1;padding:20px;text-align:center;font-size:13px;
+    color:var(--text-3);background:var(--paper);border:1px solid var(--line);border-radius:10px}
+  @media (max-width:560px){
+    /* 좁은 화면에서는 한 줄씩 — 둘씩 놓으면 대회 이름이 잘립니다 */
+    .sp-ca{grid-template-columns:1fr}
+  }
 
   @media (max-width:980px){
     .sp-two64{grid-template-columns:minmax(0,1fr);gap:38px}
@@ -371,6 +424,33 @@ function ocN(tpl) {
         </div>
       </div>
       <div class="cm-track as-poster" id="ciBox"></div>
+    </section>
+
+    <!-- ★★ 2026-08-16 · 이번 주 공연 (파트너와 정한 새 자리) ★★
+         ─────────────────────────────────────────────────────
+         왜 필요한가
+           아래 달력은 「2026년 8월 공연 651건」을 보여 줍니다. 그런데
+           사람들이 알고 싶은 것은 <b>「이번 주말에 뭐 볼까」</b>입니다.
+           지금은 날짜를 하나씩 눌러 봐야 알 수 있습니다.
+           정보SPOT 의 존재 이유가 「지금 쓸모 있는 정보」인데, 정작
+           <b>가장 가까운 것</b>을 찾기가 번거로웠습니다.
+
+         어떻게 만드나
+           · 오늘부터 <b>이레</b> 안에 열리는 공연만
+           · 「오늘·내일」은 <b>글자로</b> — 날짜만 보면 세어 봐야 합니다
+           · <b>국내를 먼저</b> — 국내 이용자가 주 이용자입니다
+           · 지난 공연은 뺍니다
+         ★ 없으면 이 덩어리를 <b>통째로 감춥니다.</b> 제목만 남고 비면
+           고장으로 보입니다(연휴 뒤나 비수기에 그럴 수 있습니다). -->
+    <section class="cm-sec" id="wkSec" hidden>
+      <div class="cm-head">
+        <span class="cm-title">이번 주 공연<em>THIS WEEK</em></span>
+        <div class="cm-headright">
+          <span class="wk-range" id="wkRange"></span>
+          <a class="cm-more" href="/spot/concert.html">VIEW MORE +</a>
+        </div>
+      </div>
+      <div class="wk" id="wkList"></div>
     </section>
 
     <!-- ★ 2026-08-16 · 「새로 등록된 정보」를 없앴습니다 (개편)
@@ -633,6 +713,106 @@ function ocN(tpl) {
       view:VIEW, label:'음원·동영상',
       emptyText:'등록된 음원·동영상이 아직 없습니다.'
     });
+
+    /* ── 이번 주 공연 (2026-08-16) ────────────────────────
+       ★ 오늘부터 <b>이레</b> 안에 열리는 공연을 아홉 건 보여 줍니다.
+       ★ 「이 달 651건」과 다른 점 — 지난 것을 빼고 <b>가장 가까운</b>
+         것만 고릅니다. 사람들이 알고 싶은 것은 「이번 주말에 뭐 볼까」
+         이지 「이 달에 몇 건인가」가 아닙니다.
+       ★ 국내를 먼저 놓습니다 — 국내 이용자가 주 이용자입니다.
+         (한 번에 받아 화면에서 가릅니다. 두 번 부르면 요청이 늡니다.)
+       ★ 여러 날에 걸친 공연은 <b>시작일</b>로 셉니다. 이미 시작해
+         진행 중인 것도 「오늘」로 잡아 넣습니다 — 오늘 볼 수 있으니까요. */
+    (function week() {
+      var sec = document.getElementById('wkSec');
+      var box = document.getElementById('wkList');
+      if (!sec || !box) return;
+
+      /* ★ 주소·열쇠·도우미를 <b>이 안에</b> 둡니다. 바깥에 있는 것들은
+           다른 덩어리 안에 갇혀 있어(각자 제 U·esc 를 갖습니다) 여기서
+           쓸 수 없습니다. 밖으로 끌어내면 그 덩어리들을 다 손봐야 하므로,
+           지금은 여기서 다시 적습니다. */
+      var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/';
+      var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+      var H = { apikey: K, Authorization: 'Bearer ' + K };
+      function esc(x) {
+        return String(x == null ? '' : x)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      function t(x) {
+        try { return (window.OCI18N && window.OCI18N.t) ? window.OCI18N.t(x) : x; }
+        catch (e) { return x; }
+      }
+
+      var now = new Date();
+      function ymd(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+             + '-' + String(d.getDate()).padStart(2, '0');
+      }
+      var today = ymd(now);
+      var end = new Date(now.getTime()); end.setDate(end.getDate() + 6);
+      var last = ymd(end);
+
+      var rangeEl = document.getElementById('wkRange');
+      if (rangeEl) {
+        rangeEl.textContent = (now.getMonth() + 1) + '월 ' + now.getDate() + '일 ~ '
+          + (end.getMonth() + 1) + '월 ' + end.getDate() + '일';
+      }
+
+      /* 오늘 안에 시작하거나, 이미 시작해 아직 안 끝난 것 */
+      var q = '?select=id,title,city,venue_name,date_from,date_to,region,category'
+            + '&section=eq.' + encodeURIComponent('공연정보')
+            + '&hidden=is.false'
+            + '&date_from=lte.' + last
+            + '&or=(date_to.gte.' + today + ',date_from.gte.' + today + ')'
+            + '&order=date_from.asc,id.asc&limit=120';
+
+      fetch(U + 'spot' + q, { headers: H })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (rows) {
+          rows = (rows || []).filter(function (x) {
+            /* ★ 변수 이름을 to 로 둡니다. t 로 두면 위에 있는 <b>낱말
+                 옮기는 함수 t()</b> 를 가려 버립니다 — 어제 콩쿠르 화면에서
+                 같은 실수를 했고, 그때는 화면이 통째로 멈췄습니다. */
+            var f = x.date_from, to = x.date_to || x.date_from;
+            if (!f) return false;
+            return to >= today && f <= last;     /* 이 이레와 겹치는 것 */
+          });
+          if (!rows.length) return;
+
+          /* 국내 먼저, 그다음 날짜순 */
+          rows.sort(function (a, b) {
+            var ka = (a.region === '해외') ? 1 : 0, kb = (b.region === '해외') ? 1 : 0;
+            if (ka !== kb) return ka - kb;
+            return String(a.date_from).localeCompare(String(b.date_from));
+          });
+
+          var DOW = ['일', '월', '화', '수', '목', '금', '토'];
+          box.innerHTML = rows.slice(0, 9).map(function (x) {
+            /* 이미 시작한 것은 오늘로 봅니다 */
+            var f = (x.date_from < today) ? today : x.date_from;
+            var dd = new Date(f + 'T00:00:00');
+            var gap = Math.round((dd - new Date(today + 'T00:00:00')) / 86400000);
+
+            var cls = gap === 0 ? ' is-today' : gap === 1 ? ' is-tmr' : '';
+            var big = gap === 0 ? esc(t('오늘')) : gap === 1 ? esc(t('내일')) : dd.getDate();
+            var sub = gap <= 1 ? (dd.getMonth() + 1) + '.' + dd.getDate()
+                               : esc(t(DOW[dd.getDay()]));
+
+            var where = [x.venue_name, x.city].filter(Boolean).join(' · ');
+            return '<a href="' + esc(VIEW) + '?id=' + encodeURIComponent(x.id) + '" class="' + cls.trim() + '">'
+              + '<span class="wd"><b>' + big + '</b><i>' + sub + '</i></span>'
+              + '<span class="wb">'
+              +   '<span class="wt">' + esc(x.title || '') + '</span>'
+              +   (where ? '<span class="wp">'
+                    + (x.region === '해외' ? '<em>' + esc(t('해외')) + '</em>' : '')
+                    + esc(where) + '</span>' : '')
+              + '</span></a>';
+          }).join('');
+          sec.hidden = false;
+        })
+        .catch(function () { /* 없으면 감춘 채로 */ });
+    })();
 
     /* ── 국제 콩쿨 아카이브 (2026-08-15 · 파트너 요청) ──────────
        ★ 다른 칸과 달리 <b>OCHub.board 를 쓰지 않습니다.</b>
