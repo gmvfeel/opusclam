@@ -404,6 +404,20 @@
         <div id="pvAwards"></div>
       </section>
 
+      <!-- ★★ 2026-08-16 · 출연 공연 (파트너 아이디어 2026-08-15)
+             공연정보에서 뽑은 출연자를 인물DB 와 이었습니다(oc_cast).
+             공연 쪽에서 인물로 가는 길은 냈으니, <b>돌아오는 길</b>도
+             냅니다. 한쪽만 있으면 절반입니다.
+           ★ 자료가 없으면 이 덩어리를 <b>통째로 감춥니다.</b>
+             작곡가처럼 무대에 서지 않는 사람이 훨씬 많습니다. -->
+      <section class="pv-sec" id="pvStageSec" hidden>
+        <div class="pv-sechead">
+          <h2 class="pv-h">출연 공연 <span class="pv-h-en">On Stage</span></h2>
+          <span class="pv-auto">공연정보에서 자동으로 이었습니다</span>
+        </div>
+        <div id="pvStage"></div>
+      </section>
+
       <section class="pv-sec">
         <div class="pv-sechead"><h2 class="pv-h">사진 · 갤러리</h2><span class="pv-auto">자동 수집 영역</span></div>
         <div class="pv-carousel">
@@ -1207,6 +1221,73 @@ document.querySelectorAll('.tabs').forEach(function(t){
            a.innerHTML='현대음악DB 에서 보기 <span>&#8594;</span>';
            head.parentNode.insertBefore(a, head.nextSibling);
          }).catch(function(){});
+     })();
+
+     /* ★★ 출연 공연 (2026-08-16) ─────────────────────────────
+        oc_cast 로 이어진 공연을 보여 줍니다.
+
+        ★ 왜 양쪽에 두는가
+          공연 상세에서 인물로 갈 수 있는데 돌아올 길이 없으면,
+          사용자는 뒤로 가기를 눌러야 합니다. 오퍼스클램의 자료는
+          서로 이어져야 합니다.
+        ★ <b>앞으로 열릴 공연을 먼저</b> 보여 줍니다. 지난 공연은
+          기록이지만, 앞으로 열릴 것은 <b>가서 볼 수 있습니다</b>.
+        ★ 자료가 없으면 덩어리를 통째로 감춘 채로 둡니다. */
+     (function stage(){
+       var sec = document.getElementById('pvStageSec');
+       var box = document.getElementById('pvStage');
+       if(!sec || !box) return;
+
+       fetch(URL + '/rest/v1/oc_cast?select=role,spot:spot_id(id,title,venue_name,city,'
+             + 'date_from,date_to,region,thumb_url)'
+             + '&person_id=eq.' + encodeURIComponent(p.id)
+             + '&limit=60', { headers:H })
+         .then(function(r){ return r.ok ? r.json() : []; })
+         .then(function(rows){
+           var list = (rows||[]).filter(function(x){ return x.spot && x.spot.id; });
+           if(!list.length) return;
+
+           /* 같은 공연이 두 번 들어오지 않게 */
+           var seen = {}, uniq = [];
+           list.forEach(function(x){
+             if(seen[x.spot.id]) return;
+             seen[x.spot.id] = 1; uniq.push(x);
+           });
+
+           /* 앞으로 열릴 것 먼저, 그다음 최근 것부터 */
+           var today = new Date().toISOString().slice(0,10);
+           uniq.sort(function(a,b){
+             var ea = (a.spot.date_to || a.spot.date_from || '');
+             var eb = (b.spot.date_to || b.spot.date_from || '');
+             var fa = ea >= today ? 0 : 1, fb = eb >= today ? 0 : 1;
+             if(fa !== fb) return fa - fb;
+             /* 앞으로 열릴 것은 가까운 순, 지난 것은 최근 순 */
+             return fa === 0
+               ? String(a.spot.date_from||'').localeCompare(String(b.spot.date_from||''))
+               : String(b.spot.date_from||'').localeCompare(String(a.spot.date_from||''));
+           });
+
+           box.innerHTML = uniq.slice(0,12).map(function(x){
+             var o = x.spot;
+             var d = String(o.date_from||'').slice(0,10).replace(/-/g,'.');
+             var dt = String(o.date_to||'').slice(0,10).replace(/-/g,'.');
+             var when = d + (dt && dt !== d ? ' ~ ' + dt.slice(5) : '');
+             var soon = (o.date_to || o.date_from || '') >= today;
+             var where = [o.venue_name, o.city].filter(Boolean).join(' · ');
+             return '<a class="pv-stage" href="/spot/spot-view.html?id='
+               + encodeURIComponent(o.id) + '&sec=' + encodeURIComponent('공연정보') + '">'
+               + '<span class="pv-sday' + (soon ? ' is-soon' : '') + '">'
+               +   (soon ? '예정' : '지난') + '</span>'
+               + '<span class="pv-sbody">'
+               +   '<b>' + esc(o.title||'') + '</b>'
+               +   '<span>' + esc([when, where].filter(Boolean).join(' · ')) + '</span>'
+               + '</span>'
+               + (x.role ? '<span class="pv-srole">' + esc(x.role) + '</span>' : '')
+               + '</a>';
+           }).join('');
+           sec.hidden = false;
+         })
+         .catch(function(){});
      })();
 
      if(window.OCWorks) OCWorks.mount({

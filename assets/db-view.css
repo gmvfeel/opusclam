@@ -293,3 +293,36 @@ html[data-theme="dark"] .site-header:not(.solid){background:linear-gradient(115d
     .pdb-table th.c-org{width:15%}
     .pdb-table th.c-link{width:11%}
   }
+
+/* ── 출연 공연 (2026-08-16) ──────────────────────────────────
+   ★ 공연정보에서 뽑은 출연자를 인물DB 와 이었습니다(oc_cast).
+     공연 쪽에서 인물로 가는 길은 냈으니 돌아오는 길도 냅니다.
+   ★ <b>앞으로 열릴 공연</b>은 「예정」으로 눈에 띄게 — 지난 것은
+     기록이지만 앞으로 열릴 것은 가서 볼 수 있습니다. */
+.pv-stage{display:flex;align-items:center;gap:13px;padding:13px 4px;
+  border-bottom:1px solid var(--line);text-decoration:none;
+  transition:background .15s ease}
+.pv-stage:hover{background:var(--paper-2)}
+.pv-stage:last-child{border-bottom:0}
+
+.pv-sday{flex:0 0 auto;min-width:38px;padding:4px 9px;border-radius:8px;
+  font-size:11px;font-weight:800;text-align:center;
+  background:var(--paper-3);color:var(--text-3)}
+.pv-sday.is-soon{background:var(--ink,#0E1230);color:#C9A94E}
+
+.pv-sbody{flex:1;min-width:0}
+.pv-sbody b{display:block;font-size:14px;font-weight:700;letter-spacing:-.02em;
+  color:var(--text);line-height:1.45;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pv-stage:hover .pv-sbody b{color:var(--violet-2)}
+.pv-sbody span{display:block;margin-top:3px;font-size:12px;color:var(--text-3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.pv-srole{flex:0 0 auto;font-size:11.5px;color:var(--text-3);
+  padding:3px 9px;border-radius:10px;background:var(--paper-2)}
+
+@media (max-width:560px){
+  .pv-stage{gap:10px;padding:11px 2px}
+  .pv-sbody b{font-size:13px}
+  .pv-srole{display:none}
+}
