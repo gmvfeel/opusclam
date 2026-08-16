@@ -2532,5 +2532,18 @@
   "시작": "Founded",
   "우승": "Winner",
   "이번 주 공연": "This Week",
-  "내일": "Tomorrow"
+  "내일": "Tomorrow",
+  "연주 올리기": "Share Your Playing",
+  "조언을 기다리는": "Awaiting advice",
+  "최근 올린": "Recent",
+  "조언이 많은": "Most advice",
+  "악기 전부": "All instruments",
+  "첫 조언을 기다립니다": "Awaiting first advice",
+  "조언 {n}": "{n} advice",
+  "모두 {n}건": "{n} in total",
+  "{n}일 전": "{n} days ago",
+  "어제": "Yesterday",
+  "더 보기": "Show more",
+  "아직 올라온 연주가 없습니다.": "No playing shared yet.",
+  "첫 연주를 올려 보시겠습니까? 짧은 한 곡이라도 좋습니다.": "Would you share the first one? Even a short piece is welcome."
 }
