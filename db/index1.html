@@ -90,90 +90,6 @@
     <!-- 영역 카드 -->
     <div class="hb-cards"></div>
 
-    <!-- ★★ 2026-08-16 · DATABASE 메인 개편 (파트너 요청) ★★
-         ─────────────────────────────────────────────────────
-         무엇이 문제였나
-           · 처음 두 섹션이 <b>모두 그래프</b>였습니다(성장 추이·데이터 분석).
-             숫자는 운영자가 보고 싶은 것이지 방문자가 보고 싶은 것이 아닙니다.
-             처음 온 사람은 「그래서 뭘 볼 수 있는데?」를 먼저 궁금해합니다.
-           · 인물 15,250명·작품 16,642건을 쌓아 놓고 보여 주는 것은
-             「새로 등록」·「새로 보강」 둘뿐이었습니다.
-           · 사진이 6,321명에게 있는데 메인에 <b>한 장도</b> 없었습니다.
-
-         무엇을 더했나
-           ① 오늘의 인물 — 날마다 바뀝니다. <b>매일 올 이유</b>를 만듭니다.
-              daily_self_pr 표를 그대로 씁니다(scripts/pick-daily.mjs 가
-              날마다 한 사람을 골라 담고 있었는데, SELF PR 화면에서만
-              쓰이고 있었습니다).
-           ② 둘러보기 — 15,250명을 뭉텅이로 두지 않고 <b>들어갈 문</b>을 냅니다.
-              시대·분야를 누르면 그 조건으로 걸러진 목록으로 갑니다.
-
-         차례도 바꿨습니다 — 콘텐츠를 앞으로, 그래프는 뒤로. -->
-
-    <!-- ── 오늘의 인물 ─────────────────────────────────── -->
-    <section class="hb-sec hb-today" id="todaySec" hidden>
-      <div class="hb-head">
-        <span class="hb-title">오늘의 인물<em>TODAY</em></span>
-        <a class="hb-more" href="/db/person.html">인물DB 전체보기 &rsaquo;</a>
-      </div>
-      <a class="tdy" id="tdyCard" href="#">
-        <span class="tdy-img"><img id="tdyImg" alt="" loading="lazy"><i id="tdyIni"></i></span>
-        <span class="tdy-body">
-          <span class="tdy-date" id="tdyDate"></span>
-          <span class="tdy-name" id="tdyName"></span>
-          <span class="tdy-meta" id="tdyMeta"></span>
-          <span class="tdy-desc" id="tdyDesc"></span>
-          <span class="tdy-go">자세히 보기 &rsaquo;</span>
-        </span>
-      </a>
-    </section>
-
-    <!-- ── 둘러보기 ────────────────────────────────────── -->
-    <section class="hb-sec">
-      <div class="hb-head">
-        <span class="hb-title">둘러보기<em>BROWSE</em></span>
-      </div>
-      <div class="brw">
-        <div class="brw-row">
-          <span class="brw-cap">시대로</span>
-          <div class="brw-chips" id="brwEra"></div>
-        </div>
-        <div class="brw-row">
-          <span class="brw-cap">분야로</span>
-          <div class="brw-chips" id="brwField"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 새로 등록된 Database -->
-    <section class="hb-sec">
-    <div class="hb-head">
-      <span class="hb-title">새로 등록된 Database<em>NEW</em></span>
-      <div class="hb-tools" id="latestView">
-        <button type="button" class="hb-vbtn on" data-view="list" aria-label="목록으로 보기">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-        <button type="button" class="hb-vbtn" data-view="grid" aria-label="두 줄로 보기">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="hub-list" id="latestBox"></div>
-  </section>
-
-    <!-- 새로 보강된 Database -->
-    <section class="hb-sec">
-      <div class="hb-head">
-        <span class="hb-title">새로 보강된 Database<em>UPDATED</em></span>
-      </div>
-      <div class="hub-grid" id="freshBox"></div>
-      <div class="hub-more"><a href="/search.html">통합검색으로 더 찾아보기 &rsaquo;</a></div>
-    </section>
-
-    <!-- ★ 2026-08-16 · 그래프 두 덩어리를 <b>맨 아래</b>로 내렸습니다.
-           예전에는 화면을 열자마자 이것부터 보였습니다. 숫자는 이 데이터를
-           이미 아는 사람에게 값어치가 있지, 처음 온 사람에게는 아닙니다.
-           콘텐츠를 먼저 보고, 더 궁금하면 내려와 그래프를 봅니다. -->
     <!-- 성장 추이 -->
     <section class="hb-sec">
       <div class="hb-head">
@@ -273,6 +189,30 @@
       </div>
     </section>
 
+    <!-- 새로 등록된 Database -->
+    <section class="hb-sec">
+    <div class="hb-head">
+      <span class="hb-title">새로 등록된 Database<em>NEW</em></span>
+      <div class="hb-tools" id="latestView">
+        <button type="button" class="hb-vbtn on" data-view="list" aria-label="목록으로 보기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <button type="button" class="hb-vbtn" data-view="grid" aria-label="두 줄로 보기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="hub-list" id="latestBox"></div>
+  </section>
+
+    <!-- 새로 보강된 Database -->
+    <section class="hb-sec">
+      <div class="hb-head">
+        <span class="hb-title">새로 보강된 Database<em>UPDATED</em></span>
+      </div>
+      <div class="hub-grid" id="freshBox"></div>
+      <div class="hub-more"><a href="/search.html">통합검색으로 더 찾아보기 &rsaquo;</a></div>
+    </section>
 
   </div>
 </section>
@@ -439,158 +379,6 @@
 </script>
 <script src="/assets/app.js" defer></script>
 <!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->
-<script src="/assets/pwa-install.js?v=20260815" defer>
-/* ══ 2026-08-16 · 오늘의 인물 · 둘러보기 ══════════════════════
-   ★ 부르는 횟수를 아낍니다 — 오늘의 인물 1번(+인물 1번),
-     둘러보기는 시대·분야 각 1번, 모두 <b>네 번</b>입니다.
-     시대 여덟 갈래를 따로 세면 여덟 번이 됩니다. */
-(function () {
-  'use strict';
-  var U = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/';
-  var K = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var H = { apikey: K, Authorization: 'Bearer ' + K };
-
-  function esc(x) {
-    return String(x == null ? '' : x)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-  function t(x) { try { return (window.OCI18N && window.OCI18N.t) ? window.OCI18N.t(x) : x; } catch (e) { return x; } }
-  function n(tpl, v) {
-    try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n(tpl, v); } catch (e) {}
-    return String(tpl).replace('{n}', v);
-  }
-  function get(path) {
-    return fetch(U + path, { headers: H }).then(function (r) { return r.ok ? r.json() : []; });
-  }
-  /* 몇 건인지만 알고 싶을 때 — 목록을 받지 않고 헤더로만 셉니다 */
-  function count(path) {
-    return fetch(U + path + '&select=id', {
-      headers: Object.assign({ Prefer: 'count=exact', Range: '0-0' }, H)
-    }).then(function (r) {
-      var cr = r.headers.get('content-range') || '';
-      return parseInt((cr.split('/')[1] || '0'), 10) || 0;
-    }).catch(function () { return 0; });
-  }
-
-  /* ── 오늘의 인물 ─────────────────────────────────────
-     ★ daily_self_pr 표를 그대로 씁니다. scripts/pick-daily.mjs 가
-       날마다 한 사람을 골라 담아 왔는데, 여태 SELF PR 화면에서만
-       쓰이고 있었습니다. 이미 있는 것을 다시 만들지 않습니다.
-     ★ 오늘 것이 없으면 <b>가장 가까운 날</b>을 씁니다. 자동수집이
-       하루 걸러도 이 자리가 비지 않게 하려는 것입니다.
-     ★ 그래도 없으면 이 덩어리를 <b>통째로 감춥니다</b> —
-       「오늘의 인물」이라는 제목만 남고 아래가 비면 고장으로 보입니다. */
-  (function today() {
-    var sec = document.getElementById('todaySec');
-    if (!sec) return;
-
-    get('daily_self_pr?select=ymd,person_id&order=ymd.desc&limit=1')
-      .then(function (rows) {
-        if (!rows || !rows.length || !rows[0].person_id) throw 0;
-        var d = rows[0];
-        return get('persons?select=id,name_ko,name_en,field,instrument,life,nationality,'
-                 + 'description,description_en,image_url&id=eq.' + encodeURIComponent(d.person_id))
-          .then(function (ps) {
-            if (!ps || !ps.length) throw 0;
-            draw(ps[0], d.ymd);
-          });
-      })
-      .catch(function () { /* 조용히 감춘 채로 둡니다 */ });
-
-    function draw(p, ymd) {
-      var nm = p.name_ko || p.name_en || '';
-      var meta = [t(p.field), t(p.instrument), p.life, t(p.nationality)]
-        .filter(Boolean).join(' · ');
-      /* 한국어 소개가 없으면 영문이라도 — 빈 자리보다 낫습니다 */
-      var desc = (p.description && p.description.trim()) || p.description_en || '';
-
-      document.getElementById('tdyDate').textContent = (ymd || '').replace(/-/g, '. ');
-      document.getElementById('tdyName').textContent = nm;
-      document.getElementById('tdyMeta').textContent = meta;
-      document.getElementById('tdyDesc').textContent = desc;
-      document.getElementById('tdyCard').href = '/db/person-view.html?id=' + encodeURIComponent(p.id);
-
-      var img = document.getElementById('tdyImg');
-      var ini = document.getElementById('tdyIni');
-      ini.textContent = (nm || '?').trim().charAt(0);
-      if (p.image_url) {
-        /* 사진을 <b>다 받은 뒤에</b> 보입니다 — 깨진 그림이 잠깐 뜨는 것을 막습니다 */
-        img.onload = function () { img.style.opacity = '1'; };
-        img.onerror = function () { img.removeAttribute('src'); };
-        img.style.opacity = '0';
-        img.style.transition = 'opacity .3s ease, transform .5s ease';
-        img.src = p.image_url;
-      } else {
-        img.removeAttribute('src');
-      }
-      sec.hidden = false;
-    }
-  })();
-
-  /* ── 둘러보기 ────────────────────────────────────────
-     ★ 갈래 목록을 <b>코드에 적지 않습니다.</b> 인물DB 에 실제로 든 것을
-       세어 많은 것부터 보여 줍니다. 적어 두면 데이터가 늘 때마다
-       손봐야 하고, 없는 갈래가 목록에 남습니다.
-     ★ 「기타」처럼 뜻이 옅은 값과 <b>한 자리 수</b>는 뺍니다 —
-       눌러 봐야 볼 것이 없으면 오히려 실망합니다. */
-  (function browse() {
-    var eraBox = document.getElementById('brwEra');
-    var fldBox = document.getElementById('brwField');
-    if (!eraBox || !fldBox) return;
-
-    var skel = '<span class="brw-skel"></span>';
-    eraBox.innerHTML = skel + skel + skel + skel + skel;
-    fldBox.innerHTML = skel + skel + skel + skel;
-
-    /* 한 번에 받아 화면에서 셉니다 — 갈래마다 물으면 열두 번이 됩니다.
-       200행 상한이 있으므로 나눠 받되 <b>0행일 때만</b> 멈춥니다. */
-    (function pull(off, acc) {
-      off = off || 0; acc = acc || [];
-      get('persons?select=era_name,field&hidden=not.is.true&limit=1000&offset=' + off)
-        .then(function (rows) {
-          if (rows && rows.length) {
-            acc = acc.concat(rows);
-            if (rows.length >= 1000 && off < 30000) return pull(off + rows.length, acc);
-          }
-          done(acc);
-        })
-        .catch(function () { done(acc); });
-    })();
-
-    function done(rows) {
-      if (!rows.length) { eraBox.innerHTML = ''; fldBox.innerHTML = ''; return; }
-      var e = {}, f = {};
-      rows.forEach(function (r) {
-        if (r.era_name) e[r.era_name] = (e[r.era_name] || 0) + 1;
-        if (r.field)    f[r.field]    = (f[r.field]    || 0) + 1;
-      });
-      /* 시대는 <b>흐른 차례</b>로 — 많은 것부터 늘어놓으면 뒤죽박죽입니다 */
-      var ORDER = ['고대','중세','르네상스','바로크','고전주의','낭만주의','근대','근·현대','현대'];
-      eraBox.innerHTML = chips(e, ORDER) || '';
-      fldBox.innerHTML = chips(f, null) || '';
-    }
-
-    function chips(map, order) {
-      var keys = Object.keys(map).filter(function (k) {
-        return map[k] >= 10 && !/^(기타|미상|불명)$/.test(k);
-      });
-      if (order) {
-        keys.sort(function (a, b) {
-          var ia = order.indexOf(a), ib = order.indexOf(b);
-          if (ia < 0) ia = 99; if (ib < 0) ib = 99;
-          return ia - ib || map[b] - map[a];
-        });
-      } else {
-        keys.sort(function (a, b) { return map[b] - map[a]; });
-        keys = keys.slice(0, 10);
-      }
-      return keys.map(function (k) {
-        return '<a href="/db/person.html?sel=' + encodeURIComponent(k) + '">'
-          + esc(t(k)) + '<b>' + map[k].toLocaleString() + '</b></a>';
-      }).join('');
-    }
-  })();
-})();
-</script>
+<script src="/assets/pwa-install.js?v=20260815" defer></script>
 </body>
 </html>

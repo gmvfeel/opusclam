@@ -695,9 +695,37 @@ function ocN(tpl) {
       loadPage(_spot.page || _sp);
       return;                    /* 아래 기본 로드는 건너뛴다 */
     }
-    if (_q) {
+    /* ★ 2026-08-16 · 주소로 <b>조건을 미리 걸어</b> 들어올 수 있게 (파트너 요청)
+       ─────────────────────────────────────────────────────────
+       예) /db/person.html?sel=낭만주의   → 시대 상자를 「낭만주의」로
+           /db/person.html?sel=피아노     → 분야 상자를 「피아노」로
+           /db/person.html?sel=국내&sel=성악  → 두 상자를 함께
+
+       ★ 상자 <b>번호를 적지 않습니다.</b> 값만 주면 그 값을 가진 상자를
+         스스로 찾아 맞춥니다. 화면마다 상자 차례가 다르고(인물은 시대가
+         셋째, 학교는 없음) 나중에 상자가 하나 늘면 번호가 밀립니다 —
+         번호로 적으면 그때 조용히 엉뚱한 조건이 걸립니다.
+       ★ 없는 값이면 <b>아무 일도 하지 않습니다.</b> 잘못된 주소로 들어와도
+         목록은 정상으로 뜹니다.
+       ★ 공용 엔진에 두었으므로 <b>모든 DB 목록</b>에서 같은 방식으로
+         쓸 수 있습니다(인물·학교·단체·공연장…). */
+    var _sel = new URLSearchParams(location.search).getAll('sel').filter(Boolean);
+    var _hit = 0;
+    if (_sel.length) {
+      var _ss = document.querySelectorAll('.pdb-selects select');
+      _sel.forEach(function (want) {
+        for (var i = 0; i < _ss.length; i++) {
+          var op = _ss[i].options;
+          for (var k = 0; k < op.length; k++) {
+            if (op[k].value === want) { _ss[i].value = want; _hit++; return; }
+          }
+        }
+      });
+    }
+
+    if (_q || _hit) {
       var _inp = document.querySelector('.pdb-search input');
-      if (_inp) _inp.value = _q;
+      if (_inp && _q) _inp.value = _q;
       readSearch();
       loadPage(1);
     } else {
