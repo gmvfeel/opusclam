@@ -606,8 +606,13 @@
         list = list.slice(0, 10);
       }
       return list.map(function (x) {
+        /* ★ n('{n}명') 을 쓰지 <b>않습니다.</b> i18n 의 숫자 규칙은
+             1000~2999 를 <b>연도로 보아</b> 쉼표를 넣지 않습니다
+             (「2026년」이 「2,026년」이 되는 것을 막으려는 것입니다).
+             그래서 인원수에서 「1003명」과 「3,096명」이 섞여 나왔습니다.
+           ▶ 여기서는 사람 수이므로 쉼표를 직접 붙이고, 「명」만 옮깁니다. */
         return '<a href="/db/person.html?sel=' + encodeURIComponent(x.k) + '">'
-          + esc(t(x.k)) + '<b>' + n('{n}명', x.c) + '</b></a>';
+          + esc(t(x.k)) + '<b>' + x.c.toLocaleString() + esc(t('명')) + '</b></a>';
       }).join('');
     }
   })();
