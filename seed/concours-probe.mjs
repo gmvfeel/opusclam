@@ -1075,6 +1075,11 @@ async function save(rows) {
           }
           const { how, list } = parseAll(mwt, { medalistOk: true });
           const use = list.filter(p => p.year && p.rank);
+          /* 연도로 회차를 되찾아 붙입니다 — 본 문서 표에는 회차가
+             링크 글자로만 있어 그대로 쓰기 어렵습니다. */
+          const y2e = {};
+          if (comp.years) Object.keys(comp.years).forEach(e => { y2e[comp.years[e]] = +e; });
+          use.forEach(p => { p.edition = y2e[p.year] || null; });
           use.forEach(p => gotKey.add(p.year + '|' + p.rank));
           const yrs = new Set(use.map(p => p.year));
           console.log(`   본 문서 「${how}」 — 입상 ${use.length}명 · ${yrs.size}개 회차`);
@@ -1113,9 +1118,16 @@ async function save(rows) {
           } catch (e) { await sleep(400); }
         }
         if (!hit) {
-          console.log(`   제${String(no).padStart(2)}회  ★ 문서를 받지 못했습니다`
-            + (names.length > 1 ? `  (후보 ${names.length}개 모두)` : ''));
-          fail++; bad.push(no); continue;
+          /* ★ 본 문서가 이미 그 회를 담았으면 <b>못 읽은 것이 아닙니다.</b>
+               3·4·5·6회는 회차 문서가 아예 없지만 본 문서 표에
+               온전히 들어 있습니다. */
+          const covered = comp.years && comp.years[no] && gotKey.has(comp.years[no] + '|1');
+          console.log(`   제${String(no).padStart(2)}회  `
+            + (covered ? '본 문서로 갈음 (회차 문서 없음)'
+                       : '★ 문서를 받지 못했습니다'
+                         + (names.length > 1 ? `  (후보 ${names.length}개 모두)` : '')));
+          if (covered) ok++; else { fail++; bad.push(no); }
+          continue;
         }
         const year = (comp.years && comp.years[no]) || 0;
         const { how, list } = parseAll(wt, { proseFirst });
@@ -1123,7 +1135,8 @@ async function save(rows) {
              2009년 클라이번은 3위를 <b>주지 않았습니다</b>(not awarded).
              주지 않은 상을 못 읽었다고 셀 수는 없습니다.
              1위가 있고 둘 이상 읽었으면 제대로 읽은 것으로 봅니다. */
-        const good = list.some(p => p.rank === '1') && list.length >= 2;
+        const good = (list.some(p => p.rank === '1') && list.length >= 2)
+          || (year && gotKey.has(year + '|1'));   /* 본 문서가 이미 담음 */
         /* ★ 본 문서에 이미 있는 「연도|등수」는 <b>더하지 않습니다.</b>
              본 문서 쪽이 더 정확하기 때문입니다. */
         const add = year ? list.filter(p => p.rank && !gotKey.has(year + '|' + p.rank)) : [];
