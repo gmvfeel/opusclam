@@ -967,7 +967,11 @@ async function save(rows) {
         const year = (comp.years && comp.years[no]) || 0;
         const { how, list } = parseAll(wt, { proseFirst });
         const top3 = ['1', '2', '3'].filter(r => list.some(p => p.rank === r)).length;
-        const good = top3 === 3;
+        /* ★ 「1~3위가 다 있어야 읽은 것」은 <b>맞지 않습니다</b> —
+             2009년 클라이번은 3위를 <b>주지 않았습니다</b>(not awarded).
+             주지 않은 상을 못 읽었다고 셀 수는 없습니다.
+             1위가 있고 둘 이상 읽었으면 제대로 읽은 것으로 봅니다. */
+        const good = list.some(p => p.rank === '1') && list.length >= 2;
         list.forEach(p => { if (year && p.rank) gotKey.add(year + '|' + p.rank); });
 
         /* ★ 진단 — 못 읽은 회의 <b>원문 문형</b>을 보여 줍니다 (--diag)
