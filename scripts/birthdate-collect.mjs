@@ -191,9 +191,16 @@ SELECT ?item ?birth ?death WHERE {
       if (seenId.has(p.id)) return;
       seenId.add(p.id);
 
-      const row = { id: p.id };
-      if (bd) { row.birth_date = bd; gotB++; }
-      if (dd) { row.death_date = dd; gotD++; }
+      /* ★★ 칸을 <b>모두 같게</b> 채웁니다 (2026-08-16 · 첫 담기 실패)
+           Supabase 는 한 묶음 안의 줄들이 <b>칸 구성이 다르면</b>
+           통째로 거부합니다 — PGRST102 「All object keys must match」.
+           살아 있는 사람은 death_date 가 없어서 어긋났습니다.
+         ▶ 없는 것은 null 로 적어 <b>모든 줄이 같은 칸</b>을 갖게 합니다.
+           null 은 「모른다」이지 「지운다」가 아니므로, 이미 든 값을
+           덮어쓰지 않습니다(merge-duplicates 는 준 칸만 고칩니다). */
+      const row = { id: p.id, birth_date: bd || null, death_date: dd || null };
+      if (bd) gotB++;
+      if (dd) gotD++;
       rows.push(row);
 
       if (shown < 8) {
