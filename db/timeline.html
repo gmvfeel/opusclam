@@ -166,6 +166,11 @@
   .kr-bar .n{font-size:10px;color:var(--text-3);font-weight:700}
 
   /* ── 세로 흐름선 ───────────────────────────────────── */
+  /* ★ 2026-08-16 (세 번째) · <b>좌우 빈 자리가 너무 넓었습니다</b> (파트너 지적)
+       본문이 1,312px 인데 카드는 420px 이라 양쪽에 206px 씩 남았습니다.
+     ▶ 흐름선 전체를 <b>900px</b> 로 좁힙니다. 그러면 한쪽 칸이 420px 이라
+       카드가 거의 채웁니다. 가운데 선도 화면 한복판에 그대로 놓입니다. */
+  .kr-flowhead,.kr-flow{max-width:900px;margin-left:auto;margin-right:auto}
   .kr-flowhead{display:grid;grid-template-columns:1fr 60px 1fr;gap:0;
     padding-bottom:12px;margin-bottom:4px;border-bottom:2px solid var(--text-3)}
   .kr-flowhead span{font-size:13.5px;font-weight:800;letter-spacing:-.02em;
@@ -190,14 +195,19 @@
     color:var(--text-2);font-variant-numeric:tabular-nums}
   .kr-row.is-win .yr b{background:var(--violet-2);border-color:var(--violet-2);color:#fff}
 
-  .kr-card{display:flex;align-items:center;gap:11px;padding:10px 13px;
+  .kr-card{display:inline-flex;align-items:center;gap:11px;padding:10px 13px;
     border:1px solid var(--line);border-radius:12px;background:var(--paper);
     text-decoration:none;transition:border-color .18s ease,box-shadow .18s ease}
   .kr-card:hover{border-color:var(--violet-2);
     box-shadow:0 8px 20px -14px rgba(30,20,60,.35)}
-  /* 왼쪽 칸은 <b>오른쪽 끝에</b> 붙습니다 — 가운데 선을 향하게 */
+  /* ★ 2026-08-16 (두 번째) · 오른쪽 카드가 <b>화면 끝까지</b> 늘어났습니다
+       (파트너 지적). 왼쪽에는 justify-content:flex-end 가 있는데
+       오른쪽에는 없어, 카드가 칸을 가득 채웠습니다.
+     ▶ 양쪽 다 <b>flex 상자</b>로 두고, 카드는 글자만큼만 차지하게
+       합니다(inline-flex). 가운데 선을 향해 마주 보게 됩니다.
+     ★ 너무 긴 이름은 잘립니다 — max-width 로 막아 둡니다. */
   .kr-row .side-l{grid-column:1;display:flex;justify-content:flex-end;padding-right:14px}
-  .kr-row .side-r{grid-column:3;padding-left:14px}
+  .kr-row .side-r{grid-column:3;display:flex;justify-content:flex-start;padding-left:14px}
   .kr-row .side-l .kr-card{flex-direction:row-reverse;text-align:right}
   .kr-card{max-width:100%}
 
