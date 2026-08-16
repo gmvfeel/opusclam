@@ -905,6 +905,25 @@ async function save(rows) {
         try { mwt = await raw(comp.mainTitle); await sleep(600); }
         catch (e) { console.log(`   본 문서를 받지 못했습니다 — ${e.message}`); }
         if (mwt) {
+          /* ★ 본 문서 진단 — 표 짜임을 봅니다.
+               회차 문서가 <b>아예 없는 회</b>(3·4·5·6회)는 본 문서
+               표에서만 얻을 수 있습니다. 지금 두 명밖에 못 읽으니
+               표가 어떻게 생겼는지 보아야 합니다. */
+          if (DIAG) {
+            console.log('   ┌── 진단 : 본 문서');
+            const tbs = mwt.match(/\{\|[\s\S]*?\n\|\}/g) || [];
+            console.log(`   │ 표 ${tbs.length}개 · 글자 ${mwt.length}`);
+            tbs.slice(0, 3).forEach((tb, i) => {
+              console.log(`   │ ── 표${i + 1} (앞 16줄)`);
+              tb.split('\n').slice(0, 16).forEach(l =>
+                console.log('   │ ' + l.replace(/\s+/g, ' ').trim().slice(0, 200)));
+            });
+            if (!tbs.length) {
+              mwt.split('\n').filter(l => /won|medal|winner/i.test(l)).slice(0, 8)
+                .forEach(l => console.log('   │ ' + l.replace(/\s+/g, ' ').trim().slice(0, 200)));
+            }
+            console.log('   └──');
+          }
           const { how, list } = parseAll(mwt);
           const add = list.filter(p => p.year && p.rank && !gotKey.has(p.year + '|' + p.rank));
           console.log(`   본 문서 「${how}」에서 ${list.length}명 · 새로 더할 것 ${add.length}명`);
