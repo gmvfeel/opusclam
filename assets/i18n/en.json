@@ -2579,5 +2579,13 @@
   "오늘 태어난 음악가": "Born Today",
   "{n}일": "/{n}",
   "올해 {n}살": "age {n}",
-  "그 밖에 {n}명이 오늘 태어났습니다": "{n} more were born today"
+  "그 밖에 {n}명이 오늘 태어났습니다": "{n} more were born today",
+  "서양 음악사": "Western Music",
+  "한국 클래식": "Korean Classical",
+  "국제 무대": "On the World Stage",
+  "단체의 발자취": "Ensembles",
+  "국제 콩쿠르 1 · 2 · 3위": "Top 3 at international competitions",
+  "국내에서 가장 이른 곳 · 지금 무대에 오르는 곳": "Earliest in Korea · currently active",
+  "한국 클래식 음악이 걸어온 길입니다. 국제 무대의 발자취와 단체의 역사를 나란히 봅니다.": "The path Korean classical music has walked — international achievements alongside the history of ensembles.",
+  "아직 자료가 없습니다.": "No records yet."
 }

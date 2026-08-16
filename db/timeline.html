@@ -117,6 +117,41 @@
     line-height:1.35;word-break:keep-all;transition:color .15s ease}
   .tl-item .s{display:block;font-size:11.5px;color:var(--text-3);margin-top:2px}
 
+  /* ── 갈래 탭 (2026-08-16) ─────────────────────────────
+     ★ 하위 메뉴(알약)와 헷갈리지 않게 <b>밑줄</b> 모양으로 둡니다. */
+  .tl-kind{display:flex;gap:0;margin:0 0 22px;border-bottom:1px solid var(--line)}
+  .tl-kind button{appearance:none;border:0;background:none;cursor:pointer;
+    position:relative;padding:11px 20px;font-family:inherit;font-size:14px;
+    font-weight:700;letter-spacing:-.02em;color:var(--text-3);
+    transition:color .15s ease}
+  .tl-kind button:hover{color:var(--text-2)}
+  .tl-kind button.on{color:var(--text)}
+  .tl-kind button.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;
+    height:2px;background:var(--violet-2);border-radius:2px}
+
+  /* ── 한국 클래식 연표 ─────────────────────────────────
+     ★ 두 칸으로 — 「국제 무대」와 「단체의 발자취」.
+       한데 섞으면 콩쿠르가 단체 목록에 묻힙니다. */
+  .krcols{grid-template-columns:1fr 1fr}
+  .kr-item{display:flex;gap:14px;align-items:baseline;padding:11px 2px;
+    border-bottom:1px solid var(--line);text-decoration:none}
+  .kr-item:last-child{border-bottom:0}
+  .kr-item .y{flex:0 0 44px;font-family:var(--display);font-size:14px;font-weight:900;
+    letter-spacing:-.03em;color:#C9A94E;font-variant-numeric:tabular-nums}
+  .kr-item .b{flex:1;min-width:0}
+  .kr-item .t{display:block;font-size:13.5px;font-weight:700;letter-spacing:-.02em;
+    color:var(--text);line-height:1.4;word-break:keep-all}
+  a.kr-item:hover .t{color:var(--violet-2)}
+  .kr-item .s{display:block;margin-top:2px;font-size:11.5px;color:var(--text-3)}
+  /* 우승은 도드라지게 — 1위는 그 자체가 사건입니다 */
+  .kr-item.is-win .y{color:var(--violet-2)}
+  .kr-item.is-win .s{color:var(--violet-2);font-weight:700}
+
+  @media(max-width:900px){ .krcols{grid-template-columns:1fr} }
+  @media(max-width:560px){
+    .tl-kind button{flex:1;padding:11px 8px;font-size:13px}
+  }
+
   .tl-empty{padding:26px 4px;color:var(--text-3);font-size:13px}
   .tl-sk{height:52px;border-radius:8px;background:var(--paper-2);margin-bottom:8px;
     animation:tlsk 1.2s ease-in-out infinite}
@@ -185,8 +220,18 @@ function ocN(tpl) {
           <h1 class="pdb-title">음악사 연표</h1>
         </div>
       </div>
-      <p class="pdb-lead">중세부터 오늘까지 한 줄로 봅니다. 시대를 누르면 그 시대의 작곡가 · 작품 · 용어가 함께 펼쳐집니다.</p>
+      <p class="pdb-lead" id="tlLead">중세부터 오늘까지 한 줄로 봅니다. 시대를 누르면 그 시대의 작곡가 · 작품 · 용어가 함께 펼쳐집니다.</p>
     </header>
+
+    <!-- ★★ 2026-08-16 · 갈래 탭 (파트너와 정함)
+           「음악사 연표」는 <b>서양 음악사</b>를 시대별로 봅니다.
+           그 옆에 <b>한국 클래식 연표</b>를 나란히 둡니다 —
+           오퍼스클램만 할 수 있는 것입니다. 서구 서비스는 이 자료에
+           닿을 수 없습니다. -->
+    <nav class="tl-kind" aria-label="연표 갈래">
+      <button type="button" data-k="west" class="on">서양 음악사</button>
+      <button type="button" data-k="kr">한국 클래식</button>
+    </nav>
 
     <!-- 시대 띠 -->
     <div class="tl-band" id="tlBand" role="tablist" aria-label="시대 고르기"></div>
@@ -222,6 +267,29 @@ function ocN(tpl) {
         </div>
         <div id="tlTerms"></div>
       </section>
+    </div>
+
+    <!-- ── 한국 클래식 연표 ──────────────────────────────
+         ★ 「국제 무대」와 「단체의 발자취」를 <b>나란히</b> 둡니다.
+           한데 섞으면 콩쿠르 기록이 단체 목록에 묻힙니다 —
+           단체가 훨씬 많기 때문입니다. -->
+    <div id="krWrap" hidden>
+      <div class="tl-cols krcols">
+        <section class="tl-col">
+          <div class="tl-colhead">
+            <h3>국제 무대 <a class="tl-more" href="/spot/concours-archive.html">콩쿨 아카이브 &rarr;</a></h3>
+            <p class="tl-basis">국제 콩쿠르 1 · 2 · 3위</p>
+          </div>
+          <div id="krConcours"></div>
+        </section>
+        <section class="tl-col">
+          <div class="tl-colhead">
+            <h3>단체의 발자취 <a class="tl-more" href="/db/org.html">단체DB &rarr;</a></h3>
+            <p class="tl-basis">국내에서 가장 이른 곳 · 지금 무대에 오르는 곳</p>
+          </div>
+          <div id="krOrgs"></div>
+        </section>
+      </div>
     </div>
 
   </div>
@@ -505,6 +573,94 @@ function ocN(tpl) {
       })
       .catch(function(){ pick(ERAS[0].key); });
   });
+
+  /* ══ 한국 클래식 연표 (2026-08-16) ═══════════════════════
+     ★ 무엇인가
+       한국 클래식 음악의 발자취를 연도순으로 엮습니다.
+       <b>오퍼스클램만 할 수 있는 것</b>입니다 — 서구 서비스는 이
+       자료에 닿을 수 없습니다.
+     ★ 어디서 얻나 — SQL 함수 oc_kr_timeline()
+       국내 단체 창단(orgs.founded)과 한국인 콩쿠르 입상을 모읍니다.
+       고르는 규칙은 함수 안에 <b>한 번만</b> 적어 두었습니다.
+     ★ 두 칸으로 나눕니다 — 한데 섞으면 콩쿠르 35건이 단체 목록에
+       묻힙니다(단체가 훨씬 많습니다).
+     ★ 한 번 받아 두고 갈래를 오갈 때는 다시 받지 않습니다. */
+  var krLoaded = false;
+
+  function loadKr(){
+    if (krLoaded) return;
+    krLoaded = true;
+
+    fetch(SB + '/rest/v1/rpc/oc_kr_timeline', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, HDR),
+      body: '{}'
+    })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){
+        rows = rows || [];
+        drawKr($('krConcours'), rows.filter(function(x){ return x.kind === 'concours'; }), true);
+        drawKr($('krOrgs'),     rows.filter(function(x){ return x.kind === 'org'; }),      false);
+      })
+      .catch(function(){
+        $('krConcours').innerHTML = '<p class="tl-empty">불러오지 못했습니다.</p>';
+      });
+  }
+
+  function drawKr(box, list, isConcours){
+    if (!box) return;
+    if (!list.length){ box.innerHTML = '<p class="tl-empty">아직 자료가 없습니다.</p>'; return; }
+
+    box.innerHTML = list.map(function(x){
+      /* ★ 인물DB 와 <b>이어진 사람만</b> 누를 수 있게 합니다.
+           안 이어진 이름(영문으로만 남은 분들)은 글자로 둡니다 —
+           눌러도 갈 데가 없는데 눌릴 것처럼 보이면 안 됩니다. */
+      var href = x.ref_kind === 'person' && x.ref_id
+        ? '/db/person-view.html?id=' + encodeURIComponent(x.ref_id)
+        : (x.ref_kind === 'org' && x.ref_id
+            ? '/db/org-view.html?id=' + encodeURIComponent(x.ref_id) : '');
+      /* 우승은 도드라지게 — 1위는 그 자체가 사건입니다 */
+      var win = isConcours && / 1위$/.test(x.sub || '');
+      var cls = 'kr-item' + (win ? ' is-win' : '');
+      var inner = '<span class="y">' + esc(x.yr) + '</span>'
+        + '<span class="b"><span class="t">' + esc(x.title || '') + '</span>'
+        + (x.sub ? '<span class="s">' + esc(x.sub) + '</span>' : '') + '</span>';
+      return href
+        ? '<a class="' + cls + '" href="' + href + '">' + inner + '</a>'
+        : '<div class="' + cls + '">' + inner + '</div>';
+    }).join('');
+  }
+
+  /* ── 갈래 탭 ─────────────────────────────────────────── */
+  (function kindTab(){
+    var nav = document.querySelector('.tl-kind');
+    if (!nav) return;
+    var WEST = ['tlBand','tlAxis','tlHeadWrap','tlColsWest'];
+
+    nav.addEventListener('click', function(ev){
+      var b = ev.target.closest('button[data-k]');
+      if (!b) return;
+      [].forEach.call(nav.querySelectorAll('button'), function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+
+      var kr = b.getAttribute('data-k') === 'kr';
+      /* 서양 쪽 덩어리를 한꺼번에 여닫습니다 */
+      [ document.querySelector('.tl-band'), document.querySelector('.tl-axis'),
+        document.querySelector('.tl-note'), document.querySelector('.tl-head'),
+        document.querySelector('.tl-cols:not(.krcols)') ].forEach(function(el){
+        if (el) el.hidden = kr;
+      });
+      $('krWrap').hidden = !kr;
+
+      var lead = $('tlLead');
+      if (lead) {
+        lead.textContent = kr
+          ? '한국 클래식 음악이 걸어온 길입니다. 국제 무대의 발자취와 단체의 역사를 나란히 봅니다.'
+          : '중세부터 오늘까지 한 줄로 봅니다. 시대를 누르면 그 시대의 작곡가 · 작품 · 용어가 함께 펼쳐집니다.';
+      }
+      if (kr) loadKr();
+    });
+  })();
 })();
 </script>
 <script src="/assets/app.js" defer></script>
