@@ -47,6 +47,28 @@ The competition was won by [[Radu Lupu]] of [[Romania]]. Lupu had previously won
 * [[Jorge Bolet]]
 * [[Lili Kraus]]
 `, { '1': 'Radu Lupu' }],
+
+  ['⑦ 이름 앞에 나라가 붙은 목록', `
+* Gold Medal – Hong Kong Aristo Sham
+* Silver Medal – Israel Russia Vitaly Starikov
+* Bronze Medal – USA Evren Ozel
+`, { '1': 'Aristo Sham', '2': 'Vitaly Starikov', '3': 'Evren Ozel' }],
+
+  ['⑧ X won the competition (won by 가 아님)', `
+[[José Feghali]] won the competition, while [[Philippe Bianconi]] and [[Barry Douglas]] were awarded the silver and bronze medals.
+`, { '1': 'José Feghali', '2': 'Philippe Bianconi', '3': 'Barry Douglas' }],
+
+  ['⑨ was the winner', `
+[[Jon Nakamatsu]] was the winner. [[Yakov Kasman]] took the silver medal and [[Aviram Reichert]] the bronze medal.
+`, { '1': 'Jon Nakamatsu', '2': 'Yakov Kasman', '3': 'Aviram Reichert' }],
+
+  ['⑩ 표 안은 보지 않음 (후원자 이름이 1위가 되던 것)', `
+{| class="wikitable"
+! Prize !! Winner
+|-
+| First Prize (Nancy Lee and Perry R. Bass Gold Medal) || China Haochen Zhang
+|}
+`, {}],
 ];
 
 let pass = 0, fail = 0;

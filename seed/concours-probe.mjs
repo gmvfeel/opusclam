@@ -42,6 +42,7 @@ const ARGS = Object.fromEntries(process.argv.slice(2).map(a => {
 }));
 const DUMP = !!ARGS.dump;
 const SAVE = !!ARGS.save;
+const DIAG = !!ARGS.diag;      /* 못 읽은 회의 원문 문형 보기 */
 
 const SB_URL = process.env.SUPABASE_URL || '';
 const SB_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -549,10 +550,30 @@ function nameCandsAt(seg) {
   return out;
 }
 
+/* 이름 앞에 붙은 나라를 뗍니다 — 아는 나라일 때만
+   ★ 사람 이름을 잘라 내면 안 되므로, 나라 사전에 있는 낱말만 뗍니다.
+   ★ 두 나라가 잇달아 붙기도 합니다(이중국적) — 두 낱말까지 봅니다. */
+function stripLeadCountry(name) {
+  const t = String(name || '').trim();
+  const w = t.split(/\s+/);
+  for (let k = 2; k >= 1; k--) {
+    if (w.length > k + 1 && isCountry(w.slice(0, k).join(' '))) {
+      return { name: w.slice(k).join(' '), country: w.slice(0, k).join(' ') };
+    }
+  }
+  return { name: t, country: '' };
+}
+
 function parseProse(wt) {
   const out = [];
   /* 참고문헌·심사위원 뒤는 보지 않습니다 — 엉뚱한 이름이 많습니다 */
-  const body = wt.split(/\n=+\s*(?:References|External links|Notes|Sources|Bibliography|Further reading|Jury|Jurors|Judges|Repertoire|See also)\b/i)[0];
+  const body = wt.split(/\n=+\s*(?:References|External links|Notes|Sources|Bibliography|Further reading|Jury|Jurors|Judges|Repertoire|See also)\b/i)[0]
+    /* ★ 표는 <b>통째로 걷어냅니다</b> (2026-08-17 · 시험에서 잡음)
+         표 한 줄이 절로 잡히면 상 이름 속 사람이 입상자가 됩니다 —
+           「First Prize (Nancy Lee and Perry R. Bass Gold Medal)」
+           → 1위 「Nancy Lee」(상을 낸 후원자입니다)
+         표는 표 파서가 볼 몫이고, 문장 파서는 <b>줄글만</b> 봅니다. */
+    .replace(/\{\|[\s\S]*?\n\|\}/g, '\n');
   /* 다른 대회 이야기가 섞인 문장은 건너뜁니다
      (「그는 차이콥스키 콩쿠르에서 금메달을 땄다」 같은 서술) */
   const OTHER = /tchaikovsky|chopin|leeds|busoni|queen elisabeth|rubinstein|geneva|montreal|hamamatsu|sydney|dublin|honens|naumburg/i;
@@ -572,7 +593,10 @@ function parseProse(wt) {
       const k = (m[1] || m[2]).toLowerCase();
       if (MEDAL_RANK[k]) ranks.push(MEDAL_RANK[k]);
     }
-    const wonBy = /\b(?:won by|shared by|awarded to|went to|winner was|first place went)\b/i.test(seg);
+    /* ★ 1위를 가리키는 말은 <b>여러 가지</b>입니다. 메달 낱말이 없는
+         문형이 많아 좁게 잡으면 <b>1위만 빠집니다</b> — 2·7·9·10회에서
+         2·3위만 읽힌 까닭입니다. */
+    const wonBy = /\b(?:won by|shared by|awarded to|went to|winner was|winners? were|first place went|won the (?:competition|contest|gold|first)|took (?:the )?(?:gold|first)|winner of the (?:competition|contest)|was the winner|emerged (?:as )?the winner|top prize)\b/i.test(seg);
     if (!ranks.length && !wonBy) continue;
 
     const cands = nameCandsAt(seg);
@@ -590,7 +614,24 @@ function parseProse(wt) {
       }
     }
   }
-  return out;
+
+  /* ── 다듬기 ────────────────────────────────────────────
+     ★ 국기 틀이 풀리면 나라가 <b>이름 앞에</b> 그대로 남습니다 —
+         「USA Evren Ozel」·「Israel Russia Vitaly Starikov」
+       떼지 않으면 같은 사람이 둘로 갈라져 인물DB 와 이을 때
+       <b>둘 다 못 찾습니다.</b> */
+  const seen = new Set(), fin = [];
+  for (const p of out) {
+    const s = stripLeadCountry(p.name);
+    const name = s.name;
+    const country = p.country || s.country || '';
+    if (!name || isNotName(name) || isCountry(name)) continue;
+    const k = p.rank + '|' + name.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    fin.push({ rank: p.rank, name, country });
+  }
+  return fin;
 }
 
 /* 다섯 가운데 가장 많이 읽어낸 것을 씁니다 */
@@ -611,16 +652,30 @@ function parseAll(wt, opt = {}) {
        그래서 문장 꼴은 두 자리에서만 씁니다 —
          ① 문장을 먼저 보라고 한 대회 (반 클라이번)
          ② 네 꼴이 <b>한 명도</b> 못 읽었을 때
-       이러면 기존 대회의 결과는 한 글자도 바뀌지 않습니다. */
-  if (opt.proseFirst || !best.got.length) {
+       이러면 기존 대회의 결과는 한 글자도 바뀌지 않습니다.
+
+     ★★ 문장을 먼저 보는 대회는 <b>표 결과를 아예 쓰지 않습니다</b>
+       (2026-08-17 · 첫 실행에서 잡음)
+       클라이번 13·14회 표는 상 이름이 이름 자리로 밀려들어
+         1위 = 「Prize money」
+         1위 = 「First Prize (Nancy Lee and Perry R. Bass Gold Medal) · China …」
+       이런 것이 나왔습니다. 이름 40건 가운데 열 건 남짓이 이런 찌꺼기입니다.
+       <b>충실도가 개수보다 앞섭니다</b> — 못 읽은 회로 두고 문형을
+       더 손보는 편이 낫습니다. */
+  if (opt.proseFirst) {
+    return finish({ how: '문장', got: parseProse(wt) });
+  }
+  if (!best.got.length) {
     const prose = parseProse(wt);
-    const top3 = ['1', '2', '3'].filter(r => prose.some(p => p.rank === r)).length;
-    if (opt.proseFirst ? top3 >= 2 : prose.length > 0) {
-      best = { how: '문장', got: prose };
-    }
+    if (prose.length) best = { how: '문장', got: prose };
   }
 
   /* 이름 같은 것이 두 번 나오면 하나로 */
+  return finish(best);
+}
+
+/* 읽어낸 것을 마지막으로 다듬습니다 — 두 자리에서 함께 씁니다 */
+function finish(best) {
   const seen = new Set(), list = [];
   for (const p of best.got) {
     if (!p.name || p.name.length < 2 || p.name.length > 60) continue;
@@ -804,6 +859,23 @@ async function save(rows) {
         const top3 = ['1', '2', '3'].filter(r => list.some(p => p.rank === r)).length;
         const good = top3 === 3;
         list.forEach(p => { if (year && p.rank) gotKey.add(year + '|' + p.rank); });
+
+        /* ★ 진단 — 못 읽은 회의 <b>원문 문형</b>을 보여 줍니다 (--diag)
+             문서마다 문장 짜임이 달라, 어떤 말로 적혀 있는지 보아야
+             문형을 더할 수 있습니다. 회차마다 왕복하면 끝이 없어서
+             <b>한 번에</b> 모아 봅니다. */
+        if (DIAG && !good) {
+          console.log(`   ┌── 진단 : ${title}`);
+          const head = clean(wt.slice(0, 1200)).slice(0, 320);
+          console.log(`   │ 머리말 : ${head}`);
+          const lines = wt.split('\n')
+            .filter(l => /won|winner|medal|prize|first place/i.test(l))
+            .filter(l => !/^\s*(?:\{\{|\[\[(?:File|Image|Category)|<ref)/i.test(l))
+            .slice(0, 7);
+          lines.forEach(l => console.log(`   │ ${l.replace(/\s+/g, ' ').trim().slice(0, 220)}`));
+          if (!lines.length) console.log('   │ (「won·medal·prize」가 든 줄이 없습니다)');
+          console.log('   └──');
+        }
         if (good) ok++; else { fail++; bad.push(no); }
         total += list.length;
         console.log(`   제${String(no).padStart(2)}회 ${year || '????'}  ${good ? '읽음' : '★못읽음'}`

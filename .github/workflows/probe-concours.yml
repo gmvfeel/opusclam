@@ -30,9 +30,15 @@ on:
         required: false
         default: ''
       raw:
-        description: '원문 보기 (쇼팽은 회차 숫자 · 다른 대회는 이름 · 예: 9 또는 tchaikovsky)'
+        description: '원문 보기 (쇼팽 9 · 대회이름 tchaikovsky · 회차 문서 cliburn16)'
         required: false
         default: ''
+      diag:
+        description: '못 읽은 회의 원문 문형 보기 (문형을 고칠 때만 yes)'
+        required: false
+        default: 'no'
+        type: choice
+        options: ['no', 'yes']
       save:
         description: '실제로 담기 (먼저 sql/concours-01-table.sql 을 돌리십시오)'
         required: true
@@ -57,6 +63,7 @@ jobs:
           if [ -n "$ONLY" ]; then OPTS="$OPTS --only=$ONLY"; fi
           RAWNO="${{ github.event.inputs.raw }}"
           if [ -n "$RAWNO" ]; then OPTS="--raw=$RAWNO"; fi
+          if [ "${{ github.event.inputs.diag }}" = "yes" ]; then OPTS="$OPTS --diag"; fi
           if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
           echo "── 실행 : node seed/concours-probe.mjs $OPTS ──"
           node seed/concours-probe.mjs $OPTS
