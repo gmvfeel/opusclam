@@ -2575,5 +2575,9 @@
   "영상 보기": "Watch video",
   "눌러서 보기": "Click to play",
   "출연": "Cast",
-  "이름을 누르면 인물 정보로 갑니다.": "Tap a name to see their profile."
+  "이름을 누르면 인물 정보로 갑니다.": "Tap a name to see their profile.",
+  "오늘 태어난 음악가": "Born Today",
+  "{n}일": "/{n}",
+  "올해 {n}살": "age {n}",
+  "그 밖에 {n}명이 오늘 태어났습니다": "{n} more were born today"
 }

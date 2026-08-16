@@ -1088,3 +1088,37 @@
     .fb .bd{padding:11px 12px 12px}
     .fb .t{font-size:12.5px}
   }
+
+  /* ══ 오늘 태어난 음악가 (2026-08-16) ═══════════════════════
+     ★ 「오늘의 인물」은 한 사람을 크게 보여 주지만, 이것은 <b>여럿</b>을
+       나란히 놓습니다 — 하루 평균 마흔 명이라 고를 것이 많습니다.
+     ★ 태어난 해를 크게 두어 <b>시대가 한눈에</b> 들어오게 합니다.
+       1685년과 1998년이 나란히 있으면 그 자체가 볼거리입니다. */
+  .bday{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .bday a{display:flex;align-items:center;gap:13px;padding:13px 15px;
+    border:1px solid var(--line);border-radius:12px;background:var(--paper);
+    text-decoration:none;transition:border-color .18s ease,background .18s ease}
+  .bday a:hover{border-color:var(--violet-2);background:var(--paper-2)}
+
+  .bday .yr{flex:0 0 auto;font-family:var(--display);font-size:15px;font-weight:900;
+    letter-spacing:-.03em;color:#C9A94E;font-variant-numeric:tabular-nums;
+    min-width:38px;text-align:center}
+  .bday .bd{flex:1;min-width:0}
+  .bday .nm{display:block;font-size:13.5px;font-weight:700;letter-spacing:-.02em;
+    color:var(--text);line-height:1.35;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bday a:hover .nm{color:var(--violet-2)}
+  .bday .sub{display:block;margin-top:2px;font-size:11.5px;color:var(--text-3);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* 살아 있는 분에게는 나이를 — 「올해 27살」이 「1998년생」보다 와닿습니다 */
+  .bday .age{flex:0 0 auto;font-size:11px;color:var(--text-3);white-space:nowrap}
+
+  .bday .more{grid-column:1/-1;padding:11px;text-align:center;font-size:12.5px;
+    color:var(--text-3);border:1px dashed var(--line-2);border-radius:12px}
+
+  @media (max-width:1040px){ .bday{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  @media (max-width:760px){ .bday{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px} }
+  @media (max-width:480px){
+    .bday{grid-template-columns:1fr}
+    .bday .age{display:none}
+  }

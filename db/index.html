@@ -128,6 +128,31 @@
       </a>
     </section>
 
+    <!-- ★★ 2026-08-16 · 오늘 태어난 음악가 ★★
+         ─────────────────────────────────────────────────────
+         ★ 무엇인가
+           오늘 날짜와 <b>생일이 같은</b> 음악가를 보여 줍니다.
+           「오늘의 인물」은 아무나 한 명이지만 이것은 <b>날짜와 이어진</b>
+           것이라, 날마다 와서 볼 값이 생깁니다.
+
+         ★ 어디서 얻나
+           persons.birth_date — 오늘 새로 채운 칸입니다. 예전에는
+           life 에 「1963~」처럼 연도만 있어 이런 것을 만들 수 없었습니다.
+           위키데이터가 월일까지 주는데 수집기가 버리고 있었습니다.
+
+         ★★ 1월 1일은 <b>보여 주지 않습니다</b>
+           그날에 2,049명이 몰려 있습니다. 다른 날은 50명 안팎인데
+           마흔 배입니다. 위키데이터가 <b>연도만 아는 인물</b>을 1월 1일로
+           적어 두기 때문입니다. 실제 생일이 아니므로 그날은 감춥니다.
+           (1년에 하루뿐이고, 그날도 위 「오늘의 인물」은 나옵니다.) -->
+    <section class="hb-sec" id="bdaySec" hidden>
+      <div class="hb-head">
+        <span class="hb-title">오늘 태어난 음악가<em>BORN TODAY</em></span>
+        <span class="hb-more" id="bdayDate"></span>
+      </div>
+      <div class="bday" id="bdayList"></div>
+    </section>
+
     <!-- ── 인물 훑어보기 ──────────────────────────────────
          ★ 2026-08-16 · 「둘러보기」를 다시 짰습니다 (파트너 지적)
            예전에는 「시대로 / 낭만주의 39」라고만 적혀 있어 <b>39가 무슨
@@ -556,6 +581,78 @@
       }
       sec.hidden = false;
     }
+  })();
+
+  /* ── 오늘 태어난 음악가 (2026-08-16) ──────────────────
+     ★ 오늘 날짜와 생일이 같은 사람을 보여 줍니다. 하루 평균 마흔 명
+       쯤이라 <b>여덟 명</b>만 골라 놓습니다.
+     ★★ 1월 1일은 <b>건너뜁니다.</b> 그날에 2,049명이 몰려 있는데,
+       위키데이터가 「연도만 아는 인물」을 1월 1일로 적어 두기 때문입니다.
+       실제 생일이 아니므로 보여 주면 거짓말이 됩니다.
+     ★ 고를 자리를 흔듭니다 — 늘 앞에서부터 받으면 같은 얼굴만 나옵니다.
+     ★ 소개문이 있는 사람을 먼저 — 눌러 들어갔는데 비어 있으면 실망합니다. */
+  /* ★ 이 블록의 이름은 <b>n·esc·t</b> 이고 $ 는 없습니다.
+       다른 화면은 $·ocN 을 쓰는데 여기만 다릅니다 —
+       처음에 그대로 옮겨 적었다가 화면이 통째로 멈췄습니다. */
+  (function bornToday() {
+    var sec = document.getElementById('bdaySec');
+    var box = document.getElementById('bdayList');
+    if (!sec || !box) return;
+
+    var now = new Date();
+    var mo = now.getMonth() + 1, dy = now.getDate();
+
+    /* 1월 1일 — 실제 생일이 아닌 사람이 몰려 있어 건너뜁니다 */
+    if (mo === 1 && dy === 1) return;
+
+    var el = document.getElementById('bdayDate');
+    if (el) el.textContent = n('{n}월', mo) + ' ' + n('{n}일', dy);
+
+    /* 날짜로 거르는 것은 PostgREST 로 못 하므로, 그 달에 태어난 사람을
+       받아 화면에서 날을 맞춥니다. 한 달이면 넉넉히 받아집니다. */
+    var from = mo + '-' + String(dy).padStart(2, '0');
+    fetch(U + 'persons?select=id,name_ko,name_en,field,instrument,birth_date,death_date,description'
+            + '&hidden=not.is.true&birth_date=not.is.null'
+            + '&birth_date=gte.1000-01-01&limit=1200'
+            + '&offset=' + Math.floor(Math.random() * 400), { headers: H })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        var hit = (rows || []).filter(function (p) {
+          if (!p.birth_date) return false;
+          var d = String(p.birth_date).slice(0, 10).split('-');
+          return +d[1] === mo && +d[2] === dy;
+        });
+        if (!hit.length) return;
+
+        /* 소개문 있는 사람을 앞으로 */
+        hit.sort(function (a, b) {
+          var ka = (a.description && a.description.trim()) ? 0 : 1;
+          var kb = (b.description && b.description.trim()) ? 0 : 1;
+          if (ka !== kb) return ka - kb;
+          return String(a.birth_date).localeCompare(String(b.birth_date));
+        });
+
+        var thisYear = now.getFullYear();
+        box.innerHTML = hit.slice(0, 8).map(function (p) {
+          var nm = p.name_ko || p.name_en || '';
+          var y = +String(p.birth_date).slice(0, 4);
+          var sub = [t(p.field), t(p.instrument)].filter(Boolean).join(' · ');
+          /* 살아 있는 분에게는 나이를 — 「올해 27살」이 더 와닿습니다 */
+          var age = !p.death_date ? n('올해 {n}살', thisYear - y) : '';
+          return '<a href="/db/person-view.html?id=' + encodeURIComponent(p.id) + '">'
+            + '<span class="yr">' + y + '</span>'
+            + '<span class="bd"><span class="nm">' + esc(nm) + '</span>'
+            +   (sub ? '<span class="sub">' + esc(sub) + '</span>' : '')
+            + '</span>'
+            + (age ? '<span class="age">' + esc(age) + '</span>' : '')
+            + '</a>';
+        }).join('')
+        + (hit.length > 8
+            ? '<span class="more">' + esc(n('그 밖에 {n}명이 오늘 태어났습니다', hit.length - 8)) + '</span>'
+            : '');
+        sec.hidden = false;
+      })
+      .catch(function () { /* 없으면 감춘 채로 */ });
   })();
 
   /* ── 인물 훑어보기 ───────────────────────────────────
