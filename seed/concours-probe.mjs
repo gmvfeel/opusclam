@@ -238,6 +238,14 @@ const COUNTRY = new Set(['USA','USSR','UK','U.S.','U.K.','US','United States','U
   'KAZ','Uzbekistan','Azerbaijan','Belarus','Moldova','Mongolia','South Africa','Egypt',
   'Yugoslavia','Bosnia and Herzegovina','North Macedonia','Albania','Cyprus','Malta',
   'Luxembourg','Monaco','Puerto Rico','Costa Rica','Ecuador','Bolivia','Paraguay',
+  /* ★ 세 글자 코드 — 클라이번 14회 표가 「UKR Vadym Kholodenko」꼴입니다.
+       코드를 모르면 나라가 이름에 붙어 버립니다. */
+  'UKR','ITA','CHN','JPN','KOR','RUS','GBR','FRA','GER','POL','ESP','BUL','ROU',
+  'CZE','HKG','ISR','CAN','BRA','ARG','AUS','TUR','GEO','ARM','BLR','UZB','SRB',
+  'HUN','AUT','NED','BEL','SUI','SWE','NOR','FIN','DEN','GRE','POR','IRL','MEX',
+  'VEN','CUB','COL','PER','CHI','TPE','SGP','IND','IRI','THA','PHI','MAS','VIE',
+  'RSA','EGY','MDA','MGL','LAT','LTU','EST','SVK','SLO','CRO','BIH','MKD','ALB',
+  'CYP','MLT','LUX','MON','PUR','CRC','ECU','BOL','PAR','URU','NZL','MAR','SVN',
 ].map(x => x.toLowerCase()));
 
 function isCountry(t) {
@@ -550,6 +558,92 @@ function nameCandsAt(seg) {
   return out;
 }
 
+/* ── ⑥ 상 이름 표 (반 클라이번 회차 문서) ─────────────────
+   원문을 보고 알았습니다 (2026-08-17). 두 꼴이 있습니다 —
+
+   ① 세로 꼴 (13·14회) — 첫 칸이 상 이름, 둘째 칸이 수상자
+        ! First Prize (Nancy Lee and Perry R. Bass Gold Medal)
+        |bgcolor="gold"| {{flagicon|China}} [[Haochen Zhang]]<br />
+                         {{flagicon|Japan}} [[Nobuyuki Tsujii]]<br />(tie)
+        | cash award of US$20,000 each …
+
+   ② 가로 꼴 (15회) — 머리줄이 등수, 다음 줄이 이름
+        ! Gold Medalist !! Silver Medalist !! Bronze Medalist !! Audience Award
+        |-
+        |[[Yekwon Sunwoo]] || [[Kenneth Broberg]] || [[Daniel Hsu]] || …
+
+   ★ <b>등수 칸에서는 이름을 뽑지 않습니다.</b> 「First Prize (Nancy Lee
+     and Perry R. Bass Gold Medal)」의 두 사람은 상을 낸 <b>후원자</b>입니다.
+     지난 실행에서 이들이 1위로 들어왔습니다.
+   ★ 특별상은 등수가 아닙니다 — 실내악상·청중상·심사위원장 재량상 등.
+   ★ 한 칸에 여럿이 들어갑니다 — <b>「&lt;br&gt;」로 먼저 가릅니다.</b>
+     clean 을 먼저 하면 줄바꿈이 공백이 되어 두 사람이 한 사람이 됩니다. */
+const SPECIAL_AWARD = /memorial award|discretionary|audience|internet voter|best performance|chamber music|new work|jur(?:y|or)|encouragement|steven de groote|beverly taylor|raymond e|john giordano|prize money|benefits?|semifinal|finalist|other/i;
+
+function awardRank(t) {
+  const s = String(t || '').toLowerCase();
+  if (!s || SPECIAL_AWARD.test(s)) return '';
+  if (/first prize|gold medal/.test(s)) return '1';
+  if (/second prize|silver medal/.test(s)) return '2';
+  if (/third prize|bronze medal|crystal/.test(s)) return '3';
+  return '';
+}
+
+/* 칸 하나에서 사람 이름들 — 「<br>」로 먼저 가릅니다 */
+function cellNames(rawCell) {
+  const out = [];
+  for (const part of String(rawCell || '').split(/<br\s*\/?>/i)) {
+    const v = clean(part);
+    if (!v || /^\(?tie\)?$/i.test(v) || /^and$/i.test(v)) continue;
+    if (isNotName(v)) continue;
+    const s = stripLeadCountry(v);
+    if (!s.name || isNotName(s.name) || isCountry(s.name)) continue;
+    if (!looksPerson(s.name)) continue;
+    out.push({ name: s.name, country: s.country });
+  }
+  return out;
+}
+
+/* 줄을 칸으로 — <b>다듬기 전 원문</b>을 그대로 돌려줍니다 */
+function rowCells(row) {
+  const cells = [];
+  for (const line of String(row || '').split('\n')) {
+    if (!/^[|!]/.test(line)) continue;
+    const body = line.replace(/^[|!]+\s*/, '');
+    for (const c of body.split(/\s*\|\|\s*|\s*!!\s*/)) cells.push(c);
+  }
+  return cells;
+}
+
+function parseAwardTable(wt) {
+  const out = [];
+  const tables = wt.match(/\{\|[\s\S]*?\n\|\}/g) || [];
+  for (const tb of tables) {
+    const R = tb.split(/\n\|-/).map(rowCells);
+
+    /* ① 세로 꼴 */
+    for (const cells of R) {
+      if (cells.length < 2) continue;
+      const rk = awardRank(clean(cells[0]));
+      if (!rk) continue;
+      cellNames(cells[1]).forEach(p => out.push({ rank: rk, name: p.name, country: p.country }));
+    }
+
+    /* ② 가로 꼴 — 머리줄에 등수가 <b>둘 이상</b> 있어야 합니다 */
+    for (let i = 0; i < R.length - 1; i++) {
+      const map = [];
+      R[i].forEach((c, j) => { const r = awardRank(clean(c)); if (r) map[j] = r; });
+      if (map.filter(Boolean).length < 2) continue;
+      const data = R[i + 1];
+      map.forEach((r, j) => {
+        if (!r || !data[j]) return;
+        cellNames(data[j]).forEach(p => out.push({ rank: r, name: p.name, country: p.country }));
+      });
+    }
+  }
+  return out;
+}
+
 /* 이름 앞에 붙은 나라를 뗍니다 — 아는 나라일 때만
    ★ 사람 이름을 잘라 내면 안 되므로, 나라 사전에 있는 낱말만 뗍니다.
    ★ 두 나라가 잇달아 붙기도 합니다(이중국적) — 두 낱말까지 봅니다. */
@@ -558,7 +652,13 @@ function stripLeadCountry(name) {
   const w = t.split(/\s+/);
   for (let k = 2; k >= 1; k--) {
     if (w.length > k + 1 && isCountry(w.slice(0, k).join(' '))) {
-      return { name: w.slice(k).join(' '), country: w.slice(0, k).join(' ') };
+      let c = w.slice(0, k).join(' ');
+      /* ★ 국기 틀과 글자 코드가 나란히 오면 같은 나라가 두 번 붙습니다 —
+           「{{flagicon|UKR}} UKR」 → 「UKR UKR」. 하나로 줄입니다.
+           다만 <b>서로 다른</b> 두 나라는 그대로 둡니다(이중국적). */
+      const ws = c.split(/\s+/);
+      if (ws.length === 2 && ws[0].toLowerCase() === ws[1].toLowerCase()) c = ws[0];
+      return { name: w.slice(k).join(' '), country: c };
     }
   }
   return { name: t, country: '' };
@@ -663,7 +763,17 @@ function parseAll(wt, opt = {}) {
        <b>충실도가 개수보다 앞섭니다</b> — 못 읽은 회로 두고 문형을
        더 손보는 편이 낫습니다. */
   if (opt.proseFirst) {
-    return finish({ how: '문장', got: parseProse(wt) });
+    /* ★ 상 이름 표를 <b>먼저</b> 놓고 문장을 뒤에 붙입니다.
+         표 쪽이 나라까지 또렷해 더 낫고, 겹치는 사람은 뒤엣것이
+         버려집니다. 둘 다 없으면 그 회는 못 읽은 것으로 둡니다. */
+    const aw = parseAwardTable(wt);
+    const pr = parseProse(wt);
+    const how = aw.length ? (pr.length ? '상표＋문장' : '상표') : '문장';
+    return finish({ how, got: aw.concat(pr) });
+  }
+  if (!best.got.length) {
+    const aw = parseAwardTable(wt);
+    if (aw.length) best = { how: '상표', got: aw };
   }
   if (!best.got.length) {
     const prose = parseProse(wt);

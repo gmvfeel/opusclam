@@ -6,7 +6,7 @@ import { readFileSync } from 'fs';
 const src = readFileSync(new URL('./concours-probe.mjs', import.meta.url), 'utf8');
 const cut = src.indexOf('/* ══ 담기');
 const mod = src.slice(0, cut)
-  + '\nexport { parseProse, parseAll, looksPerson, nameCandsAt };\n';
+  + '\nexport { parseProse, parseAll };\n';
 const { writeFileSync } = await import('fs');
 writeFileSync(new URL('/tmp/_t-parsers.mjs', import.meta.url), mod);
 const P = await import('/tmp/_t-parsers.mjs');
@@ -69,11 +69,56 @@ The competition was won by [[Radu Lupu]] of [[Romania]]. Lupu had previously won
 | First Prize (Nancy Lee and Perry R. Bass Gold Medal) || China Haochen Zhang
 |}
 `, {}],
+
+  ['⑪ 상 이름 세로 표 (13회 · 실제 원문)', `{| class="wikitable"
+! Award !! Winner(s) !! Benefits
+|-
+! First Prize (Nancy Lee and Perry R. Bass Gold Medal)
+|bgcolor="gold"| {{flagicon|China}} [[Haochen Zhang]]<br />{{flagicon|Japan}} [[Nobuyuki Tsujii]]<br />(tie)
+| cash award of [[US $]]20,000 each
+|-
+! Second Prize (Silver Medal)
+|bgcolor="silver"|{{flagicon|South Korea}} [[Yeol Eum Son]]
+| cash award of [[US $]]20,000
+|-
+! Third Prize (Crystal Award)
+| not awarded
+|-
+! [[Steven De Groote]] Memorial Award for the Best Performance(s) of Chamber Music
+| {{flagicon|Bulgaria}} [[Evgeni Bozhanov]]<br />and<br />{{flagicon|South Korea}} [[Yeol Eum Son]]
+| cash award
+|}`, { '1': 'Haochen Zhang', '2': 'Yeol Eum Son' }, true],
+
+  ['⑫ 머리줄이 등수인 가로 표 (15회 · 실제 원문)', `{| class="wikitable"
+! Gold Medalist
+! Silver Medalist
+! Bronze Medalist
+! Audience Award
+|-
+|[[Yekwon Sunwoo]]
+|[[Kenneth Broberg]]
+|[[Daniel Hsu]]
+| [[Rachel Cheung]]
+|}`, { '1': 'Yekwon Sunwoo', '2': 'Kenneth Broberg', '3': 'Daniel Hsu' }, true],
+
+  ['⑬ 세 글자 나라 코드 (14회)', `{| class="wikitable"
+! Award !! Winner !! Prize money
+|-
+! Gold Medal
+| {{flagicon|UKR}} UKR [[Vadym Kholodenko]] || $50,000
+|-
+! Silver Medal
+| {{flagicon|ITA}} ITA [[Beatrice Rana]] || $30,000
+|-
+! Crystal Medal
+| {{flagicon|USA}} USA [[Sean Chen]] || $20,000
+|}`, { '1': 'Vadym Kholodenko', '2': 'Beatrice Rana', '3': 'Sean Chen' }, true],
 ];
 
 let pass = 0, fail = 0;
-for (const [label, wt, want] of CASES) {
-  const got = P.parseProse(wt);
+for (const [label, wt, want, viaAll] of CASES) {
+  /* 표 꼴은 parseAll(문장 먼저 보는 대회) 로 봅니다 — 상표 파서가 함께 돕니다 */
+  const got = viaAll ? P.parseAll(wt, { proseFirst: true }).list : P.parseProse(wt);
   const byRank = {};
   got.forEach(p => { if (!byRank[p.rank]) byRank[p.rank] = p.name; });
   const bad = [];
