@@ -644,6 +644,105 @@ function parseAwardTable(wt) {
   return out;
 }
 
+/* 나라 코드 → 나라 이름
+   ★ 클라이번 본 문서는 「URS·FRG·ROU」처럼 <b>세 글자 코드</b>로 적습니다.
+     그대로 두면 화면 나라 고르개에 「URS」와 「Soviet Union」이 <b>따로</b>
+     보입니다. 다른 대회와 같은 표기로 맞춥니다.
+   ★ 없는 코드는 <b>그대로 둡니다</b> — 지어내지 않습니다. */
+const CODE2NAME = {
+  USA: 'USA', URS: 'Soviet Union', RUS: 'Russia', JPN: 'Japan', CHN: 'China',
+  KOR: 'South Korea', PRK: 'North Korea', ITA: 'Italy', FRA: 'France',
+  FRG: 'West Germany', GDR: 'East Germany', GER: 'Germany', ROU: 'Romania',
+  COL: 'Colombia', BRA: 'Brazil', NZL: 'New Zealand', RSA: 'South Africa',
+  UZB: 'Uzbekistan', ISR: 'Israel', UK: 'UK', GBR: 'UK', UKR: 'Ukraine',
+  CHI: 'Chile', TPE: 'Taiwan', HKG: 'Hong Kong', CAN: 'Canada', ESP: 'Spain',
+  POL: 'Poland', HUN: 'Hungary', BUL: 'Bulgaria', AUT: 'Austria',
+  SUI: 'Switzerland', NED: 'Netherlands', BEL: 'Belgium', ARM: 'Armenia',
+  GEO: 'Georgia', LAT: 'Latvia', LTU: 'Lithuania', EST: 'Estonia',
+  SRB: 'Serbia', CRO: 'Croatia', SVK: 'Slovakia', SLO: 'Slovenia',
+  CZE: 'Czech Republic', TCH: 'Czechoslovakia', YUG: 'Yugoslavia',
+  TUR: 'Turkey', GRE: 'Greece', POR: 'Portugal', IRL: 'Ireland',
+  MEX: 'Mexico', ARG: 'Argentina', AUS: 'Australia', IND: 'India',
+  SGP: 'Singapore', VIE: 'Vietnam', THA: 'Thailand', PHI: 'Philippines',
+  MAS: 'Malaysia', KAZ: 'Kazakhstan', BLR: 'Belarus', MDA: 'Moldova',
+  MGL: 'Mongolia', EGY: 'Egypt', IRI: 'Iran', CUB: 'Cuba', VEN: 'Venezuela',
+  PER: 'Peru', ECU: 'Ecuador', BOL: 'Bolivia', PAR: 'Paraguay',
+  URU: 'Uruguay', CRC: 'Costa Rica', PUR: 'Puerto Rico', SWE: 'Sweden',
+  NOR: 'Norway', FIN: 'Finland', DEN: 'Denmark', ISL: 'Iceland',
+  LUX: 'Luxembourg', MON: 'Monaco', CYP: 'Cyprus', MLT: 'Malta',
+  ALB: 'Albania', MKD: 'North Macedonia', BIH: 'Bosnia and Herzegovina',
+};
+function codeName(c) {
+  const t = String(c || '').trim();
+  return CODE2NAME[t.toUpperCase()] || t;
+}
+
+/* ── ⑦ 메달리스트 표 (반 클라이번 <b>본 문서</b>) ──────────
+   원문을 보고 알았습니다 (2026-08-17). 회차 문서보다 <b>훨씬 낫습니다</b> —
+   열일곱 회가 한 표에 있고, 공동 수상과 미수여까지 또렷합니다.
+
+       {| {{MedalistTable|type=Year}}
+       |-
+       |[[Eleventh Van Cliburn…|2001]]
+       |{{Flag medalist|[[Stanislav Ioudenitch]]|UZB}}{{break}}
+        {{Flag medalist|[[Olga Kern]]|RUS}}
+       |{{Flag medalist|[[Maxim Philippov]]|RUS}}{{break}}
+        {{Flag medalist|[[Antonio Pompa-Baldi]]|ITA}}
+       |Not Awarded
+
+   ★ 공동 수상은 <b>{{break}}</b> 로 이어집니다 — 이것으로 가릅니다.
+   ★ 이름은 <b>문서 이름</b>을 씁니다(「[[Barry Douglas (pianist)|Barry
+     Douglas]]」→ 괄호를 뗀 Barry Douglas). 보이는 글자를 쓰면 회차
+     문서와 표기가 달라져 같은 사람이 둘이 됩니다.
+   ★ 「Not Awarded」는 <b>주지 않은 상</b>입니다 — 건너뜁니다. */
+function medalistCell(rawCell) {
+  const out = [];
+  for (const part of String(rawCell || '').split(/\{\{\s*break\s*\}\}/i)) {
+    if (!part.trim() || /not\s*awarded/i.test(part)) continue;
+    let country = '';
+    const mc = /\|\s*([A-Za-z]{2,3})\s*(?:\|\s*variant\s*=\s*[^}|]*)?\s*\}\}/.exec(part);
+    if (mc) country = codeName(mc[1]);
+    let name = '';
+    const ml = /\[\[([^\]|]+)(?:\|([^\]]*))?\]\]/.exec(part);
+    if (ml) name = ml[1];
+    else {
+      const mi = /interlanguage\s*link\s*\|\s*([^|}]+)/i.exec(part);
+      if (mi) name = mi[1];
+    }
+    name = clean(name).replace(/\s*\([^)]*\)\s*$/, '').trim();
+    if (!name || !looksPerson(name)) continue;
+    out.push({ name, country });
+  }
+  return out;
+}
+
+function parseMedalistTable(wt) {
+  const out = [];
+  const tables = (wt.match(/\{\|[\s\S]*?\n\|\}/g) || [])
+    .filter(tb => /\{\{\s*Flag\s?medalist/i.test(tb));
+  for (const tb of tables) {
+    for (const row of tb.split(/\n\|-/).slice(1)) {
+      /* 셀을 <b>다듬기 전 원문</b>으로 나눕니다 — 틀 속을 봐야 합니다.
+         맨 앞의 「||」는 빈 칸이 아니라 적는 버릇이므로 하나로 봅니다. */
+      const cells = [];
+      for (const line of row.split('\n')) {
+        if (!/^\|/.test(line)) continue;
+        cells.push(line.replace(/^\|+\s*/, ''));
+      }
+      if (cells.length < 2) continue;
+      const my = /\b(19|20)(\d{2})\b/.exec(cells[0]);
+      if (!my) continue;
+      const year = +(my[1] + my[2]);
+      if (year < 1950 || year > 2035) continue;
+      for (let i = 1; i < cells.length && i <= 3; i++) {
+        medalistCell(cells[i]).forEach(p =>
+          out.push({ rank: String(i), name: p.name, country: p.country, year }));
+      }
+    }
+  }
+  return out;
+}
+
 /* 이름 앞에 붙은 나라를 뗍니다 — 아는 나라일 때만
    ★ 사람 이름을 잘라 내면 안 되므로, 나라 사전에 있는 낱말만 뗍니다.
    ★ 두 나라가 잇달아 붙기도 합니다(이중국적) — 두 낱말까지 봅니다. */
@@ -736,6 +835,13 @@ function parseProse(wt) {
 
 /* 다섯 가운데 가장 많이 읽어낸 것을 씁니다 */
 function parseAll(wt, opt = {}) {
+  /* ★ 메달리스트 표가 있으면 <b>그것이 가장 낫습니다</b> — 회차·등수·
+       나라·공동 수상이 모두 또렷합니다. 다만 <b>시키는 곳에서만</b>
+       봅니다. 아무 데서나 켜면 이미 잘 읽고 있는 다섯 대회가 흔들립니다. */
+  if (opt.medalistOk) {
+    const md = parseMedalistTable(wt);
+    if (md.length) return finish({ how: '메달표', got: md });
+  }
   const tries = [
     { how: '틀', got: parseTemplate(wt) },
     { how: '표', got: parseTable(wt) },
@@ -940,7 +1046,54 @@ async function save(rows) {
       const proseFirst = comp.kind === 'per-edition-word';
       let ok = 0, fail = 0, total = 0, saved = 0;
       const bad = [];
-      const gotKey = new Set();      /* 「연도|등수」 — 본 문서와 겹침 막기 */
+      const gotKey = new Set();      /* 「연도|등수」 — 겹침 막기 */
+
+      /* ★★ 본 문서를 <b>먼저</b> 봅니다 (2026-08-17 · 원문을 보고 바꿈)
+           ─────────────────────────────────────────────────────
+           클라이번 본 문서에는 열일곱 회가 <b>한 표에</b> 들어 있고,
+           공동 수상과 미수여까지 또렷합니다. 회차 문서보다 낫습니다 —
+             · 11회 공동 1위(유데니치·케른)를 회차 문서로는 못 읽었습니다
+             · 8회 2·3위도 본 문서에만 온전합니다
+             · 3·4·5·6회는 회차 문서가 <b>아예 없습니다</b>
+           그래서 본 문서를 바탕으로 삼고, 회차 문서는 <b>빈자리만</b>
+           채웁니다. */
+      if (comp.mainTitle) {
+        let mwt = '';
+        try { mwt = await raw(comp.mainTitle); await sleep(600); }
+        catch (e) { console.log(`   본 문서를 받지 못했습니다 — ${e.message}`); }
+        if (mwt) {
+          if (DIAG) {
+            console.log('   ┌── 진단 : 본 문서');
+            const tbs = mwt.match(/\{\|[\s\S]*?\n\|\}/g) || [];
+            console.log(`   │ 표 ${tbs.length}개 · 글자 ${mwt.length}`);
+            tbs.slice(0, 3).forEach((tb, i) => {
+              console.log(`   │ ── 표${i + 1} (앞 16줄)`);
+              tb.split('\n').slice(0, 16).forEach(l =>
+                console.log('   │ ' + l.replace(/\s+/g, ' ').trim().slice(0, 200)));
+            });
+            console.log('   └──');
+          }
+          const { how, list } = parseAll(mwt, { medalistOk: true });
+          const use = list.filter(p => p.year && p.rank);
+          use.forEach(p => gotKey.add(p.year + '|' + p.rank));
+          const yrs = new Set(use.map(p => p.year));
+          console.log(`   본 문서 「${how}」 — 입상 ${use.length}명 · ${yrs.size}개 회차`);
+          if (DUMP) {
+            use.slice(0, 12).forEach(p =>
+              console.log(`            ${p.year}  ${p.rank}위  ${p.name}${p.country ? ' · ' + p.country : ''}`));
+            if (use.length > 12) console.log(`            … 그리고 ${use.length - 12}명`);
+          }
+          total += use.length;
+          if (SAVE && use.length) {
+            try {
+              const rows = toRows(comp, use,
+                `https://en.wikipedia.org/wiki/${encodeURIComponent(comp.mainTitle)}`);
+              saved += await save(rows);
+            } catch (e) { console.log(`   ★ 본 문서분을 담지 못했습니다 — ${e.message}`); }
+          }
+        }
+      }
+
       for (let no = 1; no <= comp.editions; no++) {
         /* ★ 문서 이름 후보를 차례로 두드립니다.
              회마다 이름 짜임이 다를 수 있어, 하나가 없다고 그 회를
@@ -966,13 +1119,15 @@ async function save(rows) {
         }
         const year = (comp.years && comp.years[no]) || 0;
         const { how, list } = parseAll(wt, { proseFirst });
-        const top3 = ['1', '2', '3'].filter(r => list.some(p => p.rank === r)).length;
         /* ★ 「1~3위가 다 있어야 읽은 것」은 <b>맞지 않습니다</b> —
              2009년 클라이번은 3위를 <b>주지 않았습니다</b>(not awarded).
              주지 않은 상을 못 읽었다고 셀 수는 없습니다.
              1위가 있고 둘 이상 읽었으면 제대로 읽은 것으로 봅니다. */
         const good = list.some(p => p.rank === '1') && list.length >= 2;
-        list.forEach(p => { if (year && p.rank) gotKey.add(year + '|' + p.rank); });
+        /* ★ 본 문서에 이미 있는 「연도|등수」는 <b>더하지 않습니다.</b>
+             본 문서 쪽이 더 정확하기 때문입니다. */
+        const add = year ? list.filter(p => p.rank && !gotKey.has(year + '|' + p.rank)) : [];
+        add.forEach(p => gotKey.add(year + '|' + p.rank));
 
         /* ★ 진단 — 못 읽은 회의 <b>원문 문형</b>을 보여 줍니다 (--diag)
              문서마다 문장 짜임이 달라, 어떤 말로 적혀 있는지 보아야
@@ -991,13 +1146,13 @@ async function save(rows) {
           console.log('   └──');
         }
         if (good) ok++; else { fail++; bad.push(no); }
-        total += list.length;
+        total += add.length;
         console.log(`   제${String(no).padStart(2)}회 ${year || '????'}  ${good ? '읽음' : '★못읽음'}`
-          + `  입상 ${String(list.length).padStart(2)}명 · 1~3위 ${top3}/3 · 꼴「${how}」`);
+          + `  입상 ${String(list.length).padStart(2)}명 · 새로 더할 것 ${add.length}명 · 꼴「${how}」`);
 
-        if (SAVE && list.length && year) {
+        if (SAVE && add.length && year) {
           try {
-            const rows = toRows(comp, list.map(p => ({ ...p, year, edition: no })),
+            const rows = toRows(comp, add.map(p => ({ ...p, year, edition: no })),
               `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`);
             saved += await save(rows);
           } catch (e) {
@@ -1008,52 +1163,6 @@ async function save(rows) {
           list.slice(0, 4).forEach(p =>
             console.log(`            ${(p.rank || '-').padStart(3)}  ${p.name}${p.country ? ' · ' + p.country : ''}`));
           if (list.length > 4) console.log(`            … 그리고 ${list.length - 4}명`);
-        }
-      }
-      /* ★ 본 문서도 <b>함께</b> 봅니다 (2026-08-17)
-           회차 문서가 없거나 문장이 다른 회를, 본 문서의 연도별 표가
-           채워 줍니다. 이미 얻은 「연도|등수」는 건너뛰므로 회차 문서
-           쪽이 늘 이깁니다 — 그쪽이 더 자세합니다. */
-      if (comp.mainTitle) {
-        let mwt = '';
-        try { mwt = await raw(comp.mainTitle); await sleep(600); }
-        catch (e) { console.log(`   본 문서를 받지 못했습니다 — ${e.message}`); }
-        if (mwt) {
-          /* ★ 본 문서 진단 — 표 짜임을 봅니다.
-               회차 문서가 <b>아예 없는 회</b>(3·4·5·6회)는 본 문서
-               표에서만 얻을 수 있습니다. 지금 두 명밖에 못 읽으니
-               표가 어떻게 생겼는지 보아야 합니다. */
-          if (DIAG) {
-            console.log('   ┌── 진단 : 본 문서');
-            const tbs = mwt.match(/\{\|[\s\S]*?\n\|\}/g) || [];
-            console.log(`   │ 표 ${tbs.length}개 · 글자 ${mwt.length}`);
-            tbs.slice(0, 3).forEach((tb, i) => {
-              console.log(`   │ ── 표${i + 1} (앞 16줄)`);
-              tb.split('\n').slice(0, 16).forEach(l =>
-                console.log('   │ ' + l.replace(/\s+/g, ' ').trim().slice(0, 200)));
-            });
-            if (!tbs.length) {
-              mwt.split('\n').filter(l => /won|medal|winner/i.test(l)).slice(0, 8)
-                .forEach(l => console.log('   │ ' + l.replace(/\s+/g, ' ').trim().slice(0, 200)));
-            }
-            console.log('   └──');
-          }
-          const { how, list } = parseAll(mwt);
-          const add = list.filter(p => p.year && p.rank && !gotKey.has(p.year + '|' + p.rank));
-          console.log(`   본 문서 「${how}」에서 ${list.length}명 · 새로 더할 것 ${add.length}명`);
-          if (DUMP && add.length) {
-            add.slice(0, 10).forEach(p =>
-              console.log(`            ${p.year}  ${p.rank}위  ${p.name}${p.country ? ' · ' + p.country : ''}`));
-            if (add.length > 10) console.log(`            … 그리고 ${add.length - 10}명`);
-          }
-          total += add.length;
-          if (SAVE && add.length) {
-            try {
-              const rows = toRows(comp, add,
-                `https://en.wikipedia.org/wiki/${encodeURIComponent(comp.mainTitle)}`);
-              saved += await save(rows);
-            } catch (e) { console.log(`   ★ 본 문서분을 담지 못했습니다 — ${e.message}`); }
-          }
         }
       }
 

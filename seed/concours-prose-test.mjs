@@ -113,14 +113,31 @@ The competition was won by [[Radu Lupu]] of [[Romania]]. Lupu had previously won
 ! Crystal Medal
 | {{flagicon|USA}} USA [[Sean Chen]] || $20,000
 |}`, { '1': 'Vadym Kholodenko', '2': 'Beatrice Rana', '3': 'Sean Chen' }, true],
+
+  ['⑭ 본 문서 메달리스트 표 (실제 원문 · 공동 수상)', `{| {{MedalistTable|type=Year}}
+|-
+|[[Second Van Cliburn International Piano Competition|1966]]
+|{{Flag medalist|[[Radu Lupu]]|ROU|variant=1965}}
+|{{Flag medalist|[[Barry Lee Snyder]]|USA}}
+|{{Flag medalist|{{interlanguage link|Blanca Uribe|es|Blanca Uribe}}|COL}}
+|-
+|[[Eleventh Van Cliburn International Piano Competition|2001]]
+|{{Flag medalist|[[Stanislav Ioudenitch]]|UZB}}{{break}}{{Flag medalist|[[Olga Kern]]|RUS}}
+|{{Flag medalist|[[Maxim Philippov]]|RUS}}{{break}}{{Flag medalist|[[Antonio Pompa-Baldi]]|ITA}}
+|Not Awarded
+|}`, { '1': 'Radu Lupu', '2': 'Barry Lee Snyder', '3': 'Blanca Uribe' }, 'medalist'],
 ];
 
 let pass = 0, fail = 0;
 for (const [label, wt, want, viaAll] of CASES) {
   /* 표 꼴은 parseAll(문장 먼저 보는 대회) 로 봅니다 — 상표 파서가 함께 돕니다 */
-  const got = viaAll ? P.parseAll(wt, { proseFirst: true }).list : P.parseProse(wt);
+  const got = viaAll === 'medalist' ? P.parseAll(wt, { medalistOk: true }).list
+            : viaAll               ? P.parseAll(wt, { proseFirst: true }).list
+            :                        P.parseProse(wt);
+  /* 메달표는 회차가 여럿이므로 <b>첫 회차</b>만 견줍니다 */
+  const use = viaAll === 'medalist' ? got.filter(p => p.year === got[0].year) : got;
   const byRank = {};
-  got.forEach(p => { if (!byRank[p.rank]) byRank[p.rank] = p.name; });
+  use.forEach(p => { if (!byRank[p.rank]) byRank[p.rank] = p.name; });
   const bad = [];
   for (const r of Object.keys(want)) {
     if (byRank[r] !== want[r]) bad.push(`${r}위 기대「${want[r]}」→ 얻음「${byRank[r] || '없음'}」`);
