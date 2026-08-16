@@ -89,7 +89,17 @@
 /* ★ 2026-08-16 · 안쪽 여백을 넓혔습니다 (파트너 지적)
      16 → 20px. 그림이 카드 끝까지 닿아 있어, 글이 그 폭에 맞춰
      보이니 더 좁아 보였습니다. 위아래도 조금 늘려 숨통을 틔웁니다. */
-.pl-body{padding:17px 20px 18px}
+/* ★★ 2026-08-16 · 좌우 여백이 <b>처음부터 안 먹고 있었습니다</b> (파트너 지적)
+     ─────────────────────────────────────────────────────────
+     .pl-body 는 <b>span</b> 인데 display 지정이 없었습니다. span 은 기본이
+     inline 이라 <b>좌우 padding 이 줄 흐름에 반영되지 않습니다</b> —
+     여백을 16 → 20px 로 늘려도 화면은 그대로였습니다.
+   ▶ display:block 을 주니 그제야 걸립니다.
+   ★ 왜 span 을 썼나 — 바깥이 <a> 라서 그 안에 <div> 를 넣으면 옛 브라우저에서
+     짜임이 깨질 수 있어 span 으로 두었습니다. 그러면 <b>display 를 반드시</b>
+     함께 적어야 합니다. 이 화면의 다른 span 들은 다 적혀 있었는데
+     이것만 빠졌습니다. */
+.pl-body{display:block;padding:17px 20px 18px}
 .pl-t{font-size:14.5px;font-weight:700;letter-spacing:-.02em;color:var(--text);
   line-height:1.45;margin:0 0 8px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -108,7 +118,8 @@
      첫 조언을 남기는 것이 이 자리의 목적입니다 */
 .pl-adv.zero{color:var(--orange,#D96A0E)}
 .pl-adv.zero svg{color:var(--orange,#D96A0E)}
-.pl-date{margin-left:auto;font-size:11.5px;color:var(--text-3)}
+/* flex 자식이라 지금은 괜찮지만, 나중에 짜임이 바뀌어도 견디게 적어 둡니다 */
+.pl-date{display:inline-block;margin-left:auto;font-size:11.5px;color:var(--text-3)}
 
 .pl-empty{grid-column:1/-1;padding:70px 20px;text-align:center;
   font-size:14px;line-height:1.9;color:var(--text-3)}
