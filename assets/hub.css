@@ -14,8 +14,15 @@
   .cm-sec{margin-top:52px}
   .cm-sec:first-of-type{margin-top:44px}
   .cm-sec:last-of-type{padding-bottom:70px}
+  /* ★ 2026-08-16 · 구분선을 <b>두껍고 짙게</b> (파트너 지시)
+       1.5px·--line 은 배경과 거의 구별되지 않아 항목이 나뉜 느낌이
+       약했습니다. 2px·--line-2 로 한 단계씩 올립니다.
+     ★ 색을 직접 적지 않고 <b>변수</b>를 씁니다 — 어두운 모드에서
+       --line-2 가 #383838 로 바뀌므로 저절로 따라옵니다.
+     ★ 이 한 곳이 DATABASE·OC커뮤니티·정보SPOT <b>세 화면 모두</b>에
+       적용됩니다(셋 다 hub.css 를 씁니다). */
   .cm-head{display:flex;align-items:flex-end;gap:11px;margin:0 0 16px;padding-bottom:12px;
-    border-bottom:1.5px solid var(--line)}
+    border-bottom:2px solid var(--line-2)}
   .cm-title{position:relative;padding-left:12px;font-size:20px;font-weight:800;
     letter-spacing:-.03em;color:var(--text)}
   .cm-title::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:2px;
@@ -554,8 +561,11 @@
 
   /* 섹션 제목 */
   .hb-sec{margin-top:52px}
+  /* ★ 2026-08-16 · cm-head 와 <b>같은 값</b>으로 맞춥니다.
+       DATABASE 메인은 hb-head, 나머지 두 화면은 cm-head 를 쓰는데
+       둘이 다르면 메뉴를 옮겨 다닐 때 선 굵기가 달라 보입니다. */
   .hb-head{display:flex;align-items:flex-end;gap:11px;margin:0 0 15px;padding-bottom:12px;
-    border-bottom:1.5px solid var(--line,#e4e4ec)}
+    border-bottom:2px solid var(--line-2,#e4ded2)}
   .hb-title{position:relative;padding-left:12px;font-size:20px;font-weight:900;
     letter-spacing:-.03em;color:var(--text,#1b1c2b)}
   .hb-title::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:2px;
