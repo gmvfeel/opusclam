@@ -31,7 +31,30 @@
   .cm-title::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:2px;
     background:linear-gradient(180deg,#9C7FD6,#C9A94E)}
   .cm-title em{font-style:normal;font-weight:700;font-size:12px;color:var(--text-3);
-    letter-spacing:.06em;margin-left:8px}
+    letter-spacing:.06em;margin-left:8px;white-space:nowrap}
+
+  /* ★★ 2026-08-16 · 좁은 화면에서 <b>VIEW MORE 가 두 줄로</b> 깨졌습니다
+     ─────────────────────────────────────────────────────────
+       제목 줄은 「제목 + 영문 + VIEW MORE」가 한 줄에 서는 짜임인데,
+       좁은 화면에서 영문(CONCERT INFORMATION 등)이 길어 밀려났습니다.
+     ▶ 좁은 화면에서는 <b>영문을 감춥니다.</b> 한국어 제목이 이미 있으니
+       뜻은 그대로이고, 자리는 크게 아낍니다.
+     ▶ VIEW MORE 는 줄바꿈을 막습니다. 「VIEW / MORE / +」 로 쪼개지면
+       무엇을 누르는 것인지 알아보기 어렵습니다. */
+  @media (max-width:760px){
+    .cm-head{gap:8px;padding-bottom:10px;margin-bottom:14px}
+    .cm-title{font-size:17px;padding-left:10px}
+    .cm-title em{display:none}
+    .cm-more{font-size:11.5px;white-space:nowrap;flex:0 0 auto}
+    .cm-headright{gap:9px}
+    /* 「이번 주 공연」의 기간 표시 — 좁으면 제목 줄이 터집니다.
+       감추는 대신 <b>줄 아래</b>로 내려 그대로 보이게 합니다.
+       ★ :has() 를 쓰지 않고 클래스로 — 옛 브라우저에서 :has() 가
+         통하지 않으면 그 규칙 <b>덩어리 전체</b>가 죽습니다. */
+    .cm-head.has-range{flex-wrap:wrap}
+    .cm-head.has-range .cm-headright{flex-wrap:wrap}
+    .wk-range{order:9;flex:1 0 100%;margin-top:3px}
+  }
   .cm-more{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:12.5px;
     font-weight:700;letter-spacing:.02em;color:var(--violet-2);text-decoration:none}
   .cm-more:hover{opacity:.75}
