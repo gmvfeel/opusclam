@@ -139,6 +139,19 @@ function ocN(tpl) {
           <span class="cm-qlabel">이달의 음악학교</span>
           <span class="cm-qcount"><b id="cSch">—</b><i>호</i></span>
         </a>
+        <!-- ★ 2026-08-16 · SELF PR · 연주 올리기 (파트너 요청)
+               SELF PR 은 하위 메뉴에는 있었는데 <b>바로가기 카드에서
+               빠져</b> 있었습니다. 연주 올리기는 그 하위 갈래입니다.
+             ★ 연주 올리기는 spot 표가 아니라 <b>제 표</b>(oc_play)를
+               셉니다. 단위도 「건」이 아니라 「곡」입니다. -->
+        <a class="cm-qcard" href="/community/selfpr.html">
+          <span class="cm-qlabel">SELF PR</span>
+          <span class="cm-qcount"><b id="cSpr">—</b><i>명</i></span>
+        </a>
+        <a class="cm-qcard" href="/community/play.html">
+          <span class="cm-qlabel">연주 올리기</span>
+          <span class="cm-qcount"><b id="cPlay">—</b><i>곡</i></span>
+        </a>
       </div>
     </section>
 
@@ -261,6 +274,27 @@ function ocN(tpl) {
 <script src="/assets/stats-chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
+    /* ★ 2026-08-16 · SELF PR·연주 올리기 건수
+         다른 카드는 OCHub 이 게시판을 세지만 이 둘은 표가 다릅니다.
+         SELF PR 은 인물DB(임시)를, 연주 올리기는 oc_play 를 셉니다.
+       ★ 목록을 받지 않고 <b>헤더로만</b> 셉니다 — 가볍습니다. */
+    (function () {
+      var U0 = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/';
+      var K0 = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+      var H0 = { apikey: K0, Authorization: 'Bearer ' + K0 };
+      function cnt(path, el) {
+        fetch(U0 + path, { headers: Object.assign({ Prefer: 'count=exact', Range: '0-0' }, H0) })
+          .then(function (r) {
+            var cr = r.headers.get('content-range') || '';
+            var n = parseInt((cr.split('/')[1] || '0'), 10) || 0;
+            var t = document.getElementById(el);
+            if (t && n) t.textContent = n.toLocaleString();
+          }).catch(function () {});
+      }
+      cnt('daily_self_pr?select=person_id', 'cSpr');
+      cnt('oc_play?select=id&status=eq.open', 'cPlay');
+    })();
+
 
     /* Concert PR — 공연사진·영상 최신 글 */
     OCHub.board({ el:'#prBox', table:'gallery', kind:'cards', n:8,

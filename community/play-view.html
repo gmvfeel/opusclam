@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>연주 · OPUSCLAM</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<style>
+/* ============================================================
+   연주 상세 · 조언 — community/play-view.html
+   ------------------------------------------------------------
+   2026-08-16
+
+   ★ 이 화면의 주인공은 <b>영상</b>입니다. 크게 놓고, 그 아래에
+     「어떤 조언을 받고 싶은지」와 조언들을 잇습니다.
+
+   ★ 조언은 <b>점수가 아니라 글</b>입니다. 별점·추천 수가 없습니다.
+     대신 올린 사람이 「도움이 됐습니다」를 표시할 수 있습니다 —
+     점수가 아니라 고마움이고, 좋은 조언이 위로 올라옵니다.
+
+   ★ 조언은 <b>누구나</b> 남길 수 있습니다. 올리는 것만 전공자·
+     음악관계자·음악학교로 한정합니다(들을 사람이 많아야 합니다).
+   ============================================================ */
+
+.pv2{max-width:900px;margin:0 auto;padding:36px 24px 90px}
+
+/* ── 영상 ────────────────────────────────────────────── */
+.pv-video{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;
+  overflow:hidden;background:var(--ink,#0E1230);margin:0 0 22px}
+.pv-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* ── 머리 ────────────────────────────────────────────── */
+.pv-t{font-size:23px;font-weight:800;letter-spacing:-.03em;color:var(--text);
+  line-height:1.35;margin:0 0 10px}
+.pv-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+  font-size:13px;color:var(--text-3);margin:0 0 20px}
+.pv-meta b{font-weight:700;color:var(--text-2)}
+.pv-meta .dot{color:var(--line-2)}
+.pv-tag{display:inline-flex;align-items:center;padding:4px 11px;border-radius:14px;
+  background:var(--paper-2);font-size:11.5px;font-weight:700;color:var(--text-2)}
+
+/* 「어떤 조언을 받고 싶은지」 */
+.pv-ask{padding:18px 20px;margin:0 0 30px;border-radius:12px;
+  background:var(--paper-2);border-left:3px solid var(--violet-2)}
+.pv-ask h3{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.02em;
+  color:var(--violet-2)}
+.pv-ask p{margin:0;font-size:14px;line-height:1.85;color:var(--text-2);
+  white-space:pre-wrap;word-break:break-word}
+
+/* ── 조언 ────────────────────────────────────────────── */
+.pv-sec{margin-top:38px;padding-top:26px;border-top:2px solid var(--text-3)}
+.pv-sech{display:flex;align-items:baseline;gap:9px;margin:0 0 8px}
+.pv-sech h2{margin:0;font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+.pv-sech span{font-size:13px;color:var(--text-3)}
+.pv-guide{margin:0 0 22px;font-size:12.5px;line-height:1.8;color:var(--text-3)}
+.pv-guide b{color:var(--text-2)}
+
+.adv{display:flex;flex-direction:column;gap:0}
+.adv-item{padding:20px 0;border-bottom:1px solid var(--line)}
+.adv-item:first-child{padding-top:0}
+.adv-head{display:flex;align-items:center;gap:8px;margin:0 0 9px}
+.adv-who{font-size:13.5px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+.adv-type{font-size:11px;color:var(--text-3);padding:2px 8px;border-radius:10px;
+  background:var(--paper-2)}
+.adv-when{margin-left:auto;font-size:11.5px;color:var(--text-3)}
+.adv-body{margin:0;font-size:14px;line-height:1.9;color:var(--text-2);
+  white-space:pre-wrap;word-break:break-word}
+/* 「도움이 됐습니다」 — 점수가 아니라 고마움의 표시 */
+.adv-help{display:inline-flex;align-items:center;gap:5px;margin-top:11px;
+  padding:6px 12px;border-radius:16px;border:1px solid var(--line-2);
+  background:var(--paper);font-size:12px;font-weight:700;color:var(--text-3);
+  cursor:default;font-family:inherit}
+.adv-help.on{border-color:#C9A94E;background:rgba(201,169,78,.1);color:#8a6d1e}
+.adv-help.can{cursor:pointer}
+.adv-help.can:hover{border-color:#C9A94E;color:#8a6d1e}
+.adv-help svg{width:13px;height:13px}
+html[data-theme="dark"] .adv-help.on{background:rgba(201,169,78,.16);color:#d9bd6a}
+
+.adv-empty{padding:44px 20px;text-align:center;font-size:14px;line-height:1.9;
+  color:var(--text-3)}
+.adv-empty b{display:block;font-size:15px;color:var(--text-2);margin-bottom:6px}
+
+/* ── 조언 쓰기 ───────────────────────────────────────── */
+.wr{margin-top:30px;padding:20px;border:1px solid var(--line);border-radius:14px;
+  background:var(--paper)}
+.wr textarea{width:100%;box-sizing:border-box;min-height:110px;padding:13px 15px;
+  border:1px solid var(--line-2);border-radius:11px;font-size:14px;font-family:inherit;
+  line-height:1.8;background:var(--paper);color:var(--text);resize:vertical}
+.wr textarea:focus{outline:none;border-color:var(--violet-2)}
+.wr-act{display:flex;align-items:center;gap:10px;margin-top:12px}
+.wr-act .n{font-size:12px;color:var(--text-3)}
+.wr-act button{margin-left:auto;height:42px;padding:0 22px;border-radius:11px;
+  border:0;background:var(--violet-2);color:#fff;font-family:inherit;
+  font-size:13.5px;font-weight:800;cursor:pointer}
+.wr-act button:hover{background:#4a3d7e}
+.wr-act button[disabled]{opacity:.5;cursor:default}
+.wr-login{padding:22px;text-align:center;font-size:13.5px;line-height:1.8;
+  color:var(--text-3);border:1px dashed var(--line-2);border-radius:14px;margin-top:30px}
+.wr-login a{color:var(--violet-2);font-weight:800;text-decoration:none}
+.wr-login a:hover{text-decoration:underline}
+
+.pv-msg{display:none;padding:14px 16px;margin:14px 0 0;border-radius:11px;
+  font-size:13px;line-height:1.7}
+.pv-msg.on{display:block}
+.pv-msg.err{background:#fdeeee;color:#9a2323;border:1px solid #f0c4c4}
+html[data-theme="dark"] .pv-msg.err{background:#2a1616;color:#e8a0a0;border-color:#4a2020}
+
+.pv-load{padding:80px 20px;text-align:center;color:var(--text-3);font-size:14px}
+
+@media (max-width:620px){
+  .pv2{padding:24px 16px 80px}
+  .pv-t{font-size:19px}
+  .pv-video{border-radius:11px;margin-bottom:18px}
+  .wr{padding:16px}
+}
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-orbit on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/community/index.html">OC커뮤니티</a><span>/</span><a href="/community/selfpr.html">SELF PR</a><span>/</span><a href="/community/play.html">연주 올리기</a>
+    </nav>
+  </div>
+</section>
+
+<main class="pv2">
+  <div id="body"><div class="pv-load">불러오는 중…</div></div>
+</main>
+
+<div id="oc-bigban"></div>
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var U = SB_URL + '/rest/v1/';
+  var H = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+
+  var TYPE_KO = { major:'전공자', industry:'음악관계자', org:'단체·기업',
+                  school:'음악학교', general:'일반' };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(x) {
+    return String(x == null ? '' : x)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function tr(x) {
+    try { return (window.OCI18N && window.OCI18N.t) ? window.OCI18N.t(x) : x; }
+    catch (e) { return x; }
+  }
+  function ocN(tpl, v) {
+    try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n(tpl, v); } catch (e) {}
+    return String(tpl).replace('{n}', v);
+  }
+  function when(iso) {
+    if (!iso) return '';
+    var d = new Date(iso), now = new Date();
+    var day = Math.floor((now - d) / 86400000);
+    if (day <= 0) return tr('오늘');
+    if (day === 1) return tr('어제');
+    if (day < 7) return ocN('{n}일 전', day);
+    return d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0')
+         + '.' + String(d.getDate()).padStart(2, '0');
+  }
+
+  var id = new URLSearchParams(location.search).get('id');
+  var play = null, me = null;
+
+  if (!id) {
+    $('body').innerHTML = '<div class="pv-load">' + esc(tr('주소가 올바르지 않습니다.')) + '</div>';
+    return;
+  }
+
+  /* 회원 정보는 화면과 <b>따로</b> 받습니다 — 로그인 확인이 늦어도
+     영상과 조언은 먼저 보이는 편이 낫습니다. */
+  function loadMe() {
+    return new Promise(function (ok) {
+      function ask(n) {
+        n = n || 0;
+        if (window.ocAuth && window.ocAuth.myMember) {
+          window.ocAuth.myMember().then(function (m) { me = m || null; ok(); })
+            .catch(function () { ok(); });
+          return;
+        }
+        if (n > 30) { ok(); return; }
+        setTimeout(function () { ask(n + 1); }, 150);
+      }
+      ask();
+    });
+  }
+
+  function loadAll() {
+    Promise.all([
+      fetch(U + 'oc_play?select=*&id=eq.' + encodeURIComponent(id), { headers: H })
+        .then(function (r) { return r.ok ? r.json() : []; }),
+      fetch(U + 'oc_play_advice?select=*&play_id=eq.' + encodeURIComponent(id)
+              + '&status=eq.open&order=helpful.desc,created_at.asc', { headers: H })
+        .then(function (r) { return r.ok ? r.json() : []; }),
+      loadMe()
+    ]).then(function (res) {
+      var rows = res[0] || [];
+      if (!rows.length) {
+        $('body').innerHTML = '<div class="pv-load">' + esc(tr('그런 연주가 없습니다.'))
+          + '<br><br><a href="/community/play.html" style="color:var(--violet-2)">'
+          + esc(tr('목록으로 가기')) + '</a></div>';
+        return;
+      }
+      play = rows[0];
+      draw(res[1] || []);
+    }).catch(function () {
+      $('body').innerHTML = '<div class="pv-load">' + esc(tr('불러오지 못했습니다.')) + '</div>';
+    });
+  }
+
+  function draw(advs) {
+    var p = play;
+    var mine = me && me.id === p.member_id;      /* 내가 올린 것인가 */
+    var meta = [];
+    if (p.author_name) meta.push('<b>' + esc(p.author_name) + '</b>');
+    if (p.author_type) meta.push('<span class="pv-tag">' + esc(tr(TYPE_KO[p.author_type] || p.author_type)) + '</span>');
+    if (p.instrument)  meta.push('<span class="pv-tag">' + esc(tr(p.instrument)) + '</span>');
+    if (p.composer)    meta.push('<span class="dot">·</span>' + esc(p.composer));
+    meta.push('<span class="dot">·</span>' + esc(when(p.created_at)));
+
+    var html = ''
+      + '<div class="pv-video">'
+      +   (p.video_id
+            ? '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(p.video_id)
+              + '?rel=0&modestbranding=1" title="' + esc(p.title || '') + '"'
+              + ' allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture"'
+              + ' allowfullscreen loading="lazy"></iframe>'
+            : '')
+      + '</div>'
+      + '<h1 class="pv-t">' + esc(p.title || '') + '</h1>'
+      + '<div class="pv-meta">' + meta.join('') + '</div>'
+      + (p.body
+          ? '<div class="pv-ask"><h3>' + esc(tr('이런 조언을 받고 싶습니다')) + '</h3>'
+            + '<p>' + esc(p.body) + '</p></div>'
+          : '')
+
+      + '<section class="pv-sec">'
+      +   '<div class="pv-sech"><h2>' + esc(tr('조언')) + '</h2>'
+      +     '<span>' + (advs.length ? esc(ocN('{n}개', advs.length)) : esc(tr('아직 없습니다'))) + '</span></div>'
+      +   '<p class="pv-guide">'
+      +     esc(tr('점수를 매기는 곳이 아닙니다.')) + ' <b>'
+      +     esc(tr('「여기를 이렇게 해 보면 어떨까요」')) + '</b> '
+      +     esc(tr('처럼 구체적으로 적어 주시면 큰 도움이 됩니다.'))
+      +   '</p>'
+      +   '<div class="adv" id="advBox">' + (advs.length ? advs.map(function (a) { return advHtml(a, mine); }).join('')
+          : '<div class="adv-empty"><b>' + esc(tr('아직 조언이 없습니다.')) + '</b>'
+            + esc(tr('첫 조언을 남겨 주시겠습니까? 한 줄이라도 좋습니다.')) + '</div>') + '</div>'
+      +   writerHtml(mine)
+      +   '<div class="pv-msg" id="msg"></div>'
+      + '</section>';
+
+    $('body').innerHTML = html;
+    bind(mine);
+  }
+
+  function advHtml(a, mine) {
+    /* ★ 「도움이 됐습니다」는 <b>올린 사람만</b> 누를 수 있습니다.
+         다른 사람에게는 표시만 보입니다 — 점수처럼 여럿이 누르는
+         것이 아니라, 올린 사람의 고마움이기 때문입니다. */
+    var can = mine ? ' can' : '';
+    var on = a.helpful ? ' on' : '';
+    var show = a.helpful || mine;
+    return '<div class="adv-item" data-aid="' + esc(a.id) + '">'
+      + '<div class="adv-head">'
+      +   '<span class="adv-who">' + esc(a.author_name || '') + '</span>'
+      +   (a.author_type ? '<span class="adv-type">' + esc(tr(TYPE_KO[a.author_type] || a.author_type)) + '</span>' : '')
+      +   '<span class="adv-when">' + esc(when(a.created_at)) + '</span>'
+      + '</div>'
+      + '<p class="adv-body">' + esc(a.body || '') + '</p>'
+      + (show
+          ? '<button type="button" class="adv-help' + on + can + '"'
+            + (mine ? '' : ' disabled') + '>'
+            + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+            + '<path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7 11l4-7a2 2 0 0 1 3 2l-1 5h5a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7"/></svg>'
+            + esc(tr(a.helpful ? '도움이 됐습니다' : '도움이 됐다고 표시'))
+            + '</button>'
+          : '')
+      + '</div>';
+  }
+
+  function writerHtml(mine) {
+    if (!me) {
+      return '<div class="wr-login">' + esc(tr('조언을 남기려면 로그인이 필요합니다.'))
+        + '<br><a href="/account/login.html">' + esc(tr('로그인하러 가기')) + '</a></div>';
+    }
+    if (mine) {
+      /* 자기 연주에 자기가 조언할 까닭이 없습니다 */
+      return '<div class="wr-login">' + esc(tr('내가 올린 연주입니다. 조언이 오면 알려 드리겠습니다.')) + '</div>';
+    }
+    return '<div class="wr">'
+      + '<textarea id="advBody" maxlength="1200" placeholder="'
+      + esc(tr('예) 3분 20초 부분에서 왼손이 조금 급한 것 같습니다. 조금 늦춰 보시면 어떨까요.')) + '"></textarea>'
+      + '<div class="wr-act"><span class="n" id="advN">0 / 1200</span>'
+      + '<button type="button" id="advSave">' + esc(tr('조언 남기기')) + '</button></div>'
+      + '</div>';
+  }
+
+  function bind(mine) {
+    var ta = $('advBody');
+    if (ta) {
+      ta.addEventListener('input', function () {
+        $('advN').textContent = ta.value.length + ' / 1200';
+      });
+      $('advSave').addEventListener('click', saveAdvice);
+    }
+    if (mine) {
+      [].forEach.call(document.querySelectorAll('.adv-help.can'), function (b) {
+        b.addEventListener('click', function () { toggleHelp(b); });
+      });
+    }
+  }
+
+  function sb() {
+    if (window.__ocSb) return window.__ocSb;
+    if (!window.supabase || !window.supabase.createClient) return null;
+    window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY);
+    return window.__ocSb;
+  }
+  function say(html) {
+    var m = $('msg'); if (!m) return;
+    m.className = 'pv-msg on err'; m.innerHTML = html;
+  }
+
+  function saveAdvice() {
+    var ta = $('advBody'), btn = $('advSave');
+    var body = (ta.value || '').trim();
+    if (body.length < 5) { say(esc(tr('조금 더 적어 주십시오. 다섯 글자 이상이면 됩니다.'))); ta.focus(); return; }
+    var c = sb(); if (!c || !me) return;
+
+    btn.disabled = true; btn.textContent = tr('남기는 중…');
+    c.from('oc_play_advice').insert({
+      play_id: play.id,
+      member_id: me.id,
+      author_name: me.name || me.username || '회원',
+      author_type: me.member_type || null,
+      body: body
+    }).then(function (r) {
+      if (r.error) throw r.error;
+      /* 다시 그립니다 — 조언 수도 방아쇠가 세어 두므로 그대로 맞습니다 */
+      location.reload();
+    }).catch(function (e) {
+      btn.disabled = false; btn.textContent = tr('조언 남기기');
+      say(esc(tr('남기지 못했습니다')) + ' — ' + esc(e && e.message ? e.message : e));
+    });
+  }
+
+  function toggleHelp(btn) {
+    var wrap = btn.closest('.adv-item');
+    var aid = wrap && wrap.getAttribute('data-aid');
+    if (!aid) return;
+    var c = sb(); if (!c) return;
+    var turnOn = !btn.classList.contains('on');
+
+    btn.disabled = true;
+    /* ★ 함수로 부릅니다 — 「올린 사람만」을 서버에서 확인합니다.
+         화면에서만 막으면 손대는 사람이 있습니다. */
+    c.rpc('oc_play_mark_helpful', { p_advice_id: Number(aid), p_on: turnOn })
+      .then(function (r) {
+        if (r.error) throw r.error;
+        btn.classList.toggle('on', turnOn);
+        btn.lastChild.nodeValue = tr(turnOn ? '도움이 됐습니다' : '도움이 됐다고 표시');
+        btn.disabled = false;
+      })
+      .catch(function (e) {
+        btn.disabled = false;
+        say(esc(tr('표시하지 못했습니다')) + ' — ' + esc(e && e.message ? e.message : e));
+      });
+  }
+
+  loadAll();
+})();
+</script>
+
+<script src="/assets/app.js"></script>
+<script src="/assets/pwa-install.js?v=20260815" defer></script>
+</body>
+</html>
