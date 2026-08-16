@@ -145,78 +145,6 @@ function ocN(tpl) {
     <!-- ★ 2026-08-13 · 커뮤니티 현황 (파트너 요청)
            정보SPOT 현황과 같은 짜임입니다. 그림은 assets/stats-chart.js,
            숫자는 Supabase 함수 community_stats() 한 번으로 받습니다. -->
-    <!-- Concert PR -->
-    <section class="cm-sec" id="prWrap">
-      <div class="cm-head">
-        <span class="cm-title">Concert PR<em>공연 · 연주회</em></span>
-        <div class="cm-arrows">
-          <button type="button" class="cm-arw" data-car="prev" aria-label="이전">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
-          </button>
-          <button type="button" class="cm-arw" data-car="next" aria-label="다음">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="cm-track" id="prBox"></div>
-    </section>
-
-    <!-- Hot Topic -->
-    <section class="cm-sec">
-      <div class="cm-head">
-        <span class="cm-title">Hot Topic<em>HOT TOPIC</em></span>
-        <a class="cm-more" href="/community/hottopic.html">VIEW MORE <span>+</span></a>
-      </div>
-      <div id="hotFeat"></div>
-      <div id="hotList" style="margin-top:8px"></div>
-    </section>
-
-    <!-- 뉴스 · 입시 탭 -->
-    <section class="cm-sec">
-      <div class="cm-head">
-        <span class="cm-title">새 글<em>ALL BOARDS</em></span>
-      </div>
-      <div class="bd-tabs" id="tabBtns"></div>
-      <div id="tabList"></div>
-    </section>
-
-    <!-- ★ 2026-08-16 · 현대음악과 태교음악을 <b>두 칸</b>으로 묶었습니다
-           둘 다 갈래 탭 하나에 글 셋짜리인데 섹션을 통째로 쓰고 있어
-           스크롤만 길어졌습니다. 짜임이 똑같으니 나란히 놓아도
-           어색하지 않습니다. -->
-    <section class="cm-sec">
-      <div class="cm-two">
-        <div>
-          <div class="cm-head">
-            <span class="cm-title">현대음악<em>CONTEMPORARY</em></span>
-            <a class="cm-more" href="/community/modern.html">VIEW MORE <span>+</span></a>
-          </div>
-          <div class="bd-tabs" id="modTabs"></div>
-          <div id="modList"></div>
-        </div>
-        <div>
-          <div class="cm-head">
-            <span class="cm-title">태교음악<em>PRENATAL MUSIC</em></span>
-            <a class="cm-more" href="/community/prenatal.html">VIEW MORE <span>+</span></a>
-          </div>
-          <div class="bd-tabs" id="preTabs"></div>
-          <div id="preList"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 이달의 음악학교 -->
-    <section class="cm-sec">
-      <div class="cm-head">
-        <span class="cm-title">이달의 음악학교<em>MUSIC SCHOOL THIS MONTH</em></span>
-        <a class="cm-more" href="/community/school-month.html">지난 호 보기 <span>&rsaquo;</span></a>
-      </div>
-      <div id="schoolBox"></div>
-    </section>
-
-    <!-- ★ 2026-08-16 · 「커뮤니티 현황」을 <b>맨 아래</b>로 내렸습니다
-           숫자는 이 곳을 이미 아는 사람에게 값어치가 있지, 처음 온
-           사람에게는 아닙니다. DATABASE·정보SPOT 과 같은 판단입니다. -->
     <section class="cm-sec">
       <div class="cm-head">
         <span class="cm-title">커뮤니티 현황<em>STATISTICS</em></span>
@@ -245,6 +173,69 @@ function ocN(tpl) {
       <div class="hb-compose" id="cmCompose"></div>
     </section>
 
+    <!-- Concert PR -->
+    <section class="cm-sec" id="prWrap">
+      <div class="cm-head">
+        <span class="cm-title">Concert PR<em>공연 · 연주회</em></span>
+        <div class="cm-arrows">
+          <button type="button" class="cm-arw" data-car="prev" aria-label="이전">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <button type="button" class="cm-arw" data-car="next" aria-label="다음">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="cm-track" id="prBox"></div>
+    </section>
+
+    <!-- Hot Topic -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">Hot Topic</span>
+        <a class="cm-more" href="/community/hottopic.html">VIEW MORE <span>+</span></a>
+      </div>
+      <div id="hotFeat"></div>
+      <div id="hotList" style="margin-top:8px"></div>
+    </section>
+
+    <!-- 뉴스 · 입시 탭 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">새 글<em>ALL BOARDS</em></span>
+      </div>
+      <div class="bd-tabs" id="tabBtns"></div>
+      <div id="tabList"></div>
+    </section>
+
+    <!-- 현대음악 — 갈래(추천·즐기기)로 나눠 보여 줍니다 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">현대음악<em>CONTEMPORARY</em></span>
+        <a class="cm-more" href="/community/modern.html">VIEW MORE <span>+</span></a>
+      </div>
+      <div class="bd-tabs" id="modTabs"></div>
+      <div id="modList"></div>
+    </section>
+
+    <!-- 태교음악 — 갈래(추천·즐기기)로 나눠 보여 줍니다 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">태교음악<em>PRENATAL MUSIC</em></span>
+        <a class="cm-more" href="/community/prenatal.html">VIEW MORE <span>+</span></a>
+      </div>
+      <div class="bd-tabs" id="preTabs"></div>
+      <div id="preList"></div>
+    </section>
+
+    <!-- 이달의 음악학교 -->
+    <section class="cm-sec">
+      <div class="cm-head">
+        <span class="cm-title">이달의 음악학교<em>MUSIC SCHOOL THIS MONTH</em></span>
+        <a class="cm-more" href="/community/school-month.html">지난 호 보기 <span>&rsaquo;</span></a>
+      </div>
+      <div id="schoolBox"></div>
+    </section>
 
   </div>
 </section>
