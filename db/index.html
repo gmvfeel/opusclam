@@ -332,6 +332,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/auth.js"></script>
 <script src="/assets/hub.js"></script>
+<!-- ★ 2026-08-16 · 사진 줄이기 (OCThumb) — db/work.html 과 같은 방식.
+       위키미디어 원본은 큰 것이 많아 그대로 쓰면 목록이 무겁습니다.
+       이 파일이 <b>줄인 그림</b>을 만들고, 안 되면 되돌립니다.
+     ★ defer 가 아니라 <b>보통</b>으로 싣습니다 — 아래 코드가
+       바로 OCThumb 을 찾기 때문입니다. -->
+<script src="/assets/thumb.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
     OCHub.init({
@@ -531,11 +537,20 @@
       ini.textContent = (nm || '?').trim().charAt(0);
       if (p.image_url) {
         /* 사진을 <b>다 받은 뒤에</b> 보입니다 — 깨진 그림이 잠깐 뜨는 것을 막습니다 */
+        var full = p.image_url, small = full;
+        try {
+          if (window.OCThumb && window.OCThumb.wikiThumb) small = window.OCThumb.wikiThumb(full, 520);
+        } catch (e) {}
         img.onload = function () { img.style.opacity = '1'; };
-        img.onerror = function () { img.removeAttribute('src'); };
+        /* 줄인 것이 안 되면 원본으로 한 번 더 — 원본이 작은 그림에서
+           위키미디어가 썸네일을 안 만들어 주는 일이 있습니다 */
+        img.onerror = function () {
+          if (img.src !== full) { img.src = full; return; }
+          img.removeAttribute('src');
+        };
         img.style.opacity = '0';
         img.style.transition = 'opacity .3s ease, transform .5s ease';
-        img.src = p.image_url;
+        img.src = small;
       } else {
         img.removeAttribute('src');
       }
@@ -617,6 +632,33 @@
     }
   })();
 
+  /* 사진 한 장 — <b>줄인 그림</b>을 먼저 쓰고, 안 되면 원본으로
+     ─────────────────────────────────────────────────────
+     ★ 2026-08-16 · 목록에서만 그림이 깨진다는 지적 (파트너)
+       상세 화면은 <b>원본 주소를 그대로</b> 쓰는데, 목록은 위키미디어에
+       작은 썸네일을 달라고 합니다. 그런데 <b>원본이 요청한 폭보다
+       작으면</b> 위키미디어가 그 크기를 만들어 주지 않아 깨집니다.
+       옛 그림·판화처럼 원본이 작은 것에서 자주 생깁니다.
+     ▶ assets/thumb.js 가 이 문제를 이미 다룹니다 — 줄인 것이 안 되면
+       다른 방법으로, 그것도 안 되면 글자로 바꿉니다. 새로 만들지 않고
+       그것을 씁니다.
+     ★ 그 파일이 안 실렸을 때를 대비해 원본으로 되돌아가는 길도
+       남겨 둡니다. 그림이 아예 안 나오는 것보다 낫습니다. */
+  function pic(url, nm) {
+    if (!url) return '<i class="fce-ini">' + esc((nm || '?').trim().charAt(0)) + '</i>';
+    var small = url, big = url;
+    try {
+      if (window.OCThumb && window.OCThumb.wikiThumb) small = window.OCThumb.wikiThumb(url, 420);
+    } catch (e) {}
+    return '<img src="' + esc(small) + '" data-full="' + esc(big) + '"'
+      + ' alt="" loading="lazy" decoding="async"'
+      + ' onerror="(function(i){'
+      +   'var f=i.getAttribute(\'data-full\');'
+      +   'if(f&&i.src!==f){i.removeAttribute(\'data-full\');i.src=f;return;}'
+      +   'i.removeAttribute(\'onerror\');i.style.display=\'none\';'
+      + '})(this)">';
+  }
+
   /* ── 사진으로 보는 인물 ──────────────────────────────
      ★ 아래가 글자만 이어지면 화면이 죽습니다. 사진이 6,321명에게
        있는데 여태 「오늘의 인물」 한 장뿐이었습니다.
@@ -637,7 +679,7 @@
         box.innerHTML = rows.map(function (p) {
           var nm = p.name_ko || p.name_en || '';
           return '<a class="fce" href="/db/person-view.html?id=' + encodeURIComponent(p.id) + '">'
-            + '<span class="fce-img"><img src="' + esc(p.image_url) + '" alt="" loading="lazy"></span>'
+            + '<span class="fce-img">' + pic(p.image_url, nm) + '</span>'
             + '<span class="fce-nm">' + esc(nm) + '</span>'
             + (p.field ? '<span class="fce-f">' + esc(t(p.field)) + '</span>' : '')
             + '</a>';
