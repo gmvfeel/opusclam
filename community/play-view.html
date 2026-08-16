@@ -48,6 +48,32 @@
   overflow:hidden;background:var(--ink,#0E1230)}
 .pv-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 
+/* ── 표지 + 재생 단추 (2026-08-16) ────────────────────────
+   ★ 파트너 지적 — 유튜브가 그리는 <b>빨간 재생 단추</b>가 보였습니다.
+     레슨:ON·상세 화면은 <b>흰 테두리 동그라미</b>를 쓰는데 이곳만 달랐습니다.
+   ★ 유튜브 단추는 우리가 바꿀 수 없습니다. 그래서 <b>표지 그림을 먼저</b>
+     놓고 그 위에 우리 단추를 얹습니다. 누르면 그때 영상이 실립니다.
+   ★ 덤으로 화면이 <b>가벼워집니다</b> — 유튜브 플레이어는 무거운데,
+     누르기 전에는 그림 한 장만 받습니다. */
+.pv-cover{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;
+  cursor:pointer;background:var(--ink,#0E1230);display:grid;place-items:center}
+.pv-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:.62;transition:opacity .18s ease,transform .3s ease}
+.pv-cover:hover img{opacity:.8;transform:scale(1.02)}
+/* 흰 동그라미 — board.css 의 .bv-playbtn 과 같은 값 */
+.pv-cover i{position:relative;z-index:1;font-style:normal;
+  width:72px;height:72px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.8);color:#fff;
+  display:grid;place-items:center;font-size:24px;padding-left:5px;
+  background:rgba(0,0,0,.35);pointer-events:none;
+  transition:transform .18s ease,background .18s ease}
+.pv-cover:hover i{transform:scale(1.12);background:rgba(0,0,0,.5)}
+.pv-cover span{position:absolute;left:0;right:0;bottom:16px;z-index:1;
+  text-align:center;font-size:12.5px;letter-spacing:.02em;
+  color:rgba(255,255,255,.72);pointer-events:none}
+.pv-cover:focus-visible{outline:2px solid var(--violet-2);outline-offset:-4px}
+@media (max-width:620px){ .pv-cover i{width:56px;height:56px;font-size:19px} }
+
 /* ── 머리 ────────────────────────────────────────────── */
 .pv-t{font-size:23px;font-weight:800;letter-spacing:-.03em;color:var(--text);
   line-height:1.35;margin:0 0 10px}
@@ -302,12 +328,17 @@ html[data-theme="dark"] .pv-msg.err{background:#2a1616;color:#e8a0a0;border-colo
     meta.push('<span class="dot">·</span>' + esc(when(p.created_at)));
 
     var html = ''
-      + '<div class="pv-video">'
+      /* ★ 처음에는 <b>표지 그림</b>만 놓습니다. 누르면 그때 영상이
+           실립니다 — 유튜브 빨간 단추를 감추고, 화면도 가벼워집니다. */
+      + '<div class="pv-video" id="vBox">'
       +   (p.video_id
-            ? '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(p.video_id)
-              + '?rel=0&modestbranding=1" title="' + esc(p.title || '') + '"'
-              + ' allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture"'
-              + ' allowfullscreen loading="lazy"></iframe>'
+            ? '<button type="button" class="pv-cover" id="vCover" aria-label="'
+              + esc(tr('영상 보기')) + '">'
+              + '<img src="https://i.ytimg.com/vi/' + encodeURIComponent(p.video_id)
+              + '/hqdefault.jpg" alt="" loading="lazy" decoding="async">'
+              + '<i aria-hidden="true">&#9654;</i>'
+              + '<span>' + esc(tr('눌러서 보기')) + '</span>'
+              + '</button>'
             : '')
       + '</div>'
       + '<h1 class="pv-t">' + esc(p.title || '') + '</h1>'
@@ -389,6 +420,23 @@ html[data-theme="dark"] .pv-msg.err{background:#2a1616;color:#e8a0a0;border-colo
   }
 
   function bind(mine) {
+    /* 표지를 누르면 그 자리에 영상을 싣습니다.
+       ★ autoplay=1 — 이미 한 번 눌렀으므로 바로 나오는 것이 맞습니다.
+         누르지 않았는데 저절로 소리가 나면 안 되지만, 누른 뒤에는
+         한 번 더 누르게 하는 것이 번거롭습니다. */
+    var cov = $('vCover');
+    if (cov) {
+      cov.addEventListener('click', function () {
+        var box = $('vBox');
+        if (!box || !play.video_id) return;
+        box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/'
+          + encodeURIComponent(play.video_id) + '?rel=0&modestbranding=1&autoplay=1"'
+          + ' title="' + esc(play.title || '') + '"'
+          + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"'
+          + ' allowfullscreen></iframe>';
+      });
+    }
+
     var ta = $('advBody');
     if (ta) {
       ta.addEventListener('input', function () {
