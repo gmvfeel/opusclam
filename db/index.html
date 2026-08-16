@@ -608,32 +608,26 @@
     var el = document.getElementById('bdayDate');
     if (el) el.textContent = n('{n}월', mo) + ' ' + n('{n}일', dy);
 
-    /* 날짜로 거르는 것은 PostgREST 로 못 하므로, 그 달에 태어난 사람을
-       받아 화면에서 날을 맞춥니다. 한 달이면 넉넉히 받아집니다. */
-    var from = mo + '-' + String(dy).padStart(2, '0');
-    fetch(U + 'persons?select=id,name_ko,name_en,field,instrument,birth_date,death_date,description'
-            + '&hidden=not.is.true&birth_date=not.is.null'
-            + '&birth_date=gte.1000-01-01&limit=1200'
-            + '&offset=' + Math.floor(Math.random() * 400), { headers: H })
+    /* ★★ 2026-08-16 (두 번째) · <b>서버에서 고릅니다</b>
+         예전에는 1,200명을 받아 화면에서 날짜를 맞췄습니다. 그런데
+         15,000명 중 일부만 받으니 <b>그날 생일자가 안 걸리는 일</b>이
+         있었습니다 — 8월 16일 생일자가 마흔 명쯤인데 서너 명만
+         걸리거나 아예 못 찾았습니다.
+       ▶ SQL 함수(oc_born_today)가 날짜로 바로 거릅니다. 정확하고
+         가볍습니다(색인이 월·일로 걸려 있습니다).
+       ★ 소개문 있는 사람을 앞에 두고 그다음은 무작위 — 그것도
+         함수 안에서 합니다. 규칙을 한 곳에만 두려는 것입니다. */
+    fetch(U + 'rpc/oc_born_today', {
+      method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H),
+      body: JSON.stringify({ p_month: mo, p_day: dy, p_limit: 8 })
+    })
       .then(function (r) { return r.ok ? r.json() : []; })
-      .then(function (rows) {
-        var hit = (rows || []).filter(function (p) {
-          if (!p.birth_date) return false;
-          var d = String(p.birth_date).slice(0, 10).split('-');
-          return +d[1] === mo && +d[2] === dy;
-        });
-        if (!hit.length) return;
-
-        /* 소개문 있는 사람을 앞으로 */
-        hit.sort(function (a, b) {
-          var ka = (a.description && a.description.trim()) ? 0 : 1;
-          var kb = (b.description && b.description.trim()) ? 0 : 1;
-          if (ka !== kb) return ka - kb;
-          return String(a.birth_date).localeCompare(String(b.birth_date));
-        });
+      .then(function (hit) {
+        if (!hit || !hit.length) return;
 
         var thisYear = now.getFullYear();
-        box.innerHTML = hit.slice(0, 8).map(function (p) {
+        var total = hit[0].total || hit.length;
+        box.innerHTML = hit.map(function (p) {
           var nm = p.name_ko || p.name_en || '';
           var y = +String(p.birth_date).slice(0, 4);
           var sub = [t(p.field), t(p.instrument)].filter(Boolean).join(' · ');
@@ -647,8 +641,8 @@
             + (age ? '<span class="age">' + esc(age) + '</span>' : '')
             + '</a>';
         }).join('')
-        + (hit.length > 8
-            ? '<span class="more">' + esc(n('그 밖에 {n}명이 오늘 태어났습니다', hit.length - 8)) + '</span>'
+        + (total > hit.length
+            ? '<span class="more">' + esc(n('그 밖에 {n}명이 오늘 태어났습니다', total - hit.length)) + '</span>'
             : '');
         sec.hidden = false;
       })
