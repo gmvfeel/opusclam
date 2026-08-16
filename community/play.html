@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>연주 올리기 · OPUSCLAM</title>
+<meta name="description" content="자기 연주를 올리고 다른 회원에게서 글로 된 조언을 받는 곳입니다. 점수는 매기지 않습니다.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/board.css">
+<style>
+/* ============================================================
+   연주 올리기 — community/play.html
+   ------------------------------------------------------------
+   2026-08-16 · 파트너와 정한 새 갈래
+
+   ★ 무엇을 하는 곳인가
+     회원이 자기 연주 영상을 올리고, 다른 회원에게서 <b>글로 된 조언</b>을
+     받습니다. 오퍼스클램에만 있는 것이 되고, 커뮤니티에 사람이 모일
+     이유를 만듭니다.
+
+   ★ <b>점수를 매기지 않습니다</b>
+     「별 3개」보다 「왼손이 급합니다」가 값어치 있고 다투기도 어렵습니다.
+     음악 연주에 점수를 매기면 어린 연주자가 상처받고, 서로 품앗이
+     평점이 생겨 결국 아무도 안 올립니다.
+
+   ★ 「조언을 기다리는」 것을 <b>먼저</b> 보여 줍니다
+     아무도 안 봐 주면 다시 올리지 않습니다. 새 글이 묻히지 않게
+     이 차례를 기본으로 둡니다.
+   ============================================================ */
+
+.pl{max-width:1360px;margin:0 auto;padding:44px 24px 80px}
+
+/* ── 안내 띠 ─────────────────────────────────────────── */
+.pl-note{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;
+  margin:0 0 26px;border-left:3px solid var(--violet-2);background:var(--paper-2);
+  border-radius:0 10px 10px 0}
+.pl-note svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px;color:var(--violet-2)}
+.pl-note p{margin:0;font-size:13px;line-height:1.75;color:var(--text-2)}
+.pl-note b{color:var(--text)}
+
+/* ── 고르개 ──────────────────────────────────────────── */
+.pl-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  padding:0 0 18px;margin:0 0 24px;border-bottom:2px solid var(--text-3)}
+.pl-sort{display:flex;gap:2px;background:var(--paper-2);border-radius:10px;padding:3px}
+.pl-sort button{appearance:none;border:0;background:transparent;cursor:pointer;
+  padding:8px 15px;border-radius:8px;font-family:inherit;font-size:12.5px;
+  font-weight:700;color:var(--text-3);transition:all .15s ease}
+.pl-sort button.on{background:var(--paper);color:var(--text);
+  box-shadow:0 1px 3px rgba(30,20,60,.1)}
+.pl-bar select{height:40px;padding:0 12px;border:1px solid var(--line-2);border-radius:10px;
+  font-size:13px;font-family:inherit;background:var(--paper);color:var(--text);cursor:pointer}
+.pl-count{margin-left:auto;font-size:12.5px;color:var(--text-3)}
+.pl-write{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 18px;
+  border-radius:10px;background:var(--violet-2);color:#fff;text-decoration:none;
+  font-size:13px;font-weight:700;border:0;cursor:pointer;font-family:inherit}
+.pl-write:hover{background:#4a3d7e}
+
+/* ── 목록 ────────────────────────────────────────────── */
+.pl-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.pl-card{display:block;text-decoration:none;border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;background:var(--paper);
+  transition:border-color .18s ease,box-shadow .18s ease}
+.pl-card:hover{border-color:var(--violet-2);box-shadow:0 10px 26px -16px rgba(30,20,60,.3)}
+
+.pl-thumb{position:relative;display:block;width:100%;aspect-ratio:16/9;
+  background:var(--ink,#0E1230);overflow:hidden}
+.pl-thumb img{width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .45s ease}
+.pl-card:hover .pl-thumb img{transform:scale(1.04)}
+/* 재생 표시 — 다른 화면(.bv-playbtn·.bd-playmark)과 같은 결 */
+.pl-thumb i{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:44px;height:44px;border-radius:50%;font-style:normal;
+  border:2px solid rgba(255,255,255,.8);background:rgba(0,0,0,.35);color:#fff;
+  display:grid;place-items:center;font-size:15px;padding-left:3px;
+  transition:background .18s ease,transform .18s ease}
+.pl-card:hover .pl-thumb i{background:rgba(0,0,0,.5);transform:translate(-50%,-50%) scale(1.12)}
+
+.pl-body{padding:15px 16px 16px}
+.pl-t{font-size:14.5px;font-weight:700;letter-spacing:-.02em;color:var(--text);
+  line-height:1.4;margin:0 0 7px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pl-card:hover .pl-t{color:var(--violet-2)}
+.pl-who{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);
+  margin-bottom:10px}
+.pl-who b{font-weight:700;color:var(--text-2)}
+.pl-who span{color:var(--line-2)}
+
+.pl-foot{display:flex;align-items:center;gap:8px;padding-top:11px;
+  border-top:1px solid var(--line)}
+.pl-adv{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+  color:var(--text-2)}
+.pl-adv svg{width:14px;height:14px;color:var(--text-3)}
+/* ★ 조언이 아직 없는 글은 <b>눈에 띄게</b> — 이 표시를 보고 들어와
+     첫 조언을 남기는 것이 이 자리의 목적입니다 */
+.pl-adv.zero{color:var(--orange,#D96A0E)}
+.pl-adv.zero svg{color:var(--orange,#D96A0E)}
+.pl-date{margin-left:auto;font-size:11.5px;color:var(--text-3)}
+
+.pl-empty{grid-column:1/-1;padding:70px 20px;text-align:center;
+  font-size:14px;line-height:1.9;color:var(--text-3)}
+.pl-empty b{display:block;font-size:16px;color:var(--text-2);margin-bottom:8px}
+.pl-more{display:block;width:100%;margin-top:24px;padding:14px;
+  border:1px solid var(--line-2);background:var(--paper);border-radius:11px;
+  font-size:13.5px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit}
+.pl-more:hover{border-color:var(--violet-2);color:var(--violet-2)}
+
+@media (max-width:980px){ .pl-list{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:620px){
+  .pl{padding:30px 16px 70px}
+  .pl-list{grid-template-columns:1fr}
+  .pl-bar{gap:8px}
+  .pl-count{width:100%;margin-left:0;order:9}
+}
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+<script src="/assets/hero-scene.js" defer></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-orbit on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><a href="/community/index.html">OC커뮤니티</a><span>/</span><span class="on">연주 올리기</span>
+    </nav>
+
+    <div id="oc-subnav"></div>
+
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">OC COMMUNITY</div>
+          <h1 class="pdb-title">연주 올리기</h1>
+        </div>
+      </div>
+      <p class="pdb-lead">자기 연주를 올리고 다른 회원에게서 조언을 받는 곳입니다. 점수는 매기지 않습니다.</p>
+    </header>
+  </div>
+</section>
+
+<main class="pl">
+
+  <div class="pl-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+    <p>
+      이곳은 <b>점수를 매기지 않습니다.</b> 「잘한다·못한다」 대신 「여기를 이렇게 해 보면 어떨까요」를 남겨 주십시오.<br>
+      연주는 오래 준비한 것입니다. 짧게라도 <b>구체적으로</b> 적어 주시면 올린 분에게 큰 도움이 됩니다.
+    </p>
+  </div>
+
+  <div class="pl-bar">
+    <div class="pl-sort" id="sortBox" role="group" aria-label="차례">
+      <button type="button" data-s="wait" class="on">조언을 기다리는</button>
+      <button type="button" data-s="new">최근 올린</button>
+      <button type="button" data-s="hot">조언이 많은</button>
+    </div>
+    <select id="instBox" aria-label="악기"><option value="">악기 전부</option></select>
+    <a class="pl-write" href="/community/play-write.html" id="writeBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>
+      연주 올리기
+    </a>
+    <span class="pl-count" id="count"></span>
+  </div>
+
+  <div class="pl-list" id="list">
+    <div class="pl-empty">불러오는 중…</div>
+  </div>
+</main>
+
+<div id="oc-bigban"></div>
+<div id="oc-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function () {
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var U = SB_URL + '/rest/v1/';
+  var H = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(x) {
+    return String(x == null ? '' : x)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function tr(x) {
+    try { return (window.OCI18N && window.OCI18N.t) ? window.OCI18N.t(x) : x; }
+    catch (e) { return x; }
+  }
+  function ocN(tpl, v) {
+    try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n(tpl, v); } catch (e) {}
+    return String(tpl).replace('{n}', v);
+  }
+
+  var PAGE = 12, off = 0, sort = 'wait', inst = '', done = false;
+
+  /* 유튜브 미리보기 그림 — 주소를 저장하지 않고 그때그때 만듭니다.
+     ★ hqdefault 는 어느 영상에나 있습니다. maxres 는 없는 것이 많아
+       깨진 그림이 뜹니다. */
+  function ytThumb(id) {
+    return 'https://i.ytimg.com/vi/' + encodeURIComponent(id) + '/hqdefault.jpg';
+  }
+
+  function when(iso) {
+    if (!iso) return '';
+    var d = new Date(iso), now = new Date();
+    var day = Math.floor((now - d) / 86400000);
+    if (day <= 0) return tr('오늘');
+    if (day === 1) return tr('어제');
+    if (day < 7) return ocN('{n}일 전', day);
+    return (d.getMonth() + 1) + '.' + d.getDate();
+  }
+
+  function order() {
+    /* ★ 「조언을 기다리는」이 기본입니다. 아무도 안 봐 주면 다시
+         올리지 않습니다 — 새 글이 묻히지 않게 하려는 것입니다. */
+    if (sort === 'wait') return 'advice_count.asc,created_at.desc';
+    if (sort === 'hot')  return 'advice_count.desc,created_at.desc';
+    return 'created_at.desc';
+  }
+
+  function load(reset) {
+    if (reset) { off = 0; done = false; $('list').innerHTML = '<div class="pl-empty">' + esc(tr('불러오는 중…')) + '</div>'; }
+    if (done) return;
+
+    var q = 'oc_play?select=id,title,composer,instrument,author_name,author_type,'
+          + 'video_provider,video_id,thumb_url,advice_count,created_at'
+          + '&status=eq.open'
+          + (inst ? '&instrument=eq.' + encodeURIComponent(inst) : '')
+          + '&order=' + order()
+          + '&offset=' + off + '&limit=' + PAGE;
+
+    fetch(U + q, { headers: Object.assign({ Prefer: 'count=exact' }, H) })
+      .then(function (r) {
+        var cr = r.headers.get('content-range') || '';
+        var total = parseInt((cr.split('/')[1] || '0'), 10) || 0;
+        return r.json().then(function (rows) { return { rows: rows || [], total: total }; });
+      })
+      .then(function (res) {
+        var rows = res.rows;
+        if (off === 0) $('list').innerHTML = '';
+        if (!rows.length && off === 0) {
+          $('list').innerHTML = '<div class="pl-empty"><b>' + esc(tr('아직 올라온 연주가 없습니다.')) + '</b>'
+            + esc(tr('첫 연주를 올려 보시겠습니까? 짧은 한 곡이라도 좋습니다.')) + '</div>';
+          $('count').textContent = '';
+          return;
+        }
+        $('count').textContent = res.total ? ocN('모두 {n}건', res.total) : '';
+        $('list').insertAdjacentHTML('beforeend', rows.map(card).join(''));
+        off += rows.length;
+        if (rows.length < PAGE || off >= res.total) done = true;
+
+        var old = $('moreBtn');
+        if (old) old.remove();
+        if (!done) {
+          $('list').insertAdjacentHTML('afterend',
+            '<button type="button" class="pl-more" id="moreBtn">' + esc(tr('더 보기')) + '</button>');
+          $('moreBtn').addEventListener('click', function () { load(false); });
+        }
+      })
+      .catch(function () {
+        if (off === 0) $('list').innerHTML = '<div class="pl-empty">' + esc(tr('불러오지 못했습니다.')) + '</div>';
+      });
+  }
+
+  function card(p) {
+    var img = p.thumb_url || (p.video_provider === 'youtube' && p.video_id ? ytThumb(p.video_id) : '');
+    var who = [p.author_name, p.instrument].filter(Boolean);
+    var zero = !p.advice_count;
+    return '<a class="pl-card" href="/community/play-view.html?id=' + encodeURIComponent(p.id) + '">'
+      + '<span class="pl-thumb">'
+      +   (img ? '<img src="' + esc(img) + '" alt="" loading="lazy" decoding="async">' : '')
+      +   '<i aria-hidden="true">&#9654;</i>'
+      + '</span>'
+      + '<span class="pl-body">'
+      +   '<span class="pl-t">' + esc(p.title || '') + '</span>'
+      +   '<span class="pl-who"><b>' + esc(who[0] || '') + '</b>'
+      +     (who[1] ? '<span>·</span>' + esc(tr(who[1])) : '') + '</span>'
+      +   '<span class="pl-foot">'
+      +     '<span class="pl-adv' + (zero ? ' zero' : '') + '">'
+      +       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+      +       '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+      +       (zero ? esc(tr('첫 조언을 기다립니다')) : esc(ocN('조언 {n}', p.advice_count)))
+      +     '</span>'
+      +     '<span class="pl-date">' + esc(when(p.created_at)) + '</span>'
+      +   '</span>'
+      + '</span></a>';
+  }
+
+  /* 악기 고르개 — 올라온 것에서 뽑아 만듭니다.
+     미리 적어 두면 없는 악기가 목록에 남습니다. */
+  function fillInst() {
+    fetch(U + 'oc_play?select=instrument&status=eq.open&limit=500', { headers: H })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        var m = {};
+        (rows || []).forEach(function (x) { if (x.instrument) m[x.instrument] = (m[x.instrument] || 0) + 1; });
+        var ks = Object.keys(m).sort(function (a, b) { return m[b] - m[a]; });
+        if (!ks.length) return;
+        $('instBox').innerHTML = '<option value="">' + esc(tr('악기 전부')) + '</option>'
+          + ks.map(function (k) {
+              return '<option value="' + esc(k) + '">' + esc(tr(k)) + ' (' + m[k] + ')</option>';
+            }).join('');
+      })
+      .catch(function () {});
+  }
+
+  [].forEach.call($('sortBox').querySelectorAll('button'), function (b) {
+    b.addEventListener('click', function () {
+      [].forEach.call($('sortBox').querySelectorAll('button'), function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      sort = b.getAttribute('data-s');
+      load(true);
+    });
+  });
+  $('instBox').addEventListener('change', function () { inst = this.value; load(true); });
+
+  load(true);
+  fillInst();
+})();
+</script>
+
+<script src="/assets/app.js"></script>
+<script src="/assets/pwa-install.js?v=20260815" defer></script>
+</body>
+</html>
