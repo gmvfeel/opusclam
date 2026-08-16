@@ -902,6 +902,11 @@ html[data-theme="dark"] .board-card:hover{background:#000}
 .sp-cname.is-plain{color:var(--text-2);background:var(--paper-2);border-color:var(--line)}
 .sp-crole{font-size:11.5px;font-weight:500;color:var(--text-3)}
 .sp-cname:hover .sp-crole{color:rgba(255,255,255,.66)}
+/* ★ 이어진 이름에 붙는 화살표 — 색이 아니라 <b>모양</b>으로 알립니다.
+     색만 쓰면 색맹인 분이 구분할 수 없습니다. */
+.sp-cgo{font-style:normal;font-weight:800;margin-left:1px;opacity:.55}
+.sp-cname:hover .sp-cgo{opacity:.9}
+.sp-cnote{margin:0 0 12px;font-size:12.5px;color:var(--text-3)}
 @media (max-width:560px){
   .sp-clist{gap:6px}
   .sp-cname{padding:7px 12px;font-size:12.5px}

@@ -425,13 +425,23 @@
       var wrap = document.createElement('div');
       wrap.id = 'spCast';
       wrap.className = 'sp-cast';
-      var h = '<div class="sp-ph">출연</div><div class="sp-clist">';
+      /* ★ 2026-08-16 · 「누를 수 있다」가 잘 안 보인다는 지적 (파트너)
+           색만으로는 모릅니다 — 색맹인 분에게는 더 그렇습니다.
+         ▶ 이어진 이름에 <b>작은 화살표</b>를 붙입니다. 색이 아니라
+           모양으로도 알 수 있습니다(콩쿨 아카이브와 같은 방식).
+         ▶ 안내 한 줄도 답니다. 다만 <b>이어진 사람이 있을 때만</b> —
+           아무도 안 이어졌는데 안내만 뜨면 이상합니다. */
+      var linked = list.filter(function(c){ return c.person_id; }).length;
+
+      var h = '<div class="sp-ph">출연</div>'
+        + (linked ? '<p class="sp-cnote">이름을 누르면 인물 정보로 갑니다.</p>' : '')
+        + '<div class="sp-clist">';
       list.forEach(function(c){
         var nm = c.name || '';
         var role = c.role ? '<span class="sp-crole">' + esc(c.role) + '</span>' : '';
         h += c.person_id
           ? '<a class="sp-cname" href="/db/person-view.html?id=' + encodeURIComponent(c.person_id) + '">'
-            + esc(nm) + role + '</a>'
+            + esc(nm) + role + '<i class="sp-cgo" aria-hidden="true">&rsaquo;</i></a>'
           : '<span class="sp-cname is-plain">' + esc(nm) + role + '</span>';
       });
       h += '</div>';
