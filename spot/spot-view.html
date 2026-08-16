@@ -239,7 +239,7 @@
       if (LEAD[sec]) info = { list: info.list, name: info.name, lead: LEAD[sec] };
       start(info);
       linkPersons(id);
-      if (sec === '공연정보') concertHead(id);
+      if (sec === '공연정보') { concertHead(id); linkCast(id); }
     })
     .catch(function(){ start(FALLBACK); });
 
@@ -383,6 +383,63 @@
       h += '</div>';
       wrap.innerHTML = h;
       body.parentNode.insertBefore(wrap, body.nextSibling);
+    }, 120);
+  }
+
+  /* ============================================================
+     출연자 보여 주기 (2026-08-16)
+
+     ★ 공연에 누가 나오는지는 KOPIS <b>상세</b>에만 있습니다.
+       그것을 따로 모아 oc_cast 에 담아 두었습니다(seed/cast-collect.mjs).
+     ★ 인물DB 와 <b>이어진 사람만</b> 누를 수 있게 합니다. 안 이어진
+       이름은 글자로만 보입니다 — 눌러도 갈 데가 없는데 눌릴 것처럼
+       보이면 안 됩니다.
+     ★ 인물이 숨김(hidden)이어도 <b>여기서는 보입니다.</b> 숨김은
+       「인물DB 목록에 안 낸다」는 뜻이지 「없는 사람」이 아닙니다.
+     ★ 자료가 없으면 아무것도 그리지 않습니다.
+     ============================================================ */
+  function linkCast(vid){
+    if(!vid) return;
+    fetch(SB + '/rest/v1/oc_cast?select=name,role,person_id,link_status'
+          + '&spot_id=eq.' + encodeURIComponent(vid)
+          + '&order=ord.asc&limit=40',
+          { headers:{ apikey:KEY, Authorization:'Bearer ' + KEY } })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){
+        if(!Array.isArray(rows) || !rows.length) return;
+        drawCast(rows);
+      })
+      .catch(function(){});
+  }
+
+  function drawCast(list){
+    var tries = 0;
+    var tick = setInterval(function(){
+      var body = document.querySelector('.board-view .bv-body')
+              || document.querySelector('.board-view');
+      tries++;
+      if(!body){ if(tries > 40) clearInterval(tick); return; }
+      clearInterval(tick);
+      if(document.getElementById('spCast')) return;
+
+      var wrap = document.createElement('div');
+      wrap.id = 'spCast';
+      wrap.className = 'sp-cast';
+      var h = '<div class="sp-ph">출연</div><div class="sp-clist">';
+      list.forEach(function(c){
+        var nm = c.name || '';
+        var role = c.role ? '<span class="sp-crole">' + esc(c.role) + '</span>' : '';
+        h += c.person_id
+          ? '<a class="sp-cname" href="/db/person-view.html?id=' + encodeURIComponent(c.person_id) + '">'
+            + esc(nm) + role + '</a>'
+          : '<span class="sp-cname is-plain">' + esc(nm) + role + '</span>';
+      });
+      h += '</div>';
+      wrap.innerHTML = h;
+      /* 공연 안내표(spConcert) 바로 아래에 놓습니다 */
+      var head = document.getElementById('spConcert');
+      if (head && head.parentNode) head.parentNode.insertBefore(wrap, head.nextSibling);
+      else body.parentNode.insertBefore(wrap, body);
     }, 120);
   }
 
