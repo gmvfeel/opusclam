@@ -117,6 +117,15 @@
     line-height:1.35;word-break:keep-all;transition:color .15s ease}
   .tl-item .s{display:block;font-size:11.5px;color:var(--text-3);margin-top:2px}
 
+  /* ★★ 2026-08-16 · hidden 이 안 먹던 문제 (파트너 지적)
+     ─────────────────────────────────────────────────────────
+     한국 클래식 탭을 눌러도 <b>서양 쪽이 그대로 남았습니다.</b>
+     hidden 은 display:none 과 같은 뜻인데, .tl-band 에 display:flex,
+     .tl-cols 에 display:grid 가 있어 <b>그쪽이 이겼습니다.</b>
+   ▶ [hidden] 에 display:none 을 <b>!important</b> 로 못박습니다.
+     이 화면 전체에 걸리므로 다른 곳에서도 hidden 이 제대로 듭니다. */
+  [hidden]{display:none !important}
+
   /* ── 갈래 탭 (2026-08-16) ─────────────────────────────
      ★ 하위 메뉴(알약)와 헷갈리지 않게 <b>밑줄</b> 모양으로 둡니다. */
   .tl-kind{display:flex;gap:0;margin:0 0 22px;border-bottom:1px solid var(--line)}
