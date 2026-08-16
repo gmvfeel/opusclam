@@ -1,0 +1,68 @@
+name: SPOT · 공연 출연자 (매일)
+
+# ── 무엇을 하나 ──
+#  이미 담긴 공연(spot)의 KOPIS 상세를 불러 출연진(prfcast)을 뽑아
+#  oc_cast 에 담습니다. 인물DB 와 잇는 것은 다음 단계입니다.
+#
+# ── 왜 나눠 부르나 ──
+#  KOPIS 를 처음 붙였을 때 상세를 한꺼번에 불러 무료 시간이 터졌습니다.
+#  그래서 한 번에 정해진 만큼만 부르고, 부른 공연에는 표시를 남겨
+#  다음번에는 건너뜁니다.
+#  1,011건이면 나흘이면 다 채워지고, 그다음부터는 새로 들어온 것만
+#  부르므로 하루 몇십 건입니다.
+#
+# ── 언제 실행되나 ──
+#  1) 수동 — 처음에는 「실제로 담기: no」 로 무엇이 오는지 먼저 보세요
+#  2) 자동 — 날마다 오전 7시 30분(KST).
+#     공연정보 수집(월요일 07:13)보다 뒤에 두어, 새로 들어온 공연도
+#     그날 함께 채워지게 합니다.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '한 번에 부를 공연 수 (기본 250)'
+        required: true
+        default: '250'
+      save:
+        description: '실제로 담기 (처음에는 no 로 확인하세요)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+  schedule:
+    # 날마다 오전 7시 30분(KST) = 22:30 UTC
+    - cron: '30 22 * * *'
+
+# 수동 실행과 예약 실행이 겹치지 않게 합니다.
+concurrency:
+  group: oc-collect-cast
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 출연자 수집 실행
+        env:
+          KOPIS_KEY: ${{ secrets.KOPIS_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          L="${{ github.event.inputs.limit }}"
+          SAVE="${{ github.event.inputs.save }}"
+          OPTS=""
+          if [ -n "$L" ]; then OPTS="--limit=$L"; fi
+          # 예약 실행이면 입력이 비어 있습니다 — 그때는 기본값으로 담습니다
+          if [ -n "$SAVE" ] && [ "$SAVE" != "yes" ]; then OPTS="$OPTS --dry"; fi
+          echo "── 실행 : node seed/cast-collect.mjs $OPTS ──"
+          node seed/cast-collect.mjs $OPTS
