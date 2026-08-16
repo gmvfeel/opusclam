@@ -138,25 +138,110 @@
   .tl-kind button.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;
     height:2px;background:var(--violet-2);border-radius:2px}
 
-  /* ── 한국 클래식 연표 ─────────────────────────────────
-     ★ 두 칸으로 — 「국제 무대」와 「단체의 발자취」.
-       한데 섞으면 콩쿠르가 단체 목록에 묻힙니다. */
-  .krcols{grid-template-columns:1fr 1fr}
-  .kr-item{display:flex;gap:14px;align-items:baseline;padding:11px 2px;
-    border-bottom:1px solid var(--line);text-decoration:none}
-  .kr-item:last-child{border-bottom:0}
-  .kr-item .y{flex:0 0 44px;font-family:var(--display);font-size:14px;font-weight:900;
-    letter-spacing:-.03em;color:#C9A94E;font-variant-numeric:tabular-nums}
-  .kr-item .b{flex:1;min-width:0}
-  .kr-item .t{display:block;font-size:13.5px;font-weight:700;letter-spacing:-.02em;
-    color:var(--text);line-height:1.4;word-break:keep-all}
-  a.kr-item:hover .t{color:var(--violet-2)}
-  .kr-item .s{display:block;margin-top:2px;font-size:11.5px;color:var(--text-3)}
-  /* 우승은 도드라지게 — 1위는 그 자체가 사건입니다 */
-  .kr-item.is-win .y{color:var(--violet-2)}
-  .kr-item.is-win .s{color:var(--violet-2);font-weight:700}
+  /* ══ 한국 클래식 연표 (2026-08-16) ═══════════════════════
+     ★ 셋을 엮습니다 — <b>십년 띠</b>(흐름) · <b>세로 흐름선</b>(차례) ·
+       <b>얼굴과 색</b>(누구·어느 대회).
+     ★ 목록만 이어지면 밋밋합니다. 다만 다 넣으면 시끄러우므로
+       대회는 <b>작은 색 점</b>으로만 둡니다(띠까지 넣으면 과합니다). */
 
-  @media(max-width:900px){ .krcols{grid-template-columns:1fr} }
+  /* ── 십년 띠 ────────────────────────────────────────── */
+  .kr-band{display:flex;align-items:flex-end;gap:5px;height:96px;margin:0 0 30px;
+    padding:0 2px}
+  .kr-bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
+    cursor:pointer;background:none;border:0;padding:0;font-family:inherit;
+    transition:opacity .15s ease}
+  .kr-bar:hover{opacity:.82}
+  .kr-bar .fill{width:100%;border-radius:5px 5px 0 0;
+    background:linear-gradient(180deg,#9C7FD6,#6E5AA8);min-height:4px;
+    transition:background .18s ease,transform .18s ease}
+  .kr-bar.on .fill{background:linear-gradient(180deg,#C9A94E,#A8862E)}
+  .kr-bar:hover .fill{transform:scaleY(1.04);transform-origin:bottom}
+  .kr-bar .lb{font-size:10.5px;color:var(--text-3);white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  .kr-bar.on .lb{color:var(--text);font-weight:700}
+  .kr-bar .n{font-size:10px;color:var(--text-3);font-weight:700}
+
+  /* ── 세로 흐름선 ───────────────────────────────────── */
+  .kr-flowhead{display:grid;grid-template-columns:1fr 60px 1fr;gap:0;
+    padding-bottom:12px;margin-bottom:4px;border-bottom:2px solid var(--text-3)}
+  .kr-flowhead span{font-size:13.5px;font-weight:800;letter-spacing:-.02em;
+    color:var(--text)}
+  .kr-flowhead .l{text-align:right;grid-column:1}
+  .kr-flowhead .r{grid-column:3}
+  .kr-flowhead em{display:block;margin-top:3px;font-style:normal;font-size:11px;
+    font-weight:400;color:var(--text-3)}
+
+  .kr-flow{position:relative;padding:8px 0 4px}
+  /* 가운데 선 — 연도가 흐르는 길입니다 */
+  .kr-flow::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;
+    margin-left:-1px;background:linear-gradient(180deg,
+      transparent,var(--line-2) 6%,var(--line-2) 94%,transparent)}
+
+  .kr-row{position:relative;display:grid;grid-template-columns:1fr 60px 1fr;
+    align-items:center;padding:9px 0}
+  .kr-row .yr{grid-column:2;text-align:center;position:relative;z-index:2}
+  .kr-row .yr b{display:inline-block;padding:3px 7px;border-radius:11px;
+    background:var(--paper);border:1px solid var(--line-2);
+    font-family:var(--display);font-size:11.5px;font-weight:900;letter-spacing:-.02em;
+    color:var(--text-2);font-variant-numeric:tabular-nums}
+  .kr-row.is-win .yr b{background:var(--violet-2);border-color:var(--violet-2);color:#fff}
+
+  .kr-card{display:flex;align-items:center;gap:11px;padding:10px 13px;
+    border:1px solid var(--line);border-radius:12px;background:var(--paper);
+    text-decoration:none;transition:border-color .18s ease,box-shadow .18s ease}
+  .kr-card:hover{border-color:var(--violet-2);
+    box-shadow:0 8px 20px -14px rgba(30,20,60,.35)}
+  /* 왼쪽 칸은 <b>오른쪽 끝에</b> 붙습니다 — 가운데 선을 향하게 */
+  .kr-row .side-l{grid-column:1;display:flex;justify-content:flex-end;padding-right:14px}
+  .kr-row .side-r{grid-column:3;padding-left:14px}
+  .kr-row .side-l .kr-card{flex-direction:row-reverse;text-align:right}
+  .kr-card{max-width:100%}
+
+  /* 얼굴 — 인물DB 에 사진이 있는 분만 */
+  .kr-face{flex:0 0 38px;width:38px;height:38px;border-radius:50%;overflow:hidden;
+    background:var(--paper-2);border:1px solid var(--line);display:grid;
+    place-items:center;font-family:var(--display);font-size:13px;font-weight:800;
+    color:var(--text-3)}
+  .kr-face img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .kr-card .bd{min-width:0}
+  .kr-card .t{display:block;font-size:13.5px;font-weight:700;letter-spacing:-.02em;
+    color:var(--text);line-height:1.35;word-break:keep-all;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  a.kr-card:hover .t{color:var(--violet-2)}
+  .kr-card .s{display:flex;align-items:center;gap:5px;margin-top:3px;
+    font-size:11.5px;color:var(--text-3)}
+  .kr-row .side-l .kr-card .s{justify-content:flex-end}
+  /* 대회 색 점 — 어느 대회에서 강했나가 색으로 드러납니다 */
+  .kr-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--text-3)}
+  .kr-dot.chopin{background:#C0504D}
+  .kr-dot.tchaikovsky{background:#3B6FD4}
+  .kr-dot.queen-elisabeth{background:#2E9E7E}
+  .kr-dot.leeds{background:#D9A441}
+  .kr-dot.busoni{background:#8B5FBF}
+  .kr-row.is-win .kr-card{border-color:var(--violet-2)}
+  .kr-row.is-win .s{color:var(--violet-2);font-weight:700}
+
+  .kr-foot{display:flex;gap:18px;justify-content:center;margin:26px 0 0;
+    font-size:12.5px}
+  .kr-foot a{color:var(--text-2);text-decoration:none}
+  .kr-foot a:hover{color:var(--violet-2)}
+  .kr-empty{padding:44px 20px;text-align:center;color:var(--text-3);font-size:13.5px}
+
+  @media(max-width:760px){
+    /* 좁은 화면에서는 가운데 선을 <b>왼쪽으로</b> 옮기고 한 줄로 */
+    .kr-flowhead{display:none}
+    .kr-flow::before{left:34px}
+    .kr-row{grid-template-columns:34px 1fr;padding:7px 0}
+    .kr-row .yr{grid-column:1;text-align:left}
+    .kr-row .yr b{padding:2px 5px;font-size:10.5px}
+    .kr-row .side-l,.kr-row .side-r{grid-column:2;padding:0 0 0 16px;
+      justify-content:flex-start}
+    .kr-row .side-l .kr-card{flex-direction:row;text-align:left}
+    .kr-row .side-l .kr-card .s{justify-content:flex-start}
+    .kr-band{height:74px;gap:3px}
+    .kr-bar .lb{font-size:9.5px}
+  }
   @media(max-width:560px){
     .tl-kind button{flex:1;padding:11px 8px;font-size:13px}
   }
@@ -238,8 +323,11 @@ function ocN(tpl) {
            오퍼스클램만 할 수 있는 것입니다. 서구 서비스는 이 자료에
            닿을 수 없습니다. -->
     <nav class="tl-kind" aria-label="연표 갈래">
-      <button type="button" data-k="west" class="on">서양 음악사</button>
-      <button type="button" data-k="kr">한국 클래식</button>
+      <!-- ★ 2026-08-16 · 한국 클래식을 <b>먼저</b> 둡니다 (파트너 지시)
+             오퍼스클램이 내세울 것이 그쪽입니다 — 서구 서비스는 이
+             자료에 닿을 수 없습니다. -->
+      <button type="button" data-k="kr" class="on">한국 클래식</button>
+      <button type="button" data-k="west">서양 음악사</button>
     </nav>
 
     <!-- 시대 띠 -->
@@ -282,23 +370,23 @@ function ocN(tpl) {
          ★ 「국제 무대」와 「단체의 발자취」를 <b>나란히</b> 둡니다.
            한데 섞으면 콩쿠르 기록이 단체 목록에 묻힙니다 —
            단체가 훨씬 많기 때문입니다. -->
-    <div id="krWrap" hidden>
-      <div class="tl-cols krcols">
-        <section class="tl-col">
-          <div class="tl-colhead">
-            <h3>국제 무대 <a class="tl-more" href="/spot/concours-archive.html">콩쿨 아카이브 &rarr;</a></h3>
-            <p class="tl-basis">국제 콩쿠르 1 · 2 · 3위</p>
-          </div>
-          <div id="krConcours"></div>
-        </section>
-        <section class="tl-col">
-          <div class="tl-colhead">
-            <h3>단체의 발자취 <a class="tl-more" href="/db/org.html">단체DB &rarr;</a></h3>
-            <p class="tl-basis">국내에서 가장 이른 곳 · 지금 무대에 오르는 곳</p>
-          </div>
-          <div id="krOrgs"></div>
-        </section>
+    <div id="krWrap">
+      <!-- ★ 십년 띠 — 어느 시기에 일이 많았는지 <b>높이</b>로 보입니다.
+             2010년대가 유난히 높은데, 그것이 「한국 클래식이 세계로
+             나간 시기」라는 것을 그림으로 말해 줍니다. -->
+      <div class="kr-band" id="krBand" role="tablist" aria-label="십년 고르기"></div>
+
+      <!-- ★ 세로 흐름선 — 연도가 흐르는 것이 몸으로 느껴집니다.
+             왼쪽에 국제 무대, 오른쪽에 단체를 둡니다. -->
+      <div class="kr-flowhead">
+        <span class="l">국제 무대<em>국제 콩쿠르 1 · 2 · 3위</em></span>
+        <span class="r">단체의 발자취<em>국내에서 가장 이른 곳 · 지금 무대에 오르는 곳</em></span>
       </div>
+      <div class="kr-flow" id="krFlow"></div>
+      <p class="kr-foot">
+        <a href="/spot/concours-archive.html">콩쿨 아카이브 &rarr;</a>
+        <a href="/db/org.html">단체DB &rarr;</a>
+      </p>
     </div>
 
   </div>
@@ -595,6 +683,7 @@ function ocN(tpl) {
        묻힙니다(단체가 훨씬 많습니다).
      ★ 한 번 받아 두고 갈래를 오갈 때는 다시 받지 않습니다. */
   var krLoaded = false;
+  var krRows = [], krPick = null;
 
   function loadKr(){
     if (krLoaded) return;
@@ -607,36 +696,108 @@ function ocN(tpl) {
     })
       .then(function(r){ return r.ok ? r.json() : []; })
       .then(function(rows){
-        rows = rows || [];
-        drawKr($('krConcours'), rows.filter(function(x){ return x.kind === 'concours'; }), true);
-        drawKr($('krOrgs'),     rows.filter(function(x){ return x.kind === 'org'; }),      false);
+        krRows = rows || [];
+        krDrawBand();
+        krDrawFlow(null);
       })
       .catch(function(){
-        $('krConcours').innerHTML = '<p class="tl-empty">불러오지 못했습니다.</p>';
+        $('krFlow').innerHTML = '<p class="kr-empty">불러오지 못했습니다.</p>';
       });
   }
 
-  function drawKr(box, list, isConcours){
+  /* ── 십년 띠 ───────────────────────────────────────────
+     ★ 어느 시기에 일이 많았는지 <b>높이</b>로 보입니다.
+       2010년대가 유난히 높은데, 그것이 「한국 클래식이 세계로 나간
+       시기」라는 것을 그림으로 말해 줍니다.
+     ★★ 이름을 krDrawBand 로 둡니다 — 서양 연표에 이미 drawBand 가
+       있어서 같은 이름을 쓰면 <b>그것을 덮어씁니다</b>.
+       (처음에 그렇게 했다가 서양 쪽 시대 띠가 통째로 멈췄습니다.) */
+  function krDec(y){ return Math.floor(y / 10) * 10; }
+
+  function krDrawBand(){
+    var box = $('krBand');
+    if (!box || !krRows.length) return;
+
+    var cnt = {};
+    krRows.forEach(function(x){ var d = krDec(x.yr); cnt[d] = (cnt[d] || 0) + 1; });
+
+    var ds = Object.keys(cnt).map(Number).sort(function(a,b){ return a - b; });
+    var lo = ds[0], hi = ds[ds.length - 1];
+    var max = Math.max.apply(null, ds.map(function(d){ return cnt[d]; }));
+
+    var out = '';
+    for (var d = lo; d <= hi; d += 10) {
+      var n = cnt[d] || 0;
+      /* 없는 십년도 자리를 지킵니다 — 빠지면 흐름이 끊겨 보입니다 */
+      var h = n ? Math.max(6, Math.round(n / max * 62)) : 3;
+      out += '<button type="button" class="kr-bar" data-d="' + d + '" role="tab">'
+        + '<span class="n">' + (n || '') + '</span>'
+        + '<span class="fill" style="height:' + h + 'px"></span>'
+        + '<span class="lb">' + String(d).slice(2) + '</span>'
+        + '</button>';
+    }
+    box.innerHTML = out;
+
+    box.addEventListener('click', function(ev){
+      var b = ev.target.closest('.kr-bar');
+      if (!b) return;
+      var dd = Number(b.getAttribute('data-d'));
+      /* 같은 것을 다시 누르면 전부 보기로 돌아옵니다 */
+      krPick = (krPick === dd) ? null : dd;
+      [].forEach.call(box.querySelectorAll('.kr-bar'), function(x){
+        x.classList.toggle('on', krPick !== null && Number(x.getAttribute('data-d')) === krPick);
+      });
+      krDrawFlow(krPick);
+    });
+  }
+
+  /* ── 세로 흐름선 ───────────────────────────────────────
+     ★ 왼쪽에 국제 무대, 오른쪽에 단체. 가운데 선을 따라 연도가
+       흐르는 것이 몸으로 느껴집니다.
+     ★ 인물DB 와 이어진 분은 <b>얼굴</b>이 나옵니다. 없으면 첫 글자. */
+  function krDrawFlow(dec){
+    var box = $('krFlow');
     if (!box) return;
-    if (!list.length){ box.innerHTML = '<p class="tl-empty">아직 자료가 없습니다.</p>'; return; }
+
+    var list = krRows.filter(function(x){
+      return dec === null || krDec(x.yr) === dec;
+    });
+    if (!list.length){
+      box.innerHTML = '<p class="kr-empty">이 시기의 기록이 아직 없습니다.</p>';
+      return;
+    }
 
     box.innerHTML = list.map(function(x){
-      /* ★ 인물DB 와 <b>이어진 사람만</b> 누를 수 있게 합니다.
-           안 이어진 이름(영문으로만 남은 분들)은 글자로 둡니다 —
-           눌러도 갈 데가 없는데 눌릴 것처럼 보이면 안 됩니다. */
-      var href = x.ref_kind === 'person' && x.ref_id
-        ? '/db/person-view.html?id=' + encodeURIComponent(x.ref_id)
-        : (x.ref_kind === 'org' && x.ref_id
-            ? '/db/org-view.html?id=' + encodeURIComponent(x.ref_id) : '');
-      /* 우승은 도드라지게 — 1위는 그 자체가 사건입니다 */
-      var win = isConcours && / 1위$/.test(x.sub || '');
-      var cls = 'kr-item' + (win ? ' is-win' : '');
-      var inner = '<span class="y">' + esc(x.yr) + '</span>'
-        + '<span class="b"><span class="t">' + esc(x.title || '') + '</span>'
-        + (x.sub ? '<span class="s">' + esc(x.sub) + '</span>' : '') + '</span>';
-      return href
-        ? '<a class="' + cls + '" href="' + href + '">' + inner + '</a>'
-        : '<div class="' + cls + '">' + inner + '</div>';
+      var isC = x.kind === 'concours';
+      var win = isC && x.rank_no === 1;
+      var href = x.ref_id
+        ? (x.ref_kind === 'person'
+            ? '/db/person-view.html?id=' + encodeURIComponent(x.ref_id)
+            : '/db/org-view.html?id=' + encodeURIComponent(x.ref_id))
+        : '';
+
+      var face = '<span class="kr-face">'
+        + (x.img
+            ? '<img src="' + esc(x.img) + '" alt="" loading="lazy" onerror="this.remove()">'
+            : esc(String(x.title || '?').trim().charAt(0)))
+        + '</span>';
+
+      var sub = isC
+        ? '<span class="kr-dot ' + esc(x.ck || '') + '"></span>' + esc(x.sub || '')
+        : esc(x.sub || '');
+
+      var inner = face
+        + '<span class="bd"><span class="t">' + esc(x.title || '') + '</span>'
+        + '<span class="s">' + sub + '</span></span>';
+      var card = href
+        ? '<a class="kr-card" href="' + href + '">' + inner + '</a>'
+        : '<span class="kr-card">' + inner + '</span>';
+
+      return '<div class="kr-row' + (win ? ' is-win' : '') + '">'
+        + '<span class="side-l">' + (isC ? card : '') + '</span>'
+        + '<span class="yr"><b>' + esc(x.yr) + '</b></span>'
+        + '<span class="side-r">' + (isC ? '' : card) + '</span>'
+        + '</div>';
     }).join('');
   }
 
@@ -669,6 +830,12 @@ function ocN(tpl) {
       }
       if (kr) loadKr();
     });
+
+    /* ★ 처음 열 때는 <b>한국 클래식</b>입니다. 탭 순서를 바꿨으므로
+         화면도 그에 맞춰 시작해야 합니다 — 안 그러면 서양 띠와
+         한국 연표가 <b>함께</b> 보입니다. */
+    nav.querySelector('button[data-k="kr"]')
+       .dispatchEvent(new MouseEvent('click', { bubbles: true }));
   })();
 })();
 </script>
