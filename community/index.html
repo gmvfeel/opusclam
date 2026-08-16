@@ -174,6 +174,25 @@ function ocN(tpl) {
       <div class="cm-track" id="prBox"></div>
     </section>
 
+    <!-- ★★ 2026-08-16 · 연주 봐 주세요 (파트너 요청) ★★
+         ─────────────────────────────────────────────────────
+         왜 여기 두나
+           SELF PR 을 거쳐 탭을 눌러야 나와 <b>찾기 어려웠습니다.</b>
+           바로가기 카드에도 넣었지만 작아서 눈에 띄지 않습니다.
+         ★ <b>조언이 없는 것을 먼저</b> 보여 줍니다. 아무도 안 봐 주면
+           다시 올리지 않습니다 — 새 글이 묻히지 않게 하려는 것입니다.
+         ★ 올라온 것이 없으면 이 덩어리를 <b>통째로 감춥니다.</b>
+           제목만 남고 아래가 비면 「아무도 안 쓰는 곳」으로 보입니다.
+         ★ Concert PR 바로 아래에 둡니다 — 둘 다 「회원이 올린 것」이라
+           결이 같습니다. -->
+    <section class="cm-sec" id="fbSec" hidden>
+      <div class="cm-head">
+        <span class="cm-title">연주 봐 주세요<em>FEEDBACK</em></span>
+        <a class="cm-more" href="/community/play.html">VIEW MORE <span>+</span></a>
+      </div>
+      <div class="fb" id="fbList"></div>
+    </section>
+
     <!-- Hot Topic -->
     <section class="cm-sec">
       <div class="cm-head">
@@ -274,6 +293,68 @@ function ocN(tpl) {
 <script src="/assets/stats-chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
+    /* ── 연주 봐 주세요 (2026-08-16) ──────────────────────
+       ★ <b>조언이 없는 것을 먼저</b> — advice_count 오름차순.
+         아무도 안 봐 주면 다시 올리지 않습니다.
+       ★ 없으면 덩어리를 <b>통째로 감춥니다.</b> 제목만 남고 비면
+         「아무도 안 쓰는 곳」으로 보입니다.
+       ★ 유튜브 미리보기 그림은 <b>그때그때 만듭니다</b> — 주소를
+         저장하지 않으므로 비용이 없습니다. hqdefault 는 어느 영상에나
+         있습니다(maxres 는 없는 것이 많아 깨집니다). */
+    (function feedback() {
+      var sec = document.getElementById('fbSec');
+      var box = document.getElementById('fbList');
+      if (!sec || !box) return;
+
+      var U1 = 'https://ptdxzxkgddvkusamkiol.supabase.co/rest/v1/';
+      var K1 = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+      var H1 = { apikey: K1, Authorization: 'Bearer ' + K1 };
+
+      function esc1(x) {
+        return String(x == null ? '' : x)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      function t1(x) {
+        try { return (window.OCI18N && window.OCI18N.t) ? window.OCI18N.t(x) : x; }
+        catch (e) { return x; }
+      }
+      function n1(tpl, v) {
+        try { if (window.OCI18N && window.OCI18N.n) return window.OCI18N.n(tpl, v); } catch (e) {}
+        return String(tpl).replace('{n}', v);
+      }
+
+      fetch(U1 + 'oc_play?select=id,title,instrument,author_name,video_provider,video_id,'
+              + 'thumb_url,advice_count&status=eq.open'
+              + '&order=advice_count.asc,created_at.desc&limit=4', { headers: H1 })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (rows) {
+          if (!rows || !rows.length) return;
+          box.innerHTML = rows.map(function (p) {
+            var img = p.thumb_url
+              || (p.video_provider === 'youtube' && p.video_id
+                  ? 'https://i.ytimg.com/vi/' + encodeURIComponent(p.video_id) + '/hqdefault.jpg' : '');
+            var who = [p.author_name, p.instrument ? t1(p.instrument) : ''].filter(Boolean).join(' · ');
+            var zero = !p.advice_count;
+            return '<a href="/community/play-view.html?id=' + encodeURIComponent(p.id) + '">'
+              + '<span class="th">'
+              +   (img ? '<img src="' + esc1(img) + '" alt="" loading="lazy" decoding="async">' : '')
+              +   '<i aria-hidden="true">&#9654;</i>'
+              + '</span>'
+              + '<span class="bd">'
+              +   '<span class="t">' + esc1(p.title || '') + '</span>'
+              +   (who ? '<span class="w">' + esc1(who) + '</span>' : '')
+              +   '<span class="n' + (zero ? ' zero' : '') + '">'
+              +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+              +     '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+              +     (zero ? esc1(t1('첫 조언을 기다립니다')) : esc1(n1('조언 {n}', p.advice_count)))
+              +   '</span>'
+              + '</span></a>';
+          }).join('');
+          sec.hidden = false;
+        })
+        .catch(function () { /* 없으면 감춘 채로 */ });
+    })();
+
     /* ★ 2026-08-16 · SELF PR·연주 올리기 건수
          다른 카드는 OCHub 이 게시판을 세지만 이 둘은 표가 다릅니다.
          SELF PR 은 인물DB(임시)를, 연주 올리기는 oc_play 를 셉니다.
