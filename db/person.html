@@ -48,9 +48,21 @@
   .pdb-table th.c-life{width:112px}
   .pdb-table th.c-era{width:7%}
   .pdb-table th.c-work{width:13%}
-  .pdb-table th.c-org{width:12%}
+  /* c-org 폭은 아래에서 8% 로 정합니다 (2026-08-16) */
   .pdb-table th.c-school{width:8.5%}
-  .pdb-table th.c-link{width:9%}/* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
+  /* ★★ 2026-08-16 · 칸 폭을 다시 나눴습니다 (파트너 지적)
+     ─────────────────────────────────────────────────────────
+       「주요 악기」는 <b>「피아노」·「바이올린」</b>뿐이라 157px 가운데
+       절반이 비어 있었고, 정작 링크 칸은 28px 이 모자라 마지막
+       아이콘이 잘렸습니다.
+       ▶ 악기 12% → 8% (105px · 「바이올린」에 넉넉)
+         링크 9% → 11% (144px · 아이콘 넷 + 악보 숫자)
+         남은 2% 는 <b>출신학교</b>로 갑니다 — 지금 이름이 가장 많이
+         잘리는 칸입니다(「Conservatoriu…」).
+       ★ 합은 그대로 74% 입니다. 한 칸을 늘리면 다른 칸이 줄어야 하니
+         <b>가장 남는 곳에서</b> 덜어 왔습니다. */
+  .pdb-table th.c-org{width:8%}
+  .pdb-table th.c-link{width:11%}/* ===== 태블릿: No·사진·사조·출신학교 숨김 ===== */
   
   @media(max-width:840px){
     .pdb-table .c-no,.pdb-table .c-ava,.pdb-table .c-era,.pdb-table .c-school{display:none}
@@ -99,7 +111,11 @@
 
   
   .pdb-table .c-work{min-width:180px;max-width:270px;color:var(--text-2);white-space:normal;line-height:1.5}
-  .pdb-table .c-org{min-width:120px;max-width:170px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ★ 2026-08-16 · min-width 를 120 → 76px 로 (파트너 지적)
+       칸 폭을 8%(105px)로 줄여도 이 min-width 가 120px 를 붙들어
+       실제로는 줄어들지 않았습니다. 「바이올린」이 60px 쯤이니
+       76px 면 넉넉합니다. */
+  .pdb-table .c-org{min-width:76px;max-width:120px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pdb-table .c-org,.pdb-table th.c-org{text-align:center}
   .pdb-table .c-school{max-width:170px;overflow:hidden;text-overflow:ellipsis}
   .pdb-table .c-name{min-width:160px}/* 행 호버: 짙은 퍼플 배경 + 흰색 텍스트 *//* 복수 태그 */
@@ -125,9 +141,43 @@
        옮겼습니다. 여기 있던 그 한 줄은
        이 여덟 화면에만 있어서, 다른 화면과 맨 위가 서로 달랐습니다. */  /* ★ 악보 아이콘 — 건수를 곁들입니다. 다른 링크 아이콘과 달리
      자료가 있을 때만 보이므로, 눈에 띄게 색을 줍니다. */
+  /* ★★ 2026-08-16 · 링크 칸의 <b>마지막 아이콘이 잘렸습니다</b> (파트너 지적)
+     ─────────────────────────────────────────────────────────
+       칸(c-link)은 9% = 약 118px 인데, 안에 들어갈 것이 146px 였습니다 —
+         아이콘 넷 (26+5)×4 = 124  ·  악보 숫자 ≈10  ·  칸 여백 12
+       28px 이 넘쳐 오른쪽 끝이 잘렸습니다.
+     ▶ 칸을 넓히면 다른 칸(작품·소속)이 좁아져 글이 더 잘립니다.
+       그래서 <b>아이콘 사이 여백</b>을 줄입니다 — 5px → 2px.
+       (26+2)×4 = 112 + 10 + 12 = 134… 아직 모자라므로 아이콘도
+       26 → 24px 로 한 단계 줄입니다. (24+2)×4 = 104 + 22 = 126px.
+     ★ 마지막 아이콘의 오른쪽 여백은 <b>없앱니다.</b> 줄 끝이라
+       그만큼이 그대로 낭비됩니다.
+     ★ 악보 숫자는 아이콘에 <b>겹쳐</b> 올립니다 — 옆에 두면 그 줄만
+       넓어져 다른 줄과 아이콘 자리가 어긋나 보입니다. */
+  .pdb-table .c-link{white-space:nowrap}
+  .pdb-table .c-link .lk{width:24px;height:24px;margin-right:2px}
+  .pdb-table .c-link .lk:last-child{margin-right:0}
+  .pdb-table .c-link .lk svg{width:13px;height:13px}
+
   .pdb-table .lk-score{color:#5b4b9e;position:relative}
-  .pdb-table .lk-score b{font-size:11px;font-weight:800;margin-left:1px;vertical-align:top}
+  /* 악보 건수 — 아이콘 <b>오른쪽 위에 겹쳐</b> 놓습니다.
+     옆에 두면 그 줄만 넓어져 아이콘 자리가 줄마다 어긋납니다. */
+  .pdb-table .lk-score b{position:absolute;top:-3px;right:-4px;
+    min-width:13px;height:13px;padding:0 2px;border-radius:7px;
+    background:#5b4b9e;color:#fff;font-size:9px;font-weight:800;
+    line-height:13px;text-align:center;margin:0;
+    box-shadow:0 0 0 1.5px var(--paper)}
+  .pdb-table tbody tr:not(.pdb-norow):hover .lk-score b{box-shadow:0 0 0 1.5px #322152}
   .pdb-table .lk-score:hover{color:#3d3270}
+
+  /* ★ 좁은 화면 값은 <b>여기서 다시</b> 적습니다.
+       위 78줄에도 같은 규칙이 있지만, 방금 더한 전역 규칙(142줄)이
+       <b>뒤에 있어</b> 그것을 덮어 버립니다. CSS 는 같은 무게면
+       나중 것이 이깁니다. */
+  @media(max-width:520px){
+    .pdb-table .c-link .lk{width:22px;height:22px;margin-right:2px}
+    .pdb-table .c-link .lk svg{width:12px;height:12px}
+  }
 </style>
 </head>
 <body>
