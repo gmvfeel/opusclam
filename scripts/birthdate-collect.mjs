@@ -155,6 +155,7 @@ SELECT ?item ?birth ?death WHERE {
   todo.forEach((p) => { byQid[p.wikidata_id] = p; });
 
   const rows = [];
+  const seenId = new Set();       /* 같은 사람을 두 번 담지 않으려고 */
   let asked = 0, gotB = 0, gotD = 0, shown = 0;
 
   for (let i = 0; i < todo.length; i += CH) {
@@ -177,6 +178,18 @@ SELECT ?item ?birth ?death WHERE {
       const bd = toDate(val(b, 'birth'));
       const dd = toDate(val(b, 'death'));
       if (!bd && !dd) return;
+
+      /* ★★ 한 사람이 <b>여러 줄로 옵니다</b> (2026-08-16 첫 시험에서 확인)
+           2,000명을 물었는데 2,154건이 왔습니다. 위키데이터에 생몰일이
+           <b>둘 이상</b> 적힌 인물이 있기 때문입니다 —
+             · 율리우스력과 그레고리력을 둘 다 적어 둔 옛 인물
+             · 자료마다 날짜가 달라 여러 값을 담아 둔 인물
+         ▶ <b>먼저 온 것</b>만 씁니다. 같은 사람을 두 번 담으면
+           Supabase 가 묶음을 통째로 거부합니다(21000).
+         ★ 어느 것이 맞는지는 우리가 가릴 수 없습니다. 위키데이터가
+           앞에 둔 것을 그대로 씁니다 — 지어내지 않습니다. */
+      if (seenId.has(p.id)) return;
+      seenId.add(p.id);
 
       const row = { id: p.id };
       if (bd) { row.birth_date = bd; gotB++; }
