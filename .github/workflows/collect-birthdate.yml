@@ -1,0 +1,59 @@
+name: DB · 인물 생몰일 (수동)
+
+# ── 무엇을 하나 ──
+#  위키데이터에서 인물의 태어난 날·죽은 날을 받아
+#  persons.birth_date · death_date 에 담습니다.
+#
+# ── 왜 필요한가 ──
+#  지금 인물DB 의 life 는 「1963~」처럼 연도만 있습니다.
+#  위키데이터는 「1963-05-12」까지 주는데, 기존 수집기가 연도 넉 자만
+#  뽑아 쓰고 나머지를 버리고 있었습니다.
+#  이것이 채워지면 「오늘의 클래식」·연표 같은 것을 만들 수 있습니다.
+#
+# ── 언제 실행되나 ──
+#  1) 수동 — 처음에는 「실제로 담기: no」 로 무엇이 오는지 먼저 보세요
+#  2) 예약 없음 — 한 번 채우면 끝나는 일입니다. 새 인물이 늘면
+#     그때 다시 돌리시면 됩니다(이미 채운 사람은 건너뜁니다).
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '한 번에 물어볼 인물 수 (기본 2000)'
+        required: true
+        default: '2000'
+      save:
+        description: '실제로 담기 (처음에는 no 로 확인하세요)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+concurrency:
+  group: oc-birthdate
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 생몰일 수집 실행
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          L="${{ github.event.inputs.limit }}"
+          OPTS=""
+          if [ -n "$L" ]; then OPTS="--limit=$L"; fi
+          if [ "${{ github.event.inputs.save }}" != "yes" ]; then OPTS="$OPTS --dry"; fi
+          echo "── 실행 : node scripts/birthdate-collect.mjs $OPTS ──"
+          node scripts/birthdate-collect.mjs $OPTS

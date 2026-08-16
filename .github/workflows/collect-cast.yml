@@ -66,3 +66,27 @@ jobs:
           if [ -n "$SAVE" ] && [ "$SAVE" != "yes" ]; then OPTS="$OPTS --dry"; fi
           echo "── 실행 : node seed/cast-collect.mjs $OPTS ──"
           node seed/cast-collect.mjs $OPTS
+
+      # ── 인물·단체 잇기 ────────────────────────────────────
+      #  모은 이름을 인물DB·단체DB 와 잇습니다.
+      #  ★ 규칙은 SQL 함수(oc_link_all)에 한 번만 적어 두었습니다 —
+      #    손으로 돌릴 때와 같은 규칙이므로 두 곳에 적으면
+      #    한쪽만 고쳐지는 일이 생깁니다.
+      #  ★ <b>새 인물 만들기는 하지 않습니다.</b> 잘못 뽑힌 이름이
+      #    인물DB 에 쌓이면 되돌리기 어렵습니다. 그것은 파트너가
+      #    목록을 보고 sql/cast-03-newperson.sql 로 하십시오.
+      #  ★ 「담기: no」로 돌릴 때는 잇기도 건너뜁니다.
+      - name: 인물·단체 잇기
+        if: ${{ github.event.inputs.save != 'no' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          KEY="${SUPABASE_SERVICE_KEY:-$SUPABASE_SERVICE_ROLE_KEY}"
+          echo "── 인물·단체 잇기 ──"
+          curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/oc_link_all" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+            -H "Content-Type: application/json" -d '{}'
+          echo ""
+
