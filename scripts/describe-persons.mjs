@@ -53,7 +53,21 @@ const H = {
 };
 const getJSON = makeGetJSON();
 
-const MAX_LEN = 500;   /* 요약을 몇 자에서 끊을지 — 저작권과 화면 길이 둘 다 */
+/* ★★ 2026-08-19 · 500 → 4000 자 (파트너 지시)
+     ─────────────────────────────────────────────────────
+   ★ 무엇이 문제였나
+     소개문이 <b>정확히 501자에서 끊기는</b> 사람이 있었습니다 —
+     미셸린 오스테르메이에·크리스토퍼 호그우드. 화면에는 「여기서
+     끊깁니다」 안내가 붙어 원문으로 보내고 있었습니다.
+
+   ★ enrich-persons 는 2026-08-12 에 <b>이미 4,000자로</b> 늘렸는데
+     이 수집기만 500자로 남아 있었습니다. 두 수집기가 <b>같은 칸</b>
+     (description)을 채우면서 서로 다른 잣대를 쓰고 있던 셈입니다.
+
+   ★ 저작권 — 도입부만 받아 오고(exintro), 화면에 「출처: 위키백과 ·
+     CC BY-SA」를 함께 보입니다. 실제 도입부는 대개 200~800자라
+     4,000자는 <b>사실상 자르지 않는</b> 값입니다. */
+const MAX_LEN = 4000;
 
 /* ── Supabase 나눠받기 ──────────────────────────────────────
    ★ 받은 만큼 다음 자리를 옮깁니다. 「요청한 수보다 적게 왔으면 끝」 으로
@@ -130,7 +144,18 @@ async function fetchExtracts(titles) {
 }
 
 function tidy(s) {
-  let t = String(s || '').replace(/\s+/g, ' ').trim();
+  /* ★★ 2026-08-19 · <b>줄바꿈을 살립니다</b>
+       \s+ → ' ' 로 뭉개면 여러 문단이 <b>한 덩어리</b>로 붙어 화면에서
+       읽기 어렵습니다. enrich-persons 는 2026-08-12 에 이것을 고쳤는데
+       이 파일은 그대로 남아 있었습니다.
+     ★ 줄 <b>안의</b> 여러 공백만 정리하고, 빈 줄이 셋 이상이면
+       둘로 줄입니다. */
+  let t = String(s || '')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[ \t\u00a0]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^[ \t]+|[ \t]+$/gm, '')
+    .trim();
   if (t.length > MAX_LEN) {
     /* 문장 가운데서 끊지 않으려고, 마지막 마침표까지만 남깁니다 */
     const cut = t.slice(0, MAX_LEN);
@@ -154,10 +179,37 @@ async function main() {
     /* ★ id 를 뒤에 붙여 순서를 확정합니다. sort_no 는 같은 값이 수십 명씩
        있어서, 그것만으로 정렬하면 페이지 경계에서 어떤 줄은 두 번 오고
        어떤 줄은 아예 오지 않습니다. */);
+  /* ★★ 2026-08-19 · <b>잘린 소개문도 다시 받습니다</b> (--recut)
+       ─────────────────────────────────────────────────────
+     ★ 무엇이 문제였나
+       이 수집기는 <b>소개문이 없는 사람만</b> 봅니다. 그래서 길이를
+       500 → 4,000자로 늘려도 <b>이미 잘려서 담긴 사람은 그대로</b>
+       남습니다. 채우려면 그들을 다시 봐야 합니다.
+
+     ★ 어떻게 가려내나 — 「…」 로 끝나거나, 문장이 온전히 끝나지 않은
+       것을 잘린 것으로 봅니다. <b>화면과 같은 잣대</b>입니다
+       (community/selfpr.html 의 cutNote).
+       ★ 콩쿠르 입상 이력처럼 <b>「…위」로 끝나는 목록</b>은 잘린 것이
+         아닙니다 — 다시 받으면 그 이력이 위키 글로 <b>덮여 사라집니다.</b>
+         이것을 빼지 않으면 어제 담은 683명의 입상 이력을 잃습니다. */
+  const RECUT = process.argv.includes('--recut');
+  function looksCut(t) {
+    const v = String(t || '').trim();
+    if (!v) return false;
+    if (/…\s*$/.test(v)) return true;                    /* 잘릴 때 붙인 표시 */
+    if (/[.!?。]["')\]]?$/.test(v)) return false;         /* 온전히 끝남 */
+    if (/(습니다|입니다|이다|였다|한다)$/.test(v)) return false;
+    if (/(\d+\s*위|위|등|상|수상)$/.test(v)) return false;  /* 이력 목록 — 건드리지 않습니다 */
+    return true;
+  }
+
   const empty = all.filter(p => !(p.description && String(p.description).trim()));
-  const targets = empty.slice(0, DAILY_LIMIT);
+  const cut   = RECUT ? all.filter(p => looksCut(p.description)) : [];
+  const pool  = empty.concat(cut);
+  const targets = pool.slice(0, DAILY_LIMIT);
   console.log('   위키데이터 번호가 있는 인물 : ' + all.length + '명');
   console.log('   소개가 없는 인물            : ' + empty.length + '명');
+  if (RECUT) console.log('   소개가 잘린 인물 (--recut)  : ' + cut.length + '명');
   console.log('   이번에 처리할 인물          : ' + targets.length + '명');
   if (!targets.length) { console.log('✅ 채울 것이 없습니다.'); return; }
 

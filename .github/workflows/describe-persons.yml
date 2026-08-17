@@ -40,6 +40,24 @@ on:
         description: '이번 실행에서 처리할 인물 수 (기본 1200)'
         required: false
         default: '1200'
+      # ★ 2026-08-19 · 「잘린 소개문 다시 받기」 (파트너 지시)
+      #
+      #  ★ 왜 필요한가
+      #    소개문 길이를 500 → 4,000자로 늘렸는데, 이 수집기는
+      #    「소개문이 없는 사람」만 봅니다. 그래서 이미 501자에서
+      #    잘려 담긴 사람은 그대로 남습니다.
+      #
+      #  ★ yes 로 두면 잘린 소개문도 다시 받습니다.
+      #    ★ 콩쿠르 입상 이력(「…1위」로 끝나는 것)은 건드리지 않습니다 —
+      #      다시 받으면 그 이력이 위키 글로 덮여 사라집니다.
+      recut:
+        description: '잘린 소개문도 다시 받기 (500자에서 끊긴 사람)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
       dry_run:
         description: '미리보기만 하고 저장하지 않음 (1 을 넣으면 미리보기)'
         required: false
@@ -69,7 +87,10 @@ jobs:
           DRY_RUN: ${{ github.event.inputs.dry_run || '0' }}
         run: |
           try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
-          try2 node scripts/describe-persons.mjs
+          EX=""
+          if [ "${{ github.event.inputs.recut }}" = "yes" ]; then EX="--recut"; fi
+          echo "── 실행 : node scripts/describe-persons.mjs $EX ──"
+          try2 node scripts/describe-persons.mjs $EX
 
   # ── 실패를 알려 줍니다 ──────────────────────────────────────
   #  예약 실행이 실패해도 눌러 보지 않으면 모릅니다.
