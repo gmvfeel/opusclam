@@ -429,6 +429,28 @@
   .hslide{grid-area:1/1;opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
   /* 자료가 닿기 전 — 켜진 장까지 감춥니다 (높이는 그대로) */
   .hero .wrap.hero-boot .hslide{visibility:hidden !important;opacity:0 !important}
+  /* ── 기다리는 동안 보여 줄 뼈대 (2026-08-18) ───────────────
+     ★ 크기를 <b>실제 글자에 맞췄습니다</b> — eyebrow 12px · h1 52px ·
+       sub 15px · meta 13px. 그래야 글자로 바뀔 때 튀지 않습니다.
+     ★ 좌우로 흐르는 빛으로 「받고 있다」를 보입니다.
+     ★ 움직임을 싫어하는 설정을 지킵니다(prefers-reduced-motion). */
+  .hero-skel{grid-area:1/1;display:none;padding-top:24px;pointer-events:none}
+  .hero .wrap.hero-boot .hero-skel{display:block}
+  .hero-skel .sk{display:block;border-radius:6px;
+    background:linear-gradient(90deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,.16) 50%,rgba(255,255,255,.07) 100%);
+    background-size:220% 100%;animation:skShine 1.5s ease-in-out infinite}
+  .hero-skel .sk-eyebrow{width:170px;height:12px;margin-bottom:20px;border-radius:3px}
+  .hero-skel .sk-h1{width:min(560px,86%);height:46px;margin-bottom:10px}
+  .hero-skel .sk-h1b{width:min(420px,66%)}
+  .hero-skel .sk-sub{width:min(640px,94%);height:15px;margin-top:20px;border-radius:4px}
+  .hero-skel .sk-meta{width:min(400px,62%);height:13px;margin-top:28px;border-radius:4px}
+  @keyframes skShine{0%{background-position:120% 0}100%{background-position:-120% 0}}
+  @media (prefers-reduced-motion:reduce){
+    .hero-skel .sk{animation:none;background:rgba(255,255,255,.1)}
+  }
+  @media(max-width:820px){
+    .hero-skel .sk-h1{height:30px}
+  }
   .hslide.on{opacity:1;visibility:visible;transform:none}
   /* ★ 2026-08-14 · 눈썹 글자 위에 <b>작은 화살표</b> (파트너 요청)
        ─────────────────────────────────────────────────────────────
@@ -1546,6 +1568,21 @@ function ocN(tpl) {
      ▶ 자료를 못 받거나 늦으면 3초 뒤 <b>그냥 보여 줍니다</b> — 대비책이
          영영 감춰지면 히어로가 빈 채로 남습니다. -->
   <div class="wrap hero-boot">
+    <!-- ★★ 2026-08-18 · <b>기다리는 동안 보여 줄 뼈대</b> (파트너 지적)
+           자료가 닿기 전에는 글자를 감춰 두는데(hero-boot), 그 사이가
+           <b>텅 비어</b> 멈춘 것처럼 보였습니다.
+         ★ 글자가 들어올 자리에 <b>흐릿한 막대</b>를 같은 크기로 둡니다.
+           동그라미 스피너보다 자연스럽습니다 — 자료가 오는 순간 막대가
+           글자로 바뀌므로 <b>화면이 덜컥거리지 않습니다.</b>
+         ★ hslide 는 감춰져 있으므로 뼈대는 그 <b>밖에</b> 둡니다.
+         ★ 읽어 주는 기계에는 감춥니다(aria-hidden) — 뜻이 없는 장식입니다. -->
+    <div class="hero-skel" aria-hidden="true">
+      <span class="sk sk-eyebrow"></span>
+      <span class="sk sk-h1"></span>
+      <span class="sk sk-h1 sk-h1b"></span>
+      <span class="sk sk-sub"></span>
+      <span class="sk sk-meta"></span>
+    </div>
     <!-- ★ 2026-08-14 · 대비책을 <b>사이트 소개</b>로 바꿨습니다 (파트너 지시)
            전에는 2022·2013년 공연 셋이 박혀 있었습니다. 자료를 못 받는
            드문 경우에 <b>지난 공연</b>이 보이는 것이 어색했습니다.
