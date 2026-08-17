@@ -269,7 +269,63 @@
        (assets/auth.js 가 붙인 직후 이것을 부릅니다) */
   window.OCAuth = { refresh: updateHeaderAuth };
 
-  function ocInit(){ injectFooter(); updateHeaderAuth(); loadEngines(); }
+  /* ── 맨 위로 가기 (2026-08-19 · 파트너 지적) ────────────────
+     ★ 무엇이 문제였나
+       이 단추가 <b>home.html 안에만</b> 있었습니다 — 마크업·스타일·
+       동작 셋 다요. 그래서 메인에서는 보이지만 <b>다른 화면에는
+       아예 없었습니다.</b> 사라진 것이 아니라 처음부터 메인 전용이었습니다.
+
+     ★ 어떻게 고쳤나 — 이 공용 파일에서 <b>만들어 붙입니다.</b>
+       화면마다 단추를 적어 넣으면 120곳을 고쳐야 하고, 새 화면을
+       만들 때마다 잊습니다. 스타일도 여기서 넣습니다.
+
+     ★ 메인에는 <b>이미 있으므로</b> 만들지 않습니다(id 로 가려냅니다).
+       두 개가 겹치면 눌렀을 때 어느 것이 반응하는지 알 수 없습니다.
+
+     ★ 스크롤이 420px 을 넘으면 나타납니다 — 메인과 같은 값입니다.
+     ★ 움직임을 싫어하는 설정을 지킵니다(prefers-reduced-motion) —
+       그때는 부드럽게가 아니라 곧바로 올라갑니다. */
+  function injectToTop(){
+    if(document.getElementById('toTop')) return;      /* 메인에는 이미 있습니다 */
+    if(document.getElementById('ocToTop')) return;    /* 두 번 붙이지 않습니다 */
+
+    var css = document.createElement('style');
+    css.textContent =
+      '#ocToTop{position:fixed;right:24px;bottom:24px;width:46px;height:46px;border-radius:50%;'
+      + 'background:var(--violet-2,#6b5b95);color:#fff;border:0;display:grid;place-items:center;'
+      + 'cursor:pointer;box-shadow:0 10px 24px -8px rgba(90,74,122,.55);'
+      + 'opacity:0;visibility:hidden;transform:translateY(12px);'
+      + 'transition:opacity .25s ease,transform .25s ease,background .2s ease;z-index:80}'
+      + '#ocToTop.show{opacity:1;visibility:visible;transform:none}'
+      + '#ocToTop:hover{background:var(--violet-3,#5a4a7a)}'
+      + '#ocToTop svg{width:20px;height:20px}'
+      + '@media(max-width:880px){#ocToTop{right:16px;bottom:16px;width:42px;height:42px}}'
+      + '@media (prefers-reduced-motion:reduce){#ocToTop{transition:none}}';
+    document.head.appendChild(css);
+
+    var btn = document.createElement('button');
+    btn.id = 'ocToTop';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', '맨 위로 가기');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"'
+      + ' stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+    document.body.appendChild(btn);
+
+    function onScroll(){
+      if(window.scrollY > 420) btn.classList.add('show');
+      else btn.classList.remove('show');
+    }
+    window.addEventListener('scroll', onScroll, { passive:true });
+    onScroll();                                        /* 이미 내려와 있을 때도 */
+
+    btn.addEventListener('click', function(){
+      var soft = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches);
+      try{ window.scrollTo({ top:0, behavior: soft ? 'smooth' : 'auto' }); }
+      catch(e){ window.scrollTo(0, 0); }               /* 낡은 브라우저 */
+    });
+  }
+
+  function ocInit(){ injectFooter(); updateHeaderAuth(); loadEngines(); injectToTop(); }
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", ocInit); }
   else { ocInit(); }
 })();
