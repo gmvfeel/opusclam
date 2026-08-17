@@ -256,11 +256,32 @@ async function main() {
   console.log('대상 : ' + T.label + ' (' + T.table + ')');
 
   /* ① 사진이 없는 사람 */
+  /*  ★★ 2026-08-18 · <b>어디부터 볼지 고를 수 있게</b> 했습니다
+        ─────────────────────────────────────────────────────
+      ★ 무엇이 문제였나
+        차례가 <b>번호가 작은 사람부터</b>(order=id.asc)였습니다.
+        사진이 빈 사람이 5,277명인데 한 번에 400명씩 보므로, 뒤쪽
+        사람은 <b>열세 번을 돌려야</b> 닿습니다. 그런데 앞쪽 사람들은
+        이미 여러 번 훑어 「없다」고 확인된 이들이라, 돌려도 0명만
+        나옵니다(2026-08-18 · 400명 전부 「문서·사진 없음」).
+
+      ★ --source=… 를 주면 <b>그 갈래만</b> 봅니다.
+        콩쿠르에서 담은 사람들은 방금 위키 번호를 붙였으므로
+        사진이 있을 만한데, 번호가 16,000번대라 차례가 오지
+        않았습니다. --source=concours 로 곧장 봅니다.
+      ★ --newest 를 주면 <b>새로 담긴 사람부터</b> 봅니다.
+        새 인물이 늘 때 그들부터 채우는 것이 이치에 맞습니다. */
+  const SRC    = (process.argv.find(a => a.startsWith('--source=')) || '').split('=')[1] || '';
+  const NEWEST = process.argv.includes('--newest');
   let sel = 'id,' + T.name + ',' + T.name2 + ',' + T.imgCol;
   if (T.wiki) sel += ',' + T.wiki;
-  const rows = await getAll(T.table + '?select=' + sel
-    + '&' + T.imgCol + '=is.null&order=id.asc');
-  console.log('사진 칸이 빈 ' + T.label + ' : ' + rows.length + '명');
+  const q = T.table + '?select=' + sel + '&' + T.imgCol + '=is.null'
+    + (SRC ? '&source=eq.' + encodeURIComponent(SRC) : '')
+    + '&order=id.' + (NEWEST ? 'desc' : 'asc');
+  const rows = await getAll(q);
+  console.log('사진 칸이 빈 ' + T.label + ' : ' + rows.length + '명'
+    + (SRC ? ' (source=' + SRC + ' 만)' : '')
+    + (NEWEST ? ' · 새로 담긴 사람부터' : ''));
 
   /* ② 이미 사진 저장소에 있는 사람은 건너뜁니다 */
   const have = new Set();

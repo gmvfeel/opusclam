@@ -54,6 +54,36 @@ on:
           - 'org'
           - 'school'
           - 'venue'
+      # ★ 2026-08-18 · 「어디부터 볼까요」 (파트너와 겪은 일)
+      #
+      #  ★ 왜 필요한가
+      #    차례가 번호가 작은 사람부터였습니다. 사진이 빈 사람이
+      #    5,277명인데 한 번에 몇백 명씩 보니 뒤쪽 사람은 열 번 넘게
+      #    돌려야 닿습니다. 그런데 앞쪽 사람들은 이미 여러 번 훑어
+      #    「없다」고 확인된 이들이라 돌려도 0명만 나옵니다.
+      #
+      #  ★ concours — 콩쿠르 입상 기록에서 담은 사람만 봅니다.
+      #    방금 위키 번호를 붙였으므로 사진이 있을 만한데, 번호가
+      #    16,000번대라 차례가 오지 않았습니다.
+      #  ★ 새로 담긴 사람부터 — 새 인물이 늘 때 그들부터 채웁니다.
+      src:
+        description: '어디서 온 사람만 볼까요 (비우면 전부)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - 'concours'
+          - 'kopis-cast'
+          - 'wikidata'
+      newest:
+        description: '새로 담긴 사람부터 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
       limit:
         description: '한 번에 볼 수 (250 이면 5~8분)'
         required: false
@@ -97,6 +127,9 @@ jobs:
           # 저절로 도는 경우에는 입력값이 없으므로 800명을 봅니다 (10~12분)
           case "$L" in ''|*[!0-9]*) L=800 ;; esac
           OPTS="$OPTS --limit=$L"
+
+          if [ -n "${{ github.event.inputs.src }}" ]; then OPTS="$OPTS --source=${{ github.event.inputs.src }}"; fi
+          if [ "${{ github.event.inputs.newest }}" = "yes" ]; then OPTS="$OPTS --newest"; fi
 
           echo "── 실행 : node seed/photo-wiki.mjs $OPTS ──"
           node seed/photo-wiki.mjs $OPTS
