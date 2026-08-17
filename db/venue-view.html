@@ -231,6 +231,18 @@
         </section>
       </div>
 
+      <!-- ★★ 2026-08-18 · 이곳에서 열리는 공연 (파트너 제안)
+             공연정보(spot)와 공연장DB 를 이어 두었으므로, 그 공연장에서
+             열리는 공연을 여기에 모아 보입니다.
+           ★ 공연은 <b>매주 저절로 늘어납니다</b>(KOPIS·Ticketmaster).
+             한 번 만들어 두면 계속 채워집니다.
+           ★ 이어진 공연이 없으면 이 자리는 <b>통째로 사라집니다</b> —
+             빈 칸을 두는 것보다 없는 편이 깔끔합니다. -->
+      <section class="pv-sec" id="vnConcertSec" style="display:none">
+        <div class="pv-sechead"><h2 class="pv-h">이곳에서 열리는 공연 <span class="pv-h-en">Concerts</span></h2><span class="pv-auto" id="vnConcertCnt"></span></div>
+        <div class="pv-list" id="vnConcertList"></div>
+      </section>
+
       <section class="pv-sec">
         <div class="pv-sechead"><h2 class="pv-h">사진 · 갤러리</h2><span class="pv-auto">자동 수집 영역</span></div>
         <div class="pv-carousel">
@@ -1059,6 +1071,52 @@ document.querySelectorAll('.tabs').forEach(function(t){
      (function(){document.querySelectorAll('.pv-sec, .pv-block').forEach(function(sec){var h=sec.querySelector('.pv-h');if(h&&/(영상|사진|갤러리|홀 구성|관람 안내|관련 공연장)/.test(h.textContent))sec.style.display='none';});})();
      var dl=document.querySelector('dl.pv-deflist');if(dl)dl.innerHTML=fact('유형',esc(x.type||''))+fact('소재지',esc(x.location||''))+fact('개관',esc(x.opened||''))+fact('좌석수',esc(x.seats||''))+fact('운영주체',esc(x.operator||''))+fact('상주단체',esc(x.resident||''))+fact('대표 프로그램',esc(x.programs||''));
      var ppl=document.querySelector('.pv-people');if(ppl){var sec=ppl.closest('.pv-sec');if(sec)sec.style.display='none';}
+     /* ★★ 이곳에서 열리는 공연 (2026-08-18) ─────────────────
+          spot.venue_id 로 이어진 공연을 받아 옵니다.
+        ★ <b>다가올 것을 먼저</b> 보입니다 — 지난 공연만 잔뜩 나오면
+          「지금 무엇을 볼 수 있나」를 알 수 없습니다.
+        ★ 지난 것은 흐리게 두어 한눈에 갈립니다.
+        ★ 이어진 공연이 없으면 자리를 그대로 감춥니다. */
+     (function(){
+       var sec=document.getElementById('vnConcertSec');
+       var box=document.getElementById('vnConcertList');
+       if(!sec||!box||!x.id) return;
+       var today=new Date().toISOString().slice(0,10);
+       fetch(URL+'/rest/v1/spot?select=id,title,title_ko,date_from,date_to,date_text,category'
+             +'&venue_id=eq.'+encodeURIComponent(x.id)
+             +'&section=eq.'+encodeURIComponent('공연정보')
+             +'&hidden=not.is.true&order=date_from.desc&limit=200',{headers:H})
+        .then(function(r){return r.ok?r.json():[];})
+        .then(function(rows){
+          if(!rows||!rows.length) return;
+          /* 다가올 것 → 지난 것 차례로 */
+          var up=[],past=[];
+          rows.forEach(function(r){
+            var end=(r.date_to||r.date_from||'').slice(0,10);
+            (end&&end>=today?up:past).push(r);
+          });
+          up.sort(function(a,b){return String(a.date_from||'').localeCompare(String(b.date_from||''));});
+          var list=up.concat(past).slice(0,12);
+          var d=function(v){return String(v||'').slice(0,10).replace(/-/g,'.');};
+          box.innerHTML=list.map(function(r){
+            var df=d(r.date_from),dt=d(r.date_to),when=df;
+            if(dt&&dt!==df) when+=' ~ '+(dt.slice(0,4)===df.slice(0,4)?dt.slice(5):dt);
+            if(!when) when=r.date_text||'';
+            var end=(r.date_to||r.date_from||'').slice(0,10);
+            var over=!(end&&end>=today);
+            return '<a class="pv-lirow" href="/spot/spot-view.html?id='+encodeURIComponent(r.id)+'"'
+              +(over?' style="opacity:.55"':'')+'>'
+              +'<span class="pv-li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">'
+              +'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>'
+              +'<span class="pv-li-main"><b>'+esc(r.title_ko||r.title||'')+'</b>'
+              +'<span>'+esc([when,r.category].filter(Boolean).join(' · '))+'</span></span>'
+              +'<span class="pv-li-act">'+(over?'지난 공연':'보기 →')+'</span></a>';
+          }).join('');
+          var cnt=document.getElementById('vnConcertCnt');
+          if(cnt) cnt.textContent=(up.length?up.length+'건 예정 · ':'')+'모두 '+rows.length+'건';
+          sec.style.display='';
+        }).catch(function(){});
+     })();
           (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
        var _k=encodeURIComponent((x.name_ko||x.name_en||'').trim());
        var _e=encodeURIComponent((x.name_en||x.name_ko||'').trim());

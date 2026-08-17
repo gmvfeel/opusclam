@@ -260,7 +260,7 @@
   function concertHead(vid) {
     if (!vid) return;
     fetch(SB + '/rest/v1/spot?select=title,title_ko,thumb_url,date_from,date_to,date_text,'
-          + 'venue_name,city,region,category,organizer,kopis_id,kopis_state,link_url'
+          + 'venue_name,city,region,category,organizer,kopis_id,kopis_state,link_url,venue_id'
           + '&id=eq.' + encodeURIComponent(vid),
           { headers:{ apikey:KEY, Authorization:'Bearer ' + KEY } })
       .then(function(r){ return r.ok ? r.json() : []; })
@@ -293,7 +293,18 @@
 
       var rows = '';
       if (when) rows += '<tr><th>일시</th><td>' + esc(when) + '</td></tr>';
-      if (o.venue_name) rows += '<tr><th>장소</th><td>' + esc(o.venue_name) + '</td></tr>';
+      /* ★ 공연장DB 와 이어져 있으면 <b>누를 수 있게</b> 합니다 (2026-08-18)
+           그 공연장의 위치·좌석·교통을 바로 볼 수 있습니다.
+         ★ 이어지지 않은 곳은 <b>글자 그대로</b> 둡니다 — 눌러도 아무 데도
+           가지 않는 링크를 만들지 않습니다. */
+      if (o.venue_name) {
+        var vTxt = esc(o.venue_name);
+        rows += '<tr><th>장소</th><td>'
+          + (o.venue_id
+              ? '<a href="/db/venue-view.html?id=' + encodeURIComponent(o.venue_id) + '">' + vTxt + '</a>'
+              : vTxt)
+          + '</td></tr>';
+      }
       else if (o.city) rows += '<tr><th>장소</th><td>' + esc(o.city) + '</td></tr>';
       if (o.category) rows += '<tr><th>구분</th><td>' + esc(o.category) + '</td></tr>';
       if (o.kopis_state) rows += '<tr><th>상태</th><td>' + esc(o.kopis_state) + '</td></tr>';
