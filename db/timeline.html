@@ -195,7 +195,10 @@
     color:var(--text-2);font-variant-numeric:tabular-nums}
   .kr-row.is-win .yr b{background:var(--violet-2);border-color:var(--violet-2);color:#fff}
 
-  .kr-card{display:inline-flex;align-items:center;gap:11px;padding:10px 13px;
+  /* ★ 2026-08-18 · 안쪽 여백을 넓혔습니다 (파트너 지적)
+       긴 단체 이름(「사단법인 서울윈드오케스트라」)이 테두리에 딱
+       붙어 답답했습니다. 좌우 13 → 18px · 위아래 10 → 12px. */
+  .kr-card{display:inline-flex;align-items:center;gap:11px;padding:12px 18px;
     border:1px solid var(--line);border-radius:12px;background:var(--paper);
     text-decoration:none;transition:border-color .18s ease,box-shadow .18s ease}
   .kr-card:hover{border-color:var(--violet-2);
