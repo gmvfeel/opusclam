@@ -109,17 +109,20 @@ async function sb(path, opts = {}) {
 }
 
 
-/* ── 공연장 잇기 (2026-08-18) ─────────────────────────────
-   ★ 담은 <b>바로 뒤에</b> 공연장DB 와 이어 둡니다. 이러지 않으면
-     새로 들어온 공연은 아무것과도 이어지지 않은 채 쌓입니다.
-   ★ 잇는 규칙은 DB 쪽 함수(oc_link_spot_venue)에 있습니다 —
-     수집기 둘이 <b>같은 규칙</b>을 쓰게 하려는 것입니다. 규칙을
-     고칠 때 SQL 한 곳만 고치면 됩니다.
+/* ── 담은 뒤 잇기 (2026-08-18) ────────────────────────────
+   ★ 담은 <b>바로 뒤에</b> 공연장DB·단체DB 와 이어 둡니다. 이러지
+     않으면 새로 들어온 공연은 아무것과도 이어지지 않은 채 쌓입니다.
+   ★ 잇는 규칙은 <b>DB 쪽 함수에</b> 있습니다 —
+       oc_link_spot_venue  공연장 (공연 하나에 하나)
+       oc_link_spot_org    단체   (공연 하나에 여럿일 수 있음)
+     수집기 둘이 같은 규칙을 쓰게 하려는 것입니다. 규칙을 고칠 때
+     SQL 한 곳만 고치면 됩니다.
    ★ 여기서 <b>멈추지 않습니다</b> — 잇기가 실패해도 담은 것은
-     그대로 남고, 다음 수집 때 다시 이어집니다. */
-async function linkVenues() {
+     그대로 남고, 다음 수집 때 다시 이어집니다.
+   ★ 하나가 실패해도 <b>나머지는 이어 봅니다.</b> */
+async function callLink(fn, label) {
   try {
-    const r = await fetch(`${SB_URL}/rest/v1/rpc/oc_link_spot_venue`, {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
       method: 'POST',
       headers: {
         apikey: SB_KEY,
@@ -128,12 +131,17 @@ async function linkVenues() {
       },
       body: '{}',
     });
-    if (!r.ok) { console.log(`   공연장 잇기를 건너뜁니다 — ${r.status}`); return; }
+    if (!r.ok) { console.log(`   ${label} 잇기를 건너뜁니다 — ${r.status}`); return; }
     const n = await r.json();
-    console.log(`   ▶ 공연장과 새로 이은 공연 : ${n}건`);
+    console.log(`   ▶ ${label} 쪽에 새로 이은 공연 : ${n}건`);
   } catch (e) {
-    console.log(`   공연장 잇기를 건너뜁니다 — ${e.message}`);
+    console.log(`   ${label} 잇기를 건너뜁니다 — ${e.message}`);
   }
+}
+
+async function linkVenues() {
+  await callLink('oc_link_spot_venue', '공연장');
+  await callLink('oc_link_spot_org',   '단체');
 }
 
 /* ============================================================
