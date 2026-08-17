@@ -52,12 +52,34 @@
 })();
 
 (function () {
+  /* ★★ 2026-08-18 · <b>판 번호</b>를 붙입니다 (파트너와 겪은 일)
+       ─────────────────────────────────────────────────────
+     ★ 무엇이 문제였나
+       메뉴에 쇼핑몰을 하나 더했는데 <b>화면에 나오지 않았습니다.</b>
+       파일은 제대로 올라갔는데, 브라우저가 <b>한 번 받은 파셜을 계속
+       다시 쓰고</b> 있었습니다. 파셜은 모든 화면이 부르는 파일이라,
+       고쳐도 회원들은 <b>옛 메뉴를 봅니다.</b>
+
+     ★ 어떻게 고쳤나 — 주소 뒤에 판 번호를 붙입니다.
+         /partials/header.html?v=20260818
+       번호가 바뀌면 브라우저가 <b>새 파일로 봅니다.</b> 번호가 같으면
+       그대로 다시 써서 빠릅니다 — 캐시를 아예 끄는 것과 다릅니다.
+
+     ★ 메뉴를 고칠 때마다 <b>PARTIAL_VER 을 함께 올리십시오.</b>
+       올리지 않으면 다시 같은 일이 생깁니다. 날짜로 적으면
+       언제 고쳤는지도 함께 남습니다. */
+  var PARTIAL_VER = '20260818';
+
+  function withVer(url) {
+    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'v=' + PARTIAL_VER;
+  }
+
   function inject(id, url) {
     var slot = document.getElementById(id);
     if (!slot) return;
     try {
       var x = new XMLHttpRequest();
-      x.open('GET', url, false); // false = 동기
+      x.open('GET', withVer(url), false); // false = 동기
       x.send();
       slot.insertAdjacentHTML('afterend', x.responseText);
       slot.remove();
@@ -429,7 +451,10 @@
     var doc = null;
     try {
       var x = new XMLHttpRequest();
-      x.open('GET', '/partials/header.html', false);
+      /* ★ 여기도 판 번호를 붙입니다 — 회원 화면은 본 헤더를 읽어
+           메뉴를 만듭니다. 붙이지 않으면 <b>회원 화면만</b> 옛 메뉴가
+           남습니다(2026-08-18). */
+      x.open('GET', withVer('/partials/header.html'), false);
       x.send();
       doc = new DOMParser().parseFromString(x.responseText, 'text/html');
     } catch (e) {
