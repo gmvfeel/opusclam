@@ -1020,8 +1020,19 @@ async function save(rows) {
     try {
       const wt = await raw(title);
       console.log(`길이 ${wt.length} 글자\n`);
-      const i = wt.search(/following prizes|won by|gold medal|\{\|[^]*?(prize|year)/i);
-      console.log(i >= 0 ? wt.slice(i, i + 3000) : wt.slice(0, 3000));
+      /* ★ 2026-08-18 · <b>수상자 표를 찾아</b> 보여 줍니다.
+           퀸 엘리자베스처럼 문서가 길면(28,000자) 앞쪽에 일정표·연혁이
+           먼저 나와, 앞부분만 보여 주면 <b>정작 볼 곳을 못 봅니다.</b>
+         ★ 수상자 표에는 등수 낱말과 사람 이름이 함께 있습니다 —
+           그 둘이 가까이 있는 자리를 찾습니다.
+         ★ 못 찾으면 앞부분을 보여 줍니다(전과 같음). */
+      const RE_PRIZE = /\{\|[^]{0,400}?(1st|2nd|3rd|first prize|second prize|gold medal|laureate|winner)[^]{0,400}?\[\[/i;
+      let i = wt.search(RE_PRIZE);
+      if (i < 0) i = wt.search(/following prizes|won by|gold medal|\{\|[^]*?(prize|year)/i);
+      const LEN = typeof ARGS.rawlen === 'string' ? Math.min(+ARGS.rawlen || 3000, 12000) : 3000;
+      console.log(i >= 0
+        ? `(${i}번째 글자부터 ${LEN}자)\n` + wt.slice(i, i + LEN)
+        : wt.slice(0, LEN));
     } catch (e) {
       console.log('받지 못했습니다 —', e.message);
     }
