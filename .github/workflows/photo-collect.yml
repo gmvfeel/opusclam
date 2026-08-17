@@ -10,6 +10,29 @@ on:
         description: '수집 대상 (person / school / venue / org)'
         required: true
         default: 'person'
+      # ★ 2026-08-18 · 「어디부터 볼까요」 (파트너와 겪은 일)
+      #    차례가 번호 작은 것부터라, 앞쪽은 이미 훑어 사진이 없다고
+      #    확인된 항목들입니다. 400건을 봐도 두 건만 나왔습니다.
+      #    concours 를 고르면 콩쿠르 입상자만 봅니다 — 방금 위키
+      #    번호를 붙였으므로 사진이 있을 만한 이들입니다.
+      src:
+        description: '어디서 온 것만 볼까요 (비우면 전부)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - 'concours'
+          - 'kopis-cast'
+          - 'wikidata'
+      newest:
+        description: '새로 담긴 것부터 보기'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
       limit:
         description: '한 번에 처리할 건수 (전체를 원하면 9999)'
         required: true
@@ -59,8 +82,11 @@ jobs:
             echo "── 자동 실행 : 학교 100건 ──"
             try2 node seed/photo-collect.mjs --type=school --limit=100
           else
-            echo "── 수동 실행 : $TYPE $LIMIT 건 ──"
-            try2 node seed/photo-collect.mjs --type="$TYPE" --limit="$LIMIT"
+            EX=""
+            if [ -n "${{ github.event.inputs.src }}" ]; then EX="$EX --source=${{ github.event.inputs.src }}"; fi
+            if [ "${{ github.event.inputs.newest }}" = "yes" ]; then EX="$EX --newest"; fi
+            echo "── 수동 실행 : $TYPE $LIMIT 건$EX ──"
+            try2 node seed/photo-collect.mjs --type="$TYPE" --limit="$LIMIT" $EX
           fi
 
   # ── 실패를 알려 줍니다 ──────────────────────────────────────

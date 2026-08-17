@@ -105,12 +105,28 @@ async function loadTargets() {
   }
   console.log(`이미 사진이 있는 항목: ${done.size}건`);
 
+  /* ★★ 2026-08-18 · <b>어디부터 볼지 고를 수 있게</b> 했습니다
+       ─────────────────────────────────────────────────────
+     ★ 무엇이 문제였나 — 차례가 <b>번호가 작은 사람부터</b>였습니다.
+       앞쪽 사람들은 이미 여러 번 훑어 사진이 없다고 확인된 이들이라,
+       400명을 봐도 <b>두 건만</b> 나왔습니다(2026-08-18).
+     ★ --source=concours 를 주면 콩쿠르에서 담은 사람만 봅니다.
+       방금 위키 번호를 붙였으므로 사진이 있을 만한데, 번호가
+       16,000번대라 차례가 오지 않았습니다.
+     ★ --newest 를 주면 새로 담긴 사람부터 봅니다. */
+  const SRC    = (process.argv.find((a) => a.startsWith('--source=')) || '').split('=')[1] || '';
+  const NEWEST = process.argv.includes('--newest');
+  if (SRC)    console.log(`  · ${SRC} 에서 온 항목만 봅니다`);
+  if (NEWEST) console.log('  · 새로 담긴 것부터 봅니다');
+
   const out = [];
   let off = 0;
   while (out.length < LIMIT) {
     const rows = await sb(
       `${T.table}?select=id,${T.nameCol},wikidata_id` +
-      `&wikidata_id=not.is.null&order=id&limit=150&offset=${off}`
+      `&wikidata_id=not.is.null` +
+      (SRC ? `&source=eq.${encodeURIComponent(SRC)}` : '') +
+      `&order=id.${NEWEST ? 'desc' : 'asc'}&limit=150&offset=${off}`
     );
     if (!rows || !rows.length) break;
     for (const r of rows) {
