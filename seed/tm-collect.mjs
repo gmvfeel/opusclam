@@ -280,6 +280,34 @@ if (!TM_KEY) {
 /* ── 도우미 ──────────────────────────────────────────────── */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+
+/* ── 공연장 잇기 (2026-08-18) ─────────────────────────────
+   ★ 담은 <b>바로 뒤에</b> 공연장DB 와 이어 둡니다. 이러지 않으면
+     새로 들어온 공연은 아무것과도 이어지지 않은 채 쌓입니다.
+   ★ 잇는 규칙은 DB 쪽 함수(oc_link_spot_venue)에 있습니다 —
+     수집기 둘이 <b>같은 규칙</b>을 쓰게 하려는 것입니다. 규칙을
+     고칠 때 SQL 한 곳만 고치면 됩니다.
+   ★ 여기서 <b>멈추지 않습니다</b> — 잇기가 실패해도 담은 것은
+     그대로 남고, 다음 수집 때 다시 이어집니다. */
+async function linkVenues() {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/oc_link_spot_venue`, {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY,
+        Authorization: `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+    });
+    if (!r.ok) { console.log(`   공연장 잇기를 건너뜁니다 — ${r.status}`); return; }
+    const n = await r.json();
+    console.log(`   ▶ 공연장과 새로 이은 공연 : ${n}건`);
+  } catch (e) {
+    console.log(`   공연장 잇기를 건너뜁니다 — ${e.message}`);
+  }
+}
+
 async function sb(path, opts = {}) {
   const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
     ...opts,
@@ -780,6 +808,8 @@ function dropStockImages(rows) {
   const n = await save(uniq);
   console.log('');
   console.log(`   ▶ 담았습니다 — ${n}건 (이미 있던 것은 갱신됩니다)`);
+
+  if (n) await linkVenues();
 
   const after = await fetch(`${SB_URL}/rest/v1/spot?select=id&section=eq.${encodeURIComponent('공연정보')}&region=eq.${encodeURIComponent('해외')}&limit=1`, {
     headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Prefer: 'count=exact' },
