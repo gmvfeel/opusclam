@@ -58,6 +58,24 @@ on:
         options:
           - 'no'
           - 'yes'
+      # ★ 2026-08-19 · 「이 까닭은 빼기」 (파트너와 겪은 일)
+      #
+      #  ★ 왜 필요한가
+      #    「대중음악 신호가 있고 클래식 근거 약함」 371명을 훑어보니
+      #    대부분 Beyoncé·Bob Dylan 같은 대중가수였지만, 클래식
+      #    지휘자가 섞여 있었습니다 — 페렌츠 프리차이·샤를 뒤투아·
+      #    크리스토프 에셴바흐. 이들이 빠지면 큰 손실입니다.
+      #
+      #  ★ 「지우고 나중에 다시 받으면 된다」가 이 경우 통하지 않습니다.
+      #    위키데이터 수집이 같은 판정 규칙을 쓰므로 다시 걸러집니다.
+      #    한 번 지우면 영영 안 돌아옵니다.
+      #
+      #  ★ 낱말만 넣으면 됩니다 — 「약함」이면 그 까닭이 통째로 빠집니다.
+      #    여럿은 쉼표로 잇습니다 (예: 약함,재즈)
+      skip:
+        description: '이 까닭은 지우지 않기 (예: 약함 · 여럿은 쉼표로)'
+        required: false
+        default: ''
       why:
         description: '이 까닭만 자세히 (예: 대중음악 장르 · 비우면 묶음별 표본만)'
         required: false
@@ -100,6 +118,9 @@ jobs:
           OPTS=""
           if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
           if [ "${{ github.event.inputs.list }}" = "yes" ]; then OPTS="$OPTS --list"; fi
+
+          SKIP="${{ github.event.inputs.skip }}"
+          if [ -n "$SKIP" ]; then OPTS="$OPTS --skip=$SKIP"; fi
 
           WHY="${{ github.event.inputs.why }}"
           if [ -n "$WHY" ]; then OPTS="$OPTS --why=$WHY"; fi

@@ -31,6 +31,7 @@
      node scripts/recheck-classic.mjs                무엇이 빠질지만 봅니다
      node scripts/recheck-classic.mjs --list         전부 찍습니다
      node scripts/recheck-classic.mjs --why=대중음악  그 까닭만 자세히
+     node scripts/recheck-classic.mjs --skip=약함     그 까닭은 지우지 않음
      node scripts/recheck-classic.mjs --save         실제로 지웁니다
      node scripts/recheck-classic.mjs --save --max=800
          800명이 넘게 빠지면 <b>지우지 않고</b> 멈춥니다
@@ -57,6 +58,23 @@ const args = Object.fromEntries(
 const SAVE = !!args.save;
 const LIST = !!args.list;
 const WHY  = typeof args.why === 'string' ? args.why : null;
+/* ★★ 2026-08-19 · <b>이 까닭은 빼기</b> (파트너와 겪은 일)
+     ─────────────────────────────────────────────────────
+   ★ 무엇이 문제였나
+     「대중음악 신호가 있고 클래식 근거 약함」 371명을 눈으로 훑어보니
+     대부분 Beyoncé·Bob Dylan 같은 대중가수였지만, <b>클래식 지휘자가
+     섞여</b> 있었습니다 — 페렌츠 프리차이·샤를 뒤투아·크리스토프
+     에셴바흐. 이들이 빠지면 큰 손실입니다.
+
+   ★ 「지우고 나중에 다시 받으면 된다」는 이 경우 <b>통하지 않습니다.</b>
+     인물을 담는 길은 위키데이터 수집과 콩쿠르 기록뿐이고, 위키데이터
+     수집은 <b>같은 판정 규칙</b>을 쓰므로 다시 걸러집니다. 한 번 지우면
+     영영 안 돌아옵니다.
+
+   ★ 그래서 까닭 하나를 통째로 <b>빼고</b> 돌릴 수 있게 했습니다.
+     여럿을 뺄 때는 쉼표로 잇습니다 — --skip=약함,재즈 */
+const SKIP = (typeof args.skip === 'string' ? args.skip : '')
+  .split(',').map(v => v.trim()).filter(Boolean);
 const MAX  = typeof args.max === 'string' && /^\d+$/.test(args.max) ? Number(args.max) : 0;
 
 const HDR = {
@@ -140,7 +158,10 @@ async function main() {
     const c = checkClassic(p);
     if (c.ok) { ok++; continue; }
     if (c.noEvidence) { noEvidence.push(p); continue; }
-    const box = POP_REASONS.includes(c.why) ? groups : hold;
+    /* ★ --skip 으로 뺀 까닭은 「사람이 봐야 할 것」으로 돌립니다 —
+         지우지 않고 그대로 둡니다. */
+    const skipped = SKIP.some(k => c.why.indexOf(k) >= 0);
+    const box = (!skipped && POP_REASONS.includes(c.why)) ? groups : hold;
     if (!box.has(c.why)) box.set(c.why, []);
     box.get(c.why).push(p);
   }
@@ -152,6 +173,7 @@ async function main() {
   console.log('   클래식으로 남음      : ' + ok + '명');
   console.log('   ★ 지울 것           : ' + drop.length + '명   (대중음악 근거가 있는 사람)');
   console.log('   사람이 봐야 할 것    : ' + holdList.length + '명   (근거가 모자랄 뿐 — 지우지 않습니다)');
+  if (SKIP.length) console.log('   ※ 일부러 뺀 까닭      : ' + SKIP.join(' · ') + '  (--skip)');
   console.log('   판정 못 함          : ' + noEvidence.length + '명'
               + '   (장르·직업·소개문이 모두 빔 — 지우지 않습니다)');
 
