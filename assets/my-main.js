@@ -145,6 +145,12 @@ function ocN(tpl) {
     if (!cat.tb) return [];
     var col = cat.nameCol || 'title';
     var sel = 'id,' + col + ',created_at';
+    /* ★ 리쿠르트에는 <b>예시 자료</b>가 섞여 있습니다. 표시를 함께
+       받아 두어야 눌러도 열리지 않게 그릴 수 있습니다.
+       다른 표에는 이 칸이 없어 함께 물으면 통째로 실패합니다. */
+    if (cat.tb === 'recruit_jobs' || cat.tb === 'recruit_talents_public') {
+      sel += ',is_sample';
+    }
     var q = SB_URL + '/rest/v1/' + cat.tb + '?select=' + encodeURIComponent(sel);
 
     /* 정보SPOT 은 한 표(spot)에 여러 갈래가 있어 section 으로 가릅니다 */
@@ -200,7 +206,8 @@ function ocN(tpl) {
       if (!r.ok) return [];
       var rows = await r.json();
       return (rows || []).map(function (x) {
-        return { id: x.id, t: x[col] || '(제목 없음)', d: x.created_at };
+        return { id: x.id, t: x[col] || '(제목 없음)', d: x.created_at,
+                 s: !!x.is_sample };
       });
     } catch (e) { return []; }
   }
@@ -213,10 +220,14 @@ function ocN(tpl) {
        뒤에 키를 맞출 때 하나씩 켭니다(oc-my-more-row). */
     var lis = rows.length
       ? rows.map(function (x, i) {
+          /* ★ 예시 자료는 눌러도 열리지 않습니다 (리쿠르트) */
+          var nm = x.s
+            ? '<span class="rc-sample">' + esc(x.t) + '</span>'
+            : '<a href="' + esc(cat.view || cat.href)
+              + (cat.view ? ('?id=' + encodeURIComponent(x.id)) : '') + '">'
+              + esc(x.t) + '</a>';
           return '<li' + (i >= ROWS ? ' class="oc-my-hid"' : '') + '>'
-            + '<a href="' + esc(cat.view || cat.href)
-            + (cat.view ? ('?id=' + encodeURIComponent(x.id)) : '') + '">'
-            + esc(x.t) + '</a>'
+            + nm
             + '<span class="dt">' + esc(fmtDate(x.d)) + '</span></li>';
         }).join('')
       : '<li class="oc-my-none"><span>아직 올라온 것이 없습니다</span></li>';

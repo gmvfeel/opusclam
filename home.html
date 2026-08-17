@@ -707,6 +707,9 @@
   ul.list li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--violet-2);flex:0 0 4px}
   ul.list li a{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
   ul.list li a:hover{color:var(--link-hover)}
+  /* 예시 자료 — 보이는 모습은 그대로, 누를 수 있다는 느낌만 없앱니다 */
+  ul.list li .rc-sample{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;cursor:default}
   ul.list li .dt{font-size:11.5px;color:var(--text-3);white-space:nowrap}
 
   /* ★ 2026-08-11 · 38px → <b>24px</b> (파트너 요청 — 전체가 헐거워 보임)
@@ -3786,8 +3789,8 @@ document.querySelectorAll('.tabs').forEach(function(t){
 
     const table = isJob ? 'recruit_jobs' : 'recruit_talents_public';
     const cols  = isJob
-      ? 'id,title,org_name,apply_to,apply_always,apply_until_hired,created_at'
-      : 'id,title,name_masked,created_at';
+      ? 'id,title,org_name,apply_to,apply_always,apply_until_hired,created_at,is_sample'
+      : 'id,title,name_masked,created_at,is_sample';
     const view  = isJob ? '/recruit/job-view.html' : '/recruit/talent-view.html';
     const filter = isJob ? '&hidden=eq.false' : '';
 
@@ -3809,8 +3812,20 @@ document.querySelectorAll('.tabs').forEach(function(t){
          대표 카드를 없앴으니 그 표시를 목록 줄에 둡니다. */
       rows.forEach(function(r){
         const li = document.createElement('li');
-        const a  = document.createElement('a');
-        a.href = view + '?id=' + encodeURIComponent(r.id);
+        /* ★ 예시 자료(is_sample)는 <b>눌러도 열리지 않습니다.</b>
+           화면이 비어 보이지 않게 예시를 두었지만, 눌러 들어가면
+           속이 빈 상세가 나옵니다. <a> 에 막는 손질을 얹지 않고
+           아예 <span> 으로 둡니다 — <a> 를 남기면 주소가 상태막대에
+           뜨고 새 창으로 열 수도 있습니다.
+           진짜 글에는 표시가 붙지 않아 그대로 열립니다. */
+        let a;
+        if (r.is_sample) {
+          a = document.createElement('span');
+          a.className = 'rc-sample';
+        } else {
+          a = document.createElement('a');
+          a.href = view + '?id=' + encodeURIComponent(r.id);
+        }
         a.textContent = recruitTitle(r);
         li.appendChild(a);
         const fresh = r.created_at &&
