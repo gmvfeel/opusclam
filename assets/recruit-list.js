@@ -309,11 +309,27 @@
     });
   }
 
+  /* ── 상세로 가는 이름 ─────────────────────────────────────
+     ★ <b>예시 자료(is_sample)는 눌러도 열리지 않습니다.</b>
+       화면이 비어 보이지 않게 예시를 두었지만, 눌러 들어가면
+       속이 빈 상세가 나오기 때문입니다.
+     ★ 링크 자리에 <span> 을 놓습니다 — <a> 에 막는 손질을 얹으면
+       주소가 상태막대에 뜨고 새 창으로 열 수도 있습니다.
+     ★ 진짜 글에는 표시가 붙지 않으므로 <b>그대로 열립니다.</b>
+       등록 화면이 이 칸을 건드리지 않아 기본값(거짓) 그대로입니다.
+     ★ 세 목록(채용·인재·간추린 목록)이 모두 이것을 씁니다 —
+       한 곳만 고치면 세 곳에 다 걸립니다. */
+  function nameLink(o, txt, cls) {
+    var t = esc(txt || '');
+    var c = cls ? ' class="' + cls + '"' : '';
+    if (o && o.is_sample) return '<span class="rc-sample"' + (cls ? ' data-c="' + cls + '"' : '') + '>' + t + '</span>';
+    return '<a' + c + ' href="' + cfg.viewPage + '?id=' + encodeURIComponent(o.id) + '">' + t + '</a>';
+  }
+
   /* ── 목록 한 줄 ───────────────────────────────────────────*/
   /* 표 한 줄 — 다른 게시판(인물DB 등)과 같은 짜임입니다.
      No · 업체/단체명 · 채용제목 · 채용기간 · 조회수 */
   function jobRow(o, no) {
-    var vp = cfg.viewPage + '?id=' + encodeURIComponent(o.id);
 
     /* 접수기간 — 두 줄로 나누어 좁은 칸에도 온전히 보이게 합니다 */
     var lines = R.applyLines(o.apply_from, o.apply_to, o.apply_always, o.apply_until_hired);
@@ -335,9 +351,9 @@
 
     return '<tr>'
       + '<td class="c-no">' + no + '</td>'
-      + '<td class="c-org"><a href="' + vp + '">' + esc(o.org_name || '') + '</a></td>'
+      + '<td class="c-org">' + nameLink(o, o.org_name) + '</td>'
       + '<td class="c-title">'
-      +   '<a href="' + vp + '">' + esc(o.title || '') + '</a>'
+      +   nameLink(o, o.title)
       +   (bits.length ? '<span class="rc-sub">' + bits.map(esc).join(' · ') + '</span>' : '')
       + '</td>'
       + '<td class="c-when">' + when + '</td>'
@@ -346,7 +362,6 @@
   }
 
   function talentRow(o, no) {
-    var vp = cfg.viewPage + '?id=' + encodeURIComponent(o.id);
     /* 성별은 DB에 「남성·여성」 으로 담기지만 목록에서는 한 자로 줄입니다 —
        한 줄에 이름·성별·나이가 함께 들어가 자리가 좁습니다. */
     var g = String(o.gender || '').replace('남성', '남').replace('여성', '여');
@@ -365,7 +380,7 @@
       + '<td class="c-no">' + no + '</td>'
       + '<td class="c-org">' + esc(who) + '</td>'
       + '<td class="c-title">'
-      +   '<a href="' + vp + '">' + esc(o.title || '') + '</a>'
+      +   nameLink(o, o.title)
       +   (bits.length ? '<span class="rc-sub">' + bits.map(esc).join(' · ') + '</span>' : '')
       + '</td>'
       + '<td class="c-when">' + esc(d) + '</td>'
@@ -380,7 +395,6 @@
      번호는 남깁니다. 몇 번째 것을 보고 있는지 알 수 있어야
      목록과 상세를 오가며 자리를 잃지 않습니다. */
   function miniRow(o, no) {
-    var vp = cfg.viewPage + '?id=' + encodeURIComponent(o.id);
     var sub = [];
     if (cfg.kind === 'job') {
       if (o.org_name) sub.push(o.org_name);
@@ -407,7 +421,7 @@
     return '<tr>'
       + '<td class="c-no">' + no + '</td>'
       + '<td class="c-title">'
-      +   '<a href="' + vp + '">' + esc(o.title || '') + '</a>'
+      +   nameLink(o, o.title)
       +   (sub.length ? '<span class="rc-sub">' + sub.map(esc).join(' · ') + '</span>' : '')
       + '</td>'
       + '<td class="c-when">' + when + '</td>'
