@@ -192,7 +192,7 @@ async function main() {
        ★ 콩쿠르 입상 이력처럼 <b>「…위」로 끝나는 목록</b>은 잘린 것이
          아닙니다 — 다시 받으면 그 이력이 위키 글로 <b>덮여 사라집니다.</b>
          이것을 빼지 않으면 어제 담은 683명의 입상 이력을 잃습니다. */
-  const RECUT = process.argv.includes('--recut');
+  const RECUT = process.argv.includes('--recut') || process.argv.includes('--recut-only');
   function looksCut(t) {
     const v = String(t || '').trim();
     if (!v) return false;
@@ -205,12 +205,25 @@ async function main() {
 
   const empty = all.filter(p => !(p.description && String(p.description).trim()));
   const cut   = RECUT ? all.filter(p => looksCut(p.description)) : [];
-  const pool  = empty.concat(cut);
+  /* ★★ 2026-08-19 · <b>잘린 사람을 먼저</b> 봅니다
+       처음에는 empty 뒤에 cut 을 붙였는데, 소개가 없는 인물이
+       13,441명이라 <b>잘린 380명은 차례가 오지 않았습니다.</b>
+       한 번에 300명씩 보면 마흔다섯 번을 돌려야 닿습니다.
+     ★ 잘린 사람은 <b>380명뿐</b>이라 한두 번이면 끝납니다. 먼저
+       털고 나머지를 채우는 편이 이치에 맞습니다. */
+  /* ★ --recut-only 를 주면 <b>잘린 사람만</b> 봅니다. 빈 사람이 섞이지
+       않아 「몇 명을 고쳤나」를 또렷이 볼 수 있습니다. */
+  const ONLY  = process.argv.includes('--recut-only');
+  const pool  = ONLY ? cut : cut.concat(empty);
   const targets = pool.slice(0, DAILY_LIMIT);
   console.log('   위키데이터 번호가 있는 인물 : ' + all.length + '명');
   console.log('   소개가 없는 인물            : ' + empty.length + '명');
-  if (RECUT) console.log('   소개가 잘린 인물 (--recut)  : ' + cut.length + '명');
-  console.log('   이번에 처리할 인물          : ' + targets.length + '명');
+  if (RECUT) {
+    console.log('   소개가 잘린 인물 (--recut)  : ' + cut.length + '명  ← 이들을 먼저 봅니다');
+  }
+  console.log('   이번에 처리할 인물          : ' + targets.length + '명'
+    + (RECUT ? '  (잘린 ' + Math.min(cut.length, DAILY_LIMIT) + '명 + 빈 '
+             + Math.max(0, targets.length - Math.min(cut.length, DAILY_LIMIT)) + '명)' : ''));
   if (!targets.length) { console.log('✅ 채울 것이 없습니다.'); return; }
 
   /* ① 한국어 문서 제목 */
