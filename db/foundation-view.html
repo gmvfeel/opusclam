@@ -188,7 +188,6 @@
           </dl>
           <div class="pv-actions">
             <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>홈페이지 <span class="pv-en">Website</span></a>
-            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>위키 <span class="pv-en">Wiki</span></a>
             <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>영상 <span class="pv-en">Video</span></a>
             <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s7-6.3 7-11a7 7 0 0 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>위치 <span class="pv-en">Map</span></a>
           </div>
@@ -1043,8 +1042,10 @@ document.querySelectorAll('.tabs').forEach(function(t){
        var _k=encodeURIComponent((x.name_ko||x.name_en||'').trim());
        var _e=encodeURIComponent((x.name_en||x.name_ko||'').trim());
        var _loc=encodeURIComponent(((x.name_ko||x.name_en||'')+' '+(x.location||'')).trim());
-       var _u=[((x.link_home&&x.link_home!=='#')?x.link_home:'https://www.google.com/search?q='+_k),((x.link_wiki&&x.link_wiki!=='#')?x.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k),((x.link_video&&x.link_video!=='#')?x.link_video:'https://www.youtube.com/results?search_query='+_k),'https://www.google.com/maps/search/?api=1&query='+_loc];
-       for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
+       /* ★ 2026-08-18 · 위키 참고 링크를 뺐습니다 (파트너 지시).
+            단추는 차례대로 주소를 받으므로 배열도 함께 줄입니다. */
+       var _u=[((x.link_home&&x.link_home!=='#')?x.link_home:'https://www.google.com/search?q='+_k),((x.link_video&&x.link_video!=='#')?x.link_video:'https://www.youtube.com/results?search_query='+_k),'https://www.google.com/maps/search/?api=1&query='+_loc];
+       for(var _i=0;_i<3;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
      }})();
 
      /* ── 아래 영역들은 시안 상태로 박혀 있었습니다.

@@ -187,7 +187,6 @@
           </dl>
           <div class="pv-actions">
             <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>홈페이지 <span class="pv-en">Website</span></a>
-            <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>위키 <span class="pv-en">Wiki</span></a>
             <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>영상 <span class="pv-en">Video</span></a>
             <a class="pv-link" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>음원 <span class="pv-en">Audio</span></a>
           </div>
@@ -1129,8 +1128,10 @@ document.querySelectorAll('.tabs').forEach(function(t){
           (function(){var _a=document.querySelectorAll('.pv-actions .pv-link');if(_a.length>=4){
        var _k=encodeURIComponent((o.name_ko||o.name_en||'').trim());
        var _e=encodeURIComponent((o.name_en||o.name_ko||'').trim());
-       var _u=[((o.link_home&&o.link_home!=='#')?o.link_home:'https://www.google.com/search?q='+_k),((o.link_wiki&&o.link_wiki!=='#')?o.link_wiki:'https://ko.wikipedia.org/w/index.php?search='+_k),((o.link_video&&o.link_video!=='#')?o.link_video:'https://www.youtube.com/results?search_query='+_k),'https://music.youtube.com/search?q='+_k];
-       for(var _i=0;_i<4;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
+       /* ★ 2026-08-18 · 위키 참고 링크를 뺐습니다 (파트너 지시).
+            단추는 차례대로 주소를 받으므로 배열도 함께 줄입니다. */
+       var _u=[((o.link_home&&o.link_home!=='#')?o.link_home:'https://www.google.com/search?q='+_k),((o.link_video&&o.link_video!=='#')?o.link_video:'https://www.youtube.com/results?search_query='+_k),'https://music.youtube.com/search?q='+_k];
+       for(var _i=0;_i<3;_i++){if(_u[_i]){_a[_i].href=_u[_i];_a[_i].target='_blank';_a[_i].rel='noopener';}}
      }})();
 document.title=nm+' · 음악단체DB · OPUSCLAM.COM';
      /* 모아둔 사진을 대표 사진과 갤러리에 넣습니다.

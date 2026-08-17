@@ -623,7 +623,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
        그대로 받는 일이 잦았습니다. */
     var av=OCThumb.img(o.image_url, {size:38, fallback:ini(o.name_ko)});
     var nat=o.nationality?(esc(o.nationality)+(o.nat_code?' <span class="nat-code">('+esc(o.nat_code)+')</span>':'')):'<span class="nd">\u2014</span>';
-    var links='<span class="c-link">'+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_audio,'음원',IC.audio)+lk(o.link_video,'영상',IC.video)+'</span>';
+    var links='<span class="c-link">'+lk(o.link_audio,'음원',IC.audio)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
       +'<td class="c-name"><a href="modern-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(_np.main)+oc+en+'</a></td>'

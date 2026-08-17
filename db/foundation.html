@@ -622,7 +622,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
        원본을 그대로 받지 않고 보이는 크기만큼 줄여 받습니다.
        예전에는 못 받으면 원본으로 되돌아가 무거웠습니다. */
     var av=OCThumb.img(o.logo_url, {size:38, fallback:ini(o.name_ko)});
-    var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_wiki,'위키',IC.wiki)+lk(o.link_video,'영상',IC.video)+'</span>';
+    var links='<span class="c-link">'+lk(o.link_home,'홈페이지',IC.home)+lk(o.link_video,'영상',IC.video)+'</span>';
     return '<tr data-id="'+esc(o.id)+'"><td class="c-no">'+esc(no)+'</td>'
       +'<td class="c-ava"><span class="ava">'+av+'</span></td>'
       +'<td class="c-name"><a href="foundation-view.html?id='+encodeURIComponent(o.id)+'&p='+ctx.cur+'">'+esc(_np.main)+oc+en+'</a></td>'

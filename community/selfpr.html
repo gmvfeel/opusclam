@@ -437,7 +437,6 @@ function ocN(tpl) {
 
     /* 관련 자료 */
     var links = '';
-    if (has(p.link_wiki))  links += '<span class="sp-tag"><a href="' + esc(p.link_wiki) + '" target="_blank" rel="noopener">위키 문서 &#8599;</a></span>';
     if (has(p.link_audio)) links += '<span class="sp-tag"><a href="' + esc(p.link_audio) + '" target="_blank" rel="noopener">음원 &#8599;</a></span>';
     if (has(p.link_video)) links += '<span class="sp-tag"><a href="' + esc(p.link_video) + '" target="_blank" rel="noopener">영상 &#8599;</a></span>';
     if (links) secs += section('관련 자료', '<div class="sp-tags">' + links + '</div>');

@@ -671,7 +671,6 @@ function ocN(tpl) {
 
     /* ── 관련 링크 ── */
     var links = '';
-    if (has(school.link_wiki))  links += '<span class="sm-tag"><a href="' + esc(school.link_wiki) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">위키 문서 &#8599;</a></span>';
     if (has(school.link_video)) links += '<span class="sm-tag"><a href="' + esc(school.link_video) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">소개 영상 &#8599;</a></span>';
     if (links) secs += section('관련 자료', '<div class="sm-tags">' + links + '</div>');
 
