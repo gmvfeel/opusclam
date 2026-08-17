@@ -199,7 +199,21 @@
             <a href="/db/academic.html">학술 DB</a>
             <a href="/db/work.html">작품 DB</a>
             <a href="/db/terms.html">음악 용어사전</a>
-            <a href="/db/timeline.html">음악사 연표</a>
+            <!-- ★★ 2026-08-18 · 하위 갈래를 <b>마우스를 올렸을 때만</b> 폅니다
+                   (파트너 요청)
+                   2026-08-14 에 부메뉴를 모두 거두었던 까닭은 <b>늘 펼쳐져</b>
+                   있어 줄이 여섯 개 늘고 어수선했기 때문입니다. 이제는
+                   평소에 접혀 있다가 마우스를 올릴 때만 <b>옆에 떠서</b>
+                   나오므로 목록이 출렁이지 않습니다.
+                   ※ 손가락으로 쓰는 기기에는 마우스 올리기가 없어
+                     지금처럼 접힌 채로 둡니다(style.css 의 hover 규칙). -->
+            <div class="fm-has">
+              <a href="/db/timeline.html">음악사 연표</a>
+              <div class="fm-sub">
+                <a href="/db/timeline.html?k=kr">한국 클래식</a>
+                <a href="/db/timeline.html?k=west">서양 음악사</a>
+              </div>
+            </div>
           </div>
           <div class="fm-col">
             <div class="fm-num">02</div>
@@ -208,16 +222,27 @@
             <!-- ★ 2026-08-13 · 오퍼니티 (파트너 요청) -->
             <a href="/community/opusnity.html">오퍼니티</a>
             <a href="/community/gallery.html">공연사진 / 영상</a>
-            <!-- ★ 2026-08-14 · 부메뉴를 <b>모두 거두었습니다</b> (파트너 지시)
-                   전에는 입시·지식나눔·태교음악 아래에 갈래를 펼쳐 두었는데
-                   줄이 여섯 개 늘어나 어수선했습니다. 그 갈래는 해당 화면에
-                   들어가면 위쪽 탭으로 고를 수 있습니다. -->
-            <a href="/community/admission.html">입시</a>
-            <!-- ★ 2026-08-14 · 부메뉴를 <b>거두었습니다</b> (파트너 지시 — 지저분해 보임)
-                   지식나눔 안 두 갈래(음악지식 Q&A · 전공별 정보나눔)는
-                   그 화면에 들어가면 위쪽 탭으로 고를 수 있습니다. -->
-            <a href="/community/qna.html">지식나눔</a>
-            <a href="/community/selfpr.html">SELF PR</a>
+            <div class="fm-has">
+              <a href="/community/admission.html">입시</a>
+              <div class="fm-sub">
+                <a href="/community/admission.html">입시요강</a>
+                <a href="/community/admission-community.html">입시커뮤니티</a>
+              </div>
+            </div>
+            <div class="fm-has">
+              <a href="/community/qna.html">지식나눔</a>
+              <div class="fm-sub">
+                <a href="/community/qna.html">음악지식 Q&amp;A</a>
+                <a href="/community/qna.html?track=전공별">전공별 정보나눔</a>
+              </div>
+            </div>
+            <div class="fm-has">
+              <a href="/community/selfpr.html">SELF PR</a>
+              <div class="fm-sub">
+                <a href="/community/selfpr.html">SELF PR</a>
+                <a href="/community/play.html">내 연주 어때요</a>
+              </div>
+            </div>
             <a href="/community/school-month.html">이달의 음악학교</a>
             <a href="/community/news.html">뉴스</a>
             <a href="/community/modern.html">현대음악</a>

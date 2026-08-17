@@ -251,13 +251,55 @@
   .fm-col .fm-num{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--orange);margin-bottom:12px}
   .fm-col h4{font-weight:800;font-size:20px;letter-spacing:-.01em;color:#fff;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.2)}
   .fm-col a{display:block;font-size:13px;color:rgba(255,255,255,.6);padding:8px 0;transition:color .18s ease,transform .18s ease;position:relative;border-bottom:1px solid rgba(255,255,255,.07)}
-  /* ★ 2026-08-14 · 부메뉴(.fm-parent · .fm-sub) 규칙을 <b>거두었습니다</b> —
-       전체메뉴에서 하위 갈래를 모두 뺐으므로 쓰이는 곳이 없습니다
-       (partials/header.html). 남겨 두면 다음에 읽는 사람이 아직 쓰는
-       규칙으로 오해합니다. */
+  /* ★ 2026-08-14 에 부메뉴(.fm-parent · .fm-sub)를 거두었다가,
+       2026-08-18 에 <b>마우스를 올렸을 때만</b> 펴는 꼴로 되살렸습니다.
+       규칙은 아래 「하위 갈래」 자리에 새로 적었습니다. */
   .fm-col a:last-child{border-bottom:0}
   .fm-col a:hover{color:#fff;transform:translateX(8px)}
   .fm-col a:hover::before{content:"";position:absolute;left:-13px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:var(--orange)}
+  /* ── 하위 갈래 (2026-08-18 · 파트너 요청) ──────────────────
+     ★ 2026-08-14 에 부메뉴를 <b>모두 거두었던</b> 까닭은 늘 펼쳐져
+       있어 줄이 여섯 개 늘고 어수선했기 때문입니다. 이번에는
+       평소에 접혀 있다가 <b>마우스를 올릴 때만 옆에 떠서</b> 나옵니다 —
+       목록이 출렁이지 않으므로 그때 문제가 되풀이되지 않습니다.
+     ★ 아래로 밀어내지 않고 <b>옆에</b> 띄웁니다. 세로로 펼치면
+       아래 항목들이 밀려 눈이 자리를 잃습니다.
+     ★ 손가락으로 쓰는 기기에는 마우스 올리기가 없어 접힌 채로
+       둡니다 — 그 화면에 들어가면 위쪽 탭으로 고를 수 있습니다. */
+  .fm-has{position:relative}
+  /* 하위가 있다는 표시 — 없으면 마우스를 올려 볼 까닭을 모릅니다 */
+  .fm-has>a::after{content:"\203A";position:absolute;right:2px;top:50%;
+    transform:translateY(-50%);font-size:16px;line-height:1;opacity:.4;
+    transition:opacity .18s ease}
+  .fm-has:hover>a::after{opacity:.9}
+  /* 칸의 마지막이 하위를 가진 항목일 때 밑줄을 지웁니다
+     (원래는 .fm-col a:last-child 가 맡던 몫입니다) */
+  .fm-col>.fm-has:last-child>a{border-bottom:0}
+  .fm-sub{display:none}
+  /* ★ 넓은 화면에서만 폅니다 (981px 이상)
+       980px 아래에서는 칸이 3열·2열로 줄어, 오른쪽 끝 칸의 상자가
+       <b>화면 밖으로 밀려납니다.</b> 그 폭에서는 지금처럼 접어 두고
+       해당 화면의 위쪽 탭으로 고르게 합니다. */
+  @media (hover:hover) and (pointer:fine) and (min-width:981px){
+    /* 옆 칸 위로 또렷이 떠야 합니다 — 칸끼리는 82px 밖에 안 떨어져 있어
+       상자가 옆 칸을 조금 덮습니다 */
+    .fm-has:hover{z-index:7}
+    .fm-sub{display:block;position:absolute;left:100%;top:-8px;z-index:6;
+      min-width:172px;padding:6px 0;
+      background:rgba(24,16,40,.97);border:1px solid rgba(255,255,255,.16);
+      border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.45);
+      opacity:0;visibility:hidden;transform:translateX(-6px);
+      transition:opacity .18s ease,transform .18s ease,visibility .18s}
+    /* ★ 이름과 상자 사이의 <b>빈 곳을 건너는 다리</b>입니다.
+         이것이 없으면 마우스가 틈을 지나는 순간 상자가 닫힙니다. */
+    .fm-sub::before{content:"";position:absolute;left:-18px;top:0;
+      width:18px;height:100%}
+    .fm-has:hover>.fm-sub{opacity:1;visibility:visible;transform:none}
+    .fm-sub a{padding:8px 16px;font-size:12.5px;white-space:nowrap;
+      border-bottom:0;color:rgba(255,255,255,.72)}
+    .fm-sub a:hover{transform:none;background:rgba(255,255,255,.09);color:#fff}
+    .fm-sub a:hover::before{display:none}
+  }
   /* ★ 2026-08-06 — 제목(h4) 안의 링크는 <b>본문 링크 짜임을 받지 않게</b>
      (파트너 지적 — 「06 SHOPPING」만 크고 나머지는 작아 보였습니다)
      왜 그랬나 — 대분류 제목은 대부분 <h4><a …>DATABASE</a></h4> 인데

@@ -945,9 +945,16 @@ function ocN(tpl) {
 
     /* ★ 처음 열 때는 <b>한국 클래식</b>입니다. 탭 순서를 바꿨으므로
          화면도 그에 맞춰 시작해야 합니다 — 안 그러면 서양 띠와
-         한국 연표가 <b>함께</b> 보입니다. */
-    nav.querySelector('button[data-k="kr"]')
-       .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+         한국 연표가 <b>함께</b> 보입니다.
+       ★ 2026-08-18 · 주소로도 갈래를 고를 수 있게 했습니다 —
+         「/db/timeline.html?k=west」
+         전체메뉴에서 하위 갈래를 바로 누를 수 있어야 하는데,
+         탭이 <b>단추</b>라 주소가 없어 곧장 갈 수 없었습니다.
+         모르는 값이 오면 그냥 한국 클래식으로 엽니다. */
+    var want = (new URLSearchParams(location.search).get('k') || '').toLowerCase();
+    var start = nav.querySelector('button[data-k="' + (want === 'west' ? 'west' : 'kr') + '"]')
+             || nav.querySelector('button[data-k="kr"]');
+    start.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   })();
 })();
 </script>
