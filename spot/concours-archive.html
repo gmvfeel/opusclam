@@ -88,6 +88,15 @@
 .ca-nav button.on:hover i{color:rgba(255,255,255,.72)}
 .ca-nav button i{display:block;font-style:normal;font-size:11.5px;color:var(--text-3);
   font-weight:500;margin-top:3px}
+/* ── 목록의 작은 로고 (2026-08-18) ────────────────────────
+   ★ 글자보다 먼저 눈에 들어와 고르기 쉽습니다.
+   ★ 표지와 <b>같은 그림</b>을 씁니다 — 따로 만들지 않습니다.
+   ★ 로고가 없으면 그림만 사라지고 줄은 그대로입니다(em 이 자리를
+     잡고 있으므로 글자가 밀리지 않습니다). */
+.ca-nav button{display:flex;align-items:center;gap:10px}
+.ca-nav .ca-tablogo{flex:0 0 40px;width:40px;aspect-ratio:1.6;object-fit:cover;
+  border-radius:6px;background:var(--paper-2)}
+.ca-nav button em{flex:1;min-width:0;font-style:normal}
 .ca-nav button.on i{color:var(--violet-2);opacity:.75}
 
 /* ── 대회 머리 ─────────────────────────────────────────
@@ -105,14 +114,26 @@
   background:var(--paper-2);border:1px solid var(--line);border-radius:16px}
 
 /* 글자로 만든 표지 */
-.ca-badge{flex:0 0 96px;border-radius:12px;background:var(--ink,#0E1230);
-  color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;padding:14px 8px;text-align:center}
+/* ── 표지 (2026-08-18 · 대회 로고) ────────────────────────
+   ★ 로고가 가로로 긴 것이 넷, 정사각형이 둘이라 <b>1.6:1</b> 로
+     맞췄습니다. 정사각형에 넣으면 가로형 로고가 너무 작아집니다.
+   ★ 그림 안에 <b>배경색까지 담겨</b> 있습니다 — 로고마다 흰 바탕·
+     검은 바탕·붉은 바탕이 달라, 표지 배경을 하나로 정하면 어느
+     한쪽이 반드시 튑니다.
+   ★ 로고가 없는 대회는 <b>글자 표지</b>로 되돌아갑니다(.ca-badge--txt).
+     새 대회를 더할 때 로고를 잊어도 화면이 비지 않습니다. */
+.ca-badge{flex:0 0 152px;aspect-ratio:1.6;border-radius:12px;overflow:hidden;
+  background:var(--ink,#0E1230);color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;text-align:center}
 html[data-theme="dark"] .ca-badge{background:#1c1c1c}
-.ca-badge b{font-family:var(--display);font-size:34px;font-weight:900;line-height:1;
-  letter-spacing:-.04em;color:#C9A94E}
-.ca-badge span{font-size:10.5px;letter-spacing:.06em;color:rgba(255,255,255,.62);
-  font-variant-numeric:tabular-nums}
+.ca-badge .ca-logo{width:100%;height:100%;object-fit:cover;display:block}
+/* 그림이 있을 때는 글자를 감춥니다 */
+.ca-badge b, .ca-badge span{display:none}
+.ca-badge--txt{padding:14px 8px}
+.ca-badge--txt b{display:block;font-family:var(--display);font-size:34px;font-weight:900;
+  line-height:1;letter-spacing:-.04em;color:#C9A94E}
+.ca-badge--txt span{display:block;font-size:10.5px;letter-spacing:.06em;
+  color:rgba(255,255,255,.62);font-variant-numeric:tabular-nums}
 
 .ca-hbody{flex:1;min-width:0;display:flex;flex-direction:column}
 .ca-head h2{font-size:21px;font-weight:800;margin:0 0 4px;color:var(--text);letter-spacing:-.025em}
@@ -129,8 +150,12 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
 
 @media(max-width:560px){
   .ca-head{flex-direction:column;gap:16px}
-  .ca-badge{flex:0 0 auto;flex-direction:row;gap:10px;padding:12px}
-  .ca-badge b{font-size:26px}
+  /* ★ 좁은 화면에서는 표지가 <b>가로로 눕습니다.</b> 폭을 200px 로
+       두어 로고가 읽힐 만큼은 크게 남깁니다 — 그 아래로 줄이면
+       「INTERNATIONAL PIANO COMPETITION」 같은 작은 글자가 뭉갭니다. */
+  .ca-badge{flex:0 0 auto;width:200px;padding:0}
+  .ca-badge--txt{flex-direction:row;gap:10px;padding:12px;width:auto;aspect-ratio:auto}
+  .ca-badge--txt b{font-size:26px}
   .ca-head div.f{padding:0 14px}
 }
 
@@ -457,8 +482,14 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
       var sub = [t(x.country), x.founded ? ocN('{n}년~', x.founded) : '']
         .filter(Boolean).join(' · ');
       return '<button data-k="' + esc(x.key) + '"' + (i === 0 ? ' class="on"' : '') + '>'
-        + esc(t(x.name_ko))
+        /* ★ 작은 로고 — 글자보다 먼저 눈에 들어와 고르기 쉽습니다.
+             표지와 <b>같은 그림</b>을 씁니다(따로 만들지 않습니다).
+             없으면 조용히 사라집니다 — 자리만 비고 줄은 그대로입니다. */
+        + '<img class="ca-tablogo" src="/assets/concours/' + esc(x.key) + '.webp" alt=""'
+        +   ' onerror="this.remove()">'
+        + '<em>' + esc(t(x.name_ko))
         + (sub ? '<i>' + esc(sub) + '</i>' : '')
+        + '</em>'
         + '</button>';
     }).join('');
     [].forEach.call($('tabs').querySelectorAll('button'), function (b) {
@@ -494,13 +525,19 @@ html[data-theme="dark"] .ca-badge{background:#1c1c1c}
       return val ? '<div class="f"><dt>' + esc(t(label)) + '</dt><dd>' + esc(val) + '</dd></div>' : '';
     }
 
-    /* ★ 글자로 만든 표지 — 대회 이름 첫 글자와 여는 해.
-         「쇼」1927 · 「차」1958 처럼 대회마다 저절로 달라집니다.
-         한국어 이름의 첫 글자를 씁니다(영문보다 알아보기 쉽습니다). */
+    /* ★ 표지 — 대회 로고를 씁니다 (2026-08-18)
+         `/assets/concours/{열쇠}.webp` 를 부릅니다.
+       ★ <b>로고가 없는 대회도 있습니다.</b> 그때는 글자 표지로
+         되돌아갑니다 — 대회 이름 첫 글자와 여는 해입니다.
+         새 대회를 더할 때 로고를 잊어도 화면이 비지 않습니다.
+       ★ 되돌리는 일은 <b>그림이 실패했을 때</b> 브라우저가 알려 줍니다
+         (onerror). 미리 파일이 있는지 물어보지 않아도 됩니다. */
     var initial = (CUR.name_ko || CUR.name_en || '?').trim().charAt(0);
 
     $('head').innerHTML = '<div class="ca-head">'
       + '<div class="ca-badge" aria-hidden="true">'
+      +   '<img class="ca-logo" src="/assets/concours/' + esc(CUR.key) + '.webp" alt=""'
+      +     ' onerror="this.parentNode.classList.add(\'ca-badge--txt\');this.remove()">'
       +   '<b>' + esc(initial) + '</b>'
       +   (CUR.founded ? '<span>SINCE ' + esc(CUR.founded) + '</span>' : '')
       + '</div>'
