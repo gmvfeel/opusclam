@@ -867,13 +867,24 @@ html[data-theme="dark"] .rv-aside-tool select {
 .rc-table--mini td.c-title .rc-sample { display: block; line-height: 1.45; }
 
 /* ── 예시 자료 ────────────────────────────────────────────
-   ★ 눌러도 열리지 않는 줄입니다. <b>보이는 모습은 그대로</b> 두고
-     누를 수 있다는 느낌만 없앱니다 — 밑줄도 손 모양도 나오지
-     않습니다. 흐리게 만들지 않는 것은, 예시가 회색으로 죽으면
-     목록이 텅 비어 보이기 때문입니다. */
-.rc-sample { cursor: default; }
+   ★ 눌러도 열리지 않는 줄입니다. 밑줄도 손 모양도 나오지 않습니다.
+   ★★ 2026-08-18 · <b>흐리게 바꿨습니다</b> (파트너 요청)
+     처음에는 「목록이 텅 비어 보인다」는 걱정으로 그대로 두었으나,
+     예시가 마흔 줄 넘게 쌓이니 <b>진짜 글과 구분이 안 됩니다.</b>
+     회원이 올린 글이 들어오기 시작하면 더 헷갈립니다.
+   ★ 다만 <b>글자를 지우듯 흐리게 하지는 않습니다.</b> 0.55 쯤이면
+     읽을 수는 있으면서 「이건 예시」가 한눈에 옵니다.
+     줄 전체(제목·업체명·조건)를 함께 흐리게 해야 결이 맞습니다. */
+.rc-sample { cursor: default; opacity: .55; }   /* :has() 를 모르는 브라우저용 */
 .rc-table tbody tr:hover td.c-title .rc-sample { text-decoration: none; }
 .rc-table td.c-org .rc-sample:hover { color: inherit; }
+/* ★ 줄 전체를 흐리게 — 제목만 흐리고 조건·기간·조회수가 또렷하면
+     오히려 어수선합니다. 예시가 든 줄을 통째로 뒤로 물립니다.
+   ★ :has() 는 요즘 브라우저가 다 압니다. 모르는 브라우저에서는
+     제목만 흐려지는데, 그것만으로도 구분은 됩니다. */
+.rc-table tbody tr:has(.rc-sample) { opacity: .62; }
+.rc-table tbody tr:has(.rc-sample) .rc-sample { opacity: 1; }
+.rc-table tbody tr:has(.rc-sample):hover { opacity: .78; }
 .rc-table--mini .rc-sub { font-size: 11.5px; }
 .rc-mini-end { font-size: 11.5px; color: var(--text-3); }
 

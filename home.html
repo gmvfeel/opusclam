@@ -771,9 +771,14 @@
   ul.list li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--violet-2);flex:0 0 4px}
   ul.list li a{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s ease}
   ul.list li a:hover{color:var(--link-hover)}
-  /* 예시 자료 — 보이는 모습은 그대로, 누를 수 있다는 느낌만 없앱니다 */
+  /* 예시 자료 — 누를 수 없고 <b>흐리게</b> 보입니다 (2026-08-18)
+     ★ 리쿠르트 목록과 같은 결로 맞춥니다. 예시가 진짜 글과 섞이면
+       회원이 헷갈립니다. 날짜까지 함께 흐리게 해야 줄이 어수선하지
+       않습니다. */
   ul.list li .rc-sample{flex:1;min-width:0;color:var(--link-idle);white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis;cursor:default}
+  ul.list li:has(.rc-sample){opacity:.6}
+  ul.list li:has(.rc-sample):hover{opacity:.75}
   ul.list li .dt{font-size:11.5px;color:var(--text-3);white-space:nowrap}
 
   /* ★ 2026-08-11 · 38px → <b>24px</b> (파트너 요청 — 전체가 헐거워 보임)
