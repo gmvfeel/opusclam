@@ -1,0 +1,67 @@
+name: DB · 콩쿠르 인물 위키 잇기 (수동)
+
+# ── 무엇을 하나 ──
+#  콩쿠르 입상 기록에서 담은 인물(source='concours')에
+#  위키데이터 번호를 찾아 붙입니다.
+#
+# ── 왜 필요한가 ──
+#  오늘 683명을 담았는데 사진·생몰년·나라가 모두 비어 있습니다.
+#  이미 있는 「인물DB 보강」 수집기는 위키 번호가 있는 사람만 보므로
+#  이들에게는 손도 대지 못합니다. 번호가 붙으면 그 수집기가 사진·
+#  생몰년·나라를 다 채웁니다.
+#
+# ── 어떻게 찾나 ──
+#  두 단계로, 확실한 것부터
+#    1단계  이름이 같고 그 콩쿠르 수상 기록이 위키데이터에도 있는 사람
+#    2단계  이름이 같고 직업이 음악 쪽이며 후보가 하나뿐
+#  후보가 여럿이면 건드리지 않습니다. 「Sean Chen」에는 피아니스트·
+#  배우·운동선수가 있어, 한 번 잘못 붙으면 사진과 생몰년이 통째로
+#  남의 것이 됩니다.
+#
+# ── 언제 실행되나 ──
+#  1) 처음에는 「실제로 담기: no」 로 짝을 눈으로 확인하세요
+#  2) 예약 없음 — 콩쿠르 인물이 늘 때 다시 돌리면 됩니다
+#     (이미 번호가 있는 사람은 건너뜁니다)
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '한 번에 볼 인물 수 (기본 2000)'
+        required: true
+        default: '2000'
+      save:
+        description: '실제로 담기 (처음에는 no 로 짝을 확인하세요)'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+concurrency:
+  group: oc-concours-wdlink
+  cancel-in-progress: false
+
+jobs:
+  link:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 콩쿠르 인물 위키 잇기 실행
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          L="${{ github.event.inputs.limit }}"
+          OPTS=""
+          if [ -n "$L" ]; then OPTS="--limit=$L"; fi
+          if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
+          echo "── 실행 : node scripts/concours-wdlink.mjs $OPTS ──"
+          node scripts/concours-wdlink.mjs $OPTS
