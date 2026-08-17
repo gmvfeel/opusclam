@@ -326,7 +326,31 @@ async function main() {
   const COLS_ARR = await checkColumns(WANT);
   const COLS = COLS_ARR.join(',');
   const has = (c) => COLS_ARR.indexOf(c) >= 0;
-  const HID = has('hidden') ? '&hidden=is.false' : '';
+  /* ★★ 2026-08-18 · <b>숨은 콩쿠르 인물도 봅니다</b> (--with-hidden)
+       ─────────────────────────────────────────────────────────
+     ★ 무엇이 문제였나
+       콩쿠르 입상 기록에서 담은 683명은 <b>hidden</b> 으로 넣었습니다
+       (이름밖에 없어 공개할 수 없었습니다). 그런데 이 수집기가
+       「hidden=false」 만 보기 때문에 <b>그들에게는 손도 대지
+       못했습니다.</b> 채워야 공개할 수 있는데 채워지지 않는 셈입니다.
+
+     ★ 어떻게 하나 — 기본은 그대로 두고(hidden=false),
+       <b>--with-hidden</b> 을 주면 <b>숨은 사람까지</b> 봅니다.
+       ★ 숨은 사람을 <b>전부</b> 열지 않습니다 — 어드민에서 일부러
+         숨긴 사람(잘못 담긴 인물·클래식 무관 인물)이 섞이면
+         그들에게 자료를 채우게 됩니다. 그래서
+         <b>source='concours' 인 사람만</b> 함께 봅니다.
+       ★ 나중에 다른 갈래(kopis-cast 등)도 채우려면 이 자리를
+         넓히면 됩니다. */
+  const WITH_HIDDEN = process.argv.includes('--with-hidden');
+  /* ★ 「or=」와 「and=」를 <b>각각 한 번씩</b> 쓰는 것은 괜찮습니다 —
+       PostgREST 가 둘을 and 로 묶습니다. 아래쪽 주석이 걱정한 것은
+       「or=」를 <b>두 번</b> 적는 경우입니다(뒤엣것이 앞엣것을 덮음). */
+  const HID = !has('hidden') ? ''
+    : WITH_HIDDEN
+      ? '&or=(hidden.is.false,and(hidden.is.true,source.eq.concours))'
+      : '&hidden=is.false';
+  if (WITH_HIDDEN) console.log('  · 숨은 콩쿠르 인물도 함께 봅니다 (--with-hidden)');
 
   // 1) 시대별 era_yr 표기를 DB에서 그대로 배워옵니다 (제가 새 표기를 만들지 않습니다)
   const eraYr = {};
