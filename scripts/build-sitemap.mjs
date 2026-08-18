@@ -20,6 +20,33 @@
      메뉴에서 안 보이는 화면이 검색에는 나오면 앞뒤가 맞지 않습니다.
      감출 목록은 assets/i18n.js 의 HIDE_PATH 와 <b>같아야</b> 하므로,
      이 파일이 그 파일을 직접 읽어 맞춥니다 — 두 곳에 적지 않습니다.
+
+   ★★ 2026-08-19 · <b>상세 화면을 담습니다</b> (인물 15,509 · 작품 17,061)
+     ────────────────────────────────────────────────────────────
+     api/seo.js 가 봇에게만 서버에서 미리 그려 주게 되어, 이제 상세
+     화면도 <b>빈 껍데기가 아닙니다.</b> 그래서 사이트맵에 넣습니다.
+
+     ★ 파일을 <b>넷으로 나눕니다</b>
+         sitemap.xml          목차
+         sitemap-pages.xml    목록·안내 화면 (hreflang 그대로)
+         sitemap-person.xml   인물
+         sitemap-work.xml     작품
+       한 파일에 5만 개까지 넣을 수 있지만 나누는 편이 낫습니다 —
+       <b>어느 갈래가 색인되고 막혔는지</b> 서치 콘솔에서 따로 보입니다.
+
+     ★ hreflang 은 <b>목록 화면에만</b> 붙입니다. 상세 화면은 한국어
+       판 하나뿐이고 /en/ /ja/ 판이 따로 없습니다. 없는 주소를
+       가리키면 구글이 그 짝을 통째로 버립니다.
+
+     ★ 상세 화면에는 lastmod 를 <b>넣지 않습니다.</b> 자료가 언제
+       바뀌었는지 정확히 알 수 없는데 날짜를 적으면 구글이 그것을
+       믿고 다시 오지 않습니다.
+
+     ★ 인물은 <b>숨기지 않은 사람만</b> 담습니다. 자료가 모자라 감춘
+       사람을 알리면 빈약한 화면이 색인됩니다.
+
+     ★ DB 를 읽으므로 SUPABASE_URL · 키가 있어야 합니다. 없으면
+       상세 화면 없이 목록만 만듭니다 — 손으로 돌릴 때도 됩니다.
    ════════════════════════════════════════════════════════════════ */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -171,7 +198,7 @@ for (const [path, freq, pri] of PAGES) {
 }
 lines.push('</urlset>');
 
-writeFileSync(join(ROOT, 'sitemap.xml'), lines.join('\n') + '\n', 'utf8');
+writeFileSync(join(ROOT, 'sitemap-pages.xml'), lines.join('\n') + '\n', 'utf8');
 
 /* ── 알림 ──────────────────────────────────────────────────────── */
 const onlyKo = PAGES.filter(([p]) => langsFor(p).length === 1).length;
@@ -181,3 +208,89 @@ for (const l of LANGS) {
   const n = PAGES.filter(([p]) => !hidden(l, p)).length;
   console.log(`    ${l} : ${n}개 (감춤 ${PAGES.length - n}개)`);
 }
+
+
+/* ════════════════════════════════════════════════════════════════
+   상세 화면 — 인물 · 작품
+   ★ DB 를 읽습니다. 키가 없으면 <b>조용히 건너뜁니다</b> —
+     손으로 목록만 다시 만들 때도 돌아가야 합니다.
+   ════════════════════════════════════════════════════════════════ */
+
+const SB_URL = process.env.SUPABASE_URL;
+const SB_KEY = process.env.SUPABASE_SERVICE_KEY
+            || process.env.SUPABASE_SERVICE_ROLE_KEY
+            || process.env.SUPABASE_ANON_KEY;
+
+/* ★ PostgREST 는 한 번에 1,000줄까지 줍니다. 받은 수만큼 offset 을
+     밀고 0줄이면 끝냅니다 — 200 상한에 걸려도 이 방식이면 맞습니다. */
+async function getAll(path, label) {
+  const out = [];
+  let off = 0;
+  for (;;) {
+    const r = await fetch(`${SB_URL}/rest/v1/${path}&limit=1000&offset=${off}`, {
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
+    });
+    if (!r.ok) throw new Error(`${label} — Supabase ${r.status} ${(await r.text()).slice(0, 120)}`);
+    const rows = await r.json();
+    if (!rows || !rows.length) break;
+    out.push(...rows);
+    off += rows.length;
+    if (out.length % 5000 === 0) console.log(`    ${label} ${out.length}개…`);
+    if (off > 200000) break;                    /* 만일의 되돌이 막기 */
+  }
+  return out;
+}
+
+/* 상세 화면 묶음 — hreflang 도 lastmod 도 없이 단순하게 */
+function plainSet(urls, freq, pri, note) {
+  return '<?xml version="1.0" encoding="UTF-8"?>\n'
+    + `<!-- ${note}\n     ★ scripts/build-sitemap.mjs 가 만듭니다. 손으로 고치지 마십시오. -->\n`
+    + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    + urls.map(u => `  <url><loc>${u}</loc>`
+        + `<changefreq>${freq}</changefreq><priority>${pri}</priority></url>`).join('\n')
+    + '\n</urlset>\n';
+}
+
+const parts = ['sitemap-pages.xml'];
+
+if (!SB_URL || !SB_KEY) {
+  console.log('');
+  console.log('  ※ SUPABASE 키가 없어 상세 화면은 건너뜁니다 (목록만 다시 만들었습니다).');
+  /* ★ 있던 상세 사이트맵을 <b>지우지 않습니다.</b> 목차에도 그대로
+       남겨 두어야 이미 색인된 것을 잃지 않습니다. */
+  for (const f of ['sitemap-person.xml', 'sitemap-work.xml']) {
+    try { readFileSync(join(ROOT, f), 'utf8'); parts.push(f); } catch (e) { /* 없으면 뺍니다 */ }
+  }
+} else {
+  console.log('');
+  console.log('  인물을 읽습니다…');
+  const ps = await getAll('persons?select=id&hidden=not.is.true&order=id', '인물');
+  console.log(`  인물 ${ps.length}명`);
+
+  console.log('  작품을 읽습니다…');
+  const ws = await getAll('person_works?select=id&order=id', '작품');
+  console.log(`  작품 ${ws.length}건`);
+
+  writeFileSync(join(ROOT, 'sitemap-person.xml'), plainSet(
+    ps.map(p => `${ORIGIN}/db/person-view.html?id=${p.id}`),
+    'monthly', '0.7', 'OPUSCLAM.COM 인물 상세'), 'utf8');
+  writeFileSync(join(ROOT, 'sitemap-work.xml'), plainSet(
+    ws.map(w => `${ORIGIN}/db/work-view.html?id=${w.id}`),
+    'monthly', '0.6', 'OPUSCLAM.COM 작품 상세'), 'utf8');
+
+  parts.push('sitemap-person.xml', 'sitemap-work.xml');
+}
+
+/* ── 목차 ────────────────────────────────────────────────────────
+   ★ 서치 콘솔에는 이 파일 하나만 제출하면 됩니다. */
+writeFileSync(join(ROOT, 'sitemap.xml'),
+  '<?xml version="1.0" encoding="UTF-8"?>\n'
+  + '<!-- OPUSCLAM.COM 사이트맵 목차\n'
+  + '     ★ scripts/build-sitemap.mjs 가 만듭니다. 손으로 고치지 마십시오.\n'
+  + '     ★ 서치 콘솔에는 이 파일 하나만 제출하면 됩니다. -->\n'
+  + '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+  + parts.map(f => `  <sitemap><loc>${ORIGIN}/${f}</loc></sitemap>`).join('\n')
+  + '\n</sitemapindex>\n', 'utf8');
+
+console.log('');
+console.log('▶ 만든 파일 : ' + ['sitemap.xml'].concat(parts).join(' · '));

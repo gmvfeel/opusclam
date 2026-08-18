@@ -9,6 +9,11 @@ name: SEO · 사이트맵 만들기 (주간)
 #  화면을 찾아낼 길이 없었습니다.
 #  인물은 주마다 늘어나므로 손으로 적을 수 없습니다.
 #
+# ── ★ scripts/build-sitemap.mjs 를 씁니다 ──
+#  그 파일이 원래 hreflang(한국어·영어·일본어 서로 가리키기)을 만들고
+#  있었습니다. 새로 만들지 않고 그 파일에 상세 화면을 더했습니다 —
+#  따로 만들면 hreflang 을 잃습니다.
+#
 # ── 갈래별로 나눕니다 ──
 #  sitemap.xml          목차
 #  sitemap-pages.xml    목록·안내 화면
@@ -72,8 +77,8 @@ jobs:
           elif [ "${{ github.event.inputs.save }}" = "yes" ]; then
             OPTS="--save"
           fi
-          echo "── 실행 : node scripts/sitemap-build.mjs $OPTS ──"
-          node scripts/sitemap-build.mjs $OPTS
+          echo "── 실행 : node scripts/build-sitemap.mjs $OPTS ──"
+          node scripts/build-sitemap.mjs $OPTS
 
       - name: 바뀐 것이 있으면 올리기
         run: |
