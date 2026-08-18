@@ -44,36 +44,6 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://opusclam.com/home.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/home.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/home.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/home.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/home.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/home.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/home.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/home.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/home.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/home.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/home.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/home.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/home.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/home.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/home.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
     <loc>https://opusclam.com/search.html</loc>
     <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/search.html"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/search.html"/>
