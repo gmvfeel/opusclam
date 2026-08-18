@@ -419,7 +419,7 @@
     wrap.className = 'pdb-subnav-sel';
 
     var sel = document.createElement('select');
-    sel.setAttribute('aria-label', '구분 고르기');
+    sel.setAttribute('aria-label', '메뉴 고르기');
 
     links.forEach(function (a) {
       var op = document.createElement('option');
@@ -434,7 +434,10 @@
     if (!nav.querySelector('a.active')) {
       var op0 = document.createElement('option');
       op0.value = '';
-      op0.textContent = '구분 고르기';
+      /* ★ 2026-08-19 · 「구분 고르기」 → <b>「전체」</b> (파트너 지시)
+           고르라고 다그치는 말이고, 메뉴 메인에서는 실제로 「전체」를
+           보고 있는 것이 맞습니다. */
+      op0.textContent = '전체';
       op0.selected = true;
       sel.insertBefore(op0, sel.firstChild);
     }
