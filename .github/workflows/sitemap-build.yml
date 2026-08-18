@@ -1,0 +1,89 @@
+name: SEO · 사이트맵 만들기 (주간)
+
+# ── 무엇을 하나 ──
+#  인물·작품 상세 화면 주소를 사이트맵으로 만들어 저장소에 올립니다.
+#
+# ── 왜 필요한가 (2026-08-19) ──
+#  sitemap.xml 에 목록 화면 129개만 있었습니다. 정작 자산인
+#  인물 15,511명 · 작품 17,061건이 빠져 있어, 구글이 3만 개가 넘는
+#  화면을 찾아낼 길이 없었습니다.
+#  인물은 주마다 늘어나므로 손으로 적을 수 없습니다.
+#
+# ── 갈래별로 나눕니다 ──
+#  sitemap.xml          목차
+#  sitemap-pages.xml    목록·안내 화면
+#  sitemap-person.xml   인물
+#  sitemap-work.xml     작품
+#  어느 갈래가 색인되고 막혔는지 서치 콘솔에서 따로 보입니다.
+#
+# ── ★ 이 워크플로는 저장소에 커밋합니다 ──
+#  다른 수집기들과 달리 <b>파일을 고쳐 올립니다.</b> 그래서
+#  permissions 에 contents: write 가 필요합니다.
+#  바뀐 것이 없으면 커밋하지 않습니다 — 빈 커밋이 쌓이지 않게.
+
+on:
+  schedule:
+    # 일요일 새벽 5시(KST) = 토요일 20:00 UTC
+    # ★ 다른 수집기가 주중에 자료를 채우므로, 주말에 한 번 만듭니다.
+    - cron: '0 20 * * 6'
+  workflow_dispatch:
+    inputs:
+      save:
+        description: '실제로 만들어 올리기 (no 면 몇 개인지만 셉니다)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
+
+concurrency:
+  group: oc-sitemap
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 사이트맵 만들기
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # ★★ 예약 실행은 실제로 만듭니다.
+          #   예약에는 입력이 없어 save 가 빈 값이 됩니다. 그대로 두면
+          #   매주 세기만 하고 아무것도 안 만듭니다 — 오늘 다른
+          #   워크플로에서 이 함정을 세 번 겪었습니다.
+          OPTS=""
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            OPTS="--save"
+            echo "   (예약 실행 — 실제로 만듭니다)"
+          elif [ "${{ github.event.inputs.save }}" = "yes" ]; then
+            OPTS="--save"
+          fi
+          echo "── 실행 : node scripts/sitemap-build.mjs $OPTS ──"
+          node scripts/sitemap-build.mjs $OPTS
+
+      - name: 바뀐 것이 있으면 올리기
+        run: |
+          if [ -z "$(git status --porcelain sitemap*.xml)" ]; then
+            echo "바뀐 것이 없습니다 — 올리지 않습니다"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add sitemap*.xml
+          git commit -m "auto: 사이트맵 갱신 ($(date -u +%Y-%m-%d))"
+          git push
+          echo "▶ 올렸습니다"

@@ -1,55 +1,54 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "cleanUrls": true,
+  "trailingSlash": false,
+
   "rewrites": [
-    { "source": "/en", "destination": "/index.html" },
-    { "source": "/ja", "destination": "/index.html" },
-    { "source": "/en/", "destination": "/index.html" },
-    { "source": "/ja/", "destination": "/index.html" },
-    { "source": "/en/:path*", "destination": "/:path*" },
-    { "source": "/ja/:path*", "destination": "/:path*" }
+    { "source": "/", "destination": "/home" },
+    { "source": "/index", "destination": "/home" },
+
+    {
+      "source": "/db/person-view.html",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Gg]ooglebot|Google-InspectionTool|Storebot-Google|[Bb]ingbot|[Yy]eti|[Dd]aumoa|[Nn]aver[Bb]ot|Slurp|[Dd]uck[Dd]uck[Bb]ot|[Bb]aiduspider|[Yy]andex|[Aa]pplebot|facebookexternalhit|[Tt]witterbot|[Ss]lackbot|[Ll]inked[Ii]n[Bb]ot|kakaotalk-scrap|[Tt]elegram[Bb]ot|[Dd]iscordbot|[Ww]hats[Aa]pp|[Ee]mbedly|[Pp]interest).*"
+        }
+      ],
+      "destination": "/api/seo?kind=person"
+    },
+    {
+      "source": "/db/work-view.html",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Gg]ooglebot|Google-InspectionTool|Storebot-Google|[Bb]ingbot|[Yy]eti|[Dd]aumoa|[Nn]aver[Bb]ot|Slurp|[Dd]uck[Dd]uck[Bb]ot|[Bb]aiduspider|[Yy]andex|[Aa]pplebot|facebookexternalhit|[Tt]witterbot|[Ss]lackbot|[Ll]inked[Ii]n[Bb]ot|kakaotalk-scrap|[Tt]elegram[Bb]ot|[Dd]iscordbot|[Ww]hats[Aa]pp|[Ee]mbedly|[Pp]interest).*"
+        }
+      ],
+      "destination": "/api/seo?kind=work"
+    }
   ],
+
   "headers": [
     {
-      "source": "/assets/:path*.js",
+      "source": "/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
-      "source": "/assets/ads/:path*",
+      "source": "/assets/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
-      "source": "/assets/:path*.css",
+      "source": "/partials/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/assets/i18n/:path*.json",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/:path*.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/style.css",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/partials/:path*",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
-        { "key": "X-Robots-Tag", "value": "noindex" }
       ]
     }
   ]
