@@ -63,7 +63,9 @@ const LANGS = ['en', 'ja'];
      불러오므로 봇에게는 빈 껍데기입니다. 미리 그려 주게 된 뒤에 엽니다. */
 const PAGES = [
   ['/',                                    'daily',   '1.0'],
-  ['/home.html',                           'daily',   '1.0'],
+  /* ★ 2026-08-19 · `/home.html` 을 뺐습니다 — `/` 와 같은 화면입니다.
+       둘 다 넣으면 구글이 중복으로 봅니다. home.html 의 canonical 이
+       `/` 를 가리키므로 짧은 쪽 하나만 알립니다. */
   ['/search.html',                         'weekly',  '0.6'],
 
   ['/db/index.html',                       'daily',   '0.9'],

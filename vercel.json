@@ -5,11 +5,25 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/home"
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Gg]ooglebot|Google-InspectionTool|Storebot-Google|[Bb]ingbot|[Yy]eti|[Dd]aumoa|[Nn]aver[Bb]ot|Slurp|[Dd]uck[Dd]uck[Bb]ot|[Bb]aiduspider|[Yy]andex|[Aa]pplebot|facebookexternalhit|[Tt]witterbot|[Ss]lackbot|[Ll]inked[Ii]n[Bb]ot|kakaotalk-scrap|[Tt]elegram[Bb]ot|[Dd]iscordbot|[Ww]hats[Aa]pp|[Ee]mbedly|[Pp]interest).*"
+        }
+      ],
+      "destination": "/home.html"
     },
     {
       "source": "/index",
-      "destination": "/home"
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*([Gg]ooglebot|Google-InspectionTool|Storebot-Google|[Bb]ingbot|[Yy]eti|[Dd]aumoa|[Nn]aver[Bb]ot|Slurp|[Dd]uck[Dd]uck[Bb]ot|[Bb]aiduspider|[Yy]andex|[Aa]pplebot|facebookexternalhit|[Tt]witterbot|[Ss]lackbot|[Ll]inked[Ii]n[Bb]ot|kakaotalk-scrap|[Tt]elegram[Bb]ot|[Dd]iscordbot|[Ww]hats[Aa]pp|[Ee]mbedly|[Pp]interest).*"
+        }
+      ],
+      "destination": "/home.html"
     },
     {
       "source": "/db/person-view.html",
