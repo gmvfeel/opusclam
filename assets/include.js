@@ -90,13 +90,10 @@
          ① 브라우저에서 강력 새로고침(Ctrl+Shift+R)
          ② 이 아래 FORCE 값을 아무 글자로 바꿔 함께 올리기
        ②는 모든 회원에게 곧바로 새 메뉴가 갑니다. */
-<<<<<<< Updated upstream
-  var FORCE = '';   /* 급할 때만 아무 글자로 바꾸십시오 (예: 'a') */
-=======
-  var FORCE = 'b';  /* 급할 때만 아무 글자로 바꾸십시오 (예: 'a')
-                       ★ 2026-08-19 · 알약 판정을 고쳤으니 곧바로
-                         반영되게 한 글자 올렸습니다. */
->>>>>>> Stashed changes
+  var FORCE = 'c';  /* 급할 때만 아무 글자로 바꾸십시오 (예: 'a')
+                       ★ 2026-08-19 · 깨진 판을 브라우저가 담아 두고
+                         있어 한 글자 올렸습니다. 이 파일은 15시간 전
+                         판으로 되돌린 것입니다. */
   var PARTIAL_VER = (function () {
     /* ① 이 스크립트를 부른 주소에 ?v= 가 있으면 그것을 씁니다 */
     try {
@@ -256,26 +253,6 @@
     if (!hit.length) {
       var base = baseOf(location.pathname);
       hit = links.filter(function (a) { return rawOf(a.getAttribute('href')) === base; });
-    }
-    /* ★★ 2026-08-19 · <b>메뉴 메인에서 「전체」가 켜지지 않던 것</b>
-         ─────────────────────────────────────────────────────
-       ★ 무엇이 문제였나
-         메뉴 링크는 `/db/index.html` 인데, vercel.json 의 cleanUrls 가
-         주소를 <b>`/db` 로 정리</b>합니다(trailingSlash:false).
-         그러면 이름이 「db」가 되어 「전체」(index)와 맞지 않아
-         <b>아무 알약도 켜지지 않았습니다.</b> 좁은 화면 풀다운에는
-         「구분 고르기」가 떴습니다.
-       ★ 그래서 아무것도 안 맞으면 <b>그 폴더의 「전체」</b>를 켭니다.
-         `/db` 를 `/db/` 로 보고 견줍니다 — 확장자가 없으면 폴더입니다. */
-    if (!hit.length) {
-      var here = bare(String(location.pathname || '')).split('#')[0].split('?')[0];
-      var asDir = /\.[a-z0-9]+$/i.test(here)
-        ? dirOf(here)
-        : here.replace(/\/?$/, '/');
-      hit = links.filter(function (a) {
-        var h = a.getAttribute('href');
-        return dirOf(h) === asDir && rawOf(h) === 'index';
-      });
     }
     links.forEach(function (a) {
       a.classList.toggle('active', hit.indexOf(a) >= 0);
@@ -442,7 +419,7 @@
     wrap.className = 'pdb-subnav-sel';
 
     var sel = document.createElement('select');
-    sel.setAttribute('aria-label', '메뉴 고르기');
+    sel.setAttribute('aria-label', '구분 고르기');
 
     links.forEach(function (a) {
       var op = document.createElement('option');
@@ -453,16 +430,11 @@
     });
 
     /* 지금 화면이 메뉴에 없으면(글쓰기·상세 등) 맨 앞에 알림을 둡니다 —
-       아무것도 골라지지 않은 것처럼 보이면 헷갈립니다.
-       ★★ 2026-08-19 · 「구분 고르기」 → <b>「전체」</b> (파트너 지시)
-         「구분 고르기」는 시키는 말이라 <b>고르라고 다그치는</b> 느낌이고,
-         메뉴 메인에서는 실제로 「전체」를 보고 있는 것이 맞습니다.
-       ★ 「전체」 알약이 있는 곳에서는 위쪽 판정이 그것을 켜므로
-         이 줄이 아예 나오지 않습니다. 글쓰기·상세 화면에서만 보입니다. */
+       아무것도 골라지지 않은 것처럼 보이면 헷갈립니다. */
     if (!nav.querySelector('a.active')) {
       var op0 = document.createElement('option');
       op0.value = '';
-      op0.textContent = '전체';
+      op0.textContent = '구분 고르기';
       op0.selected = true;
       sel.insertBefore(op0, sel.firstChild);
     }
