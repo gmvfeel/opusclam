@@ -1,4 +1,4 @@
-name: 작품 · 형식 보강 (수동)
+name: 작품 · 형식 보강 (주간)
 
 # ── 무엇을 하나 ──
 #  이미 담긴 작품의 위키데이터 번호로 P31(이것은 무엇인가)을 물어
@@ -39,7 +39,18 @@ name: 작품 · 형식 보강 (수동)
 #
 # ── 언제 실행되나 ──
 #  손으로만 돌립니다.
+# ── ★ 2026-08-19 · <b>예약을 걸었습니다</b> (파트너와 재어 보고)
+#
+#  ★ 무엇이 문제였나 — 작품 17,061건 가운데 <b>13,823건(83%)</b> 이
+#    형식(form_ko)이 비어 있었습니다. 「교향곡」·「소나타」·「오페라」
+#    같은 갈래가 없어 작품 화면에서 고르개가 일하지 못합니다.
+#    이 워크플로에 <b>예약이 없어</b> 손으로만 돌았기 때문입니다.
+#
+#  ★ 한 번에 2,000건씩 주 1회면 <b>일곱 주</b>에 다 훑습니다.
+#    다 훑고 나면 채울 것이 없어 아무 일도 하지 않습니다.
 on:
+  schedule:
+    - cron: '40 20 * * 3'
   workflow_dispatch:
     inputs:
       save:
@@ -106,7 +117,15 @@ jobs:
           try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
 
           OPTS=""
-          if [ "${{ github.event.inputs.save }}" != "yes" ]; then OPTS="$OPTS --dry"; fi
+          # ★★ 2026-08-19 · <b>예약 실행은 실제로 담습니다.</b>
+          #   예약에는 입력이 없어 save 가 빈 값이 됩니다. 그대로 두면
+          #   --dry 가 붙어 <b>매주 목록만 찍고</b> 아무것도 담기지
+          #   않습니다. 오늘 작품 수집기에서 같은 함정을 겪었습니다.
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "   (예약 실행 — 실제로 담습니다)"
+          elif [ "${{ github.event.inputs.save }}" != "yes" ]; then
+            OPTS="$OPTS --dry"
+          fi
           if [ "${{ github.event.inputs.all }}"  = "yes" ]; then OPTS="$OPTS --all"; fi
           if [ "${{ github.event.inputs.redo }}" = "yes" ]; then OPTS="$OPTS --redo"; fi
           if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi

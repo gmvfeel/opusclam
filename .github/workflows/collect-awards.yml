@@ -1,4 +1,4 @@
-name: 인물 · 수상·수훈 경력 (수동)
+name: 인물 · 수상·수훈 경력 (주간)
 
 # ── 무엇을 하나 ──
 #  인물DB 의 위키데이터 번호로 P166(받은 상)을 물어보고,
@@ -20,7 +20,18 @@ name: 인물 · 수상·수훈 경력 (수동)
 #
 # ── 언제 실행되나 ──
 #  손으로만 돌립니다.
+# ── ★ 2026-08-19 · <b>예약을 걸었습니다</b> (파트너와 재어 보고)
+#
+#  ★ 무엇이 문제였나 — 위키 번호가 있는 인물 가운데 <b>14,395명(90%)</b>
+#    이 수상 경력이 하나도 없었습니다. 인물 화면의 「수상」 자리가
+#    거의 다 비어 있었다는 뜻입니다.
+#    이 워크플로에 <b>예약이 없어</b> 손으로만 돌았기 때문입니다.
+#
+#  ★ 한 번에 500명씩 주 1회면 여러 달이 걸리지만, 손대지 않아도
+#    <b>저절로 쌓입니다.</b> 급하면 손으로 더 돌리면 됩니다.
 on:
+  schedule:
+    - cron: '50 20 * * 5'
   workflow_dispatch:
     inputs:
       save:
@@ -86,7 +97,16 @@ jobs:
           try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
 
           OPTS=""
-          if [ "${{ github.event.inputs.save }}"  = "yes" ]; then OPTS="$OPTS --save"; fi
+          # ★★ 2026-08-19 · <b>예약 실행은 실제로 담습니다.</b>
+          #   이 수집기는 --save 를 줘야 담습니다. 예약에는 입력이
+          #   없어 save 가 빈 값이 되므로, 그대로 두면 <b>매주 목록만
+          #   찍고</b> 아무것도 담기지 않습니다.
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            OPTS="$OPTS --save"
+            echo "   (예약 실행 — 실제로 담습니다)"
+          elif [ "${{ github.event.inputs.save }}" = "yes" ]; then
+            OPTS="$OPTS --save"
+          fi
           if [ "${{ github.event.inputs.kr }}"    = "yes" ]; then OPTS="$OPTS --kr"; fi
           if [ "${{ github.event.inputs.redo }}"  = "yes" ]; then OPTS="$OPTS --redo"; fi
           if [ "${{ github.event.inputs.debug }}" = "yes" ]; then OPTS="$OPTS --debug"; fi
