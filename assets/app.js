@@ -325,7 +325,128 @@
     });
   }
 
-  function ocInit(){ injectFooter(); updateHeaderAuth(); loadEngines(); injectToTop(); }
+  /* ★★ 2026-08-19 · 자료 지키기 ㉠ 복사할 때 출처 붙이기 ★★
+     ─────────────────────────────────────────────────────────────
+     ★ 왜 이렇게 하나
+       복사를 <b>막지 않습니다</b>. 막을 수 없기 때문입니다(화면을 찍으면 끝입니다).
+       대신 가져가면 <b>우리 이름과 주소가 따라갑니다</b>. 블로그·카페에 붙여지면
+       그 자체가 홍보이고 되돌아오는 링크가 됩니다.
+
+     ★ 이용자에게 불편이 없어야 합니다 — 그래서 이렇게 가려냅니다
+       · 짧게 복사한 것은 <b>그대로 둡니다</b>(COPY_MIN_LEN 미만).
+         이름·연도·전화번호를 옮길 때 출처가 붙으면 방해가 됩니다.
+       · 글쓰기 칸(input·textarea·편집기) 안에서 복사한 것은 <b>손대지 않습니다</b>.
+         내가 쓰던 글에 출처가 붙으면 안 됩니다.
+
+     ★ 두 가지 모양으로 담습니다
+       글자만 붙이는 곳 → …본문
+                          — 출처: OPUSCLAM (주소)
+       서식이 살아나는 곳(블로그·워드) → 출처가 <b>누를 수 있는 링크</b>가 됩니다
+
+     ★ 주소는 언제나 opusclam.com 으로 적습니다 — 미리보기 주소가 퍼지면
+       안 되기 때문입니다. 화면 말은 주소 첫 칸(/en/·/ja/)을 따릅니다. */
+  var COPY_MIN_LEN = 30;            /* 이보다 짧게 복사하면 그대로 둡니다 */
+
+  function ocSourceUrl(){
+    var path = location.pathname + location.search;
+    if ((location.hostname || '').indexOf('opusclam.com') >= 0){
+      return location.protocol + '//' + location.hostname + path;
+    }
+    return 'https://opusclam.com' + path;        /* 미리보기·로컬도 정식 주소로 */
+  }
+
+  function ocCreditWord(){
+    var seg = (location.pathname.split('/')[1] || '').toLowerCase();
+    if (seg === 'en') return 'Source: OPUSCLAM';
+    if (seg === 'ja') return '\u51FA\u5178: OPUSCLAM';
+    return '\uCD9C\uCC98: OPUSCLAM';
+  }
+
+  /* 고른 자리가 글쓰기 칸 안인지 봅니다 */
+  function ocInEditable(node){
+    var el = (node && node.nodeType === 1) ? node : (node && node.parentElement);
+    while (el){
+      var t = el.tagName;
+      if (t === 'INPUT' || t === 'TEXTAREA') return true;
+      if (el.isContentEditable) return true;
+      el = el.parentElement;
+    }
+    return false;
+  }
+
+  function mountCopyCredit(){
+    document.addEventListener('copy', function(e){
+      try{
+        var sel = window.getSelection && window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+        if (!e.clipboardData) return;                        /* 아주 낡은 브라우저 */
+
+        var text = String(sel).replace(/\s+$/, '');
+        if (text.replace(/\s/g, '').length < COPY_MIN_LEN) return;
+        if (ocInEditable(sel.anchorNode) || ocInEditable(sel.focusNode)) return;
+
+        var url    = ocSourceUrl();
+        var credit = ocCreditWord();
+
+        e.clipboardData.setData('text/plain',
+          text + '\n\n\u2014 ' + credit + ' (' + url + ')');
+
+        /* 서식까지 담기는 곳을 위해 — 고른 부분을 그대로 떠서 손질합니다 */
+        var html = '';
+        try{
+          var box = document.createElement('div');
+          box.appendChild(sel.getRangeAt(0).cloneContents());
+          var junk = box.querySelectorAll('script,style,noscript');
+          for (var j = 0; j < junk.length; j++){ junk[j].parentNode.removeChild(junk[j]); }
+          /* 상대 주소는 붙여넣은 곳에서 깨집니다 — 절대 주소로 바꿔 둡니다 */
+          var im = box.querySelectorAll('img[src]');
+          for (var i = 0; i < im.length; i++){ im[i].setAttribute('src', im[i].src); }
+          var an = box.querySelectorAll('a[href]');
+          for (var k = 0; k < an.length; k++){ an[k].setAttribute('href', an[k].href); }
+          html = box.innerHTML;
+        }catch(err){}
+
+        if (html){
+          e.clipboardData.setData('text/html',
+            '<div>' + html + '</div>'
+            + '<p style="margin-top:12px;font-size:12px;color:#8f90a6">\u2014 '
+            + credit + ' (<a href="' + url + '">' + url + '</a>)</p>');
+        }
+        e.preventDefault();
+      }catch(err){}                                          /* 실패하면 그냥 평소대로 */
+    }, true);
+  }
+
+  /* ★★ 2026-08-19 · 자료 지키기 ㉡ 사진 끌어 놓기 막기 ★★
+     ─────────────────────────────────────────────────────────────
+     사진을 마우스로 끌어 바탕화면에 떨어뜨려 저장하는 것을 막습니다.
+     오른쪽 단추 금지와 달리 <b>이용자에게 불편이 없고</b>, 한 장씩 긁어 모으는
+     일에는 실제로 조금 방해가 됩니다. 크롤러에는 효과가 없습니다 — 그것은
+     robots.txt 의 몫입니다.
+
+     ★ 글쓰기 편집기 안에서는 <b>막지 않습니다</b> — 넣은 사진을 옮길 수 있어야 합니다. */
+  function blockImageDrag(){
+    if (document.getElementById('oc-nodrag-css')) return;
+    var css = document.createElement('style');
+    css.id = 'oc-nodrag-css';
+    css.textContent = 'img{-webkit-user-drag:none;user-drag:none}'
+      + '[contenteditable] img,[contenteditable="true"] img{-webkit-user-drag:auto;user-drag:auto}';
+    document.head.appendChild(css);
+
+    document.addEventListener('dragstart', function(e){
+      var t = e.target;
+      if (!t || t.tagName !== 'IMG') return;
+      if (ocInEditable(t)) return;
+      e.preventDefault();
+    }, true);
+  }
+
+  /* ★ 자료 지키기는 <b>맨 먼저</b> 걸어 둡니다 — 뒤의 어느 하나가 실패해도
+     (예: 회원 확인이 서버에 못 닿을 때) 보호가 함께 죽지 않게 하려는 것입니다. */
+  function ocInit(){
+    mountCopyCredit(); blockImageDrag();
+    injectFooter(); updateHeaderAuth(); loadEngines(); injectToTop();
+  }
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", ocInit); }
   else { ocInit(); }
 })();
