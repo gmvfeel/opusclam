@@ -89,5 +89,67 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/privacy",
+      "destination": "/legal/privacy.html",
+      "permanent": true
+    },
+    {
+      "source": "/policy",
+      "destination": "/legal/terms.html",
+      "permanent": true
+    },
+    {
+      "source": "/terms",
+      "destination": "/legal/terms.html",
+      "permanent": true
+    },
+    {
+      "source": "/agreement",
+      "destination": "/legal/terms.html",
+      "permanent": true
+    },
+    {
+      "source": "/login",
+      "destination": "/account/login.html",
+      "permanent": true
+    },
+    {
+      "source": "/join",
+      "destination": "/account/join.html",
+      "permanent": true
+    },
+    {
+      "source": "/member",
+      "destination": "/account/join.html",
+      "permanent": true
+    },
+    {
+      "source": "/findPass",
+      "destination": "/account/find-pw.html",
+      "permanent": true
+    },
+    {
+      "source": "/findpass",
+      "destination": "/account/find-pw.html",
+      "permanent": true
+    },
+    {
+      "source": "/findId",
+      "destination": "/account/find-id.html",
+      "permanent": true
+    },
+    {
+      "source": "/findid",
+      "destination": "/account/find-id.html",
+      "permanent": true
+    },
+    {
+      "source": "/mypage",
+      "destination": "/account/interests.html",
+      "permanent": true
+    }
   ]
 }
