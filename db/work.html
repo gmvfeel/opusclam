@@ -543,8 +543,22 @@ document.querySelectorAll('.tabs').forEach(function(t){
      조인 결과는 o.persons 객체로 옵니다. */
 (function(){
   /* 편성을 한 글자로 — 표 왼쪽 동그라미에 넣습니다 */
-  var GK={Orchestral:'관',Keyboard:'건',Chamber:'실',Stage:'무',Vocal:'성'};
-  var GKO={Orchestral:'관현악',Keyboard:'건반',Chamber:'실내악',Stage:'무대',Vocal:'성악'};
+  /* ★★ 2026-08-19 · <b>옮김표를 넓혔습니다</b> (파트너 지적)
+       ─────────────────────────────────────────────────────
+     ★ 무엇이 문제였나 — 편성 고르개에 같은 뜻이 둘로 갈라졌습니다
+         「실내악 · Chamber (583)」 · 「실내악 · 실내악 (277)」
+       genre 를 어떤 곳은 영문, 어떤 곳은 한글로 담아 두었는데,
+       옮김표에 <b>한글 값이 없어</b> 그대로 나온 것입니다.
+     ★ DB 쪽은 영문으로 모았습니다(sql/genrefix-01-B-apply.sql).
+       영문 짝이 없던 갈래에 <b>새 이름</b>을 주었으니 여기에도
+       같이 넣어야 합니다 — Choral · Organ · Screen · Electronic.
+     ★ 이 표를 고칠 때는 <b>세 곳을 함께</b> 고쳐야 합니다.
+       한 글자(GK)·목록(GKO)·고르개(GKO) 셋입니다. */
+  var GK={Orchestral:'관',Keyboard:'건',Chamber:'실',Stage:'무',Vocal:'성',
+          Choral:'합',Organ:'오',Screen:'영',Electronic:'전',Other:'그'};
+  var GKO={Orchestral:'관현악',Keyboard:'건반',Chamber:'실내악',Stage:'무대',Vocal:'성악',
+           Choral:'합창',Organ:'오르간·교회음악',Screen:'영화·방송',
+           Electronic:'전자음악',Other:'그 밖'};
   var IC={score:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>'};
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function nd(v){return (v!=null&&String(v).trim())?esc(v):'<span class="nd">\u2014</span>';}
@@ -634,7 +648,11 @@ document.querySelectorAll('.tabs').forEach(function(t){
        값을 짐작하지 않고 물어보는 편이 어긋나지 않습니다. */
   var SB='https://ptdxzxkgddvkusamkiol.supabase.co',
       SK='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
-  var GKO={Orchestral:'관현악',Keyboard:'건반',Chamber:'실내악',Stage:'무대 · 오페라',Vocal:'성악'};
+  /* ★ 2026-08-19 · 위 표와 같이 넓혔습니다. 「무대 · 오페라」는
+       고르개에서만 쓰는 표기라 그대로 둡니다. */
+  var GKO={Orchestral:'관현악',Keyboard:'건반',Chamber:'실내악',Stage:'무대 · 오페라',Vocal:'성악',
+           Choral:'합창',Organ:'오르간·교회음악',Screen:'영화·방송',
+           Electronic:'전자음악',Other:'그 밖'};
   function fillFacets(){
     var selG=document.querySelector('select[aria-label="편성"]');
     var selE=document.querySelector('select[aria-label="시대"]');
