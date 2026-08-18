@@ -144,7 +144,19 @@
           누를 자리는 32.5px 로 남습니다 — 줄 전체가 눌리고 가로가 넓어
           작은 단추와 달리 44px 지침을 그대로 볼 필요는 없습니다. */
   }
-  @media(max-width:420px){ .exam-comm em{display:none} }
+  /* ★★ 2026-08-19 · 좁은 화면에서도 <b>보이게</b> 합니다 (파트너 요청)
+       ─────────────────────────────────────────────────────
+     ★ 무엇이 문제였나 — 420px 아래에서 「입시·진로 이야기를 나누는
+       자리 →」 를 <b>통째로 감추고</b> 있었습니다. 한 줄에 안 들어가서
+       그렇게 두었던 것인데, 그 자리가 무엇을 하는 곳인지 알려 주는
+       <b>유일한 글</b>이라 감추면 「입시커뮤니티」 넉 자만 남습니다.
+     ★ 감추는 대신 <b>아래로 내립니다.</b> 띠를 세로로 두고 이름 밑에
+       설명을 붙이면, 넘치지도 않고 뜻도 전해집니다.
+     ★ 화살표는 그대로 둡니다 — 누르면 어디로 간다는 신호입니다. */
+  @media(max-width:420px){
+    .exam-comm{flex-direction:column;align-items:flex-start;gap:3px;padding:11px 14px}
+    .exam-comm em{font-size:11px;opacity:.88;white-space:normal;line-height:1.4}
+  }
 
   .card-link{position:absolute;inset:0;z-index:6;border-radius:inherit;text-indent:-9999px;overflow:hidden}
   /* 사진이 없는 자리 — 어두운 바탕에 오퍼스클램 로고를 옅게 얹습니다.
