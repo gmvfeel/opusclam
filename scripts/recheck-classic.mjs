@@ -90,8 +90,20 @@ const SKIP = (typeof args.skip === 'string' ? args.skip : '')
      직업·장르·소개문 어디엔가 있는 사람입니다.
      ★ 자동으로 살리지 <b>않습니다.</b> 목록만 보여 주고 판단은
        사람이 합니다 — 잘못 살리면 대중가수가 클래식에 남습니다. */
+/* --rescue        클래식 신호가 보이는 사람 (넉넉히)
+   --rescue=strong  <b>직업에 지휘자·연주자가 또렷한</b> 사람만 (좁게)
+   ★ 넉넉히 보면 목록이 길어 훑기 어렵습니다. 좁게 보면 놓치는 사람이
+     생기지만 <b>먼저 확실한 것부터</b> 살리고 나중에 넓히면 됩니다. */
 const RESCUE = !!args.rescue;
+const STRONG = args.rescue === 'strong';
+
+/* 넉넉한 그물 — 어디엔가 클래식 낱말이 보이면 */
 const CLASSIC_SIGN = /(conductor|chef d.orchestre|dirigent|kapellmeister|music director|principal conductor|philharmonic|symphony orchestra|opera house|concertmaster|violinist|cellist|organist|harpsichord|classical music|지휘자|상임지휘|음악감독|교향악단|오케스트라|필하모닉|오페라극장|클래식)/i;
+
+/* 좁은 그물 — <b>직업</b>에 지휘자·클래식 연주자가 또렷할 때만.
+   ★ 소개문이나 장르가 아니라 직업만 봅니다. 소개문에 「오케스트라와
+     협연했다」가 있다고 클래식 음악인은 아닙니다. */
+const CLASSIC_JOB = /\b(conductor|chef d.orchestre|dirigent|kapellmeister|concertmaster|violinist|cellist|violist|organist|harpsichordist|opera singer|classical pianist)\b/i;
 const MAX  = typeof args.max === 'string' && /^\d+$/.test(args.max) ? Number(args.max) : 0;
 
 const HDR = {
@@ -188,11 +200,14 @@ async function main() {
 
   /* ★ 살릴 만한 사람 — <b>빠질 사람과 남겨 둔 사람 모두</b>에서 찾습니다.
        --skip 으로 빼 둔 371명도 언젠가는 갈라야 하므로 함께 봅니다. */
-  const rescue = RESCUE
-    ? [...drop, ...holdList].filter(p => CLASSIC_SIGN.test(
-        [p.wd_occupation, p.wd_genre, p.description, p.description_en]
-          .filter(Boolean).join(' ')))
-    : [];
+  const rescue = !RESCUE ? []
+    : STRONG
+      /* 좁게 — 직업에 지휘자·연주자가 또렷한 사람만 */
+      ? [...drop, ...holdList].filter(p => CLASSIC_JOB.test(p.wd_occupation || ''))
+      /* 넉넉히 — 어디엔가 클래식 낱말이 보이면 */
+      : [...drop, ...holdList].filter(p => CLASSIC_SIGN.test(
+          [p.wd_occupation, p.wd_genre, p.description, p.description_en]
+            .filter(Boolean).join(' ')));
 
   console.log('\n── 다시 판정한 결과 ──');
   console.log('   클래식으로 남음      : ' + ok + '명');
@@ -203,7 +218,8 @@ async function main() {
               + '   (장르·직업·소개문이 모두 빔 — 지우지 않습니다)');
 
   if (RESCUE) {
-    console.log('\n── ★ 살릴 만한 사람 (클래식 신호가 보임) — ' + rescue.length + '명 ──');
+    console.log('\n── ★ 살릴 만한 사람 ' + (STRONG ? '(직업이 또렷함 · 좁게)' : '(클래식 신호가 보임 · 넉넉히)')
+      + ' — ' + rescue.length + '명 ──');
     console.log('   ※ 자동으로 살리지 않습니다. 눈으로 보고 정하십시오.');
     console.log('   ※ 살릴 사람은 sql/weak-01-B-rescue.sql 에 이름을 적어 넣습니다.');
     rescue.slice(0, 80).forEach((p, i) => {

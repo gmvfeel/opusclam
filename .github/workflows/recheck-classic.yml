@@ -80,13 +80,17 @@ on:
       #
       #  ★ 자동으로 살리지 않습니다. 목록만 보고 사람이 정합니다 —
       #    잘못 살리면 대중가수가 클래식에 남습니다.
+      #  ★ strong — 직업에 지휘자·연주자가 <b>또렷한</b> 사람만.
+      #    목록이 짧아 훑기 쉽습니다. 먼저 확실한 것부터 살리고
+      #    나중에 yes 로 넓히면 됩니다.
       rescue:
-        description: '살릴 만한 사람 골라 보기 (클래식 신호가 보이는 사람)'
+        description: '살릴 만한 사람 골라 보기 (strong = 좁게 · yes = 넉넉히)'
         required: false
         default: 'no'
         type: choice
         options:
           - 'no'
+          - 'strong'
           - 'yes'
       skip:
         description: '이 까닭은 지우지 않기 (예: 약함 · 여럿은 쉼표로)'
@@ -135,7 +139,8 @@ jobs:
           if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
           if [ "${{ github.event.inputs.list }}" = "yes" ]; then OPTS="$OPTS --list"; fi
 
-          if [ "${{ github.event.inputs.rescue }}" = "yes" ]; then OPTS="$OPTS --rescue"; fi
+          if [ "${{ github.event.inputs.rescue }}" = "yes" ];    then OPTS="$OPTS --rescue"; fi
+          if [ "${{ github.event.inputs.rescue }}" = "strong" ]; then OPTS="$OPTS --rescue=strong"; fi
 
           SKIP="${{ github.event.inputs.skip }}"
           if [ -n "$SKIP" ]; then OPTS="$OPTS --skip=$SKIP"; fi
