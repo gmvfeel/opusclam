@@ -431,15 +431,29 @@
 
     /* 지금 화면이 메뉴에 없으면(글쓰기·상세 등) 맨 앞에 알림을 둡니다 —
        아무것도 골라지지 않은 것처럼 보이면 헷갈립니다. */
+    /* ★★ 2026-08-19 · 「구분 고르기」 → <b>「전체」</b> (파트너 지시)
+         고르라고 다그치는 말이고, 메뉴 메인에서는 실제로 「전체」를
+         보고 있는 것이 맞습니다.
+       ★ 다만 알약에 <b>이미 「전체」가 있으면</b> 안내를 따로 넣지
+         않습니다 — 넣으면 「전체」가 <b>두 번</b> 나옵니다(겪었습니다).
+         그때는 그 「전체」를 고른 것으로 표시하면 됩니다. */
     if (!nav.querySelector('a.active')) {
-      var op0 = document.createElement('option');
-      op0.value = '';
-      /* ★ 2026-08-19 · 「구분 고르기」 → <b>「전체」</b> (파트너 지시)
-           고르라고 다그치는 말이고, 메뉴 메인에서는 실제로 「전체」를
-           보고 있는 것이 맞습니다. */
-      op0.textContent = '전체';
-      op0.selected = true;
-      sel.insertBefore(op0, sel.firstChild);
+      var already = null;
+      for (var oi = 0; oi < sel.options.length; oi++) {
+        if ((sel.options[oi].textContent || '').trim() === '전체') {
+          already = sel.options[oi];
+          break;
+        }
+      }
+      if (already) {
+        already.selected = true;
+      } else {
+        var op0 = document.createElement('option');
+        op0.value = '';
+        op0.textContent = '전체';
+        op0.selected = true;
+        sel.insertBefore(op0, sel.firstChild);
+      }
     }
 
     sel.addEventListener('change', function () {
