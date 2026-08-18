@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- OPUSCLAM.COM 인물 상세
+     ★ scripts/build-sitemap.mjs 가 만듭니다. 손으로 고치지 마십시오. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://opusclam.com/db/person-view.html?id=6208</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/person-view.html?id=6209</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>

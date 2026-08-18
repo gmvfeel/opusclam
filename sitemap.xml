@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- OPUSCLAM.COM 사이트맵 목차
+     ★ scripts/build-sitemap.mjs 가 만듭니다. 손으로 고치지 마십시오.
+     ★ 서치 콘솔에는 이 파일 하나만 제출하면 됩니다. -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>https://opusclam.com/sitemap-pages.xml</loc></sitemap>
   <sitemap><loc>https://opusclam.com/sitemap-person.xml</loc></sitemap>
