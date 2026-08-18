@@ -32,6 +32,7 @@
      node scripts/recheck-classic.mjs --list         전부 찍습니다
      node scripts/recheck-classic.mjs --why=대중음악  그 까닭만 자세히
      node scripts/recheck-classic.mjs --skip=약함     그 까닭은 지우지 않음
+     node scripts/recheck-classic.mjs --rescue        살릴 만한 사람 골라 보기
      node scripts/recheck-classic.mjs --save         실제로 지웁니다
      node scripts/recheck-classic.mjs --save --max=800
          800명이 넘게 빠지면 <b>지우지 않고</b> 멈춥니다
@@ -75,6 +76,22 @@ const WHY  = typeof args.why === 'string' ? args.why : null;
      여럿을 뺄 때는 쉼표로 잇습니다 — --skip=약함,재즈 */
 const SKIP = (typeof args.skip === 'string' ? args.skip : '')
   .split(',').map(v => v.trim()).filter(Boolean);
+
+/* ★★ 2026-08-19 · <b>살릴 만한 사람 골라 보기</b> (--rescue)
+     ─────────────────────────────────────────────────────
+   ★ 왜 필요한가
+     「대중음악 신호가 있고 클래식 근거 약함」으로 걸린 371명은
+     대부분 대중가수지만 <b>클래식 지휘자가 묻혀</b> 있습니다 —
+     페렌츠 프리차이·샤를 뒤투아·크리스토프 에셴바흐.
+     371명을 눈으로 다 훑는 것은 품이 큽니다.
+
+   ★ 무엇을 하나 — 빠질 사람 가운데 <b>클래식 신호가 또렷한</b>
+     사람만 따로 보여 줍니다. 지휘자·오케스트라·오페라 같은 낱말이
+     직업·장르·소개문 어디엔가 있는 사람입니다.
+     ★ 자동으로 살리지 <b>않습니다.</b> 목록만 보여 주고 판단은
+       사람이 합니다 — 잘못 살리면 대중가수가 클래식에 남습니다. */
+const RESCUE = !!args.rescue;
+const CLASSIC_SIGN = /(conductor|chef d.orchestre|dirigent|kapellmeister|music director|principal conductor|philharmonic|symphony orchestra|opera house|concertmaster|violinist|cellist|organist|harpsichord|classical music|지휘자|상임지휘|음악감독|교향악단|오케스트라|필하모닉|오페라극장|클래식)/i;
 const MAX  = typeof args.max === 'string' && /^\d+$/.test(args.max) ? Number(args.max) : 0;
 
 const HDR = {
@@ -169,6 +186,14 @@ async function main() {
   const drop = [...groups.values()].flat();
   const holdList = [...hold.values()].flat();
 
+  /* ★ 살릴 만한 사람 — <b>빠질 사람과 남겨 둔 사람 모두</b>에서 찾습니다.
+       --skip 으로 빼 둔 371명도 언젠가는 갈라야 하므로 함께 봅니다. */
+  const rescue = RESCUE
+    ? [...drop, ...holdList].filter(p => CLASSIC_SIGN.test(
+        [p.wd_occupation, p.wd_genre, p.description, p.description_en]
+          .filter(Boolean).join(' ')))
+    : [];
+
   console.log('\n── 다시 판정한 결과 ──');
   console.log('   클래식으로 남음      : ' + ok + '명');
   console.log('   ★ 지울 것           : ' + drop.length + '명   (대중음악 근거가 있는 사람)');
@@ -176,6 +201,21 @@ async function main() {
   if (SKIP.length) console.log('   ※ 일부러 뺀 까닭      : ' + SKIP.join(' · ') + '  (--skip)');
   console.log('   판정 못 함          : ' + noEvidence.length + '명'
               + '   (장르·직업·소개문이 모두 빔 — 지우지 않습니다)');
+
+  if (RESCUE) {
+    console.log('\n── ★ 살릴 만한 사람 (클래식 신호가 보임) — ' + rescue.length + '명 ──');
+    console.log('   ※ 자동으로 살리지 않습니다. 눈으로 보고 정하십시오.');
+    console.log('   ※ 살릴 사람은 sql/weak-01-B-rescue.sql 에 이름을 적어 넣습니다.');
+    rescue.slice(0, 80).forEach((p, i) => {
+      console.log('\n   ' + String(i + 1).padStart(3) + '. ' + nameOf(p)
+        + (p.wikidata_id ? '  [' + p.wikidata_id + ']' : ''));
+      if (p.wd_occupation) console.log('        직업 : ' + short(p.wd_occupation, 84));
+      if (p.wd_genre)      console.log('        장르 : ' + short(p.wd_genre, 84));
+      const d = p.description || p.description_en;
+      if (d)               console.log('        소개 : ' + short(d, 84));
+    });
+    if (rescue.length > 80) console.log('\n   … 그리고 ' + (rescue.length - 80) + '명');
+  }
 
   console.log('\n── 지울 묶음 (대중음악 근거 있음) ──');
   console.log('   ※ 이름을 하나씩 보지 마시고 「까닭이 맞는지」만 보십시오.');

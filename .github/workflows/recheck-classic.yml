@@ -72,6 +72,22 @@ on:
       #
       #  ★ 낱말만 넣으면 됩니다 — 「약함」이면 그 까닭이 통째로 빠집니다.
       #    여럿은 쉼표로 잇습니다 (예: 약함,재즈)
+      # ★ 2026-08-19 · 「살릴 만한 사람 골라 보기」
+      #
+      #  ★ 371명을 눈으로 다 훑는 것은 품이 큽니다. 빠질 사람 가운데
+      #    지휘자·오케스트라·오페라 같은 낱말이 보이는 사람만 따로
+      #    보여 줍니다 — 페렌츠 프리차이·샤를 뒤투아·에셴바흐 같은 분들.
+      #
+      #  ★ 자동으로 살리지 않습니다. 목록만 보고 사람이 정합니다 —
+      #    잘못 살리면 대중가수가 클래식에 남습니다.
+      rescue:
+        description: '살릴 만한 사람 골라 보기 (클래식 신호가 보이는 사람)'
+        required: false
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes'
       skip:
         description: '이 까닭은 지우지 않기 (예: 약함 · 여럿은 쉼표로)'
         required: false
@@ -118,6 +134,8 @@ jobs:
           OPTS=""
           if [ "${{ github.event.inputs.save }}" = "yes" ]; then OPTS="$OPTS --save"; fi
           if [ "${{ github.event.inputs.list }}" = "yes" ]; then OPTS="$OPTS --list"; fi
+
+          if [ "${{ github.event.inputs.rescue }}" = "yes" ]; then OPTS="$OPTS --rescue"; fi
 
           SKIP="${{ github.event.inputs.skip }}"
           if [ -n "$SKIP" ]; then OPTS="$OPTS --skip=$SKIP"; fi
