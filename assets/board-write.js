@@ -1,3 +1,5 @@
+/* i18n 이 없을 때를 위한 폴백 — 언어를 붙이지 못해도 이동은 됩니다 */
+if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) location.replace(u); else location.href = u; }; }
 /* ============================================================
    OPUSCLAM 공용 글쓰기 엔진 — assets/board-write.js
    폼 생성 + 리치에디터 + 이미지 업로드(+카드용 썸네일) + 저장.
@@ -488,7 +490,8 @@ function ocN(tpl) {
         btn.disabled = false;
         if (res.error) { $('bwMsg').textContent = '저장 실패: ' + res.error.message; return; }
         var goId = editId || (res.data && res.data.id);
-        location.href = goId ? (cfg.viewPage + '?id=' + encodeURIComponent(goId)) : cfg.listPage;
+        /* ★ 2026-08-19 · ocGo — 영어·일본어에서 말을 잃지 않게 */
+        ocGo(goId ? (cfg.viewPage + '?id=' + encodeURIComponent(goId)) : cfg.listPage);
       });
     }
 

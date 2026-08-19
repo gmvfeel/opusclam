@@ -58,7 +58,7 @@
   agAll.addEventListener('change',function(){ag1.checked=agAll.checked;ag2.checked=agAll.checked;});
   function sync(){agAll.checked=ag1.checked&&ag2.checked;} ag1.addEventListener('change',sync);ag2.addEventListener('change',sync);
   document.getElementById('cs-next').addEventListener('click',function(){var err=document.getElementById('cs-err');err.textContent='';
-    if(!ag1.checked||!ag2.checked){err.textContent='필수 항목에 모두 동의해 주세요.';return;} location.href=next;});
+    if(!ag1.checked||!ag2.checked){err.textContent='필수 항목에 모두 동의해 주세요.';return;} (window.ocGo||function(u){location.href=u;})(next);});
 })();
 </script>
 </body>

@@ -5,1247 +5,311 @@
        새 화면을 열면 그 파일의 PAGES 에 한 줄 보태고 다시 돌리십시오.
        node scripts/build-sitemap.mjs
 
-     ★ 한국어·영어·일본어 세 판을 hreflang 으로 묶었습니다.
-       영어·일본어에서 감춘 메뉴는 그 말의 판을 넣지 않았습니다
-       (감출 목록은 assets/i18n.js 의 HIDE_PATH 를 그대로 읽습니다).
+     ★ 지금은 한국어 판 하나뿐입니다. /en/ · /ja/ 판을 실제로 만들면
+       scripts/build-sitemap.mjs 의 LANGS 를 다시 채우십시오.
+       (없는 주소를 알리면 사이트맵을 통째로 덜 믿습니다).
 
-     ★ 상세 화면(-view.html)은 아직 넣지 않았습니다 —
-       내용을 자바스크립트로 불러오므로 봇에게는 빈 껍데기입니다. -->
+     ★ 이 파일은 목록·안내 화면만 담습니다.
+       상세 화면은 sitemap-person.xml · sitemap-work.xml 에 있습니다. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://opusclam.com/</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://opusclam.com/search.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/search.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/search.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/search.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/search.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/search.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/search.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/search.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/search.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/search.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/search.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/search.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/search.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/search.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/search.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/index.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/index.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/index.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/person.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/person.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/person.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/person.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/person.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/person.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/person.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/person.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/person.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/person.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/person.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/person.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/person.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/person.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/person.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/venue.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/venue.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/venue.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/venue.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/venue.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/venue.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/venue.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/venue.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/venue.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/venue.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/venue.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/venue.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/venue.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/venue.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/venue.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/modern.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/modern.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/modern.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/modern.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/modern.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/modern.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/org.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/org.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/org.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/org.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/org.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/org.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/org.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/org.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/org.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/org.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/org.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/org.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/org.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/org.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/org.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/school.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/school.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/school.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/school.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/school.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/school.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/school.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/school.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/school.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/school.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/school.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/school.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/school.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/school.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/school.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/foundation.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/foundation.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/foundation.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/foundation.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/foundation.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/foundation.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/foundation.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/foundation.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/foundation.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/foundation.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/foundation.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/foundation.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/foundation.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/foundation.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/foundation.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/work.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/work.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/work.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/work.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/work.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/work.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/work.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/work.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/work.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/work.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/work.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/work.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/work.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/work.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/work.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/timeline.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/timeline.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/timeline.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/timeline.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/timeline.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/timeline.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/timeline.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/timeline.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/timeline.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/timeline.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/timeline.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/timeline.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/timeline.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/timeline.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/timeline.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/terms.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/terms.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/terms.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/terms.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/terms.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/terms.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/academic.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/academic.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/academic.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/academic.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/academic.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/db/academic.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/academic.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/academic.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/academic.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/academic.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/db/academic.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/db/academic.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/db/academic.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/db/academic.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/db/academic.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/index.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/index.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/index.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/news.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/news.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/news.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/news.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/news.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/news.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/news.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/news.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/news.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/news.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/news.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/news.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/news.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/news.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/news.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/hottopic.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/hottopic.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/hottopic.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/hottopic.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/hottopic.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/hottopic.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/hottopic.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/hottopic.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/hottopic.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/hottopic.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/hottopic.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/hottopic.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/hottopic.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/hottopic.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/hottopic.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/qna.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/qna.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/qna.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/qna.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/qna.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/qna.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/qna.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/qna.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/qna.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/qna.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/qna.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/qna.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/qna.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/qna.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/qna.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/prenatal.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/prenatal.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/prenatal.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/prenatal.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/prenatal.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/prenatal.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/prenatal.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/prenatal.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/prenatal.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/prenatal.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/prenatal.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/prenatal.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/prenatal.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/prenatal.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/prenatal.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/prenatal-playlist.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/prenatal-playlist.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/prenatal-playlist.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/prenatal-playlist.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/prenatal-playlist.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/prenatal-playlist.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/prenatal-playlist.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/prenatal-playlist.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/prenatal-playlist.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/prenatal-playlist.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/prenatal-playlist.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/prenatal-playlist.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/prenatal-playlist.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/prenatal-playlist.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/prenatal-playlist.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/selfpr.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/selfpr.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/selfpr.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/selfpr.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/selfpr.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/selfpr.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/selfpr.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/selfpr.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/selfpr.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/selfpr.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/selfpr.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/selfpr.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/selfpr.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/selfpr.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/selfpr.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/school-month.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/school-month.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/school-month.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/school-month.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/school-month.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/school-month.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/school-month.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/school-month.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/school-month.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/school-month.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/school-month.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/school-month.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/school-month.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/school-month.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/school-month.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/gallery.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/gallery.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/gallery.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/gallery.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/gallery.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/gallery.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/gallery.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/gallery.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/gallery.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/gallery.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/gallery.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/gallery.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/gallery.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/gallery.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/gallery.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/modern.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/modern.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/modern.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/modern.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/modern.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/modern.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/modern.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/utility.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/utility.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/utility.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/utility.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/utility.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/community/utility.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/utility.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/utility.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/utility.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/utility.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/community/utility.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/utility.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/community/utility.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/community/utility.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/utility.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/admission.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/admission.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/admission.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/admission-community.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/community/admission-community.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/community/admission-community.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/index.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/spot/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/index.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/spot/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/index.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/concert.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/concert.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/concert.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/concert.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/concert.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/spot/concert.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/concert.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/concert.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/concert.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/concert.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/spot/concert.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/concert.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/concert.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/concert.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/concert.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/concours.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/concours.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/concours.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/concours.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/concours.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/spot/concours.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/concours.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/concours.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/concours.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/concours.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/spot/concours.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/concours.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/concours.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/concours.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/concours.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/concours-price.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/concours-price.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/concours-price.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/concours-price.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/concours-price.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/spot/concours-price.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/concours-price.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/concours-price.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/concours-price.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/concours-price.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/spot/concours-price.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/concours-price.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/concours-price.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/concours-price.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/concours-price.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/festival.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/festival.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/festival.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/festival.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/festival.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/spot/festival.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/festival.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/festival.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/festival.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/festival.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/spot/festival.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/festival.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/festival.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/festival.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/festival.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/funding.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/funding.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/funding.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/score.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/score.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/score.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/score.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/score.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/spot/score.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/score.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/score.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/score.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/score.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/spot/score.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/score.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/score.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/score.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/score.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/media.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/media.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/media.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/media.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/media.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/spot/media.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/media.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/media.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/media.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/media.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/spot/media.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/media.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/spot/media.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/spot/media.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/media.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/sites.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/spot/sites.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/spot/sites.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/lesson/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/lesson/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/index.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/lesson/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/lesson/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/lesson/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/index.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/lesson/index.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/index.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/lesson/index.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/lesson/index.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/index.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/master.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/master.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/lesson/master.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/lesson/master.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/master.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/lesson/master.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/master.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/lesson/master.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/lesson/master.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/master.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/lesson/master.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/master.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/lesson/master.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/lesson/master.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/master.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/open.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/open.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/lesson/open.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/lesson/open.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/open.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/lesson/open.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/open.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/lesson/open.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/lesson/open.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/open.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/lesson/open.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/open.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/lesson/open.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/lesson/open.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/open.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/live.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/live.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/live.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/one.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/one.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/one.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/group.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/group.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/group.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/instructor.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/lesson/instructor.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/lesson/instructor.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/recruit/guide.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/recruit/guide.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/recruit/guide.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://opusclam.com/recruit/job.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/recruit/job.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/recruit/job.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/recruit/talent.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/recruit/talent.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/recruit/talent.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/shop/apply.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/shop/apply.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/shop/apply.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://opusclam.com/legal/terms.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/terms.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/legal/terms.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/terms.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/legal/terms.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/terms.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/terms.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://opusclam.com/legal/privacy.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/privacy.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/legal/privacy.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/privacy.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/legal/privacy.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/privacy.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://opusclam.com/legal/data-policy.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/data-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/data-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/data-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/data-policy.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/legal/data-policy.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/data-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/data-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/data-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/data-policy.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/legal/data-policy.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/data-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/data-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/data-policy.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/data-policy.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://opusclam.com/legal/data-protection.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/data-protection.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/data-protection.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/data-protection.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/data-protection.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/en/legal/data-protection.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/data-protection.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/data-protection.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/data-protection.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/data-protection.html"/>
-    <lastmod>2026-08-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://opusclam.com/ja/legal/data-protection.html</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://opusclam.com/legal/data-protection.html"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://opusclam.com/en/legal/data-protection.html"/>
-    <xhtml:link rel="alternate" hreflang="ja" href="https://opusclam.com/ja/legal/data-protection.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://opusclam.com/legal/data-protection.html"/>
-    <lastmod>2026-08-18</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

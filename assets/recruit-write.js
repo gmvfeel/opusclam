@@ -1,3 +1,5 @@
+/* i18n 이 없을 때를 위한 폴백 — 언어를 붙이지 못해도 이동은 됩니다 */
+if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) location.replace(u); else location.href = u; }; }
 /* ============================================================
    OPUSCLAM 리쿠르트 등록 엔진 — assets/recruit-write.js
 
@@ -714,7 +716,8 @@
         await C.from('recruit_drafts').delete()
           .eq('member_id', me.user.id).eq('kind', DRAFT_KIND);
       } catch (e) {}
-      location.href = cfg.viewPage + '?id=' + encodeURIComponent(id);
+      /* ★ 2026-08-19 · ocGo — 영어·일본어에서 말을 잃지 않게 */
+      ocGo(cfg.viewPage + '?id=' + encodeURIComponent(id));
     } catch (e) {
       busy = false;
       if (btn) { btn.disabled = false; btn.textContent = '게시하기'; }

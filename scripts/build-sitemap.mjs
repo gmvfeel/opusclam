@@ -55,7 +55,22 @@ import { dirname, join } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ORIGIN = 'https://opusclam.com';
-const LANGS = ['en', 'ja'];
+/* ★★ 2026-08-19 — <b>['en','ja'] 에서 [] 로 비웠습니다.</b>
+
+   왜 —  사이트맵이 /en/db/person.html · /ja/db/person.html 같은 주소를
+         126개 중 <b>76개</b> 적고 hreflang 도 그리로 가리키고 있었는데,
+         저장소에 <b>en/ · ja/ 폴더가 없습니다.</b> 열어 보면 404 입니다
+         (2026-08-19 확인 — Vercel NOT_FOUND).
+         말 바꾸기는 assets/i18n.js 가 <b>화면 안에서</b> 글자만 바꾸는
+         방식이라, 그런 주소는 애초에 생긴 적이 없습니다.
+
+   무엇이 나빴나 — 사이트맵의 60%가 404 이면 구글이 사이트맵 자체를
+         덜 믿습니다. 어긋난 hreflang 은 통째로 버려집니다.
+
+   ★ 나중에 영어·일본어 판을 <b>정말로 만들면</b> 이 줄을
+     ['en','ja'] 로 되돌리고 다시 돌리면 그대로 살아납니다.
+     그 전에는 <b>비워 두십시오.</b> */
+const LANGS = [];
 
 /* ── 담을 화면 ──────────────────────────────────────────────────
    ★ 새 메뉴를 열면 여기에 한 줄만 보태고 이 파일을 다시 돌리십시오.
@@ -171,12 +186,12 @@ lines.push('       손으로 고치지 마십시오 — 다시 돌리면 지워�
 lines.push('       새 화면을 열면 그 파일의 PAGES 에 한 줄 보태고 다시 돌리십시오.');
 lines.push('       node scripts/build-sitemap.mjs');
 lines.push('');
-lines.push('     ★ 한국어·영어·일본어 세 판을 hreflang 으로 묶었습니다.');
-lines.push('       영어·일본어에서 감춘 메뉴는 그 말의 판을 넣지 않았습니다');
-lines.push('       (감출 목록은 assets/i18n.js 의 HIDE_PATH 를 그대로 읽습니다).');
+lines.push('     ★ 지금은 한국어 판 하나뿐입니다. /en/ · /ja/ 판을 실제로 만들면');
+lines.push('       scripts/build-sitemap.mjs 의 LANGS 를 다시 채우십시오.');
+lines.push('       (없는 주소를 알리면 사이트맵을 통째로 덜 믿습니다).');
 lines.push('');
-lines.push('     ★ 상세 화면(-view.html)은 아직 넣지 않았습니다 —');
-lines.push('       내용을 자바스크립트로 불러오므로 봇에게는 빈 껍데기입니다. -->');
+lines.push('     ★ 이 파일은 목록·안내 화면만 담습니다.');
+lines.push('       상세 화면은 sitemap-person.xml · sitemap-work.xml 에 있습니다. -->');
 lines.push('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
 lines.push('        xmlns:xhtml="http://www.w3.org/1999/xhtml">');
 
@@ -186,11 +201,16 @@ for (const [path, freq, pri] of PAGES) {
   for (const lang of langs) {
     lines.push('  <url>');
     lines.push(`    <loc>${href(lang, path)}</loc>`);
-    /* 서로 가리키기 — 이 주소를 볼 수 있는 말 전부를 적습니다 */
-    for (const l of langs) {
-      lines.push(`    <xhtml:link rel="alternate" hreflang="${l}" href="${href(l, path)}"/>`);
+    /* 서로 가리키기 — 이 주소를 볼 수 있는 말 전부를 적습니다.
+       ★ 2026-08-19 — <b>한국어 하나뿐이면 아예 적지 않습니다.</b>
+         자기 혼자만 가리키는 hreflang 은 뜻이 없고, 없는 판을
+         있는 것처럼 보이게 할 뿐입니다. */
+    if (langs.length > 1) {
+      for (const l of langs) {
+        lines.push(`    <xhtml:link rel="alternate" hreflang="${l}" href="${href(l, path)}"/>`);
+      }
+      lines.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${href('ko', path)}"/>`);
     }
-    lines.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${href('ko', path)}"/>`);
     lines.push(`    <lastmod>${today}</lastmod>`);
     lines.push(`    <changefreq>${freq}</changefreq>`);
     lines.push(`    <priority>${pri}</priority>`);
@@ -205,10 +225,14 @@ writeFileSync(join(ROOT, 'sitemap-pages.xml'), lines.join('\n') + '\n', 'utf8');
 /* ── 알림 ──────────────────────────────────────────────────────── */
 const onlyKo = PAGES.filter(([p]) => langsFor(p).length === 1).length;
 console.log(`  화면 ${PAGES.length}개 → 주소 ${count}개`);
-console.log(`  영어·일본어에서 감춘 화면 ${onlyKo}개는 한국어만 넣었습니다`);
-for (const l of LANGS) {
-  const n = PAGES.filter(([p]) => !hidden(l, p)).length;
-  console.log(`    ${l} : ${n}개 (감춤 ${PAGES.length - n}개)`);
+if (LANGS.length === 0) {
+  console.log('  한국어 판만 넣었습니다 (LANGS 가 비어 있습니다 — hreflang 없음)');
+} else {
+  console.log(`  영어·일본어에서 감춘 화면 ${onlyKo}개는 한국어만 넣었습니다`);
+  for (const l of LANGS) {
+    const n = PAGES.filter(([p]) => !hidden(l, p)).length;
+    console.log(`    ${l} : ${n}개 (감춤 ${PAGES.length - n}개)`);
+  }
 }
 
 
