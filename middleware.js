@@ -106,6 +106,21 @@ const BOTS = [
   'facebookexternalhit', 'twitterbot', 'slackbot', 'linkedinbot',
   'kakaotalk-scrap', 'telegrambot', 'discordbot', 'whatsapp',
   'embedly', 'pinterest',
+
+  /* ★★ 2026-08-19 · AI 도구가 <b>답변에 걸어 줄</b> 때 오는 봇들
+     ─────────────────────────────────────────────────────────────
+     robots.txt 에서 이들만 열었습니다(학습용은 그대로 막았습니다).
+     ★ 그런데 <b>여기에도 넣어야 합니다.</b> robots.txt 만 열면
+       찾아와도 자바스크립트 화면, 곧 <b>빈 껍데기</b>를 보고 갑니다.
+       AI 도구는 브라우저처럼 기다려 주지 않습니다.
+     ★ 'claudebot'(학습용)과 헷갈리지 않습니다 — 'claude-user' ·
+       'claude-searchbot' 은 이음표가 있어 글자가 다릅니다. */
+  'oai-searchbot',      /* ChatGPT 검색에 오르려면 필요 */
+  'chatgpt-user',       /* 사람이 물어 ChatGPT 가 찾아올 때 */
+  'claude-user',        /* 사람이 물어 Claude 가 찾아올 때 */
+  'claude-searchbot',   /* Claude 검색 */
+  'perplexitybot',      /* Perplexity 답변에 오르려면 필요 */
+  'perplexity-user',
 ];
 
 function isBot(ua) {
