@@ -110,7 +110,12 @@
 .adp-in{max-width:1080px;margin:0 auto}
 .adp-head{margin:0 0 30px}
 .adp-num{display:inline-flex;align-items:center;justify-content:center;
-  width:26px;height:26px;border-radius:50%;background:var(--violet-2);color:#fff;
+  width:26px;height:26px;border-radius:50%;
+  /* ★ 2026-08-19 · 구역 번호 동그라미를 <b>훨씬 짙게</b> (파트너 지적)
+     흰 글씨를 안고 있으므로 짙을수록 숫자가 또렷해집니다.
+     ★ 어두운 화면은 <b>건드리지 않습니다</b> — 거기서는 이 동그라미가
+       「밝은 바탕 + 검은 숫자」라, 짙게 하면 숫자가 묻힙니다. */
+  background:var(--adp-num-bg,#453764);color:#fff;
   font-family:var(--display);font-size:12.5px;font-weight:800;margin:0 0 10px}
 .adp-head h2{font-size:26px;font-weight:800;letter-spacing:-.025em;margin:0 0 10px;color:var(--text)}
 .adp-head p{font-size:14.5px;line-height:1.85;color:var(--text-2);margin:0;max-width:640px}
@@ -257,7 +262,8 @@
      따로 적어 둡니다 — 한 색으로는 두 화면을 다 맞출 수 없습니다. */
 .adp-wrap, .adp-sec{ --adp-edge:#cfc6b4; --adp-tbl-edge:#7c63b0 }
 html[data-theme="dark"] .adp-wrap,
-html[data-theme="dark"] .adp-sec{ --adp-edge:#565656; --adp-tbl-edge:#9b7fd0 }
+html[data-theme="dark"] .adp-sec{ --adp-edge:#565656; --adp-tbl-edge:#9b7fd0;
+                                 --adp-num-bg:var(--violet-2) }
 
 html[data-theme="dark"] .adp-num,
 html[data-theme="dark"] .adp-tag i,
