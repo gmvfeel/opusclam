@@ -92,7 +92,10 @@ async function person(id) {
   if (p.hidden === true) return { skip: true };
 
   const nm = p.name_ko || p.name_en || '';
-  const en = (p.name_en && p.name_en !== p.name_ko) ? p.name_en : '';
+  /* ★★ 2026-08-19 고침 — <b>이미 큰 제목에 쓴 것과 견줍니다.</b>
+       예전에는 name_ko 와 견주었습니다. 그래서 한글 이름이 비어 있으면
+       큰 제목에 영문이 올라가고 그 아래 <b>같은 영문이 또</b> 찍혔습니다. */
+  const en = (p.name_en && p.name_en !== nm) ? p.name_en : '';
   const lf = life(p);
 
   /* 작품·수상은 곁들이입니다. 없어도 됩니다. */
@@ -174,7 +177,10 @@ async function work(id) {
   if (w.hidden === true) return { skip: true };
 
   const ti = w.title_ko || w.title || '';
-  const en = (w.title && w.title !== w.title_ko) ? w.title : '';
+  /* ★ 인물과 같은 고침 — 한글 제목이 없으면 원제가 큰 제목으로 올라가므로,
+       그때는 「원제」 줄을 따로 두지 않습니다. */
+  const en = (w.title && w.title !== ti) ? w.title : '';
+  const sub = (w.subtitle && w.subtitle !== ti && w.subtitle !== en) ? w.subtitle : '';
   const cn = w.composer_ko || w.composer_en || '';
 
   /* 작곡 연도 — 「1717~1723」 · 「1717」 · 글로 적힌 것 차례로 */
@@ -200,7 +206,7 @@ async function work(id) {
     body:
       `<h1>${esc(ti)}</h1>`
       + (en ? `<p class="en">${esc(en)}</p>` : '')
-      + (w.subtitle ? `<p class="en">${esc(w.subtitle)}</p>` : '')
+      + (sub ? `<p class="en">${esc(sub)}</p>` : '')
       /* ★ 작곡가 이름에 <b>인물 화면 링크</b>를 답니다 — 작품과 인물이
            서로 이어져 구글이 오갈 수 있습니다. */
       + (cn
