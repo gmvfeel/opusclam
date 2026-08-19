@@ -253,8 +253,15 @@ function toRow(b, kind, fallbackName) {
        저장이 통째로 거절당합니다(42703). 그래서 여기서 먼저 돌려보냅니다.
      ★ orgs 의 갈래 칸 이름은 `type` 입니다 (`org_type` 아닙니다). */
   if (kind === 'org') {
-    const isUnion = /union|association|society|협회|연맹|союз|guild/i.test(hay);
-    return Object.assign(base, { type: isUnion ? '협회' : '음악단체' });
+    /* ★ 2026-08-19 · 시험 실행에서 <b>「제2빈악파」</b>가 나왔습니다.
+       유파(schule)·작곡가 모임은 단체가 아닙니다. 아래 학술원 갈래에도
+       같은 가름이 있어 그 규칙을 그대로 씁니다 — 두 곳이 어긋나면
+       같은 것이 화면마다 다르게 불립니다. */
+    const isCircle = /악파|\bles six\b|6인조|group of|circle of|school of composers/i.test(hay);
+    const isUnion  = /union|association|society|협회|연맹|союз|guild|아카데미|academy/i.test(hay);
+    return Object.assign(base, {
+      type: isCircle ? '유파 · 모임' : (isUnion ? '협회' : '음악단체'),
+    });
   }
 
   // 학술원 · 기관·재단DB 로 갑니다.
