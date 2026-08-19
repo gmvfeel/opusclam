@@ -52,6 +52,10 @@ import { next, rewrite } from '@vercel/functions';
      여기서도 미들웨어가 먼저 가로채 home.html 을 내어 줍니다. */
 export const config = {
   matcher: [
+    '/en',
+    '/ja',
+    '/en/:path*',
+    '/ja/:path*',
     '/',
     '/index',
     '/index.html',
@@ -83,8 +87,57 @@ function isBot(ua) {
   return false;
 }
 
+/* ── 다국어 주소 ──────────────────────────────────────────
+   ★★ 2026-08-19 · <b>되살린 것입니다.</b>
+
+     `/en/db/person.html` 같은 주소는 <b>en/ 폴더가 있어서가 아니라</b>
+     vercel.json 의 `/en/:path*` → `/:path*` 규칙이 한국어 파일을
+     그대로 내어 주고, assets/i18n.js 가 주소 앞의 `/en/` 을 보고
+     글자만 바꾸는 얼개였습니다.
+
+     그 여섯 줄이 <b>8/18 vercel.json 을 다시 쓸 때 딸려 나갔습니다</b>
+     (23762ab 에는 있고 93b2df3 부터 없음). 그래서 다국어를 고르면
+     모든 화면이 404 였습니다.
+
+   ★ 왜 vercel.json 으로 되돌리지 않았나 — <b>그때는 cleanUrls 가
+     꺼져 있었습니다.</b> 지금은 켜져 있어 `.html` 이 붙은 목적지는
+     없는 이름입니다(대문이 `/home.html` 로 404 났던 그 까닭).
+     옛 규칙을 그대로 되돌리면 또 404 가 납니다.
+     미들웨어는 cleanUrls 보다 먼저 돌므로 이 문제를 지납니다.
+
+   ★ 글자 자리만 봅니다 — 정규식을 쓰지 않습니다. */
+const LANGS = ['/en', '/ja'];
+
+function stripLang(p) {
+  for (let i = 0; i < LANGS.length; i++) {
+    const pre = LANGS[i];
+    if (p === pre || p === pre + '/') return '/';
+    if (p.indexOf(pre + '/') === 0) return p.slice(pre.length);
+  }
+  return null;
+}
+
+/* cleanUrls 가 켜져 있으므로 `.html` 을 뗀 이름이 진짜 주소입니다 */
+function dropHtml(p) {
+  return (p.length > 5 && p.slice(-5) === '.html') ? p.slice(0, -5) : p;
+}
+
 export default function middleware(request) {
   const url = new URL(request.url);
+
+  /* ── 다국어가 먼저입니다 ─────────────────────────────────
+     사람이든 봇이든 같습니다. 주소는 /en/... 그대로 남고(rewrite),
+     i18n.js 가 그것을 보고 영어·일본어로 바꿉니다. */
+  const bare = stripLang(url.pathname);
+  if (bare !== null) {
+    /* ★ `/en/` · `/ja/` 는 <b>포털 메인으로 곧바로</b> 보냅니다.
+         `/` 로 보내면 대문의 「얇은 문」(index.html)이 자바스크립트로
+         `/home.html` 로 넘겨 버려 <b>주소에서 /en/ 이 떨어집니다.</b>
+         영어를 골랐는데 한국어로 되돌아가는 꼴이 됩니다. */
+    const to = (bare === '/') ? '/home' : dropHtml(bare);
+    return rewrite(new URL(to + url.search, request.url));
+  }
+
   const ua = (request.headers.get('user-agent') || '').toLowerCase();
 
   /* 사람 → 손대지 않습니다 */
