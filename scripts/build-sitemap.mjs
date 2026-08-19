@@ -357,7 +357,16 @@ async function getRows(d) {
   for (const t of tries) {
     try {
       const rows = await getAll(`${d.table}?select=${t.sel}${t.extra}&order=id`, d.label);
-      return { rows, lastmod: t.mod, named: t.names };
+      /* ★★★ 2026-08-19 · <b>어느 칸을 읽었는지 반드시 찍습니다.</b>
+         ─────────────────────────────────────────────────────────
+         이름 거르기를 넣고 돌렸더니 <b>결과가 이전과 한 글자도 같았습니다.</b>
+         그럴 수 있는 경우가 둘인데 <b>로그로 구별이 안 됐습니다</b> —
+           ⓐ 새 파일이 아직 안 올라가서 옛 코드가 돌았다
+           ⓑ 새 코드가 돌았고 이름 빈 줄이 <b>정말 하나도 없다</b>
+         「문제가 있을 때만 찍는」 로그는 <b>아무 일도 없었는지, 아니면
+         코드가 안 돌았는지</b>를 말해 주지 못합니다.
+         ▶ 그래서 <b>언제나</b> 무엇을 읽었는지 한 줄 찍습니다. */
+      return { rows, lastmod: t.mod, named: t.names, sel: t.sel + t.extra };
     } catch (e) { last = e; }
   }
   throw last;
@@ -425,6 +434,8 @@ if (!SB_URL || !SB_KEY) {
       items, d.freq, d.pri, `OPUSCLAM.COM ${d.label} 상세`), `sitemap-${d.key}.xml`);
     parts.push(`sitemap-${d.key}.xml`);
     total += items.length;
+    console.log(`    ↳ 읽은 칸 : ${got.sel}`
+      + (got.named ? ` · 이름 거르기 켜짐(${(d.names || []).join('/')})` : ' · 이름 거르기 꺼짐'));
     console.log(`  · ${d.label} ${items.length}건`
       + (withMod ? ` (바뀐 날 ${withMod}건)` : ' (바뀐 날 없음 — updated_at 칸이 없습니다)')
       + (dropped ? ` · ★ 이름이 없어 뺀 것 ${dropped}건` : '')
