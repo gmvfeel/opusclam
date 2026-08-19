@@ -581,6 +581,7 @@ export default async function handler(req, res) {
            목록으로 보내면 같은 내용이 여러 주소로 잡힙니다. */
       if (!id || !/^\d+$/.test(id)) {
         res.setHeader('X-Robots-Tag', 'noindex');
+        res.setHeader('Cache-Control', 'private, no-store');
         res.status(404).send('not found');
         return;
       }
@@ -594,6 +595,11 @@ export default async function handler(req, res) {
        ★ 200 으로 빈 화면을 주면 구글이 <b>빈 페이지를 색인</b>합니다. */
     if (!d || d.skip) {
       res.setHeader('X-Robots-Tag', 'noindex');
+      /* ★★ 2026-08-19 · <b>404·500 도 담아 두지 않습니다.</b>
+           갈래를 새로 열기 전에 그 주소를 한 번 열어 보면 404 가 나는데,
+           그것이 담기면 <b>열고 나서도 계속 404</b> 입니다. 용어사전에서
+           겪었습니다(코드는 맞는데 not found 가 이어졌습니다). */
+      res.setHeader('Cache-Control', 'private, no-store');
       res.status(404).send('not found');
       return;
     }
@@ -612,6 +618,7 @@ export default async function handler(req, res) {
     /* ★ 실패하면 <b>500 을 줍니다.</b> 빈 화면을 200 으로 주면
          구글이 그것을 색인해 버립니다. 500 이면 나중에 다시 옵니다. */
     res.setHeader('X-Robots-Tag', 'noindex');
+    res.setHeader('Cache-Control', 'private, no-store');
     /* ★ 주소 끝에 &raw=1 을 붙였을 때만 <b>까닭을 보여 줍니다.</b>
          봇에게는 여전히 `error` 넉 자뿐입니다. */
     const raw = String(req.url || '').indexOf('raw=1') !== -1;

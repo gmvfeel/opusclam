@@ -285,7 +285,12 @@
     /* ★ 2026-08-13 · 리쿠르트 하위 메뉴를 오른쪽으로 (파트너 요청)
          기본값 81px 왼쪽이라 대메뉴보다 훨씬 왼쪽에 있었습니다. */
     --dd-nudge:calc(-191px + min(0px, (100vw - 1064px) / 2))}
-  .dropdown a{position:relative;font-size:13px;color:#4a4c5c;font-weight:500;padding:5px 18px;white-space:nowrap;letter-spacing:-.01em;transition:color .15s}
+  /* ★★ 2026-08-19 · 좌우 여백 18px → 15px (파트너 지시)
+       하위 목록이 <b>두 줄로 접혔습니다.</b> 실측(1440px · 들어갈 자리 1140):
+         DATABASE(11개) 1171 · OC커뮤니티(12개) 1149
+       15px 로 줄이면 1105 · 1077 — 35~63px 남습니다.
+     ★ 영어·일본어는 글자가 더 길어 assets/i18n.js 가 12px 로 한 번 더 줄입니다. */
+  .dropdown a{position:relative;font-size:13px;color:#4a4c5c;font-weight:500;padding:5px 15px;white-space:nowrap;letter-spacing:-.01em;transition:color .15s}
   .dropdown a:not(:last-child)::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:11px;background:var(--line-2)}
   .dropdown a:hover{color:var(--violet-2,#5b4b9e)}
   .mast-tools{display:flex;align-items:center;gap:12px;flex:0 0 auto}

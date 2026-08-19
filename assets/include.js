@@ -168,6 +168,30 @@
     return f;
   }
 
+  /* ★★ 2026-08-19 · <b>「전체」 알약이 안 켜지던 것</b> (파트너 지적)
+     ─────────────────────────────────────────────────────────────
+     cleanUrls 가 `/db/index.html` 을 <b>`/db`</b> 로 만듭니다. 그런데
+     아래 fileOf 는 마지막 조각에서 이름을 뽑으므로 <b>`db`</b> 가 나오고,
+     메뉴에는 `index` 라는 이름뿐이라 <b>아무것도 맞지 않았습니다.</b>
+     그래서 DATABASE 대메뉴도, 하위 메뉴의 「전체」도 함께 꺼졌습니다.
+
+     ★ 어떻게 가리나 — <b>마지막 조각에 점이 있느냐</b>로 봅니다.
+         /db/person.html · /db/person → 이름으로 이미 맞습니다
+         /db                          → 점이 없음 → <b>폴더일 수 있음</b>
+       폴더로 본 주소(`/db/`)를 <b>마지막 걸음</b>에서만 씁니다. 메뉴에
+       그 폴더의 index 링크가 있을 때만 켜지므로, 없으면 아무 일도
+       일어나지 않습니다 — 엉뚱한 알약이 켜질 일이 없습니다.
+
+     ★ 정규식을 쓰지 않습니다 — lastIndexOf 로 자리만 봅니다
+       (2026-08-18 에 정규식으로 고치려다 화면을 두 번 깨뜨렸습니다). */
+  function asDirOf(path) {
+    var q = bare(String(path || '')).split('#')[0].split('?')[0];
+    if (!q || q === '/') return '';
+    var slash = q.lastIndexOf('/'), dot = q.lastIndexOf('.');
+    if (dot > slash) return '';                     /* 마지막 조각에 점 → 파일 */
+    return q.charAt(q.length - 1) === '/' ? q : q + '/';
+  }
+
   /* 폴더 — /recruit/job.html → /recruit/ */
   function dirOf(path) {
     var q = bare(String(path || '')).split('#')[0].split('?')[0];
@@ -191,14 +215,17 @@
   function markActiveMenu() {
     try {
       var p = location.pathname;
-      var raw = fileOf(p), base = baseOf(p), dir = dirOf(p);
+      var raw = fileOf(p), base = baseOf(p), dir = dirOf(p), asDir = asDirOf(p);
 
       /* ① 위쪽 큰 메뉴 — 폴더로 */
       var tops = document.querySelectorAll('.site-header nav.main > .nav-item > a[href]');
       [].forEach.call(tops, function (a) {
         var h = a.getAttribute('href') || '';
         if (h.charAt(0) !== '/') return;              /* '#' 이나 외부 주소는 건너뜁니다 */
-        if (dir !== '/' && dirOf(h) === dir) a.classList.add('active');
+        var d = dirOf(h);
+        if (dir !== '/' && d === dir) { a.classList.add('active'); return; }
+        /* ★ /db 처럼 폴더 꼴로 정리된 주소도 맞춰 줍니다 */
+        if (asDir && d === asDir) a.classList.add('active');
       });
 
       /* ② 드롭다운·전체메뉴 — 파일 이름으로 */
@@ -212,6 +239,13 @@
         hit = links.filter(function (a) {
           var h = a.getAttribute('href') || '';
           return h.charAt(0) === '/' && fileOf(h) === base;
+        });
+      }
+      /* ★ 그래도 없으면 — 폴더 꼴 주소(`/db`)의 index 링크를 켭니다 */
+      if (!hit.length && asDir) {
+        hit = links.filter(function (a) {
+          var h = a.getAttribute('href') || '';
+          return h.charAt(0) === '/' && dirOf(h) === asDir && fileOf(h) === 'index';
         });
       }
       hit.forEach(function (a) { a.classList.add('active'); });
@@ -253,6 +287,17 @@
     if (!hit.length) {
       var base = baseOf(location.pathname);
       hit = links.filter(function (a) { return rawOf(a.getAttribute('href')) === base; });
+    }
+    /* ★ 2026-08-19 · 그래도 없으면 폴더 꼴 주소(`/db`)의 index 를 켭니다
+         — 이것이 「전체」 알약입니다. */
+    if (!hit.length) {
+      var asDir = asDirOf(location.pathname);
+      if (asDir) {
+        hit = links.filter(function (a) {
+          var h = a.getAttribute('href') || '';
+          return dirOf(h) === asDir && rawOf(h) === 'index';
+        });
+      }
     }
     links.forEach(function (a) {
       a.classList.toggle('active', hit.indexOf(a) >= 0);
@@ -577,13 +622,16 @@
   function markAuthMenu() {
     try {
       var p = location.pathname;
-      var raw = fileOf(p), base = baseOf(p), dir = dirOf(p);
+      var raw = fileOf(p), base = baseOf(p), dir = dirOf(p), asDir = asDirOf(p);
 
       /* 위 큰 메뉴 — 폴더로 */
       [].forEach.call(document.querySelectorAll('.gnb nav.nav > .ga-item > a[href]'), function (a) {
         var h = a.getAttribute('href') || '';
         if (h.charAt(0) !== '/') return;
-        if (dir !== '/' && dirOf(h) === dir) a.classList.add('active');
+        var d = dirOf(h);
+        if (dir !== '/' && d === dir) { a.classList.add('active'); return; }
+        /* ★ /db 처럼 폴더 꼴로 정리된 주소도 맞춰 줍니다 */
+        if (asDir && d === asDir) a.classList.add('active');
       });
 
       /* 하위 메뉴·전체메뉴 — 파일 이름으로 */
@@ -597,6 +645,13 @@
         hit = links.filter(function (a) {
           var h = a.getAttribute('href') || '';
           return h.charAt(0) === '/' && fileOf(h) === base;
+        });
+      }
+      /* ★ 그래도 없으면 — 폴더 꼴 주소(`/db`)의 index 링크를 켭니다 */
+      if (!hit.length && asDir) {
+        hit = links.filter(function (a) {
+          var h = a.getAttribute('href') || '';
+          return h.charAt(0) === '/' && dirOf(h) === asDir && fileOf(h) === 'index';
         });
       }
       hit.forEach(function (a) { a.classList.add('active'); });
