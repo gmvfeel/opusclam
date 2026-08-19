@@ -103,11 +103,26 @@ function plain(s) {
      하이델베르크   → 왼쪽이 「델」이라 걸리지 않습니다
      프라이부르크   → 오른쪽이 「부」이고 조사가 아니라 걸리지 않습니다
      베토벤의       → 오른쪽이 조사 「의」라 걸립니다             */
+/* ★ 영문에도 같은 원리를 씁니다 — 다만 조사가 없으므로 더 단순합니다.
+     John Cage 를 찾을 때 Johnson 안에서 걸리면 안 됩니다. */
+const isWordEn = (ch) =>
+  (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
+
 function edgeOk(text, at, len) {
-  if (at > 0 && isHangul(text[at - 1])) return false;
   const end = at + len;
+  const first = text[at], last = text[end - 1];
+
+  /* ── 왼쪽 ── 같은 갈래의 글자가 이어져 있으면 낱말 가운데입니다 */
+  if (at > 0) {
+    const p = text[at - 1];
+    if (isHangul(first) && isHangul(p)) return false;
+    if (isWordEn(first) && isWordEn(p)) return false;
+  }
+
+  /* ── 오른쪽 ── */
   if (end >= text.length) return true;
   const c1 = text[end];
+  if (isWordEn(last)) return !isWordEn(c1);      /* 영문은 조사가 없습니다 */
   if (!isHangul(c1)) return true;
   if (JOSA2.has(text.slice(end, end + 2))) return true;
   if (JOSA1.has(c1)) return true;
@@ -150,12 +165,19 @@ async function sbUpsert(rows) {
       「… 루트비히」로 끝나는 다른 사람이 있어서 그 사람이 78번
       언급된 것처럼 세어졌습니다. (2026-08-19 실제 자료)              */
 async function buildDict() {
-  const people = await sbGetAll('persons', 'id,name_ko', '&name_ko=not.is.null');
-  console.log('  · 인물 ' + people.length + '명을 읽었습니다');
+  /* ★★ 2026-08-19 · 한글 이름만 읽었더니 <b>10,269명</b>뿐이었습니다.
+     인물은 16,075명입니다 — <b>5,800명 넘게 한글 이름이 없습니다.</b>
+     그 사람들은 영문 이름밖에 없으므로 영영 못 찾게 됩니다.
+     ▶ 영문은 <b>풀네임만</b> 씁니다. 성만 쓰면 Sin←Sin<b>fonia</b> 처럼
+       낱말 가운데 걸립니다(2026-08-19 실제 자료에서 확인). */
+  const people = await sbGetAll('persons', 'id,name_ko,name_en', '');
+  const withKo = people.filter(p => p.name_ko && String(p.name_ko).trim()).length;
+  console.log('  · 인물 ' + people.length + '명 (한글 이름 있는 사람 ' + withKo + '명)');
 
   // 남의 이름 앞쪽에도 쓰이는 낱말 모으기
   const nonLast = new Set();
   for (const p of people) {
+    if (!p.name_ko) continue;
     const w = String(p.name_ko).trim().split(/\s+/);
     for (let i = 0; i < w.length - 1; i++) nonLast.add(w[i]);
   }
@@ -167,20 +189,27 @@ async function buildDict() {
   }
 
   for (const p of people) {
-    const full = String(p.name_ko).trim();
-    if (!full) continue;
-    const w = full.split(/\s+/);
+    const full = String(p.name_ko || '').trim();
+    if (full) {
+      const w = full.split(/\s+/);
 
-    // 풀네임 — 두 낱말 이상일 때만 (한 낱말이면 성과 같습니다)
-    if (w.length > 1 && full.length >= 4) put(full, p.id, 'fullname');
+      // 풀네임 — 두 낱말 이상일 때만 (한 낱말이면 성과 같습니다)
+      if (w.length > 1 && full.length >= 4) put(full, p.id, 'fullname');
 
-    // 성 — 마지막 낱말
-    const s = w[w.length - 1];
-    if (s.length < 3) continue;                       // 두 글자 이하는 흔한 말과 부딪힙니다
-    if (!/^[가-힣]+$/.test(s)) continue;               // 한글만 (영문은 낱말 가운데 걸립니다)
-    if (BAN.has(s)) continue;
-    if (nonLast.has(s)) continue;                     // 남의 이름 앞낱말
-    put(s, p.id, 'surname');
+      // 성 — 마지막 낱말
+      const s = w[w.length - 1];
+      if (s.length >= 3 && /^[가-힣]+$/.test(s) && !BAN.has(s) && !nonLast.has(s)) {
+        put(s, p.id, 'surname');
+      }
+    }
+
+    /* ── 영문 풀네임 ──
+       ★ 두 낱말 이상 · 여덟 글자 이상만. 짧으면 흔한 말과 부딪힙니다.
+       ★ 성만은 쓰지 않습니다. */
+    const en = String(p.name_en || '').trim();
+    if (en.length >= 8 && en.indexOf(' ') > 0 && /^[A-Za-z][A-Za-z .'\-]+$/.test(en)) {
+      put(en, p.id, 'fullname_en');
+    }
   }
 
   /* ★ 긴 것부터 찾습니다.
@@ -192,8 +221,9 @@ async function buildDict() {
     .sort((a, b) => b.surface.length - a.surface.length);
 
   console.log('  · 찾을 말 ' + list.length + '개'
-    + ' (풀네임 ' + list.filter(x => x.how === 'fullname').length
-    + ' · 성 ' + list.filter(x => x.how === 'surname').length + ')');
+    + ' (한글 풀네임 ' + list.filter(x => x.how === 'fullname').length
+    + ' · 성 ' + list.filter(x => x.how === 'surname').length
+    + ' · 영문 풀네임 ' + list.filter(x => x.how === 'fullname_en').length + ')');
   return list;
 }
 
@@ -205,8 +235,14 @@ function scanOne(text, dict) {
   const taken = new Uint8Array(text.length);
   const found = new Map();   // key -> {surface,how,ids,hits}
 
+  /* ★★ 빠르게 만드는 한 줄 — <b>첫 글자가 글에 없으면 아예 찾지 않습니다.</b>
+     찾을 말이 12,000개, 글이 4,664건입니다. 그냥 하면 5,600만 번 훑습니다.
+     글에 쓰인 글자를 한 번 모아 두면 대부분이 그 자리에서 걸러집니다. */
+  const chars = new Set(text);
+
   for (const d of dict) {
     const s = d.surface;
+    if (!chars.has(s[0])) continue;
     let at = text.indexOf(s);
     while (at >= 0) {
       let clash = false;
@@ -228,7 +264,8 @@ function scanOne(text, dict) {
    성 · 한 사람  75 — 그 성을 쓰는 사람이 하나뿐
    성 · 여럿     45 — 누구인지 모릅니다. 화면에서 가릴 수 있게 낮게 둡니다 */
 function scoreOf(m) {
-  if (m.how === 'fullname') return 90;
+  if (m.how === 'fullname')    return 90;
+  if (m.how === 'fullname_en') return 85;   /* 영문 풀네임도 거의 틀리지 않습니다 */
   return m.ids.length === 1 ? 75 : 45;
 }
 
