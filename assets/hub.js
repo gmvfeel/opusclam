@@ -139,8 +139,66 @@ window.OCHub = (function () {
       desc: src.desc ? txt(r[src.desc], 220) : '',
       meta: join((src.meta || []).map(function (c) { return r[c]; })),
       img: src.img ? thumb(r[src.img], 128) : '',
+      /* ★ 2026-08-19 · 줄인 그림이 404 일 때 되돌아갈 <b>원본</b>을 함께 담습니다 */
+      imgFull: src.img ? (r[src.img] || '') : '',
       date: ymd(r[dateCol])
     };
+  }
+
+  /* ── 그림이 안 열릴 때 ──────────────────────────────────────
+     ★★ 2026-08-19 · 카드에 <b>깨진 그림 아이콘</b>이 그대로 보였습니다
+        (파트너가 DATABASE 메인에서 알려 주심).
+
+     ★ 왜 생기나 — 두 갈래입니다.
+       ① <b>썸네일 주소는 이 파일이 손으로 지어냅니다</b>(위 thumb 함수).
+          .../thumb/a/ab/File.jpg/128px-File.jpg 꼴인데, 위키미디어는
+          <b>원본이 작거나 SVG 면 그 주소를 만들어 주지 않습니다.</b>
+          그러면 404 입니다. ▶ 이때는 <b>원본으로 한 번 더</b> 부르면 삽니다.
+       ② 주소 자체가 죽은 것. ▶ 이때는 자리표로 바꿉니다.
+
+     ★ 같은 대비가 db/index.html 의 pic() 에는 이미 있었는데,
+       이 파일에는 없었습니다. 그래서 이 파일이 그리는 카드에서만
+       깨진 아이콘이 보였습니다.
+
+     ★ 정규식을 쓰지 않고 글자 자리만 봅니다. */
+  function imgFail(im) {
+    if (!im) return;
+    /* ① 줄인 그림이 없으면 원본으로 한 번 더 */
+    var full = im.getAttribute('data-full');
+    if (full && im.getAttribute('src') !== full) {
+      im.removeAttribute('data-full');
+      im.setAttribute('src', full);
+      return;
+    }
+    /* ② 원본도 안 되면 자리표 — 두 번 걸리지 않게 손잡이를 뗍니다 */
+    im.removeAttribute('onerror');
+    im.onerror = null;
+    var box = im.parentNode;
+    if (!box) { im.style.display = 'none'; return; }
+    var cls = ' ' + (box.className || '') + ' ';
+    var ini = im.getAttribute('data-ini') || '?';
+    if (cls.indexOf(' hub-th ') >= 0) {          /* 줄 목록 — 첫 글자 */
+      box.className = 'hub-th hub-th-ph';
+      box.textContent = ini;
+    } else if (cls.indexOf(' bd-cardimg ') >= 0) { /* 게시판 카드 — 첫 글자 */
+      box.className = 'bd-cardimg bd-noimg';
+      box.innerHTML = '<i>' + esc(ini) + '</i>';
+    } else if (cls.indexOf(' bd-rowimg ') >= 0 || cls.indexOf(' bd-featimg ') >= 0) {
+      /* 이 둘은 그림이 없으면 아예 자리를 두지 않는 꼴입니다 */
+      if (box.parentNode) box.parentNode.removeChild(box);
+    } else {                                      /* 카드 — 로고 자리표 */
+      box.className = 'hub-cardimg hub-cardimg-ph';
+      im.setAttribute('src', '/assets/logo.png');
+      im.setAttribute('alt', 'OPUSCLAM');
+    }
+  }
+
+  /* <img> 에 붙일 것들 — 줄인 그림 · 원본 · 첫 글자 · 실패 손잡이 */
+  function imgAtt(small, full, ini) {
+    return ' src="' + esc(small) + '"'
+      + (full && full !== small ? ' data-full="' + esc(full) + '"' : '')
+      + ' data-ini="' + esc((ini || '?').trim().charAt(0)) + '"'
+      + ' alt="" loading="lazy" onerror="OCHub.imgFail(this)"';
   }
 
   /* ── 화면 조각 ── */
@@ -148,7 +206,7 @@ window.OCHub = (function () {
     return '<a class="hub-row" href="' + esc(it.href) + '">'
       + '<span class="hub-badge hub-' + esc(it.key) + '">' + esc(it.label) + '</span>'
       + (it.img
-          ? '<span class="hub-th"><img src="' + esc(it.img) + '" alt="" loading="lazy"></span>'
+          ? '<span class="hub-th"><img' + imgAtt(it.img, it.imgFull, it.name) + '></span>'
           : '<span class="hub-th hub-th-ph">' + esc(it.name.trim().charAt(0)) + '</span>')
       + '<span class="hub-info">'
       +   '<span class="hub-name">' + esc(it.name)
@@ -162,7 +220,7 @@ window.OCHub = (function () {
   function cardHtml(it) {
     return '<a class="hub-card" href="' + esc(it.href) + '">'
       + (it.img
-          ? '<span class="hub-cardimg"><img src="' + esc(it.img) + '" alt="" loading="lazy"></span>'
+          ? '<span class="hub-cardimg"><img' + imgAtt(it.img, it.imgFull, it.name) + '></span>'
           /* 사진이 없을 때 — 어두운 바탕에 오퍼스클램 로고를 옅게 얹습니다.
              예전에는 「NO IMAGE」 라는 글자를 보여 주었습니다. */
           : '<span class="hub-cardimg hub-cardimg-ph">'
@@ -483,7 +541,7 @@ window.OCHub = (function () {
     var head = (cfg.koField && r[cfg.koField]) ? r[cfg.koField] : r.title;
     return '<a class="bd-card' + (isVideo ? ' is-video' : '') + '" href="' + esc(bHref(cfg, r)) + '">'
       + (img
-          ? '<span class="bd-cardimg"><img src="' + esc(thumb(img, 480)) + '" alt="" loading="lazy">'
+          ? '<span class="bd-cardimg"><img' + imgAtt(thumb(img, 480), img, head) + '>'
             + (dur ? '<i class="bd-dur">' + dur + '</i>' : '')
             + (isVideo ? '<i class="bd-playmark" aria-hidden="true">&#9654;</i>' : '')
             + '</span>'
@@ -501,7 +559,7 @@ window.OCHub = (function () {
   function bRow(cfg, r) {
     var img = r.thumb_url || '';
     return '<a class="bd-row" href="' + esc(bHref(cfg, r)) + '">'
-      + (img ? '<span class="bd-rowimg"><img src="' + esc(thumb(img, 240)) + '" alt="" loading="lazy"></span>' : '')
+      + (img ? '<span class="bd-rowimg"><img' + imgAtt(thumb(img, 240), img, r.title) + '></span>' : '')
       + '<span class="bd-rowbody">'
       +   '<span class="bd-title">' + esc(bTxt(r.title, 60)) + '</span>'
       +   '<span class="bd-desc">' + esc(bTxt(r.body, 130)) + '</span>'
@@ -513,7 +571,7 @@ window.OCHub = (function () {
   function bFeature(cfg, r) {
     var img = r.thumb_url || '';
     return '<a class="bd-feat" href="' + esc(bHref(cfg, r)) + '">'
-      + (img ? '<span class="bd-featimg"><img src="' + esc(thumb(img, 640)) + '" alt="" loading="lazy"></span>' : '')
+      + (img ? '<span class="bd-featimg"><img' + imgAtt(thumb(img, 640), img, r.title) + '></span>' : '')
       + '<span class="bd-featbody">'
       +   '<span class="bd-featcat">' + esc(cfg.badge || r.category || 'HOT TOPIC') + '</span>'
       +   '<span class="bd-feattitle">' + esc(bTxt(r.title, 70)) + '</span>'
@@ -1772,5 +1830,7 @@ window.OCHub = (function () {
            board: board, boardTabs: boardTabs, one: one,
            bindCarousel: bindCarousel, rotateBox: rotateBox, resize: resize,
            stats: stats, insight: insight, qnaTop: qnaTop,
+           /* ★ 2026-08-19 · <img onerror="OCHub.imgFail(this)"> 가 부릅니다 */
+           imgFail: imgFail,
            releaseCounter: releaseCounter };
 })();
