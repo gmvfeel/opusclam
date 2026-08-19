@@ -141,6 +141,8 @@ Allow: /db/school-view.html
 Allow: /db/academic-view.html
 Allow: /db/modern-view.html
 Allow: /db/foundation-view.html
+Allow: /db/terms-view.html
+Allow: /spot/spot-view.html
 # ★ 그 밖 상세 화면 — 내용을 자바스크립트로 불러오므로 봇에게는
 #   빈 껍데기입니다. 빈 페이지가 색인되는 것을 막습니다.
 Disallow: /*-view.html
@@ -190,6 +192,8 @@ Allow: /db/school-view.html
 Allow: /db/academic-view.html
 Allow: /db/modern-view.html
 Allow: /db/foundation-view.html
+Allow: /db/terms-view.html
+Allow: /spot/spot-view.html
 # ★ 그 밖 상세 화면 — 내용을 자바스크립트로 불러오므로 봇에게는
 #   빈 껍데기입니다. 빈 페이지가 색인되는 것을 막습니다.
 Disallow: /*-view.html

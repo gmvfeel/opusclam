@@ -345,6 +345,27 @@ const LISTS = {
     list: '/db/foundation.html', view: '/db/foundation-view.html', name: '기관·재단DB', unit: '곳',
     row: (r) => ({ text: r.name_ko || r.name_en || '', sub: [r.location, r.field] }),
   },
+  /* ★★ 2026-08-19 · 이름 칸이 <b>다른</b> 갈래 둘
+       용어사전은 `term_ko`, 정보SPOT 은 `title` 입니다. 그래서 상세를
+       그릴 때 쓸 이름 고르개(`nameOf`)를 따로 적어 둡니다. */
+  terms: {
+    table: 'oc_terms', select: 'id,term_ko,term_en,reading,work_form',
+    list: '/db/terms.html', view: '/db/terms-view.html', name: '음악용어사전', unit: '개',
+    nameOf: (r) => r.term_ko || r.term_en || '',
+    row: (r) => ({ text: r.term_ko || r.term_en || '',
+                   sub: [r.term_ko && r.term_en, r.work_form] }),
+  },
+  /* 정보SPOT — 표 하나(spot)를 여섯 갈래(section)가 나눠 씁니다.
+     ★ 목록은 <b>갈래를 가리지 않고 모두</b> 담습니다. 사람 화면은
+       갈래별로 나뉘어 있지만, 봇에게 필요한 것은 「모든 상세로 가는
+       길」이므로 한 줄기로 두는 편이 짧고 빠짐이 없습니다. */
+  spot: {
+    table: 'spot', select: 'id,section,category,title,venue_name,date_from',
+    list: '/spot/index.html', view: '/spot/spot-view.html', name: '정보SPOT', unit: '건',
+    nameOf: (r) => r.title || '',
+    row: (r) => ({ text: r.title || '',
+                   sub: [r.section, r.venue_name || String(r.date_from || '').slice(0, 10)] }),
+  },
 };
 
 /* 모든 갈래가 <b>서로를 가리킵니다</b> — 구글이 어느 하나로 들어와도
@@ -436,6 +457,10 @@ const FIELD_LABEL = {
   year: '연도', business: '사업', technique: '기법', works: '주요 작품',
   nationality: '국적', era_name: '시대', school: '출신학교',
   homepage: '누리집', website: '누리집',
+  /* ★ 2026-08-19 · 용어사전·정보SPOT 이 쓰는 칸 */
+  term_en: '영문', reading: '읽기', work_form: '형식',
+  section: '갈래', venue_name: '공연장',
+  date_from: '시작', date_to: '끝', city: '도시', country: '나라',
 };
 
 /* 아는 칸만, 값이 있는 것만, 너무 긴 것은 잘라서 */
@@ -457,10 +482,13 @@ async function entity(kind, id) {
   if (!r) return null;
   if (r.hidden === true) return { skip: true };
 
-  const nm = r.name_ko || r.name_en || '';
+  const nm = (c.nameOf ? c.nameOf(r) : (r.name_ko || r.name_en)) || '';
   if (!nm) return null;                       /* 이름이 없으면 색인할 값이 없습니다 */
-  const desc = r.description || r.description_en || r.note || '';
-  const ft = facts(r).filter(([k]) => !(k === '영문명' && r.name_en === nm));
+  /* 갈래마다 소개문 칸 이름이 다릅니다 — 용어사전은 summary·body,
+     정보SPOT 은 body 입니다. 있는 것을 차례로 씁니다. */
+  const desc = r.description || r.description_en || r.note
+            || r.summary || r.body || '';
+  const ft = facts(r).filter(([k, v]) => v !== nm);   /* 큰 제목과 같은 값은 두 번 안 적습니다 */
 
   return {
     title: `${nm} · ${c.name} · OPUSCLAM`,

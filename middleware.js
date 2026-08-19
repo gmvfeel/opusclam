@@ -63,20 +63,36 @@ export const config = {
          목록 여덟 · 상세 여덟 · `.html` 붙은 것과 안 붙은 것까지 하면
          서른두 줄이 됩니다. 한 줄로 두면 갈래를 넓힐 때 여기를
          고칠 일이 없습니다 — 아래 KINDS 에 한 낱말만 더하면 됩니다.
-       ★ /db/ 아래 다른 화면(timeline·terms·write…)도 여기 들어오지만
+       ★ 그 아래 다른 화면(timeline·write…)도 여기 들어오지만
          아래에서 <b>곧바로 next()</b> 로 흘려보냅니다. */
     '/db/:file',
+    '/spot/:file',
   ],
 };
 
-/* ── DATABASE 갈래 ────────────────────────────────────────
-   화면 이름이 곧 갈래 이름입니다 —
-       /db/venue.html       → 목록  venue-list
-       /db/venue-view.html  → 상세  venue
-   ★ 새 갈래를 열 때는 <b>이 줄에 한 낱말</b>만 더하면 됩니다
-     (api/seo.js 의 LISTS 에도 같은 이름으로 한 칸). */
-const KINDS = ['person', 'work', 'venue', 'org', 'school',
-               'academic', 'modern', 'foundation'];
+/* ── 갈래 표 ──────────────────────────────────────────────
+   ★★ 2026-08-19 · 처음에는 「화면 이름 = 갈래 이름」으로 짐작했는데,
+     <b>어긋나는 것이 둘</b> 있었습니다 —
+         /spot/index.html      목록인데 이름이 index
+         /spot/spot-view.html  상세인데 폴더가 /db/ 가 아님
+     그래서 <b>주소를 그대로 적습니다.</b> 짐작할 자리가 없어집니다.
+   ★ 새 갈래를 열 때는 여기 두 줄 + api/seo.js 의 LISTS 한 칸 +
+     robots.txt 의 Allow 한 줄, 이렇게 셋입니다.
+   ★ `.html` 은 떼고 견줍니다(cleanUrls 가 없앤 주소도 들어옵니다). */
+const LIST_OF = {
+  '/db/person': 'person', '/db/work': 'work',
+  '/db/venue': 'venue', '/db/org': 'org', '/db/school': 'school',
+  '/db/academic': 'academic', '/db/modern': 'modern',
+  '/db/foundation': 'foundation', '/db/terms': 'terms',
+  '/spot/index': 'spot',
+};
+const VIEW_OF = {
+  '/db/person-view': 'person', '/db/work-view': 'work',
+  '/db/venue-view': 'venue', '/db/org-view': 'org', '/db/school-view': 'school',
+  '/db/academic-view': 'academic', '/db/modern-view': 'modern',
+  '/db/foundation-view': 'foundation', '/db/terms-view': 'terms',
+  '/spot/spot-view': 'spot',
+};
 
 /* ── 봇 이름표 ────────────────────────────────────────────
    ★ 소문자로 바꿔 놓고 견주므로 대소문자를 걱정하지 않습니다.
@@ -178,21 +194,17 @@ export default function middleware(request) {
        봇에게만 목록을 서버에서 그려 주면 길이 생깁니다.
      ★ 쪽 번호 `p` 는 <b>사람 목록도 알아듣는 것</b>입니다
        (assets/db-list.js). 그래서 같은 주소를 그대로 씁니다.
-     ★ 화면 이름에서 갈래를 얻습니다 — 정규식 없이 글자 자리만. */
-  if (p.indexOf('/db/') !== 0) return next();
+     ★ 갈래는 위 표에서 <b>주소로</b> 찾습니다 — 정규식 없이 글자 자리만. */
+  const bareP = dropHtml(p);
+  const listKind = LIST_OF[bareP];
+  const viewKind = VIEW_OF[bareP];
+  if (!listKind && !viewKind) return next();           /* 아직 안 연 화면 */
 
-  let f = p.slice(4);                                  /* '/db/' 를 뗍니다 */
-  if (f.length > 5 && f.slice(-5) === '.html') f = f.slice(0, -5);
-  if (f.indexOf('/') !== -1) return next();            /* 더 깊은 자리는 아닙니다 */
-
-  const isView = f.length > 5 && f.slice(-5) === '-view';
-  const kind = isView ? f.slice(0, -5) : f;
-  if (KINDS.indexOf(kind) === -1) return next();       /* 아직 안 연 화면 */
-
+  const kind = listKind || viewKind;
   const to = new URL('/api/seo', request.url);
 
   /* 목록 — 쪽 번호는 있으면 그대로 넘깁니다 */
-  if (!isView) {
+  if (listKind) {
     to.searchParams.set('kind', kind + '-list');
     const pg = url.searchParams.get('p') || '';
     if (pg !== '' && /^[0-9]+$/.test(pg)) to.searchParams.set('p', pg);
