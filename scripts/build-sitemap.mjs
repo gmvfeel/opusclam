@@ -267,13 +267,78 @@ async function getAll(path, label) {
   return out;
 }
 
+/* ★★★ 2026-08-19 (파트너와 정함) · <b>상세 화면 열 갈래를 모두 알립니다</b>
+   ══════════════════════════════════════════════════════════════
+   여태 사이트맵에는 <b>인물·작품 둘</b>만 있었습니다. 그런데 봇에게 내용을
+   그려 주는 `api/seo.js` 는 <b>열 갈래</b>를 다 그립니다 —
+   공연장 · 음악단체 · 음악학교 · 학술 · 현대음악 · 기관재단 · 용어사전 ·
+   그리고 <b>정보SPOT 4,629건.</b>
+
+   ▶ 즉 <b>이미 만들어 둔 것을 구글에 안 알리고 있었습니다.</b>
+     정보SPOT 은 오늘 6,002줄의 「이 글에 나온 것」이 붙은 곳입니다.
+     내용이 가장 두꺼운데 사이트맵에 한 줄도 없었습니다.
+
+   ★ 갈래 이름·주소는 `api/seo.js` 의 LISTS 와 <b>같아야 합니다.</b>
+     여기 없는 갈래를 넣으면 구글이 404 를 받아 갑니다(사이트맵 전체를
+     덜 믿습니다 — 8월에 /en/ 주소 76개로 겪었습니다).
+
+   ★★ <b>lastmod 를 붙입니다.</b> 오늘 작품 928건의 한글 제목을 고쳤는데,
+     lastmod 가 없으면 구글은 <b>바뀐 줄을 모릅니다.</b> 다시 와서 볼 이유가
+     없습니다. updated_at 이 없는 표는 그냥 생략합니다(거짓 날짜보다 낫습니다). */
+const DETAIL = [
+  { key:'person',     table:'persons',          view:'/db/person-view.html',     freq:'monthly', pri:'0.7', label:'인물' },
+  { key:'work',       table:'person_works',     view:'/db/work-view.html',       freq:'monthly', pri:'0.6', label:'작품' },
+  { key:'spot',       table:'spot',             view:'/spot/spot-view.html',     freq:'weekly',  pri:'0.8', label:'정보SPOT' },
+  { key:'venue',      table:'venues',           view:'/db/venue-view.html',      freq:'monthly', pri:'0.7', label:'공연장' },
+  { key:'school',     table:'schools',          view:'/db/school-view.html',     freq:'monthly', pri:'0.7', label:'음악학교' },
+  { key:'org',        table:'orgs',             view:'/db/org-view.html',        freq:'monthly', pri:'0.7', label:'음악단체' },
+  { key:'foundation', table:'foundations',      view:'/db/foundation-view.html', freq:'monthly', pri:'0.6', label:'기관·재단' },
+  { key:'modern',     table:'modern_composers', view:'/db/modern-view.html',     freq:'monthly', pri:'0.6', label:'현대음악' },
+  { key:'academic',   table:'academic',         view:'/db/academic-view.html',   freq:'monthly', pri:'0.6', label:'학술' },
+  { key:'terms',      table:'oc_terms',         view:'/db/terms-view.html',      freq:'monthly', pri:'0.6', label:'음악용어' },
+];
+
+/* ★★ 표마다 <b>있는 칸이 다릅니다.</b> `updated_at` 도 `hidden` 도 없는 표가
+     있습니다. 없는 칸을 적으면 PostgREST 가 <b>400(42703)</b> 을 주고
+     사이트맵 만들기가 통째로 멈춥니다.
+   ▶ 그래서 <b>넉넉한 쪽부터 시도하고, 안 되면 한 단씩 뺍니다.</b>
+     (훑개에서 쓰던 방법과 같습니다 — 짐작하지 않고 물어봅니다.) */
+async function getRows(d) {
+  const tries = [
+    { sel: 'id,updated_at', extra: '&hidden=not.is.true', has: true },
+    { sel: 'id,updated_at', extra: '',                    has: true },
+    { sel: 'id',            extra: '&hidden=not.is.true', has: false },
+    { sel: 'id',            extra: '',                    has: false },
+  ];
+  let last = null;
+  for (const t of tries) {
+    try {
+      const rows = await getAll(
+        `${d.table}?select=${t.sel}${t.extra}&order=id`, d.label);
+      return { rows, lastmod: t.has, how: t.sel + t.extra };
+    } catch (e) { last = e; }
+  }
+  throw last;
+}
+
+/* 날짜만 남깁니다 — 2026-08-19T03:43:09Z → 2026-08-19 */
+function ymd(v) {
+  const s = String(v || '');
+  return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : '';
+}
+
 /* 상세 화면 묶음 — hreflang 도 lastmod 도 없이 단순하게 */
-function plainSet(urls, freq, pri, note) {
+function plainSet(items, freq, pri, note) {
   return '<?xml version="1.0" encoding="UTF-8"?>\n'
     + `<!-- ${note}\n     ★ scripts/build-sitemap.mjs 가 만듭니다. 손으로 고치지 마십시오. -->\n`
     + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    + urls.map(u => `  <url><loc>${u}</loc>`
-        + `<changefreq>${freq}</changefreq><priority>${pri}</priority></url>`).join('\n')
+    + items.map(it => {
+        const u = typeof it === 'string' ? it : it.loc;
+        const m = typeof it === 'string' ? '' : (it.lastmod || '');
+        return `  <url><loc>${u}</loc>`
+          + (m ? `<lastmod>${m}</lastmod>` : '')
+          + `<changefreq>${freq}</changefreq><priority>${pri}</priority></url>`;
+      }).join('\n')
     + '\n</urlset>\n';
 }
 
@@ -284,30 +349,38 @@ if (!SB_URL || !SB_KEY) {
   console.log('  ※ SUPABASE 키가 없어 상세 화면은 건너뜁니다 (목록만 다시 만들었습니다).');
   /* ★ 있던 상세 사이트맵을 <b>지우지 않습니다.</b> 목차에도 그대로
        남겨 두어야 이미 색인된 것을 잃지 않습니다. */
-  for (const f of ['sitemap-person.xml', 'sitemap-work.xml']) {
+  for (const d of DETAIL) {
+    const f = `sitemap-${d.key}.xml`;
     try { readFileSync(join(ROOT, f), 'utf8'); parts.push(f); } catch (e) { /* 없으면 뺍니다 */ }
   }
 } else {
   console.log('');
-  console.log('  인물을 읽습니다…');
-  const ps = await getAll('persons?select=id&hidden=not.is.true&order=id', '인물');
-  console.log(`  인물 ${ps.length}명`);
-
-  console.log('  작품을 읽습니다…');
-  /* ★ 2026-08-19 · <b>숨긴 작품은 뺍니다</b> — 인물과 같은 기준입니다.
-       api/seo.js 는 숨긴 작품에 404 를 주므로, 사이트맵에 넣으면
-       구글이 없는 주소를 받아 갑니다. */
-  const ws = await getAll('person_works?select=id&hidden=not.is.true&order=id', '작품');
-  console.log(`  작품 ${ws.length}건`);
-
-  writeFileSync(join(ROOT, 'sitemap-person.xml'), plainSet(
-    ps.map(p => `${ORIGIN}/db/person-view.html?id=${p.id}`),
-    'monthly', '0.7', 'OPUSCLAM.COM 인물 상세'), 'utf8');
-  writeFileSync(join(ROOT, 'sitemap-work.xml'), plainSet(
-    ws.map(w => `${ORIGIN}/db/work-view.html?id=${w.id}`),
-    'monthly', '0.6', 'OPUSCLAM.COM 작품 상세'), 'utf8');
-
-  parts.push('sitemap-person.xml', 'sitemap-work.xml');
+  let total = 0;
+  for (const d of DETAIL) {
+    let got;
+    try {
+      got = await getRows(d);
+    } catch (e) {
+      /* ★ 한 갈래가 안 되면 <b>그 갈래만</b> 건너뜁니다. 통째로 멈추면
+           멀쩡한 아홉 갈래도 못 만듭니다. 다만 <b>크게 알립니다.</b> */
+      console.log(`  ✗ ${d.label} 건너뜀 — ${String(e.message).slice(0, 110)}`);
+      const f = `sitemap-${d.key}.xml`;
+      try { readFileSync(join(ROOT, f), 'utf8'); parts.push(f); } catch (e2) {}
+      continue;
+    }
+    const items = got.rows.map(r => ({
+      loc: `${ORIGIN}${d.view}?id=${r.id}`,
+      lastmod: got.lastmod ? ymd(r.updated_at) : '',
+    }));
+    const withMod = items.filter(x => x.lastmod).length;
+    writeFileSync(join(ROOT, `sitemap-${d.key}.xml`), plainSet(
+      items, d.freq, d.pri, `OPUSCLAM.COM ${d.label} 상세`), 'utf8');
+    parts.push(`sitemap-${d.key}.xml`);
+    total += items.length;
+    console.log(`  · ${d.label} ${items.length}건`
+      + (withMod ? ` (바뀐 날 ${withMod}건)` : ' (바뀐 날 없음 — updated_at 칸이 없습니다)'));
+  }
+  console.log(`  ─ 상세 화면 합계 ${total}건`);
 }
 
 /* ── 목차 ────────────────────────────────────────────────────────
