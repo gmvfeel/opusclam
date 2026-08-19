@@ -1,0 +1,114 @@
+/* ============================================================
+   봇을 갈라 서버 렌더링으로 보냅니다
+   middleware.js                                  2026-08-19
+   ------------------------------------------------------------
+   ★ 왜 vercel.json 의 rewrite 로는 안 되었나
+
+     어제 넣은 규칙은 이렇게 생겼습니다 —
+       source: "/db/person-view.html" · has: 봇 UA → "/api/seo?kind=person"
+
+     이것이 <두 가지 이유로> 한 번도 안 걸렸습니다.
+
+     ① cleanUrls 가 먼저 튕깁니다
+        Vercel 문서 그대로 —
+        "Visiting /about.html will redirect to /about."
+        즉 봇이 /db/person-view.html?id=1 을 부르면 <308 로>
+        /db/person-view?id=1 로 먼저 보내집니다. 그 뒤에 rewrite 를
+        따지므로 source 인 ".../person-view.html" 과 더는 맞지 않습니다.
+
+     ② 파일이 rewrite 보다 먼저입니다
+        Vercel 문서 그대로 —
+        "The source property should NOT be a file because precedence
+         is given to the filesystem prior to rewrites being applied."
+        db/person-view.html 은 <실제로 있는 파일>이라 언제나 파일이 이깁니다.
+
+     ★ 어제 「/ 에 index.html 이 있으면 rewrite 가 안 듭니다」로 겪은
+       것과 <같은 함정>입니다. 인트로는 파일을 옮겨 피했지만 상세 화면
+       둘은 파일이 그대로 남아 있었습니다.
+
+   ★ 미들웨어는 왜 되나
+     미들웨어는 <redirect·파일·rewrite 그 무엇보다 먼저> 돌아갑니다.
+     그래서 308 이 일어나기 전에, 파일이 집히기 전에 가로챌 수 있습니다.
+
+   ★ 사람은 하나도 달라지지 않습니다
+     봇이 아니면 next() 로 그냥 흘려보냅니다. 지금까지와 똑같이
+     cleanUrls 가 정리하고 원래 화면이 열립니다.
+
+   ★ config.matcher 로 <상세 화면 네 주소에만> 겁니다.
+     미들웨어는 안 걸면 모든 요청마다 돌아 돈이 듭니다.
+   ============================================================ */
+
+import { next, rewrite } from '@vercel/functions';
+
+/* ── 어느 주소에서만 돌 것인가 ────────────────────────────
+   ★ .html 붙은 것과 안 붙은 것을 <둘 다> 적습니다.
+     사이트맵·내부 링크는 .html 을 쓰고, cleanUrls 를 거친 뒤에는
+     .html 이 없어집니다. 어느 쪽으로 들어와도 잡히게 합니다.
+
+   ★ 대문(/) 도 같은 병이었습니다
+     `/` 에는 index.html <파일>이 있어 rewrite 가 안 들었습니다. 그래서
+     봇이 대문에 오면 「갈라 보내는 얇은 문」을 보았고, 그 파일에는
+     <noindex 가 박혀 있습니다.> 즉 <대문이 색인되지 않고 있었습니다.>
+     여기서도 미들웨어가 먼저 가로채 home.html 을 내어 줍니다. */
+export const config = {
+  matcher: [
+    '/',
+    '/index',
+    '/index.html',
+    '/db/person-view.html',
+    '/db/person-view',
+    '/db/work-view.html',
+    '/db/work-view',
+  ],
+};
+
+/* ── 봇 이름표 ────────────────────────────────────────────
+   ★ 소문자로 바꿔 놓고 견주므로 대소문자를 걱정하지 않습니다.
+     (어제 vercel.json 에서 [Gg]ooglebot 처럼 적던 것이 이것 때문입니다)
+   ★ robots.txt 에서 막아 둔 수집 봇은 여기 넣지 않습니다.
+     들어와도 그냥 원래 화면(빈 껍데기)을 봅니다. */
+const BOTS = [
+  'googlebot', 'google-inspectiontool', 'storebot-google',
+  'bingbot', 'yeti', 'daumoa', 'naverbot', 'slurp',
+  'duckduckbot', 'baiduspider', 'yandex', 'applebot',
+  'facebookexternalhit', 'twitterbot', 'slackbot', 'linkedinbot',
+  'kakaotalk-scrap', 'telegrambot', 'discordbot', 'whatsapp',
+  'embedly', 'pinterest',
+];
+
+function isBot(ua) {
+  for (let i = 0; i < BOTS.length; i++) {
+    if (ua.indexOf(BOTS[i]) !== -1) return true;
+  }
+  return false;
+}
+
+export default function middleware(request) {
+  const url = new URL(request.url);
+  const ua = (request.headers.get('user-agent') || '').toLowerCase();
+
+  /* 사람 → 손대지 않습니다 */
+  if (!isBot(ua)) return next();
+
+  /* ── 대문 ──────────────────────────────────────────────
+     봇에게는 「얇은 문」이 아니라 <포털 메인>을 곧바로 줍니다.
+     주소는 https://opusclam.com/ 그대로입니다(rewrite 라서). */
+  const p = url.pathname;
+  if (p === '/' || p === '/index' || p === '/index.html') {
+    return rewrite(new URL('/home.html', request.url));
+  }
+
+  /* ★ 번호가 없거나 숫자가 아니면 그냥 넘깁니다.
+       목록 화면으로 보내면 같은 내용이 여러 주소로 잡힙니다. */
+  const id = url.searchParams.get('id') || '';
+  if (id === '' || !/^[0-9]+$/.test(id)) return next();
+
+  /* 인물이냐 작품이냐 — 글자 자리만 봅니다 */
+  const kind = url.pathname.indexOf('work-view') !== -1 ? 'work' : 'person';
+
+  const to = new URL('/api/seo', request.url);
+  to.searchParams.set('kind', kind);
+  to.searchParams.set('id', id);
+
+  return rewrite(to);
+}

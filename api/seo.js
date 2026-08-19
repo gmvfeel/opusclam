@@ -199,7 +199,22 @@ ul{padding-left:18px}li{margin:3px 0}li span{color:#888;font-size:13px}
 <body>
 ${d.body}
 <p><a href="${esc(d.canonical)}">OPUSCLAM 에서 자세히 보기</a></p>
-<script>location.replace(${JSON.stringify(d.canonical)});</script>
+<script>
+/* ★★ 2026-08-19 고침 — <b>/api/seo 로 곧바로 온 사람만</b> 보냅니다.
+     미들웨어가 들어온 뒤로는 주소가 /db/person-view.html 그대로인 채
+     이 HTML 이 나갑니다. 그때도 새로 고치면 <b>같은 주소로 스스로를
+     불러 제자리를 맴돕니다.</b> 구글은 자바스크립트를 돌리므로
+     이것을 「자기 자신으로 넘김」으로 볼 수 있습니다.
+   ★ 정규식을 쓰지 않고 글자 자리만 봅니다. */
+(function () {
+  /* ★ 주소 끝에 &raw=1 을 붙이면 <b>보내지 않고 그대로 보여 줍니다.</b>
+       파트너가 눈으로 확인할 때 씁니다. */
+  if (location.search.indexOf('raw=1') !== -1) return;
+  if (location.pathname.indexOf('/api/seo') === 0) {
+    location.replace(${JSON.stringify(d.canonical)});
+  }
+})();
+</script>
 </body>
 </html>`;
 }
@@ -232,10 +247,14 @@ export default async function handler(req, res) {
     }
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    /* ★ 하루 담아 두고, 지난 것도 이레까지 쓰게 합니다.
-         봇이 자주 와도 Supabase 를 매번 두드리지 않습니다. */
-    res.setHeader('Cache-Control',
-      'public, s-maxage=86400, stale-while-revalidate=604800');
+    /* ★★ 2026-08-19 고침 — <b>담아 두지 않습니다.</b>
+         미들웨어가 봇만 이리로 보내는데, 그 응답이 CDN 에 담기면
+         사람이 같은 주소(/db/person-view.html?id=1)로 왔을 때
+         <b>봇용 맨화면을 볼 위험</b>이 있습니다. Vary 로 갈라 보려 해도
+         CDN 이 정말 갈라 주는지 확신할 수 없어, 아예 담지 않습니다.
+         구글이 한 화면을 몇 날에 한 번 가져가는 정도라 밑지지 않습니다. */
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('Vary', 'User-Agent');
     res.status(200).send(page(d));
   } catch (e) {
     /* ★ 실패하면 <b>500 을 줍니다.</b> 빈 화면을 200 으로 주면
