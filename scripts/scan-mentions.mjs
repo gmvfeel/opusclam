@@ -324,7 +324,32 @@ function scoreOf(m) {
 // ── ③ 한 갈래 훑기 ─────────────────────────────────────────
 async function runSource(sc, dict) {
   console.log('■ ' + sc.label + ' (' + sc.src + ')');
-  const docs = await sbGetAll(sc.table, 'id,title,body', '');
+
+  /* ★★ 2026-08-19 · <b>숨긴 글까지 훑고 있었습니다</b>
+     ─────────────────────────────────────────────────────────────
+       정보SPOT 처럼 `hidden` 칸이 있는 표는 <b>숨긴 글</b>이 있습니다.
+       그걸 그대로 훑으면, 인물 화면의 「여기가 나온 글」에
+       <b>숨겨 둔 글이 뜹니다.</b> 눌러도 볼 수 없는 글입니다.
+
+     ★ 그런데 게시판마다 `hidden` 칸이 <b>있기도 하고 없기도</b> 합니다.
+       (핫토픽·뉴스·지식나눔·공연사진·현대음악·태교·유틸리티·
+        입시요강·입시커뮤니티 아홉 곳에는 <b>없습니다</b> — 파트너가
+        보내 주신 `_oc_hid` 표에서 확인했습니다)
+       없는 표에 그 조건을 걸면 통째로 실패합니다(42703).
+
+     ▶ 그래서 <b>먼저 걸어 보고, 없다고 하면 빼고 다시</b> 받습니다.
+       표마다 손으로 적어 두면 새 게시판이 생길 때 또 어긋납니다. */
+  let docs;
+  try {
+    docs = await sbGetAll(sc.table, 'id,title,body', '&hidden=not.is.true');
+  } catch (e) {
+    /* ★ 42703 은 「그런 칸 없음」입니다. 혹시 몰라 400 도 함께 봅니다 —
+       칸이 없을 때 오는 답이 언제나 같은 모양이라고 믿지 않습니다. */
+    const msg = String(e.message);
+    if (msg.indexOf('42703') < 0 && msg.indexOf(' 400 ') < 0) throw e;
+    docs = await sbGetAll(sc.table, 'id,title,body', '');
+    console.log('  · 이 표에는 hidden 칸이 없습니다 — 그대로 훑습니다');
+  }
   console.log('  · 글 ' + docs.length + '건');
 
   // 사람이 물린 것은 다시 만들지 않습니다
