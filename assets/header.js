@@ -28,6 +28,31 @@
      한 번만 걸리게 한다(auth.js 도 같은 표시를 본다).
    ★ 화면 안의 옛 코드들은 그대로 두어도 이 표시 때문에 겹치지 않는다.
    ------------------------------------------------------------ */
+/* ★★ 2026-08-19 · <b>다른 화면에서 어두운 모드로 두고 오면 풀렸습니다</b>
+   ─────────────────────────────────────────────────────────────────
+   (파트너 지적 — 광고안내 화면에 들어오면 밝은 화면으로 돌아갔습니다)
+
+   ★ 무엇이 어긋나 있었나 — <b>켜는 곳과 되살리는 곳이 다른 파일</b>이었습니다
+       누르기(토글)   header.js  ← 거의 모든 화면이 싣습니다
+       되살리기       auth.js    ← <b>여섯 화면이 싣지 않습니다</b>
+     그래서 그 여섯 화면에 들어가면, 저장은 되어 있는데 <b>읽어 주는 이가
+     없어</b> 밝은 화면으로 돌아갔습니다.
+       advertise · community/play · community/prenatal-playlist ·
+       recruit/guide · spot/concours-archive · spot/concours-price
+
+   ★ 되살리기를 <b>여기로</b> 옮깁니다. 켜는 곳과 같은 파일에 두어야
+     한쪽만 실리는 일이 다시 생기지 않습니다.
+   ★ <b>맨 앞에</b> 둡니다 — header.js 는 &lt;head&gt; 에서 곧바로 도므로,
+     화면이 그려지기 전에 바꿔야 <b>흰 화면이 번쩍하지 않습니다.</b>
+   ★ auth.js 에도 같은 코드가 있지만 부딪히지 않습니다 —
+     둘 다 「어두우면 표를 붙인다」일 뿐이라 두 번 해도 같습니다. */
+(function(){
+  try {
+    if (localStorage.getItem('oc-theme') === 'dark')
+      document.documentElement.setAttribute('data-theme', 'dark');
+  } catch (e) {}
+})();
+
 (function(){
   if (window.__ocThemeBound) return;
   window.__ocThemeBound = true;
