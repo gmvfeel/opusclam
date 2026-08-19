@@ -174,7 +174,12 @@
 
 /* ══ 한눈에 보기 ═══════════════════════════════════════ */
 .adp-tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;
-  border:2px solid var(--adp-edge,var(--line-2));border-radius:14px;background:var(--paper)}
+  /* ★ 2026-08-19 · 표만 <b>다른 색</b>으로 (파트너 지적)
+     카드·단계와 같은 흙빛 테를 쓰면 표가 그 사이에 묻힙니다.
+     이 화면의 본디 강조색(보랏빛)을 <b>연하게 풀어</b> 두르면,
+     튀지 않으면서 「여기가 요점」이라는 것이 드러납니다.
+     ★ 어두운 화면에서는 같은 보라를 조금 밝혀 씁니다 — 아래에 따로. */
+  border:2px solid var(--adp-tbl-edge,var(--violet-3));border-radius:14px;background:var(--paper)}
 .adp-tbl{width:100%;border-collapse:collapse;font-size:13.5px;min-width:660px}
 .adp-tbl th{text-align:left;padding:16px 18px;color:var(--text-2);font-weight:700;
   background:var(--paper-2);border-bottom:1px solid var(--line-2);white-space:nowrap}
@@ -250,9 +255,9 @@
    이름을 하나 두고 카드·표·단계 셋이 그것을 봅니다.
    ★ 어두운 화면에서는 <b>반대로 밝혀야</b> 진해 보입니다. 아래에
      따로 적어 둡니다 — 한 색으로는 두 화면을 다 맞출 수 없습니다. */
-.adp-wrap, .adp-sec{ --adp-edge:#cfc6b4 }
+.adp-wrap, .adp-sec{ --adp-edge:#cfc6b4; --adp-tbl-edge:#7c63b0 }
 html[data-theme="dark"] .adp-wrap,
-html[data-theme="dark"] .adp-sec{ --adp-edge:#565656 }
+html[data-theme="dark"] .adp-sec{ --adp-edge:#565656; --adp-tbl-edge:#9b7fd0 }
 
 html[data-theme="dark"] .adp-num,
 html[data-theme="dark"] .adp-tag i,
