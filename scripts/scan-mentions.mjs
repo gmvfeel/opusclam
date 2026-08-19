@@ -19,6 +19,7 @@
 //            SCAN_DRY=1     저장하지 않고 결과만 보여줍니다
 //            SCAN_ONLY=spot 한 게시판만 훑습니다
 //            SCAN_LIMIT=500 갈래마다 이만큼만 (시험용)
+//            SCAN_DICT=1    사전만 짓고 멈춥니다 (작품 규칙 확인용 · 몇 초)
 // ============================================================
 
 import { readJson } from './lib/json.mjs';
@@ -34,6 +35,9 @@ const VERSION = 'v2';
 const DRY   = process.env.SCAN_DRY === '1';
 const ONLY  = (process.env.SCAN_ONLY || '').trim();
 const LIMIT = Number(process.env.SCAN_LIMIT || 0);
+/* ★ 2026-08-19 · 사전만 짓고 멈춥니다 — 작품 규칙을 고칠 때 숫자만 빨리
+   보기 위한 것입니다. 글 5,364개를 훑지 않으니 몇 초면 끝납니다. */
+const DICT_ONLY = process.env.SCAN_DICT === '1';
 
 const H = {
   apikey: SERVICE_KEY,
@@ -245,7 +249,7 @@ const KINDS = [
        작품은 <b>title_ko/title</b> 입니다. 그래서 적어 둡니다.
      ★ 「사람들이 실제로 부르는 이름」만 씁니다. 아래 workOk 참조. */
   { type:'work', table:'person_works', who:false, label:'작품',
-    ko:'title_ko', en:'title' },
+    ko:'title_ko', en:'title', extra:'imslp_ref' },
 ];
 
 /* ★★ 작품 이름은 <b>다른 갈래보다 훨씬 까다롭게</b> 거릅니다
@@ -334,8 +338,78 @@ function formOnly(t) {
   return true;
 }
 
-function workOk(ko) {
+/* ★★★ 2026-08-19 (둘째 판) · <b>큰 작품의 한 곡</b>을 걸러 냅니다
+   ══════════════════════════════════════════════════════════════
+   225건에 한글 제목을 손으로 채운 뒤 드러난 문제입니다.
+   슈베르트 「겨울 나그네」 스물네 곡이 한꺼번에 들어왔는데, 그 제목이
+   <b>평범한 우리말 구절</b>입니다 —
+
+       「마을에서」 「강 위에서」 「마지막 희망」 「폭풍의 아침」 「얼어붙은 마음」
+
+   「그 마을에서 열린 축제」라는 문장이 슈베르트 가곡으로 이어지면 안 됩니다.
+   「피아노 소나타」가 78건 걸렸던 것과 같은 병입니다.
+
+   ★★ 그런데 이 곡들에는 <b>자료 안에 표시가 이미 있습니다.</b>
+     악보 주소(imslp_ref)가 <b>자기 제목이 아니라 큰 작품</b>을 가리킵니다 —
+
+       「Der Lindenbaum」  → Winterreise,_D.911_(Schubert,_Franz)
+       「Les Cloches de Genève」 → Années_de_pèlerinage_I,_S.160
+       「Transcendental Étude No. 12」 → Études_d'exécution_transcendante
+
+     반대로 혼자 서는 작품은 <b>자기 이름</b>을 가리킵니다 —
+
+       「Cello Suite No. 1 in G major」 → Cello_Suite_No.1_in_G_major,_BWV_1007
+       「Gretchen am Spinnrade」 → Gretchen_am_Spinnrade,_D.118
+
+   ▶ 그래서 <b>낱말을 금지어에 적지 않고</b>, 자료가 스스로 말해 주는 것을
+     씁니다. 금지어를 적는 방법은 스물네 곡을 다 적어도 다음 가곡집에서
+     또 시작해야 합니다.
+
+   ★ 이 규칙은 <b>일부러 넉넉하게</b> 잡았습니다. 악보 주소가 제목과 조금만
+     달라도 뺍니다. 그래서 멀쩡한 작품 몇 개도 함께 빠집니다 —
+     「방랑자 환상곡」(주소는 Fantasie_in_C_major) ·
+     「세 개의 군대 행진곡」(주소는 3_Marches_militaires).
+     ▶ 그런 것은 <b>아래 WORK_KEEP 에 손으로 적어</b> 되살립니다.
+       목록이 짧고 눈에 보이니, 규칙을 느슨하게 푸는 것보다 안전합니다. */
+const WORK_KEEP = new Set([
+  '방랑자 환상곡',
+  '세 개의 군대 행진곡',
+]);
+
+/* 견주기 좋게 다듬습니다 — 소문자로, 악센트를 떼고, 글자와 숫자만 남깁니다.
+   ★ Á→A 는 normalize('NFD') 로 악센트를 갈라낸 뒤 지웁니다.
+     이걸 안 하면 「Shéhérazade」와 「Sheherazade」가 다른 말이 됩니다. */
+function flat(s) {
+  return String(s || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9가-힣]+/g, '');
+}
+
+/* 악보 주소에서 <b>큰 작품 이름</b>만 뽑습니다.
+   Winterreise,_D.911_(Schubert,_Franz)  →  Winterreise
+   ★ %2C 처럼 주소로 감싸인 글자가 섞여 있어 먼저 풉니다. */
+function imslpParent(ref) {
+  let s = String(ref || '').trim();
+  if (!s) return '';
+  try { s = decodeURIComponent(s); } catch (e) { /* 잘못된 주소는 그대로 */ }
+  s = s.replace(/^wiki\//, '').replace(/_/g, ' ');
+  const cut = s.search(/[,(]/);
+  return (cut >= 0 ? s.slice(0, cut) : s).trim();
+}
+
+/* 큰 작품의 한 곡인가 — 주소가 있고, 그 주소가 제목과 <b>서로 딴 것</b>일 때 */
+function isPartOfLarger(en, ref) {
+  const p = flat(imslpParent(ref));
+  if (!p) return false;                  /* 주소가 없으면 판단하지 않습니다 */
+  const t = flat(en);
+  if (!t) return false;
+  if (p.indexOf(t) >= 0 || t.indexOf(p) >= 0) return false;   /* 자기 이름 */
+  return true;
+}
+
+function workOk(ko, en, ref) {
   const t = String(ko || '').trim();
+  if (WORK_KEEP.has(t)) return true;                    /* 손으로 되살린 것 */
   if (t.length < 4 || t.length > 20) return false;      /* 너무 짧거나 긴 것 */
   if (t.indexOf(',') >= 0 || t.indexOf('(') >= 0) return false;  /* 설명이 붙은 것 */
   if (WORK_BAN.has(t)) return false;                    /* 흔한 말 */
@@ -345,14 +419,23 @@ function workOk(ko) {
      우리 DB 에 하나뿐이어도 세상에는 여럿입니다. 「발라드 3번」이
      브람스 글에서 쇼팽으로 이어지면 안 됩니다. */
   if (/[0-9]+ ?번$/.test(t)) return false;
+  /* ★★ 곳을 나타내는 말로 끝나는 제목 — 「마을에서」·「강 위에서」.
+     이런 꼴은 우리말 문장에서 <b>부사구</b>로 훨씬 자주 쓰입니다.
+     악보 주소가 없는 줄도 있으니 아래 규칙과 따로 둡니다. */
+  if (/(에서|에게|으로|로서)$/.test(t)) return false;
   /* ★ 형식 이름뿐인 제목 — 「피아노 소나타」·「현악 사중주」 */
   if (formOnly(t)) return false;
+  /* ★★ 큰 작품의 한 곡 — 「겨울 나그네」의 스물네 곡 같은 것 */
+  if (isPartOfLarger(en, ref)) return false;
   return true;
 }
 
 /* 같은 말이 여러 갈래를 가리킬 때 무엇을 먼저 볼 것인가 */
 const HOW_RANK  = { fullname:3, fullname_en:3, entity:2, entity_en:2, surname:1 };
 const KIND_RANK = { person:6, modern:5, venue:4, school:3, org:2, foundation:1 };
+
+/* 작품 규칙이 무엇을 넣고 무엇을 뺐는지 적어 둡니다 (화면에만 보여 줍니다) */
+const WORK_LOG = { ok: [], part: [], locative: [], seenBad: new Set() };
 
 async function buildDict() {
   const bySurface = new Map();   // 드러난 말 -> { refs:[{type,id,how}] }
@@ -366,9 +449,14 @@ async function buildDict() {
        hidden 이 비어 있는(null) 줄도 살아 있는 것으로 봅니다. */
     /* ★ 갈래마다 이름 칸이 다릅니다 — 적혀 있으면 그것을, 없으면 기본값을. */
     const koCol = k.ko || 'name_ko', enCol = k.en || 'name_en';
-    const raw = await sbGetAll(k.table, 'id,' + koCol + ',' + enCol, '&hidden=not.is.true');
+    /* ★ 갈래마다 더 필요한 칸이 있을 수 있습니다 — 작품은 악보 주소를 봅니다 */
+    const sel = 'id,' + koCol + ',' + enCol + (k.extra ? ',' + k.extra : '');
+    const raw = await sbGetAll(k.table, sel, '&hidden=not.is.true');
     /* 아래 코드가 name_ko/name_en 을 보므로 이름을 맞춰 둡니다 */
-    const rows = raw.map(r => ({ id: r.id, name_ko: r[koCol], name_en: r[enCol] }));
+    const rows = raw.map(r => ({
+      id: r.id, name_ko: r[koCol], name_en: r[enCol],
+      extra: k.extra ? r[k.extra] : null,
+    }));
     const withKo = rows.filter(r => r.name_ko && String(r.name_ko).trim()).length;
     console.log('  · ' + k.label + ' ' + rows.length + '개 (한글 이름 ' + withKo + '개)');
 
@@ -412,7 +500,21 @@ async function buildDict() {
            우리말 글에 영문 원제가 그대로 적히는 일은 드물고,
            적혀도 「Symphony No. 5」처럼 겹치는 것이 대부분입니다. */
         if (k.type === 'work') {
-          if (workOk(ko)) put(ko, k.type, o.id, 'entity');
+          if (workOk(ko, o.name_en, o.extra)) {
+            put(ko, k.type, o.id, 'entity');
+            WORK_LOG.ok.push(ko);
+          } else if (ko && !WORK_LOG.seenBad.has(ko)) {
+            WORK_LOG.seenBad.add(ko);
+            /* 왜 빠졌는지 갈라 적어 둡니다 — 규칙을 고칠 때 이 숫자를 봅니다 */
+            if (ko.length >= 4 && ko.length <= 20
+                && ko.indexOf(',') < 0 && ko.indexOf('(') < 0
+                && !WORK_BAN.has(ko) && !formOnly(ko)
+                && !/(BWV|WoO|Op\.|K\.|D\.|Hob|작품 ?번호)/i.test(ko)
+                && !/[0-9]+ ?번$/.test(ko)) {
+              if (/(에서|에게|으로|로서)$/.test(ko)) WORK_LOG.locative.push(ko);
+              else WORK_LOG.part.push(ko + '  ← ' + imslpParent(o.extra));
+            }
+          }
           continue;
         }
         /* ★★ 2026-08-19 · <b>한글 칸에 영문이 들어 있는 줄이 있습니다.</b>
@@ -447,6 +549,26 @@ async function buildDict() {
   list.forEach(x => { by[x.type] = (by[x.type] || 0) + 1; });
   console.log('  · 찾을 말 ' + list.length + '개 — '
     + KINDS.map(k => k.label + ' ' + (by[k.type] || 0)).join(' · '));
+
+  /* ── 작품 규칙이 한 일 ──────────────────────────────────────
+     ★ 숫자만 보고 넘기지 말고 <b>표본을 눈으로</b> 보십시오.
+       「피아노 소나타」 78건도 숫자만 봤을 때는 몰랐습니다. */
+  const uniq = (a) => Array.from(new Set(a));
+  const okU = uniq(WORK_LOG.ok);
+  console.log('  ── 작품 규칙 ──');
+  console.log('   · 사전에 넣은 제목      ' + okU.length + '가지 (줄 ' + WORK_LOG.ok.length + ')');
+  console.log('   · 큰 작품의 한 곡이라 뺌 ' + WORK_LOG.part.length + '가지');
+  console.log('   · 「…에서」로 끝나 뺌     ' + WORK_LOG.locative.length + '가지');
+  if (WORK_LOG.locative.length) {
+    console.log('     ' + WORK_LOG.locative.slice(0, 12).join(' · '));
+  }
+  for (const s of WORK_LOG.part.slice(0, 25)) console.log('     [한 곡] ' + s);
+  if (WORK_LOG.part.length > 25) {
+    console.log('     … 그 밖 ' + (WORK_LOG.part.length - 25) + '가지');
+  }
+  console.log('   · 넣은 것 표본 40가지');
+  for (const s of okU.slice(0, 40)) console.log('     [넣음] ' + s);
+
   return list;
 }
 
@@ -620,6 +742,7 @@ async function runSource(sc, dict) {
 async function main() {
   console.log('■ 글에서 우리 자료 찾기', VERSION, DRY ? '(시험 실행 · 저장 안 함)' : '');
   const dict = await buildDict();
+  if (DICT_ONLY) { console.log('■ 사전만 짓고 멈춥니다 (SCAN_DICT=1)'); return; }
   for (const sc of SOURCES) {
     if (ONLY && ONLY !== sc.src) continue;
     try { await runSource(sc, dict); }
