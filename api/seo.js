@@ -521,8 +521,20 @@ function page(d) {
 <meta property="og:title" content="${esc(d.title)}">
 <meta property="og:description" content="${esc(d.desc)}">
 <meta property="og:url" content="${esc(d.canonical)}">
-${d.image ? `<meta property="og:image" content="${esc(d.image)}">` : ''}
+<meta property="og:site_name" content="OPUSCLAM.COM">
+<meta property="og:locale" content="ko_KR">
+<!-- ★★ 2026-08-20 (파트너가 카카오톡으로 주소를 보내다 찾음)
+       그림이 없으면 og:image 를 <b>아예 안 적었습니다.</b> 그러면
+       카카오톡·페이스북이 <b>화면에서 제일 큰 그림을 자기가 고릅니다.</b>
+       대문에서는 그게 <b>광고 배너</b>였습니다.
+     ▶ 없으면 기본 그림을 씁니다. 무엇이 걸릴지 우리가 정합니다. -->
+<meta property="og:image" content="${esc(d.image || SITE + '/og-default.png')}">
+${d.image ? '' : `<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">`}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(d.title)}">
+<meta name="twitter:description" content="${esc(d.desc)}">
+<meta name="twitter:image" content="${esc(d.image || SITE + '/og-default.png')}">
 <style>
 body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;max-width:760px;
   margin:0 auto;padding:28px 20px;line-height:1.7;color:#222}
