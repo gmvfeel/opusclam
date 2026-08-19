@@ -147,14 +147,23 @@
      ★ 먼저 맞는 것 하나만 켭니다. 「/db/」 와 「/」 가 함께 켜지는 것을
        막으려고 홈은 <b>정확히 같을 때만</b> 봅니다. */
   function pick() {
-    var p = location.pathname;
+    /* ★★ 2026-08-19 · cleanUrls 가 `.html` 을 없애고 `/db/index.html` 을
+         `/db` 로 만듭니다. 그대로 두면 <b>검색·홈 탭이 안 켜지고</b>,
+         DATABASE 도 `/db` 하나만 왔을 때 꺼집니다.
+       ★ 언어(/en/ · /ja/)도 떼고 견줍니다. */
+    var p = (window.ocPath || String)(location.pathname);
+    if (p.length > 5 && p.slice(-5) === '.html') p = p.slice(0, -5);
     for (var i = 1; i < ITEMS.length; i++) {
       var m = ITEMS[i].match;
       for (var j = 0; j < m.length; j++) {
-        if (p.indexOf(m[j]) === 0) return ITEMS[i].k;
+        var q = m[j];
+        if (q.length > 5 && q.slice(-5) === '.html') q = q.slice(0, -5);
+        if (p.indexOf(q) === 0) return ITEMS[i].k;
+        /* `/db/` 처럼 폴더로 적은 것은 `/db` 하나만 와도 맞춥니다 */
+        if (q.charAt(q.length - 1) === '/' && p === q.slice(0, -1)) return ITEMS[i].k;
       }
     }
-    if (p === '/' || p === '/home.html' || p === '/index.html') return 'home';
+    if (p === '/' || p === '/home' || p === '/index') return 'home';
     return '';
   }
 

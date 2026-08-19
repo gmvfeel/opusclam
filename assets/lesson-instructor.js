@@ -147,11 +147,20 @@
       }
       /* ★ 주소와 링크 <b>양쪽</b>에서 언어를 뗍니다 — 한쪽만 떼면 어긋납니다 */
       var _b = (window.ocPath || String);
-      var here = _b(location.pathname).replace(/\/index\.html$/, '/');
-      if (here === '/lesson/' || here === '/lesson/index.html') return;
+      /* ★★ 2026-08-19 · cleanUrls 가 `/lesson/index.html` 을 `/lesson` 으로
+           만듭니다. 주소와 링크를 <b>같은 꼴</b>로 다듬어 견줍니다.
+         ★ 정규식을 쓰지 않습니다 — 글자 자리만. */
+      function _norm(v) {
+        var q = _b(String(v || '')).split('#')[0].split('?')[0];
+        if (q.length > 5 && q.slice(-5) === '.html') q = q.slice(0, -5);
+        if (q.length > 6 && q.slice(-6) === '/index') q = q.slice(0, -5);
+        if (q.charAt(q.length - 1) !== '/') q = q + '/';
+        return q;
+      }
+      var here = _norm(location.pathname);
+      if (here === '/lesson/') return;
       [].forEach.call(nav.querySelectorAll('a[href]'), function (a) {
-        var h = _b(a.getAttribute('href') || '').replace(/\/index\.html$/, '/');
-        if (h === here) a.classList.add('active');
+        if (_norm(a.getAttribute('href')) === here) a.classList.add('active');
       });
     })();
   }

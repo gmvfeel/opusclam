@@ -2347,6 +2347,16 @@
     foundation: {table:"foundations",      col:"name_ko", path:"/db/foundation-view.html",  label:"기관·재단"},
     academic:   {table:"academic",         col:"name_ko", path:"/db/academic-view.html",    label:"학술"},
 
+    /* ★★ 2026-08-19 · <b>세 갈래가 빠져 있었습니다</b>
+       ───────────────────────────────────────────────────────────
+       아래 세 화면도 pv.js 를 싣고 있으므로 <b>담기</b>가 됩니다.
+       그런데 이 표에 없어서, 마이페이지에서 「#1234 terms」 처럼
+       <b>번호와 영문</b>으로만 나오고 눌러도 갈 곳이 없었습니다.
+       ★ 이름 칸이 저마다 다릅니다 — 용어는 term_ko, 작품은 title. */
+    terms:      {table:"oc_terms",         col:"term_ko", path:"/db/terms-view.html",       label:"음악용어"},
+    work:       {table:"person_works",     col:"title",   path:"/db/work-view.html",        label:"작품"},
+    opusnity:   {table:"opusnity",         col:"title",   path:"/community/opusnity-view.html", label:"오퍼니티"},
+
     /* ── 커뮤니티·정보SPOT · 이름 칸은 title ── */
     hottopic:              {table:"hottopic",            col:"title", path:"/community/hottopic-view.html",            label:"핫토픽"},
     news:                  {table:"news",                col:"title", path:"/community/news-view.html",                label:"뉴스·공지"},

@@ -112,7 +112,12 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
          DB 화면 가운데 class 를 안 쓴 곳이 있을 수 있습니다. */
       if (p) {
         var file = location.pathname.split('/').pop();
-        var list = file.replace('-view.html', '.html');
+    /* ★★ 2026-08-19 · cleanUrls 가 `.html` 을 없앱니다 —
+         `/db/person-view.html` → `/db/person-view`
+         정규식을 쓰지 않고 글자 자리만 봅니다. */
+        if (file.length > 5 && file.slice(-5) === '.html') file = file.slice(0, -5);
+        var list = (file.length > 5 && file.slice(-5) === '-view')
+                   ? file.slice(0, -5) + '.html' : file;
         if (list !== file) {
           document.querySelectorAll('a[href="' + list + '"]').forEach(function (a) {
             if (seen.indexOf(a) >= 0) return;
@@ -136,11 +141,17 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
          둘 다 modern 이 되어 마이페이지 즐겨찾기에서 <b>구별할 수
          없었습니다.</b> 게시판 쪽만 표 이름과 같게 modern_music 으로
          둡니다. (받는 쪽은 account/mypage.html 의 FAV_META) */
-    var TYPE_FIX = { '/community/modern-view.html': 'modern_music' };
-    /* ★ 언어를 떼고 견줍니다 — /en/community/modern-view.html 도 같은 화면입니다 */
+    var TYPE_FIX = { '/community/modern-view': 'modern_music' };
+    /* ★ 언어를 떼고 견줍니다 — /en/community/modern-view 도 같은 화면입니다 */
     var _p = (window.ocPath || String)(location.pathname);
+    /* ★★ 2026-08-19 · <b>cleanUrls 가 `.html` 을 없앱니다.</b>
+         그대로 두면 갈래가 `person-view` 로 저장되어, 마이페이지
+         즐겨찾기에서 <b>아무것도 안 보이게 됩니다.</b>
+         `.html` 을 떼고 `-view` 도 뗀 것이 갈래입니다. */
+    if (_p.length > 5 && _p.slice(-5) === '.html') _p = _p.slice(0, -5);
+    var _f = _p.split('/').pop();
     var itemType = TYPE_FIX[_p]
-      || _p.split('/').pop().replace('-view.html', '');
+      || ((_f.length > 5 && _f.slice(-5) === '-view') ? _f.slice(0, -5) : _f);
       var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
       var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
       var client = null;
