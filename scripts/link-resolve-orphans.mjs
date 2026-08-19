@@ -246,6 +246,17 @@ function toRow(b, kind, fallbackName) {
     if (cat === '기타' && !MUS_SCHOOL.test(hay)) cat = '일반학교';
     return Object.assign(base, { category: cat });
   }
+  /* ★★ 2026-08-19 · 소속(member_of) — 음악단체DB(orgs) 로 갑니다
+     ─────────────────────────────────────────────────────────────
+     ★ orgs 는 <b>칸이 다릅니다.</b> 아래 학술원 갈래가 붙이는
+       estab_type · field 는 orgs 에 <b>없는 칸</b>입니다. 그대로 쓰면
+       저장이 통째로 거절당합니다(42703). 그래서 여기서 먼저 돌려보냅니다.
+     ★ orgs 의 갈래 칸 이름은 `type` 입니다 (`org_type` 아닙니다). */
+  if (kind === 'org') {
+    const isUnion = /union|association|society|협회|연맹|союз|guild/i.test(hay);
+    return Object.assign(base, { type: isUnion ? '협회' : '음악단체' });
+  }
+
   // 학술원 · 기관·재단DB 로 갑니다.
   // '제2빈악파' · '프랑스 6인조' 처럼 유파 · 작곡가 모임은 기관이 아니므로
   // 갈래를 '기타' 로 두어 협회와 섞이지 않게 합니다.
@@ -267,7 +278,10 @@ function toOrgRow(b, label) {
   return {
     name_ko: nameKo || nameEn,
     name_en: nameEn,
-    org_type: '연주팀 · 밴드',
+    /* ★★ 2026-08-19 · 칸 이름이 틀려 있었습니다 — `org_type` 은 <b>없는 칸</b>입니다.
+       orgs 의 갈래 칸은 `type` 입니다. 이 한 글자 때문에 밴드·연주팀 담기가
+       <b>한 번도 성공한 적이 없습니다</b> (try 로 감싸 놓아 조용히 넘어갔습니다). */
+    type: '연주팀 · 밴드',
     description: clean(val(b, 'descKo')) || clean(val(b, 'descEn')) || null,
     wikidata_id: qidOf(val(b, 'item')),
     source: 'wikidata',
@@ -290,12 +304,25 @@ function bandLike(row, types) {
 
 // ── 한 갈래 처리 ─────────────────────────────────────────────
 async function run(kind) {
-  const rel   = kind === 'school' ? 'alumnus_of' : 'fellow_of';
-  const table = kind === 'school' ? 'schools' : 'foundations';
-  // 학술원은 foundations 표에 담으므로 to_type 도 'foundation' 이어야 합니다.
-  // 'org' 로 두면 엔진이 단체DB(orgs)를 뒤져 엉뚱한 곳을 가리킵니다.
-  const toType = kind === 'school' ? 'school' : 'foundation';
-  console.log('■ ' + (kind === 'school' ? '학교' : '학술원') + ' 처리 · 관계 ' + rel);
+  /* ★★ 2026-08-19 · 갈래를 <b>표로</b> 바꿨습니다 (파트너 지적으로 드러난 것)
+     ─────────────────────────────────────────────────────────────────
+     ★ 예전에는 삼항식 두 줄로 school 아니면 fellow 였습니다. 그래서
+       <b>소속(member_of) 은 아무도 보지 않았습니다</b> — 2,542건이
+       몇 달째 「DB 미등록」으로 남아 있었습니다. 그중에는
+         소련 작곡가동맹 341건 · 폴란드 작곡가동맹 104건 ·
+         스웨덴 왕립음악원 90건 · 그리스 작곡가동맹 36건
+       처럼 <b>틀림없는 음악단체</b>가 들어 있습니다.
+     ★ 표로 두면 갈래를 늘릴 때 <b>한 줄만</b> 더하면 됩니다.
+       삼항식은 늘어날수록 어디를 고쳐야 하는지 흐려집니다. */
+  const PLAN = {
+    school: { rel: 'alumnus_of', table: 'schools',     toType: 'school',     name: '학교'   },
+    fellow: { rel: 'fellow_of',  table: 'foundations', toType: 'foundation', name: '학술원' },
+    org:    { rel: 'member_of',  table: 'orgs',        toType: 'org',        name: '음악단체' },
+  };
+  const plan = PLAN[kind];
+  if (!plan) { console.log('■ 모르는 갈래: ' + kind); return; }
+  const rel = plan.rel, table = plan.table, toType = plan.toType;
+  console.log('■ ' + plan.name + ' 처리 · 관계 ' + rel);
 
   const links = await sbGetAll('entity_links', 'id,to_ref,to_label',
     '&rel=eq.' + rel + '&to_id=is.null&to_ref=not.is.null');
@@ -341,6 +368,13 @@ async function run(kind) {
     if (!b) { skipped.정보없음++; continue; }
     const row = toRow(b, kind, byQid.get(q).label);
     if (!row) { skipped.정보없음++; continue; }
+    /* ★ 음악단체(member_of) 도 <b>음악 관련만</b> 담습니다.
+       미술 아카데미·프리메이슨이 소속으로도 들어와 있습니다(DENY_ORG 가 거릅니다).
+       다만 밴드·연주팀은 <b>옮기지 않습니다</b> — 이미 소속 관계이고
+       목적지도 이미 음악단체DB 이므로 옮길 곳이 없습니다. */
+    if (kind === 'org') {
+      if (!musicalOrg(row, val(b, 'types'))) { skipped.음악무관++; continue; }
+    }
     if (kind === 'fellow') {
       if (!musicalOrg(row, val(b, 'types'))) { skipped.음악무관++; continue; }
       /* ★ 밴드·연주팀·듀오는 학술원이 아닙니다.
@@ -445,6 +479,8 @@ async function main() {
   console.log('■ 이름만 있는 관계 해소', VERSION, DRY ? '(시험 실행 · 저장 안 함)' : '');
   if (!ONLY || ONLY === 'school') await run('school');
   if (!ONLY || ONLY === 'fellow') await run('fellow');
+  /* ★ 2026-08-19 · 소속(member_of) 을 새로 봅니다. 위 둘과 같은 방식입니다. */
+  if (!ONLY || ONLY === 'org')    await run('org');
   console.log('■ 완료');
 }
 

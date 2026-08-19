@@ -11,7 +11,7 @@ on:
         type: boolean
         default: false
       only:
-        description: '한쪽만 처리 (school 또는 fellow · 비우면 둘 다)'
+        description: '한쪽만 처리 (school · fellow · org 중 하나 · 비우면 셋 다)'
         type: string
         default: ''
       min:
