@@ -70,6 +70,9 @@ const BAN = new Set([
   '아리아','칸타타','레퀴엠','미사','세레나데','왈츠',
   // 뜻이 겹치는 흔한 말 (2026-08-19 실제 자료에서 확인)
   '리스트','브리지','사이드','포스트','스코어','마스터',
+  /* ★ 「말씀 드리고」처럼 <b>띄어 쓰면</b> 낱말 경계 검사를 통과합니다.
+     성으로는 쓰지 않고, 「리카르도 드리고」 풀네임으로만 찾습니다. */
+  '드리고','바치고','부치고',
 ]);
 
 // ── 우리말 조사 ──────────────────────────────────────────────
@@ -282,26 +285,55 @@ async function runSource(sc, dict) {
   if (noSet.size) console.log('  · 사람이 물린 것 ' + noSet.size + '건은 건너뜁니다');
 
   const rows = [];
-  let docHit = 0;
+  let docHit = 0, merged = 0;
   for (const d of docs) {
     const text = plain((d.title || '') + ' ' + (d.body || ''));
     if (text.length < 4) continue;
     const ms = scanOne(text, dict);
     if (!ms.length) continue;
     docHit++;
+
+    /* ★★ 한 글 안에서 <b>같은 사람이 여러 이름으로</b> 걸립니다
+       ─────────────────────────────────────────────────────────
+         「루트비히 판 베토벤」 · 「베토벤」 · 「Ludwig van Beethoven」
+       셋 다 같은 사람입니다. 그대로 보내면 <b>같은 열쇠가 한 묶음에
+       세 번</b> 들어가고, 포스트그레스가 이렇게 거절합니다 —
+         ON CONFLICT DO UPDATE command cannot affect row a second time
+       (2026-08-03 어드민 화면에서 똑같은 것으로 멈춘 적이 있습니다)
+
+       ▶ 그래서 <b>보내기 전에 합칩니다.</b>
+         · 나온 횟수는 <b>더하고</b>
+         · 확신도는 <b>가장 높은 것</b>을 쓰고
+         · 드러난 말은 <b>가장 긴 것</b>을 남깁니다 (풀네임이 더 알아보기 쉽습니다) */
+    const one = new Map();
     for (const m of ms) {
       // 성을 여럿이 쓰면 누구인지 모릅니다 — 가장 작은 번호 하나만 답니다
       const pid = m.ids.slice().sort((a, b) => a - b)[0];
       if (noSet.has(d.id + '|person|' + pid)) continue;
+      const key = 'person|' + pid;
+      const conf = scoreOf(m);
+      const cur = one.get(key);
+      if (!cur) {
+        one.set(key, { pid, surface: m.surface, hits: m.hits, conf, how: m.how });
+      } else {
+        merged++;
+        cur.hits += m.hits;
+        if (conf > cur.conf) { cur.conf = conf; cur.how = m.how; }
+        if (m.surface.length > cur.surface.length) cur.surface = m.surface;
+      }
+    }
+
+    for (const v of one.values()) {
       rows.push({
         src_type: sc.src, src_id: d.id,
-        to_type: 'person', to_id: pid,
-        surface: m.surface, hits: m.hits,
-        confidence: scoreOf(m), matched_by: m.how,
+        to_type: 'person', to_id: v.pid,
+        surface: v.surface, hits: v.hits,
+        confidence: v.conf, matched_by: v.how,
         status: 'auto', updated_at: new Date().toISOString(),
       });
     }
   }
+  if (merged) console.log('  · 같은 사람을 여러 이름으로 부른 것 ' + merged + '건을 합쳤습니다');
 
   console.log('  · 무언가 걸린 글 ' + docHit + '건 · 적을 줄 ' + rows.length + '건');
   const top = {};

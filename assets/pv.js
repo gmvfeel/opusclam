@@ -280,4 +280,23 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
     }
 
   });
+
+  /* ★★ 2026-08-19 · 언급 잇기(assets/mentions.js) 를 <b>여기서</b> 싣습니다
+     ─────────────────────────────────────────────────────────────
+     ★ 왜 화면 파일에 넣지 않았나
+       상세 화면이 <b>스무 개</b>입니다. 스무 개를 고쳐 올리면
+       그만큼 실수할 자리가 늘어납니다. 특히 이름에 이음표(-)가 있는
+       파일은 올릴 때 이음표가 떨어져 나가는 일이 있었습니다.
+     ★ pv.js 는 <b>그 스무 곳에 이미 다 실려 있습니다.</b>
+       그러니 여기 한 곳에서 부르면 스무 곳이 함께 됩니다.
+     ★ 두 번 싣지 않도록 이미 있는지 봅니다. */
+  (function loadMentions() {
+    if (window.OCMentions) return;
+    if (document.querySelector('script[data-oc="mentions"]')) return;
+    var s = document.createElement('script');
+    s.src = '/assets/mentions.js';
+    s.defer = true;
+    s.setAttribute('data-oc', 'mentions');
+    (document.head || document.documentElement).appendChild(s);
+  })();
 })();
