@@ -310,17 +310,28 @@ async function getAll(path, label) {
    ★★ <b>lastmod 를 붙입니다.</b> 오늘 작품 928건의 한글 제목을 고쳤는데,
      lastmod 가 없으면 구글은 <b>바뀐 줄을 모릅니다.</b> 다시 와서 볼 이유가
      없습니다. updated_at 이 없는 표는 그냥 생략합니다(거짓 날짜보다 낫습니다). */
+/* ★★★ `names` — <b>이름이 없는 줄은 사이트맵에 넣지 않습니다.</b>
+   ══════════════════════════════════════════════════════════════
+   `api/seo.js` 는 이름이 없으면 그립니다 —
+       const nm = ... ; if (!nm) return null;   ← 404 가 됩니다
+   즉 이름 빈 줄을 사이트맵에 적으면 <b>구글에 404 를 알리는 셈</b>입니다.
+   이 파일 머리말에 이미 적혀 있습니다 — 8월에 /en/ 주소 76개가 404 여서
+   「사이트맵의 60%가 404 면 구글이 사이트맵 자체를 덜 믿는다」고요.
+   ▶ 그래서 <b>갈래마다 이름 칸을 적어 두고</b>, 하나라도 채워진 줄만 넣습니다.
+   ★ 칸 이름이 갈래마다 다릅니다 — 작품은 title_ko/title,
+     용어는 term_ko/term_en, 정보SPOT 은 title 뿐입니다.
+     `api/seo.js` 의 nameOf 와 <b>같게</b> 맞췄습니다. */
 const DETAIL = [
-  { key:'person',     table:'persons',          view:'/db/person-view.html',     freq:'monthly', pri:'0.7', label:'인물' },
-  { key:'work',       table:'person_works',     view:'/db/work-view.html',       freq:'monthly', pri:'0.6', label:'작품' },
-  { key:'spot',       table:'spot',             view:'/spot/spot-view.html',     freq:'weekly',  pri:'0.8', label:'정보SPOT' },
-  { key:'venue',      table:'venues',           view:'/db/venue-view.html',      freq:'monthly', pri:'0.7', label:'공연장' },
-  { key:'school',     table:'schools',          view:'/db/school-view.html',     freq:'monthly', pri:'0.7', label:'음악학교' },
-  { key:'org',        table:'orgs',             view:'/db/org-view.html',        freq:'monthly', pri:'0.7', label:'음악단체' },
-  { key:'foundation', table:'foundations',      view:'/db/foundation-view.html', freq:'monthly', pri:'0.6', label:'기관·재단' },
-  { key:'modern',     table:'modern_composers', view:'/db/modern-view.html',     freq:'monthly', pri:'0.6', label:'현대음악' },
-  { key:'academic',   table:'academic',         view:'/db/academic-view.html',   freq:'monthly', pri:'0.6', label:'학술' },
-  { key:'terms',      table:'oc_terms',         view:'/db/terms-view.html',      freq:'monthly', pri:'0.6', label:'음악용어' },
+  { key:'person',     table:'persons',          view:'/db/person-view.html',     freq:'monthly', pri:'0.7', label:'인물',      names:['name_ko','name_en'] },
+  { key:'work',       table:'person_works',     view:'/db/work-view.html',       freq:'monthly', pri:'0.6', label:'작품',      names:['title_ko','title'] },
+  { key:'spot',       table:'spot',             view:'/spot/spot-view.html',     freq:'weekly',  pri:'0.8', label:'정보SPOT',  names:['title'] },
+  { key:'venue',      table:'venues',           view:'/db/venue-view.html',      freq:'monthly', pri:'0.7', label:'공연장',    names:['name_ko','name_en'] },
+  { key:'school',     table:'schools',          view:'/db/school-view.html',     freq:'monthly', pri:'0.7', label:'음악학교',  names:['name_ko','name_en'] },
+  { key:'org',        table:'orgs',             view:'/db/org-view.html',        freq:'monthly', pri:'0.7', label:'음악단체',  names:['name_ko','name_en'] },
+  { key:'foundation', table:'foundations',      view:'/db/foundation-view.html', freq:'monthly', pri:'0.6', label:'기관·재단', names:['name_ko','name_en'] },
+  { key:'modern',     table:'modern_composers', view:'/db/modern-view.html',     freq:'monthly', pri:'0.6', label:'현대음악',  names:['name_ko','name_en'] },
+  { key:'academic',   table:'academic',         view:'/db/academic-view.html',   freq:'monthly', pri:'0.6', label:'학술',      names:['name_ko','name_en'] },
+  { key:'terms',      table:'oc_terms',         view:'/db/terms-view.html',      freq:'monthly', pri:'0.6', label:'음악용어',  names:['term_ko','term_en'] },
 ];
 
 /* ★★ 표마다 <b>있는 칸이 다릅니다.</b> `updated_at` 도 `hidden` 도 없는 표가
@@ -329,18 +340,24 @@ const DETAIL = [
    ▶ 그래서 <b>넉넉한 쪽부터 시도하고, 안 되면 한 단씩 뺍니다.</b>
      (훑개에서 쓰던 방법과 같습니다 — 짐작하지 않고 물어봅니다.) */
 async function getRows(d) {
+  const nm = (d.names || []).join(',');
   const tries = [
-    { sel: 'id,updated_at', extra: '&hidden=not.is.true', has: true },
-    { sel: 'id,updated_at', extra: '',                    has: true },
-    { sel: 'id',            extra: '&hidden=not.is.true', has: false },
-    { sel: 'id',            extra: '',                    has: false },
+    { sel: `id,updated_at${nm ? ',' + nm : ''}`, extra: '&hidden=not.is.true', mod: true,  names: !!nm },
+    { sel: `id,updated_at${nm ? ',' + nm : ''}`, extra: '',                    mod: true,  names: !!nm },
+    { sel: `id${nm ? ',' + nm : ''}`,            extra: '&hidden=not.is.true', mod: false, names: !!nm },
+    { sel: `id${nm ? ',' + nm : ''}`,            extra: '',                    mod: false, names: !!nm },
+    /* ★ 이름 칸 이름을 제가 틀리게 적었을 수도 있습니다. 그때는 <b>거르지 않고</b>
+         전부 넣습니다 — 거르려다 통째로 못 만드는 것보다 낫습니다.
+         대신 화면에 「이름 칸을 못 읽었습니다」라고 크게 알립니다. */
+    { sel: 'id,updated_at',                      extra: '&hidden=not.is.true', mod: true,  names: false },
+    { sel: 'id',                                 extra: '&hidden=not.is.true', mod: false, names: false },
+    { sel: 'id',                                 extra: '',                    mod: false, names: false },
   ];
   let last = null;
   for (const t of tries) {
     try {
-      const rows = await getAll(
-        `${d.table}?select=${t.sel}${t.extra}&order=id`, d.label);
-      return { rows, lastmod: t.has, how: t.sel + t.extra };
+      const rows = await getAll(`${d.table}?select=${t.sel}${t.extra}&order=id`, d.label);
+      return { rows, lastmod: t.mod, named: t.names };
     } catch (e) { last = e; }
   }
   throw last;
@@ -393,7 +410,13 @@ if (!SB_URL || !SB_KEY) {
       try { readFileSync(join(ROOT, f), 'utf8'); parts.push(f); } catch (e2) {}
       continue;
     }
-    const items = got.rows.map(r => ({
+    /* 이름이 하나라도 채워진 줄만 — 없으면 api/seo.js 가 404 를 줍니다 */
+    const keep = got.named
+      ? got.rows.filter(r => (d.names || []).some(
+          k => String(r[k] == null ? '' : r[k]).trim() !== ''))
+      : got.rows;
+    const dropped = got.rows.length - keep.length;
+    const items = keep.map(r => ({
       loc: `${ORIGIN}${d.view}?id=${r.id}`,
       lastmod: got.lastmod ? ymd(r.updated_at) : '',
     }));
@@ -403,7 +426,9 @@ if (!SB_URL || !SB_KEY) {
     parts.push(`sitemap-${d.key}.xml`);
     total += items.length;
     console.log(`  · ${d.label} ${items.length}건`
-      + (withMod ? ` (바뀐 날 ${withMod}건)` : ' (바뀐 날 없음 — updated_at 칸이 없습니다)'));
+      + (withMod ? ` (바뀐 날 ${withMod}건)` : ' (바뀐 날 없음 — updated_at 칸이 없습니다)')
+      + (dropped ? ` · ★ 이름이 없어 뺀 것 ${dropped}건` : '')
+      + (got.named ? '' : ' · ★ 이름 칸을 못 읽어 거르지 않았습니다'));
   }
   console.log(`  ─ 상세 화면 합계 ${total}건`);
 }
