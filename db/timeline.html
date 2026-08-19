@@ -173,6 +173,25 @@
        본문이 1,312px 인데 카드는 420px 이라 양쪽에 206px 씩 남았습니다.
      ▶ 흐름선 전체를 <b>900px</b> 로 좁힙니다. 그러면 한쪽 칸이 420px 이라
        카드가 거의 채웁니다. 가운데 선도 화면 한복판에 그대로 놓입니다. */
+  /* ★★ 2026-08-19 (파트너 요청) · <b>십년 띠를 위에 붙여 둡니다</b>
+       ──────────────────────────────────────────────────────────
+     전에는 십년을 누르면 <b>그 십년만 남기고 나머지를 지웠습니다.</b>
+     그러면 흐름이 끊깁니다 — 연표인데 앞뒤가 안 보입니다.
+     ▶ 이제 <b>전부 그려 두고</b>, 누르면 그 자리로 <b>미끄러져 갑니다.</b>
+       띠는 위에 붙어 있으니 어디로든 다시 뛸 수 있습니다.
+
+     ★ top 을 76px 로 박지 않고 <b>--feat-top</b> 을 씁니다 —
+       머리띠(.site-header)가 position:fixed 라 그 높이만큼 내려야 하고,
+       그 값은 이미 board.css 의 .board-bar 가 쓰는 이름입니다.
+       숫자를 새로 박으면 머리띠 높이가 바뀔 때 여기만 어긋납니다.
+     ★ box-shadow 로 좌우를 넘겨 칠합니다 — 본문 폭 밖으로 카드가
+       비쭉 보이는 것을 막습니다(board.css 와 같은 방법). */
+  .kr-stick{position:sticky;top:var(--feat-top,76px);z-index:20;
+    background:var(--paper);padding-top:10px;
+    box-shadow:-50vw 0 0 var(--paper),50vw 0 0 var(--paper)}
+  .kr-stick .kr-band{margin-bottom:14px}
+  .kr-stick .kr-flowhead{margin-bottom:0}
+
   .kr-flowhead,.kr-flow{max-width:900px;margin-left:auto;margin-right:auto}
   .kr-flowhead{display:grid;grid-template-columns:1fr 60px 1fr;gap:0;
     padding-bottom:12px;margin-bottom:4px;border-bottom:2px solid var(--text-3)}
@@ -422,13 +441,17 @@ function ocN(tpl) {
       <!-- ★ 십년 띠 — 어느 시기에 일이 많았는지 <b>높이</b>로 보입니다.
              2010년대가 유난히 높은데, 그것이 「한국 클래식이 세계로
              나간 시기」라는 것을 그림으로 말해 줍니다. -->
-      <div class="kr-band" id="krBand" role="tablist" aria-label="십년 고르기"></div>
+      <!-- ★★ 2026-08-19 · 띠와 머리글을 <b>한 상자에 묶어</b> 위에 붙입니다.
+             따로 붙이면 스크롤할 때 둘 사이가 벌어져 보입니다. -->
+      <div class="kr-stick">
+        <div class="kr-band" id="krBand" role="tablist" aria-label="십년으로 뛰기"></div>
 
-      <!-- ★ 세로 흐름선 — 연도가 흐르는 것이 몸으로 느껴집니다.
-             왼쪽에 국제 무대, 오른쪽에 단체를 둡니다. -->
-      <div class="kr-flowhead">
-        <span class="l">국제 무대<em>국제 콩쿠르 1 · 2 · 3위</em></span>
-        <span class="r">단체의 발자취<em>국내에서 가장 이른 곳 · 지금 무대에 오르는 곳</em></span>
+        <!-- ★ 세로 흐름선 — 연도가 흐르는 것이 몸으로 느껴집니다.
+               왼쪽에 국제 무대, 오른쪽에 단체를 둡니다. -->
+        <div class="kr-flowhead">
+          <span class="l">국제 무대<em>국제 콩쿠르 1 · 2 · 3위</em></span>
+          <span class="r">단체의 발자취<em>국내에서 가장 이른 곳 · 지금 무대에 오르는 곳</em></span>
+        </div>
       </div>
       <div class="kr-flow" id="krFlow"></div>
       <p class="kr-foot">
@@ -804,7 +827,8 @@ function ocN(tpl) {
       .then(function(rows){
         krRows = rows || [];
         krDrawBand();
-        krDrawFlow(null);
+        krDrawFlow();
+        krFitStick();
       })
       .catch(function(){
         $('krFlow').innerHTML = '<p class="kr-empty">불러오지 못했습니다.</p>';
@@ -832,6 +856,9 @@ function ocN(tpl) {
   function krDrawBand(){
     var box = $('krBand');
     if (!box || !krRows.length) return;
+    /* ★ 안 보이는 동안에는 다시 그리지 않습니다 — 「서양 음악사」 탭에서
+         폭을 바꾸면 띠 높이가 0 으로 재져서 <b>막대가 납작해집니다.</b> */
+    if (!box.offsetParent) return;
 
     var cnt = {};
     krRows.forEach(function(x){ var d = krDec(x.yr); cnt[d] = (cnt[d] || 0) + 1; });
@@ -840,11 +867,24 @@ function ocN(tpl) {
     var lo = ds[0], hi = ds[ds.length - 1];
     var max = Math.max.apply(null, ds.map(function(d){ return cnt[d]; }));
 
+    /* ★★ 2026-08-19 · 막대가 자랄 수 있는 높이를 <b>띠에서 재서</b> 구합니다.
+       ─────────────────────────────────────────────────────────────
+       전에는 62px 로 박아 두었습니다. 그런데 띠 높이가 넓은 화면 96px ·
+       손전화 74px 로 다릅니다. 74px 인 곳에서 숫자(13)+간격(10)+
+       막대(62)+연도(11) = 96px 이 되어 <b>위로 삐져나가 머리띠에 가렸습니다</b>
+       (390px 에서 「16」·「18」의 숫자가 잘려 보였습니다).
+       ▶ 띠 높이에서 숫자·연도·간격 몫(36px)을 빼고 나머지를 막대에 줍니다.
+         넓은 화면 60px · 손전화 38px 이 저절로 나옵니다.
+       ★ % 로 주는 방법을 먼저 써 봤는데 안 됐습니다 — 띠가
+         align-items:flex-end 라 <b>막대 상자가 내용만큼만</b> 커서
+         flex:1 이 늘어날 자리가 없었습니다(막대가 납작해졌습니다). */
+    var room = Math.max(20, box.clientHeight - 36);
+
     var out = '';
     for (var d = lo; d <= hi; d += 10) {
       var n = cnt[d] || 0;
       /* 없는 십년도 자리를 지킵니다 — 빠지면 흐름이 끊겨 보입니다 */
-      var h = n ? Math.max(6, Math.round(n / max * 62)) : 3;
+      var h = n ? Math.max(6, Math.round(n / max * room)) : 3;
       /* 색은 <b>차례대로</b> 씁니다 — 앞쪽이 흙빛, 뒤쪽이 보라 */
       var ci = Math.round((d - lo) / Math.max(10, hi - lo) * (KR_HUE.length - 1));
       var c1 = KR_HUE[Math.min(KR_HUE.length - 1, Math.max(0, ci))];
@@ -868,30 +908,141 @@ function ocN(tpl) {
     }
     box.innerHTML = out;
 
+    /* ★ 다시 그려도 손잡이는 <b>한 번만</b> 답니다.
+         화면 폭이 바뀌면 이 함수를 다시 부르는데, 그때마다 달면
+         한 번 눌러도 두 번·세 번 처리됩니다. */
+    if (box.dataset.bound) return;
+    box.dataset.bound = '1';
+
     box.addEventListener('click', function(ev){
       var b = ev.target.closest('.kr-bar');
       if (!b) return;
       var dd = Number(b.getAttribute('data-d'));
       /* 같은 것을 다시 누르면 전부 보기로 돌아옵니다 */
-      krPick = (krPick === dd) ? null : dd;
-      [].forEach.call(box.querySelectorAll('.kr-bar'), function(x){
-        x.classList.toggle('on', krPick !== null && Number(x.getAttribute('data-d')) === krPick);
-      });
-      krDrawFlow(krPick);
+      /* ★★ 2026-08-19 (파트너 요청) · <b>지우지 않고 옮겨 갑니다.</b>
+         전에는 krDrawFlow(십년) 으로 <b>그 십년만 남겼습니다.</b>
+         연표에서 앞뒤가 사라지면 흐름을 볼 수 없습니다.
+         ▶ 이제 전부 그려 두고 <b>그 자리로 미끄러져</b> 갑니다. */
+      krMark(dd);
+      krJump(dd);
     });
   }
+
+  /* 어느 십년이 골라져 있는지 띠에 표시합니다 */
+  function krMark(dec){
+    var box = $('krBand');
+    if (!box) return;
+    krPick = dec;
+    [].forEach.call(box.querySelectorAll('.kr-bar'), function(x){
+      x.classList.toggle('on', dec !== null && Number(x.getAttribute('data-d')) === dec);
+    });
+  }
+
+  /* ── 머리띠 높이만큼 내려 붙이기 ─────────────────────────
+     ★★ 처음에 `top:76px` 로 박았더니 <b>머리띠가 십년 띠를 덮었습니다.</b>
+       이 화면의 머리띠는 위쪽 띠 + 로고줄이라 <b>150px 쯤</b> 됩니다.
+       board.css 의 `--feat-top:76px` 은 다른 화면 기준이었습니다.
+     ▶ 그래서 숫자를 박지 않고 <b>그때그때 재서</b> 넣습니다.
+       머리띠가 바뀌어도, 손전화에서 낮아져도 저절로 맞습니다.
+     ★ 머리띠가 position:fixed·sticky 일 때만 셈합니다 — 그냥 흘러가는
+       머리띠라면 빼 줄 필요가 없습니다. */
+  function krFitStick(){
+    var st = document.querySelector('.kr-stick');
+    if (!st) return;
+    var h = 0, hd = document.querySelector('.site-header');
+    if (hd) {
+      var pos = window.getComputedStyle(hd).position;
+      if (pos === 'fixed' || pos === 'sticky') h = hd.offsetHeight;
+    }
+    /* ★ 머리띠 <b>바로 밑</b>에 붙입니다. 4px 이라도 띄우면 그 틈으로
+         아래 카드가 지나가는 것이 <b>얄금 보입니다</b>(시험에서 잡았습니다). */
+    st.style.top = h + 'px';
+  }
+
+  /* 붙어 있는 띠의 <b>아래 끝</b>이 화면에서 몇 px 인가
+     ★ 이 값만큼 더 내려야 카드가 띠에 가리지 않습니다.
+       띠 높이는 화면 폭에 따라 달라지므로 <b>그때그때 잽니다.</b> */
+  function krStickBottom(){
+    var st = document.querySelector('.kr-stick');
+    if (!st) return 0;
+    var top0 = parseFloat(window.getComputedStyle(st).top);
+    if (!isFinite(top0)) top0 = 76;
+    return top0 + st.offsetHeight;
+  }
+
+  /* ── 그 십년의 첫 줄로 미끄러져 가기 ─────────────────────
+     ★ scrollIntoView 대신 <b>자리를 재서</b> 옮깁니다 —
+       붙어 있는 띠 높이를 빼야 카드가 띠 밑에 숨지 않습니다.
+     ★ 「움직임을 줄여 달라」고 해 둔 분에게는 <b>바로</b> 옮깁니다. */
+  function krJump(dec){
+    var box = $('krFlow');
+    if (!box) return;
+    var row = box.querySelector('.kr-row[data-d="' + dec + '"]');
+    if (!row) return;                     /* 그 십년에 기록이 없으면 가만히 */
+    var slow = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var y = window.pageYOffset + row.getBoundingClientRect().top
+          - krStickBottom() - 14;
+    if (y < 0) y = 0;
+    try { window.scrollTo({ top: y, behavior: slow ? 'auto' : 'smooth' }); }
+    catch (e) { window.scrollTo(0, y); }   /* 옛 브라우저 */
+  }
+
+  /* ── 굴릴 때 띠도 따라 오게 ───────────────────────────────
+     ★ 띠가 늘 보이는데 표시가 안 따라오면 <b>어디 있는지 알 수 없습니다.</b>
+     ★ scroll 은 1초에 수십 번 옵니다 — requestAnimationFrame 으로
+       한 그림에 한 번만 셈합니다(안 하면 굴릴 때 뻑뻑해집니다). */
+  (function krSpy(){
+    var waiting = false;
+    function look(){
+      waiting = false;
+      var box = $('krFlow');
+      if (!box || !box.offsetParent) return;      /* 안 보이는 탭이면 건너뜀 */
+      var edge = krStickBottom() + 24, cur = null;
+      var rows = box.querySelectorAll('.kr-row[data-d]');
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].getBoundingClientRect().top <= edge) {
+          cur = Number(rows[i].getAttribute('data-d'));
+        } else break;                              /* 위에서 아래 차례라 멈춤 */
+      }
+      if (cur !== krPick) krMark(cur);
+    }
+    window.addEventListener('scroll', function(){
+      if (waiting) return;
+      waiting = true;
+      (window.requestAnimationFrame || setTimeout)(look, 16);
+    }, { passive: true });
+
+    /* ★ 머리띠 높이는 <b>바뀝니다</b> — 화면 폭이 바뀌거나, 굴리면
+         머리띠가 얇아지는 화면도 있습니다(.solid).
+       ★ 굴릴 때마다 높이를 재면 브라우저가 <b>다시 그리기를 되풀이</b>해
+         뻑뻑해집니다. 그래서 ResizeObserver 로 <b>바뀔 때만</b> 잽니다. */
+    /* ★ 폭이 바뀌면 띠 높이가 달라지므로 <b>막대도 다시 그립니다.</b>
+         resize 는 끄는 동안 수십 번 오므로 <b>200ms 쉰 뒤</b> 한 번만. */
+    var rt = null;
+    window.addEventListener('resize', function(){
+      krFitStick();
+      if (rt) clearTimeout(rt);
+      rt = setTimeout(function(){ krDrawBand(); krFitStick(); }, 200);
+    });
+    var hd = document.querySelector('.site-header');
+    if (hd && window.ResizeObserver) {
+      new ResizeObserver(krFitStick).observe(hd);
+    }
+  })();
 
   /* ── 세로 흐름선 ───────────────────────────────────────
      ★ 왼쪽에 국제 무대, 오른쪽에 단체. 가운데 선을 따라 연도가
        흐르는 것이 몸으로 느껴집니다.
      ★ 인물DB 와 이어진 분은 <b>얼굴</b>이 나옵니다. 없으면 첫 글자. */
-  function krDrawFlow(dec){
+  /* ★★ 2026-08-19 · dec 을 <b>더 받지 않습니다.</b> 늘 전부 그립니다.
+       거르는 일은 없어졌고, 대신 줄마다 <b>data-d</b>(십년)를 달아
+       띠를 눌렀을 때 그 줄을 찾아갈 수 있게 합니다. */
+  function krDrawFlow(){
     var box = $('krFlow');
     if (!box) return;
 
-    var list = krRows.filter(function(x){
-      return dec === null || krDec(x.yr) === dec;
-    });
+    var list = krRows;
     if (!list.length){
       box.innerHTML = '<p class="kr-empty">이 시기의 기록이 아직 없습니다.</p>';
       return;
@@ -923,7 +1074,8 @@ function ocN(tpl) {
         ? '<a class="kr-card" href="' + href + '">' + inner + '</a>'
         : '<span class="kr-card">' + inner + '</span>';
 
-      return '<div class="kr-row' + (win ? ' is-win' : '') + '">'
+      return '<div class="kr-row' + (win ? ' is-win' : '') + '"'
+        + ' data-d="' + krDec(x.yr) + '">'
         + '<span class="side-l">' + (isC ? card : '') + '</span>'
         + '<span class="yr"><b>' + esc(x.yr) + '</b></span>'
         + '<span class="side-r">' + (isC ? '' : card) + '</span>'
@@ -958,7 +1110,13 @@ function ocN(tpl) {
           ? '한국 클래식 음악이 걸어온 길입니다. 국제 무대의 발자취와 단체의 역사를 나란히 봅니다.'
           : '중세부터 오늘까지 한 줄로 봅니다. 시대를 누르면 그 시대의 작곡가 · 작품 · 용어가 함께 펼쳐집니다.';
       }
-      if (kr) loadKr();
+      if (kr) {
+        loadKr();
+        /* ★ 돌아왔을 때 다시 잽니다 — 숨어 있는 동안 폭이 바뀌었으면
+             띠 높이를 못 재서 막대가 옛 높이로 남아 있습니다. */
+        krDrawBand();
+        krFitStick();
+      }
     });
 
     /* ★ 처음 열 때는 <b>한국 클래식</b>입니다. 탭 순서를 바꿨으므로
