@@ -309,6 +309,15 @@ window.OCBoard = (function () {
   /* ============================ 목록 ============================ */
   function list(cfg) {
     var PAGE = cfg.pageSize || 20, cur = 1, total = 0, cat = '', q = '', yr = '', region = '', era = '';
+    /* ★★ 2026-08-19 · 시·도로 고르기 (파트너 지적 — 메인 지역 단추)
+       ─────────────────────────────────────────────────────────────
+       메인의 「서울·경기…」 단추가 <b>?q=서울</b> 로 가 있었습니다.
+       그건 <b>글자 찾기</b>라서, 「연세대학교 음악대학 입시요강」처럼
+       제목에 "서울"이 없는 글은 <b>빠집니다.</b> 8건만 나온 까닭입니다.
+       ▶ 이제 <b>?sido=서울</b> 로 오고, 아래에서 칸으로 고릅니다.
+       ★ 어느 칸을 쓸지는 화면이 정합니다 — cfg.sidoCol (예: 'sido').
+         적지 않은 게시판에서는 이 기능이 아예 돌지 않습니다. */
+    var sido = '';
     var sortCol = cfg.defaultSort || 'created_at';
     /* 날짜 탭 — 「진행중·예정 / 지난 / 전체」처럼 오늘을 기준으로 나눕니다.
        cfg.dateTabs 를 주지 않은 게시판에서는 늘 빈 값이라 아무 일도 하지 않습니다. */
@@ -488,6 +497,7 @@ window.OCBoard = (function () {
       if (cat) u += '&category=eq.' + encodeURIComponent(cat);
       if (yr) u += '&title=ilike.*' + encodeURIComponent(yr) + '*';
       if (region) u += '&region=eq.' + encodeURIComponent(region);
+      if (sido && cfg.sidoCol) u += '&' + cfg.sidoCol + '=eq.' + encodeURIComponent(sido);
       if (era) u += '&era=eq.' + encodeURIComponent(era);
       /* 날짜 탭 — 오늘을 기준으로 앞뒤를 가릅니다 ('all' 이면 거르지 않습니다) */
       if (cfg.dateTabs && (dtab === 'upcoming' || dtab === 'past')) {
@@ -843,7 +853,8 @@ window.OCBoard = (function () {
     function saveSpot(id) {
       try {
         sessionStorage.setItem(SKEY, JSON.stringify({
-          id: String(id), page: cur, cat: cat, q: q, yr: yr, region: region, era: era, sort: sortCol, dtab: dtab
+          id: String(id), page: cur, cat: cat, q: q, yr: yr, region: region, era: era,
+          sido: sido, sort: sortCol, dtab: dtab
         }));
       } catch (e) {}
     }
@@ -1067,6 +1078,7 @@ window.OCBoard = (function () {
       if (_sp) {
         cat = _sp.cat || '';  q = _sp.q || '';  yr = _sp.yr || '';
         region = _sp.region || '';  era = _sp.era || '';  sortCol = _sp.sort || sortCol;
+        sido = _sp.sido || '';      /* ★ 글을 보고 돌아와도 지역이 지켜집니다 */
         /* 화면의 고르는 것들도 되돌려 목록과 화면이 어긋나지 않게 한다 */
         var _bi = document.querySelector('.board-search input');
         if (_bi) _bi.value = q;
@@ -1099,7 +1111,22 @@ window.OCBoard = (function () {
         return;
       }
 
-      var _q = new URLSearchParams(location.search).get('q') || '';
+      /* ★★ 2026-08-19 · <b>?region= 을 아무도 읽지 않고 있었습니다.</b>
+         메인의 「해외」 단추가 ?region=해외 로 가는데, 여기서 읽는 것은
+         여태 ?q= 하나뿐이었습니다. 그래서 「해외」를 눌러도
+         <b>전체 목록이 그대로</b> 나왔습니다. 함께 고칩니다. */
+      var _up = new URLSearchParams(location.search);
+
+      var _rg = (_up.get('region') || '').trim();
+      if (_rg) {
+        region = _rg;
+        if (typeof regionSel !== 'undefined' && regionSel) regionSel.value = _rg;
+      }
+
+      var _sd = (_up.get('sido') || '').trim();
+      if (_sd && cfg.sidoCol) sido = _sd;
+
+      var _q = _up.get('q') || '';
       if (!_q) { loadPage(1); return; }
       var _inp = document.querySelector('.board-search input');
       if (_inp) _inp.value = _q;
