@@ -928,9 +928,16 @@ function ocN(tpl) {
 
   function boot() {
     var file = location.pathname.split('/').pop();
-    var m = file.match(/^(.+)-view\.html$/);
-    if (!m) return;
-    var type = m[1];
+    /* ★★ 2026-08-19 · <b>cleanUrls 가 `.html` 을 없앱니다.</b>
+         `/db/person-view.html` 이 `/db/person-view` 로 정리되면서
+         「.html 로 끝나는가」로 가리던 이 대목이 <b>늘 어긋났습니다.</b>
+         그래서 인물·단체·공연장·학교… <b>모든 상세 화면에서 이 기능이
+         통째로 사라져 있었습니다.</b> (2026-08-18 cleanUrls 를 켠 뒤부터)
+       ★ 붙은 것과 안 붙은 것을 <b>둘 다</b> 봅니다.
+       ★ 정규식을 쓰지 않습니다 — 글자 자리만 봅니다. */
+    if (file.length > 5 && file.slice(-5) === '.html') file = file.slice(0, -5);
+    if (file.length <= 5 || file.slice(-5) !== '-view') return;
+    var type = file.slice(0, -5);
     if (!TABLE[type]) return;
 
     var id = new URLSearchParams(location.search).get('id');

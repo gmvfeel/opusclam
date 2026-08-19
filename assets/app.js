@@ -248,7 +248,14 @@
      여기에 한 줄 추가하면 해당 조건의 모든 페이지에 엔진이 실려요.
      페이지에 이미 같은 <script>가 있으면 중복 로드하지 않습니다. */
   var OC_ENGINES = [
-    { when: function(file){ return /-view\.html$/.test(file); }, src: "/assets/links.js" }
+    /* ★★ 2026-08-19 · cleanUrls 가 `.html` 을 없애 이 줄이 늘 어긋났고,
+         그래서 <b>links.js 가 아예 실리지 않았습니다.</b>
+         (상세 화면의 「사사·제자·출신 학교·동문」이 통째로 사라짐)
+       ★ 붙은 것과 안 붙은 것을 둘 다 봅니다. 정규식 없이 글자 자리만. */
+    { when: function (file) {
+        if (file.length > 5 && file.slice(-5) === '.html') file = file.slice(0, -5);
+        return file.length > 5 && file.slice(-5) === '-view';
+      }, src: "/assets/links.js" }
   ];
   function loadEngines(){
     var file = location.pathname.split("/").pop();
