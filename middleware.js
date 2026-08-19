@@ -63,6 +63,11 @@ export const config = {
     '/db/person-view',
     '/db/work-view.html',
     '/db/work-view',
+    /* ★★ 2026-08-19 · 목록 화면 — 봇이 상세로 걸어 들어갈 길 */
+    '/db/person.html',
+    '/db/person',
+    '/db/work.html',
+    '/db/work',
   ],
 };
 
@@ -157,6 +162,24 @@ export default function middleware(request) {
   const p = url.pathname;
   if (p === '/' || p === '/index' || p === '/index.html') {
     return rewrite(new URL('/home', request.url));
+  }
+
+  /* ── 목록 화면 ─────────────────────────────────────────
+     ★★ 2026-08-19 · 서치 콘솔이 인물 상세에 「참조 페이지 : 감지된
+       페이지 없음」이라 했습니다 — <b>걸어 들어갈 링크가 없습니다.</b>
+       메뉴도 목록도 자바스크립트라 봇 눈에는 안 보이기 때문입니다.
+       봇에게만 목록을 서버에서 그려 주면 길이 생깁니다.
+     ★ 쪽 번호 `p` 는 <b>사람 목록도 알아듣는 것</b>입니다
+       (assets/db-list.js). 그래서 같은 주소를 그대로 씁니다.
+     ★ 주소를 <b>통째로 견줍니다.</b> 그래서 `/db/person-view.html` 은
+       여기 걸리지 않고 아래 상세 갈래로 갑니다. */
+  if (p === '/db/person.html' || p === '/db/person'
+   || p === '/db/work.html'  || p === '/db/work') {
+    const to = new URL('/api/seo', request.url);
+    to.searchParams.set('kind', p.indexOf('work') !== -1 ? 'work-list' : 'person-list');
+    const pg = url.searchParams.get('p') || '';
+    if (pg !== '' && /^[0-9]+$/.test(pg)) to.searchParams.set('p', pg);
+    return rewrite(to);
   }
 
   /* ★ 번호가 없거나 숫자가 아니면 그냥 넘깁니다.

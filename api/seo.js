@@ -71,6 +71,27 @@ async function sb(path) {
   return r.json();
 }
 
+/* ★★ 2026-08-19 · 몇 건인지도 함께 받습니다 (목록 화면에 씁니다)
+     PostgREST 는 Prefer: count=exact 를 주면 Content-Range 머리글에
+     「0-199/15509」 처럼 <b>전체 건수</b>를 적어 보냅니다. */
+async function sbCount(path) {
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Prefer: 'count=exact' },
+  });
+  if (!r.ok) {
+    let why = '';
+    try { why = (await r.text()).slice(0, 300); } catch (e) { /* 못 읽으면 그냥 */ }
+    throw new Error(`Supabase ${r.status} · ${why}`);
+  }
+  let total = 0;
+  const cr = r.headers.get('content-range');
+  if (cr) {
+    const q = cr.split('/')[1];
+    if (q && q !== '*') total = parseInt(q, 10) || 0;
+  }
+  return { rows: await r.json(), total };
+}
+
 /* ── 생몰 표기 ────────────────────────────────────────────
    ★ 「1685~1750」 · 「1985~」 · 「~1750」 세 꼴을 다룹니다. */
 function life(p) {
@@ -133,6 +154,8 @@ async function person(id) {
       /* ★★ 2026-08-19 — 작품 이름에 <b>링크를 답니다.</b>
            구글이 인물 화면을 타고 작품 화면까지 걸어 들어갈 길이 됩니다.
            사이트맵만으로도 가긴 하지만, 서로 이어진 것이 훨씬 낫습니다. */
+      /* ★ 2026-08-19 · 목록으로 돌아가는 길 — 구글이 오갈 수 있게 */
+      + `<p><a href="${SITE}/db/person.html">인물DB 목록</a></p>`
       + (works.length
           ? '<section><h2>작품 ' + works.length + '건</h2><ul>'
             + works.map(w => `<li><a href="${SITE}/db/work-view.html?id=${encodeURIComponent(w.id)}">`
@@ -217,7 +240,122 @@ async function work(id) {
       + (facts.length
           ? '<dl>' + facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('') + '</dl>'
           : '')
+      /* ★ 2026-08-19 · 목록으로 돌아가는 길 */
+      + `<p><a href="${SITE}/db/work.html">작품DB 목록</a></p>`
       + (w.note ? `<section><h2>설명</h2><p>${esc(plain(w.note, 4000))}</p></section>` : ''),
+  };
+}
+
+/* ============================================================
+   목록 화면 — <b>봇이 걸어 들어갈 길</b>            2026-08-19
+   ------------------------------------------------------------
+   ★ 왜 필요한가
+     서치 콘솔이 인물 상세에 대해 이렇게 말했습니다 —
+         참조 페이지 : <b>감지된 페이지 없음</b>
+     즉 그 화면으로 <b>걸어 들어갈 링크가 하나도 없습니다.</b> 메뉴는
+     include.js 가 나중에 그려 넣고 목록도 자바스크립트라, 봇 눈에는
+     링크가 보이지 않습니다. 사이트맵으로 주소는 알렸지만, 구글은
+     <b>링크가 없는 주소를 뒤로 미룹니다</b> — 그래서 인물 15,509명이
+     「발견됨 · 현재 색인이 생성되지 않음」에 머물러 있습니다.
+
+   ★ 어떤 주소를 쓰나 — <b>`?p=3` 은 사람 목록도 이미 알아듣습니다</b>
+     (assets/db-list.js). 그러니 봇만을 위한 새 주소를 만들지 않습니다.
+     사람이 그 주소로 와도 목록이 정상으로 열립니다.
+
+   ★ 한 쪽에 200개, 그리고 <b>모든 쪽으로 가는 링크</b>를 함께 답니다.
+       인물 15,509명 → 78쪽 · 작품 17,061건 → 86쪽
+     그래서 사이트맵에 이미 든 `/db/person.html` 한 곳만 구글이 들어오면
+     거기서 78쪽 전부가 보이고, 각 쪽에서 200명씩 상세로 이어집니다.
+     ▶ <b>사이트맵을 늘릴 필요가 없습니다.</b>
+
+   ★ 차례는 <b>id</b>로 고정합니다. 사람 화면의 기본 차례(quality 등)는
+     같은 값이 많아 쪽을 넘길 때 <b>빠지거나 겹치는 것이 생깁니다.</b>
+     빠지면 그 사람은 어느 쪽에도 안 나와 영영 링크가 없습니다.
+   ============================================================ */
+const PER = 200;
+
+const LISTS = {
+  person: {
+    table: 'persons',
+    select: 'id,name_ko,name_en,birth_year,death_year',
+    filter: '&hidden=not.is.true',
+    list: '/db/person.html', view: '/db/person-view.html',
+    name: '인물DB', unit: '명', other: ['작품DB', '/db/work.html'],
+    row: (r) => {
+      const nm = r.name_ko || r.name_en || '';
+      const lf = life(r);
+      return { text: nm, sub: [(r.name_ko && r.name_en && r.name_en !== r.name_ko) ? r.name_en : '', lf] };
+    },
+  },
+  work: {
+    table: 'person_works',
+    select: 'id,title,title_ko,composer_ko,composer_en,form_ko',
+    filter: '&hidden=not.is.true',
+    list: '/db/work.html', view: '/db/work-view.html',
+    name: '작품DB', unit: '건', other: ['인물DB', '/db/person.html'],
+    row: (r) => ({
+      text: r.title_ko || r.title || '',
+      sub: [r.composer_ko || r.composer_en || '', r.form_ko || ''],
+    }),
+  },
+};
+
+/* 쪽 주소 — 첫 쪽은 물음표 없이 (같은 화면이 두 주소로 잡히지 않게) */
+function pageHref(c, n) {
+  return SITE + c.list + (n > 1 ? '?p=' + n : '');
+}
+
+/* 쪽 고르개 — <b>모든 쪽</b>을 답니다. 78~86개라 한 화면에 들어갑니다.
+   ★ 몇 개만 걸고 「다음」으로 이으면 구글이 마지막 쪽까지 가는 데
+     78번을 거쳐야 합니다. 다 걸면 <b>어느 쪽이든 두 걸음</b>입니다. */
+function pager(c, cur, pages) {
+  if (pages < 2) return '';
+  let out = '<nav class="pg"><h2>쪽</h2>';
+  if (cur > 1) out += `<a rel="prev" href="${pageHref(c, cur - 1)}">이전</a> `;
+  for (let n = 1; n <= pages; n++) {
+    out += (n === cur)
+      ? `<b>${n}</b> `
+      : `<a href="${pageHref(c, n)}">${n}</a> `;
+  }
+  if (cur < pages) out += `<a rel="next" href="${pageHref(c, cur + 1)}">다음</a>`;
+  return out + '</nav>';
+}
+
+async function list(kind, page) {
+  const c = LISTS[kind];
+  if (!c) return null;
+  const off = (page - 1) * PER;
+  const { rows, total } = await sbCount(
+    `${c.table}?select=${c.select}${c.filter}&order=id.asc&limit=${PER}&offset=${off}`);
+  if (!rows || !rows.length) return null;          /* 없는 쪽 → 404 */
+
+  const pages = Math.max(1, Math.ceil(total / PER));
+  const from = off + 1, to = off + rows.length;
+  const head = c.name + (page > 1 ? ` · ${page}쪽` : '');
+
+  return {
+    title: `${head} · OPUSCLAM`,
+    desc: `클래식 ${c.name} ${total.toLocaleString('en-US')}${c.unit}`
+        + ` — ${from.toLocaleString('en-US')}~${to.toLocaleString('en-US')}번째`,
+    image: '',
+    canonical: pageHref(c, page),
+    body:
+      `<h1>${esc(head)}</h1>`
+      + `<p class="life">모두 ${esc(total.toLocaleString('en-US'))}${esc(c.unit)}`
+      + ` · ${esc(String(page))}/${esc(String(pages))}쪽</p>`
+      + '<ul>'
+      + rows.map(r => {
+          const it = c.row(r);
+          const sub = it.sub.filter(Boolean).map(s => ` <span>${esc(s)}</span>`).join('');
+          return `<li><a href="${SITE}${c.view}?id=${encodeURIComponent(r.id)}">`
+               + `${esc(it.text)}</a>${sub}</li>`;
+        }).join('')
+      + '</ul>'
+      + pager(c, page, pages)
+      /* 다른 갈래·대문으로도 이어 둡니다 — 링크가 한 방향뿐이면
+         구글이 오갈 길이 좁습니다 */
+      + `<p><a href="${SITE}${c.other[1]}">${esc(c.other[0])}</a>`
+      + ` · <a href="${SITE}/">OPUSCLAM</a></p>`,
   };
 }
 
@@ -248,6 +386,8 @@ dl{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;margin:18px 0}
 dt{color:#777}dd{margin:0}
 ul{padding-left:18px}li{margin:3px 0}li span{color:#888;font-size:13px}
 .src{color:#999;font-size:12px}
+.pg{margin:22px 0;line-height:2}.pg h2{display:inline;font-size:14px;margin-right:8px}
+.pg a{margin-right:4px}.pg b{margin-right:4px;color:#111}
 </style>
 </head>
 <body>
@@ -280,17 +420,27 @@ export default async function handler(req, res) {
     const kind = url.searchParams.get('kind');
     const id = url.searchParams.get('id');
 
-    /* ★ 번호가 없거나 숫자가 아니면 <b>색인하지 않습니다</b> —
-         목록으로 보내면 같은 내용이 여러 주소로 잡힙니다. */
-    if (!id || !/^\d+$/.test(id)) {
-      res.setHeader('X-Robots-Tag', 'noindex');
-      res.status(404).send('not found');
-      return;
-    }
-
     let d = null;
-    if (kind === 'person') d = await person(id);
-    else if (kind === 'work') d = await work(id);
+
+    /* ★★ 2026-08-19 · 목록 화면 — `kind=person-list` · `kind=work-list`
+         쪽 번호는 `p`, 없으면 첫 쪽입니다. */
+    if (kind === 'person-list' || kind === 'work-list') {
+      const raw = url.searchParams.get('p') || '1';
+      /* 숫자가 아니거나 0 이하면 <b>첫 쪽</b>으로 봅니다 — 404 로 두면
+         잘못 만든 링크 하나에 목록 전체가 끊깁니다. */
+      const page = /^[0-9]+$/.test(raw) ? Math.max(1, parseInt(raw, 10)) : 1;
+      d = await list(kind === 'work-list' ? 'work' : 'person', page);
+    } else {
+      /* ★ 번호가 없거나 숫자가 아니면 <b>색인하지 않습니다</b> —
+           목록으로 보내면 같은 내용이 여러 주소로 잡힙니다. */
+      if (!id || !/^\d+$/.test(id)) {
+        res.setHeader('X-Robots-Tag', 'noindex');
+        res.status(404).send('not found');
+        return;
+      }
+      if (kind === 'person') d = await person(id);
+      else if (kind === 'work') d = await work(id);
+    }
 
     /* 없는 번호 · 숨긴 인물 → 404 로 알립니다.
        ★ 200 으로 빈 화면을 주면 구글이 <b>빈 페이지를 색인</b>합니다. */

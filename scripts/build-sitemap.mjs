@@ -294,7 +294,10 @@ if (!SB_URL || !SB_KEY) {
   console.log(`  인물 ${ps.length}명`);
 
   console.log('  작품을 읽습니다…');
-  const ws = await getAll('person_works?select=id&order=id', '작품');
+  /* ★ 2026-08-19 · <b>숨긴 작품은 뺍니다</b> — 인물과 같은 기준입니다.
+       api/seo.js 는 숨긴 작품에 404 를 주므로, 사이트맵에 넣으면
+       구글이 없는 주소를 받아 갑니다. */
+  const ws = await getAll('person_works?select=id&hidden=not.is.true&order=id', '작품');
   console.log(`  작품 ${ws.length}건`);
 
   writeFileSync(join(ROOT, 'sitemap-person.xml'), plainSet(
