@@ -74,18 +74,32 @@
   padding:12px 14px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--text-2);
   cursor:pointer;font-family:inherit;line-height:1.45;transition:all .15s ease;
   border-left:3px solid transparent}
-/* ★ 2026-08-15 · 다른 게시판 목록과 <b>같은 hover</b> (파트너 지적)
-     board.css 의 .board-row:hover 가 표준입니다 — 짙은 보라(#322152)
-     바탕에 흰 글자. 화면마다 hover 가 다르면 「누를 수 있는 것」이
-     무엇인지 매번 새로 배워야 합니다. */
-.ca-nav button:hover{background:#322152;color:#fff}
-.ca-nav button:hover i{color:rgba(255,255,255,.72)}
-.ca-nav button.on{background:var(--paper-2);color:var(--violet-2);
+/* ★★ 2026-08-19 · 두 상태를 <b>맞바꿨습니다</b> (파트너 지적)
+   ─────────────────────────────────────────────────────────────
+   전에는 이랬습니다 —
+       손 올린 것   짙은 보라 + 흰 글자   ← 가장 세게 보임
+       고른 것      옅은 바탕 + 왼쪽 막대  ← 약하게 보임
+   거꾸로였습니다. <b>지금 보고 있는 대회</b>가 가장 또렷해야 하고,
+   손 올린 것은 「누를 수 있다」는 귀띔이면 됩니다. 손은 곧 떼지만
+   고른 것은 화면에 머무는 상태니까요.
+
+   ★ 2026-08-15 에 hover 를 board.css 와 맞춘 것은 <b>목록 줄</b>
+     이야기였습니다. 이 왼쪽 메뉴는 <b>지금 자리를 알려 주는 곳</b>이라
+     성격이 다릅니다 — 게시판 목록 규칙을 그대로 쓸 자리가 아니었습니다. */
+
+/* 손 올린 것 — 옅게, 왼쪽에 막대만 */
+.ca-nav button:hover{background:var(--paper-2);color:var(--violet-2);
   border-left-color:var(--violet-2)}
-/* 지금 보고 있는 대회에 손을 올려도 <b>같은 모양</b>으로 — 켜진 것과
-   손 올린 것이 다르면 어느 쪽이 지금 자리인지 헷갈립니다 */
-.ca-nav button.on:hover{background:#322152;color:#fff;border-left-color:#322152}
-.ca-nav button.on:hover i{color:rgba(255,255,255,.72)}
+.ca-nav button:hover i{color:var(--violet-2);opacity:.75}
+
+/* ★ 고른 것 — 짙은 보라에 흰 글자. 가장 세게 */
+.ca-nav button.on{background:#322152;color:#fff;border-left-color:#322152}
+.ca-nav button.on i{color:rgba(255,255,255,.72);opacity:1}
+
+/* 고른 것에 손을 올리면 <b>살짝만</b> 밝힙니다 —
+   눌린다는 것은 알려 주되, 고른 상태가 흐트러지지 않게. */
+.ca-nav button.on:hover{background:#3d2a63;color:#fff;border-left-color:#3d2a63}
+.ca-nav button.on:hover i{color:rgba(255,255,255,.82)}
 .ca-nav button i{display:block;font-style:normal;font-size:11.5px;color:var(--text-3);
   font-weight:500;margin-top:3px}
 /* ── 목록의 작은 로고 (2026-08-18) ────────────────────────
@@ -97,7 +111,9 @@
 .ca-nav .ca-tablogo{flex:0 0 40px;width:40px;aspect-ratio:1.6;object-fit:cover;
   border-radius:6px;background:var(--paper-2)}
 .ca-nav button em{flex:1;min-width:0;font-style:normal}
-.ca-nav button.on i{color:var(--violet-2);opacity:.75}
+/* ★ 옛 규칙이었습니다 — 위에서 흰 글자로 정했으므로 지웁니다.
+   남겨 두면 <b>뒤에 오는 이 줄이 이겨서</b> 고른 것의 작은 글씨가
+   보라로 돌아갑니다(짙은 바탕에서 거의 안 보입니다). */
 
 /* ── 대회 머리 ─────────────────────────────────────────
    ★ 2026-08-15 · 「그냥 늘어놓은 것 같다」 (파트너 지적)
