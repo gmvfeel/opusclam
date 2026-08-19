@@ -124,7 +124,7 @@
    묻힙니다. 굵기만으로 테두리가 또렷해집니다.
    ★ 카드 <b>안쪽</b> 선(머리 구역 아래 줄)은 1px 그대로입니다.
      바깥과 안쪽이 같은 굵기면 테두리가 도드라지지 않습니다. */
-.adp-item{background:var(--paper);border:2px solid var(--line-2);border-radius:18px;
+.adp-item{background:var(--paper);border:2px solid var(--adp-edge,var(--line-2));border-radius:18px;
   overflow:hidden;display:flex;flex-direction:column;
   transition:border-color .2s ease,transform .2s ease}
 .adp-item:hover{border-color:var(--violet-2);transform:translateY(-2px)}
@@ -174,7 +174,7 @@
 
 /* ══ 한눈에 보기 ═══════════════════════════════════════ */
 .adp-tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;
-  border:2px solid var(--line-2);border-radius:14px;background:var(--paper)}
+  border:2px solid var(--adp-edge,var(--line-2));border-radius:14px;background:var(--paper)}
 .adp-tbl{width:100%;border-collapse:collapse;font-size:13.5px;min-width:660px}
 .adp-tbl th{text-align:left;padding:16px 18px;color:var(--text-2);font-weight:700;
   background:var(--paper-2);border-bottom:1px solid var(--line-2);white-space:nowrap}
@@ -204,7 +204,7 @@
      ▶ 선은 원 <b>가운데 높이</b>(18px)에 둡니다. 위쪽에 걸치면
        원과 어긋나 보입니다. */
 .adp-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(212px,1fr));gap:16px}
-.adp-step{position:relative;background:var(--paper);border:2px solid var(--line-2);
+.adp-step{position:relative;background:var(--paper);border:2px solid var(--adp-edge,var(--line-2));
   border-radius:14px;padding:24px 22px 22px}
 /* 번호 원 */
 .adp-step .no{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;
@@ -243,6 +243,17 @@
      ▶ 색을 새로 정하지 않고 글자만 뒤집는 까닭은, 사이트 전체가
        어두운 모드에서 무채색으로 가도록 짜여 있기 때문입니다.
        여기만 보라를 남기면 튑니다. */
+/* ★★ 2026-08-19 · 카드 <b>테 색</b>을 따로 둡니다 (파트너 지적)
+   ─────────────────────────────────────────────────────────────
+   공용 --line-2 는 화면 전체가 함께 쓰는 값이라, 여기서 진하게 바꾸면
+   <b>다른 화면까지 따라 바뀝니다.</b> 그래서 이 화면에서만 쓰는
+   이름을 하나 두고 카드·표·단계 셋이 그것을 봅니다.
+   ★ 어두운 화면에서는 <b>반대로 밝혀야</b> 진해 보입니다. 아래에
+     따로 적어 둡니다 — 한 색으로는 두 화면을 다 맞출 수 없습니다. */
+.adp-wrap, .adp-sec{ --adp-edge:#cfc6b4 }
+html[data-theme="dark"] .adp-wrap,
+html[data-theme="dark"] .adp-sec{ --adp-edge:#565656 }
+
 html[data-theme="dark"] .adp-num,
 html[data-theme="dark"] .adp-tag i,
 html[data-theme="dark"] .adp-step .no{color:#1a1a1a}
