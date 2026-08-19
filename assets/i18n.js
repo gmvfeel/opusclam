@@ -245,12 +245,24 @@
        이어진 자리입니다. (제가 처음에 지워 버렸습니다.)
      ▶ 오른쪽 기둥(.side) 맨 아래로 옮깁니다.
        「오늘의 작품 · 이주의 음악가」 아래가 비어 있어 자리가 맞습니다.
-     ★ 옮긴 뒤 빈 줄(section.lower)은 감춥니다. */
+     ★ 옮긴 뒤 빈 줄(section.lower)은 감춥니다.
+
+     ★★ 2026-08-19 고침 — <b>회전 상자째 옮깁니다.</b>
+       예전에는 광고 <b>한 장</b>(.ad-slot.lower-ad)을 골라 옮겼습니다.
+       그런데 2026-08-14 에 광고 둘을 <b>회전 상자(.ad-rot)로 감싸면서</b>
+       상자는 그 자리에 남고 알맹이만 빠져나가게 됐습니다. 게다가
+       화면을 지켜보는 코드가 다시 돌 때마다 남은 것을 하나씩 더 꺼내,
+       영어·일본어 대문에서 <b>광고 셋이 따로따로</b> 놓였습니다.
+         · 상자 밖이라 <b>번갈아 보이는 규칙이 안 걸립니다</b>
+         · 상자에 걸어 둔 width:min(357px,100%) 도 <b>함께 풀립니다</b>
+       ▶ .ad-rot 을 먼저 찾습니다. 문서에 나온 차례로 고르므로
+         상자가 있으면 상자가, 없으면 예전처럼 광고 한 장이 잡힙니다
+         (회전 상자를 쓰지 않는 화면이 생겨도 그대로 돕니다). */
   var MOVE_AD = {
-    en: [{ from: 'section.lower .ad-slot.lower-ad', to: 'section.board aside.side',
-           after: 'section.lower' }],
-    ja: [{ from: 'section.lower .ad-slot.lower-ad', to: 'section.board aside.side',
-           after: 'section.lower' }]
+    en: [{ from: 'section.lower .ad-rot.lower-ad, section.lower .ad-slot.lower-ad',
+           to: 'section.board aside.side', after: 'section.lower' }],
+    ja: [{ from: 'section.lower .ad-rot.lower-ad, section.lower .ad-slot.lower-ad',
+           to: 'section.board aside.side', after: 'section.lower' }]
   };
 
   /* 감출 홈 섹션 — 제목의 영문으로 찾습니다 (<span class="en-s">) */
