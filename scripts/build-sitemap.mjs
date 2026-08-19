@@ -50,6 +50,31 @@
    ════════════════════════════════════════════════════════════════ */
 
 import { readFileSync, writeFileSync } from 'node:fs';
+
+/* ★★★ 2026-08-19 (파트너 물음으로 찾음) · <b>`--save` 가 아무 일도 안 하고
+   있었습니다.</b>
+   ══════════════════════════════════════════════════════════════
+   워크플로에는 「실제로 만들어 올리기 (no 면 몇 개인지만 셉니다)」라는
+   선택 칸이 있고, `yes` 면 `--save` 를 붙여 이 파일을 부릅니다.
+   그런데 이 파일은 <b>argv 를 한 번도 읽지 않았습니다.</b>
+   ▶ 그래서 `no` 를 골라도 파일을 다 쓰고, 워크플로 다음 걸음이
+     바뀐 파일을 그대로 커밋했습니다. <b>선택 칸이 거짓말을 하고 있었습니다.</b>
+
+   ★ 왜 고치나 — 이제 사이트맵이 4만 줄이 넘습니다. 「먼저 몇 개인지만
+     세어 보기」가 실제로 되어야 합니다. 숫자가 이상한데 이미 올라가 버리면
+     되돌리는 일이 늘어납니다.
+   ★ 예약 실행은 워크플로가 `--save` 를 붙여 줍니다 — 그대로 만들어집니다. */
+const SAVE = process.argv.includes('--save');
+
+/* 쓰기는 한 곳으로 모읍니다 — `--save` 가 없으면 <b>세기만</b> 합니다. */
+function put(path, text, label) {
+  const n = (text.match(/<url>|<sitemap>/g) || []).length;
+  if (SAVE) {
+    writeFileSync(path, text, 'utf8');
+    return;
+  }
+  console.log(`  (안 씀) ${label || path.split('/').pop()} — ${n}줄`);
+}
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -220,7 +245,7 @@ for (const [path, freq, pri] of PAGES) {
 }
 lines.push('</urlset>');
 
-writeFileSync(join(ROOT, 'sitemap-pages.xml'), lines.join('\n') + '\n', 'utf8');
+put(join(ROOT, 'sitemap-pages.xml'), lines.join('\n') + '\n', 'sitemap-pages.xml');
 
 /* ── 알림 ──────────────────────────────────────────────────────── */
 const onlyKo = PAGES.filter(([p]) => langsFor(p).length === 1).length;
@@ -373,8 +398,8 @@ if (!SB_URL || !SB_KEY) {
       lastmod: got.lastmod ? ymd(r.updated_at) : '',
     }));
     const withMod = items.filter(x => x.lastmod).length;
-    writeFileSync(join(ROOT, `sitemap-${d.key}.xml`), plainSet(
-      items, d.freq, d.pri, `OPUSCLAM.COM ${d.label} 상세`), 'utf8');
+    put(join(ROOT, `sitemap-${d.key}.xml`), plainSet(
+      items, d.freq, d.pri, `OPUSCLAM.COM ${d.label} 상세`), `sitemap-${d.key}.xml`);
     parts.push(`sitemap-${d.key}.xml`);
     total += items.length;
     console.log(`  · ${d.label} ${items.length}건`
@@ -385,14 +410,18 @@ if (!SB_URL || !SB_KEY) {
 
 /* ── 목차 ────────────────────────────────────────────────────────
    ★ 서치 콘솔에는 이 파일 하나만 제출하면 됩니다. */
-writeFileSync(join(ROOT, 'sitemap.xml'),
+put(join(ROOT, 'sitemap.xml'),
   '<?xml version="1.0" encoding="UTF-8"?>\n'
   + '<!-- OPUSCLAM.COM 사이트맵 목차\n'
   + '     ★ scripts/build-sitemap.mjs 가 만듭니다. 손으로 고치지 마십시오.\n'
   + '     ★ 서치 콘솔에는 이 파일 하나만 제출하면 됩니다. -->\n'
   + '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
   + parts.map(f => `  <sitemap><loc>${ORIGIN}/${f}</loc></sitemap>`).join('\n')
-  + '\n</sitemapindex>\n', 'utf8');
+  + '\n</sitemapindex>\n', 'sitemap.xml');
 
 console.log('');
-console.log('▶ 만든 파일 : ' + ['sitemap.xml'].concat(parts).join(' · '));
+console.log(SAVE
+  ? '▶ 만든 파일 : ' + ['sitemap.xml'].concat(parts).join(' · ')
+  : '▶ 세기만 했습니다 — 아무 파일도 쓰지 않았습니다.'
+    + ' 실제로 만들려면 `--save` 를 붙이십시오'
+    + ' (워크플로에서는 「실제로 만들어 올리기 = yes」).');
