@@ -83,6 +83,27 @@ const GENERIC = new Set([
   '음악당','아트홀','아트센터','문화회관','콘서트홀','대극장','소극장',
   '음악원','음악학교','음악대학','예술대학','대학교','고등학교',
   '클래식','콘서트','페스티벌','콩쿠르','콩쿨','오페라','발레',
+  /* ★ 2026-08-19 시험 실행에서 드러난 것 —
+     「김나지움」은 독일 인문계 고등학교를 가리키는 <b>보통 이름</b>이고,
+     「왕립음악원」은 런던·덴마크·스웨덴 등 <b>여러 나라에 있습니다.</b>
+     학교DB 에 나라 없이 이 이름만 들어 있는 줄이 있어서 아무 글에나
+     걸렸습니다(입시요강에서 왕립음악원 8 · 김나지움 4).
+     ▶ 자료를 「런던 왕립음악원」으로 고치면 <b>저절로 다시 잡힙니다.</b> */
+  '김나지움','왕립음악원','왕립음악대학','국립음악원','시립교향악단',
+  '음악학원','예술학교','예술고등학교','오페라하우스','오페라 하우스',
+]);
+
+/* ★★ 영문 일반명사 — 2026-08-19 시험에서 <b>「conservatory」</b>가
+   두 글에 걸렸습니다. 학교DB 에 그 이름만 든 줄이 있다는 뜻입니다.
+   ★ <b>이름 전체가 이것과 똑같을 때만</b> 버립니다. 그래서
+     「Sydney Opera House」·「Musikverein」·「Concertgebouw」는 남습니다. */
+const GENERIC_EN = new Set([
+  'conservatory','conservatoire','conservatorio','konservatorium',
+  'academy','academy of music','music academy','music school',
+  'school of music','college of music','university','college','school',
+  'gymnasium','hochschule','musikhochschule','philharmonic','orchestra',
+  'symphony','symphony orchestra','opera','opera house','concert hall',
+  'chamber orchestra','royal academy of music','royal college of music',
 ]);
 
 // ── 우리말 조사 ──────────────────────────────────────────────
@@ -269,7 +290,8 @@ async function buildDict() {
         const ko = String(o.name_ko || '').trim();
         if (ko.length >= 4 && !GENERIC.has(ko)) put(ko, k.type, o.id, 'entity');
         const en = String(o.name_en || '').trim();
-        if (en.length >= 8 && /^[A-Za-z][A-Za-z0-9 .'&\-]+$/.test(en)) {
+        if (en.length >= 8 && !GENERIC_EN.has(en.toLowerCase())
+            && /^[A-Za-z][A-Za-z0-9 .'&\-]+$/.test(en)) {
           put(en, k.type, o.id, 'entity_en');
         }
       }
