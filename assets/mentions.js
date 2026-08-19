@@ -52,7 +52,10 @@
     modern:     { table:'modern_composers', col:'name_ko', path:'/db/modern-view.html',     label:'현대음악' },
     foundation: { table:'foundations',      col:'name_ko', path:'/db/foundation-view.html', label:'기관·재단' },
     academic:   { table:'academic',         col:'name_ko', path:'/db/academic-view.html',   label:'학술' },
-    work:       { table:'person_works',     col:'title',   path:'/db/work-view.html',       label:'작품' }
+    /* ★ 2026-08-19 · 작품은 <b>한글 제목</b>을 보여 줍니다.
+       훑개가 한글 제목이 있는 작품만 잇기 때문에, 여기서 영문 title 을
+       읽으면 「Winterreise」처럼 <b>글에 적힌 말과 다른 이름</b>이 뜹니다. */
+    work:       { table:'person_works',     col:'title_ko',path:'/db/work-view.html',       label:'작품' }
   };
 
   /* 커뮤니티 화면 이름 → 표 이름.

@@ -104,6 +104,14 @@ const GENERIC_EN = new Set([
   'gymnasium','hochschule','musikhochschule','philharmonic','orchestra',
   'symphony','symphony orchestra','opera','opera house','concert hall',
   'chamber orchestra','royal academy of music','royal college of music',
+  /* ★ 2026-08-19 실제 실행에서 남은 것 —
+     「Hochschule für Musik und Theater」는 라이프치히·하노버·뮌헨·
+     로스토크·함부르크에 <b>다 있습니다.</b> 도시 이름이 없으면 어디인지
+     알 수 없습니다. 「Academy of Music」도 같습니다. */
+  'hochschule für musik','hochschule für musik und theater',
+  'universität für musik','universität für musik und darstellende kunst',
+  'accademia','accademia di musica','escuela de música','école de musique',
+  'staatliche hochschule für musik','musikkonservatorium',
 ]);
 
 // ── 우리말 조사 ──────────────────────────────────────────────
@@ -232,7 +240,51 @@ const KINDS = [
   { type:'school',     table:'schools',          who:false, label:'음악학교' },
   { type:'org',        table:'orgs',             who:false, label:'음악단체' },
   { type:'foundation', table:'foundations',      who:false, label:'기관·재단' },
+  /* ★★ 2026-08-19 · 작품을 더합니다
+     ★ 칸 이름이 다릅니다 — 다른 갈래는 name_ko/name_en 인데
+       작품은 <b>title_ko/title</b> 입니다. 그래서 적어 둡니다.
+     ★ 「사람들이 실제로 부르는 이름」만 씁니다. 아래 workOk 참조. */
+  { type:'work', table:'person_works', who:false, label:'작품',
+    ko:'title_ko', en:'title' },
 ];
+
+/* ★★ 작품 이름은 <b>다른 갈래보다 훨씬 까다롭게</b> 거릅니다
+   ─────────────────────────────────────────────────────────────
+   2026-08-19 · 실제 자료로 재 보고 정한 규칙입니다
+   (sql/workscan-01·02-A-preview.sql)
+
+   ★ 무엇이 문제인가 — 작품 제목은 <b>서로 겹칩니다.</b>
+       「교향곡 2번」  ← 31 작품이 같은 이름을 씁니다
+       「발라드 3번」  ← 우리 DB 엔 쇼팽 것뿐이지만, 브람스도 썼습니다
+     겹치는 이름을 그대로 넣으면 <b>엉뚱한 작곡가의 곡</b>으로 이어집니다.
+
+   ★ 그리고 <b>아무도 그렇게 부르지 않는 이름</b>이 많습니다.
+       「피아노, 플루트, 바순을 위한 삼중주, WoO 37」
+       「Ich lasse dich nicht, du segnest mich denn, BWV 157」
+     글에 이대로 적힐 일이 없으니 넣어 봐야 걸리지 않습니다.
+
+   ★ 그래서 <b>담백한 이름</b>만 씁니다 —
+     겨울 나그네 · 죽음의 무도 · 마탄의 사수 · 라 보엠 · 마술피리 · 정화된 밤 */
+const WORK_BAN = new Set([
+  '봄','여름','가을','겨울','사랑','노래','기도','꿈','바다','하늘',
+  '아침','저녁','밤','축제','행진','무곡','서곡','전주곡','환상곡','환타지아',
+  '연습곡','야상곡','녹턴','즉흥곡','왈츠','소나타','교향곡','협주곡',
+  '모음곡','변주곡','미사','레퀴엠','푸가','대푸가','팔중주','8중주','나비','해적',
+]);
+
+function workOk(ko) {
+  const t = String(ko || '').trim();
+  if (t.length < 4 || t.length > 20) return false;      /* 너무 짧거나 긴 것 */
+  if (t.indexOf(',') >= 0 || t.indexOf('(') >= 0) return false;  /* 설명이 붙은 것 */
+  if (WORK_BAN.has(t)) return false;                    /* 흔한 말 */
+  /* 작품 번호 표기가 붙은 것 — 글에 그대로 적히지 않습니다 */
+  if (/(BWV|WoO|Op\.|K\.|D\.|Hob|작품 ?번호)/i.test(t)) return false;
+  /* ★★ 「… N번」으로 끝나는 것은 <b>뺍니다.</b>
+     우리 DB 에 하나뿐이어도 세상에는 여럿입니다. 「발라드 3번」이
+     브람스 글에서 쇼팽으로 이어지면 안 됩니다. */
+  if (/[0-9]+ ?번$/.test(t)) return false;
+  return true;
+}
 
 /* 같은 말이 여러 갈래를 가리킬 때 무엇을 먼저 볼 것인가 */
 const HOW_RANK  = { fullname:3, fullname_en:3, entity:2, entity_en:2, surname:1 };
@@ -248,7 +300,11 @@ async function buildDict() {
   for (const k of KINDS) {
     /* ★ 숨긴 항목은 담지 않습니다 — 눌러도 갈 곳이 없습니다.
        hidden 이 비어 있는(null) 줄도 살아 있는 것으로 봅니다. */
-    const rows = await sbGetAll(k.table, 'id,name_ko,name_en', '&hidden=not.is.true');
+    /* ★ 갈래마다 이름 칸이 다릅니다 — 적혀 있으면 그것을, 없으면 기본값을. */
+    const koCol = k.ko || 'name_ko', enCol = k.en || 'name_en';
+    const raw = await sbGetAll(k.table, 'id,' + koCol + ',' + enCol, '&hidden=not.is.true');
+    /* 아래 코드가 name_ko/name_en 을 보므로 이름을 맞춰 둡니다 */
+    const rows = raw.map(r => ({ id: r.id, name_ko: r[koCol], name_en: r[enCol] }));
     const withKo = rows.filter(r => r.name_ko && String(r.name_ko).trim()).length;
     console.log('  · ' + k.label + ' ' + rows.length + '개 (한글 이름 ' + withKo + '개)');
 
@@ -288,7 +344,20 @@ async function buildDict() {
            그런 줄은 사실 자료가 잘못 들어온 것입니다. */
       for (const o of rows) {
         const ko = String(o.name_ko || '').trim();
-        if (ko.length >= 4 && !GENERIC.has(ko)) put(ko, k.type, o.id, 'entity');
+        /* ★ 작품은 규칙이 따로입니다 — 영문 제목은 아예 쓰지 않습니다.
+           우리말 글에 영문 원제가 그대로 적히는 일은 드물고,
+           적혀도 「Symphony No. 5」처럼 겹치는 것이 대부분입니다. */
+        if (k.type === 'work') {
+          if (workOk(ko)) put(ko, k.type, o.id, 'entity');
+          continue;
+        }
+        /* ★★ 2026-08-19 · <b>한글 칸에 영문이 들어 있는 줄이 있습니다.</b>
+           실제 실행에서 「Academy of Music」·「Hochschule für Musik und
+           Theater」가 걸렸는데, 둘 다 <b>name_ko 칸</b>에 있던 것입니다.
+           그래서 영문 목록으로도 함께 걸러야 합니다 —
+           한글 목록만 보면 그냥 통과합니다. */
+        if (ko.length >= 4 && !GENERIC.has(ko)
+            && !GENERIC_EN.has(ko.toLowerCase())) put(ko, k.type, o.id, 'entity');
         const en = String(o.name_en || '').trim();
         if (en.length >= 8 && !GENERIC_EN.has(en.toLowerCase())
             && /^[A-Za-z][A-Za-z0-9 .'&\-]+$/.test(en)) {
