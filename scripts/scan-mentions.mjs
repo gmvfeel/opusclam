@@ -249,7 +249,7 @@ const KINDS = [
        작품은 <b>title_ko/title</b> 입니다. 그래서 적어 둡니다.
      ★ 「사람들이 실제로 부르는 이름」만 씁니다. 아래 workOk 참조. */
   { type:'work', table:'person_works', who:false, label:'작품',
-    ko:'title_ko', en:'title', extra:'imslp_ref' },
+    ko:'title_ko', en:'title', extra:'genre' },
 ];
 
 /* ★★ 작품 이름은 <b>다른 갈래보다 훨씬 까다롭게</b> 거릅니다
@@ -308,7 +308,7 @@ const FORM_WORD = new Set([
   '미뉴에트','가보트','부레','폴로네즈','마주르카','타란텔라',
   '미사','레퀴엠','칸타타','오라토리오','모테트','마드리갈','아리아',
   '세레나데','디베르티멘토','로망스','엘레지','토카타','인벤션',
-  '노벨레테','바가텔','간주','전주','후주','서주',
+  '노벨레테','바가텔','간주','전주','후주','서주','임프롬프투',
   /* 중주·중창 */
   '이중주','삼중주','사중주','오중주','육중주','칠중주','팔중주','구중주',
   '2중주','3중주','4중주','5중주','6중주','7중주','8중주','9중주',
@@ -338,78 +338,89 @@ function formOnly(t) {
   return true;
 }
 
-/* ★★★ 2026-08-19 (둘째 판) · <b>큰 작품의 한 곡</b>을 걸러 냅니다
+/* ★★★ 2026-08-19 (둘째 판) · <b>우리말 문장으로 더 자주 쓰이는 제목</b>
    ══════════════════════════════════════════════════════════════
    225건에 한글 제목을 손으로 채운 뒤 드러난 문제입니다.
    슈베르트 「겨울 나그네」 스물네 곡이 한꺼번에 들어왔는데, 그 제목이
-   <b>평범한 우리말 구절</b>입니다 —
+   <b>평범한 우리말 구절</b>입니다 — 「그 마을에서 열린 축제」라는 문장이
+   슈베르트 가곡으로 이어지면 안 됩니다.
 
-       「마을에서」 「강 위에서」 「마지막 희망」 「폭풍의 아침」 「얼어붙은 마음」
+   ★★★ 내가 <b>영리한 규칙을 만들려다 크게 틀렸습니다.</b>
+     악보 주소(imslp_ref)가 자기 제목과 다른 큰 작품을 가리키면 「한 곡」이라고
+     보았습니다. 겨울 나그네에는 잘 들었지만, 실제 자료로 돌려 보니 —
 
-   「그 마을에서 열린 축제」라는 문장이 슈베르트 가곡으로 이어지면 안 됩니다.
-   「피아노 소나타」가 78건 걸렸던 것과 같은 병입니다.
+         [뺌] 피가로의 결혼         ← Le nozze di Figaro
+         [뺌] 마술피리              ← Die Zauberflöte
+         [뺌] 대관식 미사            ← Mass in C major
+         [뺌] 크리스마스 오라토리오   ← Weihnachtsoratorium
+         [뺌] G선상의 아리아         ← Orchestral Suite No.3
 
-   ★★ 그런데 이 곡들에는 <b>자료 안에 표시가 이미 있습니다.</b>
-     악보 주소(imslp_ref)가 <b>자기 제목이 아니라 큰 작품</b>을 가리킵니다 —
+     <b>주소는 원어, 제목 칸은 영어</b>입니다. 그래서 「말이 다른 것」과
+     「큰 작품의 한 곡」을 갈라내지 못했습니다. 108가지가 잘못 빠졌습니다.
+     ▶ 자료가 스스로 말해 주는 것 같았지만 실은 <b>말이 달랐을 뿐</b>입니다.
 
-       「Der Lindenbaum」  → Winterreise,_D.911_(Schubert,_Franz)
-       「Les Cloches de Genève」 → Années_de_pèlerinage_I,_S.160
-       「Transcendental Étude No. 12」 → Études_d'exécution_transcendante
+   ▶ 그래서 되돌리고 <b>손으로 적은 짧은 목록</b>을 씁니다.
+     영리한 규칙보다 지루하지만 무엇이 빠지는지 <b>눈에 다 보입니다.</b>
 
-     반대로 혼자 서는 작품은 <b>자기 이름</b>을 가리킵니다 —
-
-       「Cello Suite No. 1 in G major」 → Cello_Suite_No.1_in_G_major,_BWV_1007
-       「Gretchen am Spinnrade」 → Gretchen_am_Spinnrade,_D.118
-
-   ▶ 그래서 <b>낱말을 금지어에 적지 않고</b>, 자료가 스스로 말해 주는 것을
-     씁니다. 금지어를 적는 방법은 스물네 곡을 다 적어도 다음 가곡집에서
-     또 시작해야 합니다.
-
-   ★ 이 규칙은 <b>일부러 넉넉하게</b> 잡았습니다. 악보 주소가 제목과 조금만
-     달라도 뺍니다. 그래서 멀쩡한 작품 몇 개도 함께 빠집니다 —
-     「방랑자 환상곡」(주소는 Fantasie_in_C_major) ·
-     「세 개의 군대 행진곡」(주소는 3_Marches_militaires).
-     ▶ 그런 것은 <b>아래 WORK_KEEP 에 손으로 적어</b> 되살립니다.
-       목록이 짧고 눈에 보이니, 규칙을 느슨하게 푸는 것보다 안전합니다. */
-const WORK_KEEP = new Set([
-  '방랑자 환상곡',
-  '세 개의 군대 행진곡',
+   ★ 여기 적는 것은 「곡 이름이면서 <b>평범한 우리말 구절</b>인 것」뿐입니다.
+     「도깨비불」·「우편마차」·「거리의 악사」처럼 도드라지는 이름은 그냥 둡니다 —
+     글에 그 말이 나오면 정말 그 곡을 가리킬 때가 많습니다.
+   ★ 「…에서」로 끝나는 것을 통째로 빼는 규칙도 <b>버렸습니다.</b> 여섯 가지가
+     걸렸는데 그중 넷이 멀쩡한 작품이었습니다 —
+     「중앙아시아의 초원에서」(보로딘) · 「멀리 있는 연인에게」(베토벤) ·
+     「산왕의 궁전에서」 · 「이탈리아에서」. */
+const WORK_PHRASE_BAN = new Set([
+  /* 겨울 나그네(슈베르트) 가운데, 곡 이름보다 문장으로 더 자주 쓰이는 것 */
+  '마을에서', '강 위에서', '봄의 꿈', '마지막 희망', '밤 인사',
+  '얼어붙은 마음', '폭풍의 아침', '넘쳐흐르는 눈물',
+  /* ★★ 2026-08-19 (셋째 판) · 실제 자료를 재서 찾은 것
+     ─────────────────────────────────────────────────────────
+     ⓐ <b>작품이 아니라 묶음·갈래·개념</b>인 줄. 위키백과의 「목록 문서」가
+       작품처럼 들어온 것입니다. 영문 제목이 <b>복수</b>인 것이 표시입니다 —
+         바흐 칸타타(Bach cantata) · 쇼팽이 작곡한 왈츠(Waltzes) ·
+         런던 교향곡(London symphonies) · 텔레만의 수난곡(Passions) ·
+         트리스탄 화음(Tristan chord ← 이건 <b>화성 이론 용어</b>입니다)
+     ⓑ <b>평범한 말과 똑같은</b> 제목.
+         「오스트리아의 국가」 ← 「오스트리아의 국가 대표팀」에 걸립니다
+         「강제 결혼」        ← 그냥 낱말입니다
+     ⓒ 작품이 아닌 것 — 「트러스티 벨」은 <b>비디오 게임</b>입니다. */
+  '바흐 칸타타', '쇼팽이 작곡한 왈츠', '런던 교향곡', '텔레만의 수난곡',
+  '베토벤의 피아노를 위한 바가텔', '후기 현악 사중주', '트리스탄 화음',
+  '오스트리아의 국가', '강제 결혼', '트러스티 벨',
 ]);
 
-/* 견주기 좋게 다듬습니다 — 소문자로, 악센트를 떼고, 글자와 숫자만 남깁니다.
-   ★ Á→A 는 normalize('NFD') 로 악센트를 갈라낸 뒤 지웁니다.
-     이걸 안 하면 「Shéhérazade」와 「Sheherazade」가 다른 말이 됩니다. */
-function flat(s) {
-  return String(s || '')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase().replace(/[^a-z0-9가-힣]+/g, '');
-}
+/* ★★★ 2026-08-19 (셋째 판) · <b>작품표에 영화가 섞여 있습니다</b>
+   ══════════════════════════════════════════════════════════════
+   시험 실행의 「넣은 것 표본」에 이런 것이 있었습니다 —
 
-/* 악보 주소에서 <b>큰 작품 이름</b>만 뽑습니다.
-   Winterreise,_D.911_(Schubert,_Franz)  →  Winterreise
-   ★ %2C 처럼 주소로 감싸인 글자가 섞여 있어 먼저 풉니다. */
-function imslpParent(ref) {
-  let s = String(ref || '').trim();
-  if (!s) return '';
-  try { s = decodeURIComponent(s); } catch (e) { /* 잘못된 주소는 그대로 */ }
-  s = s.replace(/^wiki\//, '').replace(/_/g, ' ');
-  const cut = s.search(/[,(]/);
-  return (cut >= 0 ? s.slice(0, cut) : s).trim();
-}
+       아마데우스 · 카핑 베토벤 · 비리디아나 · 엘리펀트 ·
+       봄 이야기 · 미녀 갱 카르멘 · 사형수 탈출하다 · 테이킹 사이즈
 
-/* 큰 작품의 한 곡인가 — 주소가 있고, 그 주소가 제목과 <b>서로 딴 것</b>일 때 */
-function isPartOfLarger(en, ref) {
-  const p = flat(imslpParent(ref));
-  if (!p) return false;                  /* 주소가 없으면 판단하지 않습니다 */
-  const t = flat(en);
-  if (!t) return false;
-  if (p.indexOf(t) >= 0 || t.indexOf(p) >= 0) return false;   /* 자기 이름 */
-  return true;
-}
+   모차르트·베토벤 음악을 쓴 <b>영화</b>가 위키데이터에서 그 작곡가에 딸려
+   작품표로 들어온 것입니다. 「봄 이야기」·「엘리펀트」는 우리말 글에 아주
+   흔한 말이라, 겨울 나그네보다 <b>훨씬 위험합니다.</b>
 
-function workOk(ko, en, ref) {
+   ★★ 이번엔 <b>짐작하지 않고 재고 나서</b> 정했습니다
+     (sql/workscan-03-A-preview.sql) —
+
+       genre 값별 · 사전에 들어갈 만한 703건 가운데
+         Stage 147 · Orchestral 136 · <b>Screen 120</b> · Vocal 90 ·
+         Keyboard 86 · Chamber 33 · (빈칸) 91
+
+     짚어 본 영화 열한 편이 <b>전부 Screen</b> 이었습니다. 파솔리니의
+     「에디푸스 왕」도 Screen 이라 함께 빠집니다(스트라빈스키의 오페라는
+     Stage 이므로 남습니다).
+
+   ★★ 반대로 <b>「빈칸」은 영화 표시가 아닙니다.</b> 91건을 눈으로 보니
+     「나의 조국」·「천지창조」·「영웅의 생애」·「왕벌의 비행」·
+     「아름답고 푸른 도나우」·「짐노페디」 — 대부분 <b>멀쩡한 작품</b>입니다.
+     ▶ 빈칸을 함께 뺐다면 이 작품들을 다 잃었습니다. <b>재 보고 살았습니다.</b> */
+const WORK_GENRE_BAN = new Set(['Screen']);
+
+function workOk(ko, genre) {
   const t = String(ko || '').trim();
-  if (WORK_KEEP.has(t)) return true;                    /* 손으로 되살린 것 */
+  /* ★★ 영화·게임 — 갈래 칸이 Screen 인 줄. 재서 확인한 규칙입니다. */
+  if (WORK_GENRE_BAN.has(String(genre || '').trim())) return false;
   if (t.length < 4 || t.length > 20) return false;      /* 너무 짧거나 긴 것 */
   if (t.indexOf(',') >= 0 || t.indexOf('(') >= 0) return false;  /* 설명이 붙은 것 */
   if (WORK_BAN.has(t)) return false;                    /* 흔한 말 */
@@ -419,14 +430,10 @@ function workOk(ko, en, ref) {
      우리 DB 에 하나뿐이어도 세상에는 여럿입니다. 「발라드 3번」이
      브람스 글에서 쇼팽으로 이어지면 안 됩니다. */
   if (/[0-9]+ ?번$/.test(t)) return false;
-  /* ★★ 곳을 나타내는 말로 끝나는 제목 — 「마을에서」·「강 위에서」.
-     이런 꼴은 우리말 문장에서 <b>부사구</b>로 훨씬 자주 쓰입니다.
-     악보 주소가 없는 줄도 있으니 아래 규칙과 따로 둡니다. */
-  if (/(에서|에게|으로|로서)$/.test(t)) return false;
   /* ★ 형식 이름뿐인 제목 — 「피아노 소나타」·「현악 사중주」 */
   if (formOnly(t)) return false;
-  /* ★★ 큰 작품의 한 곡 — 「겨울 나그네」의 스물네 곡 같은 것 */
-  if (isPartOfLarger(en, ref)) return false;
+  /* ★★ 우리말 문장으로 더 자주 쓰이는 제목 — 아래 목록 */
+  if (WORK_PHRASE_BAN.has(t)) return false;
   return true;
 }
 
@@ -435,7 +442,7 @@ const HOW_RANK  = { fullname:3, fullname_en:3, entity:2, entity_en:2, surname:1 
 const KIND_RANK = { person:6, modern:5, venue:4, school:3, org:2, foundation:1 };
 
 /* 작품 규칙이 무엇을 넣고 무엇을 뺐는지 적어 둡니다 (화면에만 보여 줍니다) */
-const WORK_LOG = { ok: [], part: [], locative: [], seenBad: new Set() };
+const WORK_LOG = { ok: [], phrase: [], screen: [] };
 
 async function buildDict() {
   const bySurface = new Map();   // 드러난 말 -> { refs:[{type,id,how}] }
@@ -500,20 +507,13 @@ async function buildDict() {
            우리말 글에 영문 원제가 그대로 적히는 일은 드물고,
            적혀도 「Symphony No. 5」처럼 겹치는 것이 대부분입니다. */
         if (k.type === 'work') {
-          if (workOk(ko, o.name_en, o.extra)) {
+          if (workOk(ko, o.extra)) {
             put(ko, k.type, o.id, 'entity');
             WORK_LOG.ok.push(ko);
-          } else if (ko && !WORK_LOG.seenBad.has(ko)) {
-            WORK_LOG.seenBad.add(ko);
-            /* 왜 빠졌는지 갈라 적어 둡니다 — 규칙을 고칠 때 이 숫자를 봅니다 */
-            if (ko.length >= 4 && ko.length <= 20
-                && ko.indexOf(',') < 0 && ko.indexOf('(') < 0
-                && !WORK_BAN.has(ko) && !formOnly(ko)
-                && !/(BWV|WoO|Op\.|K\.|D\.|Hob|작품 ?번호)/i.test(ko)
-                && !/[0-9]+ ?번$/.test(ko)) {
-              if (/(에서|에게|으로|로서)$/.test(ko)) WORK_LOG.locative.push(ko);
-              else WORK_LOG.part.push(ko + '  ← ' + imslpParent(o.extra));
-            }
+          } else if (ko && WORK_PHRASE_BAN.has(ko)) {
+            WORK_LOG.phrase.push(ko);
+          } else if (ko && WORK_GENRE_BAN.has(String(o.extra || '').trim())) {
+            WORK_LOG.screen.push(ko);
           }
           continue;
         }
@@ -556,16 +556,12 @@ async function buildDict() {
   const uniq = (a) => Array.from(new Set(a));
   const okU = uniq(WORK_LOG.ok);
   console.log('  ── 작품 규칙 ──');
-  console.log('   · 사전에 넣은 제목      ' + okU.length + '가지 (줄 ' + WORK_LOG.ok.length + ')');
-  console.log('   · 큰 작품의 한 곡이라 뺌 ' + WORK_LOG.part.length + '가지');
-  console.log('   · 「…에서」로 끝나 뺌     ' + WORK_LOG.locative.length + '가지');
-  if (WORK_LOG.locative.length) {
-    console.log('     ' + WORK_LOG.locative.slice(0, 12).join(' · '));
-  }
-  for (const s of WORK_LOG.part.slice(0, 25)) console.log('     [한 곡] ' + s);
-  if (WORK_LOG.part.length > 25) {
-    console.log('     … 그 밖 ' + (WORK_LOG.part.length - 25) + '가지');
-  }
+  console.log('   · 사전에 넣은 제목  ' + okU.length + '가지 (줄 ' + WORK_LOG.ok.length + ')');
+  console.log('   · 문장·묶음·개념이라 뺌  '
+    + uniq(WORK_LOG.phrase).length + '가지 · ' + uniq(WORK_LOG.phrase).join(' · '));
+  console.log('   · 영화·게임(genre=Screen)이라 뺌  '
+    + uniq(WORK_LOG.screen).length + '가지');
+  console.log('     ' + uniq(WORK_LOG.screen).slice(0, 20).join(' · '));
   console.log('   · 넣은 것 표본 40가지');
   for (const s of okU.slice(0, 40)) console.log('     [넣음] ' + s);
 
