@@ -160,8 +160,11 @@
        결이 끊어집니다. */
   .kr-bar.on .fill{box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--violet-2)}
   .kr-bar:hover .fill{transform:scaleY(1.04);transform-origin:bottom}
+  /* ★ 네 자리 연도를 열 칸에 넣습니다 — 자릿수 폭을 고정하고(tabular-nums)
+       자간을 조금 좁혀야 좁은 화면에서 줄이 바뀌지 않습니다. */
   .kr-bar .lb{font-size:10.5px;color:var(--text-3);white-space:nowrap;
-    font-variant-numeric:tabular-nums}
+    font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .kr-bar .lb i{font-style:normal}
   .kr-bar.on .lb{color:var(--text);font-weight:700}
   .kr-bar .n{font-size:10px;color:var(--text-3);font-weight:700}
 
@@ -257,7 +260,11 @@
     .kr-row .side-l .kr-card{flex-direction:row;text-align:left}
     .kr-row .side-l .kr-card .s{justify-content:flex-start}
     .kr-band{height:74px;gap:3px}
-    .kr-bar .lb{font-size:9.5px}
+    /* ★ 좁은 화면에서는 네 자리가 아슬아슬합니다 — 한 단 더 줄이고,
+         맨 왼쪽의 「년대」는 감춥니다(320px 에서 줄이 바뀝니다).
+         마우스·손가락을 올리면 「1940년대 · 6건」이 그대로 뜹니다. */
+    .kr-bar .lb{font-size:9px;letter-spacing:-.04em}
+    .kr-bar .lb i{display:none}
   }
   @media(max-width:560px){
     .tl-kind button{flex:1;padding:11px 8px;font-size:13px}
@@ -844,11 +851,19 @@ function ocN(tpl) {
       /* ★ 여덟 자리 색(#rrggbbaa)은 옛 브라우저에서 안 통합니다.
            위에서 아래로 <b>조금 어두워지게</b> 두 색을 씁니다. */
       var c2 = KR_HUE[Math.min(KR_HUE.length - 1, ci + 1)] || c1;
-      out += '<button type="button" class="kr-bar" data-d="' + d + '" role="tab">'
+      /* ★★ 2026-08-19 (파트너 지적) · 눈금이 <b>「40 50 … 00 10 20」</b>이라
+           헷갈렸습니다. 「00」이 1900년대인지 2000년대인지 알 수 없습니다.
+         ▶ <b>네 자리를 다 적습니다.</b> 「년대」는 글자가 길어져 열 칸에
+           들어가지 않으므로, 띠 <b>맨 왼쪽 눈금에만</b> 붙여 뜻을 알립니다.
+           나머지는 마우스를 올리면 「1940년대 · 6건」이 뜹니다. */
+      var lb = String(d) + (d === lo ? '<i>년대</i>' : '');
+      out += '<button type="button" class="kr-bar" data-d="' + d + '" role="tab"'
+        +   ' title="' + d + '년대 · ' + n + '건"'
+        +   ' aria-label="' + d + '년대 ' + n + '건">'
         + '<span class="n">' + (n || '') + '</span>'
         + '<span class="fill" style="height:' + h + 'px;'
         +   'background:linear-gradient(180deg,' + c1 + ',' + c2 + ')"></span>'
-        + '<span class="lb">' + String(d).slice(2) + '</span>'
+        + '<span class="lb">' + lb + '</span>'
         + '</button>';
     }
     box.innerHTML = out;
