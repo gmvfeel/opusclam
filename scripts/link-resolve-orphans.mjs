@@ -173,6 +173,13 @@ async function sbPatch(table, cond, patch) {
   if (!r.ok) throw new Error('PATCH ' + table + ' ' + r.status + ' ' + (await r.text()).slice(0, 160));
 }
 
+async function sbDelete(table, cond) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?' + cond, {
+    method: 'DELETE', headers: { ...H, Prefer: 'return=minimal' },
+  });
+  if (!r.ok) throw new Error('DELETE ' + table + ' ' + r.status + ' ' + (await r.text()).slice(0, 160));
+}
+
 // ── 위키데이터에서 대상 받아오기 ─────────────────────────────
 async function fetchEntities(qids) {
   const out = {};
@@ -465,20 +472,67 @@ async function run(kind) {
     console.log('  · 밴드·연주팀 — 음악단체DB에 ' + bIns + '곳 담음 · 소속 관계로 옮긴 것 ' + bMoved + '건');
   }
 
-  // 관계를 이어줍니다
+  /* ── 관계를 이어줍니다 ───────────────────────────────────────
+     ★★ 2026-08-19 · <b>17건이 409(23505)로 실패했습니다.</b>
+       PATCH entity_links 409 {"code":"23505", "Key (from_type, from_id, rel, …)"}
+
+     ★ 무슨 뜻인가
+       그 사람은 <b>이미 그 단체와 제대로 이어져 있습니다.</b> 그런데
+       이름만 있는 줄이 하나 더 남아 있어서, 번호를 채우는 순간
+       <b>똑같은 줄이 둘</b>이 됩니다. 그래서 거절당한 것입니다.
+
+     ★ 그러면 남은 줄은 <b>버려도 되는 것</b>입니다 — 같은 관계가
+       이미 제대로 담겨 있으므로 잃는 것이 없습니다.
+
+     ★★ 그런데 PostgREST 의 PATCH 는 <b>조건에 맞는 줄을 통째로</b>
+       고칩니다. 하나만 부딪혀도 <b>전부 안 고쳐집니다.</b> 그래서
+       위처럼 「544건 이어줌 + 17곳 통째로 실패」가 됐습니다.
+
+     ▶ 그래서 <b>먼저 갈라 놓습니다</b> —
+         ① 이름만 있는 줄을 받아 옵니다
+         ② 이미 제대로 이어진 줄의 「사람」 목록을 받아 옵니다
+         ③ 겹치는 것은 <b>지우고</b>, 나머지만 번호를 채웁니다
+       짐작으로 지우지 않습니다. <b>겹치는 것이 확인된 줄만</b> 지웁니다. */
+  let dropped = 0;
   for (const [qid, id] of haveMap) {
     if (!byQid.has(qid)) continue;
     try {
-      await sbPatch('entity_links',
-        'rel=eq.' + rel + '&to_id=is.null&to_ref=eq.' + encodeURIComponent(qid),
-        { to_type: toType, to_id: id });
-      linked += byQid.get(qid).n;
+      // ① 이름만 있는 줄
+      const orphans = await sbGetAll('entity_links', 'id,from_type,from_id',
+        '&rel=eq.' + rel + '&to_id=is.null&to_ref=eq.' + encodeURIComponent(qid));
+      if (!orphans.length) { await sleep(60); continue; }
+
+      // ② 이미 제대로 이어진 줄
+      const already = await sbGetAll('entity_links', 'from_type,from_id',
+        '&rel=eq.' + rel + '&to_type=eq.' + toType + '&to_id=eq.' + encodeURIComponent(id));
+      const seen = new Set(already.map(a => a.from_type + '|' + a.from_id));
+
+      // ③ 갈라 놓기
+      const dupIds = [], newIds = [];
+      const mine = new Set();
+      for (const o of orphans) {
+        const k = o.from_type + '|' + o.from_id;
+        // 이름만 있는 줄끼리도 겹칠 수 있습니다 (같은 사람이 두 번 담긴 경우)
+        if (seen.has(k) || mine.has(k)) dupIds.push(o.id);
+        else { mine.add(k); newIds.push(o.id); }
+      }
+
+      if (dupIds.length) {
+        await sbDelete('entity_links', 'id=in.(' + dupIds.join(',') + ')');
+        dropped += dupIds.length;
+      }
+      if (newIds.length) {
+        await sbPatch('entity_links', 'id=in.(' + newIds.join(',') + ')',
+          { to_type: toType, to_id: id });
+        linked += newIds.length;
+      }
     } catch (e) {
       console.log('     연결 실패(' + qid + ') · ' + String(e.message).slice(0, 80));
     }
     await sleep(60);
   }
-  console.log('  · 이어준 관계 ' + linked + '건');
+  console.log('  · 이어준 관계 ' + linked + '건'
+    + (dropped ? ' · 이미 이어져 있어 버린 겹친 줄 ' + dropped + '건' : ''));
 }
 
 // ── 메인 ────────────────────────────────────────────────────
