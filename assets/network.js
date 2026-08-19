@@ -1,3 +1,5 @@
+/* i18n 이 없을 때를 위한 폴백 — 언어를 붙이지 못해도 이동은 됩니다 */
+if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) location.replace(u); else location.href = u; }; }
 /* ============================================================
    OPUSCLAM 관계 지도 공용 엔진 (v1)
 
@@ -687,7 +689,8 @@ function ocN(tpl) {
     }
     if (n.center) return;
     var href = (VIEW[n.type] || '') ;
-    if (href) location.href = href + '?id=' + encodeURIComponent(n.id);
+      /* ★ 2026-08-19 · ocGo — 영어·일본어에서 말을 잃지 않게 */
+    if (href) ocGo(href + '?id=' + encodeURIComponent(n.id));
   }
 
   function setStatus(msg) {

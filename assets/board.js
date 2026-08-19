@@ -1562,7 +1562,7 @@ window.OCBoard = (function () {
                 var c = window.__ocSb;
                 c.from(cfg.table).delete().eq('id', o.id).then(function (res) {
                   if (res.error) { alert('삭제 실패: ' + res.error.message); del.disabled = false; return; }
-                  location.href = cfg.listPage;
+                  ocGo(cfg.listPage);   /* ★ 2026-08-19 · 말을 잃지 않게 */
                 });
               });
             });
