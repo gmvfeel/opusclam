@@ -96,6 +96,12 @@
       searchCols:['title','body','keywords'],
       categories:[{value:'',label:'구분선택'},{value:'대학',label:'대학'},{value:'예고',label:'예고'},{value:'대학원',label:'대학원'}],
       regions:[{value:'',label:'국내/해외'},{value:'국내',label:'국내'},{value:'해외',label:'해외'}],
+      /* ★★ 2026-08-19 · 메인의 지역 단추가 쓰는 칸입니다 (파트너 지적)
+         `region` 칸에는 「국내·해외」 둘만 들어갑니다. 시·도는 따로
+         `sido` 칸에 담고, 학교DB 의 도시에서 <b>저절로</b> 채워집니다
+         (sql/admission-region-03-B-apply.sql 의 방아쇠).
+         ★ 이 줄이 있어야 ?sido=서울 이 걸러집니다. */
+      sidoCol:'sido',
       twoCol:true, docStyle:true, yearFilter:true, writeRole:'member', pinnedFirst:false, defaultSort:'created_at',
       // 글에 사진·로고가 없으면 연결된 학교DB(school_id)의 로고를 끌어옵니다
       logoFrom:{ table:'schools', key:'school_id', col:'logo_url', nameCol:'name_ko' }
