@@ -169,6 +169,24 @@ async function sbUpsert(rows) {
   if (!r.ok) throw new Error('UPSERT ' + r.status + ' ' + (await r.text()).slice(0, 200));
 }
 
+/* ★★ 2026-08-19 · <b>넣기만 하고 빼지 않고 있었습니다</b>
+   ─────────────────────────────────────────────────────────────
+     훑개는 찾은 것을 <b>덧쓰기만</b> 했습니다. 그러면 —
+       · 글을 <b>숨기면</b> 다시 안 훑으므로, 예전에 적어 둔 줄이 남습니다
+         → 인물 화면에 <b>눌러도 볼 수 없는 글</b>이 뜹니다
+       · 글을 <b>고쳐서</b> 이름을 지워도, 예전 줄이 그대로 남습니다
+         → 나오지도 않는 사람이 「이 글에 나온 것」에 뜹니다
+     ▶ 그래서 훑고 난 뒤 <b>이번에 못 찾은 줄은 거둡니다.</b>
+   ★ 사람이 물린 것(status='no')은 건드리지 않습니다. */
+async function sbDeleteIds(ids) {
+  for (let i = 0; i < ids.length; i += 150) {
+    const part = ids.slice(i, i + 150);
+    const r = await fetch(SUPABASE_URL + '/rest/v1/entity_mentions'
+      + '?id=in.(' + part.join(',') + ')', { method: 'DELETE', headers: H });
+    if (!r.ok) throw new Error('DELETE ' + r.status + ' ' + (await r.text()).slice(0, 160));
+  }
+}
+
 // ── ① 이름 사전 만들기 ──────────────────────────────────────
 /*  ★ 갈래마다 담는 것이 다릅니다
       사람(인물·현대음악) — 풀네임 · 성 · 영문 풀네임
@@ -379,16 +397,23 @@ async function runSource(sc, dict) {
          · 나온 횟수는 <b>더하고</b>
          · 확신도는 <b>가장 높은 것</b>을 쓰고
          · 드러난 말은 <b>가장 긴 것</b>을 남깁니다 (풀네임이 더 알아보기 쉽습니다) */
+    /*  ★★ 2026-08-19 · <b>여섯 갈래로 넓히면서 여기를 함께 못 고쳤습니다.</b>
+        ─────────────────────────────────────────────────────────────
+        사전은 갈래를 갖게 됐는데(`type`·`id`), 이 대목은 <b>사람으로 못 박혀</b>
+        있었습니다 — `m.ids` 를 읽었지만 사전에는 그런 칸이 없어졌으므로
+          TypeError: Cannot read properties of undefined (reading 'slice')
+        로 <b>첫 언급에서 바로 멈춥니다.</b>
+        ★ 사전만 시험하고 <b>줄 만드는 데까지 이어서 돌려 보지 않아</b> 놓쳤습니다.
+          앞으로 이 파일은 <b>사전→훑기→줄 만들기</b>를 한 줄로 이어 시험합니다. */
     const one = new Map();
     for (const m of ms) {
-      // 성을 여럿이 쓰면 누구인지 모릅니다 — 가장 작은 번호 하나만 답니다
-      const pid = m.ids.slice().sort((a, b) => a - b)[0];
-      if (noSet.has(d.id + '|person|' + pid)) continue;
-      const key = 'person|' + pid;
+      if (noSet.has(d.id + '|' + m.type + '|' + m.id)) continue;
+      const key = m.type + '|' + m.id;
       const conf = scoreOf(m);
       const cur = one.get(key);
       if (!cur) {
-        one.set(key, { pid, surface: m.surface, hits: m.hits, conf, how: m.how });
+        one.set(key, { type: m.type, id: m.id, surface: m.surface,
+                       hits: m.hits, conf, how: m.how });
       } else {
         merged++;
         cur.hits += m.hits;
@@ -400,14 +425,14 @@ async function runSource(sc, dict) {
     for (const v of one.values()) {
       rows.push({
         src_type: sc.src, src_id: d.id,
-        to_type: 'person', to_id: v.pid,
+        to_type: v.type, to_id: v.id,
         surface: v.surface, hits: v.hits,
         confidence: v.conf, matched_by: v.how,
         status: 'auto', updated_at: new Date().toISOString(),
       });
     }
   }
-  if (merged) console.log('  · 같은 사람을 여러 이름으로 부른 것 ' + merged + '건을 합쳤습니다');
+  if (merged) console.log('  · 같은 것을 여러 이름으로 부른 것 ' + merged + '건을 합쳤습니다');
 
   console.log('  · 무언가 걸린 글 ' + docHit + '건 · 적을 줄 ' + rows.length + '건');
   const top = {};
@@ -420,7 +445,20 @@ async function runSource(sc, dict) {
   for (let i = 0; i < rows.length; i += 500) {
     await sbUpsert(rows.slice(i, i + 500));
   }
-  console.log('  · 저장했습니다');
+
+  /* ── 이번에 못 찾은 줄 거두기 ──────────────────────────────
+     ★ 훑개가 스스로 적은 것(status='auto')만 봅니다.
+       사람이 물린 것(no)·사람이 맞다고 한 것(ok)은 그대로 둡니다. */
+  const keep = new Set(rows.map(r => r.src_id + '|' + r.to_type + '|' + r.to_id));
+  const had = await sbGetAll('entity_mentions', 'id,src_id,to_type,to_id',
+    '&src_type=eq.' + encodeURIComponent(sc.src) + '&status=eq.auto');
+  const gone = had
+    .filter(x => !keep.has(x.src_id + '|' + x.to_type + '|' + x.to_id))
+    .map(x => x.id);
+  if (gone.length) await sbDeleteIds(gone);
+
+  console.log('  · 저장했습니다 · 새로 적은 줄 ' + rows.length
+    + (gone.length ? ' · 낡아서 거둔 줄 ' + gone.length : ''));
 }
 
 // ── 메인 ────────────────────────────────────────────────────
