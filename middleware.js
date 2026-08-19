@@ -59,17 +59,24 @@ export const config = {
     '/',
     '/index',
     '/index.html',
-    '/db/person-view.html',
-    '/db/person-view',
-    '/db/work-view.html',
-    '/db/work-view',
-    /* ★★ 2026-08-19 · 목록 화면 — 봇이 상세로 걸어 들어갈 길 */
-    '/db/person.html',
-    '/db/person',
-    '/db/work.html',
-    '/db/work',
+    /* ★★ 2026-08-19 · DATABASE 아래를 <b>한 줄로</b> 묶습니다.
+         목록 여덟 · 상세 여덟 · `.html` 붙은 것과 안 붙은 것까지 하면
+         서른두 줄이 됩니다. 한 줄로 두면 갈래를 넓힐 때 여기를
+         고칠 일이 없습니다 — 아래 KINDS 에 한 낱말만 더하면 됩니다.
+       ★ /db/ 아래 다른 화면(timeline·terms·write…)도 여기 들어오지만
+         아래에서 <b>곧바로 next()</b> 로 흘려보냅니다. */
+    '/db/:file',
   ],
 };
+
+/* ── DATABASE 갈래 ────────────────────────────────────────
+   화면 이름이 곧 갈래 이름입니다 —
+       /db/venue.html       → 목록  venue-list
+       /db/venue-view.html  → 상세  venue
+   ★ 새 갈래를 열 때는 <b>이 줄에 한 낱말</b>만 더하면 됩니다
+     (api/seo.js 의 LISTS 에도 같은 이름으로 한 칸). */
+const KINDS = ['person', 'work', 'venue', 'org', 'school',
+               'academic', 'modern', 'foundation'];
 
 /* ── 봇 이름표 ────────────────────────────────────────────
    ★ 소문자로 바꿔 놓고 견주므로 대소문자를 걱정하지 않습니다.
@@ -164,35 +171,39 @@ export default function middleware(request) {
     return rewrite(new URL('/home', request.url));
   }
 
-  /* ── 목록 화면 ─────────────────────────────────────────
+  /* ── DATABASE 목록·상세 ────────────────────────────────
      ★★ 2026-08-19 · 서치 콘솔이 인물 상세에 「참조 페이지 : 감지된
        페이지 없음」이라 했습니다 — <b>걸어 들어갈 링크가 없습니다.</b>
        메뉴도 목록도 자바스크립트라 봇 눈에는 안 보이기 때문입니다.
        봇에게만 목록을 서버에서 그려 주면 길이 생깁니다.
      ★ 쪽 번호 `p` 는 <b>사람 목록도 알아듣는 것</b>입니다
        (assets/db-list.js). 그래서 같은 주소를 그대로 씁니다.
-     ★ 주소를 <b>통째로 견줍니다.</b> 그래서 `/db/person-view.html` 은
-       여기 걸리지 않고 아래 상세 갈래로 갑니다. */
-  if (p === '/db/person.html' || p === '/db/person'
-   || p === '/db/work.html'  || p === '/db/work') {
-    const to = new URL('/api/seo', request.url);
-    to.searchParams.set('kind', p.indexOf('work') !== -1 ? 'work-list' : 'person-list');
+     ★ 화면 이름에서 갈래를 얻습니다 — 정규식 없이 글자 자리만. */
+  if (p.indexOf('/db/') !== 0) return next();
+
+  let f = p.slice(4);                                  /* '/db/' 를 뗍니다 */
+  if (f.length > 5 && f.slice(-5) === '.html') f = f.slice(0, -5);
+  if (f.indexOf('/') !== -1) return next();            /* 더 깊은 자리는 아닙니다 */
+
+  const isView = f.length > 5 && f.slice(-5) === '-view';
+  const kind = isView ? f.slice(0, -5) : f;
+  if (KINDS.indexOf(kind) === -1) return next();       /* 아직 안 연 화면 */
+
+  const to = new URL('/api/seo', request.url);
+
+  /* 목록 — 쪽 번호는 있으면 그대로 넘깁니다 */
+  if (!isView) {
+    to.searchParams.set('kind', kind + '-list');
     const pg = url.searchParams.get('p') || '';
     if (pg !== '' && /^[0-9]+$/.test(pg)) to.searchParams.set('p', pg);
     return rewrite(to);
   }
 
-  /* ★ 번호가 없거나 숫자가 아니면 그냥 넘깁니다.
-       목록 화면으로 보내면 같은 내용이 여러 주소로 잡힙니다. */
+  /* 상세 — 번호가 없거나 숫자가 아니면 그냥 넘깁니다.
+     목록 화면으로 보내면 같은 내용이 여러 주소로 잡힙니다. */
   const id = url.searchParams.get('id') || '';
   if (id === '' || !/^[0-9]+$/.test(id)) return next();
-
-  /* 인물이냐 작품이냐 — 글자 자리만 봅니다 */
-  const kind = url.pathname.indexOf('work-view') !== -1 ? 'work' : 'person';
-
-  const to = new URL('/api/seo', request.url);
   to.searchParams.set('kind', kind);
   to.searchParams.set('id', id);
-
   return rewrite(to);
 }

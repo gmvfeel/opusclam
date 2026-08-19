@@ -74,6 +74,19 @@ async function sb(path) {
 /* ★★ 2026-08-19 · 몇 건인지도 함께 받습니다 (목록 화면에 씁니다)
      PostgREST 는 Prefer: count=exact 를 주면 Content-Range 머리글에
      「0-199/15509」 처럼 <b>전체 건수</b>를 적어 보냅니다. */
+/* ★★ 2026-08-19 · <b>칸 이름이 틀려도 화면이 죽지 않게</b>
+     `key_name` 하나로 작품 17,061건이 모두 500 이었던 일을 겪었습니다.
+     갈래를 넓힐 때마다 그 위험이 늘어나므로, 골라 받기가 거절당하면
+     <b>`select=*` 로 한 번 더</b> 물어봅니다. 조금 무겁지만 살아납니다. */
+async function sbCountSafe(table, select, rest) {
+  try {
+    return await sbCount(`${table}?select=${select}${rest}`);
+  } catch (e) {
+    if (!/Supabase 4\d\d/.test(String(e && e.message))) throw e;
+    return sbCount(`${table}?select=*${rest}`);
+  }
+}
+
 async function sbCount(path) {
   const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
     headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Prefer: 'count=exact' },
@@ -274,13 +287,17 @@ async function work(id) {
    ============================================================ */
 const PER = 200;
 
+/* ★★ 2026-08-19 · 여섯 갈래를 더 엽니다 (공연장·단체·학교·학술·현대음악·기관)
+     ★ 칸 이름은 <b>사람 목록이 실제로 쓰는 것</b>만 씁니다
+       (각 화면의 searchCols · db-list.js 의 hidden 거르기에서 확인).
+       그래도 틀릴 수 있으니 위 sbCountSafe 가 받쳐 줍니다. */
 const LISTS = {
   person: {
     table: 'persons',
     select: 'id,name_ko,name_en,birth_year,death_year',
     filter: '&hidden=not.is.true',
     list: '/db/person.html', view: '/db/person-view.html',
-    name: '인물DB', unit: '명', other: ['작품DB', '/db/work.html'],
+    name: '인물DB', unit: '명',
     row: (r) => {
       const nm = r.name_ko || r.name_en || '';
       const lf = life(r);
@@ -292,13 +309,52 @@ const LISTS = {
     select: 'id,title,title_ko,composer_ko,composer_en,form_ko',
     filter: '&hidden=not.is.true',
     list: '/db/work.html', view: '/db/work-view.html',
-    name: '작품DB', unit: '건', other: ['인물DB', '/db/person.html'],
+    name: '작품DB', unit: '건',
     row: (r) => ({
       text: r.title_ko || r.title || '',
       sub: [r.composer_ko || r.composer_en || '', r.form_ko || ''],
     }),
   },
+  venue: {
+    table: 'venues', select: 'id,name_ko,name_en,location,operator',
+    list: '/db/venue.html', view: '/db/venue-view.html', name: '공연장DB', unit: '곳',
+    row: (r) => ({ text: r.name_ko || r.name_en || '', sub: [r.name_ko && r.name_en, r.location] }),
+  },
+  org: {
+    table: 'orgs', select: 'id,name_ko,name_en,location,leader',
+    list: '/db/org.html', view: '/db/org-view.html', name: '음악단체DB', unit: '곳',
+    row: (r) => ({ text: r.name_ko || r.name_en || '', sub: [r.name_ko && r.name_en, r.location] }),
+  },
+  school: {
+    table: 'schools', select: 'id,name_ko,name_en,location',
+    list: '/db/school.html', view: '/db/school-view.html', name: '음악학교DB', unit: '곳',
+    row: (r) => ({ text: r.name_ko || r.name_en || '', sub: [r.name_ko && r.name_en, r.location] }),
+  },
+  academic: {
+    table: 'academic', select: 'id,name_ko,name_en,author,field',
+    list: '/db/academic.html', view: '/db/academic-view.html', name: '학술DB', unit: '건',
+    row: (r) => ({ text: r.name_ko || r.name_en || '', sub: [r.author, r.field] }),
+  },
+  modern: {
+    table: 'modern_composers', select: 'id,name_ko,name_en',
+    list: '/db/modern.html', view: '/db/modern-view.html', name: '현대음악DB', unit: '명',
+    row: (r) => ({ text: r.name_ko || r.name_en || '', sub: [r.name_ko && r.name_en] }),
+  },
+  foundation: {
+    table: 'foundations', select: 'id,name_ko,name_en,location,field',
+    list: '/db/foundation.html', view: '/db/foundation-view.html', name: '기관·재단DB', unit: '곳',
+    row: (r) => ({ text: r.name_ko || r.name_en || '', sub: [r.location, r.field] }),
+  },
 };
+
+/* 모든 갈래가 <b>서로를 가리킵니다</b> — 구글이 어느 하나로 들어와도
+   나머지 일곱으로 퍼집니다. */
+function siblings(cur) {
+  return Object.keys(LISTS)
+    .filter(k => k !== cur)
+    .map(k => `<a href="${SITE}${LISTS[k].list}">${esc(LISTS[k].name)}</a>`)
+    .join(' · ');
+}
 
 /* 쪽 주소 — 첫 쪽은 물음표 없이 (같은 화면이 두 주소로 잡히지 않게) */
 function pageHref(c, n) {
@@ -325,8 +381,10 @@ async function list(kind, page) {
   const c = LISTS[kind];
   if (!c) return null;
   const off = (page - 1) * PER;
-  const { rows, total } = await sbCount(
-    `${c.table}?select=${c.select}${c.filter}&order=id.asc&limit=${PER}&offset=${off}`);
+  /* 갈래마다 따로 적지 않으면 <b>숨긴 것만</b> 뺍니다 */
+  const filt = c.filter || '&hidden=not.is.true';
+  const { rows, total } = await sbCountSafe(
+    c.table, c.select, `${filt}&order=id.asc&limit=${PER}&offset=${off}`);
   if (!rows || !rows.length) return null;          /* 없는 쪽 → 404 */
 
   const pages = Math.max(1, Math.ceil(total / PER));
@@ -354,8 +412,68 @@ async function list(kind, page) {
       + pager(c, page, pages)
       /* 다른 갈래·대문으로도 이어 둡니다 — 링크가 한 방향뿐이면
          구글이 오갈 길이 좁습니다 */
-      + `<p><a href="${SITE}${c.other[1]}">${esc(c.other[0])}</a>`
-      + ` · <a href="${SITE}/">OPUSCLAM</a></p>`,
+      + `<p>${siblings(kind)} · <a href="${SITE}/">OPUSCLAM</a></p>`,
+  };
+}
+
+/* ============================================================
+   여섯 갈래 상세 — 공연장·단체·학교·학술·현대음악·기관 · 2026-08-19
+   ------------------------------------------------------------
+   ★ 인물·작품과 달리 <b>칸을 골라 받지 않고 `select=*` 로 받습니다.</b>
+     갈래마다 칸이 조금씩 다른데, 하나라도 틀리면 PostgREST 가
+     물음 전체를 거절합니다(`key_name` 으로 겪었습니다). `*` 는
+     절대 거절당하지 않습니다.
+   ★ 대신 <b>아는 칸만 골라 보여 줍니다.</b> 아래 표에 없는 칸은
+     화면에 나오지 않으므로, 자료에 내부용 칸이 있어도 새지 않습니다.
+   ============================================================ */
+const FIELD_LABEL = {
+  name_en: '영문명', location: '위치', address: '주소', region: '지역',
+  operator: '운영', leader: '대표', founded: '설립', founded_year: '설립',
+  opened_year: '개관', capacity: '객석', seats: '객석',
+  type: '유형', category: '갈래', field: '분야', instrument: '악기',
+  departments: '학과', alumni: '동문',
+  author: '저자', publisher: '발행처', affil: '소속', keywords: '주제어',
+  year: '연도', business: '사업', technique: '기법', works: '주요 작품',
+  nationality: '국적', era_name: '시대', school: '출신학교',
+  homepage: '누리집', website: '누리집',
+};
+
+/* 아는 칸만, 값이 있는 것만, 너무 긴 것은 잘라서 */
+function facts(r) {
+  const out = [];
+  for (const k in FIELD_LABEL) {
+    const v = r[k];
+    if (v == null || v === '' || typeof v === 'object') continue;
+    out.push([FIELD_LABEL[k], plain(v, 200)]);
+  }
+  return out;
+}
+
+async function entity(kind, id) {
+  const c = LISTS[kind];
+  if (!c) return null;
+  const rows = await sb(`${c.table}?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
+  const r = rows && rows[0];
+  if (!r) return null;
+  if (r.hidden === true) return { skip: true };
+
+  const nm = r.name_ko || r.name_en || '';
+  if (!nm) return null;                       /* 이름이 없으면 색인할 값이 없습니다 */
+  const desc = r.description || r.description_en || r.note || '';
+  const ft = facts(r).filter(([k]) => !(k === '영문명' && r.name_en === nm));
+
+  return {
+    title: `${nm} · ${c.name} · OPUSCLAM`,
+    desc: plain(desc, 155) || `${nm} — ${c.name.replace('DB', '')} 정보`,
+    image: r.image_url || r.logo_url || '',
+    canonical: `${SITE}${c.view}?id=${encodeURIComponent(id)}`,
+    body:
+      `<h1>${esc(nm)}</h1>`
+      + (ft.length
+          ? '<dl>' + ft.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('') + '</dl>'
+          : '')
+      + (desc ? `<section><h2>소개</h2><p>${esc(plain(desc, 4000))}</p></section>` : '')
+      + `<p><a href="${SITE}${c.list}">${esc(c.name)} 목록</a></p>`,
   };
 }
 
@@ -424,12 +542,12 @@ export default async function handler(req, res) {
 
     /* ★★ 2026-08-19 · 목록 화면 — `kind=person-list` · `kind=work-list`
          쪽 번호는 `p`, 없으면 첫 쪽입니다. */
-    if (kind === 'person-list' || kind === 'work-list') {
+    if (kind && kind.slice(-5) === '-list' && LISTS[kind.slice(0, -5)]) {
       const raw = url.searchParams.get('p') || '1';
       /* 숫자가 아니거나 0 이하면 <b>첫 쪽</b>으로 봅니다 — 404 로 두면
          잘못 만든 링크 하나에 목록 전체가 끊깁니다. */
       const page = /^[0-9]+$/.test(raw) ? Math.max(1, parseInt(raw, 10)) : 1;
-      d = await list(kind === 'work-list' ? 'work' : 'person', page);
+      d = await list(kind.slice(0, -5), page);
     } else {
       /* ★ 번호가 없거나 숫자가 아니면 <b>색인하지 않습니다</b> —
            목록으로 보내면 같은 내용이 여러 주소로 잡힙니다. */
@@ -440,6 +558,8 @@ export default async function handler(req, res) {
       }
       if (kind === 'person') d = await person(id);
       else if (kind === 'work') d = await work(id);
+      /* ★ 2026-08-19 · 나머지 여섯 갈래는 공통 함수가 그립니다 */
+      else if (LISTS[kind]) d = await entity(kind, id);
     }
 
     /* 없는 번호 · 숨긴 인물 → 404 로 알립니다.
