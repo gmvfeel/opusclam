@@ -126,14 +126,14 @@
   }
 
   /* ── ① 글 상세 → 「이 글에 나온 것」 ───────────────────────── */
-  function forDoc(src, id, mount) {
+  function forDoc(src, id) {
     return rest('entity_mentions?select=to_type,to_id,surface,confidence'
         + '&src_type=eq.' + encodeURIComponent(src)
         + '&src_id=eq.' + encodeURIComponent(id)
         + '&confidence=gte.' + MIN_CONF
         + '&order=confidence.desc&limit=' + (CAP * 2))
       .then(function (rows) {
-        if (!rows || !rows.length) { mount.remove(); return; }
+        if (!rows || !rows.length) return '';
 
         /* 갈래마다 한 번씩만 이름을 받아옵니다 */
         var need = {};
@@ -142,7 +142,7 @@
           (need[r.to_type] = need[r.to_type] || []).push(r.to_id);
         });
         var kinds = Object.keys(need);
-        if (!kinds.length) { mount.remove(); return; }
+        if (!kinds.length) return '';
 
         return Promise.all(kinds.map(function (k) {
           var m = TO_META[k];
@@ -167,22 +167,22 @@
             html += '<a class="ocm-item" href="' + esc(href(m.path, r.to_id)) + '">'
                  +    '<b>' + esc(nm) + '</b><i>' + esc(m.label) + '</i></a>';
           });
-          if (!n) { mount.remove(); return; }
-          mount.innerHTML = title('이 글에 나온 것', n)
-                          + '<div class="ocm-list">' + html + '</div>';
+          if (!n) return '';
+          return title('이 글에 나온 것', n)
+               + '<div class="ocm-list">' + html + '</div>';
         });
       });
   }
 
   /* ── ② DB 상세 → 「여기가 나온 글」 ────────────────────────── */
-  function forEntity(toType, id, mount) {
+  function forEntity(toType, id) {
     return rest('entity_mentions?select=src_type,src_id,confidence'
         + '&to_type=eq.' + encodeURIComponent(toType)
         + '&to_id=eq.' + encodeURIComponent(id)
         + '&confidence=gte.' + MIN_CONF
         + '&order=confidence.desc&limit=' + (CAP * 3))
       .then(function (rows) {
-        if (!rows || !rows.length) { mount.remove(); return; }
+        if (!rows || !rows.length) return '';
 
         var need = {};
         rows.forEach(function (r) {
@@ -190,7 +190,7 @@
           (need[r.src_type] = need[r.src_type] || []).push(r.src_id);
         });
         var kinds = Object.keys(need);
-        if (!kinds.length) { mount.remove(); return; }
+        if (!kinds.length) return '';
 
         return Promise.all(kinds.map(function (k) {
           var m = SRC_META[k];
@@ -215,11 +215,67 @@
             html += '<a class="ocm-row" href="' + esc(href(m.path, r.src_id)) + '">'
                  +    '<em>' + esc(m.label) + '</em><span>' + esc(t) + '</span></a>';
           });
-          if (!n) { mount.remove(); return; }
-          mount.innerHTML = title('여기가 나온 글', n)
-                          + '<div class="ocm-rows">' + html + '</div>';
+          if (!n) return '';
+          return title('여기가 나온 글', n)
+               + '<div class="ocm-rows">' + html + '</div>';
         });
       });
+  }
+
+  /* ── 붙이기 ───────────────────────────────────────────────────
+     ★★ 2026-08-19 · <b>왜 아무것도 안 보였나</b> (파트너 지적)
+     ─────────────────────────────────────────────────────────────
+       커뮤니티·정보SPOT 상세 화면의 본문은 <b>비어 있는 채로</b> 옵니다 —
+           &lt;article class="board-view pv"&gt;
+             &lt;div class="board-empty"&gt;불러오는 중…&lt;/div&gt;
+           &lt;/article&gt;
+       그리고 assets/board.js 가 자료를 받아 온 뒤
+           box.innerHTML = …
+       로 <b>통째로 갈아 끼웁니다.</b>
+
+       우리는 화면이 다 뜨자마자(DOMContentLoaded) 자리를 붙였습니다.
+       그래서 board.js 가 나중에 <b>우리 자리를 지워 버렸습니다.</b>
+       오류도 안 나고, 조회도 잘 됐고, 자리만 사라졌습니다.
+
+     ★ 어떻게 고쳤나 — <b>지워지면 다시 붙입니다.</b>
+       본문이 언제 그려질지 화면마다 다릅니다. 시간을 재서 기다리면
+       느린 날에는 또 어긋납니다. 그러니 기다리지 말고
+       <b>바뀔 때마다 있는지 보고 없으면 다시</b> 붙입니다.
+     ★ 이미 있으면 아무것도 하지 않으므로 끝없이 되풀이되지 않습니다.
+     ★ 20초 뒤에는 그만 봅니다 — 그때까지 안 그려졌으면 다른 문제입니다. */
+  function mountInto(html) {
+    var art = document.querySelector('article.pv');
+    if (!art || !html) return;
+    if (art.querySelector('.ocm-sec')) return;      /* 이미 있습니다 */
+
+    var sec = document.createElement('section');
+    sec.className = 'pv-sec ocm-sec';
+    sec.innerHTML = html;
+
+    /* 붙는 자리 — 관계 목록(ocl-sec) 이 있으면 그 앞, 없으면 맨 뒤 */
+    var links = art.querySelector('.ocl-sec');
+    var contrib = art.querySelector('.pv-contrib');
+    if (links) art.insertBefore(sec, links);
+    else if (contrib) art.insertBefore(sec, contrib);
+    else art.appendChild(sec);
+  }
+
+  function keepMounted(html) {
+    if (!html) return;
+    injectCSS();
+    mountInto(html);
+
+    var host = document.querySelector('main') || document.body;
+    if (!host || !window.MutationObserver) return;
+
+    var waiting = false;
+    var obs = new MutationObserver(function () {
+      if (waiting) return;                          /* 몰아서 한 번만 봅니다 */
+      waiting = true;
+      setTimeout(function () { waiting = false; mountInto(html); }, 80);
+    });
+    obs.observe(host, { childList: true, subtree: true });
+    setTimeout(function () { obs.disconnect(); }, 20000);
   }
 
   /* ── 시작 ─────────────────────────────────────────────────── */
@@ -244,22 +300,10 @@
       mode = 'doc';
     }
 
-    var art = document.querySelector('article.pv');
-    if (!art) return;
-
-    injectCSS();
-    var mount = document.createElement('section');
-    mount.className = 'pv-sec ocm-sec';
-
-    /* 붙는 자리 — 관계 목록(ocl-sec) 이 있으면 그 앞, 없으면 맨 뒤 */
-    var links = art.querySelector('.ocl-sec');
-    var contrib = art.querySelector('.pv-contrib');
-    if (links) art.insertBefore(mount, links);
-    else if (contrib) art.insertBefore(mount, contrib);
-    else art.appendChild(mount);
-
-    var job = (mode === 'entity') ? forEntity(kind, id, mount) : forDoc(kind, id, mount);
-    job.catch(function () { mount.remove(); });
+    /* ★ 자료를 먼저 받아 두고, 붙이는 것은 그다음입니다.
+       화면이 아직 안 그려졌어도 조회는 시작할 수 있습니다. */
+    var job = (mode === 'entity') ? forEntity(kind, id) : forDoc(kind, id);
+    job.then(keepMounted).catch(function () {});
   }
 
   if (document.readyState !== 'loading') boot();
