@@ -58,7 +58,16 @@ async function sb(path) {
   const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
     headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
   });
-  if (!r.ok) throw new Error(`Supabase ${r.status}`);
+  /* ★★ 2026-08-19 — <b>까닭까지 들고 던집니다.</b>
+       예전에는 「Supabase 400」 이라고만 해서, 화면에는 `error` 넉 자만
+       나오고 <b>어느 칸이 어긋났는지 알 길이 없었습니다.</b>
+       (실제로 `key_name` 이라는 없는 칸 하나 때문에 작품 화면이 모두
+        무너져 있었는데, 찾는 데 애를 먹었습니다.) */
+  if (!r.ok) {
+    let why = '';
+    try { why = (await r.text()).slice(0, 300); } catch (e) { /* 못 읽으면 그냥 */ }
+    throw new Error(`Supabase ${r.status} · ${why}`);
+  }
   return r.json();
 }
 
@@ -90,7 +99,8 @@ async function person(id) {
   let works = [];
   try {
     works = await sb(`person_works?select=id,title,title_ko,form_ko,year_from`
-      + `&person_id=eq.${encodeURIComponent(id)}&order=year_from.asc.nullslast&limit=40`);
+      + `&person_id=eq.${encodeURIComponent(id)}&hidden=is.false`
+      + `&order=year_from.asc.nullslast&limit=40`);
   } catch (e) { /* 없으면 그대로 */ }
 
   const facts = [
@@ -117,9 +127,13 @@ async function person(id) {
           ? `<section><h2>소개</h2><p>${esc(plain(desc, 4000))}</p>`
             + '<p class="src">출처: 위키백과 · CC BY-SA</p></section>'
           : '')
+      /* ★★ 2026-08-19 — 작품 이름에 <b>링크를 답니다.</b>
+           구글이 인물 화면을 타고 작품 화면까지 걸어 들어갈 길이 됩니다.
+           사이트맵만으로도 가긴 하지만, 서로 이어진 것이 훨씬 낫습니다. */
       + (works.length
           ? '<section><h2>작품 ' + works.length + '건</h2><ul>'
-            + works.map(w => `<li>${esc(w.title_ko || w.title || '')}`
+            + works.map(w => `<li><a href="${SITE}/db/work-view.html?id=${encodeURIComponent(w.id)}">`
+                + `${esc(w.title_ko || w.title || '')}</a>`
                 + (w.form_ko ? ` <span>${esc(w.form_ko)}</span>` : '')
                 + (w.year_from ? ` <span>${esc(w.year_from)}</span>` : '')
                 + `</li>`).join('')
@@ -129,23 +143,50 @@ async function person(id) {
 }
 
 /* ── 작품 ─────────────────────────────────────────────── */
+/* ★★ 2026-08-19 고침 — <b>실제 칸 이름에 맞췄습니다.</b>
+
+   무엇이 잘못이었나
+     · `key_name`(조성) 이라는 칸은 <b>person_works 에 없습니다.</b>
+       PostgREST 가 물음 전체를 거절해(42703) 작품 화면이 모두
+       500 이었습니다. 한 칸이 어긋나면 <b>다 무너집니다.</b>
+     · 작곡가를 `persons(...)` 로 곁들여 오고 있었는데, 그럴 까닭이
+       없습니다. <b>composer_ko · composer_en 이 같은 줄에 있습니다.</b>
+       이어 붙이기를 그만두면 어긋날 여지도 사라집니다.
+
+   실제로 있는 칸 (2026-08-19 확인)
+     id · person_id · title · title_ko · subtitle · opus ·
+     year_text · year_from · year_to · genre · instrumentation ·
+     note · era · form_raw · form_ko · form_qid ·
+     composer_ko · composer_en · imslp_ref · wikidata_id ·
+     name_ja · hidden · hidden_note · is_popular · is_recommended ·
+     source · source_id · created_at · updated_at
+
+   ★ 칸 이름을 짐작하지 마십시오. 위 주소로 `select=*` 를 한 번
+     열어 보면 그대로 나옵니다. */
 async function work(id) {
-  const rows = await sb(`person_works?select=id,title,title_ko,form_ko,genre,`
-    + `year_from,year_text,opus,key_name,note,imslp_ref,`
-    + `persons(id,name_ko,name_en,era_name)`
+  const rows = await sb(`person_works?select=id,person_id,title,title_ko,subtitle,`
+    + `form_ko,genre,instrumentation,year_from,year_to,year_text,opus,era,`
+    + `note,imslp_ref,composer_ko,composer_en,hidden`
     + `&id=eq.${encodeURIComponent(id)}&limit=1`);
   const w = rows && rows[0];
   if (!w) return null;
+  /* ★ 숨긴 작품은 <b>색인하지 않습니다</b> — 인물과 같은 기준입니다 */
+  if (w.hidden === true) return { skip: true };
 
   const ti = w.title_ko || w.title || '';
   const en = (w.title && w.title !== w.title_ko) ? w.title : '';
-  const cp = w.persons || {};
-  const cn = cp.name_ko || cp.name_en || '';
+  const cn = w.composer_ko || w.composer_en || '';
+
+  /* 작곡 연도 — 「1717~1723」 · 「1717」 · 글로 적힌 것 차례로 */
+  const yr = (w.year_from && w.year_to && w.year_from !== w.year_to)
+    ? `${w.year_from}~${w.year_to}`
+    : (w.year_from || w.year_text || '');
 
   const facts = [
-    ['작곡가', cn], ['형식', w.form_ko], ['편성', w.genre],
-    ['작곡 연도', w.year_from || w.year_text], ['작품 번호', w.opus],
-    ['조성', w.key_name], ['시대', cp.era_name],
+    ['작곡가', cn], ['형식', w.form_ko],
+    ['편성', w.genre], ['악기', w.instrumentation],
+    ['작곡 연도', yr], ['작품 번호', w.opus],
+    ['시대', w.era], ['IMSLP', w.imslp_ref],
   ].filter(([, v]) => v);
 
   const head = [ti, cn].filter(Boolean).join(' · ');
@@ -159,7 +200,14 @@ async function work(id) {
     body:
       `<h1>${esc(ti)}</h1>`
       + (en ? `<p class="en">${esc(en)}</p>` : '')
-      + (cn ? `<p class="by">${esc(cn)}</p>` : '')
+      + (w.subtitle ? `<p class="en">${esc(w.subtitle)}</p>` : '')
+      /* ★ 작곡가 이름에 <b>인물 화면 링크</b>를 답니다 — 작품과 인물이
+           서로 이어져 구글이 오갈 수 있습니다. */
+      + (cn
+          ? (w.person_id
+              ? `<p class="by"><a href="${SITE}/db/person-view.html?id=${encodeURIComponent(w.person_id)}">${esc(cn)}</a></p>`
+              : `<p class="by">${esc(cn)}</p>`)
+          : '')
       + (facts.length
           ? '<dl>' + facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('') + '</dl>'
           : '')
@@ -260,6 +308,9 @@ export default async function handler(req, res) {
     /* ★ 실패하면 <b>500 을 줍니다.</b> 빈 화면을 200 으로 주면
          구글이 그것을 색인해 버립니다. 500 이면 나중에 다시 옵니다. */
     res.setHeader('X-Robots-Tag', 'noindex');
-    res.status(500).send('error');
+    /* ★ 주소 끝에 &raw=1 을 붙였을 때만 <b>까닭을 보여 줍니다.</b>
+         봇에게는 여전히 `error` 넉 자뿐입니다. */
+    const raw = String(req.url || '').indexOf('raw=1') !== -1;
+    res.status(500).send(raw ? 'error · ' + (e && e.message ? e.message : String(e)) : 'error');
   }
 }
