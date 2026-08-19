@@ -1,5 +1,6 @@
 // ============================================================
-// OPUSCLAM 글에서 우리 자료 찾아 잇기 (v1 · 인물)
+// OPUSCLAM 글에서 우리 자료 찾아 잇기 (v2 · 여섯 갈래)
+//   인물 · 현대음악 · 공연장 · 음악학교 · 음악단체 · 기관재단
 //
 //  커뮤니티 글·정보SPOT 본문을 훑어, 우리 DB 에 있는 항목이
 //  언급됐으면 entity_mentions 에 적어 둡니다.
@@ -16,7 +17,7 @@
 //
 //  환경변수 · SUPABASE_URL, SUPABASE_SERVICE_KEY
 //            SCAN_DRY=1     저장하지 않고 결과만 보여줍니다
-//            SCAN_ONLY=spot 한 갈래만 훑습니다
+//            SCAN_ONLY=spot 한 게시판만 훑습니다
 //            SCAN_LIMIT=500 갈래마다 이만큼만 (시험용)
 // ============================================================
 
@@ -29,7 +30,7 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
   process.exit(1);
 }
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const DRY   = process.env.SCAN_DRY === '1';
 const ONLY  = (process.env.SCAN_ONLY || '').trim();
 const LIMIT = Number(process.env.SCAN_LIMIT || 0);
@@ -73,6 +74,15 @@ const BAN = new Set([
   /* ★ 「말씀 드리고」처럼 <b>띄어 쓰면</b> 낱말 경계 검사를 통과합니다.
      성으로는 쓰지 않고, 「리카르도 드리고」 풀네임으로만 찾습니다. */
   '드리고','바치고','부치고',
+]);
+
+/* ★ 곳·단체의 <b>이름이 곧 일반명사</b>인 것 — 이런 줄은 자료가 잘못
+   들어온 것입니다. 「예술의전당」처럼 진짜 이름은 여기 없습니다. */
+const GENERIC = new Set([
+  '오케스트라','교향악단','합창단','앙상블','필하모닉','심포니',
+  '음악당','아트홀','아트센터','문화회관','콘서트홀','대극장','소극장',
+  '음악원','음악학교','음악대학','예술대학','대학교','고등학교',
+  '클래식','콘서트','페스티벌','콩쿠르','콩쿨','오페라','발레',
 ]);
 
 // ── 우리말 조사 ──────────────────────────────────────────────
@@ -160,73 +170,110 @@ async function sbUpsert(rows) {
 }
 
 // ── ① 이름 사전 만들기 ──────────────────────────────────────
-/*  ★ 두 가지를 담습니다
-      풀네임 — 「루트비히 판 베토벤」  (확신도 높음)
-      성     — 「베토벤」             (확신도 조금 낮음)
-    ★ 그리고 <b>남의 이름 앞쪽에도 쓰이는 낱말</b>은 성으로 쓰지 않습니다.
+/*  ★ 갈래마다 담는 것이 다릅니다
+      사람(인물·현대음악) — 풀네임 · 성 · 영문 풀네임
+      곳·단체(공연장·학교·음악단체·기관재단) — <b>이름 통째로만</b>
+        「예술의전당」을 「전당」으로 줄이면 아무 데나 걸립니다.
+
+    ★ 남의 이름 앞쪽에도 쓰이는 낱말은 성으로 쓰지 않습니다.
       「루트비히」는 「루트비히 판 베토벤」의 앞 낱말인데, 이름이
       「… 루트비히」로 끝나는 다른 사람이 있어서 그 사람이 78번
-      언급된 것처럼 세어졌습니다. (2026-08-19 실제 자료)              */
+      언급된 것처럼 세어졌습니다. (2026-08-19 실제 자료)
+
+    ★★ 그리고 <b>긴 것부터</b> 찾습니다. 이것이 갈래를 넓히는 핵심입니다 —
+        「시벨리우스 아카데미」(학교)가 「시벨리우스」(사람)보다 먼저
+        잡혀야 합니다. 입시요강 다섯 건이 학교를 사람으로 잡고 있었는데,
+        학교 이름을 사전에 넣으면 <b>규칙을 안 고쳐도</b> 저절로 바로잡힙니다. */
+
+/* 갈래별 설정 — ★ 늘릴 때는 여기 한 줄만 더하면 됩니다 */
+const KINDS = [
+  { type:'person',     table:'persons',          who:true,  label:'인물' },
+  { type:'modern',     table:'modern_composers', who:true,  label:'현대음악' },
+  { type:'venue',      table:'venues',           who:false, label:'공연장' },
+  { type:'school',     table:'schools',          who:false, label:'음악학교' },
+  { type:'org',        table:'orgs',             who:false, label:'음악단체' },
+  { type:'foundation', table:'foundations',      who:false, label:'기관·재단' },
+];
+
+/* 같은 말이 여러 갈래를 가리킬 때 무엇을 먼저 볼 것인가 */
+const HOW_RANK  = { fullname:3, fullname_en:3, entity:2, entity_en:2, surname:1 };
+const KIND_RANK = { person:6, modern:5, venue:4, school:3, org:2, foundation:1 };
+
 async function buildDict() {
-  /* ★★ 2026-08-19 · 한글 이름만 읽었더니 <b>10,269명</b>뿐이었습니다.
-     인물은 16,075명입니다 — <b>5,800명 넘게 한글 이름이 없습니다.</b>
-     그 사람들은 영문 이름밖에 없으므로 영영 못 찾게 됩니다.
-     ▶ 영문은 <b>풀네임만</b> 씁니다. 성만 쓰면 Sin←Sin<b>fonia</b> 처럼
-       낱말 가운데 걸립니다(2026-08-19 실제 자료에서 확인). */
-  const people = await sbGetAll('persons', 'id,name_ko,name_en', '');
-  const withKo = people.filter(p => p.name_ko && String(p.name_ko).trim()).length;
-  console.log('  · 인물 ' + people.length + '명 (한글 이름 있는 사람 ' + withKo + '명)');
-
-  // 남의 이름 앞쪽에도 쓰이는 낱말 모으기
-  const nonLast = new Set();
-  for (const p of people) {
-    if (!p.name_ko) continue;
-    const w = String(p.name_ko).trim().split(/\s+/);
-    for (let i = 0; i < w.length - 1; i++) nonLast.add(w[i]);
+  const bySurface = new Map();   // 드러난 말 -> { refs:[{type,id,how}] }
+  function put(surface, type, id, how) {
+    if (!bySurface.has(surface)) bySurface.set(surface, { refs: [] });
+    bySurface.get(surface).refs.push({ type, id, how });
   }
 
-  const bySurface = new Map();   // 드러난 말 -> [{type,id}]
-  function put(surface, id, how) {
-    if (!bySurface.has(surface)) bySurface.set(surface, { how, ids: [] });
-    bySurface.get(surface).ids.push(id);
-  }
+  for (const k of KINDS) {
+    /* ★ 숨긴 항목은 담지 않습니다 — 눌러도 갈 곳이 없습니다.
+       hidden 이 비어 있는(null) 줄도 살아 있는 것으로 봅니다. */
+    const rows = await sbGetAll(k.table, 'id,name_ko,name_en', '&hidden=not.is.true');
+    const withKo = rows.filter(r => r.name_ko && String(r.name_ko).trim()).length;
+    console.log('  · ' + k.label + ' ' + rows.length + '개 (한글 이름 ' + withKo + '개)');
 
-  for (const p of people) {
-    const full = String(p.name_ko || '').trim();
-    if (full) {
-      const w = full.split(/\s+/);
-
-      // 풀네임 — 두 낱말 이상일 때만 (한 낱말이면 성과 같습니다)
-      if (w.length > 1 && full.length >= 4) put(full, p.id, 'fullname');
-
-      // 성 — 마지막 낱말
-      const s = w[w.length - 1];
-      if (s.length >= 3 && /^[가-힣]+$/.test(s) && !BAN.has(s) && !nonLast.has(s)) {
-        put(s, p.id, 'surname');
+    if (k.who) {
+      /* ── 사람 ── */
+      const nonLast = new Set();
+      for (const p of rows) {
+        if (!p.name_ko) continue;
+        const w = String(p.name_ko).trim().split(/\s+/);
+        for (let i = 0; i < w.length - 1; i++) nonLast.add(w[i]);
+      }
+      for (const p of rows) {
+        const full = String(p.name_ko || '').trim();
+        if (full) {
+          const w = full.split(/\s+/);
+          if (w.length > 1 && full.length >= 4) put(full, k.type, p.id, 'fullname');
+          const s = w[w.length - 1];
+          if (s.length >= 3 && /^[가-힣]+$/.test(s) && !BAN.has(s) && !nonLast.has(s)) {
+            put(s, k.type, p.id, 'surname');
+          }
+        }
+        /* 영문은 풀네임만 — 성만 쓰면 Sin←Sinfonia 처럼 낱말 가운데 걸립니다 */
+        const en = String(p.name_en || '').trim();
+        if (en.length >= 8 && en.indexOf(' ') > 0 && /^[A-Za-z][A-Za-z .'\-]+$/.test(en)) {
+          put(en, k.type, p.id, 'fullname_en');
+        }
+      }
+    } else {
+      /* ── 곳 · 단체 ── 이름 통째로만 ──
+         ★★ 2026-08-19 · <b>BAN 을 여기 쓰면 안 됩니다.</b>
+           BAN 은 「사람 성으로 뽑혔을 때 아무 데나 걸리는 말」 목록입니다.
+           그런데 거기 <b>「예술의전당」·「음악당」</b> 같은 것이 들어 있어서,
+           <b>진짜 공연장 이름까지 통째로 버려졌습니다.</b>
+           (시험에서 「예술의전당에서 진은숙 신작 초연」의 공연장을 놓쳤습니다)
+         ★ 곳·단체는 <b>이름 통째로</b> 맞은 것이라 그런 걱정이 없습니다.
+           대신 <b>이름이 곧 일반명사</b>인 것만 따로 거릅니다 —
+           그런 줄은 사실 자료가 잘못 들어온 것입니다. */
+      for (const o of rows) {
+        const ko = String(o.name_ko || '').trim();
+        if (ko.length >= 4 && !GENERIC.has(ko)) put(ko, k.type, o.id, 'entity');
+        const en = String(o.name_en || '').trim();
+        if (en.length >= 8 && /^[A-Za-z][A-Za-z0-9 .'&\-]+$/.test(en)) {
+          put(en, k.type, o.id, 'entity_en');
+        }
       }
     }
-
-    /* ── 영문 풀네임 ──
-       ★ 두 낱말 이상 · 여덟 글자 이상만. 짧으면 흔한 말과 부딪힙니다.
-       ★ 성만은 쓰지 않습니다. */
-    const en = String(p.name_en || '').trim();
-    if (en.length >= 8 && en.indexOf(' ') > 0 && /^[A-Za-z][A-Za-z .'\-]+$/.test(en)) {
-      put(en, p.id, 'fullname_en');
-    }
   }
 
-  /* ★ 긴 것부터 찾습니다.
-     「시벨리우스 아카데미」가 사전에 있으면 「시벨리우스」보다 먼저
-     잡혀야 합니다. 짧은 것부터 찾으면 학교 이름 속 사람 이름이
-     사람으로 잘못 걸립니다. */
-  const list = [...bySurface.entries()]
-    .map(([surface, v]) => ({ surface, how: v.how, ids: v.ids }))
-    .sort((a, b) => b.surface.length - a.surface.length);
+  const list = [...bySurface.entries()].map(([surface, v]) => {
+    /* 같은 말이 여럿을 가리키면 <b>더 또렷한 쪽</b>을 먼저 둡니다 */
+    const refs = v.refs.slice().sort((a, b) =>
+      (HOW_RANK[b.how] - HOW_RANK[a.how]) ||
+      (KIND_RANK[b.type] - KIND_RANK[a.type]) ||
+      (a.id - b.id));
+    const best = refs[0];
+    /* 헷갈리는 정도 — 같은 갈래·같은 방식으로 맞는 것이 몇인가 */
+    const same = refs.filter(r => r.type === best.type && r.how === best.how).length;
+    return { surface, type: best.type, id: best.id, how: best.how, same };
+  }).sort((a, b) => b.surface.length - a.surface.length);   /* ★ 긴 것부터 */
 
-  console.log('  · 찾을 말 ' + list.length + '개'
-    + ' (한글 풀네임 ' + list.filter(x => x.how === 'fullname').length
-    + ' · 성 ' + list.filter(x => x.how === 'surname').length
-    + ' · 영문 풀네임 ' + list.filter(x => x.how === 'fullname_en').length + ')');
+  const by = {};
+  list.forEach(x => { by[x.type] = (by[x.type] || 0) + 1; });
+  console.log('  · 찾을 말 ' + list.length + '개 — '
+    + KINDS.map(k => k.label + ' ' + (by[k.type] || 0)).join(' · '));
   return list;
 }
 
@@ -254,7 +301,7 @@ function scanOne(text, dict) {
         for (let i = at; i < at + s.length; i++) taken[i] = 1;
         const cur = found.get(s);
         if (cur) cur.hits++;
-        else found.set(s, { surface: s, how: d.how, ids: d.ids, hits: 1 });
+        else found.set(s, { surface: s, how: d.how, type: d.type, id: d.id, same: d.same, hits: 1 });
       }
       at = text.indexOf(s, at + 1);
     }
@@ -267,9 +314,11 @@ function scanOne(text, dict) {
    성 · 한 사람  75 — 그 성을 쓰는 사람이 하나뿐
    성 · 여럿     45 — 누구인지 모릅니다. 화면에서 가릴 수 있게 낮게 둡니다 */
 function scoreOf(m) {
-  if (m.how === 'fullname')    return 90;
-  if (m.how === 'fullname_en') return 85;   /* 영문 풀네임도 거의 틀리지 않습니다 */
-  return m.ids.length === 1 ? 75 : 45;
+  if (m.how === 'fullname')    return m.same === 1 ? 90 : 70;
+  if (m.how === 'fullname_en') return m.same === 1 ? 85 : 70;
+  /* 곳·단체는 이름 통째로 맞은 것이라 사람 성보다 든든합니다 */
+  if (m.how === 'entity' || m.how === 'entity_en') return m.same === 1 ? 85 : 60;
+  return m.same === 1 ? 75 : 45;            /* 사람 성 */
 }
 
 // ── ③ 한 갈래 훑기 ─────────────────────────────────────────
