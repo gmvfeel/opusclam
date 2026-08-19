@@ -92,10 +92,18 @@ export default function middleware(request) {
 
   /* ── 대문 ──────────────────────────────────────────────
      봇에게는 「얇은 문」이 아니라 <포털 메인>을 곧바로 줍니다.
-     주소는 https://opusclam.com/ 그대로입니다(rewrite 라서). */
+     주소는 https://opusclam.com/ 그대로입니다(rewrite 라서).
+
+     ★★ 2026-08-19 고침 — <b>`/home.html` 이 아니라 `/home` 입니다.</b>
+       cleanUrls: true 가 켜져 있으면 home.html 은 <b>`/home` 이라는
+       이름으로만 놓입니다.</b> `/home.html` 은 실제로는 없는 주소여서
+       (있는 것은 그리로 보내는 308 규칙뿐입니다) 미들웨어가 그리로
+       넘기면 <b>404</b> 가 났습니다. 서치 콘솔 실시간 테스트에
+       「찾을 수 없음(404)」로 잡혔습니다.
+       ★ cleanUrls 를 끄면 이 줄도 `.html` 로 되돌려야 합니다. */
   const p = url.pathname;
   if (p === '/' || p === '/index' || p === '/index.html') {
-    return rewrite(new URL('/home.html', request.url));
+    return rewrite(new URL('/home', request.url));
   }
 
   /* ★ 번호가 없거나 숫자가 아니면 그냥 넘깁니다.
