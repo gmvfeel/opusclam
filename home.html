@@ -929,11 +929,26 @@
   .mediacard .mc-th img{width:100%;height:100%;object-fit:cover;display:block;
     transition:opacity .2s ease}
   .mediacard:hover .mc-th img{opacity:.85}
+  /* ★★ 2026-08-19 · 플레이 단추를 <b>상세 화면과 같은 꼴</b>로 (파트너 지적)
+     ─────────────────────────────────────────────────────────────
+     여기와 상세 화면(.bv-playbtn · assets/board.css)이 서로 달랐습니다.
+         여기      까만 동그라미 · 테 없음 · 올리면 <b>빨강</b>
+         상세 화면  흰 테 두른 동그라미 · 올리면 조금 짙어짐
+     같은 자리에서 같은 일을 하는 단추가 화면마다 다르면, 누르는 사람이
+     매번 새로 익혀야 합니다. <b>상세 화면 쪽으로 맞춥니다.</b>
+
+     ★ 크기만 다르게 둡니다 — 상세 화면은 62px 이지만 여기 카드는
+       훨씬 작아서, 그대로 쓰면 <b>그림을 덮어 버립니다.</b>
+       48px 로 두고 테와 색은 똑같이 씁니다.
+     ★ 빨강은 버립니다. 유튜브를 흉내 낸 것으로 보이는데,
+       상세 화면과 어긋나고 우리 색도 아닙니다. */
   .mediacard .mc-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-    width:46px;height:46px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;
+    width:48px;height:48px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.8);background:rgba(0,0,0,.35);color:#fff;
     display:grid;place-items:center;font-size:16px;padding-left:3px;
     transition:background .18s ease,transform .18s ease}
-  .mediacard:hover .mc-play{background:#f00;transform:translate(-50%,-50%) scale(1.08)}
+  .mediacard:hover .mc-play{background:rgba(0,0,0,.5);
+    transform:translate(-50%,-50%) scale(1.12)}
   .mediacard .mc-dur{position:absolute;right:6px;bottom:6px;font-size:11px;font-weight:700;
     color:#fff;background:rgba(0,0,0,.74);border-radius:3px;padding:1px 5px;line-height:1.45;
     font-variant-numeric:tabular-nums}
