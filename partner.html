@@ -45,7 +45,10 @@
   .pt-frame{max-width:1000px;margin:44px auto 0;
     background:var(--paper,#fff);
     border:3px solid #514a6b;border-radius:12px;
-    padding:34px 66px 36px;
+    /* ★★ 2026-08-21 · 위아래도 34/36 → 52/56px 로 늘렸습니다 (파트너 요청).
+         액자가 세로로 커집니다. 안쪽 내용은 그대로입니다 —
+         늘어난 것은 <b>테두리와 내용 사이의 빈 자리</b>뿐입니다. */
+    padding:52px 66px 56px;
     box-shadow:0 3px 14px -4px rgba(30,24,60,.16)}
   html[data-theme="dark"] .pt-frame{border-color:#7a7295;
     box-shadow:0 3px 16px -4px rgba(0,0,0,.5)}
@@ -166,7 +169,7 @@
 
   /* 좁은 화면 — 리쿠르트와 같은 값(900px 에서 꺾습니다) */
   @media (max-width:900px){
-    .pt-frame{padding:24px 24px 26px;border-width:2px;margin-top:30px}
+    .pt-frame{padding:34px 24px 36px;border-width:2px;margin-top:30px}
     /* 좁은 화면에서는 못 박은 폭이 오히려 방해가 됩니다 */
     .pt-box,.pt-lead{max-width:none}
   }
