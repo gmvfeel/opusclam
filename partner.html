@@ -27,7 +27,26 @@
                       --text · --text-2 · --text-3 · --violet ~ --violet-3
                       --gold · --ink */
 
-  .pt-wrap{max-width:760px;margin:0 auto;padding:30px 20px 90px}
+  .pt-page{padding:0 20px 90px}
+
+  /* ── 바깥 액자 (2026-08-21 · 파트너 지적) ────────────────────
+     ★ 리쿠르트 서비스안내의 `.rg-wrap` 과 <b>같은 값</b>입니다
+       (assets/recruit.css 1649줄). 3px 테두리가 안쪽 것들을 통째로
+       감싸는 짜임이고, <b>리쿠르트 안내와 SHOPPING 입점 안내가 이미
+       함께 쓰고 있습니다.</b> 제휴문의가 세 번째입니다.
+     ★ 처음에 저는 <b>안쪽 상자만</b> 보고 액자를 놓쳤습니다.
+     ★ 폭은 리쿠르트(1240px)보다 좁은 860px 로 둡니다 — 그쪽은 카드와
+       표가 들어가지만 여기는 <b>적는 칸</b>뿐이라, 넓으면 한 줄이 길어져
+       눈이 줄을 되찾기 어렵습니다. 테두리 굵기·색·모서리는 같습니다. */
+  .pt-frame{max-width:860px;margin:44px auto 0;
+    background:var(--paper,#fff);
+    border:3px solid #514a6b;border-radius:12px;
+    padding:34px 56px 36px;
+    box-shadow:0 3px 14px -4px rgba(30,24,60,.16)}
+  html[data-theme="dark"] .pt-frame{border-color:#7a7295;
+    box-shadow:0 3px 16px -4px rgba(0,0,0,.5)}
+  /* 액자 안쪽이므로 첫 글의 위 여백을 지웁니다 */
+  .pt-frame > .pt-lead:first-child{margin-top:0}
 
   /* ── 폼을 상자로 감쌉니다 (2026-08-21 · 파트너 요청) ──────────
      그전에는 입력칸들이 배경 위에 그냥 떠 있어 <b>어디까지가
@@ -137,8 +156,12 @@
 
   .pt-form.off{display:none}
 
+  /* 좁은 화면 — 리쿠르트와 같은 값(900px 에서 꺾습니다) */
+  @media (max-width:900px){
+    .pt-frame{padding:24px 24px 26px;border-width:2px;margin-top:30px}
+  }
   @media (max-width:560px){
-    .pt-wrap{padding:24px 14px 80px}
+    .pt-page{padding:0 14px 80px}
     .pt-box{padding:24px 22px}
     .pt-kinds{grid-template-columns:repeat(2,1fr)}
     .pt-in,.pt-sel{height:46px;font-size:14px}
@@ -176,7 +199,8 @@
   </div>
 </section>
 
-<main class="pt-wrap">
+<main class="pt-page">
+ <div class="pt-frame">
 
   <p class="pt-lead">
     오퍼스클램은 클래식 음악 자료를 모으고 잇는 곳이에요.
@@ -268,6 +292,7 @@
 
   </div><!-- /.pt-box -->
 
+ </div><!-- /.pt-frame -->
 </main>
 
 <div id="oc-footer"></div>
