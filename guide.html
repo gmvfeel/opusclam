@@ -151,6 +151,14 @@
        밀리지 않습니다</b>(자리를 미리 잡아 둡니다).
      ★ 어두운 화면에서는 조금 눅입니다 — 흰 화면 그림이 너무 튑니다. */
   .gd-fig{margin:18px 0 6px}
+  /* ★★ 2026-08-20 · 그림이 <b>억지로 늘어나</b> PC 에서 깨져 보였습니다
+       (파트너 지적). 도우미 그림은 409px 인데 1000px 자리에 늘려 2.4배가
+       됐습니다.
+     ★ 처음엔 img 에 width:auto 를 주었는데, 그러면 <b>그림이 다 받아지기
+       전에 0px 로 찌그러집니다</b>(lazy 로 늦게 오므로 그동안 자리가 없음).
+     ▶ 그래서 <b>상자(figure)에 원래 크기를 한도로</b> 걸고, 그림은 그
+       상자를 100% 채웁니다. 늘어나지 않고, 늦게 와도 자리가 지켜집니다.
+       한도값은 그림마다 달라 각 figure 의 style 에 적어 두었습니다. */
   .gd-fig img{display:block;width:100%;height:auto;border-radius:11px;
     border:1px solid var(--line);background:var(--paper-2)}
   .gd-fig figcaption{font-size:12.5px;line-height:1.7;color:var(--text-3);
@@ -210,8 +218,32 @@
     .gd-hero{padding-top:110px;padding-bottom:40px}
     .gd-hero h1{font-size:31px}
     .gd-hero p{font-size:14.5px}
+    .gd-sec{padding-bottom:38px}
     .gd-sec > h2{font-size:22px}
     .gd-sec > h2 em{display:block;margin:5px 0 0}
+    .gd-lead{font-size:14.5px;margin-bottom:18px}
+    .gd-sec h3{font-size:15.5px;margin-top:22px}
+    .gd-fig figcaption{font-size:12px}
+
+    /* ★★ 2026-08-20 · 표를 <b>세로로 쌓습니다</b> (파트너 지적)
+       ─────────────────────────────────────────────────────────────
+       ★ 무엇이 문제였나 — 342px 에 두 칸(때로 세 칸)을 넣으니 오른쪽
+         칸이 세 줄 네 줄로 쪼개져 읽기 어려웠습니다. 「국내외 클래식 /
+         공연 일 / 정. 대문 큰 화면에 돌아 / 가는 공연도…」 처럼요.
+       ★ 어떻게 — 칸을 <b>위아래로</b> 놓습니다. 첫 칸(이름)이 제목처럼
+         위에, 설명이 아래에 옵니다. 좁은 화면에서는 이게 훨씬 읽힙니다.
+       ★ 머리줄(어디 · 무엇이 있나요)은 <b>감춥니다</b> — 세로로 쌓으면
+         뜻이 없습니다. 그래서 HTML 에 class="hd" 를 달아 두었습니다.
+       ★ 이름 칸의 nowrap 도 풉니다 — 긴 이름이 화면을 밀어냅니다. */
+    .gd-tbl, .gd-tbl tbody, .gd-tbl tr, .gd-tbl td{display:block;width:auto}
+    .gd-tbl tr.hd{display:none}
+    .gd-tbl tr{padding:13px 0;border-bottom:1px solid var(--line)}
+    .gd-tbl tr:last-child{border-bottom:0}
+    .gd-tbl td{padding:0;border:0}
+    .gd-tbl td:first-child{white-space:normal;margin-bottom:4px;
+      color:var(--violet-2,#5b4b9e);font-size:14.5px}
+    .gd-tbl td + td{color:var(--text-2);font-size:13.5px}
+    .gd-tbl td + td + td{margin-top:3px;font-size:12.5px;color:var(--text-3)}
   }
 </style>
 </head>
@@ -297,7 +329,7 @@
         <p class="gd-lead">위쪽 메뉴 <b>DATABASE</b> 안에 열 갈래가 있어요.
           갈래마다 성격이 달라서, 무엇을 찾을 때 어디로 가면 되는지 적어 둘게요.</p>
 
-        <figure class="gd-fig">
+        <figure class="gd-fig" style="max-width:1200px">
           <img src="/assets/guide/menu.webp" width="1200" height="715" loading="lazy"
                alt="전체메뉴를 열면 여섯 갈래가 한 화면에 펼쳐집니다">
           <figcaption>헤더 오른쪽 <b>≡</b> 를 누르면 이렇게 <b>사이트 전체</b>가
@@ -361,7 +393,7 @@
           <b>「지금 무슨 일이 있나」</b>를 담는 곳이에요.</p>
 
         <table class="gd-tbl">
-          <tr><th>어디</th><th>무엇이 있나요</th></tr>
+          <tr class="hd"><th>어디</th><th>무엇이 있나요</th></tr>
           <tr><td><a href="/spot/concert.html">공연정보</a></td>
               <td>국내외 클래식 공연 일정. 대문 큰 화면에 돌아가는 공연도
                 여기서 뽑아 와요.</td></tr>
@@ -396,7 +428,7 @@
           나눠 두었어요.</p>
 
         <table class="gd-tbl">
-          <tr><th>게시판</th><th>어떤 이야기</th></tr>
+          <tr class="hd"><th>게시판</th><th>어떤 이야기</th></tr>
           <tr><td><a href="/community/hottopic.html">핫토픽</a></td>
               <td>클래식계에서 지금 이야기되는 것.</td></tr>
           <tr><td><a href="/community/opusnity.html">오퍼니티</a></td>
@@ -492,7 +524,7 @@
           쓸 수 있는 기능도 조금씩 달라요. 해당하는 곳을 고르시면 돼요.</p>
 
         <table class="gd-tbl">
-          <tr><th>종류</th><th>어떤 분</th><th>가입</th></tr>
+          <tr class="hd"><th>종류</th><th>어떤 분</th><th>가입</th></tr>
           <tr><td>전공자 회원</td>
               <td>대학 등에서 순수음악을 전공하고 연주·교육에 종사하거나
                 학위·유학을 준비 중이신 분</td>
@@ -509,7 +541,7 @@
               <td><b>바로 이용</b></td></tr>
         </table>
 
-        <figure class="gd-fig">
+        <figure class="gd-fig" style="max-width:980px">
           <img src="/assets/guide/join.webp" width="980" height="381" loading="lazy"
                alt="회원가입 화면의 네 가지 회원 종류 카드">
           <figcaption>실제 <b>회원가입</b> 화면이에요. 네 장 중 해당하는 것의
@@ -549,7 +581,7 @@
         <p class="gd-lead">모두 <b><a href="/account/mypage.html">마이페이지</a></b>
           에서 관리해요. 하나씩 볼게요.</p>
 
-        <figure class="gd-fig">
+        <figure class="gd-fig" style="max-width:1138px">
           <img src="/assets/guide/mypage.webp" width="1138" height="643" loading="lazy"
                alt="마이페이지 대시보드 — 탭 아홉 개와 요약 상자들">
           <figcaption>마이페이지 <b>대시보드</b>예요. 위쪽 탭이 아홉 개 —
@@ -564,7 +596,7 @@
         <p><b>즐겨찾기</b>는 「계속 보러 올 것」이에요 — 좋아하는 연주자,
           자주 찾는 작품처럼요. <b>킵</b>은 「나중에 볼 것」이에요 —
           지금은 시간이 없어 잠깐 접어 두는 느낌이죠.</p>
-        <figure class="gd-fig">
+        <figure class="gd-fig" style="max-width:1200px">
           <img src="/assets/guide/tools.webp" width="1200" height="49" loading="lazy"
                alt="상세 화면 위쪽의 즐겨찾기·킵·저장·공유 단추와 글자크기 조절">
           <figcaption>상세 화면 <b>위쪽 단추줄</b>이에요. 왼쪽부터 즐겨찾기 ·
@@ -607,7 +639,7 @@
           생겨요. 누르면 화면 위를 덮는 <b>패널</b>이 열려서, 내 것을 한눈에
           볼 수 있어요.</p>
 
-        <figure class="gd-fig">
+        <figure class="gd-fig" style="max-width:1200px">
           <img src="/assets/guide/inner.webp" width="1200" height="735" loading="lazy"
                alt="이너스페이스 패널 — 회원 카드·바로 가기·관심분야 통계·Linked·새 글">
           <figcaption>이너스페이스를 열면 이렇게 <b>내 것이 한 화면에</b>
@@ -657,7 +689,7 @@
             단추가 생겨요.</li>
         </ol>
 
-        <figure class="gd-fig">
+        <figure class="gd-fig" style="max-width:1116px">
           <img src="/assets/guide/linked.webp" width="1116" height="374" loading="lazy"
                alt="마이페이지 Linked 탭 — 아이디로 찾기와 이어진 사람 목록">
           <figcaption>마이페이지 <b>Linked</b> 탭이에요. 위에서 <b>아이디로
@@ -689,7 +721,7 @@
                 <b>전공자 회원은 기본이 「받지 않음」</b>이고, 나머지는
                 받는 것으로 시작해요.</td></tr>
         </table>
-        <figure class="gd-fig">
+        <figure class="gd-fig" style="max-width:1104px">
           <img src="/assets/guide/profile-linked.webp" width="1104" height="442"
                loading="lazy" alt="회원정보 수정 화면의 Linked · 인맥 칸 두 개">
           <figcaption><b>회원정보 수정</b> 화면을 내리면 이 상자가 있어요.
@@ -821,7 +853,7 @@
         <p class="gd-lead">화면 오른쪽 아래 <b>「도우미」</b>를 누르면 물어보실
           수 있어요. 이 이용안내를 다 읽지 않아도 되게 만든 거예요.</p>
 
-        <figure class="gd-fig">
+        <figure class="gd-fig" style="max-width:409px">
           <img src="/assets/guide/helper.webp" width="409" height="411" loading="lazy"
                alt="도우미 상자 — 빠른 단추와 입력칸">
           <figcaption>단추를 누르셔도 되고, 찾으시는 <b>사람 이름이나 작품
@@ -1021,6 +1053,14 @@
       if (on && label) label.textContent = a.textContent;
     });
   }
+  /* ★ 2026-08-20 · 라벨이 한 구역 늦게 바뀌었습니다.
+     붙어 있는 것(헤더 + 목차 바)이 가리는 높이를 <b>재서</b> 뺍니다 —
+     150 을 박아 두었더니 모바일에서 어긋났습니다.
+     ★ 관찰자를 만들기 <b>전에</b> 잡아야 합니다 — 뒤에 두면 값이 없습니다. */
+  var pickH = (pick && pick.offsetHeight) || 0;
+  var topGap = (parseInt(getComputedStyle(document.documentElement)
+                  .getPropertyValue('--gd-top'), 10) || 79) + pickH + 16;
+
   var io = new IntersectionObserver(function(es){
     /* 화면에 걸린 것 중 <b>가장 위</b>를 고릅니다 */
     var best = null;
@@ -1029,7 +1069,7 @@
       if (!best || e.boundingClientRect.top < best.boundingClientRect.top) best = e;
     });
     if (best) mark(best.target.id);
-  }, { rootMargin: '-150px 0px -60% 0px', threshold: 0 });
+  }, { rootMargin: '-' + topGap + 'px 0px -55% 0px', threshold: 0 });
   secs.forEach(function(s){ io.observe(s); });
 })();
 </script>
