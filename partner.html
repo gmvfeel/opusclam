@@ -42,7 +42,17 @@
          넓어져 한 줄이 길어지고, 눈이 줄을 되찾기 어려워집니다.
        ★ 좌우 여백도 56 → 66px 로 늘려 테두리와 안쪽 상자가 붙지 않게 합니다.
        테두리 굵기·색·모서리는 리쿠르트와 같습니다. */
-  .pt-frame{max-width:1000px;margin:44px auto 0;
+  /* ★★ 2026-08-21 · 위 여백 44 → 8px (파트너 요청)
+       ─────────────────────────────────────────────────────────
+       제목과 액자 사이가 너무 벌어져 보였습니다. 그 자리는 <b>두 몫</b>이
+       겹쳐 만들어집니다 —
+         ① 히어로(.pdb)의 아래 여백 <b>70px</b> (style.css 886줄 · 공용)
+         ② 이 액자의 위 여백 44px
+       합쳐 114px 이었습니다.
+     ★ ①은 <b>건드리지 않습니다.</b> 102개 화면이 함께 쓰는 값이라
+       여기서 줄이면 다른 화면이 다 틀어집니다.
+     ★ 그래서 ②만 8px 로 줄입니다. 합계 78px 이 됩니다. */
+  .pt-frame{max-width:1000px;margin:8px auto 0;
     background:var(--paper,#fff);
     border:3px solid #514a6b;border-radius:12px;
     /* ★★ 2026-08-21 · 위아래도 34/36 → 52/56px 로 늘렸습니다 (파트너 요청).
@@ -169,7 +179,7 @@
 
   /* 좁은 화면 — 리쿠르트와 같은 값(900px 에서 꺾습니다) */
   @media (max-width:900px){
-    .pt-frame{padding:34px 24px 36px;border-width:2px;margin-top:30px}
+    .pt-frame{padding:34px 24px 36px;border-width:2px;margin-top:6px}
     /* 좁은 화면에서는 못 박은 폭이 오히려 방해가 됩니다 */
     .pt-box,.pt-lead{max-width:none}
   }
