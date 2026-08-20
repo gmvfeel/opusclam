@@ -1063,7 +1063,25 @@ document.querySelectorAll('.tabs').forEach(function(t){
      var SEC=sectionMap();
      function hide(t){ if(SEC[t]) SEC[t].style.display='none'; }
 
-     document.title=nm+' · 작품DB · OPUSCLAM.COM';
+     /* ★★ 2026-08-20 · 제목에 <b>작곡가·형식</b>을 함께 넣습니다 ★★
+        ─────────────────────────────────────────────────────────
+        ★ 왜 — 작품 1만 7천 중 <b>한글 제목이 있는 것은 2천</b>뿐입니다(측정).
+          나머지는 「Sonate für Violine und Klavier」 처럼 원어 제목이라
+          한국어로 검색하면 아무것도 안 걸립니다.
+        ★ 그런데 <b>작곡가 이름은 한글로 채워져 있고</b>, 형식(form_ko)도
+          7천 건이 한글입니다. 제목에 그 둘을 붙이면 「타카스 소나타」
+          같은 검색에 걸립니다. <b>없는 말을 지어내지 않고</b> 이미 있는
+          한글을 쓰는 것이라 위험이 없습니다.
+        ★ 한글 제목이 이미 있으면 형식은 <b>붙이지 않습니다</b> —
+          「교향곡 5번 · 베토벤 · 교향곡」 이 되어 우스워집니다. */
+     (function(){
+       var bits = [nm];
+       var cn = (p.name_ko || p.name_en || '').trim();
+       if (cn) bits.push(cn);
+       var fk = (x.form_ko || '').trim();
+       if (!hasKo && fk && nm.indexOf(fk) < 0) bits.push(fk);
+       document.title = bits.join(' · ') + ' · 작품DB · OPUSCLAM.COM';
+     })();
      var crumb=document.querySelector('.pdb-crumb .on'); if(crumb)crumb.textContent=nm;
 
      /* 왼쪽 큰 동그라미 — <b>작곡가 사진</b>이 있으면 그것으로,

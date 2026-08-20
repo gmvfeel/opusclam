@@ -231,7 +231,19 @@ async function work(id) {
     ['시대', w.era], ['IMSLP', w.imslp_ref],
   ].filter(([, v]) => v);
 
-  const head = [ti, cn].filter(Boolean).join(' · ');
+  /* ★★ 2026-08-20 · 한글 제목이 없으면 <b>형식</b>을 제목에 함께 얹습니다 ★★
+     ─────────────────────────────────────────────────────────────
+     ★ 왜 — 작품 17,061 중 한글 제목이 있는 것은 <b>2,000</b>뿐입니다(측정).
+       나머지 15,061은 「Sonate für Violine und Klavier」 처럼 원어 제목이라
+       한국어로 검색하면 걸리지 않습니다. 그런데 <b>형식 칸(form_ko)은
+       7,057건이 한글</b>입니다. 제목에 얹으면 「타카스 소나타」 같은
+       검색에 걸립니다.
+     ★ 없는 말을 지어내지 않습니다 — 이미 표에 있는 한글을 쓸 뿐입니다.
+     ★ 한글 제목이 있을 때는 <b>얹지 않습니다.</b> 「교향곡 5번 · 베토벤 ·
+       교향곡」 이 되어 우스워집니다. */
+  const fk = (w.form_ko || '').trim();
+  const head = [ti, cn, (!w.title_ko && fk && !ti.includes(fk)) ? fk : '']
+    .filter(Boolean).join(' · ');
 
   return {
     title: `${head} · 작품DB · OPUSCLAM`,
