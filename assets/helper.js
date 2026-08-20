@@ -285,19 +285,31 @@
      DB 찾기 — 정해진 답에 안 걸릴 때
      ★ 표마다 이름 칸이 다릅니다. 짐작하지 않고 <b>여기 적은 것</b>만
        씁니다 (assets/mentions.js 의 TO_META 와 같은 짜임입니다).
+     ★ hid : 그 표에 <b>hidden 칸이 있다</b>는 표시입니다 (2026-08-21).
+       ★★ 왜 칸마다 적나 — 없는 칸으로 조건을 걸면 PostgREST 가 통째로
+         거절합니다. get() 은 실패를 빈 목록으로 돌려주므로 <b>조용히
+         한 갈래가 통째로 사라집니다.</b> 그래서 짐작으로 다 붙이지 않고
+         <b>확인한 표에만</b> 답니다.
+       ★ oc_terms 는 확인하지 못해 비워 둡니다 — 음악용어에는 감출 것이
+         없으므로 지금은 잃는 것이 없습니다.
      ══════════════════════════════════════════════════════════════ */
   var FIND = [
-    { t:'persons',          cols:['name_ko','name_en'],  view:'/db/person-view.html',     label:'인물' },
+    { t:'persons',          cols:['name_ko','name_en'],  view:'/db/person-view.html',     label:'인물', hid:true },
     /* ★ by : <b>만든 사람</b> 칸입니다. 작품만 있습니다 —
        「베토벤 교향곡 5번」 처럼 작곡가와 제목을 붙여 묻기 때문입니다. */
-    { t:'person_works',     cols:['title_ko','title'],   view:'/db/work-view.html',       label:'작품',
+    { t:'person_works',     cols:['title_ko','title'],   view:'/db/work-view.html',       label:'작품', hid:true,
       by:['composer_ko','composer_en'] },
-    { t:'venues',           cols:['name_ko','name_en'],  view:'/db/venue-view.html',      label:'공연장' },
-    { t:'schools',          cols:['name_ko','name_en'],  view:'/db/school-view.html',     label:'음악학교' },
-    { t:'orgs',             cols:['name_ko','name_en'],  view:'/db/org-view.html',        label:'음악단체' },
+    { t:'venues',           cols:['name_ko','name_en'],  view:'/db/venue-view.html',      label:'공연장', hid:true },
+    { t:'schools',          cols:['name_ko','name_en'],  view:'/db/school-view.html',     label:'음악학교', hid:true },
+    { t:'orgs',             cols:['name_ko','name_en'],  view:'/db/org-view.html',        label:'음악단체', hid:true },
     { t:'oc_terms',         cols:['term_ko','term_en'],  view:'/db/terms-view.html',      label:'음악용어' },
-    { t:'modern_composers', cols:['name_ko','name_en'],  view:'/db/modern-view.html',     label:'현대음악' }
+    { t:'modern_composers', cols:['name_ko','name_en'],  view:'/db/modern-view.html',     label:'현대음악', hid:true }
   ];
+
+  /* 감춘 항목을 빼는 조건 — hid 를 단 표에만 붙습니다.
+     ★ not.is.true 를 씁니다(is.false 가 아니라). hidden 이 비어 있는(null)
+       줄까지 함께 살립니다. 사이트맵·작품 상세도 같은 조건을 씁니다. */
+  function hidQ(d) { return d.hid ? '&hidden=not.is.true' : ''; }
 
   /* ── 잔손 ─────────────────────────────────────────────────── */
   function esc(v) {
@@ -386,7 +398,7 @@
   async function findWhole(w) {
     var all = await Promise.all(FIND.map(function (d) {
       return get(SB + '/rest/v1/' + d.t + '?' + sel(d)
-                 + '&or=(' + ors(d.cols, w) + ')&limit=3')
+                 + '&or=(' + ors(d.cols, w) + ')' + hidQ(d) + '&limit=3')
         .then(function (rows) { return rowsOf(d, rows); });
     }));
     return all.reduce(function (a, b) { return a.concat(b); }, []);
@@ -404,7 +416,7 @@
       if (!x.who || !x.what) return [];
       var url = SB + '/rest/v1/' + d.t + '?' + sel(d)
         + '&and=(or(' + ors(d.by, x.who) + '),or(' + ors(d.cols, x.what) + '))'
-        + '&limit=4';
+        + hidQ(d) + '&limit=4';
       return get(url).then(function (rows) { return rowsOf(d, rows); });
     }));
     return all.reduce(function (a, b) { return a.concat(b); }, []);
@@ -419,7 +431,7 @@
     var all = await Promise.all(FIND.map(function (d) {
       var cols = d.cols.concat(d.by || []);
       return get(SB + '/rest/v1/' + d.t + '?' + sel(d)
-                 + '&or=(' + ors(cols, long) + ')&limit=8')
+                 + '&or=(' + ors(cols, long) + ')' + hidQ(d) + '&limit=8')
         .then(function (rows) { return rowsOf(d, rows); });
     }));
     var flat2 = all.reduce(function (a, b) { return a.concat(b); }, []);
@@ -702,21 +714,38 @@
   function fitKb() {
     var vv = window.visualViewport;
     var el = document.documentElement;
-    if (!vv) return;
-    var hid = Math.max(0, Math.round(window.innerHeight - (vv.height + vv.offsetTop)));
-    el.style.setProperty('--ocH-kb', hid + 'px');
+    var vh = vv ? vv.height : window.innerHeight;
 
-    /* ★★ 여기가 제 셈 실수였습니다 (2026-08-20)
-       자판이 올라오면 <b>하단 띠는 자판 뒤에 숨습니다.</b> 그런데 띠
-       높이를 그대로 더하고 있어서, 상자가 <b>띠 높이만큼 더 올라가</b>
-       머리가 화면 위로 빠져나갔습니다.
-       ▶ 자판이 올라온 동안에는 띠 몫을 <b>0</b> 으로 둡니다.
-       ★ :root 에 직접 넣으면 미디어 쿼리 규칙을 덮습니다. */
-    if (hid > 80) el.style.setProperty('--ocH-bar', '0px');
-    else el.style.removeProperty('--ocH-bar');
+    if (vv) {
+      var hid = Math.max(0, Math.round(window.innerHeight - (vv.height + vv.offsetTop)));
+      el.style.setProperty('--ocH-kb', hid + 'px');
 
-    /* 상자 키 한도 — 지금 실제로 보이는 높이에서 조금 뺀 값 */
-    el.style.setProperty('--ocH-max', Math.max(220, Math.round(vv.height - 24)) + 'px');
+      /* ★★ 여기가 제 셈 실수였습니다 (2026-08-20)
+         자판이 올라오면 <b>하단 띠는 자판 뒤에 숨습니다.</b> 그런데 띠
+         높이를 그대로 더하고 있어서, 상자가 <b>띠 높이만큼 더 올라가</b>
+         머리가 화면 위로 빠져나갔습니다.
+         ▶ 자판이 올라온 동안에는 띠 몫을 <b>0</b> 으로 둡니다.
+         ★ :root 에 직접 넣으면 미디어 쿼리 규칙을 덮습니다. */
+      if (hid > 80) el.style.setProperty('--ocH-bar', '0px');
+      else el.style.removeProperty('--ocH-bar');
+    }
+
+    /* 상자 키 한도
+       ★★ 2026-08-21 · 같은 자리에서 <b>또 한 번</b> 셈을 틀렸습니다 (파트너 지적)
+         한도를 「보이는 높이 − 24」로 두었습니다. 그런데 상자는 바닥에
+         붙어 있지 않고 <b>82px(좁은 화면 10px) ＋ 띠 ＋ 자판</b>만큼 떠
+         있습니다. 그 몫을 안 뺐으니 「떠 있는 만큼 ＋ 상자 키」가 화면보다
+         커졌고, 넘친 만큼 <b>머리(닫기 단추)가 위로 잘려</b> 닫을 방법이
+         없어졌습니다.
+         ★ 대화가 짧을 때는 상자가 한도까지 자라지 않아 멀쩡해 보였습니다.
+           <b>길어질 때만</b> 드러나는 종류였습니다.
+       ▶ 상자가 바닥에서 <b>실제로 떨어진 만큼을 재서</b> 뺍니다.
+         82 냐 10 이냐는 화면 폭이 정하므로 숫자를 박지 않습니다.
+       ★ 못 재면(닫혀 있어 값이 auto 로 나오는 등) 넉넉한 값으로 물러섭니다 —
+         조금 작은 상자는 불편할 뿐이지만, 조금 큰 상자는 닫을 수가 없습니다. */
+    var gap = box ? parseFloat(getComputedStyle(box).bottom) : NaN;
+    if (!isFinite(gap) || gap < 0) gap = (window.innerWidth <= 560 ? 10 : 82) + 96;
+    el.style.setProperty('--ocH-max', Math.max(220, Math.round(vh - gap - 16)) + 'px');
   }
 
   /* ══════════════════════════════════════════════════════════════
@@ -859,6 +888,10 @@
       vv.addEventListener('resize', fitKb);
       vv.addEventListener('scroll', fitKb);
     }
+    /* ★ 2026-08-21 · visualViewport 가 없는 브라우저에서도 창 크기가
+       바뀌면 다시 잽니다. 없으면 창을 줄였을 때 상자만 그대로 커서
+       또 머리가 잘립니다. */
+    window.addEventListener('resize', fitKb);
     input.addEventListener('focus', function () { setTimeout(fitKb, 250); });
     input.addEventListener('blur', function () { setTimeout(fitKb, 250); });
   }
