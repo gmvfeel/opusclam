@@ -3627,7 +3627,8 @@ document.querySelectorAll('.tabs').forEach(function(t){
 
      ★ 어느 것을 뽑나
        ① 오늘 이후에 열리는 공연을 날짜 가까운 순으로 스물넷까지 받고
-       ② 그 가운데 <b>무작위로 셋</b>을 고릅니다 (열 때마 다릅니다)
+       ② 그 가운데 <b>무작위로 다섯</b>을 고릅니다 (열 때마다 다릅니다)
+          ★ 2026-08-20 · 셋에서 <b>다섯</b>으로 늘렸습니다 (파트너 지시)
        ③ 다가오는 공연이 없으면 <b>가장 최근에 담긴</b> 것으로 채웁니다
 
      ★ 자리 우선순위는 그대로입니다
@@ -3671,7 +3672,10 @@ document.querySelectorAll('.tabs').forEach(function(t){
            생기지 않게 하려는 것입니다.
          ★ 지역 칸(region)으로 가릅니다. 국내 수집기는 '국내',
            해외 수집기는 '해외'를 넣습니다. */
-      const HERO_KR = 2;                    /* 국내 몇 장 */
+      /* ★ 2026-08-20 · 다섯 장이 되었으니 몫도 함께 늘립니다.
+           둘로 두면 국내 2 · 해외 3 이 되어 <b>해외가 더 많아집니다.</b>
+           회원 대부분이 보러 가는 것은 국내 공연이므로 국내를 더 둡니다. */
+      const HERO_KR = 3;                    /* 국내 몇 장 (나머지는 해외) */
 
       async function grab(region){
         const rq = region ? ('&region=eq.' + encodeURIComponent(region)) : '';
@@ -3696,7 +3700,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
         return b;
       }
 
-      const want = n || 3;
+      const want = n || 5;
       const [kr, ab] = await Promise.all([grab('국내'), grab('해외')]);
       const krBag = shuffle(kr), abBag = shuffle(ab);
 
@@ -3744,7 +3748,7 @@ document.querySelectorAll('.tabs').forEach(function(t){
     try{
       let rows = await sbGet('hero_slides?select=eyebrow,title,subtitle,schedule,venue,time_text,image_url,link&order=sort_order.asc');
       /* 등록된 것이 없으면 정보SPOT 의 공연으로 채웁니다 (2026-08-14) */
-      if(!Array.isArray(rows) || !rows.length) rows = await feedHeroConcerts(3);
+      if(!Array.isArray(rows) || !rows.length) rows = await feedHeroConcerts(5);
       if(!Array.isArray(rows) || !rows.length) return;
       wrap.innerHTML = '';
       dotsBox.innerHTML = '';
