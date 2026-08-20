@@ -518,21 +518,43 @@
       /* 단추 — 「맨 위로」(bottom:24px · 46px) 위에 놓습니다 */
       '.ocH-btn{position:fixed;right:24px;bottom:calc(82px + var(--ocH-bar));z-index:1490;height:46px;',
       ' padding:0 17px 0 14px;border:0;border-radius:99px;cursor:pointer;',
-      /* ★★ 2026-08-20 · 단추를 <b>짙은 주황</b>으로 (파트너 지시)
-         ★ 값을 눈대중으로 고르지 않고 <b>재서</b> 골랐습니다.
-           흰 글자를 얹었을 때의 대비입니다 —
-             플랫폼 --orange(#EC7A1C) : 2.85:1  ✗ 기준 미달
-             #D2691E                  : 3.63:1  △ 큰 글씨만
-             <b>#C05600</b>           : 4.59:1  ✅ 통과 (고른 것)
-             #A63D00                  : 6.39:1  ✅ 통과 (너무 갈색)
-           그래서 플랫폼 --orange 를 그대로 쓰지 않았습니다. 그 색에
-           흰 글자를 얹으면 <b>글씨가 안 읽힙니다.</b>
-         ★ 값을 박습니다(이름표를 안 씁니다) — --orange 는 어두운
-           화면에서도 그대로라, 이름표를 써도 얻는 것이 없습니다.
-         ★ 글자는 늘 흰색입니다. var(--paper) 로 두면 어두운 화면에서
-           <b>검은 글자</b>가 되어 주황 위에서 흐려집니다. */
-      ' background:#C05600;color:#fff;font-family:inherit;font-size:13.5px;',
-      ' font-weight:700;display:flex;align-items:center;gap:8px;',
+      /* ★★ 2026-08-20 · 단추 색 — <b>두 번</b> 고쳤습니다 (파트너 지시)
+         ─────────────────────────────────────────────────────────────
+         ㉠ 「짙은 주황으로」  → #C05600
+         ㉡ 「좀 탁한 느낌이다. 진한 주황이지만 더 밝게」 → 지금 것
+
+         ★ 재 보니 <b>탁함의 원인은 선명도가 아니라 밝기</b>였습니다.
+           #C05600 은 이미 선명도 100% 인데 밝기가 75% 였습니다.
+           그래서 「칙칙한 갈색기」가 돌았습니다.
+
+         ★ 그런데 <b>밝게 하면 흰 글자가 흐려집니다.</b> 잰 값입니다 —
+             #C05600 (밝기 75%) : 4.59:1  ✅ 기준 통과
+             #D24700 (밝기 82%) : 4.52:1  ✅ 통과 (다만 붉은 쪽)
+             #E8590C (밝기 91%) : 3.58:1  △ 기준 미달
+             #F97316 (밝기 98%) : 2.80:1  ✗
+           ▶ <b>밝은 주황에 흰 글자로 기준을 넘기는 것은 불가능합니다.</b>
+             빛의 양이 색조와 상관없이 정해지기 때문입니다.
+
+         ★ 그래서 파트너 요청(밝게)을 따르면서 읽기를 셋으로 벌었습니다 —
+             ① 그라데이션 — 글자가 놓이는 <b>가운데·오른쪽을 더 짙게</b>
+                둡니다. 왼쪽이 밝아 <b>전체는 밝아 보이고</b> 글자 밑은
+                그만큼 어둡습니다. 플랫폼 글쓰기 띠와 같은 방식입니다
+             ② 글자에 <b>아주 옅은 그림자</b> — 밝은 바탕 위 흰 글자의
+                테두리를 살립니다. 값을 재는 잣대에는 안 잡히지만
+                눈에는 확실히 잡힙니다
+             ③ 굵기 700 → <b>800</b>
+           ▶ 그래도 잣대 값은 기준 아래입니다(가운데 3.6:1). <b>숨기지
+             않고 적어 둡니다.</b> 아이콘과 aria-label 이 뜻을 따로
+             나르고 있고, 파트너가 고른 모습이 우선이라 이렇게 둡니다.
+             기준을 지켜야 하는 날이 오면 #D24700 한 색으로 되돌리면
+             됩니다(4.52:1).
+
+         ★ 글자는 늘 흰색으로 박습니다 — var(--paper) 는 어두운 화면에서
+           <b>검은색</b>이 되어 주황 위에서 사라집니다. */
+      ' background:linear-gradient(100deg,#F2760B 0%,#E8590C 46%,#DC5308 100%);'
+      + 'color:#fff;text-shadow:0 1px 1.5px rgba(110,40,0,.42);'
+      + 'font-family:inherit;font-size:13.5px;',
+      ' font-weight:800;display:flex;align-items:center;gap:8px;',
       ' box-shadow:0 10px 26px -8px rgba(20,18,40,.45);transition:filter .15s,transform .15s}',
       /* ★★ 2026-08-20 · <b>둥둥 뜨는 느낌</b> (파트너 요청)
          ─────────────────────────────────────────────────────────────
@@ -553,12 +575,23 @@
          위에 있던 position:fixed 를 덮어 단추가 <b>화면 밖으로</b>
          흘러내렸습니다(글 맨 아래로). fixed 도 ::after 의 기준이 되므로
          relative 는 필요 없습니다. */
-      '.ocH-btn{overflow:hidden;animation:ocHFloat 3.4s ease-in-out infinite}',
+      '.ocH-btn{overflow:hidden;animation:ocHFloat 3.2s ease-in-out infinite}',
+      /* ★★ 2026-08-20 · 둥둥이 <b>약하다</b>는 지적 — 세 곳을 키웠습니다
+         ① 오르내림 5px → <b>10px</b> (두 배)
+         ② 그림자 차이를 <b>훨씬 크게</b> — 이게 진짜 「떠 있음」을
+            만듭니다. 내려올 때는 <b>바닥에 짧고 짙게</b> 붙고, 올라갈
+            때는 <b>멀고 넓고 옅게</b> 퍼집니다. 실제로 물체가 뜰 때
+            그림자가 그렇게 변합니다. 이걸 안 키우면 아무리 많이
+            움직여도 <b>그냥 위아래로 흔들리는</b>것으로 보입니다.
+         ③ 가운데를 살짝 <b>납작하게</b>(scaleY .985) — 뜰 때 아주 조금
+            늘어나 보이는 느낌을 줍니다. 눈에 띄면 안 되므로 1.5% 만.
+         ★ 위로만 움직입니다 — 아래에 「맨 위로」 단추가 15px 아래에
+           있어서, 내려가면 <b>겹칩니다.</b> */
       '@keyframes ocHFloat{'
-      + '0%,100%{transform:translateY(0);'
-      +   'box-shadow:0 8px 16px -8px rgba(120,52,0,.55)}'
-      + '50%{transform:translateY(-5px);'
-      +   'box-shadow:0 18px 26px -10px rgba(120,52,0,.34)}}',
+      + '0%,100%{transform:translateY(0) scaleY(1);'
+      +   'box-shadow:0 4px 8px -4px rgba(110,40,0,.72)}'
+      + '50%{transform:translateY(-10px) scaleY(.985);'
+      +   'box-shadow:0 26px 34px -12px rgba(110,40,0,.26)}}',
       '.ocH-btn::after{content:"";position:absolute;top:0;bottom:0;left:-45%;'
       + 'width:40%;pointer-events:none;transform:skewX(-14deg);'
       + 'background:linear-gradient(100deg,transparent 0%,'
@@ -647,7 +680,7 @@
          (글쓰기 띠 광택 등)도 같은 규칙을 지키고 있습니다. */
       '@media (prefers-reduced-motion:reduce){'
       + '.ocH-btn{animation:none;'
-      +   'box-shadow:0 10px 26px -8px rgba(120,52,0,.45)}'
+      +   'box-shadow:0 10px 24px -8px rgba(110,40,0,.5)}'
       + '.ocH-btn::after{display:none;animation:none}}'
     ].join('');
     document.head.appendChild(s);
