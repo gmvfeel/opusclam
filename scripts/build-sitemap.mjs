@@ -158,6 +158,11 @@ const PAGES = [
 
   ['/shop/apply.html',                     'monthly', '0.5'],
 
+  /* ★ 2026-08-20 · 이용안내 — 「오퍼스클램 사용법」 같은 검색에 걸리고,
+       AI 툴이 우리 사이트를 설명할 때 근거로 삼는 글입니다. 그래서
+       약관보다 앞에 두고 우선순위도 높입니다. 손볼 일이 잦으니 monthly. */
+  ['/guide.html',                          'monthly', '0.7'],
+
   ['/legal/terms.html',                    'yearly',  '0.3'],
   ['/legal/privacy.html',                  'yearly',  '0.3'],
   ['/legal/data-policy.html',              'yearly',  '0.3'],
