@@ -499,7 +499,21 @@
            상자가 열려 있는 동안에는 「맨 위로」를 쓸 일이 없습니다.
          ★ 「맨 위로」는 두 가지라 둘 다 적습니다(.to-top · #ocToTop). */
       'html.ocH-open .to-top,html.ocH-open #ocToTop{display:none !important}',
-      '@media (max-width:880px){:root{--ocH-bar:calc(68px + env(safe-area-inset-bottom,0px))}}',
+      /* ★★ 2026-08-20 · 아래쪽에 띠가 <b>둘</b>일 수 있습니다 (파트너 지적)
+         ─────────────────────────────────────────────────────────────
+         게시판 목록에서는 탭바(68) 위에 <b>글쓰기 띠(52)</b>가 하나 더
+         붙습니다. 탭바만 셈에 넣었더니 맨 위로가 글쓰기 띠 뒤에 깔리고
+         헬퍼 단추가 그 맨 위로를 덮었습니다. <b>셋이 같은 자리를</b>
+         다툰 것입니다.
+       ★ 68 을 다시 적지 않고 <b>--oc-tab-h</b>(tabbar.js 가 넣습니다)를
+         받습니다. 숫자를 박으면 탭바 높이를 바꿀 때 어긋납니다.
+       ★ html.oc-has-write 는 :root 보다 <b>또렷해서</b> 이깁니다
+         (0,1,1 대 0,1,0). 자판이 올라올 때 넣는 인라인 값은 그보다
+         더 세니 그 규칙은 그대로 살아 있습니다. */
+      '@media (max-width:880px){',
+      ' :root{--ocH-bar:calc(var(--oc-tab-h,68px) + env(safe-area-inset-bottom,0px))}',
+      ' html.oc-has-write{--ocH-bar:calc(var(--oc-tab-h,68px)'
+      + ' + var(--oc-write-h,52px) + env(safe-area-inset-bottom,0px))}}',
 
       /* 단추 — 「맨 위로」(bottom:24px · 46px) 위에 놓습니다 */
       '.ocH-btn{position:fixed;right:24px;bottom:calc(82px + var(--ocH-bar));z-index:1490;height:46px;',
@@ -520,8 +534,39 @@
       ' background:#C05600;color:#fff;font-family:inherit;font-size:13.5px;',
       ' font-weight:700;display:flex;align-items:center;gap:8px;',
       ' box-shadow:0 10px 26px -8px rgba(20,18,40,.45);transition:filter .15s,transform .15s}',
-      '.ocH-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}',
-      '.ocH-btn svg{width:18px;height:18px;flex:0 0 auto}',
+      /* ★★ 2026-08-20 · <b>둥둥 뜨는 느낌</b> (파트너 요청)
+         ─────────────────────────────────────────────────────────────
+         ★ 셋으로 만듭니다 —
+             ① 위아래로 5px 아주 느리게 (3.4초 한 번)
+             ② 그림자가 <b>함께 숨쉽니다</b> — 올라갈 때 옅고 넓게,
+                내려올 때 짙고 좁게. 이게 없으면 그냥 글자가 움직이는
+                것으로 보이고 <b>떠 있는 느낌이 안 납니다.</b>
+             ③ 아주 느린 <b>광택 한 줄</b>이 5.5초마다 지나갑니다.
+                ★ 새로 만든 것이 아니라 <b>게시판 「글쓰기」 띠에 이미
+                  쓰는 방식</b>입니다(board.css · ocWriteSheen). 같은
+                  플랫폼에서 같은 뜻(눌러도 되는 것)은 같은 모양이어야
+                  합니다.
+         ★ hover 에서 <b>transform 을 쓰지 않습니다.</b> 둥둥과 같은 칸을
+           다투어 <b>움직임이 뚝 끊깁니다.</b> 밝기만 바꿉니다.
+         ★ 움직임을 싫어하는 설정에서는 <b>둘 다 멈춥니다</b> (맨 아래). */
+      /* ★ position 을 <b>다시 적지 않습니다.</b> 한 번 relative 로 적었다가
+         위에 있던 position:fixed 를 덮어 단추가 <b>화면 밖으로</b>
+         흘러내렸습니다(글 맨 아래로). fixed 도 ::after 의 기준이 되므로
+         relative 는 필요 없습니다. */
+      '.ocH-btn{overflow:hidden;animation:ocHFloat 3.4s ease-in-out infinite}',
+      '@keyframes ocHFloat{'
+      + '0%,100%{transform:translateY(0);'
+      +   'box-shadow:0 8px 16px -8px rgba(120,52,0,.55)}'
+      + '50%{transform:translateY(-5px);'
+      +   'box-shadow:0 18px 26px -10px rgba(120,52,0,.34)}}',
+      '.ocH-btn::after{content:"";position:absolute;top:0;bottom:0;left:-45%;'
+      + 'width:40%;pointer-events:none;transform:skewX(-14deg);'
+      + 'background:linear-gradient(100deg,transparent 0%,'
+      +   'rgba(255,255,255,.26) 50%,transparent 100%);'
+      + 'animation:ocHSheen 5.5s ease-in-out infinite}',
+      '@keyframes ocHSheen{0%{left:-45%}55%{left:125%}100%{left:125%}}',
+      '.ocH-btn:hover{filter:brightness(1.12)}',
+      '.ocH-btn svg{width:18px;height:18px;flex:0 0 auto;position:relative}',
       '.ocH-btn.hide{display:none}',
 
       /* 상자 */
@@ -596,7 +641,14 @@
       '@media (max-width:560px){',
       ' .ocH-btn{height:42px;padding:0 14px 0 12px;font-size:12.5px}',
       ' .ocH{right:8px;left:8px;width:auto;max-width:none;border-radius:14px;',
-      '  bottom:calc(10px + var(--ocH-bar) + var(--ocH-kb))}}'
+      '  bottom:calc(10px + var(--ocH-bar) + var(--ocH-kb))}}',
+      /* ★ 움직임을 싫어하는 설정에서는 둥둥·광택을 멈춥니다.
+         어지럼을 느끼는 분이 있습니다. 플랫폼의 다른 움직임
+         (글쓰기 띠 광택 등)도 같은 규칙을 지키고 있습니다. */
+      '@media (prefers-reduced-motion:reduce){'
+      + '.ocH-btn{animation:none;'
+      +   'box-shadow:0 10px 26px -8px rgba(120,52,0,.45)}'
+      + '.ocH-btn::after{display:none;animation:none}}'
     ].join('');
     document.head.appendChild(s);
   }

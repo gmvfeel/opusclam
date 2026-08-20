@@ -1371,7 +1371,25 @@ img.oc-imgload{
   html.oc-has-write body{
     padding-bottom:calc(var(--oc-tab-h,68px) + var(--oc-write-h,52px) + env(safe-area-inset-bottom,0px));
   }
-  html.oc-has-write .to-top{
+  /* ★★ 2026-08-20 · #ocToTop 이 빠져 있었습니다 (파트너 지적) ★★
+     ─────────────────────────────────────────────────────────────────
+     파트너 : 「글쓰기 단추가 나오는 화면에서 위로가기가 가려져 안 보인다」
+
+     ★ 「맨 위로」는 <b>두 가지</b>입니다 —
+         · `.to-top`   : home.html 안에만 있는 것 (대문 전용)
+         · `#ocToTop`  : assets/app.js 가 <b>모든 화면에</b> 붙이는 것
+       여기서 `.to-top` 만 올려 두었으므로, <b>게시판을 비롯한 모든
+       화면</b>에서 맨위로가 글쓰기 띠 뒤에 깔렸습니다. 띠의 z-index 가
+       190 이라 완전히 덮습니다.
+
+     ★★ 이 실수가 <b>오늘 세 번째</b>입니다 (tabbar.js · 그리고 여기).
+       그래서 <b>규칙으로 적어 둡니다</b> —
+       <b>「맨 위로」를 손대는 규칙에는 반드시 둘을 함께 적는다.</b>
+       하나만 적으면 대문에서는 멀쩡해 보이고 나머지 122개 화면에서만
+       깨집니다. 그래서 눈에 안 띄고 세 번을 놓쳤습니다.
+       (지금 이 규칙을 지키는 곳 : tabbar.js · helper.js · 여기) */
+  html.oc-has-write .to-top,
+  html.oc-has-write #ocToTop{
     bottom:calc(var(--oc-tab-h,68px) + var(--oc-write-h,52px) + 12px + env(safe-area-inset-bottom,0px)) !important;
   }
   html.oc-has-write .pwa-install{
