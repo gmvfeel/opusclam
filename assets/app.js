@@ -257,7 +257,7 @@
         return file.length > 5 && file.slice(-5) === '-view';
       }, src: "/assets/links.js" },
 
-    /* ★ 도우미 (2026-08-20) — <b>모든 화면</b>에 놓습니다.
+    /* ★ OC 헬퍼 (2026-08-20) — <b>모든 화면</b>에 놓습니다.
        ★ 화면 파일 122개에 script 줄을 넣는 대신 여기 한 줄로 끝냅니다.
          (assets/pv.js 가 mentions.js 를 싣는 것과 같은 방식입니다.)
        ★ 관리자 화면에는 싣지 않습니다 — helper.js 안에서도 한 번 더

@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════
-   OPUSCLAM · 도우미            assets/helper.js
+   OPUSCLAM · OC 헬퍼            assets/helper.js
    2026-08-20
    ────────────────────────────────────────────────────────────────
 
@@ -15,7 +15,7 @@
      · ★ 가장 큰 까닭 — <b>틀린 말을 자연스럽게 합니다.</b> 「베토벤
        교향곡 10번」 같은 답을 하면 <b>DB 전체의 신뢰가 깎입니다.</b>
        우리는 정보를 파는 곳이라 그 값이 편의보다 큽니다.
-     ▶ 그래서 <b>지어내지 않는</b> 도우미로 만들었습니다. 모르면
+     ▶ 그래서 <b>지어내지 않는</b> OC 헬퍼로 만들었습니다. 모르면
        모른다고 하고 사람에게 넘깁니다.
      ★ 나중에 AI 를 얹더라도 이 뼈대를 그대로 씁니다.
 
@@ -239,7 +239,7 @@
 
     { k: ['검색','찾고싶','어떻게찾','통합검색'],
       a: '오른쪽 위 <b>돋보기</b>를 누르면 통합검색이에요. 사람 이름·작품 제목·'
-       + '공연장 이름을 넣어 보세요. 여기 도우미에게 그냥 넣어 주셔도 찾아 드려요.',
+       + '공연장 이름을 넣어 보세요. 여기 OC 헬퍼에게 그냥 넣어 주셔도 찾아 드려요.',
       l: [['통합검색','/search.html']] },
 
     { k: ['글쓰기','글쓰려','글못써','글등록','게시판'],
@@ -480,13 +480,13 @@
          ② <b>자판</b>이 올라오면 입력칸이 그 아래로 숨습니다. 화면 높이는
             그대로인데 보이는 자리만 줄기 때문에, 아래에 붙여 둔 것은
             자판 뒤로 들어갑니다.
-         ③ 좁은 화면에서 도우미 단추가 「맨 위로」 단추와 자리를 다툽니다.
+         ③ 좁은 화면에서 OC 헬퍼 단추가 「맨 위로」 단추와 자리를 다툽니다.
 
          ▶ 고친 방법
            · --ocH-bar : 하단 띠 높이만큼 모두 위로 올립니다
            · --ocH-kb  : 자판이 가린 높이만큼 상자를 더 올립니다
                          (아래 fitKb() 가 visualViewport 로 재서 넣습니다)
-           · 좁은 화면에서는 도우미 단추를 <b>왼쪽</b>으로 보냅니다 —
+           · 좁은 화면에서는 OC 헬퍼 단추를 <b>왼쪽</b>으로 보냅니다 —
              「맨 위로」는 오른쪽이니 서로 안 부딪칩니다. */
       ':root{--ocH-bar:0px;--ocH-kb:0px}',
       /* ★★ 2026-08-20 · 상자가 열려 있는 동안 「맨 위로」를 감춥니다 ★★
@@ -504,7 +504,20 @@
       /* 단추 — 「맨 위로」(bottom:24px · 46px) 위에 놓습니다 */
       '.ocH-btn{position:fixed;right:24px;bottom:calc(82px + var(--ocH-bar));z-index:1490;height:46px;',
       ' padding:0 17px 0 14px;border:0;border-radius:99px;cursor:pointer;',
-      ' background:var(--ink,#2b2740);color:var(--paper,#fff);font-family:inherit;font-size:13.5px;',
+      /* ★★ 2026-08-20 · 단추를 <b>짙은 주황</b>으로 (파트너 지시)
+         ★ 값을 눈대중으로 고르지 않고 <b>재서</b> 골랐습니다.
+           흰 글자를 얹었을 때의 대비입니다 —
+             플랫폼 --orange(#EC7A1C) : 2.85:1  ✗ 기준 미달
+             #D2691E                  : 3.63:1  △ 큰 글씨만
+             <b>#C05600</b>           : 4.59:1  ✅ 통과 (고른 것)
+             #A63D00                  : 6.39:1  ✅ 통과 (너무 갈색)
+           그래서 플랫폼 --orange 를 그대로 쓰지 않았습니다. 그 색에
+           흰 글자를 얹으면 <b>글씨가 안 읽힙니다.</b>
+         ★ 값을 박습니다(이름표를 안 씁니다) — --orange 는 어두운
+           화면에서도 그대로라, 이름표를 써도 얻는 것이 없습니다.
+         ★ 글자는 늘 흰색입니다. var(--paper) 로 두면 어두운 화면에서
+           <b>검은 글자</b>가 되어 주황 위에서 흐려집니다. */
+      ' background:#C05600;color:#fff;font-family:inherit;font-size:13.5px;',
       ' font-weight:700;display:flex;align-items:center;gap:8px;',
       ' box-shadow:0 10px 26px -8px rgba(20,18,40,.45);transition:filter .15s,transform .15s}',
       '.ocH-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}',
@@ -695,19 +708,19 @@
     btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'ocH-btn';
-    btn.setAttribute('aria-label', '도우미 열기');
+    btn.setAttribute('aria-label', 'OC 헬퍼 열기');
     btn.innerHTML =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"'
       + ' stroke-linecap="round" aria-hidden="true">'
       + '<path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/>'
       + '<path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.3"/>'
-      + '<path d="M12 16.6h.01"/></svg>도우미';
+      + '<path d="M12 16.6h.01"/></svg>OC 헬퍼';
     document.body.appendChild(btn);
 
     box = document.createElement('div');
     box.className = 'ocH';
     box.setAttribute('role', 'dialog');
-    box.setAttribute('aria-label', '오퍼스클램 도우미');
+    box.setAttribute('aria-label', 'OC 헬퍼');
     box.innerHTML =
         '<div class="ocH-top"><div class="tt"><b>무엇을 찾으시나요?</b>'
       /* ★ 한 줄로 줄였습니다 — 처음엔 「AI 가 아니라서」 를 넣었더니
@@ -733,7 +746,7 @@
     log = box.querySelector('#ocHLog');
     input = box.querySelector('#ocHIn');
 
-    say('oc', '안녕하세요. 오퍼스클램 도우미예요.<br>'
+    say('oc', '안녕하세요. <b>OC 헬퍼</b>예요.<br>'
       + '아래 단추를 누르시거나, 찾으시는 <b>사람 이름·작품 제목</b>을 그냥 '
       + '넣어 보세요.');
 
