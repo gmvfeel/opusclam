@@ -218,6 +218,56 @@
        + '<b>서로 이어</b> 두었어요.',
       l: [['이용안내 처음부터','/guide.html'],['DATABASE','/db/index.html']] },
 
+    /* ★ 2026-08-20 · 파트너가 물어봤는데 답이 없던 것들을 보탭니다.
+       「이너스페이스」 처럼 <b>우리만 쓰는 이름</b>은 반드시 넣어야 합니다 —
+       처음 온 사람이 가장 먼저 물어볼 말이기 때문입니다. */
+    { k: ['이너스페이스','inner','이너','패널'],
+      a: '로그인하시면 헤더 오른쪽에 <b>「이너스페이스」</b>가 생겨요. 누르면 '
+       + '화면 위를 덮는 패널이 열려서 <b>내 것을 한눈에</b> 볼 수 있어요 — '
+       + '회원 카드(등급·포인트) · 바로 가기 · 이어진 사람 · 내 활동 통계요.<br>'
+       + '어느 화면에서든 열리고, 닫으면 보던 자리로 돌아와요. '
+       + '<b>마이페이지는 그 「자세한 판」</b>이라 마이페이지에서는 열리지 않아요.',
+      l: [['자세히 보기','/guide.html#inner'],['마이페이지','/account/mypage.html']] },
+
+    { k: ['마이페이지','내정보','내페이지','mypage'],
+      a: '<b>마이페이지</b>에 탭이 여덟 개 있어요 — 대시보드 · 내 정보 · '
+       + '활동·등급 · 내가 올린 것 · Linked · 쪽지 · 리쿠르트 · 내 레슨 · 저장함.',
+      l: [['마이페이지','/account/mypage.html'],['회원정보 수정','/account/profile.html']] },
+
+    { k: ['검색','찾고싶','어떻게찾','통합검색'],
+      a: '오른쪽 위 <b>돋보기</b>를 누르면 통합검색이에요. 사람 이름·작품 제목·'
+       + '공연장 이름을 넣어 보세요. 여기 도우미에게 그냥 넣어 주셔도 찾아 드려요.',
+      l: [['통합검색','/search.html']] },
+
+    { k: ['글쓰기','글쓰려','글못써','글등록','게시판'],
+      a: '<b>로그인</b>하면 글을 쓰실 수 있어요. 게시판에 따라 자격 회원만 쓸 수 '
+       + '있는 곳이 있고, 그때는 글쓰기 단추가 보이지 않아요.',
+      l: [['OC커뮤니티','/community/index.html'],['게시판 안내','/guide.html#comm']] },
+
+    { k: ['입시','예고','예중','음대입시','편입'],
+      a: '입시요강과 입시 이야기를 모아 둔 곳이 있어요. 음악학교 정보는 '
+       + '<b>음악학교 DB</b>에서 보시면 돼요.',
+      l: [['입시','/community/admission.html'],['음악학교 DB','/db/school.html']] },
+
+    { k: ['태교','임신','아기'],
+      a: '태교로 듣는 클래식을 모아 둔 게시판이 있어요.',
+      l: [['태교음악','/community/prenatal.html']] },
+
+    { k: ['사진','영상','동영상','유튜브','음원','들을'],
+      a: '공연 사진과 영상은 커뮤니티에, 들어 볼 수 있는 자료는 정보SPOT의 '
+       + '<b>음원·동영상</b>에 있어요.',
+      l: [['공연사진 · 영상','/community/gallery.html'],
+          ['음원 · 동영상','/spot/media.html']] },
+
+    { k: ['영어','일본어','중국어','언어','다국어','english'],
+      a: '헤더 오른쪽 위 <b>KO</b> 를 누르면 언어를 고르실 수 있어요. '
+       + '아직 옮기는 중인 화면도 있어서 한국어가 가장 자세해요.',
+      l: [] },
+
+    { k: ['관련사이트','다른사이트','링크모음','학회'],
+      a: '악보·음원·학회처럼 자주 쓰는 바깥 사이트를 모아 두었어요.',
+      l: [['관련사이트','/spot/sites.html']] },
+
     { k: ['사용법','어떻게써','어디서찾','도움','가이드','이용안내','메뉴얼','매뉴얼'],
       a: '<b>이용안내</b>에 하나하나 적어 두었어요. 목차만 훑어도 어디서 무엇을 '
        + '찾을 수 있는지 보여요.',
@@ -436,10 +486,20 @@
            · 좁은 화면에서는 도우미 단추를 <b>왼쪽</b>으로 보냅니다 —
              「맨 위로」는 오른쪽이니 서로 안 부딪칩니다. */
       ':root{--ocH-bar:0px;--ocH-kb:0px}',
+      /* ★★ 2026-08-20 · 상자가 열려 있는 동안 「맨 위로」를 감춥니다 ★★
+         ───────────────────────────────────────────────────────────
+         ★ 무엇이 문제였나 — 좁은 화면에서 상자의 <b>「묻기」 단추가
+           「맨 위로」 단추 아래</b>에 깔렸습니다(맨위로 z-index 80 ·
+           상자 71). 눌러도 「맨 위로」가 눌렸습니다.
+           ★ 브라우저가 「#toTop 이 누름을 가로챈다」고 알려 주어 찾았습니다.
+         ★ 자리를 또 옮기는 것보다 <b>감추는 것</b>이 낫습니다 —
+           상자가 열려 있는 동안에는 「맨 위로」를 쓸 일이 없습니다.
+         ★ 「맨 위로」는 두 가지라 둘 다 적습니다(.to-top · #ocToTop). */
+      'html.ocH-open .to-top,html.ocH-open #ocToTop{display:none !important}',
       '@media (max-width:880px){:root{--ocH-bar:calc(68px + env(safe-area-inset-bottom,0px))}}',
 
       /* 단추 — 「맨 위로」(bottom:24px · 46px) 위에 놓습니다 */
-      '.ocH-btn{position:fixed;right:24px;bottom:calc(82px + var(--ocH-bar));z-index:70;height:46px;',
+      '.ocH-btn{position:fixed;right:24px;bottom:calc(82px + var(--ocH-bar));z-index:1490;height:46px;',
       ' padding:0 17px 0 14px;border:0;border-radius:99px;cursor:pointer;',
       ' background:var(--ink,#2b2740);color:#fff;font-family:inherit;font-size:13.5px;',
       ' font-weight:700;display:flex;align-items:center;gap:8px;',
@@ -449,8 +509,15 @@
       '.ocH-btn.hide{display:none}',
 
       /* 상자 */
-      '.ocH{position:fixed;right:24px;z-index:71;width:372px;max-width:calc(100vw - 32px);',
+      '.ocH{position:fixed;right:24px;z-index:1600;width:372px;max-width:calc(100vw - 32px);',
       ' bottom:calc(82px + var(--ocH-bar) + var(--ocH-kb));',
+      /* ★★ 2026-08-20 · 상자가 <b>위로 넘쳤습니다</b> (파트너 지적)
+           자판이 올라오면 아래에서 밀려 올라가는데, 상자 키가 그대로라
+           <b>머리(닫기 단추)가 화면 위로 빠져나갔습니다.</b>
+         ▶ 상자에 <b>키 한도</b>를 두고, 대화 칸이 <b>줄어들게</b> 합니다.
+           그러면 자판이 아무리 커도 머리와 입력칸은 늘 보입니다.
+         ★ --ocH-max 는 fitKb() 가 「지금 실제로 보이는 높이」로 넣습니다. */
+      ' max-height:var(--ocH-max,78vh);',
       ' background:var(--paper,#fff);border:1px solid var(--line,#e6e6ee);border-radius:16px;',
       ' box-shadow:0 24px 60px -14px rgba(20,18,40,.4);display:none;',
       ' flex-direction:column;overflow:hidden;font-family:inherit}',
@@ -465,7 +532,9 @@
       ' background:transparent;color:var(--text-3,#8b87a0);font-size:19px;line-height:1}',
       '.ocH-x:hover{background:var(--paper-2,#f2f0f7);color:var(--text,#2b2740)}',
 
-      '.ocH-log{padding:15px 17px;overflow-y:auto;max-height:min(52vh,420px);',
+      /* ★ flex:1 + min-height:0 — 이 둘이 있어야 <b>줄어듭니다.</b>
+         min-height 를 0 으로 두지 않으면 내용만큼 버텨서 상자를 밀어냅니다. */
+      '.ocH-log{padding:15px 17px;overflow-y:auto;flex:1 1 auto;min-height:0;',
       ' display:flex;flex-direction:column;gap:11px}',
       '.ocH-b{max-width:88%;padding:11px 13px;border-radius:13px;font-size:13.5px;',
       ' line-height:1.8;word-break:break-word}',
@@ -502,13 +571,16 @@
       ' font-size:13px;font-weight:700}',
       '.ocH-in button:hover{filter:brightness(1.15)}',
 
+      /* ★★ 2026-08-20 · 왼쪽으로 보냈다가 <b>오른쪽으로 되돌립니다</b>
+           (파트너 뜻 — 「맨 위로」 단추 위쯤이 자연스럽다).
+         ★ 좁은 화면의 「맨 위로」는 bottom = 띠+12 · 키 42 이므로
+           그 위는 <b>띠+64</b> 부터입니다. 그 자리에 놓습니다. */
+      '@media (max-width:880px){',
+      ' .ocH-btn{right:16px;left:auto;bottom:calc(var(--ocH-bar) + 64px)}}',
       '@media (max-width:560px){',
-      /* ★ 도우미는 <b>왼쪽</b>으로 — 오른쪽에는 「맨 위로」가 있습니다 */
-      ' .ocH-btn{left:16px;right:auto;bottom:calc(14px + var(--ocH-bar));',
-      '  height:42px;padding:0 14px 0 12px;font-size:12.5px}',
+      ' .ocH-btn{height:42px;padding:0 14px 0 12px;font-size:12.5px}',
       ' .ocH{right:8px;left:8px;width:auto;max-width:none;border-radius:14px;',
-      '  bottom:calc(10px + var(--ocH-bar) + var(--ocH-kb))}',
-      ' .ocH-log{max-height:38vh}}'
+      '  bottom:calc(10px + var(--ocH-bar) + var(--ocH-kb))}}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -523,14 +595,22 @@
      ══════════════════════════════════════════════════════════════ */
   function fitKb() {
     var vv = window.visualViewport;
+    var el = document.documentElement;
     if (!vv) return;
     var hid = Math.max(0, Math.round(window.innerHeight - (vv.height + vv.offsetTop)));
-    document.documentElement.style.setProperty('--ocH-kb', hid + 'px');
-    /* 자판이 올라오면 대화 칸을 줄여 상자가 화면에 들어오게 합니다.
-       ★ 200 은 상자에서 대화 칸을 뺀 나머지(머리·단추줄·입력줄)의 어림값입니다. */
-    if (!log) return;
-    if (hid > 120) log.style.maxHeight = Math.max(84, Math.round(vv.height - 240)) + 'px';
-    else log.style.removeProperty('max-height');
+    el.style.setProperty('--ocH-kb', hid + 'px');
+
+    /* ★★ 여기가 제 셈 실수였습니다 (2026-08-20)
+       자판이 올라오면 <b>하단 띠는 자판 뒤에 숨습니다.</b> 그런데 띠
+       높이를 그대로 더하고 있어서, 상자가 <b>띠 높이만큼 더 올라가</b>
+       머리가 화면 위로 빠져나갔습니다.
+       ▶ 자판이 올라온 동안에는 띠 몫을 <b>0</b> 으로 둡니다.
+       ★ :root 에 직접 넣으면 미디어 쿼리 규칙을 덮습니다. */
+    if (hid > 80) el.style.setProperty('--ocH-bar', '0px');
+    else el.style.removeProperty('--ocH-bar');
+
+    /* 상자 키 한도 — 지금 실제로 보이는 높이에서 조금 뺀 값 */
+    el.style.setProperty('--ocH-max', Math.max(220, Math.round(vv.height - 24)) + 'px');
   }
 
   /* ══════════════════════════════════════════════════════════════
@@ -686,6 +766,7 @@
   function open() {
     box.classList.add('on');
     btn.classList.add('hide');
+    document.documentElement.classList.add('ocH-open');
     fitKb();
     /* ★ 좁은 화면에서는 <b>저절로 자판을 올리지 않습니다.</b>
        열자마자 자판이 화면 절반을 덮으면 단추도 안내도 안 보입니다.
@@ -696,8 +777,11 @@
   function close() {
     box.classList.remove('on');
     btn.classList.remove('hide');
-    document.documentElement.style.setProperty('--ocH-kb', '0px');
-    if (log) log.style.removeProperty('max-height');
+    document.documentElement.classList.remove('ocH-open');
+    var el = document.documentElement;
+    el.style.setProperty('--ocH-kb', '0px');
+    el.style.removeProperty('--ocH-bar');
+    el.style.removeProperty('--ocH-max');
   }
 
   window.OCHelper = { open: open, close: close, ask: function (q) { open(); answer(q); } };
