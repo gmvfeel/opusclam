@@ -235,7 +235,10 @@
      ══════════════════════════════════════════════════════════════ */
   var FIND = [
     { t:'persons',          cols:['name_ko','name_en'],  view:'/db/person-view.html',     label:'인물' },
-    { t:'person_works',     cols:['title_ko','title'],   view:'/db/work-view.html',       label:'작품' },
+    /* ★ by : <b>만든 사람</b> 칸입니다. 작품만 있습니다 —
+       「베토벤 교향곡 5번」 처럼 작곡가와 제목을 붙여 묻기 때문입니다. */
+    { t:'person_works',     cols:['title_ko','title'],   view:'/db/work-view.html',       label:'작품',
+      by:['composer_ko','composer_en'] },
     { t:'venues',           cols:['name_ko','name_en'],  view:'/db/venue-view.html',      label:'공연장' },
     { t:'schools',          cols:['name_ko','name_en'],  view:'/db/school-view.html',     label:'음악학교' },
     { t:'orgs',             cols:['name_ko','name_en'],  view:'/db/org-view.html',        label:'음악단체' },
@@ -270,31 +273,143 @@
     return best;
   }
 
+  /* ★★ 2026-08-20 · 「베토벤 교향곡 5번」 을 못 찾았습니다 (파트너 지적) ★★
+     ─────────────────────────────────────────────────────────────────
+     ★ 왜 못 찾았나
+       물어본 말을 <b>통째로</b> 찾았습니다. 그런데 우리 표에는
+       작품 제목이 「교향곡 5번」 이고 작곡가는 <b>다른 칸</b>에 있습니다.
+       「베토벤 교향곡 5번」 이라는 글자는 어느 칸에도 없습니다.
+       ▶ 사람은 <b>작곡가 + 작품</b>을 붙여서 묻습니다. 그렇게 찾아야 합니다.
+
+     ★ 세 번에 걸쳐 찾습니다
+       ① 통째로 — 「겨울 나그네」 처럼 한 덩이 이름
+       ② 갈라서 — 「베토벤」 + 「교향곡 5번」 (작곡가 칸과 제목 칸을 함께)
+                  앞을 작곡가로 본 것과 뒤를 작곡가로 본 것, 두 가지
+       ③ 가장 긴 낱말 하나로 — 그다음 나머지 낱말이 들어 있는 줄을 앞에
+       ★ 앞 단계에서 찾으면 뒤는 하지 않습니다. 없을 때만 넓혀 갑니다.
+
+     ★ 「베토벤의」 처럼 토씨가 붙으면 못 걸립니다. 흔한 토씨는 뗍니다. */
+  var JOSA = ['으로','로서','에서','에게','까지','부터','이랑','하고',
+              '의','은','는','이','가','을','를','에','도','와','과','랑'];
+  function stem(w) {
+    for (var i = 0; i < JOSA.length; i++) {
+      var j = JOSA[i];
+      if (w.length > j.length + 1 && w.slice(-j.length) === j) return w.slice(0, -j.length);
+    }
+    return w;
+  }
+  function words(q) {
+    return safe(q).split(' ').map(stem).filter(function (w) { return w.length >= 1; });
+  }
+
+  function rowsOf(d, rows, extra) {
+    return (Array.isArray(rows) ? rows : []).map(function (o) {
+      var nm = '';
+      for (var i = 0; i < d.cols.length; i++) {
+        if (o[d.cols[i]] && String(o[d.cols[i]]).trim()) { nm = o[d.cols[i]]; break; }
+      }
+      var by = d.by ? (o[d.by[0]] || o[d.by[1]] || '') : '';
+      return { label: d.label, name: nm || ('#' + o.id), by: by,
+               text: (nm + ' ' + by).toLowerCase(),
+               href: d.view + '?id=' + encodeURIComponent(o.id) };
+    }).concat(extra || []);
+  }
+
+  function get(url) {
+    return fetch(url, { headers: H })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .catch(function () { return []; });
+  }
+  function ors(cols, w) {
+    return cols.map(function (c) {
+      return c + '.ilike.*' + encodeURIComponent(w) + '*';
+    }).join(',');
+  }
+  function sel(d) {
+    return 'select=id,' + d.cols.join(',') + (d.by ? ',' + d.by.join(',') : '');
+  }
+
+  /* ① 통째로 */
+  async function findWhole(w) {
+    var all = await Promise.all(FIND.map(function (d) {
+      return get(SB + '/rest/v1/' + d.t + '?' + sel(d)
+                 + '&or=(' + ors(d.cols, w) + ')&limit=3')
+        .then(function (rows) { return rowsOf(d, rows); });
+    }));
+    return all.reduce(function (a, b) { return a.concat(b); }, []);
+  }
+
+  /* ② 작곡가 + 작품 — 사람은 이렇게 묻습니다 */
+  async function findByMaker(ws) {
+    var d = FIND.filter(function (x) { return x.t === 'person_works'; })[0];
+    if (!d || ws.length < 2) return [];
+    var tries = [
+      { who: ws[0],              what: ws.slice(1).join(' ') },
+      { who: ws[ws.length - 1],  what: ws.slice(0, -1).join(' ') }
+    ];
+    var all = await Promise.all(tries.map(function (x) {
+      if (!x.who || !x.what) return [];
+      var url = SB + '/rest/v1/' + d.t + '?' + sel(d)
+        + '&and=(or(' + ors(d.by, x.who) + '),or(' + ors(d.cols, x.what) + '))'
+        + '&limit=4';
+      return get(url).then(function (rows) { return rowsOf(d, rows); });
+    }));
+    return all.reduce(function (a, b) { return a.concat(b); }, []);
+  }
+
+  /* ③ 가장 긴 낱말 하나로 넓혀 찾고, 나머지 낱말이 든 줄을 앞으로 */
+  async function findLoose(ws) {
+    var long = ws.slice().sort(function (a, b) { return b.length - a.length; })[0];
+    if (!long || long.length < 2) return [];
+    var rest = ws.filter(function (w) { return w !== long && w.length >= 2; })
+                 .map(function (w) { return w.toLowerCase(); });
+    var all = await Promise.all(FIND.map(function (d) {
+      var cols = d.cols.concat(d.by || []);
+      return get(SB + '/rest/v1/' + d.t + '?' + sel(d)
+                 + '&or=(' + ors(cols, long) + ')&limit=8')
+        .then(function (rows) { return rowsOf(d, rows); });
+    }));
+    var flat2 = all.reduce(function (a, b) { return a.concat(b); }, []);
+    /* 나머지 낱말이 많이 든 줄부터 — 없으면 그냥 순서대로 */
+    flat2.forEach(function (r) {
+      r.hit = rest.filter(function (w) { return r.text.indexOf(w) >= 0; }).length;
+    });
+    flat2.sort(function (a, b) { return b.hit - a.hit; });
+    return flat2;
+  }
+
+  function dedupe(list) {
+    var seen = {}, out = [];
+    for (var i = 0; i < list.length; i++) {
+      if (seen[list[i].href]) continue;
+      seen[list[i].href] = 1;
+      out.push(list[i]);
+    }
+    return out;
+  }
+
   async function findInDb(q) {
     var w = safe(q);
     if (w.length < 2) return [];
-    var jobs = FIND.map(function (d) {
-      var or = d.cols.map(function (c) {
-        return c + '.ilike.*' + encodeURIComponent(w) + '*';
-      }).join(',');
-      var url = SB + '/rest/v1/' + d.t + '?select=id,' + d.cols.join(',')
-              + '&or=(' + or + ')&limit=3';
-      return fetch(url, { headers: H })
-        .then(function (r) { return r.ok ? r.json() : []; })
-        .then(function (rows) {
-          return (Array.isArray(rows) ? rows : []).map(function (o) {
-            var nm = '';
-            for (var i = 0; i < d.cols.length; i++) {
-              if (o[d.cols[i]] && String(o[d.cols[i]]).trim()) { nm = o[d.cols[i]]; break; }
-            }
-            return { label: d.label, name: nm || ('#' + o.id),
-                     href: d.view + '?id=' + encodeURIComponent(o.id) };
-          });
-        })
-        .catch(function () { return []; });
-    });
-    var all = await Promise.all(jobs);
-    return all.reduce(function (a, b) { return a.concat(b); }, []).slice(0, 8);
+    var ws = words(q);
+
+    var hit = dedupe(await findWhole(w));
+    if (hit.length) return hit.slice(0, 8);
+
+    if (ws.length >= 2) {
+      hit = dedupe(await findByMaker(ws));
+      if (hit.length) return hit.slice(0, 8);
+
+      hit = dedupe(await findLoose(ws));
+      /* 나머지 낱말이 하나도 안 걸린 것만 남았으면 <b>버립니다</b> —
+         「베토벤 교향곡 5번」 에 엉뚱한 베토벤 작품 여덟 개를 내놓는 것보다
+         「못 찾았다」 가 정직합니다. */
+      var good = hit.filter(function (r) { return r.hit > 0; });
+      if (good.length) return good.slice(0, 8);
+      if (ws.length === 1) return hit.slice(0, 8);
+      return [];
+    }
+    return [];
   }
 
   /* ══════════════════════════════════════════════════════════════
@@ -444,7 +559,8 @@
   function hits(list) {
     return list.map(function (x) {
       return '<a class="ocH-hit" href="' + esc(x.href) + '">'
-        + '<span class="l">' + esc(x.label) + '</span>'
+        + '<span class="l">' + esc(x.label)
+        +   (x.by ? ' · ' + esc(x.by) : '') + '</span>'
         + '<span class="n">' + esc(x.name) + '</span></a>';
     }).join('');
   }
