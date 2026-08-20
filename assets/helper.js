@@ -305,8 +305,26 @@
     var s = document.createElement('style');
     s.id = 'ocHelpCss';
     s.textContent = [
+      /* ★★ 2026-08-20 · 모바일에서 세 가지가 겹쳤습니다 (파트너 지적) ★★
+         ─────────────────────────────────────────────────────────────
+         ① <b>하단 띠</b>(assets/tabbar.js · 68px · 880px 아래에서 보임)를
+            제가 몰랐습니다. 상자 아래쪽(입력칸)이 그 띠에 가려 있었습니다.
+         ② <b>자판</b>이 올라오면 입력칸이 그 아래로 숨습니다. 화면 높이는
+            그대로인데 보이는 자리만 줄기 때문에, 아래에 붙여 둔 것은
+            자판 뒤로 들어갑니다.
+         ③ 좁은 화면에서 도우미 단추가 「맨 위로」 단추와 자리를 다툽니다.
+
+         ▶ 고친 방법
+           · --ocH-bar : 하단 띠 높이만큼 모두 위로 올립니다
+           · --ocH-kb  : 자판이 가린 높이만큼 상자를 더 올립니다
+                         (아래 fitKb() 가 visualViewport 로 재서 넣습니다)
+           · 좁은 화면에서는 도우미 단추를 <b>왼쪽</b>으로 보냅니다 —
+             「맨 위로」는 오른쪽이니 서로 안 부딪칩니다. */
+      ':root{--ocH-bar:0px;--ocH-kb:0px}',
+      '@media (max-width:880px){:root{--ocH-bar:calc(68px + env(safe-area-inset-bottom,0px))}}',
+
       /* 단추 — 「맨 위로」(bottom:24px · 46px) 위에 놓습니다 */
-      '.ocH-btn{position:fixed;right:24px;bottom:82px;z-index:70;height:46px;',
+      '.ocH-btn{position:fixed;right:24px;bottom:calc(82px + var(--ocH-bar));z-index:70;height:46px;',
       ' padding:0 17px 0 14px;border:0;border-radius:99px;cursor:pointer;',
       ' background:var(--ink,#2b2740);color:#fff;font-family:inherit;font-size:13.5px;',
       ' font-weight:700;display:flex;align-items:center;gap:8px;',
@@ -316,7 +334,8 @@
       '.ocH-btn.hide{display:none}',
 
       /* 상자 */
-      '.ocH{position:fixed;right:24px;bottom:82px;z-index:71;width:372px;max-width:calc(100vw - 32px);',
+      '.ocH{position:fixed;right:24px;z-index:71;width:372px;max-width:calc(100vw - 32px);',
+      ' bottom:calc(82px + var(--ocH-bar) + var(--ocH-kb));',
       ' background:var(--paper,#fff);border:1px solid var(--line,#e6e6ee);border-radius:16px;',
       ' box-shadow:0 24px 60px -14px rgba(20,18,40,.4);display:none;',
       ' flex-direction:column;overflow:hidden;font-family:inherit}',
@@ -369,11 +388,34 @@
       '.ocH-in button:hover{filter:brightness(1.15)}',
 
       '@media (max-width:560px){',
-      ' .ocH-btn{right:16px;bottom:74px;height:42px;padding:0 14px 0 12px;font-size:12.5px}',
-      ' .ocH{right:8px;left:8px;bottom:8px;width:auto;max-width:none;border-radius:14px}',
-      ' .ocH-log{max-height:46vh}}'
+      /* ★ 도우미는 <b>왼쪽</b>으로 — 오른쪽에는 「맨 위로」가 있습니다 */
+      ' .ocH-btn{left:16px;right:auto;bottom:calc(14px + var(--ocH-bar));',
+      '  height:42px;padding:0 14px 0 12px;font-size:12.5px}',
+      ' .ocH{right:8px;left:8px;width:auto;max-width:none;border-radius:14px;',
+      '  bottom:calc(10px + var(--ocH-bar) + var(--ocH-kb))}',
+      ' .ocH-log{max-height:38vh}}'
     ].join('');
     document.head.appendChild(s);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     자판이 가린 만큼 상자를 올립니다
+     ★ 왜 이렇게 하나 — 자판이 올라와도 <b>window.innerHeight 는 그대로</b>
+       입니다. 그래서 bottom 으로 붙여 둔 것은 자판 뒤로 들어갑니다.
+       실제로 보이는 높이는 visualViewport 가 알려 줍니다.
+     ★ 이걸 못 쓰는 브라우저에서는 아무 일도 하지 않습니다 —
+       그때는 예전처럼 띠 위에만 올라가 있습니다.
+     ══════════════════════════════════════════════════════════════ */
+  function fitKb() {
+    var vv = window.visualViewport;
+    if (!vv) return;
+    var hid = Math.max(0, Math.round(window.innerHeight - (vv.height + vv.offsetTop)));
+    document.documentElement.style.setProperty('--ocH-kb', hid + 'px');
+    /* 자판이 올라오면 대화 칸을 줄여 상자가 화면에 들어오게 합니다.
+       ★ 200 은 상자에서 대화 칸을 뺀 나머지(머리·단추줄·입력줄)의 어림값입니다. */
+    if (!log) return;
+    if (hid > 120) log.style.maxHeight = Math.max(84, Math.round(vv.height - 240)) + 'px';
+    else log.style.removeProperty('max-height');
   }
 
   /* ══════════════════════════════════════════════════════════════
@@ -508,6 +550,15 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && box.classList.contains('on')) close();
     });
+
+    /* 자판이 오르내릴 때마다 다시 잽니다 */
+    var vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener('resize', fitKb);
+      vv.addEventListener('scroll', fitKb);
+    }
+    input.addEventListener('focus', function () { setTimeout(fitKb, 250); });
+    input.addEventListener('blur', function () { setTimeout(fitKb, 250); });
   }
 
   function go() {
@@ -519,11 +570,18 @@
   function open() {
     box.classList.add('on');
     btn.classList.add('hide');
-    setTimeout(function () { try { input.focus(); } catch (e) {} }, 60);
+    fitKb();
+    /* ★ 좁은 화면에서는 <b>저절로 자판을 올리지 않습니다.</b>
+       열자마자 자판이 화면 절반을 덮으면 단추도 안내도 안 보입니다.
+       입력칸을 직접 누르실 때 올라오는 것이 자연스럽습니다. */
+    if (window.innerWidth > 560)
+      setTimeout(function () { try { input.focus(); } catch (e) {} }, 60);
   }
   function close() {
     box.classList.remove('on');
     btn.classList.remove('hide');
+    document.documentElement.style.setProperty('--ocH-kb', '0px');
+    if (log) log.style.removeProperty('max-height');
   }
 
   window.OCHelper = { open: open, close: close, ask: function (q) { open(); answer(q); } };

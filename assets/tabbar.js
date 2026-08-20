@@ -128,6 +128,16 @@
     +   'body{padding-bottom:calc(' + H + 'px + env(safe-area-inset-bottom,0px))}'
     /* ★ 자리를 다투는 것들을 띠 위로 올립니다 */
     +   '.to-top{bottom:calc(' + (H + 12) + 'px + env(safe-area-inset-bottom,0px)) !important}'
+    /* ★★ 2026-08-20 · #ocToTop 이 빠져 있었습니다 ★★
+         ──────────────────────────────────────────────────────────
+         「맨 위로」 단추는 두 가지입니다 —
+           · home.html 안에 있던 것 : .to-top
+           · assets/app.js 가 <b>모든 화면에</b> 붙이는 것 : #ocToTop
+         여기서 .to-top 만 올려 두었기 때문에, 메인이 아닌 화면에서는
+         「맨 위로」 단추가 <b>이 띠 뒤에 숨어 있었습니다</b>(bottom:16 ·
+         띠 높이 68 · 띠의 z-index 가 1500). 눌러도 띠가 눌렸습니다.
+         ★ 오늘 도우미 자리를 재다가 드러났습니다. */
+    +   '#ocToTop{bottom:calc(' + (H + 12) + 'px + env(safe-area-inset-bottom,0px)) !important}'
     +   '.pwa-install{bottom:calc(' + (H + 10) + 'px + env(safe-area-inset-bottom,0px)) !important}'
     /* ★ 2026-08-14 · 위쪽 ≡ 를 감추던 규칙을 <b>지웠습니다</b>.
          전체메뉴는 헤더 오른쪽(원래 자리)에서 원래 방식으로 엽니다.
