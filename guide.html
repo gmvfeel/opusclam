@@ -216,8 +216,18 @@
        2px 로 두꺼워 보입니다.
      ★ tr:first-child 로 적습니다(tr.hd 가 아니라) — 머리줄이 없는 표도
        있어서, 있는 것만 짚으면 그 표들이 각지게 남습니다.  */
+  /* ★★ 2026-08-20 · 바깥 테두리를 <b>짙게</b> (파트너 지시)
+     ★ 처음엔 --line(#efeae0) 으로 둘렀는데 줄 사이 실선과 같은 색이라
+       <b>테두리가 있는지 없는지 몰랐습니다.</b>
+     ★ --line-2(#e4ded2) 도 재 보니 --line 과 거의 차이가 없어(6단계)
+       눈에 안 띕니다. 그래서 <b>--text-3</b>(밝을 때 #8f90a6 ·
+       어두울 때 #6d6d6d)로 둘렀습니다.
+     ★ 값을 박지 않고 <b>이름표(변수)로</b> 씁니다 — 어두운 화면에서
+       함께 뒤집힙니다. #8f90a6 을 박아 두면 어두운 화면에서 뜹니다.
+     ★ <b>바깥만</b> 짙게 하고 줄 사이는 --line 그대로입니다.
+       안쪽까지 짙게 하면 격자무늬가 되어 글자가 안 읽힙니다. */
   .gd-tbl{width:100%;margin:16px 0;font-size:14px;
-    border:1px solid var(--line);border-radius:12px;
+    border:1px solid var(--text-3);border-radius:12px;
     border-collapse:separate;border-spacing:0;background:var(--paper)}
   .gd-tbl th,.gd-tbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);
     line-height:1.75;vertical-align:top}
