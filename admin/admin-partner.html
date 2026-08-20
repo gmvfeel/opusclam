@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>제휴문의 · OPUSCLAM ADMIN</title>
+<style>
+  /* ★ reports.html 의 짜임을 그대로 씁니다 — 같은 뜻은 같은 모양이어야
+       관리자가 화면마다 새로 익히지 않습니다. */
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 120px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+  .card p{margin:0 0 14px;color:#5c5e70;font-size:13px}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.ok{background:#0f7a3d}
+  button.drop{background:#8a8c9e}
+  button.spam{background:#a01c1c}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input[type=search],input[type=text]{padding:9px 12px;border:1px solid #d8d8e2;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .log{display:none;margin-top:10px;max-height:200px;overflow:auto;background:#12131c;color:#d7d9e8;border-radius:7px;padding:12px 14px;font:12px/1.7 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+  .log.on{display:block}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
+  .stat{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .stat div{background:#f2f2f7;border-radius:7px;padding:8px 12px;font-size:12px;cursor:pointer}
+  .stat div:hover{background:#e8e8f2}
+  .stat div.on{background:#20223a;color:#fff}
+  .stat b{font-size:15px;display:block}
+  .lst{margin-top:14px;border:1px solid #eeeef4;border-radius:8px;background:#fff;display:none}
+  .lst.on{display:block}
+
+  .it{display:grid;grid-template-columns:26px 1fr 210px 92px 96px;gap:12px;align-items:start;padding:13px 14px;border-bottom:1px solid #f4f4f8;font-size:12.5px}
+  .it:last-child{border-bottom:0}
+  .it:hover{background:#fafaff}
+  .it.pick{background:#f5f3ff}
+  .it input[type=checkbox]{width:16px;height:16px;margin:2px 0 0;cursor:pointer}
+  .bd{display:block;font-weight:700;line-height:1.5;margin-bottom:5px}
+  .rp{color:#3d3f52;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .mt{color:#8a8c9e;font-size:11.5px;margin-top:6px}
+  .tg{display:inline-block;border-radius:99px;padding:2px 9px;font-size:10.5px;font-weight:700;white-space:nowrap}
+  .tg-ad{background:#fff1f1;color:#a01c1c}
+  .tg-content{background:#eaf0fd;color:#1a4aa5}
+  .tg-tech{background:#eafdf0;color:#0f7a3d}
+  .tg-sponsor{background:#fff8e8;color:#8a5a10}
+  .tg-other{background:#f2f2f7;color:#5c5e70}
+  .tg-open{background:#fff1f1;color:#a01c1c}
+  .tg-doing{background:#fff8e8;color:#8a5a10}
+  .tg-done{background:#eafdf0;color:#0f7a3d}
+  .tg-drop{background:#f2f2f7;color:#8a8c9e}
+  .tg-spam{background:#3a3a44;color:#fff}
+  .an{color:#5c5e70;font-size:11.5px;line-height:1.6}
+
+  /* 연락처 — 눌러서 바로 복사·답장 */
+  .who{line-height:1.75}
+  .who b{display:block;font-size:13px}
+  .who .cc{display:block;color:#3d3f52;word-break:break-all}
+  .who .btns{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+  .who .btns a,.who .btns button{font-size:11.5px;font-weight:700;padding:5px 10px;
+    border-radius:6px;text-decoration:none;border:1px solid #cfd0dd;background:#fff;color:#20223a;cursor:pointer}
+  .who .btns a.mail{background:#20223a;color:#fff;border-color:#20223a}
+  .who .btns a:hover,.who .btns button:hover{border-color:#7C63B0;color:#7C63B0}
+  .who .btns a.mail:hover{color:#fff;filter:brightness(1.2)}
+
+  .fixbar{position:fixed;left:0;right:0;bottom:0;background:#20223a;color:#fff;padding:12px 18px;display:none;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;box-shadow:0 -3px 14px rgba(0,0,0,.16);z-index:30}
+  .fixbar.on{display:flex}
+  .fixbar b{font-size:16px}
+  .fixbar input[type=text]{min-width:220px}
+
+  @media (max-width:860px){
+    .it{grid-template-columns:26px 1fr;gap:9px}
+    .it > .c3,.it > .c4,.it > .c5{grid-column:2}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="admin.html">← 관리자 페이지</a>
+
+  <h1>제휴문의</h1>
+  <div class="sub">
+    푸터 <b>「제휴문의」</b>로 들어온 제안입니다.
+    답은 <b>적어 주신 메일로 직접</b> 드립니다 — 플랫폼에 메일 보내는 장치가 아직 없습니다.
+  </div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <h2>문의 목록</h2>
+    <p>
+      <b>「답장 쓰기」</b>를 누르면 메일 프로그램이 열리고 제목·인사말이 채워집니다.
+      답을 보내신 뒤 <b>「답장함」</b>으로 옮기십시오.
+    </p>
+    <div class="row">
+      <select id="status">
+        <option value="open">아직 안 본 것</option>
+        <option value="doing">답장 준비 중</option>
+        <option value="done">답장함</option>
+        <option value="drop">답하지 않음</option>
+        <option value="spam">스팸</option>
+        <option value="">전부</option>
+      </select>
+      <button id="load">불러오기</button>
+      <button class="ghost" id="clr">체크 모두 풀기</button>
+    </div>
+    <div class="row" style="margin-top:9px">
+      <input type="search" id="find" placeholder="회사 · 이름 · 메일 · 내용으로 걸러내기" style="flex:1 1 260px;min-width:0">
+      <span id="fcnt" style="color:#8a8c9e;font-size:12px"></span>
+    </div>
+    <div class="stat" id="stat"></div>
+    <div class="log" id="log"></div>
+
+    <div class="note">
+      <b>문의는 지울 수 없습니다.</b> 스팸이면 상태를 <b>「스팸」</b>으로 옮기십시오.
+      기록이 남아야 「보냈는데 답이 없다」는 말에 확인할 길이 있습니다.
+      <br><br>
+      <b>연락처는 이 문의에 답하기 위해서만 씁니다.</b> 보내신 분은 그 목적에만
+      쓰겠다는 안내를 보고 동의하셨습니다. 광고 발송 명단으로 옮기지 마십시오.
+      <br><br>
+      <b>손님도 보낼 수 있습니다.</b> 제휴 제안은 대개 밖에서 오므로 로그인을
+      요구하지 않습니다. 회원이 보내신 경우에는 회원 이름이 함께 적힙니다.
+    </div>
+
+    <div class="lst" id="lst"></div>
+  </div>
+</div>
+
+<div class="fixbar" id="bar">
+  <b id="cnt">0</b> 건 선택
+  <input type="text" id="note" placeholder="메모 (선택) — 목록에 남습니다">
+  <button id="toDoing">답장 준비 중</button>
+  <button class="ok"   id="toDone">답장함</button>
+  <button class="drop" id="toDrop">답하지 않음</button>
+  <button class="spam" id="toSpam">스팸</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/admin-guard.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* ★ 싱글턴 — 인스턴스가 두 개면 RLS 가 어긋납니다.
+     admin-guard.js 도 window.__ocSb 를 먼저 찾습니다. */
+  var sb = window.__ocSb ||
+           (window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY));
+
+  function $(id){ return document.getElementById(id); }
+  function esc(t){
+    return (t==null?'':String(t))
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function warn(t){ var w=$('warn'); w.classList.add('on'); w.textContent=t; }
+  function log(t){
+    var b=$('log'); b.classList.add('on');
+    b.textContent += t + '\n'; b.scrollTop = b.scrollHeight;
+  }
+
+  var KIND_KO   = { ad:'광고', content:'콘텐츠', tech:'기술', sponsor:'후원', other:'그 밖' };
+  var STATUS_KO = { open:'안 봄', doing:'답장 준비 중', done:'답장함',
+                    drop:'답하지 않음', spam:'스팸' };
+
+  var rows = [], picked = {};
+
+  /* ── 나눠 받기 ────────────────────────────────────────────
+     ★ PostgREST 는 <b>RPC 반환도 200줄까지만</b> 내보냅니다.
+       끝냄은 0개일 때만, offset 은 실제로 받은 수만큼 전진합니다. */
+  async function fetchAll(status){
+    var PAGE_N = 200, out = [], off = 0, guard = 0;
+    while (guard++ < 40) {
+      var r = await sb.rpc('oc_partner_list', {
+        p_status: status, p_limit: PAGE_N, p_offset: off
+      });
+      if (r.error) throw new Error(r.error.message);
+      var got = r.data || [];
+      if (!got.length) break;
+      out = out.concat(got);
+      off += got.length;
+    }
+    return out;
+  }
+
+  async function load(){
+    var st = $('status').value;
+    $('load').disabled = true;
+    try {
+      rows = await fetchAll(st);
+      picked = {};
+      render();
+      await stat();
+      if (!rows.length) log('가져온 것이 없습니다 (' + (STATUS_KO[st] || '전부') + ')');
+    } catch (e){
+      var m = e.message || String(e);
+      if (/관리자만|permission|denied/i.test(m)) warn('관리자만 볼 수 있습니다.');
+      else warn('가져오지 못했습니다 — ' + m);
+      log('✗ ' + m);
+    }
+    $('load').disabled = false;
+  }
+
+  /* 상태별 건수 — 누르면 그 상태로 옮겨 다시 불러옵니다 */
+  async function stat(){
+    try {
+      var r = await sb.rpc('oc_partner_count');
+      if (r.error) return;
+      var by = {}; (r.data||[]).forEach(function(x){ by[x.status] = Number(x.n)||0; });
+      var cur = $('status').value;
+      var order = ['open','doing','done','drop','spam'];
+      $('stat').innerHTML = order.map(function(k){
+        return '<div data-st="' + k + '"' + (cur===k?' class="on"':'') + '>'
+             + esc(STATUS_KO[k]) + '<b>' + (by[k]||0) + '</b></div>';
+      }).join('');
+      [].forEach.call($('stat').children, function(d){
+        d.addEventListener('click', function(){
+          $('status').value = d.getAttribute('data-st');
+          load();
+        });
+      });
+    } catch(e){}
+  }
+
+  /* 답장 메일 — 제목과 인사말을 미리 채웁니다.
+     ★ 메일 보내는 장치가 없으므로 관리자의 메일 프로그램을 씁니다. */
+  function mailto(x){
+    var who = (x.company ? x.company + ' ' : '') + (x.person_name || '');
+    var sub = '[오퍼스클램] 제휴문의 답변 (접수번호 ' + x.id + '번)';
+    var body = who + ' 님 안녕하십니까.\n\n'
+             + '오퍼스클램에 보내 주신 제휴문의 잘 받았습니다.\n\n'
+             + '\n\n---------------------------------------------\n'
+             + '보내 주신 내용 (' + (KIND_KO[x.kind] || x.kind) + ')\n'
+             + (x.body || '') + '\n';
+    return 'mailto:' + encodeURIComponent(x.email || '')
+         + '?subject=' + encodeURIComponent(sub)
+         + '&body='    + encodeURIComponent(body);
+  }
+
+  function render(){
+    var q = String($('find').value||'').trim().toLowerCase();
+    var show = !q ? rows : rows.filter(function(x){
+      return [x.company, x.person_name, x.email, x.phone, x.body, x.admin_note]
+        .join(' ').toLowerCase().indexOf(q) >= 0;
+    });
+    $('fcnt').textContent = q
+      ? (show.length + ' / ' + rows.length + '건')
+      : (rows.length + '건');
+
+    if (!show.length){ $('lst').classList.remove('on'); $('lst').innerHTML=''; bar(); return; }
+
+    $('lst').innerHTML = show.map(function(x){
+      var d = new Date(x.created_at);
+      var when = isNaN(d) ? '' :
+        (d.getFullYear() + '.' + ('0'+(d.getMonth()+1)).slice(-2) + '.' +
+         ('0'+d.getDate()).slice(-2) + ' ' + ('0'+d.getHours()).slice(-2) + ':' +
+         ('0'+d.getMinutes()).slice(-2));
+      return '<div class="it' + (picked[x.id]?' pick':'') + '" data-id="' + x.id + '">'
+        +   '<div><input type="checkbox"' + (picked[x.id]?' checked':'') + '></div>'
+        +   '<div>'
+        +     '<span class="bd">#' + x.id + ' · '
+        +       '<span class="tg tg-' + esc(x.kind) + '">' + esc(KIND_KO[x.kind]||x.kind) + '</span>'
+        +       (x.company ? ' ' + esc(x.company) : '') + '</span>'
+        +     '<div class="rp">' + esc(x.body) + '</div>'
+        +     (x.admin_note ? '<div class="mt">메모 · ' + esc(x.admin_note) + '</div>' : '')
+        +     '<div class="mt">' + esc(when)
+        +       (x.member_name ? ' · 회원 ' + esc(x.member_name) : ' · 손님')
+        +       (x.page_url ? ' · ' + esc(x.page_url) : '') + '</div>'
+        +   '</div>'
+        +   '<div class="c3 who">'
+        +     '<b>' + esc(x.person_name || '') + '</b>'
+        +     '<span class="cc">' + esc(x.email || '') + '</span>'
+        +     (x.phone ? '<span class="cc">' + esc(x.phone) + '</span>' : '')
+        +     '<span class="btns">'
+        +       '<a class="mail" href="' + esc(mailto(x)) + '">답장 쓰기</a>'
+        +       '<button type="button" class="cp" data-cp="' + esc(x.email||'') + '">메일 복사</button>'
+        +     '</span>'
+        +   '</div>'
+        +   '<div class="c4"><span class="tg tg-' + esc(x.status) + '">'
+        +     esc(STATUS_KO[x.status]||x.status) + '</span></div>'
+        +   '<div class="c5 an">' + esc(when.split(' ')[0] || '') + '</div>'
+        + '</div>';
+    }).join('');
+    $('lst').classList.add('on');
+
+    /* 줄을 눌러도 골라집니다 — 단추·링크를 누른 것은 빼고 */
+    [].forEach.call($('lst').querySelectorAll('.it'), function(el){
+      el.addEventListener('click', function(e){
+        if (e.target.closest('a') || e.target.closest('button')) return;
+        var id = el.getAttribute('data-id');
+        picked[id] = !picked[id];
+        el.classList.toggle('pick', !!picked[id]);
+        var c = el.querySelector('input[type=checkbox]');
+        if (c) c.checked = !!picked[id];
+        bar();
+      });
+    });
+    /* 메일 복사 */
+    [].forEach.call($('lst').querySelectorAll('.cp'), function(b){
+      b.addEventListener('click', function(){
+        var v = b.getAttribute('data-cp') || '';
+        var was = b.textContent;
+        function done(){ b.textContent = '복사됨'; setTimeout(function(){ b.textContent = was; }, 1200); }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(v).then(done, function(){});
+        } else {
+          var t = document.createElement('textarea');
+          t.value = v; document.body.appendChild(t); t.select();
+          try { document.execCommand('copy'); done(); } catch(e){}
+          document.body.removeChild(t);
+        }
+      });
+    });
+    bar();
+  }
+
+  function bar(){
+    var n = Object.keys(picked).filter(function(k){ return picked[k]; }).length;
+    $('cnt').textContent = n;
+    $('bar').classList.toggle('on', n > 0);
+  }
+
+  /* ── 상태 옮기기 ──────────────────────────────────────────
+     ★ 신고(oc_report_set)와 달리 <b>표를 바로 고칩니다.</b>
+       제휴문의 표는 관리자에게만 읽기·고치기가 열려 있고, RLS 가
+       그것을 지킵니다. 함수를 하나 더 만들 까닭이 없습니다.
+     ★ 지우기는 아무에게도 열려 있지 않습니다 — 스팸도 상태로만 옮깁니다. */
+  async function setStatus(st){
+    var ids = Object.keys(picked).filter(function(k){ return picked[k]; }).map(Number);
+    if (!ids.length) return;
+    if (!confirm(ids.length + '건을 「' + STATUS_KO[st] + '」 으로 옮깁니다.\n\n계속할까요?')) return;
+
+    /* ★ 바꾸기 직전에 로그인을 다시 확인합니다 — 관리자 화면은
+       오래 열어 두므로 그 사이 풀릴 수 있습니다. */
+    if (window.OCAdminGuard) {
+      var g = await OCAdminGuard.check(sb);
+      if (!g.ok){ warn(g.msg || '로그인을 확인할 수 없습니다.'); return; }
+    }
+
+    var BTN = ['toDoing','toDone','toDrop','toSpam'];
+    BTN.forEach(function(k){ $(k).disabled = true; });
+    try {
+      var patch = { status: st, updated_at: new Date().toISOString() };
+      var memo = String($('note').value||'').trim();
+      if (memo) patch.admin_note = memo;
+
+      var r = await sb.from('oc_partner').update(patch).in('id', ids).select('id');
+      if (r.error) throw new Error(r.error.message);
+
+      /* ★ 몇 줄이 <b>실제로</b> 바뀌었는지 셉니다.
+         관리자가 아니면 RLS 가 조용히 0줄로 만들고 오류를 내지 않습니다.
+         「옮겼습니다」라고 말해 놓고 아무것도 안 바뀌면 안 됩니다. */
+      var n = (r.data || []).length;
+      if (!n) {
+        warn('아무것도 바뀌지 않았습니다. 관리자로 로그인되어 있는지 확인해 주십시오.');
+        log('✗ 0건 — 권한을 확인하십시오');
+      } else {
+        log('✅ ' + n + '건을 「' + STATUS_KO[st] + '」 으로 옮겼습니다');
+        $('note').value = '';
+        picked = {};
+        await load();
+      }
+    } catch (e){
+      var m = e.message || String(e);
+      if (/permission|denied|관리자만/i.test(m)) warn('관리자만 쓸 수 있습니다.');
+      else if (window.OCAdminGuard && OCAdminGuard.isAuthLost(m))
+        warn('로그인이 풀렸습니다. 다시 로그인해 주십시오.');
+      else warn('바꾸지 못했습니다 — ' + m);
+      log('✗ ' + m);
+    }
+    BTN.forEach(function(k){ $(k).disabled = false; });
+  }
+
+  $('load').addEventListener('click', load);
+  $('clr').addEventListener('click', function(){ picked = {}; render(); });
+  $('find').addEventListener('input', render);
+  $('status').addEventListener('change', function(){ if (rows.length) load(); });
+  $('toDoing').addEventListener('click', function(){ setStatus('doing'); });
+  $('toDone').addEventListener('click',  function(){ setStatus('done'); });
+  $('toDrop').addEventListener('click',  function(){ setStatus('drop'); });
+  $('toSpam').addEventListener('click',  function(){ setStatus('spam'); });
+
+  /* 열자마자 안 본 것을 보여 줍니다 — 관리자가 가장 자주 볼 것입니다 */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', load);
+  } else { load(); }
+})();
+</script>
+</body>
+</html>
