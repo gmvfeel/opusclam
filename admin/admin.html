@@ -310,6 +310,17 @@
              ★ 제가 쪽지 신고를 같은 표에 넣고 문패를 안 바꿨습니다.
                기능을 넓히면 <b>이름도 넓혀야</b> 합니다. -->
         <a class="card clickable tool" href="reports.html">
+          <!-- ★★ 2026-08-20 · 배지를 <b>새로 달았습니다</b> (파트너 지적)
+               파트너 : 「신고가 들어오거나 하면 어떤 표시가 있어야 아는데,
+                        그런 게 없으니 확인하기가 힘들 것 같다」
+               ▶ 맞습니다. <b>이 칸에만 배지가 없었습니다.</b> 회원 승인 ·
+                 DB 검수 · 인물 초안 · 관계자 인증에는 다 있는데
+                 신고에만 없었습니다. 그러면 신고가 쌓여도 열어 보지
+                 않는 한 알 길이 없습니다.
+               ★ 2026-08-11 에 관계자 인증에서 <b>똑같은 일</b>이 있었습니다 —
+                 자리는 있는데 채우는 코드가 없어 늘 비어 있었습니다.
+                 이번엔 자리조차 없었습니다. -->
+          <span class="cbadge" id="badgeReports"></span>
           <span class="tag">데이터 · 회원</span>
           <h3>신고 처리 <b>(자료 오류 + 쪽지)</b></h3>
           <p>들어온 신고를 <b>한자리에서</b> 봅니다. 둘이 섞여 있습니다 — 상세 화면의 <b>「정보 오류 신고」</b>와, 회원이 낸 <b>「쪽지 신고」</b>. 오른쪽 칸에 <b>어느 쪽인지</b> 나옵니다(인물·작품·… 또는 <b>쪽지</b>).</p>
@@ -662,6 +673,25 @@
         var cl=await sb.from('entity_claims')
                        .select('id',{count:'exact',head:true}).eq('status','pending');
         if(!cl.error) setBadge('badgeClaims', cl.count||0);
+      }catch(e){}
+
+      /* ★★ 2026-08-20 · <b>안 본 신고</b> 건수 (파트너 지적)
+           ★ oc_report_count() 는 상태별로 {status, n} 을 줍니다.
+             그중 <b>'open'(아직 안 본 것)만</b> 셉니다 — 보는 중·반영했음
+             까지 더하면 다 처리한 뒤에도 빨간 숫자가 남습니다.
+           ★ 이 함수는 안에서 is_admin() 을 봅니다. 관리자가 아니면
+             빈 것이 오고, 그러면 배지가 그냥 안 켜집니다.
+           ★ 함수가 아직 없어도(옛 DB) 조용히 넘어갑니다 — 숫자가 안
+             보일 뿐 관리자 홈이 깨지지 않아야 합니다. */
+      try{
+        var rp = await sb.rpc('oc_report_count');
+        if(!rp.error){
+          var open = 0;
+          (rp.data||[]).forEach(function(x){
+            if(x && x.status === 'open') open += Number(x.n) || 0;
+          });
+          setBadge('badgeReports', open);
+        }
       }catch(e){}
 
       /* ★ 배지를 다 채운 뒤 갈래 머리글을 새로 그립니다 —
