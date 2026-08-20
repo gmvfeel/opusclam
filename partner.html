@@ -27,7 +27,25 @@
                       --text · --text-2 · --text-3 · --violet ~ --violet-3
                       --gold · --ink */
 
-  .pt-wrap{max-width:720px;margin:0 auto;padding:30px 20px 90px}
+  .pt-wrap{max-width:760px;margin:0 auto;padding:30px 20px 90px}
+
+  /* ── 폼을 상자로 감쌉니다 (2026-08-21 · 파트너 요청) ──────────
+     그전에는 입력칸들이 배경 위에 그냥 떠 있어 <b>어디까지가
+     적는 곳인지</b> 경계가 없었습니다.
+   ★ 사이트가 이미 쓰는 상자 모양을 따릅니다 —
+     흰 바탕 · --line 테두리 · 둥근 모서리. 새 모양을 만들지 않습니다.
+   ★ 위쪽에 가는 그러데이션 줄 하나만 둡니다. 이 줄이 「여기가
+     오퍼스클램의 폼」이라고 말합니다. 장식은 여기까지입니다. */
+  /* ★ 테두리는 --line 이 아니라 <b>--line-2</b> 를 씁니다.
+       밝은 모드에서 상자 바탕(#fff)과 페이지 바탕(#fff)이 <b>같은 흰색</b>
+       이라, 옅은 --line 으로는 선이 거의 안 보였습니다.
+       어두운 모드에서도 --line-2(#383838)가 --line(#2b2b2b)보다 또렷합니다. */
+  .pt-box{position:relative;overflow:hidden;
+    background:var(--paper,#fff);border:1px solid var(--line-2,#e4ded2);
+    border-radius:16px;padding:32px 34px 34px;
+    box-shadow:0 12px 34px rgba(24,24,50,.07)}
+  .pt-box::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;
+    background:linear-gradient(90deg,#7C63B0,#9C7FD6 55%,#C9A94E)}
 
   .pt-lead{margin:0 0 26px;font-size:14.5px;line-height:1.95;
     color:var(--text-2,#5a5b74);word-break:keep-all}
@@ -118,7 +136,8 @@
   .pt-form.off{display:none}
 
   @media (max-width:560px){
-    .pt-wrap{padding:24px 16px 80px}
+    .pt-wrap{padding:24px 14px 80px}
+    .pt-box{padding:24px 18px 26px;border-radius:14px}
     .pt-kinds{grid-template-columns:repeat(2,1fr)}
     .pt-in,.pt-sel{height:46px;font-size:14px}
   }
@@ -162,6 +181,10 @@
     <b>광고 · 콘텐츠 제휴 · 기술 제휴 · 후원</b> 어느 쪽이든 편하게 적어 주십시오.
     담당자가 읽고 적어 주신 메일로 답을 드립니다.
   </p>
+
+  <!-- ★ 안내글은 상자 <b>밖</b>에 둡니다 — 상자 안은 「적는 곳」만
+       담아야 어디부터 적으면 되는지 한눈에 들어옵니다. -->
+  <div class="pt-box">
 
   <!-- 보내는 화면 -->
   <form class="pt-form" id="ptForm" novalidate>
@@ -239,6 +262,8 @@
     <span class="num" id="ptNo"></span><br>
     <a class="back" href="/home.html">홈으로</a>
   </section>
+
+  </div><!-- /.pt-box -->
 
 </main>
 
