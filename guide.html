@@ -82,50 +82,39 @@
      바탕색을 지우고 나니 머리와 본문이 붙어 보였습니다. */
   .gd-hero{padding:158px 0 38px;position:relative;
     border-bottom:1px solid var(--line)}
-  .gd-hin{max-width:1360px;margin:0 auto;padding:0 24px}
+  /* ★ 머리의 폭은 <b>아래 내용과 같아야</b> 합니다 (2026-08-20).
+     1360 으로 두었더니 제목만 왼쪽으로 82px 튀어나왔습니다. */
+  .gd-hin{max-width:1080px;margin:0 auto;padding:0 24px}
   .gd-tag{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.22em;
     color:var(--violet-2,#5b4b9e);margin-bottom:14px}
   .gd-hero h1{font-size:44px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;
     line-height:1.2;color:var(--text)}
   .gd-hero p{font-size:16px;line-height:1.85;color:var(--text-2);margin:0;max-width:620px}
 
-  /* 몸 — 왼쪽 목차 + 오른쪽 내용 */
-  /* ★ 2026-08-20 · 목차를 236→190, 사이를 52→40 으로 줄였습니다.
-     까닭 — 그림을 1000px 로 맞춰 두었는데, 1280px 화면에서 글 자리가
-     944px 이라 그림이 다시 줄어들어 흐려졌습니다. 목차를 조금 줄이니
-     1280px 에서도 자리가 1002px 이 되어 <b>줄어들지 않습니다.</b>
-     ★ 목차 글씨가 가장 긴 「무엇을 찾을 수 있나요」도 190px 에 들어갑니다. */
-  .gd-wrap{max-width:1360px;margin:0 auto;padding:0 24px;
-    display:grid;grid-template-columns:190px 1fr;gap:40px;align-items:start}
+  /* ★★ 2026-08-20 · 몸 — <b>목차를 풀다운 하나로</b> 합쳤습니다 (파트너 지시)
+     ─────────────────────────────────────────────────────────────────────
+     ★ 전에는 왼쪽에 목차 기둥(190px) + 오른쪽에 내용, 좁은 화면에서만
+       풀다운이었습니다. 이제 <b>넓은 화면도 풀다운</b>입니다.
+     ★ 얻은 것 셋
+       ① 열다섯 줄이 늘 펼쳐져 있지 않아 화면이 조용합니다.
+       ② 목차가 <b>한 벌</b>이 됩니다 — 넓을 때와 좁을 때 모양이 갈리면
+          한쪽만 고쳐서 어긋납니다. 실제로 그런 일을 겪었습니다.
+       ③ 내용이 <b>가운데로</b> 옵니다.
+     ★ 폭을 1080 으로 잡았습니다 — 안쪽이 1032px 입니다.
+       <b>그림이 1000px</b>이라 이보다 좁으면 브라우저가 줄이면서
+       다시 흐려집니다. 여러 번 겪은 일이라 넉넉히 둡니다.
+     ★ 목차(aside)는 <b>HTML 에 그대로 남겨 둡니다</b> — 감추기만 합니다.
+       풀다운을 이것에서 그대로 옮겨 오므로, 지우면 목차가 사라집니다. */
+  .gd-wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .gd-toc{display:none}
 
-  .gd-toc{position:sticky;top:130px;padding-top:40px}
-  .gd-toc h2{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--text-3);
-    margin:0 0 10px}
-  /* ★ 2026-08-20 · 목차를 <b>세 묶음</b>으로 나눕니다.
-     열다섯 줄이 한 덩이로 늘어서 있으면 어디쯤인지 가늠이 안 됩니다. */
-  .gd-toc .grp{font-size:10.5px;font-weight:800;letter-spacing:.14em;
-    color:var(--violet-2,#5b4b9e);margin:16px 0 5px;padding-left:12px}
-  .gd-toc .grp:first-of-type{margin-top:2px}
-  /* ★★ 2026-08-20 · 고른 것을 <b>짙은 바탕</b>으로 (파트너 지시) ★★
-     ─────────────────────────────────────────────────────────────────
-     ★ 값을 짐작하지 않았습니다 — 국제 콩쿨 아카이브의 왼쪽 메뉴
-       (spot/concours-archive.html · .ca-nav button.on)에서 <b>그대로</b>
-       가져왔습니다. #322152 · 손 올리면 #3d2a63 · 왼쪽 막대 3px.
-       플랫폼 안에서 같은 자리는 같은 색이어야 합니다.
-     ★ 그때 정한 원칙도 같습니다 — <b>지금 보고 있는 것</b>이 가장
-       또렷하고, 손 올린 것은 「누를 수 있다」는 귀띔이면 됩니다.
-     ★ 어두운 화면에서는 #322152 가 바탕(#0b0b0b)과 잘 갈리므로
-       그대로 씁니다. 글자는 흰색이라 잘 읽힙니다. */
-  /* ★ 2026-08-20 · 글씨를 13.5 → 12.5 로 줄였습니다 (파트너 지시) */
-  .gd-toc a{display:block;font-size:12.5px;line-height:1.45;padding:7px 12px;
-    border-radius:9px;color:var(--text-2);text-decoration:none;font-weight:600;
-    border-left:3px solid transparent;transition:all .15s ease}
-  /* 손 올린 것 — 옅게, 왼쪽에 막대만 */
-  .gd-toc a:hover{background:var(--paper-2);color:var(--violet-2,#5b4b9e);
-    border-left-color:var(--violet-2,#5b4b9e)}
-  /* 고른 것 — 짙은 바탕에 흰 글자 */
-  .gd-toc a.on{background:#322152;color:#fff;border-left-color:#322152;font-weight:700}
-  .gd-toc a.on:hover{background:#3d2a63;color:#fff;border-left-color:#3d2a63}
+  /* ★ 아래에 있던 왼쪽 목차 꾸밈(기둥·글씨·고른 것)은 <b>지웠습니다</b>
+     (2026-08-20 · 풀다운 하나로 합치면서). 남겨 두면 「어느 쪽이
+     실제로 쓰이는 것인지」 헷갈립니다 — 푸터 partial 에서 겪은 일입니다.
+     ★ 짙은 바탕(#322152 · 손 올리면 #3d2a63)은 <b>버리지 않았습니다.</b>
+       풀다운 목록의 .gd-pick .list a.on 으로 옮겨 두었습니다. 값은
+       국제 콩쿨 아카이브 왼쪽 메뉴(.ca-nav button.on)에서 가져온
+       것으로, 플랫폼 안에서 같은 자리는 같은 색이어야 합니다. */
 
   /* ★★ 2026-08-20 · 「내용이 쭉 늘어놓은 것 같다」 (파트너 지적) ★★
      ─────────────────────────────────────────────────────────────────
@@ -139,8 +128,10 @@
            크게 표시합니다
      ★ 번호는 CSS 셈(counter)으로 답니다 — HTML 에 손으로 적으면 구역을
        하나 끼울 때마다 열다섯 개를 다시 적어야 합니다. */
-  .gd-body{padding-top:40px;min-width:0;counter-reset:sec}
-  .gd-sec{padding:0 0 44px;scroll-margin-top:130px}
+  .gd-body{padding-top:16px;min-width:0;counter-reset:sec}
+  /* ★ 눌러서 뛰어갈 때 <b>헤더와 목차 바에 가리지 않게</b> 그만큼 비웁니다.
+     숫자를 박지 않고 --gd-top(재서 넣은 헤더 높이) + 목차 바 높이입니다. */
+  .gd-sec{padding:0 0 44px;scroll-margin-top:calc(var(--gd-top,79px) + 74px)}
   .gd-sec + .gd-sec{border-top:1px solid var(--line);padding-top:40px}
 
   /* 묶음 이름 — 성격이 바뀌는 자리 */
@@ -162,6 +153,44 @@
   .gd-sec b{color:var(--text);font-weight:700}
   .gd-sec a{color:var(--violet-2,#5b4b9e);font-weight:600}
 
+  /* ★★ 2026-08-20 · 줄바꿈이 어색했습니다 (파트너 지적) ★★
+     ─────────────────────────────────────────────────────────────────────
+     재 보니 <b>까닭이 셋</b>이었습니다. 하나만 고치면 안 됩니다.
+
+     ① 한 줄이 <b>너무 길었습니다</b> — 1440 화면에서 글 한 줄이 1082px,
+        14.5px 글씨로 <b>일흔두 자</b>입니다. 읽기 좋은 길이는 마흔에서
+        쉰 자입니다. 길면 줄 끝에서 다음 줄 첫머리로 눈이 돌아올 때
+        <b>어느 줄이었는지 놓칩니다.</b>
+        ▶ 글이 놓이는 폭을 <b>820px(약 쉰 자)</b>로 잡습니다.
+        ★ 그림(figure)은 <b>빼 둡니다</b> — 원래 크기 1:1 로 선명하게
+          보여야 하므로 폭을 좁히면 안 됩니다. 글보다 넓게 나갑니다.
+
+     ② 한글이 <b>낱말 가운데서 잘렸습니다</b> — 크롬은 기본값에서 한글을
+        글자 단위로 끊습니다. 「데이터베」/「이스」 처럼 됩니다.
+        ▶ word-break:keep-all — <b>띄어쓰기에서만</b> 끊습니다.
+        ★ 함께 overflow-wrap:break-word 를 둡니다. keep-all 만 두면
+          띄어쓰기 없는 아주 긴 영문·주소가 <b>화면 밖으로 삐져나갑니다.</b>
+
+     ③ 마지막 줄에 <b>한 낱말만 남았습니다</b> — 「…옮겨 다닐 수 /
+        있게요.」 파트너가 보내 주신 그림에 바로 이것이 찍혀 있었습니다.
+        ▶ text-wrap:pretty — 앞줄을 조금 당겨 <b>끝줄을 채웁니다.</b>
+        ★ 모르는 브라우저는 그냥 지나칩니다(있으면 좋고 없어도 그만).  */
+  .gd-body{word-break:keep-all;overflow-wrap:break-word}
+  .gd-lead,.gd-sec p,.gd-tip,.gd-steps li,.gd-q summary,.gd-q .a,
+  .gd-fig figcaption,.gd-card .d,.gd-ask p{text-wrap:pretty}
+
+  /* ★ 그림만 빼고 글·표·카드는 820px 안에서 놉니다.
+     ★ :not(.gd-fig) 로 적으므로 <b>구역을 새로 넣어도 저절로</b>
+       같은 폭이 됩니다 — 하나하나 적어 줄 일이 없습니다.
+     ★ <b>가운데로 두지 않았습니다.</b> 한 번 그렇게 해 보았더니
+       머리 제목·목차 단추는 왼쪽에서 시작하는데 글만 82px 안으로
+       들어가 <b>줄이 세 군데서 갈렸습니다.</b> 왼쪽 한 줄로 맞추고
+       그림만 오른쪽으로 더 나가게 두는 것이 훨씬 정돈돼 보입니다.
+     ★ 좁은 화면에서는 자리가 820 보다 작아 <b>저절로 듣지 않습니다</b>
+       (max-width 는 한도일 뿐 폭을 늘리지 않습니다). 그래서 폭마다
+       따로 적을 필요가 없습니다. */
+  .gd-sec > *:not(.gd-fig),.gd-part{max-width:820px}
+
   /* 갈래 카드 */
   .gd-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:11px;
     margin:16px 0 6px}
@@ -176,13 +205,36 @@
     border-radius:0 10px 10px 0;padding:14px 17px;margin:16px 0;font-size:14px;line-height:1.9}
   .gd-tip b{color:var(--violet-2,#5b4b9e)}
 
-  /* 표 */
-  .gd-tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
-  .gd-tbl th,.gd-tbl td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);
+  /* 표
+     ★★ 2026-08-20 · <b>바깥 테두리를 둘렀습니다</b> (파트너 지시)
+     ─────────────────────────────────────────────────────────────────────
+     ★ 무엇이 아쉬웠나 — 줄 사이 실선만 있어서 표가 <b>어디서 시작해
+       어디서 끝나는지</b> 경계가 없었습니다. 구역마다 표가 이어지니
+       한 덩어리로 보였습니다.
+     ★ border-collapse 를 <b>collapse → separate 로</b> 바꿨습니다.
+       collapse 에서는 <b>둥근 모서리가 먹지 않습니다</b>(브라우저가
+       테두리를 합치면서 radius 를 버립니다). separate + border-spacing:0
+       이면 모양은 그대로면서 모서리를 둥글릴 수 있습니다.
+     ★ 모서리는 <b>표가 아니라 네 귀퉁이 칸에</b> 걸어야 합니다 —
+       table 에 overflow:hidden 은 브라우저마다 다르게 듣습니다.
+       (머리줄에 바탕색이 있어 안 둥글리면 각이 삐져나옵니다)
+     ★ 마지막 줄의 아래 실선은 <b>지웁니다</b> — 바깥 테두리와 겹쳐
+       2px 로 두꺼워 보입니다.
+     ★ tr:first-child 로 적습니다(tr.hd 가 아니라) — 머리줄이 없는 표도
+       있어서, 있는 것만 짚으면 그 표들이 각지게 남습니다.  */
+  .gd-tbl{width:100%;margin:16px 0;font-size:14px;
+    border:1px solid var(--line);border-radius:12px;
+    border-collapse:separate;border-spacing:0;background:var(--paper)}
+  .gd-tbl th,.gd-tbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);
     line-height:1.75;vertical-align:top}
   .gd-tbl th{font-size:12.5px;font-weight:800;color:var(--text-3);background:var(--paper-2);
     white-space:nowrap}
   .gd-tbl td:first-child{white-space:nowrap;font-weight:700;color:var(--text)}
+  .gd-tbl tr:last-child > *{border-bottom:0}
+  .gd-tbl tr:first-child > *:first-child{border-top-left-radius:11px}
+  .gd-tbl tr:first-child > *:last-child {border-top-right-radius:11px}
+  .gd-tbl tr:last-child  > *:first-child{border-bottom-left-radius:11px}
+  .gd-tbl tr:last-child  > *:last-child {border-bottom-right-radius:11px}
 
   /* 걸음 */
   .gd-steps{counter-reset:s;margin:16px 0;padding:0;list-style:none}
@@ -214,6 +266,9 @@
      ★ width·height 를 적어 둡니다 — 그림이 늦게 와도 글이 <b>덜컥
        밀리지 않습니다</b>(자리를 미리 잡아 둡니다).
      ★ 어두운 화면에서는 조금 눅입니다 — 흰 화면 그림이 너무 튑니다. */
+  /* ★ 그림은 글보다 <b>넓게</b> 나갑니다 — 폭에 820 한도를 걸지
+     않습니다. 걸면 1000px 그림이 줄어들며 다시 흐려집니다.
+     그 싸움을 여러 번 했습니다. 왼쪽 줄은 글과 같습니다. */
   .gd-fig{margin:18px 0 6px}
   /* ★★ 2026-08-20 · 그림이 <b>억지로 늘어나</b> PC 에서 깨져 보였습니다
        (파트너 지적). 도우미 그림은 409px 인데 1000px 자리에 늘려 2.4배가
@@ -252,46 +307,78 @@
     color:var(--paper,#fff);font-weight:700;font-size:14px;text-decoration:none}
   .gd-ask .mail:hover{filter:brightness(1.14);color:var(--paper,#fff)}
 
-  /* ★★ 2026-08-20 · 좁은 화면의 목차를 <b>상단 고정 풀다운</b>으로 (파트너 지적)
-     ─────────────────────────────────────────────────────────────────────
-     ★ 무엇이 불편했나 — 목차를 위쪽에 칩으로 늘어놓았더니 <b>스크롤하면
-       사라져</b> 다른 구역으로 갈 길이 없었습니다. 맨 위로 올라가야 했습니다.
-     ★ 어떻게 고쳤나 — 지금 보는 구역 이름을 단추에 적어 <b>헤더 아래에
-       붙여</b> 둡니다. 누르면 열두 줄이 펼쳐집니다.
+  /* ════════════════════════════════════════════════════════════════
+     목차 풀다운 — <b>모든 화면 폭에서</b> 이것 하나입니다
+     ════════════════════════════════════════════════════════════════
+     ★ 왜 풀다운인가 (처음엔 좁은 화면에서만 썼습니다)
+       목차를 위쪽에 칩으로 늘어놓았더니 <b>스크롤하면 사라져</b>
+       다른 구역으로 갈 길이 없었습니다. 맨 위로 올라가야 했습니다.
+       그래서 지금 보는 구역 이름을 단추에 적어 <b>헤더 아래에 붙여</b>
+       두었습니다. 2026-08-20 부터 넓은 화면도 같습니다(파트너 지시).
+
      ★ 붙일 자리(top)는 <b>재서</b> 넣습니다 — 헤더 높이가 화면 폭마다
-       다릅니다(데스크톱 114 · 모바일 79). 숫자를 박아 두면 어긋납니다.
-       (음악사 연표에서 같은 일을 겪었습니다) */
-  .gd-pick{display:none}
+       다릅니다(데스크톱 114 · 모바일 79). 숫자를 박아 두면 어긋나거나
+       헤더에 가립니다. (음악사 연표에서 같은 일을 겪었습니다)
 
+     ★ 좌우로 -24px 빼냅니다 — 붙어 있을 때 <b>글이 옆으로 비쳐
+       지나가지 않게</b> 바탕이 안쪽 폭을 다 덮어야 합니다.
+
+     ★ 단추는 넓은 화면에서 <b>340px 까지만</b> 늘립니다. 1032px 짜리
+       단추는 누를 곳이 아니라 띠처럼 보입니다. 목록도 같은 폭입니다. */
+  .gd-pick{display:block;position:sticky;top:var(--gd-top,79px);z-index:40;
+    margin:0 -24px 10px;padding:12px 24px;background:var(--paper);
+    border-bottom:1px solid var(--line)}
+  .gd-pick > button{width:100%;max-width:340px;height:44px;padding:0 15px;
+    border-radius:11px;
+    border:1px solid var(--line);background:var(--paper-2);color:var(--text);
+    font-family:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer;
+    display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .gd-pick > button:hover{border-color:var(--violet-2,#5b4b9e)}
+  .gd-pick > button::after{content:'';width:0;height:0;flex:0 0 auto;
+    border-left:5px solid transparent;border-right:5px solid transparent;
+    border-top:6px solid currentColor;transition:transform .2s ease}
+  .gd-pick.open > button::after{transform:rotate(180deg)}
+  .gd-pick > button i{font-style:normal;font-size:11px;font-weight:800;
+    letter-spacing:.1em;color:var(--text-3);margin-right:8px}
+  .gd-pick > button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gd-pick > button span{display:flex;align-items:center;min-width:0}
+  .gd-pick .list{display:none;max-width:340px;margin-top:7px;padding:6px;
+    border-radius:11px;
+    border:1px solid var(--line);background:var(--paper);
+    box-shadow:0 16px 34px -12px rgba(20,18,40,.28);
+    max-height:62vh;overflow-y:auto}
+  /* ★★ 어두운 화면에서 <b>바탕색을 따로 줍니다</b> (2026-08-20)
+     ★ 왜 — 목차 바는 붙어 있을 때 글이 옆으로 비쳐 지나가지 않게
+       바탕을 깔아야 합니다. 그런데 --paper 는 <b>페이지 바탕색이
+       아닙니다.</b> 밝은 화면에서는 둘 다 #fff 라 우연히 맞았지만,
+       어두운 화면은 페이지가 #0b0b0b · --paper 가 #161616 입니다.
+       그래서 목차 바만 <b>조금 밝은 띠</b>로 떠 보였습니다.
+     ★ 값은 style.css 의 html[data-theme="dark"] body 에서 가져왔습니다
+       (짐작한 값이 아닙니다). 그쪽이 바뀌면 이쪽도 바꿔야 합니다. */
+  html[data-theme="dark"] .gd-pick{background:#0b0b0b}
+  .gd-pick.open .list{display:block}
+  .gd-pick .list a{display:block;padding:10px 13px;border-radius:8px;font-size:13.5px;
+    color:var(--text-2);text-decoration:none}
+  .gd-pick .list a:hover{background:var(--paper-2);color:var(--violet-2,#5b4b9e)}
+  /* ★ 묶음 이름(둘러보기 · 회원 · 도움받기) — 왼쪽 목차에서 옮겨 왔습니다.
+     열다섯 줄이 한 덩이로 늘어서 있으면 어디쯤인지 가늠이 안 됩니다. */
+  .gd-pick .list .grp{font-size:10.5px;font-weight:800;letter-spacing:.14em;
+    color:var(--violet-2,#5b4b9e);margin:12px 0 4px;padding-left:13px}
+  .gd-pick .list .grp:first-child{margin-top:2px}
+  /* ★ 고른 것 — 짙은 바탕에 흰 글자. 값은 국제 콩쿨 아카이브 왼쪽
+     메뉴(.ca-nav button.on)에서 <b>그대로</b> 가져왔습니다. 짐작한
+     값이 아닙니다 — 플랫폼 안에서 같은 자리는 같은 색이어야 합니다.
+     ★ 어두운 화면에서도 #322152 는 바탕(#0b0b0b)과 잘 갈립니다. */
+  .gd-pick .list a.on{background:#322152;color:#fff;font-weight:700}
+  .gd-pick .list a.on:hover{background:#3d2a63;color:#fff}
+
+  /* ★ 좁은 화면에서 달라지는 것은 이제 <b>여백뿐</b>입니다 —
+     목차가 한 벌이 되어 갈릴 것이 없어졌습니다(2026-08-20). */
   @media (max-width:1000px){
-    .gd-wrap{grid-template-columns:1fr;gap:0}
-    .gd-toc{display:none}
-    .gd-body{padding-top:18px}
-
-    .gd-pick{display:block;position:sticky;top:var(--gd-top,79px);z-index:40;
-      margin:0 -24px 6px;padding:10px 24px 12px;background:var(--paper);
-      border-bottom:1px solid var(--line)}
-    .gd-pick > button{width:100%;height:44px;padding:0 15px;border-radius:11px;
-      border:1px solid var(--line);background:var(--paper-2);color:var(--text);
-      font-family:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer;
-      display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .gd-pick > button::after{content:'';width:0;height:0;flex:0 0 auto;
-      border-left:5px solid transparent;border-right:5px solid transparent;
-      border-top:6px solid currentColor;transition:transform .2s ease}
-    .gd-pick.open > button::after{transform:rotate(180deg)}
-    .gd-pick > button i{font-style:normal;font-size:11px;font-weight:800;
-      letter-spacing:.1em;color:var(--text-3);margin-right:8px}
-    .gd-pick .list{display:none;margin-top:7px;padding:6px;border-radius:11px;
-      border:1px solid var(--line);background:var(--paper);
-      box-shadow:0 16px 34px -12px rgba(20,18,40,.28);
-      max-height:56vh;overflow-y:auto}
-    .gd-pick.open .list{display:block}
-    .gd-pick .list a{display:block;padding:11px 13px;border-radius:8px;font-size:14px;
-      color:var(--text-2);text-decoration:none}
-    /* ★ 풀다운 목록에서도 고른 것은 같은 짙은 바탕으로 — 화면이 좁아도
-       규칙이 달라지면 「다른 것」처럼 느껴집니다. */
-    .gd-pick .list a.on{background:#322152;color:#fff;font-weight:700}
-    .gd-sec{scroll-margin-top:calc(var(--gd-top,79px) + 74px)}
+    .gd-pick{margin-bottom:6px;padding:10px 24px 12px}
+    .gd-pick > button{max-width:none}
+    .gd-pick .list{max-width:none;max-height:56vh}
+    .gd-pick .list a{font-size:14px;padding:11px 13px}
   }
   @media (max-width:640px){
     .gd-hero{padding-top:110px;padding-bottom:40px}
@@ -316,7 +403,9 @@
        ★ 이름 칸의 nowrap 도 풉니다 — 긴 이름이 화면을 밀어냅니다. */
     .gd-tbl, .gd-tbl tbody, .gd-tbl tr, .gd-tbl td{display:block;width:auto}
     .gd-tbl tr.hd{display:none}
-    .gd-tbl tr{padding:13px 0;border-bottom:1px solid var(--line)}
+    /* ★ 바깥 테두리가 생겼으니(2026-08-20) 좌우 여백을 넣습니다 —
+       0 으로 두면 글자가 테두리에 <b>붙어</b> 답답합니다. */
+    .gd-tbl tr{padding:13px 15px;border-bottom:1px solid var(--line)}
     .gd-tbl tr:last-child{border-bottom:0}
     .gd-tbl td{padding:0;border:0}
     .gd-tbl td:first-child{white-space:normal;margin-bottom:4px;
@@ -1061,8 +1150,19 @@
       +   '<i>목차</i><b id="gdNow">' + links[0].textContent + '</b>'
       + '</span></button>'
       + '<div class="list">'
-      + links.map(function(a){
-          return '<a href="' + a.getAttribute('href') + '">' + a.textContent + '</a>';
+      /* ★ 2026-08-20 · <b>묶음 이름(.grp)까지</b> 옮겨 옵니다.
+         전에는 a 만 옮겨서 넓은 화면 목차에만 묶음이 있었습니다.
+         풀다운 하나로 합치면서 그대로 두면 묶음이 <b>사라집니다.</b>
+         ★ querySelectorAll 은 <b>문서에 적힌 순서</b>로 줍니다 —
+           그래서 묶음과 줄이 제자리에 섞입니다. */
+      + Array.prototype.slice.call(
+          document.querySelectorAll('#gdToc .grp, #gdToc a')
+        ).map(function(el){
+          if (el.tagName === 'A') {
+            return '<a href="' + el.getAttribute('href') + '">'
+                 + el.textContent + '</a>';
+          }
+          return '<div class="grp">' + el.textContent + '</div>';
         }).join('')
       + '</div>';
     label = pick.querySelector('#gdNow');
