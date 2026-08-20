@@ -3,7 +3,7 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
 /* ============================================================
    OPUSCLAM 통합검색 엔진 — assets/search.js
    ------------------------------------------------------------
-   DB 7종 + 게시판 5종을 한 번에 찾는다.
+   DB 8종 + 게시판 5종을 한 번에 찾는다. (2026-08-21 작품 추가)
    섹션이 늘어나면 아래 SECTIONS 배열에 한 줄 추가하면 끝.
    (페이지별 복붙 없음 · 검색 화면은 search.html 하나만 유지)
 
@@ -44,12 +44,22 @@ function ocN(tpl) {
   function clean(q) {
     return String(q || '').trim().replace(/[(),*]/g, ' ').replace(/\s+/g, ' ').trim();
   }
-  /* 검색어를 굵게 표시 — 이미 esc 를 거친 뒤 감싸므로 안전하다 */
+  /* 검색어를 굵게 표시 — 이미 esc 를 거친 뒤 감싸므로 안전하다
+     ★ 2026-08-21 · 낱말 나누기에 맞춰 <b>낱말마다</b> 표시합니다.
+       통째로 찾으면 「베토벤 교향곡 5번」이 한 덩어리로만 걸려
+       실제로는 아무 데도 굵어지지 않았습니다.
+     ★ 한 번에 바꿉니다(낱말마다 돌리지 않습니다) — 여러 번 돌리면
+       앞서 넣은 &lt;mark&gt; 글자 자체가 다음 낱말에 걸릴 수 있습니다.
+     ★ 긴 낱말을 앞에 둡니다 — 짧은 것이 먼저 걸려 긴 것을 자르는 것을 막습니다. */
   function hl(s, q) {
     var e = esc(s);
     if (!q) return e;
-    var eq = esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    try { return e.replace(new RegExp(eq, 'gi'), function (m) { return '<mark>' + m + '</mark>'; }); }
+    var ws = String(q).split(' ').filter(function (w) { return w !== ''; });
+    if (!ws.length) return e;
+    var eq = ws.map(function (w) { return esc(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); })
+               .sort(function (a, b) { return b.length - a.length; })
+               .join('|');
+    try { return e.replace(new RegExp('(' + eq + ')', 'gi'), function (m) { return '<mark>' + m + '</mark>'; }); }
     catch (err) { return e; }
   }
   function join(parts) {
@@ -65,6 +75,15 @@ function ocN(tpl) {
     s = String(s == null ? '' : s).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     return s.length > n ? s.slice(0, n) + '…' : s;
   }
+
+  /* 작품의 genre 칸은 영문 약속말입니다. 한 줄 설명에 그대로 쓰면
+     「Orchestral」처럼 읽히므로 우리말로 바꿔 보여 줍니다.
+     ★ 모르는 값이 오면 원래 값을 그대로 씁니다 — 빈칸이 되지 않게. */
+  var GENRE_KO = {
+    Orchestral: '관현악', Keyboard: '건반', Stage: '무대', Chamber: '실내악',
+    Vocal: '성악', Choral: '합창', Organ: '오르간', Screen: '영상',
+    Electronic: '전자음악', Other: '그 밖'
+  };
 
   /* ── 검색할 곳 ──
      table   : Supabase 표 이름
@@ -87,6 +106,28 @@ function ocN(tpl) {
         return { t: r.name_ko || r.name_en, en: (r.name_ko && r.name_en) ? r.name_en : '',
                  s: join([r.field, r.life, r.school]), img: r.image_url,
                  d: d ? cut(d, 70) : '' };
+      } },
+
+    /* ★ 2026-08-21 · 작품 (그동안 통합검색에서 아예 빠져 있었습니다)
+         작품 17,061건이 사이트 안에서 한 건도 검색되지 않았습니다.
+       ★ 인물 바로 다음에 둡니다 — 작곡가를 찾은 사람이 그다음에
+         찾는 것이 그 사람의 작품입니다.
+       ★ 한글 제목은 2천여 건뿐이라 원제(title)를 반드시 함께 봅니다.
+         「Symphony No. 5」로 찾는 사람도, 「교향곡 5번」으로 찾는 사람도 있습니다.
+       ★ 작곡가 이름으로도 찾습니다 — 「베토벤」을 넣으면 인물과 작품이
+         함께 나옵니다. */
+    { key: 'works', label: '작품', table: 'person_works',
+      cols: ['title_ko', 'title', 'composer_ko', 'composer_en'], hidden: true,
+      sel: 'id,title,title_ko,composer_ko,composer_en,genre,form_ko,year_from',
+      list: '/db/work.html', view: '/db/work-view.html',
+      line: function (r) {
+        var ko = (r.title_ko && String(r.title_ko).trim()) ? String(r.title_ko).trim() : '';
+        var or = (r.title    && String(r.title).trim())    ? String(r.title).trim()    : '';
+        return { t: ko || or,
+                 en: (ko && or) ? or : '',
+                 s: join([r.composer_ko || r.composer_en,
+                          r.form_ko || GENRE_KO[r.genre] || r.genre,
+                          r.year_from]) };
       } },
 
     { key: 'orgs', label: '음악단체', table: 'orgs',
@@ -210,12 +251,39 @@ function ocN(tpl) {
       } },
   ];
 
+  /* ── 낱말 나누기 (2026-08-21) ─────────────────────────────────
+     ★ 그때까지는 「베토벤 교향곡 5번」을 <b>통째로</b> 한 칸 안에서
+       찾았습니다. 그런 값이 든 칸은 없습니다 — 제목 칸엔 「교향곡 5번」,
+       작곡가 칸엔 「루트비히 판 베토벤」이 따로 들어 있기 때문입니다.
+       그래서 사람들이 실제로 넣는 방식이 전부 0건이었습니다.
+     ★ 이제 띄어쓰기로 나눠 <b>모든 낱말이 다 들어간 것</b>을 찾습니다.
+       낱말마다 「어느 칸에든 있으면 됨(or)」이고, 낱말끼리는 「다 있어야
+       됨(and)」입니다.
+     ★ 낱말이 하나면 예전과 <b>똑같은 주소</b>를 만듭니다 — 잘 돌던 것을
+       건드리지 않습니다.
+     ★ 여섯 낱말까지만 씁니다. 주소가 길어지면 서버가 거절합니다.
+     ★ clean() 이 괄호·쉼표·별표를 미리 지웁니다. 그 글자들은
+       PostgREST 조건문의 문법 글자라 그대로 넣으면 조회가 깨집니다. */
+  var MAX_WORDS = 6;
+
+  function orGroup(cols, w) {
+    var t = encodeURIComponent(w);
+    return cols.map(function (c) { return c + '.ilike.*' + t + '*'; }).join(',');
+  }
+
+  function whereOf(sec, q) {
+    var words = String(q || '').split(' ').filter(function (w) { return w !== ''; });
+    if (words.length > MAX_WORDS) words = words.slice(0, MAX_WORDS);
+    if (words.length <= 1) return '&or=(' + orGroup(sec.cols, words[0] || q) + ')';
+    return '&and=(' + words.map(function (w) {
+      return 'or(' + orGroup(sec.cols, w) + ')';
+    }).join(',') + ')';
+  }
+
   /* 한 섹션 조회 — 실패하면 null 을 돌려주고 전체는 계속 진행 */
   function ask(sec, q) {
-    var t = encodeURIComponent(q);
-    var or = sec.cols.map(function (c) { return c + '.ilike.*' + t + '*'; }).join(',');
     var url = SB_URL + '/rest/v1/' + sec.table + '?select=' + sec.sel
-            + '&or=(' + or + ')'
+            + whereOf(sec, q)
             + (sec.hidden ? '&hidden=is.false' : '')
             + '&limit=' + PREVIEW;
     return fetch(url, { headers: Object.assign({ Prefer: 'count=exact' }, HDR) })
