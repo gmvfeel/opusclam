@@ -135,17 +135,24 @@
   .pt-agree label b{color:var(--text,#20223a);font-weight:700}
   .pt-agree a{color:var(--violet-2,#7C63B0);font-weight:600}
 
-  .pt-send{height:54px;border:0;border-radius:12px;cursor:pointer;
-    font-family:inherit;font-size:15.5px;font-weight:800;letter-spacing:-.01em;
-    color:#fff;background:linear-gradient(120deg,#5F4A8C,#7C63B0 55%,#A98B3E);
-    box-shadow:0 8px 20px rgba(124,99,176,.28)}
-  /* ★ 히어로 단추보다 <b>한 단계 진한</b> 그러데이션입니다.
-       이 단추는 폭이 넓어 글자가 그러데이션 <b>가운데</b>에 옵니다.
-       밝은 판(#9C7FD6)은 흰 글자와 3.0:1 이라 기준에 못 미쳤습니다.
-       가운데를 #7C63B0 으로 내려 4.9:1 로 올렸습니다. */
-  /* ★ 글자를 #fff 로 박습니다 — 바탕이 <b>늘 색</b>인 단추이기 때문입니다.
-       var(--paper) 는 어두운 모드에서 검은색이 되어 글자가 사라집니다. */
-  .pt-send:hover{filter:brightness(1.07)}
+  /* ★★ 2026-08-21 · 리쿠르트의 「문의 보내기」 단추와 같은 모양으로
+       바꿨습니다 (파트너 요청). 그러데이션 → <b>짙은 남보라 단색</b>.
+     ★ 값은 recruit.css 의 `.rv-btn--go` 를 그대로 가져왔습니다 —
+       바탕 #33305a(--rv-deep) · 손 올리면 #262346 · 모서리 5px.
+     ★★ 색을 <b>직접 적습니다.</b> --rv-deep 은 recruit.css 의 :root 에만
+       있고 이 화면은 그 파일을 부르지 않습니다. var(--rv-deep) 라고
+       쓰면 값을 못 찾아 <b>바탕이 사라지고 흰 글씨만</b> 남습니다.
+       recruit.css 주석에도 같은 사고가 적혀 있습니다.
+     ★ 어두운 모드에서도 <b>같은 색</b>입니다 — recruit.css 가 이 값을
+       어두운 모드에서 바꾸지 않습니다. 흰 글자와 12.3:1 입니다.
+     ★ 글자는 늘 #fff 입니다 — 바탕이 늘 색이므로 var(--paper) 를 쓰면
+       어두운 모드에서 검은색이 되어 사라집니다.
+     ★ 높이와 폭은 그대로 둡니다 — 이 화면에서 가장 중요한 단추이고,
+       리쿠르트 쪽은 여러 단추 중 하나라 작습니다. */
+  .pt-send{height:54px;border:0;border-radius:5px;cursor:pointer;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:-.01em;
+    color:#fff;background:#33305a;transition:background .15s}
+  .pt-send:hover{background:#262346}
   .pt-send:disabled{cursor:default;filter:grayscale(.7);opacity:.55;box-shadow:none}
 
   .pt-msg{margin:0;padding:13px 15px;border-radius:11px;font-size:13.5px;
