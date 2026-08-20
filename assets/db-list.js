@@ -357,25 +357,56 @@ function ocN(tpl) {
        ★ 개수만 받아 옵니다 (줄은 한 개만 청하고 count=exact 로 총수를 받음).
        ★ 한 번 센 것은 담아 둡니다 — 조건을 바꿔 가며 여러 번 찾아도
          다시 묻지 않습니다.
-       ★ 숨긴 것(hidden)은 가리지 않습니다. 갈래마다 그 칸이 있는지
-         달라서 조건을 걸면 어떤 갈래에서 조회가 실패합니다.
-         숨긴 것은 서른 개 남짓이라 「대략 이만큼」 이라는 뜻에는 지장이 없습니다. */
+       ★ 숨긴 것(hidden)은 <b>2026-08-21 부터 가립니다.</b>
+         ★★ 그전에는 일부러 안 가렸습니다 — 갈래마다 그 칸이 있는 표와
+           없는 표가 섞여 있어, 조건을 걸면 <b>어떤 갈래에서 조회가 통째로
+           실패</b>하기 때문입니다. 그때는 숨긴 것이 서른 개 남짓이라
+           「대략 이만큼」 이라는 뜻에 지장이 없었습니다.
+         ★★ 그런데 작품표에서 영화·음반 <b>812건</b>을 감추면서 그 전제가
+           깨졌습니다. 목록엔 16,249건이 나오는데 안내문엔 17,061 이라고
+           적히게 됩니다.
+         ▶ 그래서 <b>먼저 걸어 보고, 실패하면 조건 없이 한 번 더</b> 묻습니다.
+           칸이 있는 표는 정확해지고, 없는 표는 예전과 똑같이 돕니다.
+           실패했을 때만 한 번 더 물으므로 평소에는 조회가 늘지 않습니다. */
     var _allCount = null;
     function fillNoneTotal() {
       var slot = document.querySelector('.pdb-none-total');
       if (!slot) return;
       if (_allCount != null) { slot.textContent = _allCount.toLocaleString(); return; }
-      var u = SB_URL + '/rest/v1/' + cfg.table + '?select=id&limit=1';
-      fetch(u, { headers: {
-        apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
-        Prefer: 'count=exact', Range: '0-0'
-      } }).then(function (r) {
-        var crg = r.headers.get('content-range') || '';
-        var t = parseInt(String(crg).split('/')[1], 10);
-        if (!isFinite(t)) { slot.textContent = ''; return; }
+
+      var base = SB_URL + '/rest/v1/' + cfg.table + '?select=id&limit=1';
+      var H = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+                Prefer: 'count=exact', Range: '0-0' };
+
+      /* 응답 머리의 content-range 에서 총수를 꺼냅니다.
+         못 꺼내면 null 을 돌려 「한 번 더 묻기」로 넘어갑니다. */
+      function total(r) {
+        if (!r.ok) return null;
+        var t = parseInt(String(r.headers.get('content-range') || '').split('/')[1], 10);
+        return isFinite(t) ? t : null;
+      }
+      function put(t) {
+        if (t == null) { slot.textContent = ''; return; }
         _allCount = t;
         slot.textContent = t.toLocaleString();
-      }).catch(function () { slot.textContent = ''; });
+      }
+
+      /* ① 감춘 것을 빼고 세어 봅니다.
+         ★ not.is.true 를 씁니다(is.false 가 아니라). hidden 이 비어 있는(null)
+           줄까지 함께 셉니다. 사이트맵·작품 상세도 같은 조건입니다. */
+      fetch(base + '&hidden=not.is.true', { headers: H })
+        .then(function (r) {
+          var t = total(r);
+          if (t != null) { put(t); return; }
+          /* ② 그 표에 hidden 칸이 없었습니다 — 조건 없이 다시 셉니다 */
+          return fetch(base, { headers: H })
+            .then(function (r2) { put(total(r2)); });
+        })
+        .catch(function () {
+          return fetch(base, { headers: H })
+            .then(function (r2) { put(total(r2)); })
+            .catch(function () { slot.textContent = ''; });
+        });
     }
 
     function fixEmptyCta() {
