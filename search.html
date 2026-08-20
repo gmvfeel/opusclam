@@ -42,11 +42,21 @@
     font-size:17.5px;font-weight:500;color:var(--text,#20223a);letter-spacing:-.01em;
     padding-right:10px}
   .osr-form input::placeholder{color:var(--text-3,#a8aabb);font-weight:400;opacity:.85}
-  .osr-form button{flex:0 0 auto;height:48px;padding:0 26px;border:0;border-radius:12px;cursor:pointer;
-    font-size:15px;font-weight:800;letter-spacing:-.01em;color:#fff;
-    background:linear-gradient(120deg,#7C63B0,#9C7FD6 55%,#C9A94E);
-    box-shadow:0 5px 14px rgba(124,99,176,.30)}
-  .osr-form button:hover{filter:brightness(1.06)}
+  /* ★★ 2026-08-21 · 제휴문의 · 리쿠르트의 단추와 같은 모양으로 바꿨습니다
+       (파트너 요청). 그러데이션 → <b>짙은 남보라 단색</b>.
+     ★ 값은 recruit.css 의 `.rv-btn--go` 그대로 —
+       바탕 #33305a(--rv-deep) · 손 올리면 #262346 · 모서리 5px.
+     ★★ 색을 <b>직접 적습니다.</b> --rv-deep 은 recruit.css 의 :root 에만
+       있고 이 화면은 그 파일을 부르지 않습니다. var() 로 쓰면 값을 못 찾아
+       바탕이 사라지고 흰 글씨만 남습니다.
+     ★ 그러데이션은 <b>테두리(.osr-ring)에 그대로 둡니다.</b> 둘 다
+       그러데이션이면 서로 다투고, 둘 다 단색이면 이 화면의 얼굴이
+       사라집니다. 테두리가 오퍼스클램의 색, 단추는 누르는 자리입니다.
+     ★ 흰 글자와 12.3:1 — 그러데이션이던 때(4.9:1)보다 또렷합니다. */
+  .osr-form button{flex:0 0 auto;height:48px;padding:0 26px;border:0;border-radius:5px;cursor:pointer;
+    font-size:15px;font-weight:700;letter-spacing:-.01em;color:#fff;
+    background:#33305a;transition:background .15s}
+  .osr-form button:hover{background:#262346}
   .osr-hint{margin:14px 0 0;text-align:center;font-size:12.5px;
     color:var(--text-2,#5a5b74);letter-spacing:-.01em;word-break:keep-all}
   .osr-hint b{color:var(--text-2,#5c5e70);font-weight:600}
