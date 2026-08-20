@@ -76,16 +76,36 @@
   html[data-theme="dark"] .gd-hero::after{opacity:.35}
 
   /* 몸 — 왼쪽 목차 + 오른쪽 내용 */
+  /* ★ 2026-08-20 · 목차를 236→190, 사이를 52→40 으로 줄였습니다.
+     까닭 — 그림을 1000px 로 맞춰 두었는데, 1280px 화면에서 글 자리가
+     944px 이라 그림이 다시 줄어들어 흐려졌습니다. 목차를 조금 줄이니
+     1280px 에서도 자리가 1002px 이 되어 <b>줄어들지 않습니다.</b>
+     ★ 목차 글씨가 가장 긴 「무엇을 찾을 수 있나요」도 190px 에 들어갑니다. */
   .gd-wrap{max-width:1360px;margin:0 auto;padding:0 24px;
-    display:grid;grid-template-columns:236px 1fr;gap:52px;align-items:start}
+    display:grid;grid-template-columns:190px 1fr;gap:40px;align-items:start}
 
   .gd-toc{position:sticky;top:130px;padding-top:46px}
   .gd-toc h2{font-size:11.5px;font-weight:800;letter-spacing:.16em;color:var(--text-3);
     margin:0 0 12px}
-  .gd-toc a{display:block;font-size:13.5px;line-height:1.5;padding:7px 11px;border-radius:8px;
-    color:var(--text-2);text-decoration:none;transition:background .15s,color .15s}
-  .gd-toc a:hover{background:var(--paper-2);color:var(--text)}
-  .gd-toc a.on{background:var(--paper-2);color:var(--violet-2,#5b4b9e);font-weight:700}
+  /* ★★ 2026-08-20 · 고른 것을 <b>짙은 바탕</b>으로 (파트너 지시) ★★
+     ─────────────────────────────────────────────────────────────────
+     ★ 값을 짐작하지 않았습니다 — 국제 콩쿨 아카이브의 왼쪽 메뉴
+       (spot/concours-archive.html · .ca-nav button.on)에서 <b>그대로</b>
+       가져왔습니다. #322152 · 손 올리면 #3d2a63 · 왼쪽 막대 3px.
+       플랫폼 안에서 같은 자리는 같은 색이어야 합니다.
+     ★ 그때 정한 원칙도 같습니다 — <b>지금 보고 있는 것</b>이 가장
+       또렷하고, 손 올린 것은 「누를 수 있다」는 귀띔이면 됩니다.
+     ★ 어두운 화면에서는 #322152 가 바탕(#0b0b0b)과 잘 갈리므로
+       그대로 씁니다. 글자는 흰색이라 잘 읽힙니다. */
+  .gd-toc a{display:block;font-size:13.5px;line-height:1.5;padding:9px 12px;
+    border-radius:10px;color:var(--text-2);text-decoration:none;font-weight:600;
+    border-left:3px solid transparent;transition:all .15s ease}
+  /* 손 올린 것 — 옅게, 왼쪽에 막대만 */
+  .gd-toc a:hover{background:var(--paper-2);color:var(--violet-2,#5b4b9e);
+    border-left-color:var(--violet-2,#5b4b9e)}
+  /* 고른 것 — 짙은 바탕에 흰 글자 */
+  .gd-toc a.on{background:#322152;color:#fff;border-left-color:#322152;font-weight:700}
+  .gd-toc a.on:hover{background:#3d2a63;color:#fff;border-left-color:#3d2a63}
 
   .gd-body{padding-top:46px;min-width:0}
   .gd-sec{padding:0 0 52px;scroll-margin-top:130px}
@@ -158,9 +178,23 @@
        전에 0px 로 찌그러집니다</b>(lazy 로 늦게 오므로 그동안 자리가 없음).
      ▶ 그래서 <b>상자(figure)에 원래 크기를 한도로</b> 걸고, 그림은 그
        상자를 100% 채웁니다. 늘어나지 않고, 늦게 와도 자리가 지켜집니다.
-       한도값은 그림마다 달라 각 figure 의 style 에 적어 두었습니다. */
+       한도값은 그림마다 달라 각 figure 의 style 에 적어 두었습니다.
+
+     ★★ 2026-08-20 · 그래도 <b>선명하지 않다</b>는 지적을 받았습니다.
+       까닭은 <b>브라우저가 줄이면서 흐려지는 것</b>이었습니다 — 1149px
+       그림을 1022px 자리에 넣으면 89% 로 줄어들고, 그 어중간한 비율에서
+       글자가 뭉갭니다.
+       ▶ 그림을 <b>미리 1000px 아래로 줄여</b> 두었습니다(PIL Lanczos).
+         PC 에서 글이 놓이는 자리가 가장 넓을 때 1022px 이므로, 그보다
+         작으면 브라우저가 <b>손대지 않고 그대로</b> 그립니다 = 원래 크기.
+       ★ 줄이는 일은 브라우저보다 PIL 이 잘합니다. 그래서 미리 줄입니다. */
+  /* ★ 테두리를 <b>box-shadow 로</b> 그립니다 (2026-08-20)
+     border 는 <b>그림 자리를 2px 먹습니다</b>(box-sizing:border-box).
+     그래서 1000px 자리에 넣은 1000px 그림이 998px 로 줄어들어
+     0.2% 다시 그려지고, 그만큼 흐려졌습니다. box-shadow 는 자리를
+     차지하지 않아 <b>정확히 1:1</b> 로 그려집니다. */
   .gd-fig img{display:block;width:100%;height:auto;border-radius:11px;
-    border:1px solid var(--line);background:var(--paper-2)}
+    box-shadow:0 0 0 1px var(--line);background:var(--paper-2)}
   .gd-fig figcaption{font-size:12.5px;line-height:1.7;color:var(--text-3);
     margin-top:8px;padding-left:2px}
   .gd-fig figcaption b{color:var(--text-2)}
@@ -210,8 +244,9 @@
     .gd-pick.open .list{display:block}
     .gd-pick .list a{display:block;padding:11px 13px;border-radius:8px;font-size:14px;
       color:var(--text-2);text-decoration:none}
-    .gd-pick .list a.on{background:var(--paper-2);color:var(--violet-2,#5b4b9e);
-      font-weight:700}
+    /* ★ 풀다운 목록에서도 고른 것은 같은 짙은 바탕으로 — 화면이 좁아도
+       규칙이 달라지면 「다른 것」처럼 느껴집니다. */
+    .gd-pick .list a.on{background:#322152;color:#fff;font-weight:700}
     .gd-sec{scroll-margin-top:calc(var(--gd-top,79px) + 74px)}
   }
   @media (max-width:640px){
@@ -329,8 +364,8 @@
         <p class="gd-lead">위쪽 메뉴 <b>DATABASE</b> 안에 열 갈래가 있어요.
           갈래마다 성격이 달라서, 무엇을 찾을 때 어디로 가면 되는지 적어 둘게요.</p>
 
-        <figure class="gd-fig" style="max-width:1200px">
-          <img src="/assets/guide/menu.webp" width="1200" height="715" loading="lazy"
+        <figure class="gd-fig" style="max-width:1000px">
+          <img src="/assets/guide/menu.webp" width="1000" height="537" loading="lazy"
                alt="전체메뉴를 열면 여섯 갈래가 한 화면에 펼쳐집니다">
           <figcaption>헤더 오른쪽 <b>≡</b> 를 누르면 이렇게 <b>사이트 전체</b>가
             한 화면에 펼쳐져요. 어디에 무엇이 있는지 한눈에 보이니, 길을 잃으면
@@ -581,8 +616,8 @@
         <p class="gd-lead">모두 <b><a href="/account/mypage.html">마이페이지</a></b>
           에서 관리해요. 하나씩 볼게요.</p>
 
-        <figure class="gd-fig" style="max-width:1138px">
-          <img src="/assets/guide/mypage.webp" width="1138" height="643" loading="lazy"
+        <figure class="gd-fig" style="max-width:1000px">
+          <img src="/assets/guide/mypage.webp" width="1000" height="565" loading="lazy"
                alt="마이페이지 대시보드 — 탭 아홉 개와 요약 상자들">
           <figcaption>마이페이지 <b>대시보드</b>예요. 위쪽 탭이 아홉 개 —
             대시보드 · 내 정보 · 활동·등급 · 내가 올린 것 · <b>Linked</b> ·
@@ -596,8 +631,8 @@
         <p><b>즐겨찾기</b>는 「계속 보러 올 것」이에요 — 좋아하는 연주자,
           자주 찾는 작품처럼요. <b>킵</b>은 「나중에 볼 것」이에요 —
           지금은 시간이 없어 잠깐 접어 두는 느낌이죠.</p>
-        <figure class="gd-fig" style="max-width:1200px">
-          <img src="/assets/guide/tools.webp" width="1200" height="49" loading="lazy"
+        <figure class="gd-fig" style="max-width:1000px">
+          <img src="/assets/guide/tools.webp" width="1000" height="41" loading="lazy"
                alt="상세 화면 위쪽의 즐겨찾기·킵·저장·공유 단추와 글자크기 조절">
           <figcaption>상세 화면 <b>위쪽 단추줄</b>이에요. 왼쪽부터 즐겨찾기 ·
             킵 · 저장 · 공유이고, 오른쪽은 <b>글자크기</b>예요. 글씨가 작게
@@ -639,8 +674,8 @@
           생겨요. 누르면 화면 위를 덮는 <b>패널</b>이 열려서, 내 것을 한눈에
           볼 수 있어요.</p>
 
-        <figure class="gd-fig" style="max-width:1200px">
-          <img src="/assets/guide/inner.webp" width="1200" height="735" loading="lazy"
+        <figure class="gd-fig" style="max-width:1000px">
+          <img src="/assets/guide/inner.webp" width="1000" height="612" loading="lazy"
                alt="이너스페이스 패널 — 회원 카드·바로 가기·관심분야 통계·Linked·새 글">
           <figcaption>이너스페이스를 열면 이렇게 <b>내 것이 한 화면에</b>
             펼쳐져요. 회원 카드와 점수 채우는 길, 바로 가기, 관심분야 통계,
@@ -689,8 +724,8 @@
             단추가 생겨요.</li>
         </ol>
 
-        <figure class="gd-fig" style="max-width:1116px">
-          <img src="/assets/guide/linked.webp" width="1116" height="374" loading="lazy"
+        <figure class="gd-fig" style="max-width:1000px">
+          <img src="/assets/guide/linked.webp" width="1000" height="335" loading="lazy"
                alt="마이페이지 Linked 탭 — 아이디로 찾기와 이어진 사람 목록">
           <figcaption>마이페이지 <b>Linked</b> 탭이에요. 위에서 <b>아이디로
             찾아</b> 청하고, 오른쪽 「이어진 사람」에 <b>쪽지</b>와 <b>끊기</b>
@@ -721,8 +756,8 @@
                 <b>전공자 회원은 기본이 「받지 않음」</b>이고, 나머지는
                 받는 것으로 시작해요.</td></tr>
         </table>
-        <figure class="gd-fig" style="max-width:1104px">
-          <img src="/assets/guide/profile-linked.webp" width="1104" height="442"
+        <figure class="gd-fig" style="max-width:1000px">
+          <img src="/assets/guide/profile-linked.webp" width="1000" height="400"
                loading="lazy" alt="회원정보 수정 화면의 Linked · 인맥 칸 두 개">
           <figcaption><b>회원정보 수정</b> 화면을 내리면 이 상자가 있어요.
             칸을 고쳐 화면 맨 아래 <b>「저장」</b>을 누르셔야 지켜져요.
