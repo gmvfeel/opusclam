@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem('oc-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제휴문의 · OPUSCLAM</title>
+<meta name="description" content="오퍼스클램 제휴문의 — 광고 · 콘텐츠 제휴 · 기술 제휴 · 후원 제안을 받습니다.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#0a0d24">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OPUSCLAM">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/assets/base.css">
+<style>
+  /* ── 제휴문의 전용 · 다른 화면에 영향 없음 ──
+     ★★ 색 이름은 <b>style.css 에 실제로 있는 것</b>만 씁니다.
+       --text-1 · --text-4 같은 없는 이름을 쓰면 CSS 가 늘 되돌림 값을
+       써서, 밝은 모드에서는 우연히 맞아 보이고 <b>어두운 모드에서
+       검정 바탕에 검정 글자</b>가 됩니다. 통합검색이 그랬습니다.
+       쓸 수 있는 것 : --paper · --paper-2 · --paper-3 · --line · --line-2
+                      --text · --text-2 · --text-3 · --violet ~ --violet-3
+                      --gold · --ink */
+
+  .pt-wrap{max-width:720px;margin:0 auto;padding:30px 20px 90px}
+
+  .pt-lead{margin:0 0 26px;font-size:14.5px;line-height:1.95;
+    color:var(--text-2,#5a5b74);word-break:keep-all}
+  .pt-lead b{color:var(--text,#20223a);font-weight:700}
+
+  .pt-form{display:flex;flex-direction:column;gap:19px}
+  .pt-row{display:flex;flex-direction:column;gap:8px}
+  .pt-row > label{font-size:13px;font-weight:700;letter-spacing:-.01em;
+    color:var(--text,#20223a)}
+  .pt-row > label i{font-style:normal;color:#d2453b;margin-left:3px}
+  .pt-help{font-size:12px;line-height:1.7;color:var(--text-2,#5a5b74);
+    word-break:keep-all}
+
+  .pt-in,.pt-ta,.pt-sel{width:100%;border:1.5px solid var(--line,#e4e4ec);
+    border-radius:11px;background:var(--paper,#fff);color:var(--text,#20223a);
+    font-family:inherit;font-size:14.5px;letter-spacing:-.01em;
+    padding:0 14px;height:48px;transition:border-color .15s}
+  .pt-ta{height:auto;min-height:170px;padding:13px 14px;line-height:1.85;resize:vertical}
+  .pt-in:focus,.pt-ta:focus,.pt-sel:focus{outline:none;border-color:var(--violet-2,#7C63B0)}
+  .pt-in::placeholder,.pt-ta::placeholder{color:var(--text-3,#8f90a6)}
+  .pt-in.bad,.pt-ta.bad,.pt-sel.bad{border-color:#d2453b}
+
+  /* 제휴 갈래 — 눌러서 고릅니다 */
+  .pt-kinds{display:grid;gap:8px;grid-template-columns:repeat(5,1fr)}
+  .pt-kinds button{height:42px;padding:0 6px;border-radius:10px;cursor:pointer;
+    font-family:inherit;font-size:13px;font-weight:600;letter-spacing:-.02em;
+    border:1.5px solid var(--line,#e4e4ec);background:var(--paper,#fff);
+    color:var(--text-2,#5a5b74);transition:border-color .15s,color .15s}
+  .pt-kinds button:hover{border-color:var(--violet-3,#9C7FD6)}
+  /* ★ 고른 것은 <b>글자색으로 알리지 않습니다.</b> 옅은 보라 바탕 위에
+       보라 글자를 두니 4.48:1 로 기준(4.5)에 아슬아슬하게 못 미쳤습니다.
+       테두리 · 굵기 · 옅은 바탕 셋으로 알리고 글자는 진하게 둡니다. */
+  .pt-kinds button[aria-pressed="true"]{border-color:var(--violet-2,#7C63B0);
+    color:var(--text,#20223a);background:rgba(156,127,214,.14);font-weight:800;
+    box-shadow:inset 0 0 0 1px rgba(124,99,176,.28)}
+
+  /* 개인정보 동의 */
+  .pt-agree{display:flex;gap:10px;align-items:flex-start;padding:15px 16px;
+    border:1px solid var(--line,#e4e4ec);border-radius:12px;
+    background:var(--paper-2,#fefcf8)}
+  .pt-agree input{flex:0 0 auto;width:18px;height:18px;margin-top:1px;
+    accent-color:var(--violet-2,#7C63B0);cursor:pointer}
+  .pt-agree label{font-size:12.5px;line-height:1.8;color:var(--text-2,#5a5b74);
+    word-break:keep-all;cursor:pointer}
+  .pt-agree label b{color:var(--text,#20223a);font-weight:700}
+  .pt-agree a{color:var(--violet-2,#7C63B0);font-weight:600}
+
+  .pt-send{height:54px;border:0;border-radius:12px;cursor:pointer;
+    font-family:inherit;font-size:15.5px;font-weight:800;letter-spacing:-.01em;
+    color:#fff;background:linear-gradient(120deg,#5F4A8C,#7C63B0 55%,#A98B3E);
+    box-shadow:0 8px 20px rgba(124,99,176,.28)}
+  /* ★ 히어로 단추보다 <b>한 단계 진한</b> 그러데이션입니다.
+       이 단추는 폭이 넓어 글자가 그러데이션 <b>가운데</b>에 옵니다.
+       밝은 판(#9C7FD6)은 흰 글자와 3.0:1 이라 기준에 못 미쳤습니다.
+       가운데를 #7C63B0 으로 내려 4.9:1 로 올렸습니다. */
+  /* ★ 글자를 #fff 로 박습니다 — 바탕이 <b>늘 색</b>인 단추이기 때문입니다.
+       var(--paper) 는 어두운 모드에서 검은색이 되어 글자가 사라집니다. */
+  .pt-send:hover{filter:brightness(1.07)}
+  .pt-send:disabled{cursor:default;filter:grayscale(.7);opacity:.55;box-shadow:none}
+
+  .pt-msg{margin:0;padding:13px 15px;border-radius:11px;font-size:13.5px;
+    line-height:1.8;word-break:keep-all;display:none}
+  .pt-msg.on{display:block}
+  .pt-msg.err{background:rgba(210,69,59,.11);color:#c33a30;
+    border:1px solid rgba(210,69,59,.3)}
+  .pt-msg.warn{background:rgba(201,169,78,.15);color:var(--text,#20223a);
+    border:1px solid rgba(201,169,78,.45)}
+
+  /* 보내고 나서 */
+  .pt-done{display:none;text-align:center;padding:46px 20px 20px}
+  .pt-done.on{display:block}
+  .pt-done .ic{width:58px;height:58px;margin:0 auto 20px;border-radius:50%;
+    display:grid;place-items:center;color:#fff;font-size:27px;
+    background:linear-gradient(120deg,#7C63B0,#9C7FD6 55%,#C9A94E)}
+  .pt-done h2{margin:0 0 11px;font-size:21px;font-weight:800;letter-spacing:-.02em;
+    color:var(--text,#20223a)}
+  .pt-done p{margin:0 auto;max-width:420px;font-size:14px;line-height:1.95;
+    color:var(--text-2,#5a5b74);word-break:keep-all}
+  .pt-done .num{display:inline-block;margin-top:18px;padding:7px 15px;
+    border-radius:99px;border:1px solid var(--line,#e4e4ec);
+    background:var(--paper-2,#fefcf8);font-size:13px;font-weight:700;
+    color:var(--text,#20223a);font-variant-numeric:tabular-nums}
+  .pt-done .back{display:inline-block;margin-top:26px;padding:12px 22px;
+    border-radius:11px;text-decoration:none;font-size:14px;font-weight:700;
+    border:1.5px solid var(--line,#e4e4ec);color:var(--text,#20223a)}
+  .pt-done .back:hover{border-color:var(--violet-2,#7C63B0)}
+
+  .pt-form.off{display:none}
+
+  @media (max-width:560px){
+    .pt-wrap{padding:24px 16px 80px}
+    .pt-kinds{grid-template-columns:repeat(2,1fr)}
+    .pt-in,.pt-sel{height:46px;font-size:14px}
+  }
+</style>
+</head>
+<body data-header="overlay">
+<div id="oc-header"></div>
+<script src="/assets/include.js"></script>
+<script src="/assets/header.js"></script>
+
+<section class="pdb pdb-board">
+  <div class="pdb-bg" aria-hidden="true">
+    <div class="wave">
+      <div class="scene scene-net on">
+        <svg viewBox="0 0 1280 460" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7FD6"/><stop offset="1" stop-color="#C9A94E"/></linearGradient></defs>
+          <g fill="url(#dg)"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="pdb-inner">
+    <nav class="pdb-crumb" aria-label="위치">
+      <a href="/home.html">홈</a><span>/</span><span class="on">제휴문의</span>
+    </nav>
+    <header class="pdb-head">
+      <div class="pdb-titlebar">
+        <div>
+          <div class="pdb-eyebrow">PARTNERSHIP</div>
+          <h1 class="pdb-title">제휴문의</h1>
+        </div>
+      </div>
+    </header>
+  </div>
+</section>
+
+<main class="pt-wrap">
+
+  <p class="pt-lead">
+    오퍼스클램은 클래식 음악 자료를 모으고 잇는 일을 합니다.
+    <b>광고 · 콘텐츠 제휴 · 기술 제휴 · 후원</b> 어느 쪽이든 편하게 적어 주십시오.
+    담당자가 읽고 적어 주신 메일로 답을 드립니다.
+  </p>
+
+  <!-- 보내는 화면 -->
+  <form class="pt-form" id="ptForm" novalidate>
+
+    <div class="pt-row">
+      <label for="ptKindSel">어떤 제휴이신가요? <i>*</i></label>
+      <div class="pt-kinds" id="ptKinds" role="group" aria-label="제휴 갈래">
+        <button type="button" data-k="ad"      aria-pressed="true">광고</button>
+        <button type="button" data-k="content" aria-pressed="false">콘텐츠</button>
+        <button type="button" data-k="tech"    aria-pressed="false">기술</button>
+        <button type="button" data-k="sponsor" aria-pressed="false">후원</button>
+        <button type="button" data-k="other"   aria-pressed="false">그 밖</button>
+      </div>
+      <select id="ptKindSel" class="pt-sel" hidden>
+        <option value="ad">광고</option><option value="content">콘텐츠</option>
+        <option value="tech">기술</option><option value="sponsor">후원</option>
+        <option value="other">그 밖</option>
+      </select>
+    </div>
+
+    <div class="pt-row">
+      <label for="ptCompany">회사 · 단체 이름</label>
+      <input class="pt-in" id="ptCompany" type="text" maxlength="80" autocomplete="organization"
+             placeholder="개인이시면 비워 두셔도 됩니다">
+    </div>
+
+    <div class="pt-row">
+      <label for="ptName">담당자 이름 <i>*</i></label>
+      <input class="pt-in" id="ptName" type="text" maxlength="40" autocomplete="name"
+             placeholder="두 글자 이상">
+    </div>
+
+    <div class="pt-row">
+      <label for="ptEmail">답장 받으실 메일 <i>*</i></label>
+      <input class="pt-in" id="ptEmail" type="email" maxlength="120" autocomplete="email"
+             placeholder="name@company.com">
+      <p class="pt-help">답은 이 주소로만 드립니다. 한 글자만 틀려도 닿지 않으니 다시 봐 주십시오.</p>
+    </div>
+
+    <div class="pt-row">
+      <label for="ptPhone">전화번호</label>
+      <input class="pt-in" id="ptPhone" type="tel" maxlength="30" autocomplete="tel"
+             placeholder="선택 사항입니다">
+    </div>
+
+    <div class="pt-row">
+      <label for="ptBody">내용 <i>*</i></label>
+      <textarea class="pt-ta" id="ptBody" maxlength="3000"
+                placeholder="어떤 제휴를 생각하고 계신지, 어떤 점이 서로에게 도움이 될지 적어 주십시오."></textarea>
+      <p class="pt-help">열 글자 이상 · 3,000자까지</p>
+    </div>
+
+    <div class="pt-agree">
+      <input type="checkbox" id="ptAgree">
+      <label for="ptAgree">
+        <b>개인정보 수집에 동의합니다.</b>
+        적어 주신 이름 · 메일 · 전화번호는 <b>이 문의에 답하기 위해서만</b> 쓰고,
+        답을 드린 뒤 <b>3년</b>이 지나면 지웁니다. 동의하지 않으셔도 되지만
+        그때는 답을 드릴 길이 없습니다.
+        자세한 것은 <a href="/legal/privacy.html">개인정보처리방침</a>에 있습니다.
+      </label>
+    </div>
+
+    <p class="pt-msg" id="ptMsg" role="alert"></p>
+
+    <button type="submit" class="pt-send" id="ptSend">보내기</button>
+  </form>
+
+  <!-- 보내고 나서 -->
+  <section class="pt-done" id="ptDone">
+    <div class="ic" aria-hidden="true">✓</div>
+    <h2>보냈습니다</h2>
+    <p>담당자가 읽고 적어 주신 메일로 답을 드립니다.
+       보통 <b>영업일 기준 사나흘</b> 안에 연락드립니다.</p>
+    <span class="num" id="ptNo"></span><br>
+    <a class="back" href="/home.html">홈으로</a>
+  </section>
+
+</main>
+
+<div id="oc-footer"></div>
+
+<script>
+/* 히어로 배경: 라인 네트워크 (다른 화면과 같은 패턴) */
+(function(){
+  var g=document.querySelector('.pdb-bg .scene-net g'); if(!g)return;
+  g.innerHTML='';
+  var W=1280,H=460,NN=70,maxD=132,NS='http://www.w3.org/2000/svg';
+  function el(t){return document.createElementNS(NS,t);}
+  var nodes=[]; for(var i=0;i<NN;i++) nodes.push({x:Math.random()*W,y:Math.random()*H});
+  for(var a=0;a<nodes.length;a++)for(var b=a+1;b<nodes.length;b++){
+    var dx=nodes[a].x-nodes[b].x,dy=nodes[a].y-nodes[b].y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<maxD){var ln=el('line');
+      ln.setAttribute('x1',nodes[a].x.toFixed(1));ln.setAttribute('y1',nodes[a].y.toFixed(1));
+      ln.setAttribute('x2',nodes[b].x.toFixed(1));ln.setAttribute('y2',nodes[b].y.toFixed(1));
+      ln.style.animationDuration=(3.2+Math.random()*3.2).toFixed(2)+'s';
+      ln.style.animationDelay=(-Math.random()*4.5).toFixed(2)+'s'; g.appendChild(ln);}
+  }
+  nodes.forEach(function(n){var c=el('circle');
+    c.setAttribute('cx',n.x.toFixed(1));c.setAttribute('cy',n.y.toFixed(1));
+    c.setAttribute('r',(1.1+Math.random()*1.7).toFixed(1));
+    c.style.animationDuration=(3+Math.random()*3).toFixed(2)+'s';
+    c.style.animationDelay=(-Math.random()*4).toFixed(2)+'s'; g.appendChild(c);});
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/auth.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════════
+   제휴문의 보내기
+   ★ 표에 바로 넣지 않습니다. oc_partner_add() 함수로만 들어갑니다.
+     손님에게는 표 권한이 아예 없고, 함수가 표 주인 자격으로 넣습니다.
+   ★ 로그인한 분이면 회원 아이디도 함께 담깁니다 —
+     그래서 window.__ocSb (로그인 정보를 든 통로)를 먼저 씁니다.
+     없으면 공개키로 직접 부릅니다. 손님도 보낼 수 있어야 하니까요.
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var SB = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var PK = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  var form = document.getElementById('ptForm');
+  var done = document.getElementById('ptDone');
+  var msg  = document.getElementById('ptMsg');
+  var send = document.getElementById('ptSend');
+  var kinds= document.getElementById('ptKinds');
+  var kSel = document.getElementById('ptKindSel');
+  if (!form) return;
+
+  var F = {
+    company: document.getElementById('ptCompany'),
+    name:    document.getElementById('ptName'),
+    email:   document.getElementById('ptEmail'),
+    phone:   document.getElementById('ptPhone'),
+    body:    document.getElementById('ptBody'),
+    agree:   document.getElementById('ptAgree')
+  };
+
+  /* 갈래 고르기 — 눈에 보이는 단추와 숨은 select 를 함께 맞춥니다
+     (자동 채우기·접근성 도구는 select 를 봅니다) */
+  kinds.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    [].forEach.call(kinds.querySelectorAll('button'), function (x) {
+      x.setAttribute('aria-pressed', String(x === b));
+    });
+    kSel.value = b.getAttribute('data-k');
+  });
+
+  function say(kind, text) {
+    msg.className = 'pt-msg on ' + kind;
+    msg.textContent = text;
+    msg.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  function clear() { msg.className = 'pt-msg'; msg.textContent = ''; }
+  function mark(el, bad) { el.classList.toggle('bad', !!bad); }
+
+  /* 화면에서 먼저 봅니다 — 서버까지 갔다 오지 않아도 되는 것들.
+     ★ 서버에도 같은 검사가 있습니다. 화면 검사는 <b>친절함</b>이고
+       서버 검사가 <b>진짜 문</b>입니다. 화면 것만 두면 뚫립니다. */
+  var MAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  function check() {
+    var v = {
+      name:  (F.name.value  || '').trim(),
+      email: (F.email.value || '').trim(),
+      body:  (F.body.value  || '').trim()
+    };
+    mark(F.name,  v.name.length  < 2);
+    mark(F.email, !MAIL.test(v.email));
+    mark(F.body,  v.body.length  < 10);
+    if (v.name.length < 2)      { F.name.focus();  return '담당자 이름을 두 글자 이상 적어 주십시오.'; }
+    if (!MAIL.test(v.email))    { F.email.focus(); return '메일 주소를 다시 확인해 주십시오.'; }
+    if (v.body.length < 10)     { F.body.focus();  return '내용을 열 글자 이상 적어 주십시오.'; }
+    if (!F.agree.checked)       { F.agree.focus(); return '개인정보 수집에 동의해 주셔야 답을 드릴 수 있습니다.'; }
+    return null;
+  }
+
+  function ask(args) {
+    var sb = window.__ocSb;
+    if (sb && typeof sb.rpc === 'function') {
+      return sb.rpc('oc_partner_add', args).then(function (r) {
+        if (r.error) throw new Error(r.error.message || '보내지 못했습니다');
+        return r.data;
+      });
+    }
+    /* 로그인 통로가 없을 때 — 손님도 보낼 수 있어야 합니다 */
+    return fetch(SB + '/rest/v1/rpc/oc_partner_add', {
+      method: 'POST',
+      headers: { apikey: PK, Authorization: 'Bearer ' + PK,
+                 'Content-Type': 'application/json' },
+      body: JSON.stringify(args)
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok) throw new Error((j && (j.message || j.hint)) || '보내지 못했습니다');
+        return j;
+      });
+    });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    clear();
+    var bad = check();
+    if (bad) { say('err', bad); return; }
+
+    send.disabled = true;
+    var was = send.textContent;
+    send.textContent = '보내는 중…';
+
+    ask({
+      p_company: (F.company.value || '').trim(),
+      p_name:    (F.name.value    || '').trim(),
+      p_email:   (F.email.value   || '').trim(),
+      p_phone:   (F.phone.value   || '').trim(),
+      p_kind:    kSel.value || 'other',
+      p_body:    (F.body.value    || '').trim(),
+      p_url:     location.pathname + location.search
+    }).then(function (id) {
+      var n = Number(id);
+      /* ★ 0 은 <b>「이미 들어와 있다」</b>는 뜻입니다 (10분 안에 같은 내용).
+           신고에서 이 0 을 안 보고 「보냈습니다」라 말해 사고 날 뻔했습니다.
+           정직하게 알려 드립니다. */
+      if (n === 0) {
+        send.disabled = false; send.textContent = was;
+        say('warn', '조금 전에 같은 내용이 이미 들어왔습니다. 다시 보내지 않으셔도 됩니다.');
+        return;
+      }
+      form.classList.add('off');
+      done.classList.add('on');
+      document.getElementById('ptNo').textContent = '접수번호 ' + n + '번';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }).catch(function (err) {
+      send.disabled = false; send.textContent = was;
+      say('err', (err && err.message) ? err.message : '보내지 못했습니다. 잠시 뒤 다시 시도해 주십시오.');
+    });
+  });
+
+  /* 고치기 시작하면 붉은 테두리를 거둡니다 */
+  ['name', 'email', 'body'].forEach(function (k) {
+    F[k].addEventListener('input', function () { mark(F[k], false); clear(); });
+  });
+})();
+</script>
+<script src="/assets/app.js" defer></script>
+<script src="/assets/pwa-install.js?v=20260815" defer></script>
+</body>
+</html>
