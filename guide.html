@@ -28,15 +28,23 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/assets/base.css">
-<!-- ★★ 2026-08-20 · 이 줄이 없어 <b>다크 모드가 안 먹었습니다</b> (파트너 지적)
+<!-- ★★ 2026-08-20 · 어두운 화면 되살리기 (파트너 지적으로 찾음)
      ─────────────────────────────────────────────────────────────────
-     어두운 화면을 되살리는 코드와 반달 단추를 움직이는 코드가 모두
-     assets/header.js 에 있습니다. 82개 화면이 이 줄을 갖고 있는데
-     새로 만든 이 화면에만 없었습니다.
-     ★ &lt;head&gt; 에 두어야 합니다 — 화면이 그려지기 전에 바꿔야
-       <b>흰 화면이 번쩍하지 않습니다.</b>
-     ★ 새 화면을 만들 때마다 빠뜨리기 쉬운 줄입니다. -->
-<script src="/assets/header.js"></script>
+     ★ 처음에는 여기서 assets/header.js 를 실었습니다. 그런데 그 파일은
+       <b>헤더가 화면에 들어온 뒤</b>에 돌아야 하는 일도 합니다 —
+       머리에서 돌면 헤더를 못 찾고 <b>조용히 물러납니다.</b> 그래서
+       헤더가 투명한 채로 남아, 머리 바탕을 흰색으로 바꾼 순간
+       <b>흰 바탕에 흰 글자</b>가 되었습니다.
+     ▶ 그 파일은 다른 화면들처럼 <b>include.js 다음</b>에 싣습니다.
+       머리에서는 어두운 화면 되살리기만 <b>이 세 줄로</b> 합니다 —
+       화면이 그려지기 전에 바꿔야 흰 화면이 번쩍하지 않습니다.
+     ★ 열쇠 이름(oc-theme)은 assets/header.js 와 같아야 합니다. -->
+<script>
+  try {
+    if (localStorage.getItem('oc-theme') === 'dark')
+      document.documentElement.setAttribute('data-theme', 'dark');
+  } catch (e) {}
+</script>
 <style>
 /* ============================================================
    이용안내 — guide.html
@@ -59,21 +67,24 @@
 
   .gd{padding:0 0 80px}
 
-  /* 머리 — 어두운 구역이 헤더와 이어집니다 */
-  .gd-hero{background:linear-gradient(135deg,#0E1230 0%,#161B44 55%,#241C4A 100%);
-    color:#fff;padding:158px 0 54px;position:relative;overflow:hidden}
-  .gd-hero::after{content:'';position:absolute;inset:0;
-    background:radial-gradient(120% 90% at 78% 8%,rgba(124,99,176,.45) 0%,rgba(124,99,176,0) 58%)}
-  .gd-hin{max-width:1360px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  /* ★★ 2026-08-20 · 머리의 <b>바탕색을 지웠습니다</b> (파트너 지시)
+     ─────────────────────────────────────────────────────────────────
+     ★ 전에는 남보라 그라데이션을 깔아 헤더와 이어 보이게 했습니다.
+       파트너 뜻대로 지우고 <b>바탕 그대로</b> 둡니다.
+     ★ 헤더가 가려지지 않는지 확인했습니다 — 이 화면은 body 에
+       data-header="overlay" 가 없어 <b>헤더가 늘 불투명</b>합니다
+       (assets/header.js). 그래서 바탕이 흰색이어도 헤더 글자가
+       사라지지 않습니다. 어두운 머리를 깐 화면들(advertise 등)은
+       헤더가 투명해서 어두운 바탕이 필요했던 것입니다.
+     ★ 어두운 화면(다크 모드)에서는 바탕이 저절로 어두워지고 글자색도
+       변하는 값(var)이라 함께 뒤집힙니다 — 따로 손댈 것이 없습니다. */
+  .gd-hero{padding:158px 0 40px;position:relative}
+  .gd-hin{max-width:1360px;margin:0 auto;padding:0 24px}
   .gd-tag{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.22em;
-    color:#C9B9F0;margin-bottom:14px}
-  .gd-hero h1{font-size:44px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;line-height:1.2}
-  .gd-hero p{font-size:16px;line-height:1.85;color:rgba(255,255,255,.82);margin:0;max-width:620px}
-  /* ★ 어두운 화면에서는 사이트의 어두운 머리(.hero)와 같은 결로 맞춥니다 —
-     남보라 그라데이션만 남으면 이 화면만 튀어 보입니다. */
-  html[data-theme="dark"] .gd-hero{
-    background:linear-gradient(115deg,#0a0a0a 0%,#131313 45%,#1c1c1c 75%,#232323 100%)}
-  html[data-theme="dark"] .gd-hero::after{opacity:.35}
+    color:var(--violet-2,#5b4b9e);margin-bottom:14px}
+  .gd-hero h1{font-size:44px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;
+    line-height:1.2;color:var(--text)}
+  .gd-hero p{font-size:16px;line-height:1.85;color:var(--text-2);margin:0;max-width:620px}
 
   /* 몸 — 왼쪽 목차 + 오른쪽 내용 */
   /* ★ 2026-08-20 · 목차를 236→190, 사이를 52→40 으로 줄였습니다.
@@ -286,6 +297,10 @@
 
 <div id="oc-header"></div>
 <script src="/assets/include.js"></script>
+<!-- ★ 헤더가 들어온 뒤에 싣습니다 — 다른 화면들과 같은 자리입니다.
+     ★ data-header="overlay" 를 두지 않았으므로 헤더는 <b>늘 불투명</b>합니다.
+       머리 바탕이 흰색이라 투명 헤더면 글자가 보이지 않습니다. -->
+<script src="/assets/header.js"></script>
 
 <main class="gd">
 
@@ -933,30 +948,24 @@
         <p>오퍼스클램은 <b>(주)윅슨어소시에이츠</b>가 운영해요.
           주소와 전화번호는 화면 맨 아래 푸터에 적혀 있어요.</p>
 
-        <!-- ★ 사업자 정보 (2026-08-20)
-             ─────────────────────────────────────────────────────
-             ★ 푸터에는 이미 <b>주소·전화·팩스</b>가 있습니다(app.js).
-               그런데 <b>대표자 · 사업자등록번호 · 통신판매업 신고번호 ·
-               개인정보 보호책임자</b>는 어디에도 없습니다.
-             ★ 쇼핑·레슨처럼 돈이 오가는 서비스가 있으면 보통 표시해야
-               합니다. 제가 법률 조언을 드릴 수는 없으니 <b>확인해 보시고</b>
-               채우시길 권합니다.
-             ★ 값을 채우기 전에는 <b>감춰 둡니다</b> — 「—」 가 늘어선
-               표가 보이는 것보다 없는 것이 낫습니다.
-               ▶ 값을 채우신 뒤 아래 style="display:none" 만 지우면 보입니다. -->
-        <div style="display:none">
-          <table class="gd-tbl">
-            <tr><td>상호</td><td>(주)윅슨어소시에이츠 / WIXON ASSOCIATES INC.</td></tr>
-            <tr><td>대표자</td><td>—</td></tr>
-            <tr><td>사업자등록번호</td><td>—</td></tr>
-            <tr><td>통신판매업 신고번호</td><td>—</td></tr>
-            <tr><td>주소</td><td>03993 서울특별시 마포구 동교로 215-1(동교동)
-              스튜디오한사 406</td></tr>
-            <tr><td>전화</td><td>02-3141-1305</td></tr>
-            <tr><td>개인정보 보호책임자</td><td>—</td></tr>
-            <tr><td>문의</td><td>cser@wixon.co.kr</td></tr>
-          </table>
-        </div>
+        <!-- ★ 사업자 정보 — 파트너가 값을 주셔서 채우고 <b>보이게</b> 했습니다
+             (2026-08-20)
+             ★ 팩스는 <b>넣지 않습니다</b>(파트너 결정 · 2026-08-20).
+               표시 항목에 들어가지 않고, 푸터와 주신 값이 서로 달라
+               어느 쪽이 맞는지 모르는 채 틀린 정보가 남게 됩니다.
+               ▶ 푸터(assets/app.js)에서도 팩스를 뺐습니다 — 한국어·영어
+                 두 줄 모두. 없는 번호를 적어 두는 것보다 없는 편이 낫습니다. -->
+        <table class="gd-tbl">
+          <tr><td>상호</td><td>(주)윅슨어소시에이츠 / WIXON ASSOCIATES INC.</td></tr>
+          <tr><td>대표자</td><td>김윤기</td></tr>
+          <tr><td>사업자등록번호</td><td>105-87-92164</td></tr>
+          <tr><td>통신판매업 신고번호</td><td>2014-서울마포-0247호</td></tr>
+          <tr><td>주소</td><td>03993 서울특별시 마포구 동교로 215-1(동교동)
+            스튜디오한사 406</td></tr>
+          <tr><td>전화</td><td>02-3141-1305</td></tr>
+          <tr><td>개인정보 보호책임자</td><td>박영균</td></tr>
+          <tr><td>문의</td><td><a href="mailto:cser@wixon.co.kr">cser@wixon.co.kr</a></td></tr>
+        </table>
       </section>
 
     </div><!-- /gd-body -->
