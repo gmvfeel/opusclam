@@ -3,7 +3,7 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
 /* ============================================================
    OPUSCLAM 통합검색 엔진 — assets/search.js
    ------------------------------------------------------------
-   DB 8종 + 게시판 5종을 한 번에 찾는다. (2026-08-21 작품 추가)
+   DB 8종 + 게시판 7종을 한 번에 찾는다. (2026-08-21 작품 추가)
    섹션이 늘어나면 아래 SECTIONS 배열에 한 줄 추가하면 끝.
    (페이지별 복붙 없음 · 검색 화면은 search.html 하나만 유지)
 
@@ -390,8 +390,14 @@ function ocN(tpl) {
     var sum = document.querySelector('.osr-summary');
     var q = clean(qRaw);
     if (!box) return;
+    /* ★ 2026-08-21 · 검색어가 있는지를 html 에 적어 둡니다.
+       검색 화면의 「오퍼스클램에 담긴 것」이 이걸 보고 비켜섭니다.
+       결과가 나올 자리에 타일이 남아 있으면 안 됩니다. */
+    try { document.documentElement.classList.toggle('osr-q', !!q); } catch (e) {}
     if (!q) {
-      box.innerHTML = '<p class="osr-empty">검색어를 입력해 주세요.</p>';
+      /* 예전에는 「검색어를 입력해 주세요」를 적었습니다. 이제 그 자리에
+         담긴 것 타일이 서므로, 같은 말을 두 번 하지 않습니다. */
+      box.innerHTML = '';
       if (sum) sum.textContent = '';
       return;
     }

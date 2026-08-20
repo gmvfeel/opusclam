@@ -21,25 +21,43 @@
 <style>
   /* ── 통합검색 전용 · 다른 페이지에 영향 없음 ── */
 
-  /* 히어로 안 검색창 */
-  .osr-searchbar{max-width:660px;margin:22px auto 0;position:relative}
+  /* 히어로 안 검색창
+     ★ 2026-08-21 · 「빈약해 보인다」는 파트너 지적으로 손봤습니다.
+       새 색을 들이지 않고, 이미 쓰던 보라→금 그러데이션을 <b>테두리로</b>
+       끌어와 이 칸을 화면의 주인공으로 만듭니다. */
+  .osr-searchbar{max-width:760px;margin:26px auto 0;position:relative}
+
+  /* 그러데이션 테두리 — 안쪽 흰 칸을 2px 감쌉니다 */
+  .osr-ring{padding:2px;border-radius:18px;
+    background:linear-gradient(120deg,#7C63B0,#9C7FD6 52%,#C9A94E);
+    box-shadow:0 14px 34px rgba(24,24,50,.10);
+    transition:box-shadow .18s}
+  .osr-ring:focus-within{box-shadow:0 18px 44px rgba(124,99,176,.26)}
+
   .osr-form{display:flex;align-items:center;gap:0;
-    background:var(--paper,#fff);border:1.5px solid var(--line,#e4e4ec);border-radius:15px;
-    box-shadow:0 10px 30px rgba(24,24,50,.07);
-    padding:6px 6px 6px 17px;transition:border-color .16s, box-shadow .16s}
-  .osr-form:focus-within{border-color:#9C7FD6;box-shadow:0 14px 36px rgba(124,99,176,.16)}
-  .osr-form .ic{flex:0 0 auto;width:19px;height:19px;color:var(--text-3,#8a8c9e);margin-right:11px}
-  .osr-form input{flex:1;min-width:0;height:48px;border:0;background:transparent;outline:none;
-    font-size:16.5px;font-weight:500;color:var(--text-1,#1b1c2b);letter-spacing:-.01em}
+    background:var(--paper,#fff);border:0;border-radius:16px;
+    padding:7px 7px 7px 19px}
+  .osr-form .ic{flex:0 0 auto;width:21px;height:21px;color:#9C7FD6;margin-right:12px}
+  .osr-form input{flex:1;min-width:0;height:56px;border:0;background:transparent;outline:none;
+    font-size:17.5px;font-weight:500;color:var(--text-1,#1b1c2b);letter-spacing:-.01em;
+    padding-right:10px}
   .osr-form input::placeholder{color:var(--text-3,#a8aabb);font-weight:400;opacity:.85}
-  .osr-form button{flex:0 0 auto;height:42px;padding:0 22px;border:0;border-radius:11px;cursor:pointer;
-    font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#fff;
+  .osr-form button{flex:0 0 auto;height:48px;padding:0 26px;border:0;border-radius:12px;cursor:pointer;
+    font-size:15px;font-weight:800;letter-spacing:-.01em;color:#fff;
     background:linear-gradient(120deg,#7C63B0,#9C7FD6 55%,#C9A94E);
     box-shadow:0 5px 14px rgba(124,99,176,.30)}
   .osr-form button:hover{filter:brightness(1.06)}
-  .osr-hint{margin:13px 0 0;text-align:center;font-size:12.5px;
-    color:var(--text-3,#8a8c9e);letter-spacing:-.01em}
+  .osr-hint{margin:14px 0 0;text-align:center;font-size:12.5px;
+    color:var(--text-3,#8a8c9e);letter-spacing:-.01em;word-break:keep-all}
   .osr-hint b{color:var(--text-2,#5c5e70);font-weight:600}
+
+  /* 이렇게 찾아보세요 — 눌러 보면 낱말 여럿도 된다는 것이 바로 보입니다 */
+  .osr-eg{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:13px 0 0}
+  .osr-eg button{height:31px;padding:0 13px;border-radius:99px;cursor:pointer;
+    font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:-.01em;
+    border:1px solid var(--line,#e4e4ec);background:var(--paper,#fff);
+    color:var(--text-2,#5c5e70);transition:border-color .15s,color .15s}
+  .osr-eg button:hover{border-color:#c9bbe6;color:#7C63B0}
 
   /* 결과 영역 */
   .osr-results{max-width:1000px;margin:0 auto;padding:34px 20px 90px}
@@ -95,6 +113,39 @@
     transition:opacity .15s, transform .15s}
   .osr-item mark{background:rgba(201,169,78,.26);color:inherit;border-radius:3px;padding:0 1px;font-weight:800}
 
+  /* ── 「오퍼스클램에 담긴 것」 (2026-08-21) ─────────────────────
+     검색어를 넣기 전 화면이 텅 비어 있었습니다. 이 사이트에 무엇이
+     얼마나 있는지 한 마디도 하지 않았습니다.
+     ★ 검색어가 들어오면 <b>사라집니다</b> — 결과가 주인공입니다.
+       (search.js 가 html 에 osr-q 를 붙였다 뗍니다) */
+  .osr-home{margin:-6px 0 60px}
+  html.osr-q .osr-home{display:none}
+  .osr-home-h{display:flex;align-items:center;gap:9px;margin:0 0 16px;
+    font-size:13px;font-weight:800;letter-spacing:.02em;color:var(--text-2,#5c5e70)}
+  .osr-home-h::after{content:'';flex:1;height:1px;background:var(--line,#e4e4ec)}
+
+  /* ★ 8개가 <b>4 + 4</b> 로 떨어지게 열 수를 못박습니다.
+       auto-fit 으로 두었더니 넓은 화면에서 6 + 2 로 갈려 어색했습니다. */
+  .osr-cards{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
+  @media (max-width:860px){ .osr-cards{grid-template-columns:repeat(3,1fr)} }
+  @media (max-width:560px){ .osr-cards{grid-template-columns:repeat(2,1fr);gap:8px} }
+  .osr-card{position:relative;overflow:hidden;display:block;padding:15px 16px 14px;
+    border:1px solid var(--line,#e4e4ec);border-radius:13px;background:var(--paper,#fff);
+    text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
+  .osr-card::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;
+    background:linear-gradient(90deg,#9C7FD6,#C9A94E);
+    transform:scaleX(0);transform-origin:left;transition:transform .22s ease}
+  .osr-card:hover{border-color:#c9bbe6;transform:translateY(-2px)}
+  .osr-card:hover::before{transform:scaleX(1)}
+  .osr-card .k{display:block;font-size:12.5px;font-weight:600;
+    color:var(--text-3,#8a8c9e);letter-spacing:-.01em}
+  .osr-card .n{display:block;margin-top:5px;font-size:23px;font-weight:800;
+    letter-spacing:-.03em;color:var(--text-1,#1b1c2b);
+    font-variant-numeric:tabular-nums;line-height:1.15}
+  .osr-card .n.wait{color:var(--line,#e4e4ec)}
+  .osr-home-note{margin:15px 0 0;font-size:12.5px;line-height:1.75;
+    color:var(--text-3,#8a8c9e);letter-spacing:-.01em;word-break:keep-all}
+
   /* 빈 결과 · 안내 */
   /* ★ 「검색어를 입력해 주세요」를 <b>위로</b> 올립니다 (2026-08-05 · 파트너 지시)
        56px → 14px → <b>-12px</b> (지금)
@@ -120,9 +171,11 @@
   @keyframes osrsk{0%{background-position:100% 0}100%{background-position:0 0}}
 
   @media (max-width:640px){
-    .osr-form{padding:5px 5px 5px 14px;border-radius:14px}
-    .osr-form input{height:46px;font-size:15.5px}
-    .osr-form button{height:40px;padding:0 16px;font-size:13.5px}
+    .osr-ring{border-radius:16px}
+    .osr-form{padding:6px 6px 6px 15px;border-radius:14px}
+    .osr-form input{height:50px;font-size:15.5px}
+    .osr-form button{height:42px;padding:0 17px;font-size:13.5px}
+    .osr-eg button{font-size:12px;padding:0 11px}
     .osr-results{padding:26px 16px 70px}
     .osr-label{font-size:15px}
     .osr-thumb{width:44px;height:44px}
@@ -161,12 +214,20 @@
       </div>
 
       <div class="osr-searchbar">
-        <form class="osr-form" role="search">
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" name="q" placeholder="인물 · 단체 · 공연장 · 학교 · 게시글" aria-label="검색어" autocomplete="off">
-          <button type="submit">검색</button>
-        </form>
-        <p class="osr-hint">데이터베이스 7종과 커뮤니티 게시판을 <b>한 번에</b> 찾습니다 · 이름의 일부만 넣어도 됩니다</p>
+        <div class="osr-ring">
+          <form class="osr-form" role="search">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" name="q" placeholder="인물 · 작품 · 공연장 · 게시글" aria-label="검색어" autocomplete="off">
+            <button type="submit">검색</button>
+          </form>
+        </div>
+        <p class="osr-hint">데이터베이스 <b>8종</b>과 커뮤니티 게시판 <b>7곳</b>을 한 번에 찾습니다 · 낱말을 여럿 넣어도 됩니다</p>
+        <div class="osr-eg" id="osrEg">
+          <button type="button">베토벤 교향곡 5번</button>
+          <button type="button">쇼팽 녹턴</button>
+          <button type="button">예술의전당</button>
+          <button type="button">빈 필하모닉</button>
+        </div>
       </div>
     </header>
   </div>
@@ -176,8 +237,23 @@
   <div class="osr-summary"></div>
   <div class="osr-groups"></div>
 
+  <section class="osr-home" id="osrHome">
+    <h2 class="osr-home-h">오퍼스클램에 담긴 것</h2>
+    <div class="osr-cards">
+      <a class="osr-card" href="/db/person.html"     data-t="persons"><span class="k">인물</span><b class="n wait">…</b></a>
+      <a class="osr-card" href="/db/work.html"       data-t="person_works"><span class="k">작품</span><b class="n wait">…</b></a>
+      <a class="osr-card" href="/db/org.html"        data-t="orgs"><span class="k">음악단체</span><b class="n wait">…</b></a>
+      <a class="osr-card" href="/db/venue.html"      data-t="venues"><span class="k">공연장</span><b class="n wait">…</b></a>
+      <a class="osr-card" href="/db/school.html"     data-t="schools"><span class="k">음악학교</span><b class="n wait">…</b></a>
+      <a class="osr-card" href="/db/modern.html"     data-t="modern_composers"><span class="k">현대음악</span><b class="n wait">…</b></a>
+      <a class="osr-card" href="/db/foundation.html" data-t="foundations"><span class="k">기관 · 재단</span><b class="n wait">…</b></a>
+      <a class="osr-card" href="/db/academic.html"   data-t="academic"><span class="k">학술</span><b class="n wait">…</b></a>
+    </div>
+    <p class="osr-home-note">커뮤니티 게시판 7곳(핫토픽 · 오퍼니티 · 공연사진 · 입시요강 · 입시커뮤니티 · 지식나눔 · 뉴스)의 글도 함께 찾습니다.</p>
+  </section>
+
   <!-- ★ 「검색 범위」 상자를 없앴습니다 (2026-08-05 · 파트너 지시)
-       검색칸 아래에 이미 「데이터베이스 7종과 커뮤니티 게시판을 한 번에
+       검색칸 아래에 이미 「데이터베이스 8종과 커뮤니티 게시판 7곳을 한 번에
        찾습니다」 안내가 있어 <b>같은 말이 두 번</b>이었습니다.
        ★ CSS 로 감추지 않고 <b>만들지 않습니다</b> — 감추면 언제든 되살아납니다. -->
 </main>
@@ -222,6 +298,94 @@
 <script src="/assets/search.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){ OCSearch.boot(); });
+
+  /* ── 「담긴 것」 건수 채우기 (2026-08-21) ──────────────────────
+     ★ 비용을 먼저 생각했습니다 — 하루에 한 번만 묻습니다.
+       센 값을 브라우저에 날짜와 함께 담아 둡니다. 같은 사람이 하루에
+       몇 번을 들어와도 조회는 8번뿐입니다.
+     ★ <b>담아 둔 값을 먼저 그립니다.</b> 날이 지났으면 화면은 그대로 둔 채
+       뒤에서 다시 세어 슬쩍 갈아 끼웁니다. 그래서 숫자가 깜빡이지 않습니다.
+     ★★ 못 세었을 때 <b>빈 상자</b>가 되지 않게 합니다. 지난번 값이 있으면
+       그것을 그대로 두고, 그마저 없을 때만 줄표를 놓습니다.
+       숫자 없는 상자는 고장 난 것처럼 보입니다.
+     ★ 감춘 것(hidden)을 빼고 셉니다 — 목록에 보이는 수와 같아야 합니다.
+       칸이 없는 표를 만나면 조건 없이 한 번 더 묻습니다. */
+  (function () {
+    var KEY = 'oc-search-counts';
+    var SB  = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+    var PK  = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+    var H   = { apikey: PK, Authorization: 'Bearer ' + PK,
+                Prefer: 'count=exact', Range: '0-0' };
+    var cards = [].slice.call(document.querySelectorAll('.osr-card'));
+    if (!cards.length) return;
+
+    var today = new Date().toISOString().slice(0, 10);
+
+    function paint(t, n) {
+      cards.forEach(function (c) {
+        if (c.getAttribute('data-t') !== t) return;
+        var b = c.querySelector('.n');
+        if (!b) return;
+        b.classList.remove('wait');
+        b.textContent = (n == null) ? '—' : Number(n).toLocaleString();
+      });
+    }
+
+    /* ① 담아 둔 것이 있으면 곧바로 그립니다 (날짜와 상관없이) */
+    var old = null, fresh = false;
+    try {
+      var o = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (o && o.n) { old = o.n; fresh = (o.d === today); }
+    } catch (e) {}
+    if (old) {
+      cards.forEach(function (c) {
+        var t = c.getAttribute('data-t');
+        if (old[t] != null) paint(t, old[t]);
+      });
+      if (fresh) return;          /* 오늘 센 것이면 더 묻지 않습니다 */
+    }
+
+    function count(url) {
+      return fetch(url, { headers: H }).then(function (r) {
+        if (!r.ok) return null;
+        var v = parseInt(String(r.headers.get('content-range') || '').split('/')[1], 10);
+        return isFinite(v) ? v : null;
+      });
+    }
+
+    /* ② 오늘 것이 아니면 뒤에서 다시 셉니다 */
+    var got = {};
+    Promise.all(cards.map(function (c) {
+      var t = c.getAttribute('data-t');
+      var base = SB + '/rest/v1/' + t + '?select=id&limit=1';
+      return count(base + '&hidden=not.is.true')
+        .then(function (n) { return (n == null) ? count(base) : n; })
+        .catch(function () { return count(base).catch(function () { return null; }); })
+        .then(function (n) {
+          if (n != null) { got[t] = n; paint(t, n); return; }
+          /* 못 셌습니다 — 지난번 값이 있으면 건드리지 않습니다 */
+          if (!old || old[t] == null) paint(t, null);
+          else got[t] = old[t];
+        });
+    })).then(function () {
+      try { localStorage.setItem(KEY, JSON.stringify({ d: today, n: got })); } catch (e) {}
+    });
+  })();
+
+  /* 예시 단추 — 누르면 그대로 찾습니다 */
+  (function () {
+    var wrap = document.getElementById('osrEg');
+    var inp  = document.querySelector('.osr-form input');
+    var form = document.querySelector('.osr-form');
+    if (!wrap || !inp || !form) return;
+    wrap.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      inp.value = b.textContent.trim();
+      if (typeof form.requestSubmit === 'function') form.requestSubmit();
+      else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    });
+  })();
 </script>
 <script src="/assets/app.js" defer></script>
 <!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->
