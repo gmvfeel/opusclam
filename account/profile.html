@@ -160,6 +160,18 @@
   [data-theme="dark"] .me-btns button.go{
     background:#e9e9ec; border-color:#e9e9ec; color:#17171c;
   }
+
+  /* ★ Linked 청하기 받기 (2026-08-20) ─────────────────────────
+     ★ 칸을 <b>모든 회원에게 똑같이</b> 줍니다. 다른 것은 기본값뿐입니다
+       (전공자만 「일반 회원의 청하기」가 꺼짐 — sql/msg-03). */
+  .me-chk{display:flex;gap:10px;align-items:flex-start;padding:13px 14px;
+    border:1px solid var(--line);border-radius:10px;margin-bottom:9px;cursor:pointer;
+    background:var(--paper)}
+  .me-chk:hover{border-color:var(--violet-2,#5b4b9e)}
+  .me-chk input{flex:0 0 auto;width:17px;height:17px;margin:2px 0 0;cursor:pointer;
+    accent-color:var(--violet-2,#5b4b9e)}
+  .me-chk b{display:block;font-size:13.5px;font-weight:700;margin-bottom:3px}
+  .me-chk span{font-size:12px;color:var(--text-3);line-height:1.65}
 </style>
 </head>
 <body>
@@ -280,6 +292,36 @@
         </div>
         <input type="text" id="fAddr2" maxlength="80" placeholder="상세 주소" style="margin-top:8px">
       </div>
+    </div>
+
+    <!-- ── Linked 청하기 받기 (2026-08-20) ─────────────
+         ★ 파트너 결정 : 칸은 모든 회원에게 똑같이 준다. 다른 것은
+           기본값뿐이다 — 전공자만 「일반 회원의 청하기」가 꺼짐.
+         ★ 왜 두 칸인가 : 한 칸이면 기본값을 정할 수 없다. 모두 꺼 두면
+           아무도 청할 수 없어 인맥이 시작되지 않고, 모두 켜 두면 설정이
+           있으나 마나다. -->
+    <div class="me-card">
+      <h2>Linked · 인맥</h2>
+      <p class="note">누구의 <b>Linked 청하기</b>를 받을지 정하실 수 있습니다.
+        이어지면 서로 <b>쪽지</b>를 주고받을 수 있습니다.</p>
+
+      <label class="me-chk">
+        <input type="checkbox" id="fLkMem">
+        <span><b>승인 회원의 청하기를 받겠습니다</b>
+          전공자 · 음악관계자 · 음악학교 · 단체·기업 — 가입할 때
+          관리자가 자격을 확인한 회원입니다.</span>
+      </label>
+
+      <label class="me-chk">
+        <input type="checkbox" id="fLkGen">
+        <span><b>일반 회원의 청하기도 받겠습니다</b>
+          일반 회원은 자격 확인 없이 바로 가입합니다. 그래서 청하실 때
+          <b>인사말을 반드시</b> 적게 하고, <b>하루 세 번</b>까지만 청할 수
+          있게 해 두었습니다.</span>
+      </label>
+
+      <p class="why" id="fLkWhy" style="font-size:11.5px;color:var(--text-3);
+         margin:10px 0 0;line-height:1.7"></p>
     </div>
 
     <!-- ── 고칠 수 없는 것 ───────────────────────────── -->
@@ -436,6 +478,23 @@
         OCBirth.mount($('fBirthBox'), ME.birth || '');
       photoUrl           = ME.photo_url || '';
 
+      /* ★ Linked 청하기 받기 (2026-08-20)
+         ★ 칸이 <b>비어 있으면(null)</b> 「정하지 않음」 입니다. 그때는
+           회원 종류를 보고 정합니다 — 전공자만 「일반 회원의 청하기」가
+           꺼짐. 규칙은 서버(oc_link_open_general)와 <b>같아야</b> 하므로
+           여기 한 줄로 맞춰 둡니다. */
+      var lkMem = (ME.link_open_member  == null) ? true  : !!ME.link_open_member;
+      var lkGen = (ME.link_open_general == null)
+                    ? (ME.member_type !== 'major') : !!ME.link_open_general;
+      $('fLkMem').checked = lkMem;
+      $('fLkGen').checked = lkGen;
+      if (ME.link_open_member == null && ME.link_open_general == null)
+        $('fLkWhy').innerHTML = '★ 아직 정하지 않으셨습니다 — 지금은 <b>'
+          + (ME.member_type === 'major'
+              ? '승인 회원의 청하기만 받는'
+              : '모두의 청하기를 받는')
+          + '</b> 상태입니다. 위 칸을 고쳐 저장하시면 그때부터 그대로 지켜집니다.';
+
       /* 주소는 「기본 + 상세」 로 담겨 있을 수 있습니다.
          우리가 「|」 로 갈라 담으므로 그것으로 나눕니다. */
       var ad = String(ME.address || '');
@@ -493,6 +552,10 @@
         birth:       (window.OCBirth ? OCBirth.get($('fBirthBox')) : null),
         address:     addr,
         photo_url:   photoUrl || null,
+        /* ★ Linked 청하기 받기 — 저장할 때는 <b>확실한 값</b>을 넣습니다.
+           비워 두면 「정하지 않음」 이 되어 종류별 기본값으로 되돌아갑니다. */
+        link_open_member:  !!$('fLkMem').checked,
+        link_open_general: !!$('fLkGen').checked,
         updated_at:  new Date().toISOString()
       };
 
