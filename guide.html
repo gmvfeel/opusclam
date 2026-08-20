@@ -28,6 +28,15 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/assets/base.css">
+<!-- ★★ 2026-08-20 · 이 줄이 없어 <b>다크 모드가 안 먹었습니다</b> (파트너 지적)
+     ─────────────────────────────────────────────────────────────────
+     어두운 화면을 되살리는 코드와 반달 단추를 움직이는 코드가 모두
+     assets/header.js 에 있습니다. 82개 화면이 이 줄을 갖고 있는데
+     새로 만든 이 화면에만 없었습니다.
+     ★ &lt;head&gt; 에 두어야 합니다 — 화면이 그려지기 전에 바꿔야
+       <b>흰 화면이 번쩍하지 않습니다.</b>
+     ★ 새 화면을 만들 때마다 빠뜨리기 쉬운 줄입니다. -->
+<script src="/assets/header.js"></script>
 <style>
 /* ============================================================
    이용안내 — guide.html
@@ -60,6 +69,11 @@
     color:#C9B9F0;margin-bottom:14px}
   .gd-hero h1{font-size:44px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;line-height:1.2}
   .gd-hero p{font-size:16px;line-height:1.85;color:rgba(255,255,255,.82);margin:0;max-width:620px}
+  /* ★ 어두운 화면에서는 사이트의 어두운 머리(.hero)와 같은 결로 맞춥니다 —
+     남보라 그라데이션만 남으면 이 화면만 튀어 보입니다. */
+  html[data-theme="dark"] .gd-hero{
+    background:linear-gradient(115deg,#0a0a0a 0%,#131313 45%,#1c1c1c 75%,#232323 100%)}
+  html[data-theme="dark"] .gd-hero::after{opacity:.35}
 
   /* 몸 — 왼쪽 목차 + 오른쪽 내용 */
   .gd-wrap{max-width:1360px;margin:0 auto;padding:0 24px;
@@ -111,7 +125,10 @@
   .gd-steps li{counter-increment:s;position:relative;padding:0 0 15px 40px;
     font-size:14.5px;line-height:1.95;color:var(--text-2)}
   .gd-steps li::before{content:counter(s);position:absolute;left:0;top:2px;
-    width:25px;height:25px;border-radius:50%;background:var(--ink,#2b2740);color:#fff;
+    /* ★ 어두운 화면에서는 --ink 가 <b>밝은 색</b>이 됩니다(#ededed).
+       글자를 #fff 로 박아 두면 흰 동그라미에 흰 숫자가 되어 사라집니다.
+       그래서 글자는 --paper 로 둡니다 — 늘 바탕색이라 반대로 뒤집힙니다. */
+    width:25px;height:25px;border-radius:50%;background:var(--ink,#2b2740);color:var(--paper,#fff);
     font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
 
   /* 자주 묻는 것 */
@@ -125,22 +142,69 @@
   .gd-q summary:hover{background:var(--paper-2)}
   .gd-q .a{padding:0 17px 16px;font-size:14px;line-height:1.95;color:var(--text-2)}
 
+  /* ★★ 2026-08-20 · 그림 (파트너 요청 — 글만 있어 답답했습니다) ★★
+     ★ 화면을 실제로 찍어 붙입니다. 글로 「오른쪽 위 돋보기」라고 적는 것보다
+       한 장이 빠릅니다.
+     ★ loading="lazy" — 열세 구역의 그림을 처음에 다 받으면 느립니다.
+       내려가면서 필요할 때 받습니다.
+     ★ width·height 를 적어 둡니다 — 그림이 늦게 와도 글이 <b>덜컥
+       밀리지 않습니다</b>(자리를 미리 잡아 둡니다).
+     ★ 어두운 화면에서는 조금 눅입니다 — 흰 화면 그림이 너무 튑니다. */
+  .gd-fig{margin:18px 0 6px}
+  .gd-fig img{display:block;width:100%;height:auto;border-radius:11px;
+    border:1px solid var(--line);background:var(--paper-2)}
+  .gd-fig figcaption{font-size:12.5px;line-height:1.7;color:var(--text-3);
+    margin-top:8px;padding-left:2px}
+  .gd-fig figcaption b{color:var(--text-2)}
+  html[data-theme="dark"] .gd-fig img{filter:brightness(.88) contrast(1.02)}
+
   /* 문의 */
   .gd-ask{border:1px solid var(--line);border-radius:14px;padding:22px 24px;
     background:var(--paper-2)}
   .gd-ask .mail{display:inline-flex;align-items:center;gap:8px;margin-top:10px;
-    height:42px;padding:0 20px;border-radius:10px;background:var(--ink,#2b2740);color:#fff;
-    font-weight:700;font-size:14px;text-decoration:none}
-  .gd-ask .mail:hover{filter:brightness(1.14);color:#fff}
+    height:42px;padding:0 20px;border-radius:10px;background:var(--ink,#2b2740);
+    color:var(--paper,#fff);font-weight:700;font-size:14px;text-decoration:none}
+  .gd-ask .mail:hover{filter:brightness(1.14);color:var(--paper,#fff)}
+
+  /* ★★ 2026-08-20 · 좁은 화면의 목차를 <b>상단 고정 풀다운</b>으로 (파트너 지적)
+     ─────────────────────────────────────────────────────────────────────
+     ★ 무엇이 불편했나 — 목차를 위쪽에 칩으로 늘어놓았더니 <b>스크롤하면
+       사라져</b> 다른 구역으로 갈 길이 없었습니다. 맨 위로 올라가야 했습니다.
+     ★ 어떻게 고쳤나 — 지금 보는 구역 이름을 단추에 적어 <b>헤더 아래에
+       붙여</b> 둡니다. 누르면 열두 줄이 펼쳐집니다.
+     ★ 붙일 자리(top)는 <b>재서</b> 넣습니다 — 헤더 높이가 화면 폭마다
+       다릅니다(데스크톱 114 · 모바일 79). 숫자를 박아 두면 어긋납니다.
+       (음악사 연표에서 같은 일을 겪었습니다) */
+  .gd-pick{display:none}
 
   @media (max-width:1000px){
     .gd-wrap{grid-template-columns:1fr;gap:0}
-    .gd-toc{position:static;padding-top:30px;
-      display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--line);
-      padding-bottom:18px;top:auto}
-    .gd-toc h2{width:100%}
-    .gd-toc a{font-size:12.5px;padding:6px 10px;background:var(--paper-2)}
-    .gd-body{padding-top:30px}
+    .gd-toc{display:none}
+    .gd-body{padding-top:18px}
+
+    .gd-pick{display:block;position:sticky;top:var(--gd-top,79px);z-index:40;
+      margin:0 -24px 6px;padding:10px 24px 12px;background:var(--paper);
+      border-bottom:1px solid var(--line)}
+    .gd-pick > button{width:100%;height:44px;padding:0 15px;border-radius:11px;
+      border:1px solid var(--line);background:var(--paper-2);color:var(--text);
+      font-family:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer;
+      display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .gd-pick > button::after{content:'';width:0;height:0;flex:0 0 auto;
+      border-left:5px solid transparent;border-right:5px solid transparent;
+      border-top:6px solid currentColor;transition:transform .2s ease}
+    .gd-pick.open > button::after{transform:rotate(180deg)}
+    .gd-pick > button i{font-style:normal;font-size:11px;font-weight:800;
+      letter-spacing:.1em;color:var(--text-3);margin-right:8px}
+    .gd-pick .list{display:none;margin-top:7px;padding:6px;border-radius:11px;
+      border:1px solid var(--line);background:var(--paper);
+      box-shadow:0 16px 34px -12px rgba(20,18,40,.28);
+      max-height:56vh;overflow-y:auto}
+    .gd-pick.open .list{display:block}
+    .gd-pick .list a{display:block;padding:11px 13px;border-radius:8px;font-size:14px;
+      color:var(--text-2);text-decoration:none}
+    .gd-pick .list a.on{background:var(--paper-2);color:var(--violet-2,#5b4b9e);
+      font-weight:700}
+    .gd-sec{scroll-margin-top:calc(var(--gd-top,79px) + 74px)}
   }
   @media (max-width:640px){
     .gd-hero{padding-top:110px;padding-bottom:40px}
@@ -178,16 +242,24 @@
       <a href="#comm">OC커뮤니티</a>
       <a href="#lesson">레슨 : ON</a>
       <a href="#recruit">리쿠르트</a>
+      <a href="#shop">SHOPPING</a>
       <a href="#join">회원가입</a>
       <a href="#member">회원이 되면</a>
       <a href="#inner">이너스페이스</a>
       <a href="#linked">Linked와 쪽지</a>
       <a href="#wrong">잘못된 정보를 봤어요</a>
       <a href="#faq">자주 묻는 것</a>
+      <a href="#helper">도우미</a>
       <a href="#ask">문의하기</a>
     </aside>
 
     <div class="gd-body">
+
+      <!-- ★ 좁은 화면 목차 (2026-08-20) — 아래 스크립트가 채웁니다.
+           목차를 두 벌 적지 않으려고 왼쪽 목차에서 그대로 옮겨 옵니다.
+           두 벌 적으면 한쪽만 고쳐서 어긋납니다. -->
+      <div class="gd-pick" id="gdPick"></div>
+
 
       <!-- ① 어떤 곳인가요 ───────────────────────── -->
       <section class="gd-sec" id="what">
@@ -224,6 +296,14 @@
         <h2>무엇을 찾을 수 있나요<em>DATABASE</em></h2>
         <p class="gd-lead">위쪽 메뉴 <b>DATABASE</b> 안에 열 갈래가 있어요.
           갈래마다 성격이 달라서, 무엇을 찾을 때 어디로 가면 되는지 적어 둘게요.</p>
+
+        <figure class="gd-fig">
+          <img src="/assets/guide/menu.webp" width="1200" height="715" loading="lazy"
+               alt="전체메뉴를 열면 여섯 갈래가 한 화면에 펼쳐집니다">
+          <figcaption>헤더 오른쪽 <b>≡</b> 를 누르면 이렇게 <b>사이트 전체</b>가
+            한 화면에 펼쳐져요. 어디에 무엇이 있는지 한눈에 보이니, 길을 잃으면
+            여기부터 열어 보세요.</figcaption>
+        </figure>
 
         <div class="gd-cards">
           <a class="gd-card" href="/db/person.html">
@@ -387,7 +467,25 @@
         </div>
       </section>
 
-      <!-- ⑦ 회원가입 ─────────────────────────────── -->
+      <!-- ⑦ SHOPPING (2026-08-20 · 메뉴를 찍다가 제가 잘못 쓴 것을 알았습니다) -->
+      <section class="gd-sec" id="shop">
+        <h2>SHOPPING<em>SHOP</em></h2>
+        <p class="gd-lead">위 메뉴의 <b>SHOPPING</b> 은 오퍼스클램 안이 아니라
+          <b>같은 결의 다른 사이트</b>로 이어져요. 새 창으로 열려요.</p>
+        <table class="gd-tbl">
+          <tr><td><a href="https://lpstock.co.kr" target="_blank" rel="noopener">LPSTOCK</a></td>
+              <td>LP · 음반을 다루는 곳</td></tr>
+          <tr><td><a href="https://lpstock.co.kr/category/lifepop/90/" target="_blank" rel="noopener">LIFEPOP</a></td>
+              <td>LPSTOCK 안의 한 갈래</td></tr>
+          <tr><td><a href="/shop/apply.html">입점문의 · 안내</a></td>
+              <td>물건을 파시는 분이 <b>입점을 문의</b>하시는 곳</td></tr>
+        </table>
+        <p>화면 맨 아래 <b>FAMILY SITE</b> 를 누르면 같은 결의 다른 사이트를
+          모아 볼 수 있어요 — 부클립스(도서·음반 검색) · 엘파그(LP·오디오
+          가이드) 같은 곳이에요.</p>
+      </section>
+
+      <!-- ⑧ 회원가입 ─────────────────────────────── -->
       <section class="gd-sec" id="join">
         <h2>회원가입<em>SIGN UP</em></h2>
         <p class="gd-lead">회원 종류가 <b>네 가지</b>예요. 하는 일이 다르니
@@ -410,6 +508,15 @@
               <td>전공 중·고등학생, 전공생 학부모, 음악 애호가, 그 외 누구나</td>
               <td><b>바로 이용</b></td></tr>
         </table>
+
+        <figure class="gd-fig">
+          <img src="/assets/guide/join.webp" width="1200" height="461" loading="lazy"
+               alt="회원가입 화면의 네 가지 회원 종류 카드">
+          <figcaption>실제 <b>회원가입</b> 화면이에요. 네 장 중 해당하는 것의
+            <b>「선택하기」</b>를 누르면 됩니다. 카드 아래에 「자격 회원 · 관리자
+            승인 후 등록 권한」인지 「일반 회원 · 가입 즉시 이용」인지 적혀
+            있어요.</figcaption>
+        </figure>
 
         <h3>자격 심사가 뭔가요</h3>
         <p>앞의 세 종류는 <b>관리자가 한 번 확인</b>해요. 실제로 그 일을 하시는
@@ -448,6 +555,14 @@
         <p><b>즐겨찾기</b>는 「계속 보러 올 것」이에요 — 좋아하는 연주자,
           자주 찾는 작품처럼요. <b>킵</b>은 「나중에 볼 것」이에요 —
           지금은 시간이 없어 잠깐 접어 두는 느낌이죠.</p>
+        <figure class="gd-fig">
+          <img src="/assets/guide/tools.webp" width="1200" height="39" loading="lazy"
+               alt="상세 화면 위쪽의 즐겨찾기·킵·저장·공유 단추와 글자크기 조절">
+          <figcaption>상세 화면 <b>위쪽 단추줄</b>이에요. 왼쪽부터 즐겨찾기 ·
+            킵 · 저장 · 공유이고, 오른쪽은 <b>글자크기</b>예요. 글씨가 작게
+            느껴지시면 <b>가+</b> 를 누르시면 됩니다.</figcaption>
+        </figure>
+
         <p>담은 것은 마이페이지 <b>「저장함」</b> 탭에서 두 줄로 나뉘어 보여요.</p>
 
         <h3>관심분야</h3>
@@ -666,7 +781,29 @@
         </details>
       </section>
 
-      <!-- ⑫ 문의 ─────────────────────────────────── -->
+      <!-- ⑫ 도우미 (2026-08-20) -->
+      <section class="gd-sec" id="helper">
+        <h2>도우미<em>HELPER</em></h2>
+        <p class="gd-lead">화면 오른쪽 아래 <b>「도우미」</b>를 누르면 물어보실
+          수 있어요. 이 이용안내를 다 읽지 않아도 되게 만든 거예요.</p>
+
+        <figure class="gd-fig">
+          <img src="/assets/guide/helper.webp" width="744" height="746" loading="lazy"
+               alt="도우미 상자 — 빠른 단추와 입력칸">
+          <figcaption>단추를 누르셔도 되고, 찾으시는 <b>사람 이름이나 작품
+            제목</b>을 그냥 넣으셔도 돼요. 「베토벤 교향곡 5번」처럼
+            <b>작곡가와 작품을 붙여</b> 넣어도 찾아 드려요.</figcaption>
+        </figure>
+
+        <div class="gd-tip">
+          도우미는 <b>AI 가 아니에요.</b> 정해진 답과 오퍼스클램 DB에서만
+          찾아 드려요. 그래서 <b>없는 것을 지어내지 않습니다</b> — 모르면
+          모른다고 하고, 통합검색이나 메일로 넘겨 드려요.
+        </div>
+        <p>휴대폰에서는 오른쪽 아래, 「맨 위로」 단추 위쯤에 있어요.</p>
+      </section>
+
+      <!-- ⑬ 문의 -->
       <section class="gd-sec" id="ask">
         <h2>문의하기<em>CONTACT</em></h2>
         <p class="gd-lead">위에서 못 찾으셨거나, 사람이 봐야 하는 일이면
@@ -753,20 +890,101 @@
 </script>
 
 <script>
-/* ── 목차에 지금 보는 자리를 표시합니다 ────────────────────────
-   ★ 목차가 열둘이라 어디쯤인지 표시가 없으면 길을 잃습니다.
-   ★ IntersectionObserver 를 못 쓰는 브라우저에서는 <b>조용히</b>
-     아무 일도 하지 않습니다 — 목차는 그래도 눌러서 갑니다. */
+/* ── 목차 ────────────────────────────────────────────────────────
+   ★ 하는 일 둘
+     ① 지금 보는 구역을 목차에 표시합니다 (열둘이라 없으면 길을 잃습니다)
+     ② 좁은 화면용 <b>풀다운 목차</b>를 만들어 헤더 아래에 붙입니다
+   ★ 목차를 <b>두 벌 적지 않습니다</b> — 왼쪽 목차에서 그대로 옮겨 옵니다.
+     두 벌 적으면 한쪽만 고쳐 어긋납니다.
+   ★ IntersectionObserver 를 못 쓰는 브라우저에서는 표시만 안 됩니다 —
+     목차는 그래도 눌러서 갑니다. */
 (function(){
   var links = Array.prototype.slice.call(document.querySelectorAll('#gdToc a'));
   var secs  = links.map(function(a){
     return document.querySelector(a.getAttribute('href'));
   }).filter(Boolean);
-  if (!secs.length || !('IntersectionObserver' in window)) return;
+  if (!links.length) return;
 
+  /* ── ① 풀다운 목차 만들기 ─────────────────────────────────── */
+  var pick = document.getElementById('gdPick');
+  var picks = [];
+  var label = null;
+  if (pick) {
+    pick.innerHTML =
+        '<button type="button" aria-expanded="false"><span>'
+      +   '<i>목차</i><b id="gdNow">' + links[0].textContent + '</b>'
+      + '</span></button>'
+      + '<div class="list">'
+      + links.map(function(a){
+          return '<a href="' + a.getAttribute('href') + '">' + a.textContent + '</a>';
+        }).join('')
+      + '</div>';
+    label = pick.querySelector('#gdNow');
+    picks = Array.prototype.slice.call(pick.querySelectorAll('.list a'));
+
+    var head = pick.querySelector('button');
+    head.addEventListener('click', function(){
+      var on = pick.classList.toggle('open');
+      head.setAttribute('aria-expanded', on ? 'true' : 'false');
+    });
+    /* 고르면 닫습니다 — 열린 채로 두면 내용을 가립니다 */
+    picks.forEach(function(a){
+      a.addEventListener('click', function(){
+        pick.classList.remove('open');
+        head.setAttribute('aria-expanded','false');
+      });
+    });
+    /* 밖을 누르거나 ESC 로도 닫힙니다 */
+    document.addEventListener('click', function(e){
+      if (!pick.contains(e.target)) {
+        pick.classList.remove('open');
+        head.setAttribute('aria-expanded','false');
+      }
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') {
+        pick.classList.remove('open');
+        head.setAttribute('aria-expanded','false');
+      }
+    });
+  }
+
+  /* ── ② 붙일 자리를 <b>재서</b> 넣습니다 ────────────────────────
+     ★ 헤더 높이가 화면 폭마다 다릅니다(데스크톱 114 · 모바일 79).
+       숫자를 박아 두면 어긋나거나 헤더에 가립니다.
+     ★ 헤더가 <b>화면에 붙어 있는 방식일 때만</b> 셈에 넣습니다 —
+       그냥 흘러가는 헤더면 비워 둘 필요가 없습니다. */
+  function fitTop(){
+    var h = 0;
+    var sh = document.querySelector('.site-header');
+    if (sh) {
+      var pos = getComputedStyle(sh).position;
+      if (pos === 'fixed' || pos === 'sticky') h = sh.offsetHeight;
+    }
+    document.documentElement.style.setProperty('--gd-top', (h || 79) + 'px');
+  }
+  fitTop();
+  window.addEventListener('resize', fitTop);
+  /* 헤더는 나중에 들어옵니다(include.js) — 들어온 뒤 다시 잽니다 */
+  var tries = 0;
+  var iv = setInterval(function(){ fitTop(); if (++tries > 12) clearInterval(iv); }, 250);
+  try {
+    if ('ResizeObserver' in window) {
+      var sh2 = document.querySelector('.site-header');
+      if (sh2) new ResizeObserver(fitTop).observe(sh2);
+    }
+  } catch(e){}
+
+  /* ── ③ 지금 보는 구역 표시 ────────────────────────────────── */
+  if (!secs.length || !('IntersectionObserver' in window)) return;
   function mark(id){
     links.forEach(function(a){
       a.classList.toggle('on', a.getAttribute('href') === '#' + id);
+    });
+    picks.forEach(function(a){
+      var on = a.getAttribute('href') === '#' + id;
+      a.classList.toggle('on', on);
+      if (on && label) label.textContent = a.textContent;
     });
   }
   var io = new IntersectionObserver(function(es){
@@ -777,7 +995,7 @@
       if (!best || e.boundingClientRect.top < best.boundingClientRect.top) best = e;
     });
     if (best) mark(best.target.id);
-  }, { rootMargin: '-130px 0px -60% 0px', threshold: 0 });
+  }, { rootMargin: '-150px 0px -60% 0px', threshold: 0 });
   secs.forEach(function(s){ io.observe(s); });
 })();
 </script>

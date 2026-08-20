@@ -172,9 +172,12 @@
       a: '광고 자리와 안내를 정리해 두었어요.',
       l: [['광고안내','/advertise.html']] },
 
-    { k: ['입점','쇼핑','판매','shopping'],
-      a: 'SHOPPING 은 준비 중이고, 지금은 <b>입점 문의</b>를 받고 있어요.',
-      l: [['입점문의 · 안내','/shop/apply.html']] },
+    { k: ['입점','쇼핑','판매','shopping','lp','음반','엘피'],
+      a: '위 메뉴의 <b>SHOPPING</b> 은 오퍼스클램 안이 아니라 <b>같은 결의 다른 '
+       + '사이트</b>로 이어져요 — LP·음반을 다루는 <b>LPSTOCK</b> 이에요(새 창). '
+       + '물건을 파시는 분은 <b>입점문의</b>를 봐 주세요.',
+      l: [['LPSTOCK','https://lpstock.co.kr'],
+          ['입점문의 · 안내','/shop/apply.html']] },
 
     { k: ['어둡게','다크','눈부','밝기','테마'],
       a: '오른쪽 위 <b>반달 모양 단추</b>를 누르면 어두운 화면으로 바뀌어요. '
@@ -501,7 +504,7 @@
       /* 단추 — 「맨 위로」(bottom:24px · 46px) 위에 놓습니다 */
       '.ocH-btn{position:fixed;right:24px;bottom:calc(82px + var(--ocH-bar));z-index:1490;height:46px;',
       ' padding:0 17px 0 14px;border:0;border-radius:99px;cursor:pointer;',
-      ' background:var(--ink,#2b2740);color:#fff;font-family:inherit;font-size:13.5px;',
+      ' background:var(--ink,#2b2740);color:var(--paper,#fff);font-family:inherit;font-size:13.5px;',
       ' font-weight:700;display:flex;align-items:center;gap:8px;',
       ' box-shadow:0 10px 26px -8px rgba(20,18,40,.45);transition:filter .15s,transform .15s}',
       '.ocH-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}',
@@ -538,7 +541,7 @@
       ' display:flex;flex-direction:column;gap:11px}',
       '.ocH-b{max-width:88%;padding:11px 13px;border-radius:13px;font-size:13.5px;',
       ' line-height:1.8;word-break:break-word}',
-      '.ocH-b.me{align-self:flex-end;background:var(--ink,#2b2740);color:#fff;',
+      '.ocH-b.me{align-self:flex-end;background:var(--ink,#2b2740);color:var(--paper,#fff);',
       ' border-bottom-right-radius:4px}',
       '.ocH-b.oc{align-self:flex-start;background:var(--paper-2,#f2f0f7);',
       ' border-bottom-left-radius:4px}',
@@ -567,7 +570,7 @@
       ' font-family:inherit;font-size:13.5px}',
       '.ocH-in input:focus{outline:2px solid var(--violet-2,#5b4b9e);outline-offset:-1px}',
       '.ocH-in button{flex:0 0 auto;height:38px;padding:0 15px;border:0;border-radius:9px;',
-      ' cursor:pointer;background:var(--ink,#2b2740);color:#fff;font-family:inherit;',
+      ' cursor:pointer;background:var(--ink,#2b2740);color:var(--paper,#fff);font-family:inherit;',
       ' font-size:13px;font-weight:700}',
       '.ocH-in button:hover{filter:brightness(1.15)}',
 
