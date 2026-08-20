@@ -255,7 +255,15 @@
     { when: function (file) {
         if (file.length > 5 && file.slice(-5) === '.html') file = file.slice(0, -5);
         return file.length > 5 && file.slice(-5) === '-view';
-      }, src: "/assets/links.js" }
+      }, src: "/assets/links.js" },
+
+    /* ★ 도우미 (2026-08-20) — <b>모든 화면</b>에 놓습니다.
+       ★ 화면 파일 122개에 script 줄을 넣는 대신 여기 한 줄로 끝냅니다.
+         (assets/pv.js 가 mentions.js 를 싣는 것과 같은 방식입니다.)
+       ★ 관리자 화면에는 싣지 않습니다 — helper.js 안에서도 한 번 더
+         막지만, 아예 받아 오지 않는 편이 낫습니다. */
+    { when: function () { return location.pathname.indexOf('/admin/') !== 0; },
+      src: "/assets/helper.js" }
   ];
   function loadEngines(){
     var file = location.pathname.split("/").pop();
