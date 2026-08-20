@@ -973,19 +973,113 @@ function ocN(tpl) {
   /* ── 그 십년의 첫 줄로 미끄러져 가기 ─────────────────────
      ★ scrollIntoView 대신 <b>자리를 재서</b> 옮깁니다 —
        붙어 있는 띠 높이를 빼야 카드가 띠 밑에 숨지 않습니다.
+
+     ★★★ 2026-08-20 (파트너 요청) · <b>손으로 움직입니다.</b>
+       ─────────────────────────────────────────────────────────
+       전에는 브라우저의 `behavior:'smooth'` 를 썼습니다. 되기는 하는데
+       <b>급합니다</b> — 브라우저가 정한 시간·가락을 우리가 못 고칩니다.
+       크롬은 거리가 멀어도 짧게 끝내 버려서 <b>휙 하고 튀는</b> 느낌입니다.
+       ▶ 그래서 한 그림씩 우리가 옮깁니다. 두 가지를 우리가 정합니다 —
+
+         ⓐ <b>시간</b> — 거리에 따라 늘립니다(가깝다고 느리지 않게,
+            멀다고 끝없이 길지 않게 420~1,100ms 사이로 묶습니다).
+         ⓑ <b>가락(easing)</b> — 처음엔 천천히, 가운데서 빠르게, 끝에서
+            다시 천천히(easeInOutCubic). 이래야 <b>멈추는 순간</b>이
+            부드럽습니다. 급하게 느껴지는 것은 대개 <b>끝맺음</b> 탓입니다.
+
+     ★★ <b>파트너가 도중에 굴리면 곧바로 멈춥니다.</b> 이게 없으면
+       사람이 손으로 굴리는데 화면이 제 갈 길을 가서 <b>서로 싸웁니다.</b>
      ★ 「움직임을 줄여 달라」고 해 둔 분에게는 <b>바로</b> 옮깁니다. */
+
+  var krAnim = null;          /* 지금 움직이는 중인가 */
+
+  /* ★★★ 2026-08-20 · <b>왜 안 부드러웠는지 알아냈습니다.</b>
+     ══════════════════════════════════════════════════════════════
+     style.css 39줄에 <b>`html{scroll-behavior:smooth}`</b> 가 있습니다.
+     그래서 우리가 한 그림에 1~2px 씩 옮기려고 window.scrollTo 를 부를 때마다
+     <b>브라우저가 그 한 걸음에 또 자기 애니메이션을 겁니다.</b>
+     둘이 서로 싸워서 —
+        · 1초 넘게 거의 안 움직이다가
+        · 마지막에 몰아서 확 튀었습니다
+     (재 보니 클릭 뒤 <b>1,100ms 동안 0px</b>, 그다음 600ms 에 2,000px.)
+
+     ▶ 고침 — 우리가 움직이는 동안만 <b>html 의 scroll-behavior 를 꺼 둡니다.</b>
+       끝나거나 사람이 끊으면 <b>원래대로 되돌립니다.</b>
+     ★ 이것이 파트너가 「급하다」고 느낀 원인이기도 합니다 — 지금까지 화면을
+       움직인 것은 우리 코드가 아니라 <b>브라우저의 기본 애니메이션</b>이었고,
+       그 시간과 가락은 우리가 고칠 수 없습니다. */
+  function krLockNative(on){
+    var el = document.documentElement;
+    if (on) { el.style.scrollBehavior = 'auto'; }
+    else    { el.style.removeProperty('scroll-behavior'); }
+  }
+
+  function krStopAnim(){
+    if (!krAnim) return;
+    if (window.cancelAnimationFrame) window.cancelAnimationFrame(krAnim.id);
+    krAnim = null;
+    krLockNative(false);
+  }
+
+  /* 처음 천천히 · 가운데 빠르게 · 끝 천천히 */
+  function ease(t){
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function krScrollTo(to){
+    var from = window.pageYOffset;
+    var dist = to - from;
+    if (Math.abs(dist) < 2) return;
+
+    /* 거리에 따라 시간을 정합니다 — 1,000px 에 550ms 쯤 */
+    var ms = Math.min(1100, Math.max(420, Math.abs(dist) * 0.55));
+    var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+
+    krStopAnim();
+    krLockNative(true);              /* ★ 브라우저 기본 애니메이션을 꺼 둡니다 */
+    krAnim = { id: 0 };
+
+    function step(){
+      if (!krAnim) return;                      /* 사람이 끊었습니다 */
+      var now = (window.performance && performance.now) ? performance.now() : Date.now();
+      var t = (now - t0) / ms;
+      if (t >= 1) {
+        window.scrollTo(0, to);
+        krAnim = null;
+        krLockNative(false);
+        return;
+      }
+      window.scrollTo(0, from + dist * ease(t));
+      krAnim.id = window.requestAnimationFrame(step);
+    }
+    krAnim.id = window.requestAnimationFrame(step);
+  }
+
+  /* ★ 사람이 굴리거나 만지면 <b>즉시 손을 뗍니다.</b>
+       (우리가 window.scrollTo 로 움직이는 동안에도 scroll 이벤트가 오므로
+        scroll 로는 끊을 수 없습니다 — <b>사람의 몸짓</b>만 봅니다.) */
+  ['wheel', 'touchstart', 'mousedown'].forEach(function(ev){
+    window.addEventListener(ev, krStopAnim, { passive: true });
+  });
+  window.addEventListener('keydown', function(e){
+    /* 방향키·페이지키·스페이스·Home·End */
+    if (/^(Arrow|Page)/.test(e.key) || e.key === ' '
+        || e.key === 'Home' || e.key === 'End') krStopAnim();
+  });
+
   function krJump(dec){
     var box = $('krFlow');
     if (!box) return;
     var row = box.querySelector('.kr-row[data-d="' + dec + '"]');
     if (!row) return;                     /* 그 십년에 기록이 없으면 가만히 */
-    var slow = window.matchMedia
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var y = window.pageYOffset + row.getBoundingClientRect().top
           - krStickBottom() - 14;
     if (y < 0) y = 0;
-    try { window.scrollTo({ top: y, behavior: slow ? 'auto' : 'smooth' }); }
-    catch (e) { window.scrollTo(0, y); }   /* 옛 브라우저 */
+
+    var slow = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (slow || !window.requestAnimationFrame) { window.scrollTo(0, y); return; }
+    krScrollTo(y);
   }
 
   /* ── 굴릴 때 띠도 따라 오게 ───────────────────────────────
@@ -1005,6 +1099,10 @@ function ocN(tpl) {
           cur = Number(rows[i].getAttribute('data-d'));
         } else break;                              /* 위에서 아래 차례라 멈춤 */
       }
+      /* ★ 우리가 옮기는 중이면 표시를 건드리지 않습니다.
+           안 그러면 지나가는 십년마다 표시가 옮겨 다녀 <b>어지럽습니다.</b>
+           고른 십년에 머물러 있다가, 멈춘 뒤부터 다시 따라옵니다. */
+      if (krAnim) return;
       if (cur !== krPick) krMark(cur);
     }
     window.addEventListener('scroll', function(){
