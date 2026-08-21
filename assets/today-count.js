@@ -166,31 +166,42 @@
     + '.oc-newmark.two{font-size:10px;padding:3px 5px;letter-spacing:-.03em}'
     + '.oc-newmark .sep{display:inline-block;width:1px;height:7px;margin:0 4px;'
     +   'vertical-align:-1px;background:currentColor;opacity:.45}'
-    /* ★★ 2026-08-21 · <b>좁은 화면에서 카드 이름이 쪼개졌습니다</b> (파트너 지적)
-         배지가 nowrap 이라 안 줄어들고, 좁은 칸에서 <b>이름을 밀어냈습니다</b> —
-         「공 연 정 보」처럼 한 글자씩 세로로 쪼개졌습니다.
-       ▶ 두 가지로 막습니다
-         ① 배지가 <b>줄어들 수 있게</b> (flex-shrink) — 자리가 모자라면
-            배지가 먼저 양보합니다. 이름이 쪼개지는 것보다 낫습니다.
-         ② 좁은 화면에서는 <b>더 작게</b> 하고 왼쪽 여백을 줄입니다.
-       ★ 아주 좁으면(360px 아래) 배지를 <b>감춥니다.</b> 숫자를 보여 주려다
-         카드를 망가뜨리면 안 됩니다 — 이름이 먼저입니다. */
+    /* 카드를 못 찾아 숫자 칸 안에 바로 붙는 화면을 위한 대비 —
+       자리가 모자라면 배지가 먼저 양보합니다. */
     + '.oc-newmark{flex:0 1 auto;min-width:0;overflow:hidden}'
-    /* ★★ 2026-08-21 · <b>좁은 화면에서는 배지를 보여 주지 않습니다</b>
-         ─────────────────────────────────────────────────────────
-       ★ 왜 이렇게 정했나
-         hub.css 866줄부터 1040px 아래에서 카드가 <b>가로 배치</b>가 됩니다 —
-         이름과 숫자가 한 줄에 나란히 놓입니다. 거기에 배지를 넣으니
-         .cm-qlabel 의 overflow-wrap:anywhere 때문에 이름이 <b>한 글자씩
-         쪼개졌습니다</b> — 「공 연 정 보」.
 
-       ★ 아랫줄로 내려 보았으나 <b>실제 화면에서 여전히 어긋났습니다.</b>
-         제 시험판과 실제 화면이 달라 네 번을 헛돌았습니다.
-         ▶ 좁은 화면에서는 <b>보여 주지 않는 것</b>으로 정합니다.
-           숫자보다 <b>이름이 먼저</b>입니다.
-       ★ 넓은 화면(1041px~)에서는 그대로 나옵니다 — 관리자와 PC 방문자는
-         보실 수 있습니다. */
-    + '@media (max-width:1040px){.oc-newmark{display:none}}';
+    /* ★★ 2026-08-21(2차) · 배지를 <b>카드의 독립된 줄</b>로 내립니다
+         ─────────────────────────────────────────────────────────
+       ★ 왜 네 번을 헛돌았나 — <b>두 화면의 원인이 서로 달랐습니다.</b>
+         한쪽 원인만 보고 고쳤으니 다른 쪽은 그대로였습니다.
+
+         · 정보SPOT (.cm-qcard)
+             hub.css 866줄부터 1040px 아래에서 카드가 <b>가로 배치</b>가
+             됩니다. 이름·숫자·배지 셋이 한 줄을 다투는데,
+             .cm-qlabel 에 overflow-wrap:anywhere 가 걸려 있어
+             <b>이름이 먼저 양보</b>합니다 — 「공 연 정 보」.
+
+         · DATABASE (.hub-navcard)
+             이 카드는 <b>가로로 바뀌지 않습니다</b> — 언제나 세로입니다.
+             이름은 nowrap+ellipsis 라 쪼개질 수 없고, 대신
+             <b>숫자+배지가 카드 폭을 넘쳤습니다.</b>
+
+       ▶ 폭을 조금씩 줄여 맞추는 것을 <b>그만둡니다.</b> 네 번 다 그 방식
+         이었고 네 번 다 실패했습니다. 배지를 숫자 옆에서 <b>떼어</b>
+         카드 맨 아랫줄에 놓습니다. 한 줄을 다툴 일이 없어지므로
+         이름도 숫자도 건드려지지 않습니다.
+
+       ★ 그래서 좁은 화면에서도 배지를 <b>다시 켭니다</b> (파트너가 원하신 것).
+       ★ 세로 카드에서는 flex-basis 가 <b>높이</b>를 뜻합니다 — 여기에
+         100% 를 주면 카드가 배로 늘어납니다. 그래서 기본은 width:100%
+         로 두고, 가로 배치가 되는 좁은 화면에서만 flex-basis 를 줍니다. */
+    + '.oc-markrow{display:block;width:100%;flex:0 0 auto;'
+    /* ★ 카드에 이미 gap 이 있습니다(.cm-qcard 10px · .hub-navcard 6px).
+         여기서 여백을 크게 주면 그만큼 더해져 벌어집니다. */
+    +   'margin-top:2px;line-height:1}'
+    + '.oc-markrow .oc-newmark{margin-left:0;overflow:visible}'
+    + '.cm-qcard{flex-wrap:wrap}'
+    + '@media (max-width:1040px){.cm-qcard > .oc-markrow{flex-basis:100%}}';
 
   function injectCss() {
     if (document.getElementById('oc-newmark-css')) return;
@@ -206,11 +217,21 @@
     var el = document.querySelector(sel);
     if (!el) return;
     injectCss();
-    /* 두 번 붙지 않게 — 화면이 숫자를 다시 채워도 배지는 하나뿐이어야 합니다 */
-    var card = el.closest ? el.closest('.cm-qcard') : null;
-    var old = (card || el.parentNode) &&
-              (card || el.parentNode).querySelector('.oc-newmark');
-    if (old) old.parentNode.removeChild(old);
+    /* ★ 카드를 찾습니다 — 화면마다 카드 이름이 다릅니다.
+         .cm-qcard   : 정보SPOT 메인 등 (좁으면 가로 배치)
+         .hub-navcard: DATABASE 메인 (언제나 세로) */
+    var card = el.closest ? el.closest('.cm-qcard, .hub-navcard') : null;
+    var scope = card || el.parentNode;
+
+    /* 두 번 붙지 않게 — 화면이 숫자를 다시 채워도 배지는 하나뿐이어야 합니다.
+       ★ 예전에 숫자 칸 안에 붙던 것도 함께 지웁니다 — 자리를 옮겼으므로
+         묵은 배지가 남아 있으면 둘이 됩니다. */
+    if (scope) {
+      var olds = scope.querySelectorAll('.oc-markrow, .oc-newmark');
+      for (var oi = 0; oi < olds.length; oi++) {
+        if (olds[oi].parentNode) olds[oi].parentNode.removeChild(olds[oi]);
+      }
+    }
 
     /* ★ 배지를 <b>하나에 담습니다.</b> 둘을 나란히 두면 좁은 카드에서
          넘칩니다. 있는 것만 보입니다 —
@@ -233,9 +254,17 @@
       em.textContent = txt[0];
     }
     em.setAttribute('title', '오늘 ' + tip.join(' · '));
-    /* ★ 숫자 칸의 <b>맨 끝</b>에 놓습니다. 바로 뒤에 두면
-         「485 +9 건」처럼 단위 앞에 끼어 읽힙니다. */
-    (el.parentNode || el).appendChild(em);
+    /* ★ 카드를 찾았으면 <b>카드 맨 아랫줄</b>에 놓습니다 — 이름·숫자와
+         한 줄을 다투지 않게 하려는 것입니다.
+       ★ 못 찾았으면(다른 화면) 예전처럼 숫자 칸 끝에 답니다. */
+    if (card) {
+      var row = document.createElement('span');
+      row.className = 'oc-markrow';
+      row.appendChild(em);
+      card.appendChild(row);
+    } else {
+      (el.parentNode || el).appendChild(em);
+    }
   }
 
   /* 「고를 자리=>표이름|조건」 을 세미콜론으로 이은 글을 풀어 냅니다 */
