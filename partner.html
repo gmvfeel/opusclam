@@ -52,7 +52,9 @@
      ★ ①은 <b>건드리지 않습니다.</b> 102개 화면이 함께 쓰는 값이라
        여기서 줄이면 다른 화면이 다 틀어집니다.
      ★ 그래서 ②만 8px 로 줄입니다. 합계 78px 이 됩니다. */
-  .pt-frame{max-width:1000px;margin:8px auto 0;
+  /* ★ 2026-08-21 · 가로폭 1000 → <b>920px</b> (파트너 요청).
+       안쪽 상자(748px)는 그대로이므로, 줄어든 것은 좌우 빈 자리뿐입니다. */
+  .pt-frame{max-width:920px;margin:8px auto 0;
     background:var(--paper,#fff);
     border:3px solid #514a6b;border-radius:12px;
     /* ★★ 2026-08-21 · 위아래도 34/36 → 52/56px 로 늘렸습니다 (파트너 요청).
@@ -81,10 +83,15 @@
        하나를 덜어 두 화면을 같게 두는 편이 낫습니다. */
   /* ★ 액자가 넓어져도 <b>안쪽은 지금 크기 그대로</b>입니다.
        748px = 예전 액자(860) − 좌우 여백(56×2). 파트너가 보시던 폭입니다. */
+  /* ★ 2026-08-21 · <b>바탕색을 뺐습니다</b> (파트너 요청). 테두리만 남깁니다.
+       액자 안에 색이 든 상자가 또 있으면 상자 속 상자로 보입니다.
+       선만 남기면 액자 하나 안에 내용이 놓인 것으로 읽힙니다.
+     ★ 선 색은 조금 <b>진하게</b> 했습니다 — 바탕이 없어지면 옅은 선은
+       흰 종이 위에서 사라져 보입니다. */
   .pt-box{max-width:748px;margin:0 auto;
     padding:30px 34px;border-radius:12px;
-    background:#fbfaf7;border:1px solid var(--line,#efeae0)}
-  html[data-theme="dark"] .pt-box{background:#1a1a1a;border-color:#333}
+    background:transparent;border:1px solid #e2ddd0}
+  html[data-theme="dark"] .pt-box{background:transparent;border-color:#3a3a3a}
 
   /* 안내글도 같은 폭으로 — 액자만 넓어지고 글줄은 그대로여야 합니다 */
   .pt-lead{max-width:748px;margin:0 auto 26px;font-size:14.5px;line-height:1.95;
