@@ -215,3 +215,48 @@ html[data-theme="dark"] .oc-claim-pick .ocp-none.warn{
   .oc-claim-admin .oca-btns{ width:100%; }
   .oc-claim-admin .oca-btns button{ flex:1 1 0 }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-08-21 · 태그 줄에 놓이는 표시들
+   ------------------------------------------------------------------
+   ★ 「공식 인증」과 「Linked」를 <b>이름 옆에서 태그 줄로</b> 옮겼습니다.
+     이름은 30px 이라 한글 기준선과 배지 중앙이 원래 잘 맞지 않아,
+     값을 고쳐도 화면마다 어긋나 보였습니다. 태그 줄은 원래 배지를
+     담는 줄이라 정렬이 저절로 맞고, 「작곡」·「OC」와 같은 성격의
+     표시가 한 줄에 모여 뜻도 잘 맞습니다.
+
+   ★ 상자(.oc-claim-hold) 안에 <b>칸을 나눠</b> 둡니다.
+     배지를 그리는 쪽이 innerHTML 로 덮어쓰기 때문에, 한 자리에
+     둘을 넣으면 먼저 끝나는 쪽이 다른 쪽을 지웁니다.
+   ══════════════════════════════════════════════════════════════════ */
+
+.oc-claim-hold{
+  display:inline-flex; align-items:center; gap:6px;
+  vertical-align:middle; margin:0 4px 3px 0; line-height:1;
+}
+/* 아직 안 채워진 칸이 gap 만큼 헛여백을 만들지 않게 합니다 */
+.oc-claim-hold:empty,
+.oc-claim-hold > span:empty{ display:none }
+
+/* 태그 줄 안에서는 배지 스스로 왼쪽 여백을 갖지 않습니다 — gap 이 맡습니다 */
+.oc-claim-hold .oc-claim-badge{ margin-left:0 }
+.oc-claim-hold .bv-linked{ margin-left:0 }
+
+/* ── 이미 주인이 있는 항목의 「인증 신청」 ──
+   동명이인을 위한 길이므로 <b>조용히</b> 둡니다. 눈에 띄게 하면
+   이미 인증된 항목을 놓고 다투게 부추기는 꼴입니다. */
+.oc-claim-ask.owned{
+  color:var(--text-3,#8f90a6);
+  border-style:solid; border-color:var(--line,#e8e6ef);
+  font-weight:600;
+}
+.oc-claim-ask.owned:hover{
+  color:var(--text-2,#5c5e70); border-color:#d5d5e0;
+}
+
+/* ── 원래부터 규칙이 없던 둘 (2026-08-21 확인 후 보탬) ──
+   .oc-claim-slot  「관계자이신가요?」가 놓이는 자리 (claim.js 가 만듭니다)
+   .ocp-list       고르는 상자 안의 목록 — 후보가 많으면 넘쳐 흐릅니다 */
+.oc-claim-slot{ margin-top:10px }
+.oc-claim-pick .ocp-list{ max-height:280px; overflow:auto }

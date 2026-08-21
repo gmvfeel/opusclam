@@ -62,119 +62,29 @@
        끼어들어 document.currentScript 가 바뀔 수 있습니다. */
   var MY_SCRIPT = document.currentScript;
 
-  var CSS_ID = 'oc-claim-css';
-  /* ★ 클래스 이름은 아래 mountBadge · mountAsk · openForm · mountPicker 가
-       실제로 그리는 것을 <b>그대로 옮겨 적었습니다.</b> 짐작해 적으면
-       규칙이 하나도 안 걸립니다. */
-  var CSS =
-      /* ── 배지를 담는 상자 ──
-         ★ 안에 무엇이 몇 개 들어오든 <b>가운데로 나란히</b> 섭니다.
-           그리고 이 상자 하나만 이름에 맞춥니다.
-         ★ 이름이 30px 이라 middle 로만 세우면 배지가 <b>위로 뜹니다</b> —
-           한글은 x-height 가 로마자와 달라 middle 기준선이 높습니다.
-           그래서 조금 내립니다(.14em ≈ 4px). */
-      '.oc-claim-hold{display:inline-flex;align-items:center;gap:7px;'
-    +   'vertical-align:middle;margin-left:9px;position:relative;top:.14em;'
-    +   'line-height:1}'
-    + '.oc-claim-hold:empty{display:none}'
-      /* 아직 안 채워진 칸이 gap 만큼 헛여백을 만들지 않게 합니다 */
-    + '.oc-claim-hold > span:empty{display:none}'
-    + '.oc-claim-hold .oc-claim-badge{margin-left:0}'
-      /* 게시판에서 쓰는 여백은 상자 안에서 필요 없습니다 — gap 이 맡습니다 */
-    + '.oc-claim-hold .bv-linked{margin-left:0}'
-
-      /* ── 「공식 인증」 — 관리자 화면의 승인 색과 같게 둡니다 ── */
-    + '.oc-claim-badge{display:inline-flex;align-items:center;gap:3px;'
-    +   'font-size:11.5px;font-weight:800;color:#0f7a3d;background:#e2f3e8;'
-    +   'border-radius:99px;padding:3px 9px;margin-left:8px;'
-    +   'vertical-align:middle;line-height:1;white-space:nowrap}'
-    + '.oc-claim-badge svg{flex:0 0 auto}'
-
-      /* ── 「관계자이신가요?」 — 단추 줄 아래 ── */
-    + '.oc-claim-slot{margin-top:10px}'
-    + '.oc-claim-ask{display:inline-flex;align-items:center;gap:6px;'
-    +   'font-size:12.5px;font-weight:700;color:#5f4aa0;background:#f4f1fb;'
-    +   'border:1px solid #e0d8f4;border-radius:8px;padding:8px 13px;'
-    +   'text-decoration:none;cursor:pointer;font-family:inherit;line-height:1.45;'
-    +   'appearance:none;text-align:left}'
-    + '.oc-claim-ask:hover{background:#ece6f8;border-color:#c9bce9}'
-      /* 이미 주인이 있는 항목 — 동명이인을 위한 길이므로 조용히 둡니다.
-         눈에 띄게 하면 인증된 항목을 놓고 다투게 부추기는 꼴입니다. */
-    + '.oc-claim-ask.owned{color:#6b6d80;background:#f5f5f9;border-color:#e2e2ea;'
-    +   'font-weight:600}'
-    + '.oc-claim-ask.owned:hover{background:#eeeef4;border-color:#d5d5e0}'
-    + '.oc-claim-ask.done{color:#0f7a3d;background:#e2f3e8;border-color:#cde5d6;'
-    +   'cursor:default}'
-
-      /* ── 신청 서식 ── */
-    + '.oc-claim-form{border:1px solid #e0d8f4;border-radius:10px;'
-    +   'background:#fbfaff;padding:15px 16px;margin-top:10px;max-width:540px}'
-    + '.ocf-t{font-size:13.5px;font-weight:800;color:#20223a;margin-bottom:12px;'
-    +   'line-height:1.5}'
-    + '.ocf-l{display:block;font-size:11.5px;font-weight:700;color:#5c5e70;'
-    +   'margin:0 0 4px}'
-    + '.ocf-o{font-weight:600;color:#9a9cb0}'
-    + '.ocf-i{width:100%;box-sizing:border-box;padding:9px 11px;'
-    +   'border:1px solid #d8d8e2;border-radius:7px;font-size:13px;'
-    +   'font-family:inherit;background:#fff;color:#20223a;margin-bottom:11px}'
-    + '.ocf-i:focus{outline:none;border-color:#7C63B0}'
-    + '.ocf-ta{min-height:64px;resize:vertical;line-height:1.7}'
-    + '.ocf-note{font-size:12px;color:#6b6d80;line-height:1.7;'
-    +   'background:#fff;border:1px solid #ece8f6;border-radius:7px;'
-    +   'padding:9px 11px;margin-bottom:12px}'
-    + '.ocf-btns{display:flex;gap:7px;flex-wrap:wrap}'
-    + '.ocf-btns button{appearance:none;border:0;border-radius:7px;'
-    +   'padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;'
-    +   'font-family:inherit;background:#5f4aa0;color:#fff}'
-    + '.ocf-btns button:hover{background:#4e3d87}'
-    + '.ocf-no{background:#fff !important;color:#5c5e70 !important;'
-    +   'border:1px solid #cfd0dd !important}'
-    + '.ocf-no:hover{background:#f4f4f8 !important}'
-    + '.ocf-msg{margin-top:9px;font-size:12px;color:#6b6d80;min-height:1em;line-height:1.6}'
-    + '.ocf-msg.bad{color:#a01c1c}'
-    + '.ocf-msg.good{color:#0f7a3d}'
-
-      /* ── 고르는 상자 (가입 화면) ── */
-    + '.oc-claim-pick{border:1px solid #e0d8f4;border-radius:10px;'
-    +   'background:#fbfaff;padding:13px 14px;margin-top:8px}'
-    + '.ocp-head{font-size:12.5px;font-weight:800;color:#20223a;margin-bottom:8px}'
-    + '.ocp-hint{font-size:12px;color:#6b6d80;line-height:1.7;margin-bottom:8px}'
-    + '.ocp-list{max-height:280px;overflow:auto}'
-    + '.ocp-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;'
-    +   'border:1px solid #e6e6ee;border-radius:8px;background:#fff;'
-    +   'padding:9px 11px;margin-bottom:6px;cursor:pointer;font-size:12.5px}'
-    + '.ocp-row:hover{border-color:#c9bce9;background:#fdfcff}'
-    + '.ocp-row input{flex:0 0 auto;margin:0;accent-color:#7C63B0}'
-    + '.ocp-k{flex:0 0 auto;padding:2px 8px;border-radius:5px;font-size:10.5px;'
-    +   'font-weight:800;color:#5f4aa0;background:#efe9fb}'
-    + '.ocp-n{flex:1 1 auto;min-width:0;font-weight:700;color:#20223a;'
-    +   'line-height:1.5}'
-    + '.ocp-e{flex:0 0 auto;color:#8a8c9e;font-size:11.5px}'
-    + '.ocp-v{flex:0 0 auto;color:#5f4aa0;font-size:11.5px;font-weight:700;'
-    +   'text-decoration:none;border:1px solid #e0d8f4;border-radius:6px;'
-    +   'padding:3px 9px;background:#fff}'
-    + '.ocp-v:hover{background:#f4f1fb}'
-    + '.ocp-new{background:#f8f8fc}'
-    + '.ocp-new .ocp-n{font-weight:600;color:#6b6d80}'
-    + '.ocp-none{font-size:12.5px;color:#6b6d80;line-height:1.7;padding:4px 2px}'
-    + '.ocp-none.warn{color:#8a6a2a;background:#fffaf2;border:1px solid #f0e0c4;'
-    +   'border-radius:7px;padding:10px 12px}'
-
-    + '@media(max-width:600px){'
-    +   '.oc-claim-badge{margin-left:6px;font-size:11px;padding:2px 8px}'
-    +   '.oc-claim-form{padding:13px 13px}'
-    +   '.ocp-e{display:none}'
-    + '}';
-
-  function injectCss() {
+  /* ★★ 2026-08-21 · 꾸밈은 <b>assets/claim.css</b> 한 곳에만 둡니다.
+       ★ 제가 한 번 이 파일 안에 CSS 를 적어 넣었습니다 — claim.css 를
+         못 보고 「어디에도 없다」고 판단한 탓입니다. 두 곳에 적히면
+         언젠가 갈라집니다. 되물렸습니다.
+       ★ 다만 claim.css 를 <b>안 부르는 화면</b>이 있습니다
+         (account/join-major · join-school · admin/claims).
+         그 화면들을 하나하나 고치는 대신, 없으면 여기서 답니다 —
+         고칠 자리가 하나로 남습니다. */
+  function ensureCss() {
     try {
-      if (document.getElementById(CSS_ID)) return;
-      var st = document.createElement('style');
-      st.id = CSS_ID; st.textContent = CSS;
-      (document.head || document.documentElement).appendChild(st);
+      if (document.querySelector('link[data-oc-claimcss]')) return;
+      var has = document.querySelectorAll('link[rel="stylesheet"]');
+      for (var i = 0; i < has.length; i++) {
+        if (String(has[i].getAttribute('href') || '').indexOf('claim.css') >= 0) return;
+      }
+      var l = document.createElement('link');
+      l.rel = 'stylesheet';
+      l.href = '/assets/claim.css';
+      l.setAttribute('data-oc-claimcss', '1');
+      (document.head || document.documentElement).appendChild(l);
     } catch (e) { /* 꾸밈이 없어도 글자는 나옵니다 */ }
   }
-  injectCss();
+  ensureCss();
 
   /* ── Supabase 갖추기 ──────────────────────────────────────────
      ★ 반드시 싱글턴 — 이미 있으면 그것을 씁니다. createClient 를
@@ -752,8 +662,6 @@
         setTimeout(function () { attach(n + 1); }, 150);
         return;
       }
-      if (h.querySelector('.oc-claim-hold')) return;    /* 두 번 붙이지 않습니다 */
-
       /* ★★ 2026-08-21 · 배지가 <b>붙었다가 지워지고</b> 있었습니다.
            상세 화면은 자료를 받은 뒤 이름을 이렇게 채웁니다 —
              h.textContent = nm;
@@ -765,25 +673,30 @@
          ▶ 붙여 두고 <b>지켜봅니다.</b> 지워지면 다시 넣습니다.
            15초 뒤에는 그만 봅니다 — 그때쯤이면 이름 채우기가 끝났습니다. */
       /* ── 「공식 인증」·「Linked」 자리 ──
-         ★ 2026-08-21 · 둘이 <b>서로도, 이름과도 어긋나 있었습니다</b>
-           (파트너 지적). 까닭은 둘을 <b>따로</b> 이름 요소에 넣고
-           각자 vertical-align 으로 세운 것입니다. 배지 높이(19px)와
-           Linked 단추 높이(26px)가 다르므로 따로 세우면 맞을 수가
-           없습니다.
-         ▶ <b>한 상자에 담아</b> 그 안에서 가운데로 맞추고, 상자
-           하나만 이름에 맞춥니다. 몇 개가 붙든 나란해집니다.
+         ★★ 2026-08-21 · <b>이름 옆에서 태그 줄로 옮겼습니다</b> (파트너 결정).
+           이름은 30px 이라 한글 기준선과 배지 중앙이 원래 잘 맞지
+           않습니다. 값을 몇 번 고쳐도 화면마다 어긋나 보였습니다.
+           태그 줄(.pv-tags)은 <b>원래 배지를 담는 줄</b>이라 정렬이
+           저절로 맞고, 「작곡」·「OC」와 같은 성격의 표시가 한 줄에
+           모여 뜻도 잘 맞습니다.
+         ★ 태그 줄이 없는 화면이면 예전처럼 이름 옆에 답니다.
 
          ★★ 상자 안에 <b>칸을 나눠</b> 둡니다.
            mountBadge 는 받은 자리에 innerHTML 을 <b>덮어씁니다.</b>
            상자를 통째로 넘기면 그 안의 Linked 자리가 함께 지워집니다 —
            둘이 나란히 도는 터라 <b>먼저 끝나는 쪽이 이깁니다.</b>
            그래서 나올 때도 안 나올 때도 있었습니다. */
+      var host = document.querySelector('.pv-tags') || h;
+      if (host.querySelector('.oc-claim-hold')) return;   /* 두 번 붙이지 않습니다 */
+
       var bslot = document.createElement('span');
       bslot.className = 'oc-claim-hold';
       var bmark = document.createElement('span');   /* 「공식 인증」 자리 */
       bslot.appendChild(bmark);
-      h.appendChild(bslot);
-      guard(h, bslot);
+      host.appendChild(bslot);
+      /* ★ 태그 줄도 tg.innerHTML 로 채워집니다 — 이름 줄과 같습니다.
+           지워지면 다시 넣습니다. */
+      guard(host, bslot);
 
       /* ② 「관계자이신가요?」 — 단추 줄 아래에 둡니다
            ★ 이쪽은 .pv-name <b>바깥</b>이라 지워지지 않습니다. */
