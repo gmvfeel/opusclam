@@ -801,7 +801,23 @@ html[data-theme="dark"] .board-card:hover{background:#000}
 .bv-origtitle{margin:6px 0 0;font-size:13px;color:var(--text-3);line-height:1.6;
   word-break:break-word}
 
-.bv-video{margin:20px 0 22px;padding:0}
+
+/* ══ 오퍼스클램 표식 · 영상 틀 (2026-08-21 · 파트너 요청) ══════
+   ★ 무엇을 푸는가
+     영상이 검은 상자에 덩그러니 놓여 있어 <b>어느 사이트에서 보는지</b>
+     느낌이 나지 않았습니다.
+   ★★ 유튜브 로고를 <b>가리지 않습니다.</b>
+     덮어 가리는 것은 유튜브 약관이 금지하고, 걸리면 API 가 끊겨
+     사이트의 <b>모든 영상이 한꺼번에 멈춥니다.</b> 그래서 재생기
+     <b>바깥</b>에만 손댑니다. 로고는 그대로 남습니다.
+   ★ 표식 모양은 <b>새로 만들지 않았습니다</b> — 이 사이트가 이미 쓰는
+     3px 보라→금 막대(통합검색의 구역 이름 표식)를 그대로 가져왔습니다. */
+.bv-video{margin:20px 0 22px;padding:12px 12px 11px;
+  border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+.bv-video::before{content:'OPUSCLAM';display:block;margin:1px 0 9px 1px;
+  padding-left:11px;font-size:10.5px;font-weight:800;letter-spacing:.18em;
+  color:var(--text-2);
+  background:linear-gradient(180deg,#9C7FD6,#C9A94E) no-repeat left center/3px 11px}
 .bv-video iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;display:block;
   background:#000}
 /* ★★ 2026-08-12 · 재생 단추를 <b>레슨:ON 과 같은 모양</b>으로 ★★

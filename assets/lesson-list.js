@@ -159,10 +159,13 @@
   function embed(provider, id) {
     var src = srcOf(provider, id, false);
     if (!src) return '';
-    return '<div class="ln-embed"><iframe src="' + esc(src) + '"'
+    /* ★ 2026-08-21 · 겉을 한 겹 더 감쌉니다 — 오퍼스클램 표식이 붙을
+         자리입니다(lesson.css 의 .ln-embed-wrap). 재생기 <b>바깥</b>이라
+         유튜브 로고를 가리지 않습니다. */
+    return '<div class="ln-embed-wrap"><div class="ln-embed"><iframe src="' + esc(src) + '"'
       + ' title="강의 영상" loading="lazy" allowfullscreen'
       + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"'
-      + ' referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
+      + ' referrerpolicy="strict-origin-when-cross-origin"></iframe></div></div>';
   }
 
   /* ── 크게 보기 (라이트박스) ─────────────────────────────────
