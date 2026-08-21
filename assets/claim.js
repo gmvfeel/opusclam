@@ -67,8 +67,22 @@
        실제로 그리는 것을 <b>그대로 옮겨 적었습니다.</b> 짐작해 적으면
        규칙이 하나도 안 걸립니다. */
   var CSS =
+      /* ── 배지를 담는 상자 ──
+         ★ 안에 무엇이 몇 개 들어오든 <b>가운데로 나란히</b> 섭니다.
+           그리고 이 상자 하나만 이름에 맞춥니다.
+         ★ 이름이 30px 이라 middle 로만 세우면 배지가 <b>위로 뜹니다</b> —
+           한글은 x-height 가 로마자와 달라 middle 기준선이 높습니다.
+           그래서 조금 내립니다(.14em ≈ 4px). */
+      '.oc-claim-hold{display:inline-flex;align-items:center;gap:7px;'
+    +   'vertical-align:middle;margin-left:9px;position:relative;top:.14em;'
+    +   'line-height:1}'
+    + '.oc-claim-hold:empty{display:none}'
+    + '.oc-claim-hold .oc-claim-badge{margin-left:0}'
+      /* 게시판에서 쓰는 여백은 상자 안에서 필요 없습니다 — gap 이 맡습니다 */
+    + '.oc-claim-hold .bv-linked{margin-left:0}'
+
       /* ── 「공식 인증」 — 관리자 화면의 승인 색과 같게 둡니다 ── */
-      '.oc-claim-badge{display:inline-flex;align-items:center;gap:3px;'
+    + '.oc-claim-badge{display:inline-flex;align-items:center;gap:3px;'
     +   'font-size:11.5px;font-weight:800;color:#0f7a3d;background:#e2f3e8;'
     +   'border-radius:99px;padding:3px 9px;margin-left:8px;'
     +   'vertical-align:middle;line-height:1;white-space:nowrap}'
@@ -82,6 +96,13 @@
     +   'text-decoration:none;cursor:pointer;font-family:inherit;line-height:1.45;'
     +   'appearance:none;text-align:left}'
     + '.oc-claim-ask:hover{background:#ece6f8;border-color:#c9bce9}'
+      /* 이미 주인이 있는 항목 — 동명이인을 위한 길이므로 조용히 둡니다.
+         눈에 띄게 하면 인증된 항목을 놓고 다투게 부추기는 꼴입니다. */
+    + '.oc-claim-ask.owned{color:#6b6d80;background:#f5f5f9;border-color:#e2e2ea;'
+    +   'font-weight:600}'
+    + '.oc-claim-ask.owned:hover{background:#eeeef4;border-color:#d5d5e0}'
+    + '.oc-claim-ask.done{color:#0f7a3d;background:#e2f3e8;border-color:#cde5d6;'
+    +   'cursor:default}'
 
       /* ── 신청 서식 ── */
     + '.oc-claim-form{border:1px solid #e0d8f4;border-radius:10px;'
@@ -211,6 +232,7 @@
   var KINDS = [
     { kind:'persons',          label:'인물',        nameCol:'name_ko', enCol:'name_en', view:'/db/person-view.html',     hasHidden:true,
       who:'사람', ask:'이 분이 본인이신가요',  claimWord:'본인 인증',
+      ownedAsk:'이미 인증된 분이 계십니다 · 다른 분이신가요',
       roleLabel:'직함·활동',   roleHint:'예: 리코더 연주자 · 서울대 교수',
       evidLabel:'확인할 수 있는 곳', evidHint:'누리집·소속 기관 프로필 주소 등' },
     { kind:'orgs',             label:'음악단체',    nameCol:'name_ko', enCol:'name_en', view:'/db/org-view.html',        hasHidden:true  },
@@ -219,10 +241,12 @@
     { kind:'foundations',      label:'기관·재단',   nameCol:'name_ko', enCol:'name_en', view:'/db/foundation-view.html', hasHidden:true  },
     { kind:'modern_composers', label:'현대음악',    nameCol:'name_ko', enCol:'name_en', view:'/db/modern-view.html',     hasHidden:true,
       who:'사람', ask:'이 분이 본인이신가요',  claimWord:'본인 인증',
+      ownedAsk:'이미 인증된 분이 계십니다 · 다른 분이신가요',
       roleLabel:'직함·활동',   roleHint:'예: 작곡가 · 한국예술종합학교 교수',
       evidLabel:'확인할 수 있는 곳', evidHint:'누리집·소속 기관 프로필 주소 등' },
     { kind:'academic',         label:'학술',        nameCol:'title',   enCol:null,      view:'/db/academic-view.html',   hasHidden:false,
       who:'글',   ask:'이 글의 저자이신가요',  claimWord:'저자 인증',
+      ownedAsk:'이미 인증된 저자가 계십니다 · 다른 분이신가요',
       roleLabel:'맡으신 몫',   roleHint:'예: 제1저자 · 공동저자',
       evidLabel:'확인할 수 있는 곳', evidHint:'논문 초록 주소 · 소속 기관 프로필 등' }
   ];
@@ -259,7 +283,15 @@
       roleLabel: '맡으신 일',
       roleHint:  '예: 기획팀장',
       evidLabel: '확인할 수 있는 곳',
-      evidHint:  '누리집의 담당자 안내 주소 등'
+      evidHint:  '누리집의 담당자 안내 주소 등',
+      /* ★ 2026-08-21 · <b>이미 인증된 주인이 있을 때</b> 쓰는 말입니다.
+           숨기지 않는 까닭 — 인물이 15,000명이라 <b>동명이인이 드물지
+           않습니다.</b> 「김형윤」이 두 분일 수 있고, 뒤에 오신 분이
+           자기 항목을 만들 길이 있어야 합니다.
+         ★ 다만 <b>이미 주인이 있다는 것은 알려 드립니다.</b>
+           모르고 청하면 관리자가 거절할 수밖에 없고, 그때는 이미
+           서로 시간을 쓴 뒤입니다. */
+      ownedAsk:  '이미 인증된 관계자가 계십니다 · 다른 곳이신가요'
     };
     return k[key] || DEF[key];
   }
@@ -492,7 +524,9 @@
       slot.className = 'bv-linked';
       slot.setAttribute('data-uid', o.member_id);
       slot.setAttribute('data-name', o.member_name || '이 회원');
-      afterEl.parentNode.insertBefore(slot, afterEl.nextSibling);
+      /* ★ 배지 <b>옆</b>이 아니라 배지가 든 <b>상자 안</b>에 넣습니다.
+           밖에 두면 높이가 달라 서로 어긋납니다. */
+      afterEl.appendChild(slot);
     });
 
     /* linked-ask.js 를 아직 안 실은 화면이면 여기서 싣습니다.
@@ -515,11 +549,19 @@
     el.innerHTML = '';
     var c = sb(); if (!c) return;
 
+    /* ★ 2026-08-21 · <b>이미 인증된 주인이 있는지</b> 봅니다 (파트너 지적).
+         주인이 있는데도 「이 분이 본인이신가요?」가 그대로 떠 있었습니다.
+       ★ 감추지는 않습니다 — 동명이인이 자기 항목을 만들 길이 막힙니다.
+         대신 <b>이미 주인이 있다는 것을 먼저 알려 드립니다.</b> */
+    var bd = await badge(kind, id);
+    var owned = !!(bd && bd.owner_count);
+    var askWord = owned ? wordOf(kind, 'ownedAsk') : askOf(kind);
+
     var m = await me();
     if (!m) {
       el.innerHTML =
         '<a class="oc-claim-ask" href="/account/login.html">' +
-        esc(askOf(kind)) + '? 로그인 후 인증받으실 수 있습니다 &rarr;</a>';
+        esc(askWord) + '? 로그인 후 인증받으실 수 있습니다 &rarr;</a>';
       return;
     }
     if (m.status !== 'approved') return;
@@ -537,8 +579,8 @@
 
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'oc-claim-ask';
-    btn.innerHTML = esc(askOf(kind)) + '? 인증받기 &rarr;';
+    btn.className = 'oc-claim-ask' + (owned ? ' owned' : '');
+    btn.innerHTML = esc(askWord) + '? ' + (owned ? '인증 신청' : '인증받기') + ' &rarr;';
     btn.addEventListener('click', function () { openForm(el, kind, id, name); });
     el.appendChild(btn);
   }
@@ -720,6 +762,14 @@
            회선과 캐시에 따라 순서가 바뀌므로 들쭉날쭉했습니다.
          ▶ 붙여 두고 <b>지켜봅니다.</b> 지워지면 다시 넣습니다.
            15초 뒤에는 그만 봅니다 — 그때쯤이면 이름 채우기가 끝났습니다. */
+      /* ── 「공식 인증」·「Linked」 자리 ──
+         ★ 2026-08-21 · 둘이 <b>서로도, 이름과도 어긋나 있었습니다</b>
+           (파트너 지적). 까닭은 둘을 <b>따로</b> 이름 요소에 넣고
+           각자 vertical-align 으로 세운 것입니다. 배지 높이(19px)와
+           Linked 단추 높이(26px)가 다르므로 따로 세우면 맞을 수가
+           없습니다.
+         ▶ <b>한 상자에 담아</b> 그 안에서 가운데로 맞추고, 상자
+           하나만 이름에 맞춥니다. 몇 개가 붙든 나란해집니다. */
       var bslot = document.createElement('span');
       bslot.className = 'oc-claim-hold';
       h.appendChild(bslot);
