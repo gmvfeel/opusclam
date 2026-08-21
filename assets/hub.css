@@ -358,23 +358,6 @@
   .hub-navcard:hover .hub-navcount b{color:var(--c,#7C63B0)}
   .hub-navcount i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--text-3,#a8aabb)}
 
-  /* ── 새로 들어온 것 배지 (2026-08-21 · 파트너 요청) ─────────────
-     「+12」처럼 지난 하루에 늘어난 수를 숫자 오른쪽에 답니다.
-   ★ :empty 로 <b>빈 것은 자리째 감춥니다.</b> 늘지 않은 카드에 빈 상자가
-     남으면 아홉 칸의 높이가 어긋나 보입니다.
-   ★ 색은 <b>DB 색을 쓰지 않습니다.</b> 이 화면은 「카드는 먹색으로만,
-     색으로 구분하는 곳은 구성 스택바 하나로」라는 규칙을 지키고 있습니다
-     (위 354줄). 새로 들어왔다는 뜻만 한 가지 색으로 알립니다.
-   ★ 깜빡이거나 움직이지 않습니다 — 매일 뜨는 표시라 며칠만 지나면
-     소음이 됩니다. */
-  .hub-navnew{margin-left:auto;align-self:center;font-style:normal;
-    font-size:11px;font-weight:800;letter-spacing:-.02em;line-height:1;
-    padding:3px 7px;border-radius:99px;white-space:nowrap;
-    color:var(--violet,#5A4A7A);background:rgba(156,127,214,.16)}
-  .hub-navnew:empty{display:none}
-  html[data-theme="dark"] .hub-navnew{color:var(--violet-3,#bebebe);
-    background:rgba(255,255,255,.10)}
-
   /* 성장 추이 */
   .hb-stat{display:grid;grid-template-columns:1fr 210px;gap:20px;align-items:stretch;margin-top:2px}
   /* ★ 2026-08-13 · 모바일에서 1열로 (390px 실측)
