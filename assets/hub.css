@@ -1142,9 +1142,3 @@
 @media (max-width:560px){
   .hb-head .hb-more{ font-size:11.5px }
 }
-
-/* ── ② 현황 카드 높이를 줄마다 맞춥니다 ──────────────────────────
-   보강 배지(assets/today-count.js)가 붙은 카드만 아랫줄이 생겨
-   <b>같은 줄인데 높이가 달랐습니다.</b>
-   ▶ 격자 칸을 늘여 채우게 하면 저절로 맞습니다. */
-.cm-quick > .cm-qcard{ align-self:stretch }
