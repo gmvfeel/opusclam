@@ -115,3 +115,38 @@ jobs:
           else
             gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다"
           fi
+
+  # ── 잘 돌면 열려 있던 실패 이슈를 닫습니다 ──────────────────
+  #  ★ 2026-08-21 · 파트너 지적으로 만들었습니다.
+  #    실패하면 이슈가 생기는데 <b>고쳐도 저절로 닫히지 않았습니다.</b>
+  #    그래서 백업은 8/9부터 열흘 넘게 잘 돌고 있었는데도 이슈는
+  #    3주째 열린 채였고, 목록만 보면 「지금도 실패 중」으로 보였습니다.
+  #  ▶ 이제 성공하면 스스로 닫습니다. 열린 이슈 = <b>진짜 지금 실패 중</b>
+  #    이 되어, Issues 탭이 그대로 현황판이 됩니다.
+  #  ★ 없으면 아무 일도 하지 않습니다 — 늘 성공하는 워크플로가
+  #    쓸데없이 무언가를 만들지 않습니다.
+  oc-close-issue:
+    needs: collect
+    if: success()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 열려 있던 실패 이슈를 닫습니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -z "$N" ]; then
+            echo "열린 실패 이슈가 없습니다 — 할 일 없음"
+            exit 0
+          fi
+          B=$(printf '다시 잘 돌았습니다. 이 이슈를 닫습니다.\n\n- 실행 기록 : %s\n- 시각(UTC) : %s' "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          gh issue comment "$N" --body "$B" || echo "::warning::댓글을 달지 못했습니다"
+          gh issue close "$N" || echo "::warning::이슈를 닫지 못했습니다"
+          echo "▶ #$N 을 닫았습니다"
