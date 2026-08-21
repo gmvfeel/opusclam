@@ -112,7 +112,10 @@
         오른쪽 원본과 견주어 고쳐 넣으십시오.<br>
       · <b>사진은 아직 옮겨지지 않습니다.</b> 가입 화면의 사진 칸은 파일을
         올리는 자리가 아직 붙어 있지 않아 저장되지 않습니다. 사진은 나중에
-        인물 항목에서 따로 채워 주십시오.
+        인물 항목에서 따로 채워 주십시오.<br>
+      · 보낸 항목에는 <b>OC 딱지</b>가 켜집니다. 목록에서 이름 옆에 주황
+        <b>OC</b> 표가 붙어 회원이 만든 항목임을 알 수 있고, 정렬에서
+        <b>「OC회원」</b>을 고르면 앞으로 옵니다.
     </div>
   </div>
 
@@ -471,6 +474,7 @@
     if(kind==='persons') sel += ',instrument,school,nationality,description';
     if(kind==='orgs' || kind==='foundations' || kind==='schools') sel += ',location,description';
     if(K.hasHidden) sel += ',hidden';
+    sel += ',is_oc';
 
     var r = await c.from(kind).select(sel).ilike(K.nameCol, name).limit(20);
     if(r.error){
@@ -494,6 +498,7 @@
       if(x.nationality)sub.push(esc(x.nationality));
       if(x.location)   sub.push(esc(x.location));
       if(x.hidden)     sub.push('감춤');
+      if(x.is_oc)      sub.push('OC 회원 표시 있음');
       var d = String(x.description||'').replace(/\s+/g,' ').slice(0,90);
       var href = K.view ? (K.view+'?id='+encodeURIComponent(x.id)) : '';
       return '<div class="cand">'
@@ -582,16 +587,35 @@
       return;
     }
     var newId = r.data.id;
+    var ocOk = await markOc(kind, newId);
     var ok = await linkClaim(m, kind, newId, vals[K.nameCol]);
     btn.disabled = false;
     if(ok){
-      say(m.id, '만들고 이었습니다. (#'+newId+')', 'good');
+      say(m.id, '만들고 이었습니다. (#'+newId+')'
+              + (ocOk ? ' 목록에 OC 딱지가 붙습니다.'
+                      : ' 다만 OC 딱지는 못 붙였습니다 — '+kind+' 표의 is_oc 칸을 확인해 주십시오.'),
+          ocOk ? 'good' : 'bad');
       pn.className = 'panel';
       await load();
     }
   }
 
-  /* ④ 잇기 — entity_claims 에 담습니다
+  /* ── OC 회원 표시 ──────────────────────────────────────────────
+     ★ 표마다 is_oc 칸이 있고, 목록 화면들이 이미 그것을 보고
+       이름 옆에 <b>주황 OC 딱지</b>를 답니다 (assets/base.css 의 .oc-badge).
+       인물·음악단체·공연장·음악학교·기관·재단·현대음악 <b>여섯 목록 모두</b>
+       같은 규칙입니다. 그러니 여기서는 칸만 켜면 됩니다.
+
+     ★ 만들기(insert)에 함께 넣지 않고 <b>따로</b> 켭니다.
+       한 표에라도 그 칸이 없으면 insert 가 통째로 실패해 항목이
+       아예 안 만들어집니다. 따로 두면 딱지만 못 붙고 자료는 남습니다. */
+  async function markOc(kind, id){
+    var c = sb();
+    var r = await c.from(kind).update({ is_oc:true }).eq('id', id);
+    return !r.error;
+  }
+
+  /* ── 잇기 — entity_claims 에 담습니다
        ★ 이미 있으면 새로 넣지 않고 approved 로 <b>고쳐</b> 둡니다.
          같은 회원·같은 항목으로 두 줄이 생기면 안 됩니다. */
   async function linkClaim(m, kind, entityId, entityName){
@@ -626,9 +650,14 @@
 
   async function doLink(m, kind, entityId, entityName){
     say(m.id, '잇는 중…');
-    var ok = await linkClaim(m, kind, Number(entityId), entityName);
+    var id = Number(entityId);
+    var ocOk = await markOc(kind, id);
+    var ok = await linkClaim(m, kind, id, entityName);
     if(ok){
-      say(m.id, '이었습니다.', 'good');
+      say(m.id, '이었습니다.'
+              + (ocOk ? ' 목록에 OC 딱지가 붙습니다.'
+                      : ' 다만 OC 딱지는 못 붙였습니다 — '+kind+' 표의 is_oc 칸을 확인해 주십시오.'),
+          ocOk ? 'good' : 'bad');
       document.getElementById('pn-'+m.id).className = 'panel';
       await load();
     }
