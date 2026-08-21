@@ -143,7 +143,12 @@
     if (!provider || provider === 'none' || !id) return '';
     if (provider === 'youtube') {
       return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id)
-           + '?rel=0&modestbranding=1&playsinline=1' + (autoplay ? '&autoplay=1' : '');
+      /* ★★ 2026-08-21 · modestbranding=1 을 <b>뺐습니다</b>
+           2023년 8월에 폐기되어 아무 효과가 없습니다(유튜브 공식 문서).
+           대신 되는 것을 보탰습니다 —
+             iv_load_policy=3  영상 위에 뜨는 안내 카드 끄기
+             hl=ko             플레이어 말을 한국어로 */
+           + '?rel=0&playsinline=1&iv_load_policy=3&hl=ko' + (autoplay ? '&autoplay=1' : '');
     }
     if (provider === 'vimeo') {
       return 'https://player.vimeo.com/video/' + encodeURIComponent(id)

@@ -1505,11 +1505,27 @@ window.OCBoard = (function () {
 
           function inline() {
             var fr = document.createElement('iframe');
-            fr.src = 'https://www.youtube.com/embed/' + encodeURIComponent(vid)
-                   + '?autoplay=1&rel=0&modestbranding=1';
+            /* ★★ 2026-08-21 · 주소를 손봤습니다
+               ① modestbranding=1 을 <b>뺐습니다.</b> 2023년 8월에 폐기되어
+                  <b>아무 효과가 없습니다</b>(유튜브 공식 문서). 안 듣는 것을
+                  달아 두면 다음에 보는 사람이 「이게 왜 안 되지」 하고 헤맵니다.
+                  ▶ 유튜브 로고는 <b>없앨 수 없습니다.</b> 덮어 가리는 것은
+                    유튜브 약관이 금지하고, 걸리면 API 가 끊겨 <b>사이트의 모든
+                    영상이 한꺼번에 멈춥니다.</b> 그 값을 치를 일이 아닙니다.
+               ② youtube-nocookie 로 바꿨습니다 — 보는 사람 쪽에 쿠키를 덜
+                  남깁니다. 레슨:ON(lesson-list.js)이 이미 쓰는 주소이고,
+                  개인정보처리방침과도 결이 맞습니다.
+               ③ iv_load_policy=3 — 영상 위에 뜨는 안내 카드를 끕니다.
+               ④ playsinline=1 — 아이폰에서 전체화면으로 튀지 않습니다.
+               ⑤ hl=ko — 플레이어 말을 한국어로.
+               ★ rel=0 은 남깁니다. 추천을 <b>없애지는 못하고</b> 같은 채널
+                 것만 보여 줍니다 — 그래도 남의 채널로 새는 것은 막습니다. */
+            fr.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(vid)
+                   + '?autoplay=1&rel=0&iv_load_policy=3&playsinline=1&hl=ko';
             fr.title = document.title;
             fr.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen');
             fr.setAttribute('allowfullscreen', '');
+            fr.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
             btn.replaceWith(fr);
           }
 
