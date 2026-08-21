@@ -218,30 +218,43 @@ html[data-theme="dark"] .oc-claim-pick .ocp-none.warn{
 
 
 /* ══════════════════════════════════════════════════════════════════
-   2026-08-21 · 태그 줄에 놓이는 표시들
+   2026-08-21 · 표시를 <b>두 자리로 나눕니다</b> (파트너 결정)
    ------------------------------------------------------------------
-   ★ 「공식 인증」과 「Linked」를 <b>이름 옆에서 태그 줄로</b> 옮겼습니다.
-     이름은 30px 이라 한글 기준선과 배지 중앙이 원래 잘 맞지 않아,
-     값을 고쳐도 화면마다 어긋나 보였습니다. 태그 줄은 원래 배지를
-     담는 줄이라 정렬이 저절로 맞고, 「작곡」·「OC」와 같은 성격의
-     표시가 한 줄에 모여 뜻도 잘 맞습니다.
+     이름 옆 (.oc-hold-name)  OC · 공식 인증
+                              <b>이 사람이 누구인가</b>를 말하는 표시입니다.
+     태그 줄 (.oc-hold-tags)  + Linked
+                              <b>무엇을 할 수 있는가</b> — 성격이 다릅니다.
 
-   ★ 상자(.oc-claim-hold) 안에 <b>칸을 나눠</b> 둡니다.
-     배지를 그리는 쪽이 innerHTML 로 덮어쓰기 때문에, 한 자리에
-     둘을 넣으면 먼저 끝나는 쪽이 다른 쪽을 지웁니다.
+   ★ 상자 안에 <b>칸을 나눠</b> 둡니다. 배지를 그리는 쪽이 innerHTML 로
+     덮어쓰기 때문에, 한 자리에 둘을 넣으면 먼저 끝나는 쪽이 다른
+     쪽을 지웁니다.
    ══════════════════════════════════════════════════════════════════ */
 
 .oc-claim-hold{
-  display:inline-flex; align-items:center; gap:6px;
-  vertical-align:middle; margin:0 4px 3px 0; line-height:1;
+  display:inline-flex; align-items:center; gap:6px; line-height:1;
 }
 /* 아직 안 채워진 칸이 gap 만큼 헛여백을 만들지 않게 합니다 */
 .oc-claim-hold:empty,
 .oc-claim-hold > span:empty{ display:none }
 
-/* 태그 줄 안에서는 배지 스스로 왼쪽 여백을 갖지 않습니다 — gap 이 맡습니다 */
-.oc-claim-hold .oc-claim-badge{ margin-left:0 }
-.oc-claim-hold .bv-linked{ margin-left:0 }
+/* ── 이름 옆 ──
+   ★ 이름이 30px 이라 middle 로만 세우면 배지가 살짝 뜹니다 —
+     한글은 x-height 가 로마자와 달라 middle 기준선이 높습니다.
+     조금 내려 눈으로 맞춥니다. */
+.pv-name .oc-hold-name{
+  vertical-align:middle; margin-left:10px;
+  position:relative; top:.06em;
+}
+.pv-name .oc-hold-name .oc-claim-badge{ margin-left:0 }
+/* 태그 줄에서 옮겨 온 OC 딱지 — 여기서는 스스로 여백을 갖지 않습니다 */
+.pv-name .oc-hold-name .oc-badge{ margin-left:0; margin-right:0 }
+
+/* ── 태그 줄 ──
+   .tag 와 같은 여백을 써서 저절로 줄 맞춤이 됩니다 */
+.pv-tags .oc-hold-tags{
+  vertical-align:middle; margin:0 4px 3px 0;
+}
+.pv-tags .oc-hold-tags .bv-linked{ margin-left:0 }
 
 /* ── 이미 주인이 있는 항목의 「인증 신청」 ──
    동명이인을 위한 길이므로 <b>조용히</b> 둡니다. 눈에 띄게 하면

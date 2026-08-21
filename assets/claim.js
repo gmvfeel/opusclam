@@ -493,7 +493,12 @@
     btn.type = 'button';
     btn.className = 'oc-claim-ask' + (owned ? ' owned' : '');
     btn.innerHTML = esc(askWord) + '? ' + (owned ? '인증 신청' : '인증받기') + ' &rarr;';
-    btn.addEventListener('click', function () { openForm(el, kind, id, name); });
+    /* ★ 이름을 <b>여기서 다시 읽습니다.</b> 넘겨받은 것은 화면이 자료를
+         받기 전의 보기용 이름일 수 있습니다 (「J. S. Bach」). */
+    btn.addEventListener('click', function () {
+      openForm(el, kind, id, (typeof window.__ocClaimName === 'function')
+                             ? window.__ocClaimName(name) : name);
+    });
     el.appendChild(btn);
   }
 
@@ -643,13 +648,30 @@
     try { id = new URLSearchParams(location.search).get('id'); } catch (e) {}
     if (!id) return;
 
+    /* ★★ 2026-08-21 · 신청 서식 제목에 <b>「J. S. Bach」</b>가 나왔습니다
+         (파트너 지적). 상세 화면의 HTML 에는 자료를 받기 전까지
+         <b>보기용 이름</b>이 적혀 있습니다 —
+           <h2 class="pv-name">J. S. Bach <span…>Johann Sebastian Bach</span></h2>
+         아래 attach 는 「이름이 비어 있지 않으면 다 됐다」고 보므로
+         그 보기용 이름을 진짜로 알고 가져갔습니다.
+       ▶ 이름은 <b>쓸 때 다시 읽습니다.</b> 단추를 누르는 시점이면
+         자료는 이미 채워져 있습니다. 이 이름은 신청 기록의
+         entity_name 으로도 남으므로 틀리면 안 됩니다. */
+    function curName(fallback) {
+      var h = document.querySelector('.pv-name');
+      if (!h) return fallback || '';
+      var t = String(h.textContent || '').trim();
+      var sub = h.querySelector('.pv-name-sub');
+      if (sub) t = t.replace(String(sub.textContent || '').trim(), '').trim();
+      return t || fallback || '';
+    }
+    /* mountAsk 는 이 함수 바깥에 있으므로 여기에 걸어 둡니다 */
+    window.__ocClaimName = curName;
+
     function attach(n) {
       n = n || 0;
       var h = document.querySelector('.pv-name');
-      var nm = h ? String(h.textContent || '').trim() : '';
-      /* 이름 옆에 붙은 원어 이름은 떼고 한국어만 씁니다 */
-      var sub = h ? h.querySelector('.pv-name-sub') : null;
-      if (sub) nm = nm.replace(String(sub.textContent || '').trim(), '').trim();
+      var nm = curName('');
 
       /* ★ 2026-08-21 · 이름만 기다립니다.
            Supabase 는 위에서 <b>스스로 갖추므로</b> 여기서 기다리지
@@ -672,33 +694,63 @@
            회선과 캐시에 따라 순서가 바뀌므로 들쭉날쭉했습니다.
          ▶ 붙여 두고 <b>지켜봅니다.</b> 지워지면 다시 넣습니다.
            15초 뒤에는 그만 봅니다 — 그때쯤이면 이름 채우기가 끝났습니다. */
-      /* ── 「공식 인증」·「Linked」 자리 ──
-         ★★ 2026-08-21 · <b>이름 옆에서 태그 줄로 옮겼습니다</b> (파트너 결정).
-           이름은 30px 이라 한글 기준선과 배지 중앙이 원래 잘 맞지
-           않습니다. 값을 몇 번 고쳐도 화면마다 어긋나 보였습니다.
-           태그 줄(.pv-tags)은 <b>원래 배지를 담는 줄</b>이라 정렬이
-           저절로 맞고, 「작곡」·「OC」와 같은 성격의 표시가 한 줄에
-           모여 뜻도 잘 맞습니다.
-         ★ 태그 줄이 없는 화면이면 예전처럼 이름 옆에 답니다.
+      /* ── 자리를 <b>둘로 나눕니다</b> (2026-08-21 · 파트너 결정) ──
+         ★ 성격이 다른 것을 한 줄에 두면 어느 쪽도 제자리가 아닙니다.
+             이름 옆  : OC · 공식 인증 — <b>이 사람이 누구인가</b>를 말합니다
+             태그 줄  : + Linked      — <b>무엇을 할 수 있는가</b>입니다
+         ★ OC 딱지는 상세 화면이 태그 줄에 그립니다. 화면 일곱 곳을
+           고치는 대신 <b>여기서 이름 옆으로 옮깁니다</b> — 고칠 자리가
+           하나로 남습니다.
 
          ★★ 상자 안에 <b>칸을 나눠</b> 둡니다.
            mountBadge 는 받은 자리에 innerHTML 을 <b>덮어씁니다.</b>
-           상자를 통째로 넘기면 그 안의 Linked 자리가 함께 지워집니다 —
+           상자를 통째로 넘기면 그 안의 다른 것이 함께 지워집니다 —
            둘이 나란히 도는 터라 <b>먼저 끝나는 쪽이 이깁니다.</b>
            그래서 나올 때도 안 나올 때도 있었습니다. */
-      var host = document.querySelector('.pv-tags') || h;
-      if (host.querySelector('.oc-claim-hold')) return;   /* 두 번 붙이지 않습니다 */
+      if (h.querySelector('.oc-claim-hold')) return;   /* 두 번 붙이지 않습니다 */
 
+      /* ① 이름 옆 — OC · 공식 인증 */
       var bslot = document.createElement('span');
-      bslot.className = 'oc-claim-hold';
+      bslot.className = 'oc-claim-hold oc-hold-name';
       var bmark = document.createElement('span');   /* 「공식 인증」 자리 */
       bslot.appendChild(bmark);
-      host.appendChild(bslot);
-      /* ★ 태그 줄도 tg.innerHTML 로 채워집니다 — 이름 줄과 같습니다.
-           지워지면 다시 넣습니다. */
-      guard(host, bslot);
+      h.appendChild(bslot);
 
-      /* ② 「관계자이신가요?」 — 단추 줄 아래에 둡니다
+      /* ② 태그 줄 — Linked */
+      var tags = document.querySelector('.pv-tags');
+      var lslot = null;
+      if (tags) {
+        lslot = document.createElement('span');
+        lslot.className = 'oc-claim-hold oc-hold-tags';
+        tags.appendChild(lslot);
+      } else {
+        lslot = bslot;                 /* 태그 줄이 없으면 이름 옆에 함께 */
+      }
+
+      /* OC 딱지를 태그 줄에서 이름 옆으로 옮깁니다.
+         ★ 태그 줄은 tg.innerHTML 로 다시 채워지므로 그때마다 OC 가
+           되살아납니다. 아래 지켜보기에서 다시 옮깁니다. */
+      function moveOc() {
+        if (!tags) return;
+        var oc = tags.querySelector('.oc-badge');
+        if (oc && oc.parentNode !== bslot) bslot.insertBefore(oc, bslot.firstChild);
+      }
+      moveOc();
+
+      /* 이름 줄·태그 줄 둘 다 innerHTML 로 다시 채워집니다.
+         지워지면 되돌리고, OC 도 다시 옮깁니다. */
+      watch(h, function () {
+        if (!h.contains(bslot)) h.appendChild(bslot);
+        moveOc();
+      });
+      if (tags && lslot !== bslot) {
+        watch(tags, function () {
+          if (!tags.contains(lslot)) tags.appendChild(lslot);
+          moveOc();
+        });
+      }
+
+      /* ③ 「관계자이신가요?」 — 단추 줄 아래에 둡니다
            ★ 이쪽은 .pv-name <b>바깥</b>이라 지워지지 않습니다. */
       var acts = document.querySelector('.pv-actions');
       var aslot = document.createElement('div');
@@ -710,19 +762,22 @@
       ensureSb().then(function (c) {
         if (!c) return;                      /* 못 갖췄으면 화면은 그대로 둡니다 */
         mountBadge(bmark, kind, id);
-        mountLinked(bslot, kind, id);
-        if (aslot) mountAsk(aslot, kind, id, nm);
+        mountLinked(lslot, kind, id);
+        if (aslot) mountAsk(aslot, kind, id, curName(nm));
       });
     }
 
-    /* 지워지면 다시 넣습니다.
-       ★ 이미 들어 있으면 아무것도 하지 않습니다 — 그러지 않으면
-         스스로 일으킨 변화를 다시 보고 끝없이 돕니다. */
-    function guard(host, slot) {
-      if (!window.MutationObserver) return;
-      var obs = new MutationObserver(function () {
-        if (!host.contains(slot)) host.appendChild(slot);
-      });
+    /* 지워지면 되돌립니다.
+       ★ 상세 화면은 자료를 받은 뒤 이름 줄과 태그 줄을 innerHTML 로
+         <b>통째로 다시 채웁니다.</b> 우리가 먼저 붙여 둔 것이 함께
+         날아갑니다. 이것이 「아까는 있었는데 지금은 없다」의 까닭입니다 —
+         우리가 늦게 붙으면 살아남고, 먼저 붙으면 지워집니다.
+       ★ 콜백 안에서 이미 제자리인지 먼저 봅니다. 그러지 않으면
+         스스로 일으킨 변화를 다시 보고 끝없이 돕니다.
+       ★ 15초 뒤에는 그만 봅니다 — 그때쯤이면 채우기가 끝났습니다. */
+    function watch(host, fn) {
+      if (!window.MutationObserver) { fn(); return; }
+      var obs = new MutationObserver(function () { fn(); });
       obs.observe(host, { childList: true });
       setTimeout(function () { obs.disconnect(); }, 15000);
     }
