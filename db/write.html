@@ -1170,6 +1170,60 @@ document.querySelectorAll('.tabs').forEach(function(t){
   var _U='https://ptdxzxkgddvkusamkiol.supabase.co', _K='sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
   var _params=new URLSearchParams(location.search);
   var _db=_params.get('db')||'person', _mode=_params.get('mode')||'new', _id=_params.get('id');
+
+  /* ★★ 2026-08-21 · 로그인 안 한 분에게 <b>폼이 그대로 열렸습니다</b> (파트너 지적)
+       ─────────────────────────────────────────────────────────
+     ★ 무엇이 문제였나
+       화면 위에 「일정 자격을 갖춘 회원만 등록·보강할 수 있습니다」라고
+       적혀 있지만 <b>적는 것을 막지는 않았습니다.</b> 로그인 확인은
+       맨 아래 「보내기」를 누를 때에만 했습니다.
+       ▶ 긴 글을 다 적고 눌러야 「로그인이 필요합니다」가 나옵니다.
+         적으신 것이 날아갈 수 있습니다.
+       ★ 자료가 새지는 <b>않았습니다</b> — 보내는 것은 막고 있었습니다.
+         다만 헛수고를 시킵니다.
+
+     ★ 정보SPOT·커뮤니티는 <b>들어올 때</b> 막습니다
+       assets/board-write.js 의 gate() 가 그 일을 합니다.
+       ▶ <b>같은 방식을 옮깁니다.</b> 새로 만들면 두 화면의 안내가
+         달라지고 나중에 한쪽만 고치는 날이 옵니다.
+
+     ★ 자동으로 로그인 화면으로 <b>보내지 않습니다</b> — 갑자기 튕기면
+       무슨 일인지 모르고, 뒤로 가기로 돌아오면 또 튕깁니다.
+       무엇이 필요한지 알려 드리고 누르게 합니다.
+     ★ 돌아올 자리를 붙여 둡니다 — 로그인 뒤 이 화면으로 되돌아오게. */
+  (function(){
+    var box = document.querySelector('.wr');
+    if (!box) return;
+
+    function needLogin(){
+      var back = '';
+      try { back = '?next=' + encodeURIComponent(location.pathname + location.search); } catch(e){}
+      box.innerHTML =
+        '<div class="wr-top" style="text-align:center;padding:44px 20px">'
+        + '<b style="display:block;font-size:17px;margin-bottom:12px">로그인이 필요한 곳이에요</b>'
+        + '<span style="display:block;line-height:1.9;color:var(--text-2);margin-bottom:26px">'
+        +   'DB 등록·보강은 <b>일정 자격을 갖춘 회원</b>만 하실 수 있어요.<br>'
+        +   '적으신 것이 날아가지 않게 <b>먼저</b> 알려 드립니다.</span>'
+        + '<div style="max-width:260px;margin:0 auto;display:grid;gap:9px">'
+        +   '<a class="wr-btn wr-primary" href="/account/login.html' + back + '">로그인하기</a>'
+        +   '<a class="wr-btn wr-ghost" href="/account/join.html">회원가입</a>'
+        +   '<a class="wr-btn wr-ghost" href="/db/index.html">데이터베이스로</a>'
+        + '</div></div>';
+    }
+
+    /* ★ 확인이 <b>안 될 때는 막지 않습니다.</b> 통신이 늦거나 실패했는데
+         막으면 로그인한 분까지 못 씁니다. 그때는 예전처럼 보낼 때 걸립니다. */
+    try {
+      var _sb = window.__ocSb ||
+                (window.supabase && (window.__ocSb = window.supabase.createClient(_U, _K)));
+      if (_sb && _sb.auth) {
+        _sb.auth.getSession().then(function(r){
+          var u = r && r.data && r.data.session && r.data.session.user;
+          if (!u) needLogin();
+        }).catch(function(){});
+      }
+    } catch(e){}
+  })();
   (function(){ var sel=document.getElementById('wrDbSel'); if(sel) sel.value=_db; })();
   document.querySelectorAll('.wr-mtab').forEach(function(x){x.classList.toggle('active', x.getAttribute('data-mode')===(_mode==='enhance'?'enhance':'new'));});
   document.getElementById('wrModeDesc').textContent=desc[_mode==='enhance'?'enhance':'new'];
