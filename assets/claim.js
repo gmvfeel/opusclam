@@ -728,12 +728,18 @@
       }
 
       /* OC 딱지를 태그 줄에서 이름 옆으로 옮깁니다.
-         ★ 태그 줄은 tg.innerHTML 로 다시 채워지므로 그때마다 OC 가
-           되살아납니다. 아래 지켜보기에서 다시 옮깁니다. */
+         ★ 태그 줄은 tg.innerHTML 로 다시 채워지므로 그때마다 <b>새 OC 가
+           생깁니다.</b> 그냥 옮기면 이름 옆에 둘, 셋 쌓입니다.
+           이미 옮겨 둔 것이 있으면 <b>새로 생긴 쪽을 버립니다.</b> */
       function moveOc() {
         if (!tags) return;
-        var oc = tags.querySelector('.oc-badge');
-        if (oc && oc.parentNode !== bslot) bslot.insertBefore(oc, bslot.firstChild);
+        var fresh = tags.querySelector('.oc-badge');
+        if (!fresh) return;
+        if (bslot.querySelector('.oc-badge')) {
+          if (fresh.parentNode) fresh.parentNode.removeChild(fresh);
+          return;
+        }
+        bslot.insertBefore(fresh, bslot.firstChild);
       }
       moveOc();
 
