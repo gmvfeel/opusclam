@@ -398,6 +398,23 @@
         '공식 인증</span>';
   }
 
+  /* ── OC 딱지 ──────────────────────────────────────────────────
+     ★ 2026-08-21 · <b>DB 의 is_oc 를 직접 봅니다.</b>
+       화면에 이미 그려진 배지를 옮겨 오는 방식은 쓰지 않습니다 —
+       상세 화면의 <b>보기용 마크업</b>에 견본 배지가 박혀 있어,
+       자료가 오기 전에 옮기면 <b>회원이 아닌 인물에도</b> 붙습니다.
+     ★ is_oc 칸이 없는 갈래(학술 등)면 조용히 넘어갑니다. */
+  async function mountOc(el, kind, id) {
+    if (!el) return;
+    var c = sb(); if (!c) return;
+    var r;
+    try {
+      r = await c.from(kind).select('is_oc').eq('id', id).maybeSingle();
+    } catch (e) { return; }
+    if (!r || r.error || !r.data || r.data.is_oc !== true) { el.innerHTML = ''; return; }
+    el.innerHTML = '<span class="oc-badge">OC</span>';
+  }
+
   /* ── ⑤-2 「Linked 청하기」 ────────────────────────────────────
      ★ 2026-08-21 · 파트너 물음 —
        「회원가입 때 Linked 가 기본으로 켜져 있고 손을 안 댔다면,
@@ -716,7 +733,9 @@
       /* ① 이름 옆 — OC · 공식 인증 */
       var bslot = document.createElement('span');
       bslot.className = 'oc-claim-hold oc-hold-name';
-      var bmark = document.createElement('span');   /* 「공식 인증」 자리 */
+      var ocmark = document.createElement('span');  /* OC 딱지 자리 */
+      var bmark  = document.createElement('span');  /* 「공식 인증」 자리 */
+      bslot.appendChild(ocmark);
       bslot.appendChild(bmark);
       h.appendChild(bslot);
 
@@ -731,32 +750,35 @@
         lslot = bslot;                 /* 태그 줄이 없으면 이름 옆에 함께 */
       }
 
-      /* OC 딱지를 태그 줄에서 이름 옆으로 옮깁니다.
-         ★ 태그 줄은 tg.innerHTML 로 다시 채워지므로 그때마다 <b>새 OC 가
-           생깁니다.</b> 그냥 옮기면 이름 옆에 둘, 셋 쌓입니다.
-           이미 옮겨 둔 것이 있으면 <b>새로 생긴 쪽을 버립니다.</b> */
-      function moveOc() {
+      /* ── OC 딱지 ──
+         ★★ 2026-08-21 · 태그 줄에 있는 것을 <b>옮겨 오면 안 됩니다</b>
+           (파트너 지적 — 회원이 아닌 인물에도 다 붙었습니다).
+           상세 화면 HTML 에는 자료를 받기 전까지 <b>보기용 마크업</b>이
+           들어 있고, 거기에 OC 배지가 박혀 있습니다
+           (db/person-view.html 338줄 — J. S. Bach 견본).
+           자료가 오면 tg.innerHTML 로 덮여 사라지는데, 그 <b>전에</b>
+           옮겨 버리면 이름 옆에서 살아남습니다. 그래서 <b>모든 인물</b>에
+           딱지가 붙었습니다.
+         ▶ 옮기지 않습니다. <b>DB 의 is_oc 를 직접 보고</b> 그립니다.
+         ★ 태그 줄에 남은 것은 지웁니다 — 이름 옆으로 자리를 옮겼으므로
+           두 군데 있으면 안 됩니다. */
+      function stripTagOc() {
         if (!tags) return;
-        var fresh = tags.querySelector('.oc-badge');
-        if (!fresh) return;
-        if (bslot.querySelector('.oc-badge')) {
-          if (fresh.parentNode) fresh.parentNode.removeChild(fresh);
-          return;
-        }
-        bslot.insertBefore(fresh, bslot.firstChild);
+        var oc = tags.querySelector('.oc-badge');
+        if (oc && oc.parentNode) oc.parentNode.removeChild(oc);
       }
-      moveOc();
+      stripTagOc();
 
       /* 이름 줄·태그 줄 둘 다 innerHTML 로 다시 채워집니다.
          지워지면 되돌리고, OC 도 다시 옮깁니다. */
       watch(h, function () {
         if (!h.contains(bslot)) h.appendChild(bslot);
-        moveOc();
+        stripTagOc();
       });
       if (tags && lslot !== bslot) {
         watch(tags, function () {
           if (!tags.contains(lslot)) tags.appendChild(lslot);
-          moveOc();
+          stripTagOc();
         });
       }
 
@@ -771,6 +793,7 @@
 
       ensureSb().then(function (c) {
         if (!c) return;                      /* 못 갖췄으면 화면은 그대로 둡니다 */
+        mountOc(ocmark, kind, id);
         mountBadge(bmark, kind, id);
         mountLinked(lslot, kind, id);
         if (aslot) mountAsk(aslot, kind, id, curName(nm));

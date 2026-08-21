@@ -253,7 +253,7 @@ html[data-theme="dark"] .oc-claim-pick .ocp-none.warn{
   position:relative; top:.06em;
 }
 .pv-name .oc-hold-name .oc-claim-badge{ margin-left:0 }
-/* 태그 줄에서 옮겨 온 OC 딱지 — 여기서는 스스로 여백을 갖지 않습니다 */
+/* 이름 옆 OC 딱지 — 여기서는 스스로 여백을 갖지 않습니다(gap 이 맡습니다) */
 .pv-name .oc-hold-name .oc-badge{ margin-left:0; margin-right:0 }
 
 /* ── 태그 줄 ──
