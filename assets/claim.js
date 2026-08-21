@@ -77,6 +77,8 @@
     +   'vertical-align:middle;margin-left:9px;position:relative;top:.14em;'
     +   'line-height:1}'
     + '.oc-claim-hold:empty{display:none}'
+      /* 아직 안 채워진 칸이 gap 만큼 헛여백을 만들지 않게 합니다 */
+    + '.oc-claim-hold > span:empty{display:none}'
     + '.oc-claim-hold .oc-claim-badge{margin-left:0}'
       /* 게시판에서 쓰는 여백은 상자 안에서 필요 없습니다 — gap 이 맡습니다 */
     + '.oc-claim-hold .bv-linked{margin-left:0}'
@@ -769,9 +771,17 @@
            Linked 단추 높이(26px)가 다르므로 따로 세우면 맞을 수가
            없습니다.
          ▶ <b>한 상자에 담아</b> 그 안에서 가운데로 맞추고, 상자
-           하나만 이름에 맞춥니다. 몇 개가 붙든 나란해집니다. */
+           하나만 이름에 맞춥니다. 몇 개가 붙든 나란해집니다.
+
+         ★★ 상자 안에 <b>칸을 나눠</b> 둡니다.
+           mountBadge 는 받은 자리에 innerHTML 을 <b>덮어씁니다.</b>
+           상자를 통째로 넘기면 그 안의 Linked 자리가 함께 지워집니다 —
+           둘이 나란히 도는 터라 <b>먼저 끝나는 쪽이 이깁니다.</b>
+           그래서 나올 때도 안 나올 때도 있었습니다. */
       var bslot = document.createElement('span');
       bslot.className = 'oc-claim-hold';
+      var bmark = document.createElement('span');   /* 「공식 인증」 자리 */
+      bslot.appendChild(bmark);
       h.appendChild(bslot);
       guard(h, bslot);
 
@@ -786,7 +796,7 @@
 
       ensureSb().then(function (c) {
         if (!c) return;                      /* 못 갖췄으면 화면은 그대로 둡니다 */
-        mountBadge(bslot, kind, id);
+        mountBadge(bmark, kind, id);
         mountLinked(bslot, kind, id);
         if (aslot) mountAsk(aslot, kind, id, nm);
       });
