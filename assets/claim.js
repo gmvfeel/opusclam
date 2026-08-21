@@ -454,7 +454,60 @@
         '공식 인증</span>';
   }
 
-  /* ── ⑤ 「관계자이신가요?」 단추 ───────────────────────────────
+  /* ── ⑤-2 「Linked 청하기」 ────────────────────────────────────
+     ★ 2026-08-21 · 파트너 물음 —
+       「회원가입 때 Linked 가 기본으로 켜져 있고 손을 안 댔다면,
+         인물 상세에도 Linked 표시가 나와야 하는 것 아닌가?」
+       맞습니다. 자리만 없었습니다.
+
+     ★ 단추를 <b>새로 만들지 않습니다.</b> 게시판에서 쓰고 있는
+       assets/linked-ask.js 를 그대로 씁니다. 그 파일은
+         <span class="bv-linked" data-uid="…" data-name="…"></span>
+       라는 <b>빈 자리</b>를 찾아 채우고, 화면이 바뀌는 것도 스스로
+       지켜봅니다. 우리는 자리만 놓으면 됩니다.
+       ▶ 「청할 수 있는가」(안 받겠다 · 차단 · 30일 · 이미 이어짐)는
+         모두 그 파일과 oc_link_can_ask 가 판단합니다. 규칙을 여기
+         다시 적으면 두 곳이 갈라집니다.
+
+     ★ 주인이 누구인지는 <b>함수에게만</b> 묻습니다 (oc_entity_owner).
+       entity_claims 를 열면 연락처·증빙까지 새어 나갑니다.
+       함수는 아이디와 표시 이름만 내줍니다. */
+  async function mountLinked(afterEl, kind, id) {
+    if (!afterEl || !afterEl.parentNode) return;
+    var c = sb(); if (!c) return;
+
+    var r;
+    try {
+      r = await c.rpc('oc_entity_owner', { p_kind: kind, p_id: Number(id) });
+    } catch (e) { return; }
+    /* 함수가 아직 없으면(SQL 을 안 돌린 상태) 조용히 넘어갑니다 —
+       단추가 안 보일 뿐 화면이 깨지지 않아야 합니다. */
+    if (!r || r.error || !r.data || !r.data.length) return;
+
+    var seen = {};
+    r.data.forEach(function (o) {
+      if (!o || !o.member_id || seen[o.member_id]) return;
+      seen[o.member_id] = 1;
+      var slot = document.createElement('span');
+      slot.className = 'bv-linked';
+      slot.setAttribute('data-uid', o.member_id);
+      slot.setAttribute('data-name', o.member_name || '이 회원');
+      afterEl.parentNode.insertBefore(slot, afterEl.nextSibling);
+    });
+
+    /* linked-ask.js 를 아직 안 실은 화면이면 여기서 싣습니다.
+       ★ 깃발은 board.js 가 쓰는 것과 <b>같은 이름</b>이어야 합니다.
+         다른 이름을 쓰면 게시판 화면에서 두 번 실려 훑개가 둘이 됩니다. */
+    if (!window.__ocLinkedAsk) {
+      window.__ocLinkedAsk = true;
+      var s = document.createElement('script');
+      s.src = '/assets/linked-ask.js';
+      s.onerror = function () { /* 못 받아도 화면은 그대로 돕니다 */ };
+      (document.head || document.documentElement).appendChild(s);
+    }
+  }
+
+  /* ── ⑥ 「관계자이신가요?」 단추 ───────────────────────────────
      ★ 상세 화면에 둡니다. DB 를 보러 온 사람이 회원이 되는 <b>되돌아오는 길</b>입니다.
      ★ 이미 이어진 항목이거나 내가 신청해 둔 것이면 보여 주지 않습니다. */
   async function mountAsk(el, kind, id, name) {
@@ -684,6 +737,7 @@
       ensureSb().then(function (c) {
         if (!c) return;                      /* 못 갖췄으면 화면은 그대로 둡니다 */
         mountBadge(bslot, kind, id);
+        mountLinked(bslot, kind, id);
         if (aslot) mountAsk(aslot, kind, id, nm);
       });
     }

@@ -31,6 +31,62 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
 (function () {
   'use strict';
 
+  /* ══════════════════════════════════════════════════════════════
+     ★★ 2026-08-21 · 꾸밈을 <b>이 파일로 옮겼습니다</b>
+
+     여태 .oc-lk-btn 규칙은 assets/board.css 에만 있었습니다. 게시판
+     화면은 그 파일을 부르니 괜찮았는데, <b>DB 상세 화면은 부르지
+     않습니다.</b> 그래서 인물·단체 상세에 이 단추를 놓으면 맨 글자로만
+     보였습니다.
+
+     ▶ 단추를 그리는 곳과 꾸미는 곳을 <b>한 파일에</b> 둡니다.
+       board.css 에서는 뺐습니다 — 두 곳에 적으면 언젠가 갈라집니다.
+     ★ 값은 board.css 에 있던 것을 <b>그대로</b> 옮겼습니다.
+       게시판 화면의 모양이 달라지지 않아야 합니다.
+     ══════════════════════════════════════════════════════════════ */
+  var CSS_ID = 'oc-lk-css';
+  var CSS =
+      '.bv-linked{display:inline-flex;vertical-align:middle;margin-left:7px}'
+    + '.oc-lk-btn{display:inline-flex;align-items:center;gap:4px;'
+    +   'height:26px;padding:0 11px;border-radius:999px;'
+    +   'font-family:inherit;font-size:11.5px;font-weight:800;line-height:1;'
+    +   'letter-spacing:.01em;color:#fff;'
+    +   'background:linear-gradient(135deg,#7a5cc4,#5b4b9e);border:0;'
+    +   'box-shadow:0 2px 7px -2px rgba(91,75,158,.55);'
+    +   'cursor:pointer;white-space:nowrap;'
+    +   'transition:filter .15s ease,box-shadow .15s ease,transform .15s ease}'
+    + '.oc-lk-btn:hover{filter:brightness(1.09);'
+    +   'box-shadow:0 4px 12px -3px rgba(91,75,158,.6);'
+    +   'transform:translateY(-1px)}'
+    + '.oc-lk-btn i{font-style:normal;font-size:12.5px;font-weight:800}'
+      /* 이미 이어졌거나 청한 사이 — 누를 수 없습니다 */
+    + '.oc-lk-btn.off{color:var(--text-3,#8a8ca0);background:rgba(0,0,0,.04);'
+    +   'border:1px solid rgba(0,0,0,.10);box-shadow:none;'
+    +   'font-weight:700;cursor:default}'
+    + '.oc-lk-btn.off:hover{filter:none;transform:none;box-shadow:none;'
+    +   'background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.10)}'
+    + '@media (max-width:860px){'
+    +   '.oc-lk-btn{height:28px;padding:0 12px;font-size:12px}}'
+      /* 짧은 알림 */
+    + '.oc-lk-toast{position:fixed;left:50%;bottom:34px;'
+    +   'transform:translate(-50%,14px);'
+    +   'background:rgba(30,26,52,.94);color:#fff;'
+    +   'font-size:13px;font-weight:600;line-height:1.5;'
+    +   'padding:12px 20px;border-radius:999px;'
+    +   'box-shadow:0 10px 30px -10px rgba(20,14,45,.5);'
+    +   'opacity:0;transition:opacity .2s ease,transform .2s ease;'
+    +   'z-index:9999;pointer-events:none;max-width:86vw;text-align:center}'
+    + '.oc-lk-toast.go{opacity:1;transform:translate(-50%,0)}';
+
+  (function injectCss() {
+    try {
+      if (document.getElementById(CSS_ID)) return;
+      var st = document.createElement('style');
+      st.id = CSS_ID; st.textContent = CSS;
+      (document.head || document.documentElement).appendChild(st);
+    } catch (e) { /* 꾸밈이 없어도 단추는 눌립니다 */ }
+  })();
+
   var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
   var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
 

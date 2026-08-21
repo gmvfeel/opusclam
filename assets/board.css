@@ -1204,68 +1204,12 @@ img.oc-imgload{
 }
 
 
-/* ══ Linked 청하기 단추 (assets/linked-ask.js) ═════════════════
-   글 상세에서 <b>글 쓴 사람 옆</b>에 놓입니다.
-
-   ★ <b>눈에 띄게</b> 바꿨습니다 (2026-08-05 · 파트너 지시)
-     예전에는 옅은 보라 테두리에 옅은 바탕이라 <b>글쓴이 이름에 묻혔습니다.</b>
-     회원이 서로 이어지는 것이 오퍼스클램의 뼈대이므로, 「청할 수 있다」는
-     것이 <b>바로 보여야</b> 합니다.
-       · 바탕을 <b>채웁니다</b>(보라 그라데이션) + 흰 글자
-       · 조금 크게 (22 → 26px · 10.5 → 11.5px)
-       · 옅은 그림자로 <b>떠 보이게</b>
-   ★ 이미 이어졌거나 청한 사이(.off)는 <b>그대로 조용히</b> 둡니다 —
-     누를 수 없는 것을 눈에 띄게 하면 헛되게 시선을 끕니다. */
-.bv-linked{ display:inline-flex;vertical-align:middle;margin-left:7px }
-
-.oc-lk-btn{
-  display:inline-flex;align-items:center;gap:4px;
-  height:26px;padding:0 11px;border-radius:999px;
-  font-family:inherit;font-size:11.5px;font-weight:800;line-height:1;
-  letter-spacing:.01em;
-  color:#fff;
-  background:linear-gradient(135deg,#7a5cc4,#5b4b9e);
-  border:0;
-  box-shadow:0 2px 7px -2px rgba(91,75,158,.55);
-  cursor:pointer;white-space:nowrap;
-  transition:filter .15s ease,box-shadow .15s ease,transform .15s ease;
-}
-.oc-lk-btn:hover{
-  filter:brightness(1.09);
-  box-shadow:0 4px 12px -3px rgba(91,75,158,.6);
-  transform:translateY(-1px);
-}
-.oc-lk-btn i{ font-style:normal;font-size:12.5px;font-weight:800 }
-/* 이미 이어졌거나 청한 사이 — 누를 수 없습니다 */
-.oc-lk-btn.off{
-  color:var(--text-3,#8a8ca0);
-  background:rgba(0,0,0,.04);
-  border:1px solid rgba(0,0,0,.10);
-  box-shadow:none;
-  font-weight:700;
-  cursor:default;
-}
-.oc-lk-btn.off:hover{
-  filter:none; transform:none; box-shadow:none;
-  background:rgba(0,0,0,.04); border-color:rgba(0,0,0,.10);
-}
-
-@media (max-width:860px){
-  /* 모바일에서 누르기 쉽게 */
-  .oc-lk-btn{ height:28px;padding:0 12px;font-size:12px }
-}
-
-/* 짧은 알림 */
-.oc-lk-toast{
-  position:fixed;left:50%;bottom:34px;transform:translate(-50%,14px);
-  background:rgba(30,26,52,.94);color:#fff;
-  font-size:13px;font-weight:600;line-height:1.5;
-  padding:12px 20px;border-radius:999px;
-  box-shadow:0 10px 30px -10px rgba(20,14,45,.5);
-  opacity:0;transition:opacity .2s ease,transform .2s ease;
-  z-index:9999;pointer-events:none;max-width:86vw;text-align:center;
-}
-.oc-lk-toast.go{ opacity:1;transform:translate(-50%,0) }
+/* ══ Linked 청하기 단추 ═══════════════════════════════════════
+   ★ 2026-08-21 · 꾸밈을 <b>assets/linked-ask.js 로 옮겼습니다.</b>
+     그 단추를 DB 상세 화면(인물·단체·학교…)에도 놓게 되었는데,
+     상세 화면은 이 파일을 부르지 않아 맨 글자로만 보였습니다.
+     단추를 그리는 곳과 꾸미는 곳을 한 파일에 두었습니다.
+   ★ 값은 그대로 옮겼으므로 게시판 모양은 달라지지 않습니다. */
 
 /* ── 유료 등재 배지 ────────────────────────────────────────
    콩쿨 목록에서 「후원 공고」·「대표 공고」를 알아보게 합니다.
