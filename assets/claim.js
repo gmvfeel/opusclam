@@ -655,13 +655,25 @@
         setTimeout(function () { attach(n + 1); }, 150);
         return;
       }
-      if (h.querySelector('.oc-claim-badge')) return;   /* 두 번 붙이지 않습니다 */
+      if (h.querySelector('.oc-claim-hold')) return;    /* 두 번 붙이지 않습니다 */
 
-      /* ① 이름 옆에 「공식 인증」 */
+      /* ★★ 2026-08-21 · 배지가 <b>붙었다가 지워지고</b> 있었습니다.
+           상세 화면은 자료를 받은 뒤 이름을 이렇게 채웁니다 —
+             h.textContent = nm;
+           textContent 에 값을 넣으면 그 요소의 <b>자식이 전부 지워집니다.</b>
+           우리가 먼저 붙여 둔 배지도 함께 날아갑니다.
+         ★ 이것이 「아까는 있었는데 지금은 없다」의 까닭입니다.
+           우리가 <b>늦게</b> 붙으면 살아남고, <b>먼저</b> 붙으면 지워집니다.
+           회선과 캐시에 따라 순서가 바뀌므로 들쭉날쭉했습니다.
+         ▶ 붙여 두고 <b>지켜봅니다.</b> 지워지면 다시 넣습니다.
+           15초 뒤에는 그만 봅니다 — 그때쯤이면 이름 채우기가 끝났습니다. */
       var bslot = document.createElement('span');
+      bslot.className = 'oc-claim-hold';
       h.appendChild(bslot);
+      guard(h, bslot);
 
-      /* ② 「관계자이신가요?」 — 단추 줄 아래에 둡니다 */
+      /* ② 「관계자이신가요?」 — 단추 줄 아래에 둡니다
+           ★ 이쪽은 .pv-name <b>바깥</b>이라 지워지지 않습니다. */
       var acts = document.querySelector('.pv-actions');
       var aslot = document.createElement('div');
       aslot.className = 'oc-claim-slot';
@@ -674,6 +686,18 @@
         mountBadge(bslot, kind, id);
         if (aslot) mountAsk(aslot, kind, id, nm);
       });
+    }
+
+    /* 지워지면 다시 넣습니다.
+       ★ 이미 들어 있으면 아무것도 하지 않습니다 — 그러지 않으면
+         스스로 일으킨 변화를 다시 보고 끝없이 돕니다. */
+    function guard(host, slot) {
+      if (!window.MutationObserver) return;
+      var obs = new MutationObserver(function () {
+        if (!host.contains(slot)) host.appendChild(slot);
+      });
+      obs.observe(host, { childList: true });
+      setTimeout(function () { obs.disconnect(); }, 15000);
     }
 
     if (document.readyState === 'loading')
