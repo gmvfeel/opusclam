@@ -127,6 +127,81 @@ window.OCHub = (function () {
       });
   }
 
+  /* ── 「새로 들어온 것」 세기 (2026-08-21 · 파트너 요청) ────────
+     ★ 무엇을 푸는가 — 자료는 매일 쌓이는데 화면은 <b>총합만</b> 보여
+       주어, 이곳이 살아 움직이는지 알 수 없었습니다.
+     ★ 기준은 <b>지난 24시간</b>입니다.
+       「오늘(자정 기준)」로 하면 새벽에는 온통 0이 되고, 수집이 도는
+       시각에 따라 온종일 0일 수도 있습니다. 「최근 7일」로 하면 거의
+       늘 붙어 있어 표시가 무뎌집니다. 굴러가는 하루가 둘 사이입니다.
+     ★ SQL 을 새로 만들지 않습니다 — created_at 은 모든 표에 있고
+       (「새로 등록된 Database」가 이미 그 칸을 씁니다), 세는 조건만
+       하나 더 붙이면 됩니다.
+     ★ hidden 조건은 카드 숫자와 <b>똑같이</b> 겁니다. 다르면 「전체
+       16,249건인데 어제 +900」 같은 앞뒤 안 맞는 말이 나옵니다. */
+  var NEW_HOURS = 24;
+
+  function askNew(src) {
+    var since = new Date(Date.now() - NEW_HOURS * 3600 * 1000).toISOString();
+    var url = SB_URL + '/rest/v1/' + src.table + '?select=id'
+            + (src.noHidden ? '' : '&hidden=is.false')
+            + '&created_at=gte.' + encodeURIComponent(since)
+            + '&limit=1';
+    return fetch(url, { headers: Object.assign({ Prefer: 'count=exact', Range: '0-0' }, HDR) })
+      .then(function (r) {
+        if (!r.ok) return null;
+        var cr = r.headers.get('content-range');
+        if (!cr) return null;
+        var q = cr.split('/')[1];
+        return (q && q !== '*') ? (parseInt(q, 10) || 0) : null;
+      })
+      .catch(function () { return null; });   /* 못 세면 배지만 없습니다 */
+  }
+
+  /* ★ 비용 — 세는 조회가 표마다 하나씩 더 붙습니다.
+       그래서 <b>여섯 시간에 한 번만</b> 묻고 브라우저에 담아 둡니다.
+       같은 분이 하루에 여러 번 들어오셔도 조회는 네 번뿐입니다.
+     ★ 담아 둔 값을 <b>먼저 그리고</b> 뒤에서 갱신합니다 — 숫자가 깜빡이지
+       않고, 통신이 안 되어도 지난 값이 남습니다. */
+  var NEW_KEY = 'oc-hub-new', NEW_TTL = 6 * 3600 * 1000;
+
+  function readNewCache() {
+    try {
+      var o = JSON.parse(localStorage.getItem(NEW_KEY) || 'null');
+      if (o && o.n) return o;
+    } catch (e) {}
+    return null;
+  }
+  function writeNewCache(n) {
+    try { localStorage.setItem(NEW_KEY, JSON.stringify({ t: Date.now(), n: n })); } catch (e) {}
+  }
+
+  function paintNew(box, key, n) {
+    if (!box) return;
+    var el = box.querySelector('[data-n="' + key + '"]');
+    if (!el) return;
+    /* 0 이거나 못 센 것은 <b>아무것도 붙이지 않습니다</b> —
+       모든 카드에 무언가 붙으면 아무것도 눈에 띄지 않습니다. */
+    if (!n || n < 1) { el.textContent = ''; el.removeAttribute('title'); return; }
+    el.textContent = '+' + Number(n).toLocaleString();
+    el.setAttribute('title', '지난 하루 동안 ' + Number(n).toLocaleString() + '건 새로 들어왔습니다');
+  }
+
+  function fillNew(box, srcs) {
+    if (!box) return;
+    var cached = readNewCache();
+    if (cached) srcs.forEach(function (s) { paintNew(box, s.key, cached.n[s.key]); });
+    if (cached && (Date.now() - (cached.t || 0)) < NEW_TTL) return;   /* 아직 싱싱합니다 */
+
+    var got = {};
+    Promise.all(srcs.map(function (s) {
+      return askNew(s).then(function (n) {
+        if (n != null) { got[s.key] = n; paintNew(box, s.key, n); }
+        else if (cached && cached.n[s.key] != null) got[s.key] = cached.n[s.key];
+      });
+    })).then(function () { writeNewCache(got); });
+  }
+
   /* 한 항목을 공통 모양으로 */
   function norm(src, r, dateCol) {
     return {
@@ -292,7 +367,10 @@ window.OCHub = (function () {
       var col = DB_COLOR[s.key] || '#8b95a8';
       return '<a class="hub-navcard" href="' + esc(s.list) + '" style="--c:' + col + '">'
         + '<span class="hub-navlabel">' + esc(s.label) + '</span>'
-        + '<span class="hub-navcount"><b data-k="' + esc(s.key) + '">—</b><i>건</i></span>'
+        + '<span class="hub-navcount"><b data-k="' + esc(s.key) + '">—</b><i>건</i>'
+        /* ★ 새로 들어온 것 배지 — 값이 없으면 빈 채로 두어 자리를 차지하지
+             않습니다(:empty 로 감춥니다). 늘어난 카드만 눈에 띕니다. */
+        +   '<em class="hub-navnew" data-n="' + esc(s.key) + '"></em></span>'
         + '</a>';
     }).join('');
   }
@@ -307,7 +385,7 @@ window.OCHub = (function () {
     var richBox = cfg.rich ? document.querySelector(cfg.rich) : null;
     var totalEl = cfg.counter ? document.querySelector(cfg.counter) : null;
 
-    if (cardsBox) drawCards(cardsBox, srcs);
+    if (cardsBox) { drawCards(cardsBox, srcs); fillNew(cardsBox, srcs); }
     if (latestBox) latestBox.innerHTML = skelRows(6);
     if (freshBox) freshBox.innerHTML = skelCards(4);
     if (richBox) richBox.innerHTML = skelCards(4);
