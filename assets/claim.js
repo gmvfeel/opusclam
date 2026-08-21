@@ -34,6 +34,157 @@
 (function () {
   'use strict';
 
+  /* ══════════════════════════════════════════════════════════════
+     ★★ 2026-08-21 · 상세 화면에 인증 표시가 <b>한 번도 안 나오고
+        있었습니다</b> (파트너 지적)
+
+     붙일 자리도 부르는 곳도 다 있었는데, 두 가지가 빠져 있었습니다.
+
+     ① Supabase 를 <b>남이 만들어 주기를 기다렸습니다</b>
+        sb() 는 window.__ocSb 를 그대로 쓸 뿐 스스로 만들지 않습니다.
+        그 싱글턴은 assets/app.js 가 <b>헤더의 로그인 링크를 찾은 뒤</b>
+        CDN 에서 supabase-js 를 받아 만듭니다. 헤더는 include.js 가
+        따로 받아 오므로, 아래 attach() 가 기다리는 <b>3초</b>를
+        넘기는 일이 잦습니다. 그러면 조용히 그만두고 표시가 안 붙습니다.
+        ▶ 여기서 <b>스스로</b> 갖춥니다. 이미 있으면 그대로 씁니다 —
+          싱글턴은 반드시 하나여야 합니다.
+
+     ② 꾸밈(CSS)이 <b>어디에도 없었습니다</b>
+        .oc-claim-badge · .oc-claim-ask · .oc-claim-form 규칙이
+        style.css · base.css · 상세 화면 어디에도 없습니다. 붙어도
+        맨 글자로만 보였을 것입니다.
+        ▶ 별도 CSS 파일로 두면 상세 화면 일곱 곳에 link 를 넣어야
+          합니다. 이 파일이 스스로 넣습니다 — 고칠 자리가 하나입니다.
+     ══════════════════════════════════════════════════════════════ */
+
+  /* ★ 내 <script> 태그를 <b>지금</b> 잡아 둡니다.
+       data-kind 를 여기서 읽습니다. 나중에 읽으면 그 사이 다른 스크립트가
+       끼어들어 document.currentScript 가 바뀔 수 있습니다. */
+  var MY_SCRIPT = document.currentScript;
+
+  var CSS_ID = 'oc-claim-css';
+  /* ★ 클래스 이름은 아래 mountBadge · mountAsk · openForm · mountPicker 가
+       실제로 그리는 것을 <b>그대로 옮겨 적었습니다.</b> 짐작해 적으면
+       규칙이 하나도 안 걸립니다. */
+  var CSS =
+      /* ── 「공식 인증」 — 관리자 화면의 승인 색과 같게 둡니다 ── */
+      '.oc-claim-badge{display:inline-flex;align-items:center;gap:3px;'
+    +   'font-size:11.5px;font-weight:800;color:#0f7a3d;background:#e2f3e8;'
+    +   'border-radius:99px;padding:3px 9px;margin-left:8px;'
+    +   'vertical-align:middle;line-height:1;white-space:nowrap}'
+    + '.oc-claim-badge svg{flex:0 0 auto}'
+
+      /* ── 「관계자이신가요?」 — 단추 줄 아래 ── */
+    + '.oc-claim-slot{margin-top:10px}'
+    + '.oc-claim-ask{display:inline-flex;align-items:center;gap:6px;'
+    +   'font-size:12.5px;font-weight:700;color:#5f4aa0;background:#f4f1fb;'
+    +   'border:1px solid #e0d8f4;border-radius:8px;padding:8px 13px;'
+    +   'text-decoration:none;cursor:pointer;font-family:inherit;line-height:1.45;'
+    +   'appearance:none;text-align:left}'
+    + '.oc-claim-ask:hover{background:#ece6f8;border-color:#c9bce9}'
+
+      /* ── 신청 서식 ── */
+    + '.oc-claim-form{border:1px solid #e0d8f4;border-radius:10px;'
+    +   'background:#fbfaff;padding:15px 16px;margin-top:10px;max-width:540px}'
+    + '.ocf-t{font-size:13.5px;font-weight:800;color:#20223a;margin-bottom:12px;'
+    +   'line-height:1.5}'
+    + '.ocf-l{display:block;font-size:11.5px;font-weight:700;color:#5c5e70;'
+    +   'margin:0 0 4px}'
+    + '.ocf-o{font-weight:600;color:#9a9cb0}'
+    + '.ocf-i{width:100%;box-sizing:border-box;padding:9px 11px;'
+    +   'border:1px solid #d8d8e2;border-radius:7px;font-size:13px;'
+    +   'font-family:inherit;background:#fff;color:#20223a;margin-bottom:11px}'
+    + '.ocf-i:focus{outline:none;border-color:#7C63B0}'
+    + '.ocf-ta{min-height:64px;resize:vertical;line-height:1.7}'
+    + '.ocf-note{font-size:12px;color:#6b6d80;line-height:1.7;'
+    +   'background:#fff;border:1px solid #ece8f6;border-radius:7px;'
+    +   'padding:9px 11px;margin-bottom:12px}'
+    + '.ocf-btns{display:flex;gap:7px;flex-wrap:wrap}'
+    + '.ocf-btns button{appearance:none;border:0;border-radius:7px;'
+    +   'padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;'
+    +   'font-family:inherit;background:#5f4aa0;color:#fff}'
+    + '.ocf-btns button:hover{background:#4e3d87}'
+    + '.ocf-no{background:#fff !important;color:#5c5e70 !important;'
+    +   'border:1px solid #cfd0dd !important}'
+    + '.ocf-no:hover{background:#f4f4f8 !important}'
+    + '.ocf-msg{margin-top:9px;font-size:12px;color:#6b6d80;min-height:1em;line-height:1.6}'
+    + '.ocf-msg.bad{color:#a01c1c}'
+    + '.ocf-msg.good{color:#0f7a3d}'
+
+      /* ── 고르는 상자 (가입 화면) ── */
+    + '.oc-claim-pick{border:1px solid #e0d8f4;border-radius:10px;'
+    +   'background:#fbfaff;padding:13px 14px;margin-top:8px}'
+    + '.ocp-head{font-size:12.5px;font-weight:800;color:#20223a;margin-bottom:8px}'
+    + '.ocp-hint{font-size:12px;color:#6b6d80;line-height:1.7;margin-bottom:8px}'
+    + '.ocp-list{max-height:280px;overflow:auto}'
+    + '.ocp-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;'
+    +   'border:1px solid #e6e6ee;border-radius:8px;background:#fff;'
+    +   'padding:9px 11px;margin-bottom:6px;cursor:pointer;font-size:12.5px}'
+    + '.ocp-row:hover{border-color:#c9bce9;background:#fdfcff}'
+    + '.ocp-row input{flex:0 0 auto;margin:0;accent-color:#7C63B0}'
+    + '.ocp-k{flex:0 0 auto;padding:2px 8px;border-radius:5px;font-size:10.5px;'
+    +   'font-weight:800;color:#5f4aa0;background:#efe9fb}'
+    + '.ocp-n{flex:1 1 auto;min-width:0;font-weight:700;color:#20223a;'
+    +   'line-height:1.5}'
+    + '.ocp-e{flex:0 0 auto;color:#8a8c9e;font-size:11.5px}'
+    + '.ocp-v{flex:0 0 auto;color:#5f4aa0;font-size:11.5px;font-weight:700;'
+    +   'text-decoration:none;border:1px solid #e0d8f4;border-radius:6px;'
+    +   'padding:3px 9px;background:#fff}'
+    + '.ocp-v:hover{background:#f4f1fb}'
+    + '.ocp-new{background:#f8f8fc}'
+    + '.ocp-new .ocp-n{font-weight:600;color:#6b6d80}'
+    + '.ocp-none{font-size:12.5px;color:#6b6d80;line-height:1.7;padding:4px 2px}'
+    + '.ocp-none.warn{color:#8a6a2a;background:#fffaf2;border:1px solid #f0e0c4;'
+    +   'border-radius:7px;padding:10px 12px}'
+
+    + '@media(max-width:600px){'
+    +   '.oc-claim-badge{margin-left:6px;font-size:11px;padding:2px 8px}'
+    +   '.oc-claim-form{padding:13px 13px}'
+    +   '.ocp-e{display:none}'
+    + '}';
+
+  function injectCss() {
+    try {
+      if (document.getElementById(CSS_ID)) return;
+      var st = document.createElement('style');
+      st.id = CSS_ID; st.textContent = CSS;
+      (document.head || document.documentElement).appendChild(st);
+    } catch (e) { /* 꾸밈이 없어도 글자는 나옵니다 */ }
+  }
+  injectCss();
+
+  /* ── Supabase 갖추기 ──────────────────────────────────────────
+     ★ 반드시 싱글턴 — 이미 있으면 그것을 씁니다. createClient 를
+       또 부르면 세션 토큰이 질의에 실리지 않아 RLS 가 남처럼 굽니다. */
+  var SB_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SB_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+  var _sbWait = null;
+
+  function ensureSb() {
+    if (window.__ocSb) return Promise.resolve(window.__ocSb);
+    if (_sbWait) return _sbWait;
+    _sbWait = new Promise(function (done) {
+      function make() {
+        try {
+          if (window.supabase && window.supabase.createClient) {
+            if (!window.__ocSb)
+              window.__ocSb = window.supabase.createClient(SB_URL, SB_KEY);
+          }
+        } catch (e) {}
+        done(window.__ocSb || null);
+      }
+      if (window.supabase && window.supabase.createClient) { make(); return; }
+      /* 남(app.js)이 이미 받는 중일 수 있으므로 같은 주소를 씁니다 —
+         브라우저가 한 번만 내려받습니다. */
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      s.onload = make;
+      s.onerror = function () { done(null); };
+      (document.head || document.documentElement).appendChild(s);
+    });
+    return _sbWait;
+  }
+
   /* ── 일곱 갈래 ────────────────────────────────────────────────
      ★ 여기가 <b>유일한 목록</b>입니다. 화면에 손으로 다시 적지 마십시오.
      ★ kind 는 <b>표 이름 그대로</b>입니다 — SQL 의 oc_entity_kind 와 같습니다.
@@ -477,7 +628,7 @@
        자료를 못 불러온 화면에 「관계자이신가요?」 를 띄우면
        무엇에 대한 물음인지 알 수 없습니다. */
   function autoMount() {
-    var me = document.currentScript;
+    var me = MY_SCRIPT || document.currentScript;
     var kind = me && me.getAttribute('data-kind');
     if (!kind || !kindOf(kind)) return;
 
@@ -493,8 +644,14 @@
       var sub = h ? h.querySelector('.pv-name-sub') : null;
       if (sub) nm = nm.replace(String(sub.textContent || '').trim(), '').trim();
 
-      if (!h || !nm || !window.__ocSb) {
-        if (n > 20) return;                  /* 조용히 그만둡니다 */
+      /* ★ 2026-08-21 · 이름만 기다립니다.
+           Supabase 는 위에서 <b>스스로 갖추므로</b> 여기서 기다리지
+           않습니다. 예전에는 남이 만들어 주기를 3초 기다리다 그냥
+           그만두어, 표시가 <b>한 번도 안 나왔습니다.</b>
+         ★ 이름은 화면이 자료를 받아 채우므로 조금 걸립니다.
+           40번(6초)까지 봅니다 — 느린 회선을 생각한 것입니다. */
+      if (!h || !nm) {
+        if (n > 40) return;                  /* 조용히 그만둡니다 */
         setTimeout(function () { attach(n + 1); }, 150);
         return;
       }
@@ -503,7 +660,6 @@
       /* ① 이름 옆에 「공식 인증」 */
       var bslot = document.createElement('span');
       h.appendChild(bslot);
-      mountBadge(bslot, kind, id);
 
       /* ② 「관계자이신가요?」 — 단추 줄 아래에 둡니다 */
       var acts = document.querySelector('.pv-actions');
@@ -511,8 +667,13 @@
       aslot.className = 'oc-claim-slot';
       if (acts && acts.parentNode) acts.parentNode.insertBefore(aslot, acts.nextSibling);
       else if (h.parentNode) h.parentNode.appendChild(aslot);
-      else return;
-      mountAsk(aslot, kind, id, nm);
+      else aslot = null;
+
+      ensureSb().then(function (c) {
+        if (!c) return;                      /* 못 갖췄으면 화면은 그대로 둡니다 */
+        mountBadge(bslot, kind, id);
+        if (aslot) mountAsk(aslot, kind, id, nm);
+      });
     }
 
     if (document.readyState === 'loading')
@@ -524,6 +685,11 @@
   window.ocClaim = {
     KINDS: KINDS,
     kindOf: kindOf,
+    /* ★ 2026-08-21 · Supabase 갖추기를 밖으로도 내놓습니다.
+         가입 화면·마이페이지에서 ocClaim.search 를 부르기 전에
+         await ocClaim.ensureSb() 를 하면 「아직 안 만들어졌다」로
+         조용히 실패하는 일을 막습니다. */
+    ensureSb: ensureSb,
     /* ★ 2026-08-12 · 갈래별 말투를 밖으로도 내놓습니다.
          ① 시험할 수 있게 하려고 (문구가 갈래마다 맞는지 자동 확인)
          ② 다른 화면(마이페이지 「내 DB 항목」 등)에서도 같은 말을 쓰게 */
