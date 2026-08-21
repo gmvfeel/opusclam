@@ -471,8 +471,12 @@
 
     var m = await me();
     if (!m) {
+      /* ★ 2026-08-21 · 로그인 뒤 <b>이 화면으로 돌아옵니다.</b>
+           대문으로 떨어지면 그 사람을 다시 찾아 들어가야 합니다. */
+      var back = '/account/login.html?next='
+               + encodeURIComponent(location.pathname + location.search);
       el.innerHTML =
-        '<a class="oc-claim-ask" href="/account/login.html">' +
+        '<a class="oc-claim-ask" href="' + back + '">' +
         esc(askWord) + '? 로그인 후 인증받으실 수 있습니다 &rarr;</a>';
       return;
     }

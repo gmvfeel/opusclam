@@ -212,9 +212,9 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
         (state === 'done' || state === 'already') ? '<i>✓</i>이어짐'
       : (state === 'wait' || state === 'waiting') ? '<i>·</i>청함'
       : state === 'incoming'        ? '<i>·</i>요청 받음'
-      : state === 'closed'          ? '<i>·</i>청하기 닫힘'
+      : state === 'closed'          ? '<i>·</i>인맥연결 닫힘'
       : state === 'blocked'         ? '<i>·</i>차단됨'
-      : state === 'rejected_recent' ? '<i>·</i>청하기 닫힘'
+      : state === 'rejected_recent' ? '<i>·</i>인맥연결 닫힘'
       : null;
     if (face === null) { btn.disabled = false; btn.classList.remove('off'); return; }
     btn.innerHTML = face;
@@ -223,8 +223,8 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       : (state === 'wait' || state === 'waiting') ? '청해 두었습니다 — 상대의 답을 기다립니다'
       : state === 'incoming' ? '이 회원이 청해 두었습니다 — 마이페이지에서 답하실 수 있습니다'
       : state === 'closed'   ? (d.general === true
-                                ? '이 회원은 일반 회원의 Linked 청하기를 받지 않습니다'
-                                : '이 회원은 지금 Linked 청하기를 받지 않습니다')
+                                ? '이 회원은 일반 회원의 인맥 연결을 받지 않습니다'
+                                : '이 회원은 지금 인맥 연결을 받지 않습니다')
       : state === 'blocked'  ? '차단된 사이입니다'
       : state === 'rejected_recent'
                              ? '얼마 전에 끝난 사이입니다 — ' + (d.days || 30)

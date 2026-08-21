@@ -217,12 +217,27 @@ if (typeof window.ocGo !== 'function') { window.ocGo = function (u, r) { if (r) 
       return { ok:true };
     },
 
+    /* ★★ 2026-08-21 · 로그인 뒤 <b>원래 보던 곳으로</b> 돌려보냅니다
+         (파트너 지적). 인물 상세에서 Linked 를 누르면 로그인으로
+         갔다가 대문으로 떨어져, 그 사람을 다시 찾아 들어가야 했습니다.
+       ★ 주소는 <b>우리 사이트 안</b>인지 반드시 봅니다.
+         `//evil.com` 처럼 시작하면 브라우저가 <b>바깥 주소</b>로 읽습니다.
+         그대로 보내면 남의 사이트로 실어 나르는 문이 됩니다.
+       ★ 여기 한 곳에만 둡니다 — 로그인 화면과 소셜 로그인이 같이 씁니다. */
+    nextUrl: function(){
+      try{
+        var n = new URLSearchParams(location.search).get('next') || '';
+        if (n && n.charAt(0) === '/' && n.charAt(1) !== '/' && n.indexOf('\\') < 0) return n;
+      }catch(e){}
+      return '/home.html';
+    },
+
     /* 소셜 로그인 (google / kakao / naver) — 제공자는 Supabase에서 활성화 필요 */
     social: function(provider){
       var c = sb(); if(!c) return;
       c.auth.signInWithOAuth({
         provider: provider,
-        options: { redirectTo: location.origin + '/home.html' }
+        options: { redirectTo: location.origin + this.nextUrl() }
       });
     },
 
