@@ -629,7 +629,18 @@
            그러면 자판이 아무리 커도 머리와 입력칸은 늘 보입니다.
          ★ --ocH-max 는 fitKb() 가 「지금 실제로 보이는 높이」로 넣습니다. */
       ' max-height:var(--ocH-max,78vh);',
-      ' background:var(--paper,#fff);border:1px solid var(--line,#e6e6ee);border-radius:16px;',
+      /* ★★ 2026-08-21 · 테두리를 <b>또렷하게</b> 했습니다 (파트너 지적)
+           1px --line 은 흰 바탕에서 <b>1.20:1</b> — 거의 안 보여 그림자로만
+           떠 있는 꼴이었습니다. 모바일에서는 창이 화면을 거의 채우니
+           뒤 내용과 구분이 더 안 됐습니다.
+         ★ --line-2 로 올려 봤지만 1.34:1 로 여전히 모자랐습니다.
+           <b>재 보고 알았습니다</b> — 눈으로만 봤으면 「조금 나아졌다」로
+           넘어갈 뻔했습니다.
+         ▶ 리쿠르트 안내·SHOPPING 입점안내의 <b>액자와 같은 색</b>을 씁니다
+           (recruit.css 1649줄 · #514a6b). 흰 바탕에서 <b>8.26:1</b>.
+           사이트가 이미 「이건 하나의 덩어리」를 말할 때 쓰는 색이라,
+           새 색을 들이지 않고 결도 맞습니다. */
+      ' background:var(--paper,#fff);border:2px solid #514a6b;border-radius:16px;',
       ' box-shadow:0 24px 60px -14px rgba(20,18,40,.4);display:none;',
       ' flex-direction:column;overflow:hidden;font-family:inherit}',
       '.ocH.on{display:flex}',
@@ -692,6 +703,11 @@
       ' .ocH-btn{height:42px;padding:0 14px 0 12px;font-size:12.5px}',
       ' .ocH{right:8px;left:8px;width:auto;max-width:none;border-radius:14px;',
       '  bottom:calc(10px + var(--ocH-bar) + var(--ocH-kb))}}',
+      /* ★ 어두운 모드 — 옅은 선은 어두운 바탕에서 아예 묻힙니다.
+           --line-2(#383838)보다 한 단계 더 밝게 잡습니다. */
+      /* 어두운 모드 — 리쿠르트 액자의 어두운 판과 같은 색(4.38:1) */
+      'html[data-theme="dark"] .ocH{border-color:#7a7295;',
+      ' box-shadow:0 24px 60px -14px rgba(0,0,0,.75)}',
       /* ★ 움직임을 싫어하는 설정에서는 둥둥·광택을 멈춥니다.
          어지럼을 느끼는 분이 있습니다. 플랫폼의 다른 움직임
          (글쓰기 띠 광택 등)도 같은 규칙을 지키고 있습니다. */
