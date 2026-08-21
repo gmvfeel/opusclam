@@ -1349,10 +1349,25 @@ function ocN(tpl) {
 </script>
 <script src="/assets/app.js" defer></script>
 <!-- 오늘 업데이트 개수 — 카드 줄 맨 끝에 한 장을 더 놓습니다 (공용) -->
+<!-- ★ 2026-08-21 · 카드마다 「+N」 (파트너 요청)
+             ★ 짝은 <b>이 화면이 이미 쓰는 것</b>을 그대로 옮겼습니다 —
+               위 갈래별 건수 코드의 MAP 에서 읽어 왔습니다. 제가 새로
+               정한 것이 아니라 카드 숫자와 배지가 어긋나지 않습니다.
+             ★ 악보(#cScr)에만 review_status=eq.approved 가 붙습니다 —
+               검수를 기다리는 것은 목록에 안 나오므로, 카드 숫자도
+               같은 조건으로 세고 있습니다. -->
 <script src="/assets/today-count.js"
         data-tables="spot|hidden=is.false"
         data-label="오늘 업데이트"
-        data-href="/spot/index.html"></script>
+        data-href="/spot/index.html"
+        
+        data-marks="#cFes=>spot|hidden=is.false&section=eq.페스티벌;
+                    #cCoK=>spot|hidden=is.false&section=eq.콩쿨;
+                    #cFun=>spot|hidden=is.false&section=eq.지원금;
+                    #cCon=>spot|hidden=is.false&section=eq.공연정보;
+                    #cSit=>spot|hidden=is.false&section=eq.관련사이트;
+                    #cMed=>spot|hidden=is.false&section=eq.음원영상;
+                    #cScr=>spot|hidden=is.false&section=eq.악보&review_status=eq.approved"></script>
 <!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->
 <script src="/assets/pwa-install.js?v=20260815" defer></script>
 </body>

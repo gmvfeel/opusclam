@@ -482,6 +482,22 @@
   });
 </script>
 <script src="/assets/app.js" defer></script>
+<!-- ★ 2026-08-21 · 카드마다 「+N」 (파트너 요청)
+     ★ 이 화면은 합계 카드(「오늘 업데이트」)를 쓰지 않으므로
+       data-tables 없이 <b>data-marks 만</b> 적습니다.
+     ★ hub.js 가 카드를 그린 <b>뒤에</b> 배지가 붙어야 하므로
+       app.js 아래에 둡니다.
+     ★ 표 이름은 위 OCHub.init 의 sources 에서 그대로 옮겼습니다. -->
+<script src="/assets/today-count.js"
+        data-marks="[data-k='persons']=>persons|hidden=is.false;
+                    [data-k='orgs']=>orgs|hidden=is.false;
+                    [data-k='venues']=>venues|hidden=is.false;
+                    [data-k='schools']=>schools|hidden=is.false;
+                    [data-k='modern']=>modern_composers|hidden=is.false;
+                    [data-k='foundations']=>foundations|hidden=is.false;
+                    [data-k='academic']=>academic|hidden=is.false;
+                    [data-k='work']=>person_works|hidden=is.false;
+                    [data-k='terms']=>oc_terms|hidden=is.false"></script>
 <!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->
 <script src="/assets/pwa-install.js?v=20260815" defer></script>
 
