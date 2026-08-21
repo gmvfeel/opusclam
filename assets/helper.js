@@ -778,12 +778,41 @@
     return d;
   }
 
+  /* ★★ 2026-08-21 · 로그인 안 한 분을 <b>회원 전용 화면으로 보내던</b> 것을
+       막습니다 (파트너 지적)
+       「쪽지 보내는 법」·「이너스페이스」를 물으면 <b>「마이페이지」 단추</b>가
+       나왔고, 로그인 안 한 분이 누르면 껍데기만 열렸습니다.
+     ★ 링크마다 고치지 않고 <b>여기 한 곳</b>에서 거릅니다 — 답변이 늘어도
+       저절로 지켜집니다. 오늘 카드 배지에서 배운 것과 같은 방식입니다.
+     ★ 로그인 여부는 auth.js 가 만든 통로로 봅니다. 통로가 없으면
+       <b>막지 않습니다</b> — 확인이 안 되는데 막으면 로그인한 분까지
+       못 가게 됩니다. */
+  var MEMBER_ONLY = /^\/(account\/(mypage|profile|inner)|member\/)/;
+
+  function isLoggedIn() {
+    try {
+      var sb = window.__ocSb;
+      if (!sb || !sb.auth) return null;               /* 알 수 없음 */
+      if (window.__ocSession !== undefined) return !!window.__ocSession;
+      /* auth.js 가 담아 둔 것이 없으면 헤더로 가늠합니다 —
+         로그인하면 헤더에 이너스페이스 단추가 생깁니다. */
+      if (document.querySelector('#oc-header-auth .authlink,[data-inner],#ocInnerBtn'))
+        return true;
+      return null;
+    } catch (e) { return null; }
+  }
+
   function links(list) {
     if (!list || !list.length) return '';
+    var logged = isLoggedIn();
     return '<div class="ocH-go">' + list.map(function (x) {
-      var out = x[1].indexOf('mailto:') === 0;
-      return '<a href="' + esc(x[1]) + '"'
-        + (out ? '' : '') + '>' + esc(x[0]) + '</a>';
+      var href = x[1], label = x[0];
+      /* 회원 전용인데 로그인 안 한 것이 <b>확실할 때만</b> 바꿉니다 */
+      if (logged === false && MEMBER_ONLY.test(href)) {
+        href  = '/account/login.html?next=' + encodeURIComponent(x[1]);
+        label = '로그인하고 ' + label + ' 보기';
+      }
+      return '<a href="' + esc(href) + '">' + esc(label) + '</a>';
     }).join('') + '</div>';
   }
 
