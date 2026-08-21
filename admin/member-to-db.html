@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>회원 → DB 보내기 · OPUSCLAM ADMIN</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  .backlink:hover{border-color:#7C63B0;color:#7C63B0}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 120px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:22px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 6px}
+  .card p{margin:0 0 14px;color:#5c5e70;font-size:13px}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  button.ghost{background:#fff;color:#20223a;border:1px solid #cfd0dd}
+  button.ok{background:#0f7a3d}
+  button.no{background:#fff;color:#a01c1c;border:1px solid #e3b7b7}
+  button.sm{padding:7px 12px;font-size:12px}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  select,input[type=search],input[type=text],textarea{padding:9px 12px;border:1px solid #d8d8e2;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#20223a}
+  textarea{width:100%;min-height:96px;resize:vertical;line-height:1.7}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .warn{background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .warn.on{display:block}
+  .note{background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;margin-top:12px}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .tabs button{background:#f2f2f7;color:#5c5e70;padding:8px 13px;font-size:12.5px}
+  .tabs button.on{background:#20223a;color:#fff}
+  .tabs b{display:inline-block;margin-left:5px;font-size:11.5px;opacity:.8}
+  .lst{margin-top:14px;border:1px solid #eeeef4;border-radius:8px;background:#fff}
+
+  .it{padding:14px;border-bottom:1px solid #f4f4f8;font-size:12.5px}
+  .it:last-child{border-bottom:0}
+  .it-top{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:7px}
+  .kind{flex:0 0 auto;padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:800;color:#5f4aa0;background:#efe9fb}
+  .ename{font-size:14px;font-weight:800}
+  .st{flex:0 0 auto;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
+  .st.pending{color:#8a6f18;background:#faf1d6}
+  .st.approved{color:#0f7a3d;background:#e2f3e8}
+  .st.rejected{color:#a01c1c;background:#fbe9e9}
+  .st.withdrawn{color:#6b6d80;background:#eeeef4}
+  .flag{flex:0 0 auto;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:800}
+  .flag.ok{color:#0f7a3d;background:#e2f3e8}
+  .flag.eye{color:#8a6f18;background:#faf1d6}
+  .flag.bad{color:#a01c1c;background:#fbe9e9}
+  .it-body{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;color:#5c5e70;font-size:12px}
+  .it-body div{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .it-body b{color:#20223a;font-weight:700}
+  .it-btns{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center}
+  .msg{margin-top:8px;font-size:12px;color:#6b6d80;min-height:1em}
+  .msg.bad{color:#a01c1c}
+  .msg.good{color:#0f7a3d}
+  .empty{padding:30px 14px;text-align:center;color:#8a8c9e;font-size:13px;line-height:1.9}
+
+  /* 펼침 자리 — 후보 목록과 새로 만들기 폼이 들어갑니다 */
+  .panel{margin-top:12px;border:1px solid #e3e3ec;border-radius:9px;background:#fbfbfd;padding:14px;display:none}
+  .panel.on{display:block}
+  .panel h4{margin:0 0 9px;font-size:13px}
+  .cand{border:1px solid #e6e6ee;border-radius:8px;background:#fff;padding:10px 12px;margin-bottom:8px}
+  .cand .cn{font-size:13.5px;font-weight:800}
+  .cand .cm{color:#6b6d80;font-size:12px;margin-top:2px}
+  .cand .cb{margin-top:8px;display:flex;gap:7px;flex-wrap:wrap}
+  .dup{margin-bottom:10px;padding:9px 11px;border-radius:7px;background:#fff6f6;border:1px solid #f3caca;color:#a01c1c;font-size:12px;line-height:1.7}
+  .okbox{margin-bottom:10px;padding:9px 11px;border-radius:7px;background:#f2f8f4;border:1px solid #cde5d6;color:#0f7a3d;font-size:12px;line-height:1.7}
+
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+  .form .full{grid-column:1 / -1}
+  .form label{display:block;font-size:11.5px;font-weight:700;color:#5c5e70;margin-bottom:4px}
+  .form input[type=text],.form textarea{width:100%}
+  .raw{margin-top:12px;border-top:1px dashed #dcdce6;padding-top:10px}
+  .raw h4{margin:0 0 6px;font-size:12px;color:#6b6d80}
+  .raw ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;font-size:12px}
+  .raw li{min-width:0;display:flex;gap:8px}
+  .raw .k{flex:0 0 96px;color:#8a8c9e}
+  .raw .v{flex:1 1 auto;min-width:0;word-break:break-all;color:#3b3d54}
+  @media(max-width:760px){ .it-body,.form,.raw ul{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="admin.html">&larr; 관리자 홈</a>
+  <h1>회원 → DB 보내기</h1>
+  <div class="sub">가입할 때 적은 내용을 인물DB·음악단체DB·음악학교DB로 옮기고, 회원과 그 항목을 이어 줍니다.</div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="card">
+    <h2>무엇을 하는 화면인가</h2>
+    <p>
+      전공자·단체·학교 회원은 가입할 때 <b>「DB에 등록되는 것에 동의합니다」</b>를 누르고
+      전공·악기·학교·경력·대표작을 적습니다. 그 내용은 회원 표 안에만 있고
+      DB로는 <b>저절로 옮겨지지 않습니다</b> — 여기서 옮깁니다.
+    </p>
+    <div class="row">
+      <input type="search" id="f-q" placeholder="이름·아이디로 찾기">
+      <button id="btn-load">다시 불러오기</button>
+    </div>
+    <div class="tabs" id="tabs"></div>
+
+    <div class="note">
+      <b>보내기 전에 보실 것</b><br>
+      · <b>이름이 같은 항목을 먼저 찾아 보여 드립니다.</b> 인물 15,000여 명이라
+        <b>동명이인</b>이 드물지 않습니다. 새로 만들기 전에 후보를 꼭 보십시오.<br>
+      · 같은 사람이면 <b>새로 만들지 말고 「이 항목과 잇기」</b>를 누르십시오.
+        두 벌이 되면 나중에 합치기가 훨씬 어렵습니다.<br>
+      · 옮길 내용은 <b>회원이 스스로 적은 것</b>입니다. 그대로 믿지 마시고
+        오른쪽 원본과 견주어 고쳐 넣으십시오.<br>
+      · <b>사진은 아직 옮겨지지 않습니다.</b> 가입 화면의 사진 칸은 파일을
+        올리는 자리가 아직 붙어 있지 않아 저장되지 않습니다. 사진은 나중에
+        인물 항목에서 따로 채워 주십시오.
+    </div>
+  </div>
+
+  <div class="lst" id="lst"><div class="empty">불러오는 중…</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/admin-guard.js"></script>
+<!-- ★ claim.js 를 인라인 스크립트보다 <b>먼저</b> 부릅니다.
+       갈래 목록(KINDS)과 상세쪽 주소를 그 파일에서 가져다 씁니다.
+       두 곳에 적으면 언젠가 갈라집니다. -->
+<script src="/assets/claim.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════
+   회원 → DB 보내기 · 2026-08-21
+   ────────────────────────────────────────────────────────────────
+   ★ 왜 만들었나
+     가입 화면에는 「인물 데이터베이스에 등록되는 것에 동의합니다
+     (관리자 승인 후 반영)」 이 적혀 있는데, 그 <b>반영을 하는 자리가
+     없었습니다.</b> 회원을 승인해도 members.status 만 approved 로
+     바뀔 뿐이었습니다. 적어 주신 내용은 members.extra 안에 그대로
+     남아 있으므로 여기서 꺼내 옮깁니다.
+
+   ★ 저절로 넣지 않는 까닭
+     ① 동명이인 — 인물이 15,000명이라 이름만으로는 가릴 수 없습니다.
+     ② 갈 곳이 다름 — 전공자는 인물DB, 단체·기업은 음악단체DB 또는
+        기관·재단DB, 음악학교는 음악학교DB 입니다. 단체·기업은
+        <b>둘 중 어디인지 사람이 정해야</b> 합니다.
+     ③ 회원이 스스로 적은 것이라 손볼 데가 있습니다.
+     ▶ 그래서 콩쿠르 아카이브와 같은 방식으로 갑니다 —
+       이름이 <b>꼭 같은</b> 후보를 찾아 보여 주고, 판단은 사람이.
+
+   ★ 새 표도 새 SQL 도 필요 없습니다
+     회원↔항목 잇기는 이미 있는 entity_claims 를 그대로 씁니다.
+     관리자는 claims_admin_all 정책으로 모두 할 수 있습니다.
+
+   ★ 이은 것은 status='approved' 로 넣습니다
+     회원이 낸 신청이 아니라 <b>관리자가 직접 이은 것</b>이므로
+     기다릴 것이 없습니다. decided_by·decided_at 도 함께 적습니다.
+   ════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  var SUPABASE_URL = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  /* ★ 반드시 싱글턴 — createClient 를 또 부르면 세션 토큰이 질의에
+       실리지 않아 RLS 가 관리자를 남처럼 봅니다. */
+  function sb(){
+    if(!window.__ocSb){
+      if(!window.supabase) return null;
+      window.__ocSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return window.__ocSb;
+  }
+
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function fmt(t){
+    if(!t) return '-';
+    var d = new Date(t); if(isNaN(d)) return '-';
+    return d.getFullYear()+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+('0'+d.getDate()).slice(-2);
+  }
+  function warn(msg){
+    var w=document.getElementById('warn');
+    if(!msg){ w.className='warn'; w.textContent=''; return; }
+    w.className='warn on'; w.textContent=msg;
+  }
+
+  /* ── 회원 종류 ─────────────────────────────────────────────────
+     ★ 갈 곳이 하나로 정해지지 않는 종류가 있습니다.
+       industry(음악관계자·단체·기업)는 <b>음악단체</b>일 수도
+       <b>기관·재단</b>일 수도 있어 고르개를 답니다. */
+  var TYPES = [
+    { t:'major',    label:'전공자',        kinds:['persons'] },
+    { t:'industry', label:'단체·기업',     kinds:['orgs','foundations'] },
+    { t:'school',   label:'음악학교',      kinds:['schools'] },
+    { t:'general',  label:'일반',          kinds:[] }
+  ];
+  function typeOf(t){ for(var i=0;i<TYPES.length;i++) if(TYPES[i].t===t) return TYPES[i]; return null; }
+
+  /* 갈래 정보는 claim.js 하나만 봅니다 */
+  function kindOf(k){
+    var L = (window.ocClaim && ocClaim.KINDS) || [];
+    for(var i=0;i<L.length;i++) if(L[i].kind===k) return L[i];
+    return null;
+  }
+
+  /* ── 옮겨 담기 규칙 ────────────────────────────────────────────
+     ★ 칸 이름은 db/write.html 의 등록 폼에서 그대로 가져왔습니다.
+       짐작해 적으면 저장이 조용히 실패합니다.
+     ★ 회원이 적은 것 중 <b>갈 칸이 없는 것</b>(경력·소속·학위 등)은
+       버리지 않고 소개글 아래에 붙여 둡니다 — 지우는 것보다 낫습니다. */
+  function joinLines(arr){
+    return arr.filter(function(s){ return s && String(s).trim(); })
+              .map(function(s){ return String(s).trim(); }).join('\n');
+  }
+  function draft(kind, m){
+    var e = m.extra || {}, d = {};
+    d.name_ko = m.name || '';
+    d.name_en = e.name_en || '';
+
+    if(kind === 'persons'){
+      d.field       = e.field1 || '';
+      d.nationality = e.nationality || '';
+      d.instrument  = e.instrument || '';
+      d.school      = joinLines([ e.school_name,
+                                  e.school_degree ? '('+e.school_degree+')' : '' ])
+                        .replace('\n',' ');
+      d.works       = e.works || '';
+      d.description = joinLines([
+        e.description || '',
+        e.career ? '\n[경력]\n'+e.career : '',
+        e.org    ? '\n[소속]\n'+e.org    : '',
+        e.school_country ? '\n[유학·학교 소재]\n'+e.school_country : ''
+      ]);
+      d.image_url = '';
+    } else if(kind === 'orgs'){
+      d.location    = m.address || '';
+      d.leader      = e.leader || '';
+      d.founded     = e.founded || '';
+      d.home_venue  = e.home_venue || '';
+      d.link_home   = e.link_home || '';
+      d.description = joinLines([ e.description || '',
+                                  e.position ? '\n[담당]\n'+e.position : '' ]);
+    } else if(kind === 'foundations'){
+      d.location    = m.address || '';
+      d.founded     = e.founded || '';
+      d.link_home   = e.link_home || '';
+      d.description = joinLines([ e.description || '',
+                                  e.position ? '\n[담당]\n'+e.position : '' ]);
+    } else if(kind === 'schools'){
+      d.location    = m.address || '';
+      d.founded     = e.founded || '';
+      d.link_home   = e.link_home || '';
+      d.description = e.description || '';
+    }
+    return d;
+  }
+
+  /* 새로 만들기 폼에 무슨 칸을 보일지 — db/write.html 과 같은 칸입니다 */
+  var FORM = {
+    persons: [
+      ['name_ko','이름 (국문)','text'], ['name_en','이름 (영문)','text'],
+      ['field','분야 (쉼표로 구분)','text'], ['nationality','국적','text'],
+      ['instrument','주요 악기','text'], ['school','출신학교','text'],
+      ['works','대표작','full'], ['description','소개 · 이력','area'],
+      ['image_url','대표 이미지 주소','full']
+    ],
+    orgs: [
+      ['name_ko','단체명 (국문)','text'], ['name_en','단체명 (영문)','text'],
+      ['location','소재지','text'], ['founded','창단','text'],
+      ['leader','대표 · 지휘자','text'], ['home_venue','연고 공연장','text'],
+      ['link_home','홈페이지','full'], ['description','소개','area']
+    ],
+    foundations: [
+      ['name_ko','기관·재단명 (국문)','text'], ['name_en','기관·재단명 (영문)','text'],
+      ['location','소재지','text'], ['founded','설립','text'],
+      ['link_home','홈페이지','full'], ['description','소개','area']
+    ],
+    schools: [
+      ['name_ko','학교명 (국문)','text'], ['name_en','학교명 (영문)','text'],
+      ['location','소재지','text'], ['founded','설립','text'],
+      ['link_home','홈페이지','full'], ['description','소개','area']
+    ]
+  };
+
+  var EXTRA_LABEL = {
+    name_en:'영문명', nationality:'국적', instrument:'주요 악기',
+    school_name:'출신학교', school_country:'학교 소재', school_degree:'학위',
+    career:'경력', works:'대표작', description:'소개', org:'소속',
+    link_video:'관련 영상', photo:'사진', photos:'활동 사진',
+    db_consent:'DB등록 동의', company:'회사·단체명', position:'부서·직책',
+    biz_no:'사업자번호', link_home:'홈페이지', founded:'설립연도',
+    leader:'대표자·지휘자', home_venue:'연고 공연장', field1:'분야',
+    interest:'관심분야', claim_hint:'가입 때 고른 항목'
+  };
+
+  var rows = [], claims = {}, cur = 'major', me = null;
+
+  /* ── 불러오기 ─────────────────────────────────────────────────── */
+  async function load(){
+    var c = sb(); if(!c){ warn('초기화 오류 — 새로 고쳐 주십시오.'); return; }
+    var lst = document.getElementById('lst');
+    lst.innerHTML = '<div class="empty">불러오는 중…</div>';
+    warn('');
+
+    try{
+      var u = await c.auth.getUser();
+      me = (u && u.data && u.data.user) ? u.data.user.id : null;
+    }catch(e){ me = null; }
+
+    var r = await c.from('members')
+      .select('id,username,member_type,status,name,email,phone,address,created_at,extra')
+      .neq('member_type','general')
+      .order('created_at',{ascending:false})
+      .limit(500);
+    if(r.error){
+      warn('회원 목록을 불러오지 못했습니다: '+r.error.message);
+      lst.innerHTML = '<div class="empty">불러오지 못했습니다.</div>'; return;
+    }
+    rows = r.data || [];
+
+    /* 이미 이어진 것 — 회원마다 어느 항목에 붙어 있는지 */
+    claims = {};
+    var cl = await c.from('entity_claims')
+      .select('member_id,entity_kind,entity_id,entity_name,status')
+      .in('status',['pending','approved'])
+      .limit(1000);
+    if(!cl.error){
+      (cl.data||[]).forEach(function(x){
+        (claims[x.member_id] = claims[x.member_id] || []).push(x);
+      });
+    }
+    /* ★ 못 받아도 화면은 나와야 합니다 — 「이미 이어짐」 표시만 빠집니다 */
+
+    tabs(); render();
+  }
+
+  function tabs(){
+    var box = document.getElementById('tabs');
+    var cnt = {};
+    rows.forEach(function(m){ cnt[m.member_type] = (cnt[m.member_type]||0)+1; });
+    box.innerHTML = TYPES.filter(function(t){ return t.kinds.length; }).map(function(t){
+      return '<button data-t="'+t.t+'"'+(cur===t.t?' class="on"':'')+'>'
+           + esc(t.label)+'<b>'+(cnt[t.t]||0)+'</b></button>';
+    }).join('');
+    box.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click', function(){
+        cur = b.getAttribute('data-t'); tabs(); render();
+      });
+    });
+  }
+
+  function render(){
+    var q = (document.getElementById('f-q').value||'').trim().toLowerCase();
+    var list = rows.filter(function(m){
+      if(m.member_type !== cur) return false;
+      if(!q) return true;
+      return String(m.name||'').toLowerCase().indexOf(q) >= 0
+          || String(m.username||'').toLowerCase().indexOf(q) >= 0;
+    });
+    var lst = document.getElementById('lst');
+    if(!list.length){
+      lst.innerHTML = '<div class="empty">해당하는 회원이 없습니다.</div>'; return;
+    }
+    lst.innerHTML = list.map(card).join('');
+    lst.querySelectorAll('[data-act]').forEach(function(b){
+      b.addEventListener('click', onAct);
+    });
+  }
+
+  var MEM_LABEL = {pending:'승인 대기', approved:'승인됨', rejected:'거절', withdrawn:'탈퇴'};
+
+  function card(m){
+    var T = typeOf(m.member_type), e = m.extra || {};
+    var mine = claims[m.id] || [];
+    var done = mine.filter(function(x){ return x.status==='approved'; });
+
+    var flags = '';
+    if(e.db_consent === true || e.db_consent === '예')
+      flags += '<span class="flag ok">DB등록 동의</span>';
+    else
+      flags += '<span class="flag eye">동의 표시 없음</span>';
+    if(m.status !== 'approved')
+      flags += '<span class="flag bad">회원 승인 먼저</span>';
+
+    var linked = '';
+    if(done.length){
+      linked = '<div class="okbox">이미 이어져 있습니다 — '
+             + done.map(function(x){
+                 var K = kindOf(x.entity_kind);
+                 var href = K && K.view ? (K.view+'?id='+encodeURIComponent(x.entity_id)) : '';
+                 var nm = esc(x.entity_name||('#'+x.entity_id));
+                 return (K?esc(K.label)+' ':'') + (href?'<a href="'+href+'" target="_blank">'+nm+'</a>':nm);
+               }).join(' · ')
+             + '</div>';
+    }
+
+    var body = ''
+      + '<div><b>아이디</b> '+esc(m.username||'-')+'</div>'
+      + '<div><b>이메일</b> '+esc(m.email||'-')+'</div>'
+      + '<div><b>휴대폰</b> '+esc(m.phone||'-')+'</div>'
+      + '<div><b>가입일</b> '+fmt(m.created_at)+'</div>';
+
+    var btns = '';
+    if(m.status !== 'approved'){
+      btns = '<span class="msg">회원 상태가 「승인됨」이 되어야 보낼 수 있습니다.</span>';
+    } else if(T && T.kinds.length){
+      btns = T.kinds.map(function(k){
+        var K = kindOf(k);
+        return '<button class="sm" data-act="find" data-id="'+m.id+'" data-kind="'+k+'">'
+             + esc(K?K.label:k)+'DB로 보내기</button>';
+      }).join('');
+    }
+
+    return '<div class="it" id="it-'+m.id+'">'
+      + '<div class="it-top">'
+      +   '<span class="kind">'+esc(T?T.label:m.member_type)+'</span>'
+      +   '<span class="ename">'+esc(m.name||m.username||'-')+'</span>'
+      +   '<span class="st '+esc(m.status)+'">'+esc(MEM_LABEL[m.status]||m.status)+'</span>'
+      +   flags
+      + '</div>'
+      + linked
+      + '<div class="it-body">'+body+'</div>'
+      + '<div class="it-btns">'+btns+'</div>'
+      + '<div class="msg" id="msg-'+m.id+'"></div>'
+      + '<div class="panel" id="pn-'+m.id+'"></div>'
+      + '</div>';
+  }
+
+  function say(id, text, cls){
+    var el = document.getElementById('msg-'+id);
+    if(el){ el.className = 'msg'+(cls?' '+cls:''); el.textContent = text||''; }
+  }
+  function memById(id){
+    for(var i=0;i<rows.length;i++) if(String(rows[i].id)===String(id)) return rows[i];
+    return null;
+  }
+
+  /* ── 단추 처리 ─────────────────────────────────────────────────── */
+  async function onAct(ev){
+    var b = ev.currentTarget;
+    var act = b.getAttribute('data-act');
+    var id  = b.getAttribute('data-id');
+    var m   = memById(id); if(!m) return;
+
+    if(act === 'find')  return findCand(m, b.getAttribute('data-kind'));
+    if(act === 'new')   return openForm(m, b.getAttribute('data-kind'));
+    if(act === 'link')  return doLink(m, b.getAttribute('data-kind'),
+                                      b.getAttribute('data-eid'), b.getAttribute('data-ename'));
+    if(act === 'save')  return doCreate(m, b.getAttribute('data-kind'), b);
+    if(act === 'close') { document.getElementById('pn-'+id).className='panel'; return; }
+  }
+
+  /* ① 이름이 꼭 같은 항목 찾기
+       ★ 대소문자와 앞뒤 공백만 무시합니다. 그 이상 손대지 않습니다 —
+         콩쿠르에서 쓴 규칙 그대로입니다. 느슨하게 하면 남을 데려옵니다. */
+  async function findCand(m, kind){
+    var c = sb(), K = kindOf(kind);
+    if(!K){ say(m.id,'갈래 정보를 찾지 못했습니다.','bad'); return; }
+    var pn = document.getElementById('pn-'+m.id);
+    pn.className = 'panel on';
+    pn.innerHTML = '<div class="empty">이름이 같은 항목을 찾는 중…</div>';
+
+    var name = String(m.name||'').trim();
+    if(!name){
+      pn.innerHTML = '<div class="dup">회원 이름이 비어 있어 찾을 수 없습니다.</div>';
+      return;
+    }
+
+    var sel = 'id,'+K.nameCol + (K.enCol? ','+K.enCol : '');
+    if(kind==='persons') sel += ',instrument,school,nationality,description';
+    if(kind==='orgs' || kind==='foundations' || kind==='schools') sel += ',location,description';
+    if(K.hasHidden) sel += ',hidden';
+
+    var r = await c.from(kind).select(sel).ilike(K.nameCol, name).limit(20);
+    if(r.error){
+      pn.innerHTML = '<div class="dup">찾지 못했습니다: '+esc(r.error.message)+'</div>';
+      return;
+    }
+    var cand = r.data || [];
+
+    var head;
+    if(cand.length){
+      head = '<div class="dup">이름이 같은 항목이 <b>'+cand.length+'건</b> 있습니다. '
+           + '같은 분(곳)이면 새로 만들지 말고 <b>잇기</b>를 눌러 주십시오.</div>';
+    } else {
+      head = '<div class="okbox">이름이 같은 항목이 없습니다. 새로 만들어도 됩니다.</div>';
+    }
+
+    var body = cand.map(function(x){
+      var sub = [];
+      if(x.instrument) sub.push(esc(x.instrument));
+      if(x.school)     sub.push(esc(x.school));
+      if(x.nationality)sub.push(esc(x.nationality));
+      if(x.location)   sub.push(esc(x.location));
+      if(x.hidden)     sub.push('감춤');
+      var d = String(x.description||'').replace(/\s+/g,' ').slice(0,90);
+      var href = K.view ? (K.view+'?id='+encodeURIComponent(x.id)) : '';
+      return '<div class="cand">'
+        + '<div class="cn">'+esc(x[K.nameCol]||'-')
+        +   (K.enCol && x[K.enCol] ? ' <span style="font-weight:600;color:#8a8c9e">'+esc(x[K.enCol])+'</span>' : '')
+        + '</div>'
+        + '<div class="cm">#'+x.id+(sub.length?' · '+sub.join(' · '):'')+(d?'<br>'+esc(d)+'…':'')+'</div>'
+        + '<div class="cb">'
+        +   (href?'<button class="sm ghost" onclick="window.open(\''+href+'\',\'_blank\')">항목 보기</button>':'')
+        +   '<button class="sm ok" data-act="link" data-id="'+m.id+'" data-kind="'+kind+'" '
+        +     'data-eid="'+x.id+'" data-ename="'+esc(x[K.nameCol]||'')+'">이 항목과 잇기</button>'
+        + '</div></div>';
+    }).join('');
+
+    pn.innerHTML = head + body
+      + '<div class="it-btns">'
+      +   '<button class="sm" data-act="new" data-id="'+m.id+'" data-kind="'+kind+'">새로 만들기</button>'
+      +   '<button class="sm ghost" data-act="close" data-id="'+m.id+'">닫기</button>'
+      + '</div>';
+    pn.querySelectorAll('[data-act]').forEach(function(b){ b.addEventListener('click', onAct); });
+  }
+
+  /* ② 새로 만들기 폼 — 옮겨 담은 값을 미리 채우고 관리자가 고칩니다 */
+  function openForm(m, kind){
+    var K = kindOf(kind), d = draft(kind, m), F = FORM[kind] || [];
+    var pn = document.getElementById('pn-'+m.id);
+    pn.className = 'panel on';
+
+    var fields = F.map(function(f){
+      var k=f[0], label=f[1], t=f[2], v=esc(d[k]||'');
+      var cls = (t==='full'||t==='area') ? ' class="full"' : '';
+      var inner = (t==='area')
+        ? '<textarea data-f="'+k+'">'+v+'</textarea>'
+        : '<input type="text" data-f="'+k+'" value="'+v+'">';
+      return '<div'+cls+'><label>'+esc(label)+'</label>'+inner+'</div>';
+    }).join('');
+
+    var e = m.extra || {}, raw = '';
+    Object.keys(e).forEach(function(k){
+      var v = e[k];
+      if(v===null||v===undefined||v==='') return;
+      if(typeof v==='boolean') v = v?'예':'아니오';
+      if(Array.isArray(v)) v = v.join(', ');
+      if(typeof v==='object') v = JSON.stringify(v);
+      raw += '<li><span class="k">'+esc(EXTRA_LABEL[k]||k)+'</span>'
+           + '<span class="v">'+esc(String(v))+'</span></li>';
+    });
+
+    var hid = K && K.hasHidden
+      ? '<div class="full"><label>공개 여부</label>'
+      +   '<select data-f="__hidden"><option value="0">바로 공개</option>'
+      +   '<option value="1">감춰 두기 (내용을 더 채운 뒤 공개)</option></select></div>'
+      : '';
+
+    pn.innerHTML = '<h4>'+esc(K?K.label:kind)+'DB에 새로 만들기</h4>'
+      + '<div class="form">'+fields+hid+'</div>'
+      + '<div class="raw"><h4>회원이 적은 원본 (참고)</h4><ul>'+(raw||'<li>(없음)</li>')+'</ul></div>'
+      + '<div class="it-btns">'
+      +   '<button class="ok" data-act="save" data-id="'+m.id+'" data-kind="'+kind+'">만들고 잇기</button>'
+      +   '<button class="ghost" data-act="find" data-id="'+m.id+'" data-kind="'+kind+'">후보 다시 보기</button>'
+      +   '<button class="ghost" data-act="close" data-id="'+m.id+'">닫기</button>'
+      + '</div>';
+    pn.querySelectorAll('[data-act]').forEach(function(b){ b.addEventListener('click', onAct); });
+  }
+
+  /* ③ 만들기 — DB 항목을 넣고, 곧바로 회원과 잇습니다 */
+  async function doCreate(m, kind, btn){
+    var c = sb(), K = kindOf(kind);
+    var pn = document.getElementById('pn-'+m.id);
+    var vals = {}, hidden = false;
+    pn.querySelectorAll('[data-f]').forEach(function(el){
+      var k = el.getAttribute('data-f');
+      var v = String(el.value==null?'':el.value).trim();
+      if(k === '__hidden'){ hidden = (v === '1'); return; }
+      if(v) vals[k] = v;
+    });
+    if(!vals[K.nameCol]){ say(m.id,'이름을 적어 주십시오.','bad'); return; }
+    if(K.hasHidden) vals.hidden = hidden;
+
+    btn.disabled = true; say(m.id,'만드는 중…');
+    var r = await c.from(kind).insert(vals).select('id').maybeSingle();
+    if(r.error || !r.data){
+      btn.disabled = false;
+      say(m.id, 'DB에 넣지 못했습니다: '+((r.error&&r.error.message)||'알 수 없는 오류')
+              + ' — '+kind+' 표의 쓰기 권한(RLS)이나 칸 이름을 확인해야 할 수 있습니다.', 'bad');
+      return;
+    }
+    var newId = r.data.id;
+    var ok = await linkClaim(m, kind, newId, vals[K.nameCol]);
+    btn.disabled = false;
+    if(ok){
+      say(m.id, '만들고 이었습니다. (#'+newId+')', 'good');
+      pn.className = 'panel';
+      await load();
+    }
+  }
+
+  /* ④ 잇기 — entity_claims 에 담습니다
+       ★ 이미 있으면 새로 넣지 않고 approved 로 <b>고쳐</b> 둡니다.
+         같은 회원·같은 항목으로 두 줄이 생기면 안 됩니다. */
+  async function linkClaim(m, kind, entityId, entityName){
+    var c = sb();
+    var now = new Date().toISOString();
+    var row = {
+      member_id: m.id,
+      entity_kind: kind,
+      entity_id: entityId,
+      entity_name: entityName || m.name || '',
+      status: 'approved',
+      needs_review: false,
+      decided_by: me,
+      decided_at: now,
+      decided_note: '관리자가 회원 자료로 직접 이었습니다.'
+    };
+    var r = await c.from('entity_claims').insert(row);
+    if(!r.error) return true;
+
+    var msg = String(r.error.message||'');
+    if(/duplicate|unique/i.test(msg)){
+      var up = await c.from('entity_claims')
+        .update({ status:'approved', needs_review:false, decided_by:me,
+                  decided_at:now, decided_note:'관리자가 회원 자료로 직접 이었습니다.' })
+        .eq('member_id', m.id).eq('entity_kind', kind).eq('entity_id', entityId);
+      if(!up.error) return true;
+      msg = String(up.error.message||msg);
+    }
+    say(m.id, 'DB 항목은 처리됐지만 회원과 잇지 못했습니다: '+msg, 'bad');
+    return false;
+  }
+
+  async function doLink(m, kind, entityId, entityName){
+    say(m.id, '잇는 중…');
+    var ok = await linkClaim(m, kind, Number(entityId), entityName);
+    if(ok){
+      say(m.id, '이었습니다.', 'good');
+      document.getElementById('pn-'+m.id).className = 'panel';
+      await load();
+    }
+  }
+
+  /* ── 시작 ─────────────────────────────────────────────────────── */
+  document.getElementById('btn-load').addEventListener('click', load);
+  document.getElementById('f-q').addEventListener('input', function(){ render(); });
+
+  /* ★ claim.js 가 늦게 붙는 일이 있어 KINDS 가 올 때까지 잠깐 기다립니다.
+       기다리지 않으면 갈래 이름이 빈 채로 그려집니다. */
+  (function boot(n){
+    if(window.ocClaim && ocClaim.KINDS){ load(); return; }
+    if(n > 40){ load(); return; }   /* 4초 뒤에는 그냥 시작 — 이름만 덜 예쁩니다 */
+    setTimeout(function(){ boot(n+1); }, 100);
+  })(0);
+})();
+</script>
+</body>
+</html>
