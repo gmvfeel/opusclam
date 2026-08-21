@@ -186,7 +186,16 @@
          숫자보다 <b>이름이 먼저</b>입니다. 넓은 화면에서는 그대로 나옵니다.
        ★ 이건 임시가 아니라 <b>맞는 판단</b>으로 봅니다 — 좁은 화면에서
          숫자를 두 개나 더 넣을 자리가 없습니다. */
-    + '@media (max-width:560px){.oc-newmark{display:none}}';
+    /* ★★ 2026-08-21 · 기준을 <b>1040px</b>로 맞춥니다 (hub.css 를 보고 정함)
+         560px 로 잡았다가 실제 휴대폰에서 여전히 깨졌습니다. hub.css 866줄을
+         보니 <b>1040px 아래에서 카드가 가로 배치</b>로 바뀝니다 —
+         이름과 숫자가 나란히 놓여 자리가 빠듯해집니다.
+       ★ 그리고 .cm-qlabel 에 <b>overflow-wrap:anywhere</b> 가 걸려 있습니다.
+         「긴 이름을 자르지 말고 감기게」 하려고 넣으신 것인데, 자리가 아주
+         모자라면 <b>한 글자씩 쪼갭니다</b> — 「공 연 정 보」가 그것입니다.
+       ▶ 카드가 가로로 서는 <b>그 지점부터</b> 배지를 감춥니다.
+         이 화면의 짜임을 짐작하지 않고 hub.css 에서 읽어 왔습니다. */
+    + '@media (max-width:1040px){.oc-newmark{display:none}}';
 
   function injectCss() {
     if (document.getElementById('oc-newmark-css')) return;
