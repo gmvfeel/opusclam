@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>인증 표시 진단 · OPUSCLAM ADMIN</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f6f6f9;color:#20223a;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 18px 100px}
+  .backlink{display:inline-block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5c5e70;text-decoration:none;border:1px solid #d8d8e2;border-radius:7px;padding:7px 13px;background:#fff}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b6d80;font-size:13px;margin-bottom:20px}
+  .card{background:#fff;border:1px solid #e3e3ec;border-radius:10px;padding:16px 18px;margin-bottom:14px}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  input,select{padding:9px 12px;border:1px solid #d8d8e2;border-radius:8px;font-size:13px;font-family:inherit}
+  button{appearance:none;border:0;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;background:#20223a;color:#fff;font-family:inherit}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #f0f0f5;vertical-align:top}
+  th{width:230px;color:#5c5e70;font-weight:700;font-size:12.5px}
+  td b{font-weight:800}
+  .ok{color:#0f7a3d;font-weight:800}
+  .bad{color:#a01c1c;font-weight:800}
+  .mid{color:#8a6f18;font-weight:800}
+  .hint{margin-top:12px;padding:12px 14px;border-radius:8px;background:#fffaf2;border:1px solid #f0e0c4;color:#8a6a2a;font-size:12.5px;line-height:1.8}
+  .hint.good{background:#f2f8f4;border-color:#cde5d6;color:#0f7a3d}
+  code{background:#f3f3f8;padding:1px 5px;border-radius:4px;font-size:12px;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="admin.html">&larr; 관리자 홈</a>
+  <h1>인증 표시 진단</h1>
+  <div class="sub">상세 화면에 「공식 인증」이 안 나오는 까닭을 하나씩 짚어 봅니다.</div>
+
+  <div class="card">
+    <div class="row">
+      <select id="kind">
+        <option value="persons">인물</option>
+        <option value="orgs">음악단체</option>
+        <option value="venues">공연장</option>
+        <option value="schools">음악학교</option>
+        <option value="foundations">기관·재단</option>
+        <option value="modern_composers">현대음악</option>
+      </select>
+      <input id="name" placeholder="이름 (예: 김형윤)" value="김형윤" size="18">
+      <button id="go">진단</button>
+    </div>
+    <table id="out"><tr><td>「진단」을 눌러 주십시오.</td></tr></table>
+    <div id="hint"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/admin-guard.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   인증 표시 진단 · 2026-08-21
+   ------------------------------------------------------------------
+   ★ 왜 만들었나
+     상세 화면의 「공식 인증」이 <b>나올 때도 있고 안 나올 때도</b>
+     있습니다. 브라우저를 띄워 볼 수 없으니 짐작으로 고치면 또
+     헛돕니다. 화면에서 <b>어디서 끊기는지</b> 눈으로 보게 합니다.
+
+   무엇을 봅니까
+     ① 사이트가 지금 주고 있는 claim.js 가 <b>새 것인가</b>
+     ② 그 사람이 인물DB에 있는가 · 번호는 몇인가
+     ③ entity_claims 에 승인된 연결이 있는가
+     ④ entity_claim_badge 뷰가 <b>그 연결을 내주는가</b>
+     ⑤ 로그아웃한 손님도 볼 수 있는가 (열쇠 없는 조회)
+   ══════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  var URL_ = 'https://ptdxzxkgddvkusamkiol.supabase.co';
+  var KEY  = 'sb_publishable_FDTL3-sQ0c5NVCTA2lif7Q_v6Wee8Wu';
+
+  function sb(){
+    if(!window.__ocSb) window.__ocSb = window.supabase.createClient(URL_, KEY);
+    return window.__ocSb;
+  }
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+  var lines = [], notes = [];
+  function put(k, v, cls){
+    lines.push('<tr><th>'+esc(k)+'</th><td'+(cls?' class="'+cls+'"':'')+'>'+v+'</td></tr>');
+  }
+  function draw(){
+    document.getElementById('out').innerHTML = lines.join('');
+    var h = document.getElementById('hint');
+    if(!notes.length){ h.innerHTML=''; return; }
+    h.className = 'hint' + (notes.every(function(n){return n[0]==='ok';}) ? ' good' : '');
+    h.innerHTML = notes.map(function(n){ return n[1]; }).join('<br><br>');
+  }
+
+  async function run(){
+    lines = []; notes = [];
+    document.getElementById('out').innerHTML = '<tr><td>보는 중…</td></tr>';
+    var kind = document.getElementById('kind').value;
+    var name = document.getElementById('name').value.trim();
+    var c = sb();
+
+    /* ① 지금 사이트가 주는 claim.js 가 새 것인가 */
+    try{
+      var res = await fetch('/assets/claim.js?_=' + Date.now(), {cache:'no-store'});
+      var txt = await res.text();
+      var isNew = txt.indexOf('ensureSb') >= 0 && txt.indexOf('oc-claim-css') >= 0;
+      put('① 사이트의 claim.js',
+          (isNew ? '<b class="ok">새 것입니다</b>' : '<b class="bad">아직 옛 것입니다</b>')
+          + ' · ' + txt.length.toLocaleString() + '자',
+          '');
+      if(!isNew) notes.push(['bad','<b>claim.js 가 아직 옛 것입니다.</b> 새 파일을 올리고 배포가 끝날 때까지 기다린 뒤 다시 눌러 주십시오. (버셀 배포는 1~2분 걸립니다)']);
+    }catch(e){
+      put('① 사이트의 claim.js', '<b class="bad">못 받았습니다</b> — '+esc(e.message));
+    }
+
+    /* ② 그 사람이 DB 에 있는가 */
+    var ent = null;
+    try{
+      var r = await c.from(kind).select('id,name_ko,name_en,is_oc,hidden')
+                     .ilike('name_ko', name).limit(10);
+      if(r.error) throw new Error(r.error.message);
+      var d = r.data || [];
+      if(!d.length){
+        put('② DB 항목', '<b class="bad">'+esc(name)+' 을(를) 찾지 못했습니다</b>');
+        notes.push(['bad','이름이 정확한지 확인해 주십시오.']);
+        draw(); return;
+      }
+      ent = d[0];
+      put('② DB 항목', d.map(function(x){
+        return '<b>#'+x.id+'</b> '+esc(x.name_ko||'')+(x.name_en?' ('+esc(x.name_en)+')':'')
+             + ' · OC딱지 '+(x.is_oc?'<b class="ok">켜짐</b>':'<b class="bad">꺼짐</b>')
+             + (x.hidden?' · <b class="mid">감춤</b>':'');
+      }).join('<br>'));
+      if(d.length>1) notes.push(['mid','같은 이름이 '+d.length+'건입니다. 아래는 <b>첫 번째(#'+ent.id+')</b> 기준입니다.']);
+    }catch(e){
+      put('② DB 항목', '<b class="bad">'+esc(e.message)+'</b>'); draw(); return;
+    }
+
+    /* 상세 화면 주소 */
+    var VIEW = { persons:'/db/person-view.html', orgs:'/db/org-view.html',
+                 venues:'/db/venue-view.html', schools:'/db/school-view.html',
+                 foundations:'/db/foundation-view.html',
+                 modern_composers:'/db/modern-view.html' };
+    var url = VIEW[kind] + '?id=' + ent.id;
+    put('상세 화면', '<a href="'+url+'" target="_blank"><code>'+esc(url)+'</code></a> — 새 창에서 열어 보십시오');
+
+    /* ③ 승인된 연결이 있는가 (관리자 열쇠로) */
+    try{
+      var r2 = await c.from('entity_claims')
+        .select('id,member_id,status,entity_name,decided_at,decided_by')
+        .eq('entity_kind', kind).eq('entity_id', ent.id);
+      if(r2.error) throw new Error(r2.error.message);
+      var cl = r2.data || [];
+      var ap = cl.filter(function(x){ return x.status==='approved'; });
+      put('③ 이어진 기록',
+        cl.length
+          ? cl.map(function(x){ return '<b>#'+x.id+'</b> · '+esc(x.status)
+              + (x.status==='approved'?' <b class="ok">✔</b>':'')
+              + ' · '+esc(x.entity_name||'')
+              + (x.decided_at?' · '+String(x.decided_at).slice(0,10):''); }).join('<br>')
+          : '<b class="bad">없습니다</b>');
+      if(!ap.length){
+        notes.push(['bad','<b>승인된 연결이 없습니다.</b> 「공식 인증」은 entity_claims 에 <code>approved</code> 기록이 있어야 나옵니다. 「회원 → DB 보내기」에서 이어 주십시오.']);
+        draw(); return;
+      }
+    }catch(e){
+      put('③ 이어진 기록', '<b class="bad">'+esc(e.message)+'</b>'); draw(); return;
+    }
+
+    /* ④ 뷰가 내주는가 (관리자 열쇠로) */
+    try{
+      var r3 = await c.from('entity_claim_badge')
+        .select('owner_count,verified_at')
+        .eq('entity_kind', kind).eq('entity_id', ent.id).maybeSingle();
+      if(r3.error) throw new Error(r3.error.message);
+      put('④ 인증 표시 뷰 (관리자)',
+        r3.data ? '<b class="ok">owner_count = '+r3.data.owner_count+'</b>'
+                : '<b class="bad">빈 값</b>');
+      if(!r3.data) notes.push(['bad','<b>뷰가 값을 안 줍니다.</b> entity_claim_badge 뷰를 다시 만들어야 합니다 — <code>sql/claim-01-B-apply.sql</code> 의 뷰 부분을 다시 돌려 주십시오.']);
+    }catch(e){
+      put('④ 인증 표시 뷰 (관리자)', '<b class="bad">'+esc(e.message)+'</b>');
+      notes.push(['bad','<b>뷰가 없거나 권한이 없습니다.</b> <code>sql/claim-01-B-apply.sql</code> 을 다시 돌려 주십시오.']);
+    }
+
+    /* ⑤ 로그아웃한 손님도 볼 수 있는가
+         ★ 이것이 핵심입니다. 상세 화면은 <b>로그인 안 한 사람</b>도 봅니다.
+           entity_claims 의 읽기 규칙은 「본인 또는 관리자」뿐이라,
+           뷰가 그 규칙을 그대로 따르면 손님에게는 <b>빈 값</b>이 갑니다.
+           그러면 관리자인 파트너 화면에서만 배지가 보입니다. */
+    try{
+      var anon = window.supabase.createClient(URL_, KEY, {
+        auth:{ persistSession:false, autoRefreshToken:false, storageKey:'oc-anon-probe' }
+      });
+      var r4 = await anon.from('entity_claim_badge')
+        .select('owner_count')
+        .eq('entity_kind', kind).eq('entity_id', ent.id).maybeSingle();
+      if(r4.error) throw new Error(r4.error.message);
+      put('⑤ 인증 표시 뷰 (로그아웃 손님)',
+        r4.data ? '<b class="ok">owner_count = '+r4.data.owner_count+'</b> — 누구나 보입니다'
+                : '<b class="bad">빈 값</b> — 손님에게는 안 보입니다');
+      if(!r4.data){
+        notes.push(['bad','<b>여기가 원인입니다.</b> 뷰가 <code>entity_claims</code> 의 읽기 규칙(본인 또는 관리자)을 그대로 따르고 있어, <b>로그인 안 한 사람에게는 빈 값</b>이 갑니다. 뷰를 <code>security_invoker=false</code> 로 두거나, 갯수만 세어 주는 함수로 바꿔야 합니다. 고칠 SQL 을 드리겠습니다.']);
+      } else {
+        notes.push(['ok','<b>여기까지는 모두 정상입니다.</b> 그래도 화면에 안 나오면 상세 주소를 열어 보시고 알려 주십시오 — 붙이는 자리(.pv-name) 쪽을 봐야 합니다.']);
+      }
+    }catch(e){
+      put('⑤ 인증 표시 뷰 (로그아웃 손님)', '<b class="bad">'+esc(e.message)+'</b>');
+      notes.push(['bad','<b>손님 권한으로 못 읽습니다.</b> 이것이 원인입니다 — 고칠 SQL 을 드리겠습니다.']);
+    }
+
+    draw();
+  }
+
+  document.getElementById('go').addEventListener('click', run);
+  document.getElementById('name').addEventListener('keydown', function(e){
+    if(e.key==='Enter') run();
+  });
+})();
+</script>
+</body>
+</html>
