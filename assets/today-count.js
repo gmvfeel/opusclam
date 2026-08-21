@@ -165,7 +165,23 @@
          가운뎃점 대신 얇은 칸막이를 써서 더 짧게 만듭니다. */
     + '.oc-newmark.two{font-size:10px;padding:3px 5px;letter-spacing:-.03em}'
     + '.oc-newmark .sep{display:inline-block;width:1px;height:7px;margin:0 4px;'
-    +   'vertical-align:-1px;background:currentColor;opacity:.45}';
+    +   'vertical-align:-1px;background:currentColor;opacity:.45}'
+    /* ★★ 2026-08-21 · <b>좁은 화면에서 카드 이름이 쪼개졌습니다</b> (파트너 지적)
+         배지가 nowrap 이라 안 줄어들고, 좁은 칸에서 <b>이름을 밀어냈습니다</b> —
+         「공 연 정 보」처럼 한 글자씩 세로로 쪼개졌습니다.
+       ▶ 두 가지로 막습니다
+         ① 배지가 <b>줄어들 수 있게</b> (flex-shrink) — 자리가 모자라면
+            배지가 먼저 양보합니다. 이름이 쪼개지는 것보다 낫습니다.
+         ② 좁은 화면에서는 <b>더 작게</b> 하고 왼쪽 여백을 줄입니다.
+       ★ 아주 좁으면(360px 아래) 배지를 <b>감춥니다.</b> 숫자를 보여 주려다
+         카드를 망가뜨리면 안 됩니다 — 이름이 먼저입니다. */
+    + '.oc-newmark{flex:0 1 auto;min-width:0;overflow:hidden}'
+    + '@media (max-width:560px){'
+    +   '.oc-newmark{font-size:10px;margin-left:4px;padding:2px 5px}'
+    +   '.oc-newmark.two{font-size:9.5px;padding:2px 4px}'
+    +   '.oc-newmark .sep{margin:0 3px}'
+    + '}'
+    + '@media (max-width:360px){.oc-newmark{display:none}}';
 
   function injectCss() {
     if (document.getElementById('oc-newmark-css')) return;
