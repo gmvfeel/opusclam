@@ -176,12 +176,17 @@
        ★ 아주 좁으면(360px 아래) 배지를 <b>감춥니다.</b> 숫자를 보여 주려다
          카드를 망가뜨리면 안 됩니다 — 이름이 먼저입니다. */
     + '.oc-newmark{flex:0 1 auto;min-width:0;overflow:hidden}'
-    + '@media (max-width:560px){'
-    +   '.oc-newmark{font-size:10px;margin-left:4px;padding:2px 5px}'
-    +   '.oc-newmark.two{font-size:9.5px;padding:2px 4px}'
-    +   '.oc-newmark .sep{margin:0 3px}'
-    + '}'
-    + '@media (max-width:360px){.oc-newmark{display:none}}';
+    /* ★★ 2026-08-21 · 좁은 화면에서는 <b>아예 감춥니다</b> (파트너 지적 · 2차)
+         작게 줄이는 것만으로는 모자랐습니다. 실제 휴대폰(390px)에서
+         「공 연 정 보」가 여전히 한 글자씩 쪼개졌습니다.
+       ★ 왜 줄이는 것으로 안 되나 — 배지가 아무리 작아도 <b>자리는
+         차지합니다.</b> 카드가 두 칸으로 좁아진 화면에서는 그 몇십 px 이
+         이름을 밀어냅니다.
+       ▶ 560px 아래에서는 배지를 <b>보여 주지 않습니다.</b>
+         숫자보다 <b>이름이 먼저</b>입니다. 넓은 화면에서는 그대로 나옵니다.
+       ★ 이건 임시가 아니라 <b>맞는 판단</b>으로 봅니다 — 좁은 화면에서
+         숫자를 두 개나 더 넣을 자리가 없습니다. */
+    + '@media (max-width:560px){.oc-newmark{display:none}}';
 
   function injectCss() {
     if (document.getElementById('oc-newmark-css')) return;
