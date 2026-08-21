@@ -1122,3 +1122,29 @@
     .bday{grid-template-columns:1fr}
     .bday .age{display:none}
   }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-08-21 · 두 곳을 고칩니다 (파트너 지적)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── ① 「인물DB 전체보기」가 제자리를 못 잡았습니다 ────────────────
+   .hb-more 규칙이 <b>이 파일에도 style.css 에도 없었습니다.</b>
+   그래서 .hb-head(flex) 안에서 제목 바로 뒤에 붙어 어수선했습니다.
+   ▶ 오른쪽 끝으로 밀고, 줄바꿈되지 않게 합니다. */
+.hb-head .hb-more{
+  margin-left:auto; flex:0 0 auto; white-space:nowrap;
+  font-size:12px; font-weight:700; color:var(--text-3,#8a8c9e);
+  text-decoration:none; padding:4px 0; line-height:1.4;
+  transition:color .16s;
+}
+.hb-head .hb-more:hover{ color:var(--violet-2,#7C63B0) }
+.hb-head .hb-title{ flex:1 1 auto; min-width:0 }
+@media (max-width:560px){
+  .hb-head .hb-more{ font-size:11.5px }
+}
+
+/* ── ② 현황 카드 높이를 줄마다 맞춥니다 ──────────────────────────
+   보강 배지(assets/today-count.js)가 붙은 카드만 아랫줄이 생겨
+   <b>같은 줄인데 높이가 달랐습니다.</b>
+   ▶ 격자 칸을 늘여 채우게 하면 저절로 맞습니다. */
+.cm-quick > .cm-qcard{ align-self:stretch }

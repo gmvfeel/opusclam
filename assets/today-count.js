@@ -176,26 +176,33 @@
        ★ 아주 좁으면(360px 아래) 배지를 <b>감춥니다.</b> 숫자를 보여 주려다
          카드를 망가뜨리면 안 됩니다 — 이름이 먼저입니다. */
     + '.oc-newmark{flex:0 1 auto;min-width:0;overflow:hidden}'
-    /* ★★ 2026-08-21 · 좁은 화면에서는 <b>아예 감춥니다</b> (파트너 지적 · 2차)
-         작게 줄이는 것만으로는 모자랐습니다. 실제 휴대폰(390px)에서
-         「공 연 정 보」가 여전히 한 글자씩 쪼개졌습니다.
-       ★ 왜 줄이는 것으로 안 되나 — 배지가 아무리 작아도 <b>자리는
-         차지합니다.</b> 카드가 두 칸으로 좁아진 화면에서는 그 몇십 px 이
-         이름을 밀어냅니다.
-       ▶ 560px 아래에서는 배지를 <b>보여 주지 않습니다.</b>
-         숫자보다 <b>이름이 먼저</b>입니다. 넓은 화면에서는 그대로 나옵니다.
-       ★ 이건 임시가 아니라 <b>맞는 판단</b>으로 봅니다 — 좁은 화면에서
-         숫자를 두 개나 더 넣을 자리가 없습니다. */
-    /* ★★ 2026-08-21 · 기준을 <b>1040px</b>로 맞춥니다 (hub.css 를 보고 정함)
-         560px 로 잡았다가 실제 휴대폰에서 여전히 깨졌습니다. hub.css 866줄을
-         보니 <b>1040px 아래에서 카드가 가로 배치</b>로 바뀝니다 —
-         이름과 숫자가 나란히 놓여 자리가 빠듯해집니다.
-       ★ 그리고 .cm-qlabel 에 <b>overflow-wrap:anywhere</b> 가 걸려 있습니다.
-         「긴 이름을 자르지 말고 감기게」 하려고 넣으신 것인데, 자리가 아주
-         모자라면 <b>한 글자씩 쪼갭니다</b> — 「공 연 정 보」가 그것입니다.
-       ▶ 카드가 가로로 서는 <b>그 지점부터</b> 배지를 감춥니다.
-         이 화면의 짜임을 짐작하지 않고 hub.css 에서 읽어 왔습니다. */
-    + '@media (max-width:1040px){.oc-newmark{display:none}}';
+    /* ★★ 2026-08-21 · 좁은 화면에서는 <b>아랫줄로 내립니다</b> (파트너 지시)
+         ─────────────────────────────────────────────────────────
+       ★ 무엇이 문제였나
+         hub.css 866줄부터 <b>1040px 아래에서 카드가 가로 배치</b>가 됩니다 —
+         이름과 숫자가 한 줄에 나란히 놓입니다. 거기에 배지까지 넣으니
+         자리가 모자랐고, .cm-qlabel 의 <b>overflow-wrap:anywhere</b> 때문에
+         이름이 <b>한 글자씩 쪼개졌습니다</b> — 「공 연 정 보」.
+
+       ★ 처음엔 배지를 <b>감췄습니다.</b> 그런데 그건 파트너가 원하신
+         「보강도 보이게」를 <b>끈 것</b>이지 고친 것이 아닙니다.
+         ▶ 자리를 만들어 줍니다 — 배지를 <b>카드 아랫줄</b>에 놓습니다.
+           카드가 조금 길어지지만 이름·숫자·배지가 <b>다 보입니다.</b>
+
+       ★ 화면 파일은 건드리지 않습니다
+         카드 안을 감싸는 것을 <b>이 파일이 스스로</b> 만듭니다
+         (아래 wrapRow). 화면 셋을 다시 배포하지 않아도 됩니다.
+
+       ★ 아주 좁으면(360px 아래) 그때는 감춥니다 — 카드가 169px 밖에
+         안 되어 아랫줄도 빠듯합니다. */
+    + '@media (max-width:1040px){'
+    +   '.cm-qcard:has(> .oc-mkrow){flex-direction:column;align-items:stretch;gap:5px}'
+    +   '.oc-mkrow{display:flex;align-items:baseline;justify-content:space-between;'
+    +     'gap:8px;min-width:0}'
+    +   '.oc-mkrow > .cm-qlabel{min-width:0}'
+    +   '.cm-qcard > .oc-newmark{align-self:flex-end;margin-left:0;margin-top:1px}'
+    + '}'
+    + '@media (max-width:360px){.oc-newmark{display:none}}';
 
   function injectCss() {
     if (document.getElementById('oc-newmark-css')) return;
@@ -212,7 +219,9 @@
     if (!el) return;
     injectCss();
     /* 두 번 붙지 않게 — 화면이 숫자를 다시 채워도 배지는 하나뿐이어야 합니다 */
-    var old = el.parentNode && el.parentNode.querySelector('.oc-newmark');
+    var card = el.closest ? el.closest('.cm-qcard') : null;
+    var old = (card || el.parentNode) &&
+              (card || el.parentNode).querySelector('.oc-newmark');
     if (old) old.parentNode.removeChild(old);
 
     /* ★ 배지를 <b>하나에 담습니다.</b> 둘을 나란히 두면 좁은 카드에서
@@ -236,10 +245,41 @@
       em.textContent = txt[0];
     }
     em.setAttribute('title', '오늘 ' + tip.join(' · '));
-    /* ★ 숫자 <b>바로 뒤</b>가 아니라 그 칸의 <b>맨 끝</b>에 놓습니다.
-         바로 뒤에 두면 「485 +9 건」처럼 단위 앞에 끼어 읽힙니다.
-         맨 끝에 두면 「485건 +9」가 되어 자연스럽습니다. */
-    (el.parentNode || el).appendChild(em);
+    /* ★★ 어디에 붙일지 — 화면 폭에 따라 다릅니다
+         · 넓은 화면(1041px~) : 숫자 칸 <b>맨 끝</b>에.
+             바로 뒤에 두면 「485 +9 건」처럼 단위 앞에 끼어 읽힙니다.
+             맨 끝에 두면 「485건 +9」가 되어 자연스럽습니다.
+         · 좁은 화면(~1040px)  : 카드의 <b>아랫줄</b>에.
+             거기서는 이름과 숫자가 한 줄에 나란히 놓여 자리가 없습니다.
+             배지를 같은 줄에 두면 이름이 한 글자씩 쪼개집니다. */
+    if (card && window.matchMedia &&
+        window.matchMedia('(max-width:1040px)').matches) {
+      wrapRow(card, el);
+      card.appendChild(em);                 /* 카드 맨 아래 */
+    } else {
+      (el.parentNode || el).appendChild(em);
+    }
+  }
+
+  /* ── 이름과 숫자를 한 줄로 묶습니다 ─────────────────────────
+     ★ 왜 필요한가
+       카드를 세로로 세우면(flex-direction:column) 이름·숫자·배지가
+       <b>셋 다 따로 줄</b>이 되어 카드가 너무 길어집니다.
+       이름과 숫자는 <b>한 줄로 묶어</b> 두고 배지만 내려야 합니다.
+     ★ 화면 파일을 고치지 않으려고 <b>여기서 만듭니다.</b>
+       세 화면을 다시 배포하지 않아도 됩니다.
+     ★ 두 번 감싸지 않습니다 — 이미 있으면 그냥 둡니다. */
+  function wrapRow(card, cntEl) {
+    if (card.querySelector(':scope > .oc-mkrow')) return;
+    var label = card.querySelector('.cm-qlabel');
+    var count = cntEl.closest ? cntEl.closest('.cm-qcount') : null;
+    if (!label || !count || label.parentNode !== card) return;
+
+    var row = document.createElement('span');
+    row.className = 'oc-mkrow';
+    card.insertBefore(row, label);
+    row.appendChild(label);
+    row.appendChild(count);
   }
 
   /* 「고를 자리=>표이름|조건」 을 세미콜론으로 이은 글을 풀어 냅니다 */
