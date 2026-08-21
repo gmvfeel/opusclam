@@ -233,6 +233,13 @@ html[data-theme="dark"] .oc-claim-pick .ocp-none.warn{
 .oc-claim-hold{
   display:inline-flex; align-items:center; gap:6px; line-height:1;
 }
+/* ★ 안쪽 칸도 <b>가운데로 세웁니다.</b>
+     그냥 span 이면 이름의 30px 글자 크기를 물려받아 칸 높이가
+     30px 이 되고, 그 안의 배지가 <b>아래로 처집니다.</b>
+     OC 딱지는 상자에 바로 들어가 제 높이대로 서므로 둘이 어긋납니다. */
+.oc-claim-hold > span{
+  display:inline-flex; align-items:center; line-height:1;
+}
 /* 아직 안 채워진 칸이 gap 만큼 헛여백을 만들지 않게 합니다 */
 .oc-claim-hold:empty,
 .oc-claim-hold > span:empty{ display:none }
