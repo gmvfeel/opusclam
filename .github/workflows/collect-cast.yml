@@ -90,3 +90,33 @@ jobs:
             -H "Content-Type: application/json" -d '{}'
           echo ""
 
+
+  # ── 실패를 이슈로 알립니다 (다른 43개 워크플로와 <b>같은 방식</b>) ──────
+  #  ★ 2026-08-21 · 이 워크플로에만 빠져 있었습니다 (파트너 지적으로 재 봄).
+  #    50개 가운데 43개는 이미 이 장치를 갖고 있는데 여기와 sitemap-build
+  #    둘만 없어, 실패해도 <b>아무도 모르게</b> 지나갔습니다.
+  #  ★ 새 방식을 만들지 않고 pick-daily.yml 의 것을 그대로 옮겼습니다 —
+  #    이슈 제목이 「[자동수집 실패] …」 로 통일돼야 나중에 세기 쉽습니다.
+  oc-notify-failure:
+    needs: collect
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '자동 수집이 실패했습니다.\n\n- 워크플로 : %s\n- 실행 기록 : %s\n- 시각(UTC) : %s\n\n로그를 보시고 고친 뒤 이 이슈를 닫아 주십시오.' "$WF" "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다 (Workflow permissions 를 확인해 주십시오)"
+          fi
