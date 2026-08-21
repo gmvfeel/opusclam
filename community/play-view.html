@@ -197,7 +197,14 @@ html[data-theme="dark"] .pv-msg.err{background:#2a1616;color:#e8a0a0;border-colo
      그래서 여기만 바꿔도 푸터 피하기·이너스페이스 비키기가 그대로
      따라옵니다. */
 @media (min-width:1041px){
-  .pv-sidetabs{top:620px}
+  /* ★ 620px 로 두었더니 <b>창이 큰 화면에서는 여전히 영상에 걸렸습니다</b>
+       (파트너 지적). 고정 px 은 창 높이가 얼마냐에 따라 위로도 아래로도
+       보입니다.
+     ▶ <b>창 아래쪽에서 재는 값</b>으로 바꿉니다. 단추 높이가 약 265px
+       이므로 창 아래에서 <b>65px 위</b>에 아랫변이 놓입니다 —
+       창이 크든 작든 늘 같은 자리로 보입니다.
+     ★ pv-sidetab.js 는 계산된 px 을 읽으므로 이 식도 그대로 따라옵니다. */
+  .pv-sidetabs{top:calc(100vh - 330px)}
 }
 </style>
 </head>
