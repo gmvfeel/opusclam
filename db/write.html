@@ -298,6 +298,7 @@
             <option value="modern">현대음악</option>
             <option value="foundation">관련기관·재단</option>
             <option value="academic">학술</option>
+          <option value="terms">음악 용어사전</option>
           </select>
         </div>
       </section>
@@ -1088,6 +1089,24 @@ document.querySelectorAll('.tabs').forEach(function(t){
     {l:'설립구분',t:'select',k:'estab_type',o:['공공','민간','민간(기업)'],h:'half'},
     {l:'산하 · 운영',t:'text',k:'subsidiary',h:'half'},{l:'관련 분야',t:'text',k:'field',h:'half'},
     {l:'주요 사업',t:'text',k:'business',h:'full'},{l:'로고',t:'image',k:'logo_url',h:'half'},{l:'홈페이지',t:'url',k:'link_home',h:'half'},{l:'소개',t:'textarea',k:'description',h:'full'}]},
+   /* ★ 2026-08-21 · 음악 용어사전 (파트너 요청) ─────────────────
+        용어사전 목록·상세에 DB 등록·보강 단추가 없었습니다.
+      ★★ <b>보강에서 받는 칸을 셋으로 줄였습니다</b> (파트너 판단)
+           한 줄 뜻 · 본문 · 관련 용어
+         이름(term_ko·term_en)과 갈래(category)는 <b>안 받습니다</b> —
+         이미 정리된 것이라 잘못 고치면 어긋나고, 검수하는 분도
+         무엇이 바뀌었는지 알아보기 어렵습니다.
+      ★ 기호 그림(symbol_svg)도 안 받습니다 — SVG 코드라 회원이 쓸 수
+        있는 것이 아닙니다.
+      ★ 칸 이름은 <b>표에서 받아</b> 그대로 씁니다 (2026-08-21 확인) —
+        summary · body · related. 짐작하지 않았습니다. */
+   terms:{label:'음악 용어사전',t:'oc_terms',f:[
+    {l:'용어 (국문)',t:'text',k:'term_ko',h:'half',ph:'예: 콜 레뇨'},
+    {l:'용어 (원어)',t:'text',k:'term_en',h:'half',ph:'예: Col legno'},
+    {l:'한 줄 뜻',t:'text',k:'summary',h:'full',ph:'한 문장으로 짧게'},
+    {l:'풀이',t:'textarea',k:'body',h:'full',ph:'어떤 때 쓰는 말인지, 어떻게 소리 나는지'},
+    {l:'관련 용어',t:'text',k:'related',h:'full',ph:'쉼표로 구분'}]},
+
    academic:{label:'학술DB',t:'academic',f:[
     {l:'제목 (국문)',t:'text',k:'name_ko',h:'full'},{l:'제목 (영문)',t:'text',k:'name_en',h:'full'},
     {l:'유형',t:'select',k:'type',o:['학술논문','학위논문','저널·학술지','연구서','평론','자료','기타'],h:'half'},
