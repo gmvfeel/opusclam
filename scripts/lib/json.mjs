@@ -75,15 +75,90 @@ export function parseJsonSafe(text, label = '') {
   try {
     return JSON.parse(text);
   } catch (e) {
-    if (!/control character/i.test(String(e.message))) throw e;   // 다른 이유의 실패는 손대지 않음
+    const msg = String(e && e.message || '');
 
-    const { text: fixed, hit } = fixControlChars(text);
-    const j = JSON.parse(fixed);                                  // 여기서 또 실패하면 그대로 올라갑니다
+    /* ── ① 제어문자 (v1 부터 하던 일) ──────────────────────── */
+    if (/control character/i.test(msg)) {
+      const { text: fixed, hit } = fixControlChars(text);
+      const j = JSON.parse(fixed);                 // 또 실패하면 그대로 올라갑니다
+      _repaired += hit;
+      console.log('    ⚠ 자료원 응답에 깨진 문자 ' + hit + '개가 있어 손질했습니다'
+                  + (label ? ' — ' + label : ''));
+      return j;
+    }
 
-    _repaired += hit;
-    console.log('    ⚠ 자료원 응답에 깨진 문자 ' + hit + '개가 있어 손질했습니다'
-                + (label ? ' — ' + label : ''));
-    return j;
+    /* ── ② 답이 <b>중간에서 끊긴</b> 경우 (v2 · 2026-08-21) ───────
+       ★ 왜 넓혔나
+         학교 수집이 2주째 이 오류로 멈춰 있었습니다 —
+           Expected property name or '}' in JSON at position 356050
+         v1 은 「control character」 라는 말이 든 오류만 손질하고
+         나머지는 그대로 던졌습니다. 그래서 <b>손질조차 해 보지 않고</b>
+         890곳이 통째로 날아갔습니다.
+
+       ★ 왜 「끊김」으로 보나
+         스크립트가 <b>세 번 다시 시도</b>하는데 세 번 다 <b>같은 자리</b>
+         에서 깨졌습니다. 우연한 끊김이면 자리가 달라집니다.
+         하지만 어느 쪽이든 <b>받은 데까지는 살릴 수 있습니다.</b>
+
+       ★ 어떻게 살리나
+         SPARQL 답은 { head:…, results:{ bindings:[ …, …, … ] } } 꼴입니다.
+         마지막으로 <b>온전히 닫힌 항목</b>까지만 잘라 내고 닫아 줍니다.
+         ▶ 890곳 중 880곳이라도 들어오는 편이 0곳보다 낫습니다.
+
+       ★ 반드시 <b>몇 개를 잃었는지 알립니다.</b> 조용히 넘어가면
+         자료가 새는 줄 모르고 지나갑니다. */
+    const salvaged = salvageBindings(text);
+    if (salvaged) {
+      _repaired += 1;
+      console.log('    ⚠ 자료원 응답이 중간에 끊겼습니다 — 받은 '
+                  + salvaged.n + '건까지 살렸습니다'
+                  + (label ? ' — ' + label : ''));
+      console.log('       (원인: ' + msg.slice(0, 60) + ')');
+      return salvaged.json;
+    }
+
+    throw e;                                        // 살릴 수 없으면 숨기지 않습니다
+  }
+}
+
+/* ── 끊긴 SPARQL 답에서 온전한 항목까지만 건집니다 ──────────
+   ★ 여는 괄호와 닫는 괄호를 세어 <b>깊이 0 으로 돌아온 자리</b>를 찾습니다.
+     그 자리가 항목 하나가 온전히 끝난 곳입니다.
+   ★ 따옴표 안의 괄호는 세지 않습니다 — 이름에 { } 가 들어 있을 수 있습니다.
+   ★ 역슬래시도 봅니다. 안 보면 "\\" 를 따옴표 시작으로 잘못 읽습니다. */
+export function salvageBindings(text) {
+  const key = '"bindings"';
+  const kp = text.indexOf(key);
+  if (kp < 0) return null;
+
+  const lb = text.indexOf('[', kp);
+  if (lb < 0) return null;
+
+  let depth = 0, inStr = false, esc = false, lastGood = -1, n = 0;
+
+  for (let i = lb + 1; i < text.length; i++) {
+    const ch = text[i];
+    if (esc) { esc = false; continue; }
+    if (ch === '\\') { esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+
+    if (ch === '{' || ch === '[') depth++;
+    else if (ch === '}' || ch === ']') {
+      depth--;
+      if (depth === 0) { lastGood = i; n++; }        // 항목 하나가 온전히 닫혔습니다
+      else if (depth < 0) { lastGood = i - 1; break; } // 배열이 닫힌 자리
+    }
+  }
+
+  if (lastGood < 0 || n === 0) return null;          // 한 건도 못 건졌습니다
+
+  const head = text.slice(0, lb + 1);
+  const body = text.slice(lb + 1, lastGood + 1);
+  try {
+    return { json: JSON.parse(head + body + ']}}'), n };
+  } catch (e2) {
+    return null;                                     // 그래도 안 되면 포기합니다
   }
 }
 

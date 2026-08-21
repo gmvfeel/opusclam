@@ -87,11 +87,23 @@ jobs:
           IN_MAX: ${{ inputs.max }}
         run: |
           try2() { for i in 1 2; do "$@" && return 0; echo "::warning::${i}번째 시도가 실패했습니다 — 120초 뒤 다시 시도합니다"; sleep 120; done; return 1; }
-          echo "── 커먼즈 수집 · 대상 $IN_TYPE · 항목 $IN_LIMIT 건 · 장당 최대 $IN_MAX 장 ──"
+
+          # ★★ 2026-08-21 · <b>예약 실행이 2주째 실패하고 있었습니다</b>
+          #   workflow_dispatch 의 `default:` 는 <b>손으로 돌릴 때만</b>
+          #   쓰입니다. 예약 실행에서는 inputs 가 <b>빈 문자열</b>로 오고,
+          #   --type="" 로 넘어가 스크립트가 「venue/school/org 중 하나여야
+          #   합니다」 하고 멈췄습니다.
+          #   ▶ 비어 있으면 여기서 채웁니다. photo-collect.yml 이 이미
+          #     쓰는 방식과 같습니다 — 새 방식을 만들지 않습니다.
+          TYPE="${IN_TYPE:-venue}"
+          LIMIT="${IN_LIMIT:-200}"
+          MAX="${IN_MAX:-6}"
+
+          echo "── 커먼즈 수집 · 대상 $TYPE · 항목 $LIMIT 건 · 장당 최대 $MAX 장 ──"
           try2 node seed/photo-commons.mjs \
-            --type="$IN_TYPE" \
-            --limit="$IN_LIMIT" \
-            --max="$IN_MAX"
+            --type="$TYPE" \
+            --limit="$LIMIT" \
+            --max="$MAX"
 
   # ── 실패를 알려 줍니다 ──────────────────────────────────────
   #  ★ 왜 필요한가 — 예약 실행이 실패해도 눌러 보지 않으면 모릅니다.
