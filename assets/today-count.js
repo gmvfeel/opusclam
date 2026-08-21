@@ -114,6 +114,40 @@
       .catch(function () { return 0; });
   }
 
+  /* ── 오늘 <b>보강된</b> 것 세기 (2026-08-21 · 파트너 요청) ──────
+     ★ 무엇을 푸는가
+       「새로 들어온 것」만 세니, <b>있는 항목을 채운 일</b>은 아무 표시도
+       안 났습니다. 오늘 용어사전에 기호 95개를 채웠는데 카드는 그대로
+       였습니다 — 그날 가장 큰 일이었는데요.
+
+     ★★ <b>겹치기를 반드시 빼야 합니다</b>
+       표들은 created_at 과 updated_at 을 둘 다 now() 로 넣습니다.
+       그냥 「updated_at 이 오늘」로 세면 <b>오늘 새로 들어온 줄이 양쪽에
+       다 잡혀</b> 「새것 5 · 보강 5」처럼 같은 것을 두 번 세게 됩니다.
+       ▶ 보강 = updated_at 은 오늘 <b>이면서</b> created_at 은 오늘 아님.
+         아래 created_at=lt.<오늘0시> 가 그 몫입니다.
+
+     ★ 재서 확인했습니다 — 아홉 표 모두 두 칸을 갖고 있고, 용어사전은
+       오늘 「새것 0 · 보강 95」로 정확히 갈렸습니다. */
+  function countUpd(spec, sinceISO) {
+    var parts = String(spec).split('|');
+    var head = parts[0].split(':');
+    var table = head[0];
+    var extra = parts[1] ? ('&' + parts[1]) : '';
+    var q = SB + '/rest/v1/' + table + '?select=id&limit=1'
+          + '&updated_at=gte.' + encodeURIComponent(sinceISO)
+          + '&created_at=lt.'  + encodeURIComponent(sinceISO) + extra;
+    return fetch(q, { headers: H })
+      .then(function (r) {
+        var cr = r.headers.get('content-range');
+        if (!cr) return 0;
+        return parseInt((cr.split('/')[1] || '0'), 10) || 0;
+      })
+      /* ★ updated_at 칸이 없는 표를 만나면 조회가 실패합니다.
+           그때는 0 으로 두어 <b>새것 표시만</b> 나오게 합니다. */
+      .catch(function () { return 0; });
+  }
+
   /* ── 카드별 「+N」 배지 ────────────────────────────────────
      ★ 모양을 <b>이 파일이 스스로</b> 넣습니다. 서브 메인 세 곳이 서로
        다른 css 를 쓰므로(hub.css · style.css …), 한 곳에 적으면 나머지
@@ -121,10 +155,17 @@
   var MARK_CSS = ''
     + '.oc-newmark{display:inline-block;margin-left:6px;vertical-align:middle;'
     +   'font-style:normal;font-size:11px;font-weight:800;letter-spacing:-.02em;'
-    +   'line-height:1;padding:3px 7px;border-radius:99px;white-space:nowrap;'
+    +   'line-height:1;padding:3px 6px;border-radius:99px;white-space:nowrap;'
     +   'color:var(--violet,#5A4A7A);background:rgba(156,127,214,.16)}'
     + 'html[data-theme="dark"] .oc-newmark{color:var(--violet-3,#bebebe);'
-    +   'background:rgba(255,255,255,.10)}';
+    +   'background:rgba(255,255,255,.10)}'
+    /* ★★ 새것과 보강이 <b>둘 다</b> 있으면 배지가 길어져 좁은 카드에서
+         아랫줄로 떨어집니다(「+128 · ↻12」). 그러면 카드 높이가 어긋납니다.
+       ▶ 두 개짜리 배지는 <b>글자를 한 단계 줄이고</b> 여백을 좁힙니다.
+         가운뎃점 대신 얇은 칸막이를 써서 더 짧게 만듭니다. */
+    + '.oc-newmark.two{font-size:10px;padding:3px 5px;letter-spacing:-.03em}'
+    + '.oc-newmark .sep{display:inline-block;width:1px;height:7px;margin:0 4px;'
+    +   'vertical-align:-1px;background:currentColor;opacity:.45}';
 
   function injectCss() {
     if (document.getElementById('oc-newmark-css')) return;
@@ -134,18 +175,37 @@
     (document.head || document.documentElement).appendChild(st);
   }
 
-  function putMark(sel, n) {
-    if (!n || n < 1) return;                 /* 0 이면 아무것도 안 붙입니다 */
+  function putMark(sel, n, u) {
+    n = n || 0; u = u || 0;
+    if (n < 1 && u < 1) return;              /* 둘 다 0 이면 아무것도 안 붙입니다 */
     var el = document.querySelector(sel);
     if (!el) return;
     injectCss();
     /* 두 번 붙지 않게 — 화면이 숫자를 다시 채워도 배지는 하나뿐이어야 합니다 */
     var old = el.parentNode && el.parentNode.querySelector('.oc-newmark');
     if (old) old.parentNode.removeChild(old);
+
+    /* ★ 배지를 <b>하나에 담습니다.</b> 둘을 나란히 두면 좁은 카드에서
+         넘칩니다. 있는 것만 보입니다 —
+           새것만 : +5      보강만 : ↻95      둘 다 : +5 · ↻95
+       ★ ↻ 는 「다시 손봄」을 뜻합니다. 글자를 쓰면 배지가 길어집니다. */
+    var txt = [], tip = [];
+    if (n > 0) { txt.push('+' + n.toLocaleString());
+                 tip.push('새로 들어온 것 ' + n.toLocaleString() + '건'); }
+    if (u > 0) { txt.push('↻' + u.toLocaleString());
+                 tip.push('보강된 것 ' + u.toLocaleString() + '건'); }
+
     var em = document.createElement('em');
-    em.className = 'oc-newmark';
-    em.textContent = '+' + n.toLocaleString();
-    em.setAttribute('title', '오늘 ' + n.toLocaleString() + '건 새로 들어왔습니다');
+    em.className = 'oc-newmark' + (txt.length > 1 ? ' two' : '');
+    if (txt.length > 1) {
+      em.appendChild(document.createTextNode(txt[0]));
+      var sp = document.createElement('span'); sp.className = 'sep';
+      em.appendChild(sp);
+      em.appendChild(document.createTextNode(txt[1]));
+    } else {
+      em.textContent = txt[0];
+    }
+    em.setAttribute('title', '오늘 ' + tip.join(' · '));
     /* ★ 숫자 <b>바로 뒤</b>가 아니라 그 칸의 <b>맨 끝</b>에 놓습니다.
          바로 뒤에 두면 「485 +9 건」처럼 단위 앞에 끼어 읽힙니다.
          맨 끝에 두면 「485건 +9」가 되어 자연스럽습니다. */
@@ -186,7 +246,10 @@
     if (marks.length) {
       var since0 = kstTodayStartUTC();
       marks.forEach(function (m) {
-        countOne(m.spec, since0).then(function (n) { putMark(m.sel, n); });
+        /* ★ 둘을 <b>함께</b> 받아 한 번에 그립니다. 따로 그리면 배지가
+             두 번 바뀌어 깜빡입니다. */
+        Promise.all([countOne(m.spec, since0), countUpd(m.spec, since0)])
+          .then(function (r) { putMark(m.sel, r[0], r[1]); });
       });
     }
 
