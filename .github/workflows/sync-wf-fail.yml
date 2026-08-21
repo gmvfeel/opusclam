@@ -1,0 +1,166 @@
+name: 운영 · 자동수집 실패 현황 모으기 (매일)
+
+# ── 무엇을 하나 ──────────────────────────────────────────────
+#  GitHub 에 열려 있는 <b>실패 이슈</b>를 읽어 Supabase 표에 적습니다.
+#  관리자 홈에서 오퍼스클램 안에서 바로 볼 수 있게 하려는 것입니다.
+#
+#  ★ 왜 이렇게 하나 (2026-08-21 · 파트너 요청)
+#    관리자 화면이 GitHub 에 <b>직접</b> 물으면 열쇠를 브라우저에 넣어야
+#    하고, 그러면 누구나 그것을 꺼내 쓸 수 있습니다.
+#    ▶ 워크플로가 대신 물어 표에 적고, 화면은 <b>그 표만</b> 읽습니다.
+#
+#  ★ 쌓지 않고 <b>지금 사진</b>만 둡니다
+#    표를 통째로 지우고 다시 넣습니다. 쌓으면 이미 닫힌 이슈까지 남아
+#    「지금 몇 개 실패 중」을 셀 수 없습니다 — 오늘 겪은 문제입니다.
+#
+#  ★ 열쇠는 이미 있는 것을 씁니다
+#    GITHUB_TOKEN          Actions 안에서 저절로 주어집니다
+#    SUPABASE_URL          49개 워크플로가 이미 쓰는 것
+#    SUPABASE_SERVICE_KEY  같음
+
+on:
+  schedule:
+    # KST 매일 08:40 — 매일 도는 것들(00:20~07:47)이 다 끝난 뒤입니다.
+    # 그래야 그날 실패한 것까지 담깁니다. (UTC 23:40 = KST 다음날 08:40)
+    - cron: '40 23 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: oc-wf-fail-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 열린 실패 이슈를 모아 표에 적습니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          KEY="${SUPABASE_SERVICE_KEY:-$SUPABASE_SERVICE_ROLE_KEY}"
+
+          if [ -z "$SUPABASE_URL" ] || [ -z "$KEY" ]; then
+            echo "::error::SUPABASE_URL 또는 열쇠가 비어 있습니다"
+            exit 1
+          fi
+
+          echo "── 열린 실패 이슈를 읽습니다 ──"
+          # ★ 제목이 「[…실패]」로 시작하는 것만 가져옵니다.
+          #   사람이 손으로 연 이슈까지 담으면 현황이 흐려집니다.
+          gh issue list --state open --limit 200 \
+            --json number,title,createdAt,updatedAt,url,comments \
+            > raw.json
+          echo "   전체 열린 이슈 : $(jq 'length' raw.json) 건"
+
+          jq '[ .[]
+                | select(.title | test("^\\[[^]]*실패\\]"))
+                | {
+                    issue_no:  .number,
+                    title:     .title,
+                    kind:      (.title | capture("^\\[(?<k>[^]]*)실패\\]").k | ascii_downcase | gsub("\\s";"")),
+                    workflow:  (.title | sub("^\\[[^]]*\\]\\s*";"")),
+                    opened_at: .createdAt,
+                    updated_at:.updatedAt,
+                    url:       .url,
+                    comments:  (.comments | length)
+                  } ]' raw.json > rows.json
+
+          N=$(jq 'length' rows.json)
+          echo "   그중 실패 이슈 : $N 건"
+          jq -r '.[] | "     #\(.issue_no)  \(.title)"' rows.json
+
+          echo ""
+          echo "── 표를 비웁니다 (지금 사진만 둡니다) ──"
+          curl -sS -X DELETE "$SUPABASE_URL/rest/v1/oc_wf_fail?issue_no=gt.0" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+            -H "Prefer: return=minimal" \
+            --fail-with-body
+          echo "   비웠습니다"
+
+          if [ "$N" -eq 0 ]; then
+            # ★ 실패가 하나도 없어도 <b>받아 온 시각</b>은 남겨야 합니다.
+            #   안 그러면 화면이 「아직 못 받아 왔다」로 보고 경고를 냅니다.
+            echo ""
+            echo "── 실패가 없습니다 — 받아 온 표시만 남깁니다 ──"
+            curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/oc_wf_fail_touch" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+              -H "Content-Type: application/json" -d '{}' \
+              --fail-with-body || echo "::warning::시각 남기기를 건너뜁니다"
+            echo ""
+            echo "▶ 실패 0건 — 다 잘 돌고 있습니다"
+            exit 0
+          fi
+
+          echo ""
+          echo "── 표에 적습니다 ──"
+          curl -sS -X POST "$SUPABASE_URL/rest/v1/oc_wf_fail" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates,return=minimal" \
+            --data-binary @rows.json \
+            --fail-with-body
+          echo "▶ $N 건을 적었습니다"
+
+  # ── 실패를 이슈로 알립니다 (다른 45개와 같은 방식) ──────────
+  #  ★ 이 워크플로가 실패하면 <b>현황판 자체가 멈춥니다.</b>
+  #    그러면 화면에는 옛 자료가 남아 「괜찮다」로 보입니다.
+  #    그래서 이것도 알림을 답니다.
+  oc-notify-failure:
+    needs: sync
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 실패를 이슈로 남깁니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          B=$(printf '실패 현황 모으기가 실패했습니다. 관리자 홈의 현황이 <b>옛 자료</b>일 수 있습니다.\n\n- 실행 기록 : %s\n- 시각(UTC) : %s' "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "$B" || echo "::warning::이슈에 댓글을 달지 못했습니다"
+          else
+            gh issue create --title "$T" --body "$B" || echo "::warning::이슈를 만들지 못했습니다"
+          fi
+
+  oc-close-issue:
+    needs: sync
+    if: success()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: 열려 있던 실패 이슈를 닫습니다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WF: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          T="[자동수집 실패] $WF"
+          N=$(gh issue list --state open --search "$T in:title" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -z "$N" ]; then
+            echo "열린 실패 이슈가 없습니다 — 할 일 없음"
+            exit 0
+          fi
+          B=$(printf '다시 잘 돌았습니다. 이 이슈를 닫습니다.\n\n- 실행 기록 : %s\n- 시각(UTC) : %s' "$RUN_URL" "$(date -u '+%Y-%m-%d %H:%M')")
+          gh issue comment "$N" --body "$B" || echo "::warning::댓글을 달지 못했습니다"
+          gh issue close "$N" || echo "::warning::이슈를 닫지 못했습니다"
+          echo "▶ #$N 을 닫았습니다"
