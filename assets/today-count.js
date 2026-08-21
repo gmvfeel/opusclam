@@ -195,7 +195,13 @@
     var label = (me && me.getAttribute('data-label')) || '오늘 업데이트';
     var href  = (me && me.getAttribute('data-href')) || '';
     var box   = document.querySelector((me && me.getAttribute('data-into')) || '.cm-quick');
-    if (!box) return;
+
+    /* ★★ 2026-08-21 · 여기서 <b>곧바로 나가면 안 됩니다</b>
+         예전에는 합계 카드를 붙일 상자(.cm-quick)가 없으면 바로 나갔습니다.
+         그런데 DATABASE 처럼 <b>배지만 쓰는 화면</b>에는 그 상자가 없어,
+         data-marks 를 적어도 아무 일이 일어나지 않았습니다.
+       ▶ 상자가 없으면 <b>합계 카드만</b> 건너뛰고 배지는 그대로 답니다. */
+    if (!box && !tables.length && !marks.length) return;
 
     var since = kstTodayStartUTC();
     Promise.all(tables.map(function (t) {
@@ -210,7 +216,7 @@
       if (el) {
         var b = el.querySelector('b');
         if (b) b.textContent = sum.toLocaleString();
-      } else {
+      } else if (box) {
         box.appendChild(makeCard(label, sum, href));
       }
     }).catch(function () { /* 못 받으면 카드를 만들지 않습니다 */ });

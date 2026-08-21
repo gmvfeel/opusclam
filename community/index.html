@@ -607,7 +607,23 @@ function ocN(tpl) {
 <script src="/assets/today-count.js"
         data-tables="hottopic,opusnity,gallery,admission,admission_community,qna,news,modern_music,prenatal_music,utility"
         data-label="오늘 업데이트"
-        data-href="/community/hottopic.html"></script>
+        data-href="/community/hottopic.html"
+        <!-- ★ 2026-08-21 · 카드마다 「+N」 (파트너 요청)
+             ★ 짝은 <b>이 화면이 이미 쓰는 것</b>을 그대로 옮겼습니다 —
+               위 429줄의 선택자·표 이름 목록에서 읽어 왔습니다.
+               제가 새로 정한 것이 아니라서 카드 숫자와 어긋나지 않습니다.
+             ★ 핫토픽(#cHot)·공연사진(#cGal)은 뺐습니다 — 그 두 칸의 숫자를
+               어디서 채우는지 확인하지 못했습니다. 짐작으로 넣으면
+               엉뚱한 게시판 수가 붙습니다. -->
+        data-marks="#cAdm=>admission;
+                    #cAdc=>admission_community;
+                    #cQna=>qna;
+                    #cNews=>news;
+                    #cMod=>modern_music;
+                    #cPre=>prenatal_music;
+                    #cUtl=>utility;
+                    #cSch=>monthly_school;
+                    #cOpn=>opusnity"></script>
 <!-- 앱 설치 안내 · 서비스워커 등록 (공용) -->
 <script src="/assets/pwa-install.js?v=20260815" defer></script>
 </body>
