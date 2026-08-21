@@ -61,6 +61,19 @@
       tabs.style.visibility = on ? 'visible' : 'hidden';
     }
 
+    /* ★★ 2026-08-21 · <b>화면 아래로 넘치지 않게</b> 합니다.
+         css 의 top 은 화면마다 다르고(500 · 560 · 620px), 단추는
+         position:fixed 라 그 값이 <b>창 위쪽에서 잰 자리</b>입니다.
+         창이 낮은 노트북에서는 단추 아랫부분이 <b>화면 밖으로</b>
+         나갑니다 — 스크롤해도 따라 내려오므로 영영 안 보입니다.
+       ★ 그래서 놓을 때마다 창 높이를 함께 봅니다. */
+    function place(v) {
+      var h = tabs.offsetHeight || 0;
+      var maxTop = window.innerHeight - h - 16;
+      if (maxTop < MIN) maxTop = MIN;
+      tabs.style.top = Math.min(v, maxTop) + 'px';
+    }
+
     function upd() {
       /* ⓑ 이너스페이스 패널이 화면을 덮고 있으면 비켜 있습니다 */
       var ins = document.getElementById('ocInnerSpace');
@@ -70,7 +83,7 @@
       }
 
       /* ⓐ 푸터·하단 배너가 가까우면 그 위로 올라갑니다 */
-      tabs.style.top = BASE + 'px';
+      place(BASE);
       var h = tabs.offsetHeight || 0;
       var stop = document.querySelector('.bigban')
               || document.querySelector('.triple')
@@ -87,7 +100,7 @@
       var st = stop.getBoundingClientRect().top;
       var room = st - 20 - h;         /* 푸터 위에 놓을 수 있는 윗변 */
       if (room >= BASE) { show(true); return; }          /* 원래 자리로 충분 */
-      if (room >= MIN)  { tabs.style.top = room + 'px'; show(true); return; }
+      if (room >= MIN)  { place(room); show(true); return; }
       show(false);                                       /* 올릴 자리도 없음 */
     }
 

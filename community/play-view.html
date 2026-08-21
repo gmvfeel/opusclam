@@ -184,6 +184,21 @@ html[data-theme="dark"] .pv-msg.err{background:#2a1616;color:#e8a0a0;border-colo
   .pv-video{border-radius:11px;margin-bottom:18px}
   .wr{padding:16px}
 }
+
+/* ★★ 2026-08-21 · 옆 단추를 <b>아래로</b> 내립니다 (파트너 지시)
+     ─────────────────────────────────────────────────────────
+   왜 이 화면만 다른가
+     다른 게시판 뷰는 맨 위에 제목이 바로 나오지만, 여기는 <b>큰 영상</b>이
+     먼저 옵니다. 공용 값(board.css · top:500px)을 그대로 쓰면 단추가
+     영상 한가운데에 걸립니다.
+   ★ 공용 값은 <b>건드리지 않습니다.</b> 핫토픽·오퍼니티 등 다른 게시판
+     뷰가 다 그 값을 씁니다 — 여기서 고치면 그쪽이 전부 틀어집니다.
+   ★ assets/pv-sidetab.js 는 css 에 적힌 top 을 <b>읽어서</b> 씁니다.
+     그래서 여기만 바꿔도 푸터 피하기·이너스페이스 비키기가 그대로
+     따라옵니다. */
+@media (min-width:1041px){
+  .pv-sidetabs{top:620px}
+}
 </style>
 </head>
 <body data-header="overlay">
