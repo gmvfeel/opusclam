@@ -2,20 +2,20 @@
 <!-- OPUSCLAM.COM 공연장 상세
      ★ scripts/build-sitemap.mjs 가 만듭니다. 손으로 고치지 마십시오. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://opusclam.com/db/venue-view.html?id=1</loc><lastmod>2026-08-19</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=1</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=2</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=3</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=3</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=4</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=5</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=6</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=7</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=8</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=8</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=9</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=10</loc><lastmod>2026-08-19</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=13</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=14</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=14</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=15</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=16</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=17</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1269,7 +1269,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=11755</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11756</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11757</loc><lastmod>2026-08-09</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=11758</loc><lastmod>2026-08-16</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=11758</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11759</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11760</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11761</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1306,7 +1306,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=11792</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11793</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11794</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=11795</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=11795</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11796</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11797</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11798</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1324,14 +1324,14 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=11810</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11811</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11812</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=11813</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=11813</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11814</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11815</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11816</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11817</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11818</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11819</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=11820</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=11820</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11821</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11822</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11823</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1367,7 +1367,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=11853</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11854</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11855</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=11856</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=11856</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11857</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11858</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11859</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1376,7 +1376,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=11862</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11863</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11864</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=11865</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=11865</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11866</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11867</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11868</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1428,7 +1428,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=11914</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11915</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11916</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=11917</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=11917</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11918</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11919</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11920</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1477,7 +1477,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=11963</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11964</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11965</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=11966</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=11966</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11967</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11968</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11969</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1510,7 +1510,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=11996</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11997</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=11998</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=11999</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=11999</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12000</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12001</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12002</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1533,7 +1533,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=12019</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12020</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12021</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12022</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12022</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12023</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12024</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12025</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1541,7 +1541,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=12027</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12028</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12029</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12030</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12030</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12031</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12032</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12033</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1549,11 +1549,11 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=12035</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12036</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12037</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12038</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12038</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12039</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12040</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12041</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12042</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12042</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12043</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12044</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12045</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1566,7 +1566,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=12052</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12053</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12054</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12055</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12055</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12056</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12057</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12058</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1594,7 +1594,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=12080</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12081</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12082</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12083</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12083</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12084</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12085</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12086</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1609,7 +1609,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=12095</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12096</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12097</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12098</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12098</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12099</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12100</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12101</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1618,16 +1618,16 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=12104</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12105</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12106</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12107</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12107</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12108</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12109</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12110</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12111</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12112</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12113</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12113</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12114</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12115</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12116</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12116</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12117</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12118</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12119</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1636,8 +1636,8 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=12122</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12123</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12124</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12125</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12126</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12125</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12126</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12127</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12128</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12129</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -1648,7 +1648,7 @@
   <url><loc>https://opusclam.com/db/venue-view.html?id=12134</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12135</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12136</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://opusclam.com/db/venue-view.html?id=12137</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://opusclam.com/db/venue-view.html?id=12137</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12138</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12139</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://opusclam.com/db/venue-view.html?id=12140</loc><lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>

@@ -15,301 +15,307 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://opusclam.com/</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://opusclam.com/search.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/index.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/person.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/venue.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/modern.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/org.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/school.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/foundation.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/work.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/timeline.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/terms.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/db/academic.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/index.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/news.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/hottopic.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/qna.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/prenatal.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/prenatal-playlist.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/selfpr.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/school-month.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/gallery.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/modern.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/utility.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/admission.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/community/admission-community.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/index.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/concert.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/concours.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/concours-price.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/festival.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/funding.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/score.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/media.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/spot/sites.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/index.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/master.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/open.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/live.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/one.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/group.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/lesson/instructor.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/recruit/guide.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://opusclam.com/recruit/job.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/recruit/talent.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://opusclam.com/shop/apply.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://opusclam.com/guide.html</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://opusclam.com/legal/terms.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://opusclam.com/legal/privacy.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://opusclam.com/legal/data-policy.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://opusclam.com/legal/data-protection.html</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
